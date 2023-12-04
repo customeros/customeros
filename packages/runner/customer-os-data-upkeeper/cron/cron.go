@@ -27,14 +27,7 @@ func StartCron(cont *container.Container) *cron.Cron {
 	c := cron.New()
 
 	// Add jobs
-	err := c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateOrgNextCycleDate, func() {
-		lockAndRunJob(cont, organizationGroup, updateOrganizationNextCycleDate)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "updateOrganizationNextCycleDate", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateContract, func() {
+	err := c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateContract, func() {
 		lockAndRunJob(cont, contractGroup, updateContractsStatusAndRenewal)
 	})
 	if err != nil {
@@ -58,10 +51,6 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 	log.Info("Gracefully stopping cron")
 	cron.Stop()
 	return nil
-}
-
-func updateOrganizationNextCycleDate(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpdateNextCycleDate()
 }
 
 func updateContractsStatusAndRenewal(cont *container.Container) {
