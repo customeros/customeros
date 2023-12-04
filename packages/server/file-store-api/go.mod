@@ -5,8 +5,8 @@ go 1.21
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
 require (
-	github.com/99designs/gqlgen v0.17.40
-	github.com/aws/aws-sdk-go v1.48.10
+	github.com/99designs/gqlgen v0.17.41
+	github.com/aws/aws-sdk-go v1.48.11
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1

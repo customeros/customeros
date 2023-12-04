@@ -14,6 +14,8 @@ import (
 	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
+	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
+	organizationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -39,9 +41,10 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 
 	// Create a ContractCreateEvent
@@ -143,8 +146,9 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 	now := utils.Now()
 	yesterday := now.AddDate(0, 0, -1)
@@ -231,8 +235,9 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -282,9 +287,10 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -314,6 +320,75 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 	require.Equal(t, opportunityevent.OpportunityUpdateV1, generatedEvent2.EventType)
 }
 
+func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{
+		RenewalCycle: string(model.MonthlyRenewalCycleString),
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+	}
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
+		model.ContractDataFields{
+			Name:         "test contract updated",
+			RenewalCycle: model.None,
+		},
+		commonmodel.ExternalSystem{},
+		constants.SourceOpenline,
+		utils.Now())
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	// Verify
+	neo4jt.AssertRelationships(ctx, t, testDatabase.Driver, contractId, []string{"SUSPENDED_RENEWAL", "HAS_OPPORTUNITY"}, opportunityId)
+	opportunityDbNode, _ := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Opportunity", opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	require.Equal(t, "SUSPENDED", opportunity.InternalStage)
+
+	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	require.Nil(t, err)
+	require.NotNil(t, contractDbNode)
+	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	require.Equal(t, "", contract.RenewalCycle)
+
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 2, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 2, len(eventList))
+	generatedEvent1 := eventList[0]
+	require.Equal(t, organizationevents.OrganizationRefreshRenewalSummaryV1, generatedEvent1.EventType)
+	generatedEvent2 := eventList[1]
+	require.Equal(t, organizationevents.OrganizationRefreshArrV1, generatedEvent2.EventType)
+}
+
 func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
@@ -339,9 +414,10 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -395,8 +471,9 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 	yesterday := now.AddDate(0, 0, -1)
 	daysAgo2 := now.AddDate(0, 0, -2)
@@ -477,9 +554,10 @@ func TestContractEventHandler_OnUpdateStatusEnded(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	now := utils.Now()
@@ -538,9 +616,10 @@ func TestContractEventHandler_OnUpdateStatusLive(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	now := utils.Now()

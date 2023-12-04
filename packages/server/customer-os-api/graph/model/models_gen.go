@@ -360,6 +360,7 @@ type Contract struct {
 	EndedAt          *time.Time           `json:"endedAt,omitempty"`
 	Name             string               `json:"name"`
 	RenewalCycle     ContractRenewalCycle `json:"renewalCycle"`
+	RenewalPeriods   *int64               `json:"renewalPeriods,omitempty"`
 	Status           ContractStatus       `json:"status"`
 	ServiceLineItems []*ServiceLineItem   `json:"serviceLineItems,omitempty"`
 	Opportunities    []*Opportunity       `json:"opportunities,omitempty"`
@@ -379,6 +380,7 @@ type ContractInput struct {
 	OrganizationID    string                        `json:"organizationId"`
 	Name              *string                       `json:"name,omitempty"`
 	RenewalCycle      *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
+	RenewalPeriods    *int64                        `json:"renewalPeriods,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
 	ContractURL       *string                       `json:"contractUrl,omitempty"`
 	ServiceStartedAt  *time.Time                    `json:"serviceStartedAt,omitempty"`
@@ -391,6 +393,7 @@ type ContractUpdateInput struct {
 	Name             *string               `json:"name,omitempty"`
 	ContractURL      *string               `json:"contractUrl,omitempty"`
 	RenewalCycle     *ContractRenewalCycle `json:"renewalCycle,omitempty"`
+	RenewalPeriods   *int64                `json:"renewalPeriods,omitempty"`
 	ServiceStartedAt *time.Time            `json:"serviceStartedAt,omitempty"`
 	SignedAt         *time.Time            `json:"signedAt,omitempty"`
 	EndedAt          *time.Time            `json:"endedAt,omitempty"`
@@ -1251,7 +1254,7 @@ type Opportunity struct {
 	ExternalType           string                       `json:"externalType"`
 	InternalStage          InternalStage                `json:"internalStage"`
 	ExternalStage          string                       `json:"externalStage"`
-	EstimatedClosedAt      time.Time                    `json:"estimatedClosedAt"`
+	EstimatedClosedAt      *time.Time                   `json:"estimatedClosedAt,omitempty"`
 	GeneralNotes           string                       `json:"generalNotes"`
 	NextSteps              string                       `json:"nextSteps"`
 	RenewedAt              time.Time                    `json:"renewedAt"`
@@ -1883,10 +1886,11 @@ type WorkspaceInput struct {
 type ActionType string
 
 const (
-	ActionTypeCreated                  ActionType = "CREATED"
-	ActionTypeRenewalLikelihoodUpdated ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
-	ActionTypeRenewalForecastUpdated   ActionType = "RENEWAL_FORECAST_UPDATED"
-	ActionTypeContractStatusUpdated    ActionType = "CONTRACT_STATUS_UPDATED"
+	ActionTypeCreated                     ActionType = "CREATED"
+	ActionTypeRenewalLikelihoodUpdated    ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
+	ActionTypeRenewalForecastUpdated      ActionType = "RENEWAL_FORECAST_UPDATED"
+	ActionTypeContractStatusUpdated       ActionType = "CONTRACT_STATUS_UPDATED"
+	ActionTypeServiceLineItemPriceUpdated ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
 )
 
 var AllActionType = []ActionType{
@@ -1894,11 +1898,12 @@ var AllActionType = []ActionType{
 	ActionTypeRenewalLikelihoodUpdated,
 	ActionTypeRenewalForecastUpdated,
 	ActionTypeContractStatusUpdated,
+	ActionTypeServiceLineItemPriceUpdated,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated:
+	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated:
 		return true
 	}
 	return false

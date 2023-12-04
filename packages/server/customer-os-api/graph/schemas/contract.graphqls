@@ -15,6 +15,7 @@ type Contract implements Node {
     endedAt:            Time
     name:               String!
     renewalCycle:       ContractRenewalCycle!
+    renewalPeriods:     Int64
     status:             ContractStatus!
     serviceLineItems:   [ServiceLineItem!] @goField(forceResolver: true)
     opportunities:      [Opportunity!] @goField(forceResolver: true)
@@ -31,6 +32,7 @@ input ContractInput {
     organizationId:     ID!
     name:               String
     renewalCycle:       ContractRenewalCycle
+    renewalPeriods:     Int64
     appSource:          String
     contractUrl:        String
     serviceStartedAt:   Time
@@ -43,6 +45,7 @@ input ContractUpdateInput {
     name:               String
     contractUrl:        String
     renewalCycle:       ContractRenewalCycle
+    renewalPeriods:     Int64
     serviceStartedAt:   Time
     signedAt:           Time
     endedAt:            Time
@@ -55,6 +58,7 @@ enum ContractRenewalCycle {
     QUARTERLY_RENEWAL
     ANNUAL_RENEWAL
 }
+
 enum ContractStatus {
     UNDEFINED
     DRAFT

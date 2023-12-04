@@ -2,11 +2,14 @@ package graph
 
 import (
 	"context"
+	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/contract"
@@ -19,6 +22,10 @@ type ServiceLineItemEventHandler struct {
 	log                 logger.Logger
 	repositories        *repository.Repositories
 	opportunityCommands *opportunitycmdhandler.CommandHandlers
+}
+
+type ActionPriceMetadata struct {
+	Price float64 `json:"price"`
 }
 
 func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
@@ -55,7 +62,8 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnUpdate")
 	defer span.Finish()
 	setCommonSpanTagsAndLogFields(span, evt)
-
+	var contractId string
+	var name string
 	var eventData event.ServiceLineItemUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
@@ -63,7 +71,16 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	}
 
 	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.ServiceLineItemRepository.Update(ctx, eventData.Tenant, serviceLineItemId, eventData)
+	serviceLineItemDbNode, err := h.repositories.ServiceLineItemRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	serviceLineItemEntity := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	//we will use this boolean below to check if the price has changed
+	priceChanged := serviceLineItemEntity.Price != eventData.Price
+
+	err = h.repositories.ServiceLineItemRepository.Update(ctx, eventData.Tenant, serviceLineItemId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating service line item %s: %s", serviceLineItemId, err.Error())
@@ -78,12 +95,38 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	}
 	if contractDbNode != nil {
 		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+		contractId = contract.Id
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
 		err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contract.Id, err.Error())
 			return nil
+		}
+	}
+
+	var message string
+	metadata, err := utils.ToJson(ActionPriceMetadata{
+		Price: eventData.Price,
+	})
+	//check to make sure the name displays correctly in the action message
+	if eventData.Name == "" {
+		name = serviceLineItemEntity.Name
+	} else {
+		name = eventData.Name
+	}
+
+	if priceChanged {
+		if eventData.Price > serviceLineItemEntity.Price {
+			message = "increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " / " + serviceLineItemEntity.Billed + " to " + fmt.Sprintf("%.2f", eventData.Price) + " / " + eventData.Billed
+		}
+		if eventData.Price < serviceLineItemEntity.Price {
+			message = "decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " / " + serviceLineItemEntity.Billed + " to " + fmt.Sprintf("%.2f", eventData.Price) + " / " + eventData.Billed
+		}
+		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadata, utils.Now())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractId, err.Error())
 		}
 	}
 

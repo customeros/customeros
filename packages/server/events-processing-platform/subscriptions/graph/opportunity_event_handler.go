@@ -218,8 +218,8 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		return err
 	}
 	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
-	amountChanged := opportunity.Amount != eventData.Amount
-	likelihoodChanged := opportunity.RenewalDetails.RenewalLikelihood != eventData.RenewalLikelihood
+	amountChanged := eventData.UpdateAmount() && opportunity.Amount != eventData.Amount
+	likelihoodChanged := eventData.UpdateRenewalLikelihood() && opportunity.RenewalDetails.RenewalLikelihood != eventData.RenewalLikelihood
 	setUpdatedByUserId := (amountChanged || likelihoodChanged) && eventData.UpdatedByUserId != ""
 
 	err = h.repositories.OpportunityRepository.UpdateRenewal(ctx, eventData.Tenant, opportunityId, eventData, setUpdatedByUserId)

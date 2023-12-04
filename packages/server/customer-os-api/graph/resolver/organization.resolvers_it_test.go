@@ -1505,33 +1505,33 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	hoursAgo3 := now.Add(time.Duration(-3) * time.Hour)
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
-	orgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "just another org")
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "org name"})
+	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "just another org"})
 	contractId1 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		Name:                 "contract 1",
-		CreatedAt:            now,
-		UpdatedAt:            now,
-		ServiceStartedAt:     &hoursAgo3,
-		SignedAt:             &hoursAgo2,
-		EndedAt:              &hoursAgo1,
-		ContractRenewalCycle: entity.ContractRenewalCycleMonthlyRenewal,
-		ContractStatus:       entity.ContractStatusDraft,
-		ContractUrl:          "url1",
-		Source:               entity.DataSourceOpenline,
-		AppSource:            "test1",
+		Name:             "contract 1",
+		CreatedAt:        now,
+		UpdatedAt:        now,
+		ServiceStartedAt: &hoursAgo3,
+		SignedAt:         &hoursAgo2,
+		EndedAt:          &hoursAgo1,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+		ContractStatus:   entity.ContractStatusDraft,
+		ContractUrl:      "url1",
+		Source:           entity.DataSourceOpenline,
+		AppSource:        "test1",
 	})
 	contractId2 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		Name:                 "contract 2",
-		CreatedAt:            yesterday,
-		UpdatedAt:            yesterday,
-		ServiceStartedAt:     &hoursAgo1,
-		SignedAt:             &hoursAgo3,
-		EndedAt:              &hoursAgo2,
-		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
-		ContractStatus:       entity.ContractStatusLive,
-		ContractUrl:          "url2",
-		Source:               entity.DataSourceOpenline,
-		AppSource:            "test2",
+		Name:             "contract 2",
+		CreatedAt:        yesterday,
+		UpdatedAt:        yesterday,
+		ServiceStartedAt: &hoursAgo1,
+		SignedAt:         &hoursAgo3,
+		EndedAt:          &hoursAgo2,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		ContractStatus:   entity.ContractStatusLive,
+		ContractUrl:      "url2",
+		Source:           entity.DataSourceOpenline,
+		AppSource:        "test2",
 	})
 	contractId3 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId2, entity.ContractEntity{})
 

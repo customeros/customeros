@@ -241,6 +241,7 @@ func MapDbNodeToContractEntity(node *dbtype.Node) *entity.ContractEntity {
 		SignedAt:         utils.GetTimePropOrNil(props, "signedAt"),
 		EndedAt:          utils.GetTimePropOrNil(props, "endedAt"),
 		RenewalCycle:     utils.GetStringPropOrEmpty(props, "renewalCycle"),
+		RenewalPeriods:   utils.GetInt64PropOrNil(props, "renewalPeriods"),
 		Status:           utils.GetStringPropOrEmpty(props, "status"),
 	}
 	return &contract

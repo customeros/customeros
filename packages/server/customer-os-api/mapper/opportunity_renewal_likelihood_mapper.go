@@ -15,12 +15,26 @@ var opportunityRenewalLikelihoodByModel = map[model.OpportunityRenewalLikelihood
 
 var opportunityRenewalLikelihoodByValue = utils.ReverseMap(opportunityRenewalLikelihoodByModel)
 
-func MapOpportunityRenewalLikelihoodFromModel(input model.OpportunityRenewalLikelihood) entity.OpportunityRenewalLikelihood {
-	return opportunityRenewalLikelihoodByModel[input]
+func MapOpportunityRenewalLikelihoodFromModel(input *model.OpportunityRenewalLikelihood) entity.OpportunityRenewalLikelihood {
+	if input == nil {
+		return ""
+	}
+	return opportunityRenewalLikelihoodByModel[*input]
 }
 
 func MapOpportunityRenewalLikelihoodToModel(input entity.OpportunityRenewalLikelihood) model.OpportunityRenewalLikelihood {
 	return opportunityRenewalLikelihoodByValue[input]
+}
+
+func MapOpportunityRenewalLikelihoodFromString(input *string) string {
+	if input == nil {
+		return ""
+	}
+	if v, exists := opportunityRenewalLikelihoodByModel[model.OpportunityRenewalLikelihood(*input)]; exists {
+		return string(v)
+	} else {
+		return ""
+	}
 }
 
 func MapOpportunityRenewalLikelihoodToModelPtr(input string) *model.OpportunityRenewalLikelihood {
