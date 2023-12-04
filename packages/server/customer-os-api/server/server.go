@@ -28,6 +28,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	commonrepositorypostgres "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -42,6 +44,7 @@ import (
 	"os/signal"
 	"runtime"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -125,8 +128,8 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
-		commonservice.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
-		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonServices.CommonRepositories, commonservice.WithCache(commonCache)),
+		apiKeyCheckerHTTPMiddleware(commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
+		tenantUserContextEnhancerMiddleware(commonservice.USERNAME_OR_TENANT, commonServices.CommonRepositories, commonservice.WithCache(commonCache)),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	if server.cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
@@ -166,6 +169,55 @@ func (server *server) Run(parentCtx context.Context) error {
 	<-server.doneCh
 	server.log.Infof("Application %s exited properly", constants.ServiceName)
 	return nil
+}
+
+// Define a custom middleware adapter for ApiKeyCheckerHTTP.
+func apiKeyCheckerHTTPMiddleware(appKeyRepo commonrepositorypostgres.AppKeyRepository, app commonservice.App, opts ...commonservice.CommonServiceOption) func(c *gin.Context) {
+	apiKeyChecker := commonservice.ApiKeyCheckerHTTP(appKeyRepo, app, opts...)
+	return func(c *gin.Context) {
+		if isIntrospectionQuery(c.Request) {
+			c.Next() // Skip ApiKeyCheckerHTTP and continue to the next handler.
+			return
+		}
+		apiKeyChecker(c)
+	}
+}
+
+// Define a custom middleware adapter for TenantUserContextEnhancer.
+func tenantUserContextEnhancerMiddleware(userContextType commonservice.HeaderAllowance, repos *commonrepository.Repositories, opts ...commonservice.CommonServiceOption) func(c *gin.Context) {
+	tenantEnhancer := commonservice.TenantUserContextEnhancer(userContextType, repos, opts...)
+	return func(c *gin.Context) {
+		if isIntrospectionQuery(c.Request) {
+			c.Next() // Skip TenantUserContextEnhancer and continue to the next handler.
+			return
+		}
+		tenantEnhancer(c)
+	}
+}
+
+func isIntrospectionQuery(req *http.Request) bool {
+	var requestMap map[string]interface{}
+	requestBody, err := io.ReadAll(req.Body)
+	if err != nil {
+		return false
+	}
+
+	// Create a new ReadCloser from the read bytes.
+	req.Body = io.NopCloser(bytes.NewReader(requestBody))
+
+	if err = json.Unmarshal(requestBody, &requestMap); err != nil {
+		return false
+	}
+
+	if opName, ok := requestMap["operationName"].(string); ok && opName == "IntrospectionQuery" {
+		// Check if "__schema" is present in the request
+		if selectionSet, ok := requestMap["query"].(string); ok {
+			if strings.Contains(selectionSet, "__schema {") && strings.Contains(selectionSet, "query IntrospectionQuery") {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func InitDB(cfg *config.Config, log logger.Logger) (db *commonConfig.StorageDB, err error) {
