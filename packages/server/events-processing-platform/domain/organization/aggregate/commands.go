@@ -24,16 +24,6 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 	defer span.Finish()
 
 	switch c := cmd.(type) {
-	case *command.RequestNextCycleDateCommand:
-		return a.requestNextCycleDate(ctx, c)
-	case *command.RequestRenewalForecastCommand:
-		return a.requestRenewalForecast(ctx, c)
-	case *command.UpdateRenewalLikelihoodCommand:
-		return a.updateRenewalLikelihood(ctx, c)
-	case *command.UpdateRenewalForecastCommand:
-		return a.updateRenewalForecast(ctx, c)
-	case *command.UpdateBillingDetailsCommand:
-		return a.updateBillingDetails(ctx, c)
 	case *command.LinkDomainCommand:
 		return a.linkDomain(ctx, c)
 	case *command.AddSocialCommand:
@@ -317,98 +307,6 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, cmd *command.AddS
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationAddSocialEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) updateRenewalLikelihood(ctx context.Context, cmd *command.UpdateRenewalLikelihoodCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.updateRenewalLikelihood")
-	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
-
-	updatedAt := cmd.Fields.UpdatedAt
-	if updatedAt == utils.ZeroTime() {
-		updatedAt = utils.Now()
-	}
-
-	event, err := events.NewOrganizationUpdateRenewalLikelihoodEvent(a, cmd.Fields.RenewalLikelihood, a.Organization.RenewalLikelihood.RenewalLikelihood, cmd.Fields.UpdatedBy, cmd.Fields.Comment, updatedAt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) updateRenewalForecast(ctx context.Context, cmd *command.UpdateRenewalForecastCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.updateRenewalForecast")
-	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
-
-	updatedAt := cmd.Fields.UpdatedAt
-	if updatedAt == utils.ZeroTime() {
-		updatedAt = utils.Now()
-	}
-
-	event, err := events.NewOrganizationUpdateRenewalForecastEvent(a, cmd.Fields.Amount, cmd.Fields.PotentialAmount, a.Organization.RenewalForecast.Amount, cmd.Fields.UpdatedBy, cmd.Fields.Comment, updatedAt, a.Organization.RenewalLikelihood.RenewalLikelihood)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) requestRenewalForecast(ctx context.Context, cmd *command.RequestRenewalForecastCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.requestRenewalForecast")
-	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
-
-	event, err := events.NewOrganizationRequestRenewalForecastEvent(a)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationRequestRenewalForecastEvent")
-	}
-
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) updateBillingDetails(ctx context.Context, cmd *command.UpdateBillingDetailsCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.updateBillingDetails")
-	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
-
-	event, err := events.NewOrganizationUpdateBillingDetailsEvent(a, cmd.Fields.Amount, cmd.Fields.Frequency, cmd.Fields.RenewalCycle, cmd.Fields.UpdatedBy, cmd.Fields.RenewalCycleStart, cmd.Fields.RenewalCycleNext)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) requestNextCycleDate(ctx context.Context, cmd *command.RequestNextCycleDateCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.requestNextCycleDate")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
-
-	event, err := events.NewOrganizationRequestNextCycleDateEvent(a)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationRequestNextCycleDateEvent")
-	}
-
 	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)

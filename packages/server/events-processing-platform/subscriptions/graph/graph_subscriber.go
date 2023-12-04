@@ -201,12 +201,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnDomainLinkedToOrganization(ctx, evt)
 	case orgevents.OrganizationAddSocialV1:
 		return s.organizationEventHandler.OnSocialAddedToOrganization(ctx, evt)
-	case orgevents.OrganizationUpdateRenewalLikelihoodV1:
-		return s.organizationEventHandler.OnRenewalLikelihoodUpdate(ctx, evt)
-	case orgevents.OrganizationUpdateRenewalForecastV1:
-		return s.organizationEventHandler.OnRenewalForecastUpdate(ctx, evt)
-	case orgevents.OrganizationUpdateBillingDetailsV1:
-		return s.organizationEventHandler.OnBillingDetailsUpdate(ctx, evt)
 	case orgevents.OrganizationHideV1:
 		return s.organizationEventHandler.OnOrganizationHide(ctx, evt)
 	case orgevents.OrganizationShowV1:
@@ -225,6 +219,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnUnlinkFromParentOrganization(ctx, evt)
 	case orgevents.OrganizationRequestRenewalForecastV1,
 		orgevents.OrganizationRequestNextCycleDateV1,
+		orgevents.OrganizationUpdateRenewalLikelihoodV1,
+		orgevents.OrganizationUpdateRenewalForecastV1,
+		orgevents.OrganizationUpdateBillingDetailsV1,
 		orgevents.OrganizationRequestScrapeByWebsiteV1:
 		return nil
 

@@ -38,27 +38,6 @@ func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity 
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
 		LastTouchpointAt:  utils.GetTimePropOrNil(props, "lastTouchpointAt"),
 		LastTouchpointId:  utils.GetStringPropOrNil(props, "lastTouchpointId"),
-		RenewalLikelihood: entity.RenewalLikelihood{
-			RenewalLikelihood:         utils.GetStringPropOrEmpty(props, "renewalLikelihood"),
-			PreviousRenewalLikelihood: utils.GetStringPropOrEmpty(props, "renewalLikelihoodPrevious"),
-			Comment:                   utils.GetStringPropOrNil(props, "renewalLikelihoodComment"),
-			UpdatedBy:                 utils.GetStringPropOrEmpty(props, "renewalLikelihoodUpdatedBy"),
-			UpdatedAt:                 utils.GetTimePropOrNil(props, "renewalLikelihoodUpdatedAt"),
-		},
-		RenewalForecast: entity.RenewalForecast{
-			Amount:          utils.GetFloatPropOrNil(props, "renewalForecastAmount"),
-			PotentialAmount: utils.GetFloatPropOrNil(props, "renewalForecastPotentialAmount"),
-			Comment:         utils.GetStringPropOrNil(props, "renewalForecastComment"),
-			UpdatedBy:       utils.GetStringPropOrEmpty(props, "renewalForecastUpdatedBy"),
-			UpdatedAt:       utils.GetTimePropOrNil(props, "renewalForecastUpdatedAt"),
-		},
-		BillingDetails: entity.BillingDetails{
-			Amount:            utils.GetFloatPropOrNil(props, "billingDetailsAmount"),
-			Frequency:         utils.GetStringPropOrEmpty(props, "billingDetailsFrequency"),
-			RenewalCycle:      utils.GetStringPropOrEmpty(props, "billingDetailsRenewalCycle"),
-			RenewalCycleStart: utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleStart"),
-			RenewalCycleNext:  utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleNext"),
-		},
 		RenewalSummary: entity.RenewalSummary{
 			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
 			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),

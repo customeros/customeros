@@ -32,31 +32,6 @@ type OrganizationFields struct {
 	OrganizationDataFields OrganizationDataFields
 	CreatedAt              *time.Time
 	UpdatedAt              *time.Time
-	RenewalLikelihood      *RenewalLikelihoodFields
 	Source                 cmnmod.Source
 	ExternalSystem         cmnmod.ExternalSystem
-}
-
-type RenewalLikelihoodFields struct {
-	RenewalLikelihood RenewalLikelihoodProbability
-	Comment           *string
-	UpdatedAt         time.Time
-	UpdatedBy         string `validate:"required"`
-}
-
-type RenewalForecastFields struct {
-	Amount          *float64
-	PotentialAmount *float64
-	Comment         *string
-	UpdatedAt       time.Time
-	UpdatedBy       string
-}
-
-type BillingDetailsFields struct {
-	Amount            *float64
-	Frequency         string
-	RenewalCycle      string
-	RenewalCycleStart *time.Time
-	RenewalCycleNext  *time.Time
-	UpdatedBy         string
 }

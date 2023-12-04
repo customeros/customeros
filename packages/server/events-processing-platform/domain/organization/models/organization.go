@@ -105,35 +105,9 @@ type Organization struct {
 	Locations           []string                           `json:"locations,omitempty"`
 	Domains             []string                           `json:"domains,omitempty"`
 	Socials             map[string]Social                  `json:"socials,omitempty"`
-	RenewalLikelihood   RenewalLikelihood                  `json:"renewalLikelihood,omitempty"`
-	RenewalForecast     RenewalForecast                    `json:"renewalForecast,omitempty"`
-	BillingDetails      BillingDetails                     `json:"billingDetails,omitempty"`
 	CustomFields        map[string]CustomField             `json:"customFields,omitempty"`
 	ExternalSystems     []cmnmod.ExternalSystem            `json:"externalSystems"`
 	ParentOrganizations map[string]ParentOrganization      `json:"parentOrganizations,omitempty"`
-}
-
-type RenewalLikelihood struct {
-	RenewalLikelihood RenewalLikelihoodProbability `json:"renewalLikelihood,omitempty"`
-	Comment           *string                      `json:"comment,omitempty"`
-	UpdatedAt         time.Time                    `json:"updatedAt,omitempty"`
-	UpdatedBy         string                       `json:"updatedBy,omitempty"`
-}
-
-type RenewalForecast struct {
-	Amount    *float64  `json:"amount,omitempty"`
-	Comment   *string   `json:"comment,omitempty"`
-	UpdatedAt time.Time `json:"updatedAt,omitempty"`
-	UpdatedBy string    `json:"updatedBy,omitempty"`
-}
-
-type BillingDetails struct {
-	Amount            *float64   `json:"amount,omitempty"`
-	UpdatedBy         string     `json:"updatedBy,omitempty"`
-	Frequency         string     `json:"frequency,omitempty"`
-	RenewalCycle      string     `json:"renewalCycle,omitempty"`
-	RenewalCycleStart *time.Time `json:"renewalCycleStart,omitempty"`
-	RenewalCycleNext  *time.Time `json:"renewalCycleNext,omitempty"`
 }
 
 type OrganizationPhoneNumber struct {

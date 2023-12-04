@@ -35,43 +35,14 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 			  MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$id})
 				SET o:Organization_%s,
 					o.name=$name,
-					o.hide=$hide,
-					o.renewalLikelihood=$renewalLikelihood,
-					o.renewalLikelihoodComment=$renewalLikelihoodComment,
-					o.renewalLikelihoodUpdatedAt=$renewalLikelihoodUpdatedAt,
-					o.renewalLikelihoodUpdatedBy=$renewalLikelihoodUpdatedBy,
-					o.renewalForecastAmount=$renewalForecastAmount,
-					o.renewalForecastPotentialAmount=$renewalForecastPotentialAmount,
-					o.renewalForecastUpdatedAt=$renewalForecastUpdatedAt,
-					o.renewalForecastUpdatedBy=$renewalForecastUpdatedBy,
-					o.renewalForecastComment=$renewalForecastComment,
-					o.billingDetailsAmount=$billingAmount, 
-					o.billingDetailsFrequency=$billingFrequency, 
-					o.billingDetailsRenewalCycle=$billingRenewalCycle, 
-			 		o.billingDetailsRenewalCycleStart=$billingRenewalCycleStart,
-			 		o.billingDetailsRenewalCycleNext=$billingRenewalCycleNext
+					o.hide=$hide
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":                         tenant,
-		"name":                           organization.Name,
-		"hide":                           organization.Hide,
-		"id":                             orgId,
-		"renewalLikelihood":              organization.RenewalLikelihood.RenewalLikelihood,
-		"renewalLikelihoodPrevious":      organization.RenewalLikelihood.PreviousRenewalLikelihood,
-		"renewalLikelihoodComment":       organization.RenewalLikelihood.Comment,
-		"renewalLikelihoodUpdatedAt":     organization.RenewalLikelihood.UpdatedAt,
-		"renewalLikelihoodUpdatedBy":     organization.RenewalLikelihood.UpdatedBy,
-		"renewalForecastAmount":          organization.RenewalForecast.Amount,
-		"renewalForecastPotentialAmount": organization.RenewalForecast.PotentialAmount,
-		"renewalForecastUpdatedBy":       organization.RenewalForecast.UpdatedBy,
-		"renewalForecastUpdatedAt":       organization.RenewalForecast.UpdatedAt,
-		"renewalForecastComment":         organization.RenewalForecast.Comment,
-		"billingAmount":                  organization.BillingDetails.Amount,
-		"billingFrequency":               organization.BillingDetails.Frequency,
-		"billingRenewalCycle":            organization.BillingDetails.RenewalCycle,
-		"billingRenewalCycleStart":       utils.TimePtrFirstNonNilNillableAsAny(organization.BillingDetails.RenewalCycleStart),
-		"billingRenewalCycleNext":        utils.TimePtrFirstNonNilNillableAsAny(organization.BillingDetails.RenewalCycleNext),
+		"tenant": tenant,
+		"name":   organization.Name,
+		"hide":   organization.Hide,
+		"id":     orgId,
 	})
 	return orgId
 }

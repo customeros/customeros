@@ -105,64 +105,6 @@ func NewLinkLocationCommand(organizationId, tenant, userId, locationId string) *
 	}
 }
 
-type UpdateRenewalLikelihoodCommand struct {
-	eventstore.BaseCommand
-	Fields models.RenewalLikelihoodFields
-}
-
-func NewUpdateRenewalLikelihoodCommand(tenant, orgId, userId string, fields models.RenewalLikelihoodFields) *UpdateRenewalLikelihoodCommand {
-	return &UpdateRenewalLikelihoodCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
-		Fields:      fields,
-	}
-}
-
-type RequestNextCycleDateCommand struct {
-	eventstore.BaseCommand
-}
-
-func NewRequestNextCycleDateCommand(tenant, orgId, userId string) *RequestNextCycleDateCommand {
-	return &RequestNextCycleDateCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
-	}
-}
-
-type RequestRenewalForecastCommand struct {
-	eventstore.BaseCommand
-}
-
-func NewRequestRenewalForecastCommand(tenant, orgId, userId string) *RequestRenewalForecastCommand {
-	return &RequestRenewalForecastCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
-	}
-}
-
-type UpdateRenewalForecastCommand struct {
-	eventstore.BaseCommand
-	Fields            models.RenewalForecastFields
-	RenewalLikelihood models.RenewalLikelihoodProbability
-}
-
-func NewUpdateRenewalForecastCommand(tenant, orgId, userId string, fields models.RenewalForecastFields, renewalLikelihood models.RenewalLikelihoodProbability) *UpdateRenewalForecastCommand {
-	return &UpdateRenewalForecastCommand{
-		BaseCommand:       eventstore.NewBaseCommand(orgId, tenant, userId),
-		Fields:            fields,
-		RenewalLikelihood: renewalLikelihood,
-	}
-}
-
-type UpdateBillingDetailsCommand struct {
-	eventstore.BaseCommand
-	Fields models.BillingDetailsFields
-}
-
-func NewUpdateBillingDetailsCommand(tenant, orgId, userId string, fields models.BillingDetailsFields) *UpdateBillingDetailsCommand {
-	return &UpdateBillingDetailsCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
-		Fields:      fields,
-	}
-}
-
 type LinkDomainCommand struct {
 	eventstore.BaseCommand
 	Domain    string
