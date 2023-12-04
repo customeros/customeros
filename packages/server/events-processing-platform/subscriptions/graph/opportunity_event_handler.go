@@ -92,6 +92,8 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 		return nil
 	}
 
+	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
+
 	return nil
 }
 

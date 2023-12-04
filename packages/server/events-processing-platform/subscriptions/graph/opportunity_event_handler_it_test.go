@@ -126,9 +126,10 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"Contract": 1, "Opportunity": 0})
+		"Organization": 1, "Contract": 1, "Opportunity": 0})
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
@@ -183,6 +184,22 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	require.Equal(t, string(model.OpportunityInternalTypeStringRenewal), opportunity.InternalType)
 	require.Equal(t, string(model.OpportunityInternalStageStringOpen), opportunity.InternalStage)
 	require.Equal(t, string(model.RenewalLikelihoodStringLow), opportunity.RenewalDetails.RenewalLikelihood)
+
+	// Check event to refresh organization arr is generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 1, len(eventList))
+
+	generatedEvent1 := eventList[0]
+	require.Equal(t, organizationEvents.OrganizationRefreshRenewalSummaryV1, generatedEvent1.EventType)
+	var eventData1 organizationEvents.OrganizationRefreshRenewalSummaryEvent
+	err = generatedEvent1.GetJsonData(&eventData1)
+	require.Nil(t, err)
+	require.Equal(t, tenantName, eventData1.Tenant)
 }
 
 func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
