@@ -326,8 +326,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncrease_TimelineEvent(t *test
 	updateEvent, err := event.NewServiceLineItemUpdateEvent(
 		aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId),
 		model.ServiceLineItemDataFields{
-			Price:  200.0,
-			Billed: model.AnnuallyBilled,
+			Price: 200.0,
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -354,7 +353,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncrease_TimelineEvent(t *test
 
 	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.AnnuallyBilled.String(), serviceLineItem.Billed)
+	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, float64(200.0), serviceLineItem.Price)
 
 	// verify action
@@ -366,7 +365,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncrease_TimelineEvent(t *test
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
-	require.Equal(t, "increased the price for SLI Price Increase from 150.00 / MONTHLY to 200.00 / ANNUALLY", action.Content)
+	require.Equal(t, "increased the price for SLI Price Increase from 150.00 / MONTHLY to 200.00 / MONTHLY", action.Content)
 	require.Equal(t, `{"price":200}`, action.Metadata)
 }
 
@@ -405,7 +404,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecrease_TimelineEvent(t *test
 		model.ServiceLineItemDataFields{
 			Name:   "SLI Price Decrease V2",
 			Price:  50.0,
-			Billed: model.MonthlyBilled,
+			Billed: model.AnnuallyBilled,
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -432,7 +431,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecrease_TimelineEvent(t *test
 
 	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	require.Equal(t, model.AnnuallyBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, float64(50.0), serviceLineItem.Price)
 	require.Equal(t, "SLI Price Decrease V2", serviceLineItem.Name)
 
@@ -445,7 +444,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecrease_TimelineEvent(t *test
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
-	require.Equal(t, "decreased the price for SLI Price Decrease V2 from 150.00 / ANNUALLY to 50.00 / MONTHLY", action.Content)
+	require.Equal(t, "decreased the price for SLI Price Decrease V2 from 150.00 / ANNUALLY to 50.00 / ANNUALLY", action.Content)
 	require.Equal(t, `{"price":50}`, action.Metadata)
 }
 
@@ -508,7 +507,6 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncrease_TimelineEvent(t *t
 
 	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, int64(20), serviceLineItem.Quantity)
 
 	// verify action

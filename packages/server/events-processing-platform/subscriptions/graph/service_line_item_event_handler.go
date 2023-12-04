@@ -173,7 +173,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 			h.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractId, err.Error())
 		}
 	}
-	if billedTypeChanged {
+	if billedTypeChanged && serviceLineItemEntity.Billed != "" {
 		message = "changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " / " + serviceLineItemEntity.Billed + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " / " + eventData.Billed
 		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeUpdated, message, metadataBilledType, utils.Now())
 		if err != nil {
