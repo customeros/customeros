@@ -145,22 +145,6 @@ type AttachmentInput struct {
 	AppSource string `json:"appSource"`
 }
 
-type BillingDetails struct {
-	Amount            *float64      `json:"amount,omitempty"`
-	Frequency         *RenewalCycle `json:"frequency,omitempty"`
-	RenewalCycle      *RenewalCycle `json:"renewalCycle,omitempty"`
-	RenewalCycleStart *time.Time    `json:"renewalCycleStart,omitempty"`
-	RenewalCycleNext  *time.Time    `json:"renewalCycleNext,omitempty"`
-}
-
-type BillingDetailsInput struct {
-	ID                string        `json:"id"`
-	Amount            *float64      `json:"amount,omitempty"`
-	Frequency         *RenewalCycle `json:"frequency,omitempty"`
-	RenewalCycle      *RenewalCycle `json:"renewalCycle,omitempty"`
-	RenewalCycleStart *time.Time    `json:"renewalCycleStart,omitempty"`
-}
-
 // Describes the relationship a Contact has with a Organization.
 // **A `return` object**
 type Calendar struct {
@@ -1296,10 +1280,7 @@ type OpportunityUpdateInput struct {
 }
 
 type OrgAccountDetails struct {
-	RenewalLikelihood *RenewalLikelihood `json:"renewalLikelihood,omitempty"`
-	RenewalForecast   *RenewalForecast   `json:"renewalForecast,omitempty"`
-	BillingDetails    *BillingDetails    `json:"billingDetails,omitempty"`
-	RenewalSummary    *RenewalSummary    `json:"renewalSummary,omitempty"`
+	RenewalSummary *RenewalSummary `json:"renewalSummary,omitempty"`
 }
 
 type Organization struct {
@@ -1560,38 +1541,6 @@ type PlayerUser struct {
 	User    *User  `json:"user"`
 	Default bool   `json:"default"`
 	Tenant  string `json:"tenant"`
-}
-
-type RenewalForecast struct {
-	Amount          *float64   `json:"amount,omitempty"`
-	PotentialAmount *float64   `json:"potentialAmount,omitempty"`
-	Comment         *string    `json:"comment,omitempty"`
-	UpdatedAt       *time.Time `json:"updatedAt,omitempty"`
-	UpdatedByID     *string    `json:"updatedById,omitempty"`
-	UpdatedBy       *User      `json:"updatedBy,omitempty"`
-	Arr             *float64   `json:"arr,omitempty"`
-	MaxArr          *float64   `json:"maxArr,omitempty"`
-}
-
-type RenewalForecastInput struct {
-	ID      string   `json:"id"`
-	Amount  *float64 `json:"amount,omitempty"`
-	Comment *string  `json:"comment,omitempty"`
-}
-
-type RenewalLikelihood struct {
-	Probability         *RenewalLikelihoodProbability `json:"probability,omitempty"`
-	PreviousProbability *RenewalLikelihoodProbability `json:"previousProbability,omitempty"`
-	Comment             *string                       `json:"comment,omitempty"`
-	UpdatedAt           *time.Time                    `json:"updatedAt,omitempty"`
-	UpdatedByID         *string                       `json:"updatedById,omitempty"`
-	UpdatedBy           *User                         `json:"updatedBy,omitempty"`
-}
-
-type RenewalLikelihoodInput struct {
-	ID          string                        `json:"id"`
-	Probability *RenewalLikelihoodProbability `json:"probability,omitempty"`
-	Comment     *string                       `json:"comment,omitempty"`
 }
 
 type RenewalSummary struct {
@@ -3062,100 +3011,6 @@ func (e *PhoneNumberLabel) UnmarshalGQL(v interface{}) error {
 }
 
 func (e PhoneNumberLabel) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type RenewalCycle string
-
-const (
-	RenewalCycleWeekly     RenewalCycle = "WEEKLY"
-	RenewalCycleBiweekly   RenewalCycle = "BIWEEKLY"
-	RenewalCycleMonthly    RenewalCycle = "MONTHLY"
-	RenewalCycleQuarterly  RenewalCycle = "QUARTERLY"
-	RenewalCycleBiannually RenewalCycle = "BIANNUALLY"
-	RenewalCycleAnnually   RenewalCycle = "ANNUALLY"
-)
-
-var AllRenewalCycle = []RenewalCycle{
-	RenewalCycleWeekly,
-	RenewalCycleBiweekly,
-	RenewalCycleMonthly,
-	RenewalCycleQuarterly,
-	RenewalCycleBiannually,
-	RenewalCycleAnnually,
-}
-
-func (e RenewalCycle) IsValid() bool {
-	switch e {
-	case RenewalCycleWeekly, RenewalCycleBiweekly, RenewalCycleMonthly, RenewalCycleQuarterly, RenewalCycleBiannually, RenewalCycleAnnually:
-		return true
-	}
-	return false
-}
-
-func (e RenewalCycle) String() string {
-	return string(e)
-}
-
-func (e *RenewalCycle) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = RenewalCycle(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid RenewalCycle", str)
-	}
-	return nil
-}
-
-func (e RenewalCycle) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type RenewalLikelihoodProbability string
-
-const (
-	RenewalLikelihoodProbabilityHigh   RenewalLikelihoodProbability = "HIGH"
-	RenewalLikelihoodProbabilityMedium RenewalLikelihoodProbability = "MEDIUM"
-	RenewalLikelihoodProbabilityLow    RenewalLikelihoodProbability = "LOW"
-	RenewalLikelihoodProbabilityZero   RenewalLikelihoodProbability = "ZERO"
-)
-
-var AllRenewalLikelihoodProbability = []RenewalLikelihoodProbability{
-	RenewalLikelihoodProbabilityHigh,
-	RenewalLikelihoodProbabilityMedium,
-	RenewalLikelihoodProbabilityLow,
-	RenewalLikelihoodProbabilityZero,
-}
-
-func (e RenewalLikelihoodProbability) IsValid() bool {
-	switch e {
-	case RenewalLikelihoodProbabilityHigh, RenewalLikelihoodProbabilityMedium, RenewalLikelihoodProbabilityLow, RenewalLikelihoodProbabilityZero:
-		return true
-	}
-	return false
-}
-
-func (e RenewalLikelihoodProbability) String() string {
-	return string(e)
-}
-
-func (e *RenewalLikelihoodProbability) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = RenewalLikelihoodProbability(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid RenewalLikelihoodProbability", str)
-	}
-	return nil
-}
-
-func (e RenewalLikelihoodProbability) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

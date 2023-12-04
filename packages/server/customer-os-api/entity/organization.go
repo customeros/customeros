@@ -5,15 +5,6 @@ import (
 	"time"
 )
 
-type RenewalLikelihoodProbability string
-
-const (
-	RenewalLikelihoodProbabilityHigh   RenewalLikelihoodProbability = "0-HIGH"
-	RenewalLikelihoodProbabilityMedium RenewalLikelihoodProbability = "1-MEDIUM"
-	RenewalLikelihoodProbabilityLow    RenewalLikelihoodProbability = "2-LOW"
-	RenewalLikelihoodProbabilityZero   RenewalLikelihoodProbability = "3-ZERO"
-)
-
 type OrganizationEntity struct {
 	ID                 string
 	CustomerOsId       string `neo4jDb:"property:customerOsId;lookupName:CUSTOMER_OS_ID;supportCaseSensitive:false"`
@@ -50,10 +41,7 @@ type OrganizationEntity struct {
 		SuggestedBy *string
 		Confidence  *float64
 	}
-	RenewalLikelihood RenewalLikelihood
-	RenewalForecast   RenewalForecast
-	BillingDetails    BillingDetails
-	RenewalSummary    RenewalSummary
+	RenewalSummary RenewalSummary
 
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 
@@ -66,105 +54,6 @@ type RenewalSummary struct {
 	NextRenewalAt          *time.Time `neo4jDb:"property:derivedNextRenewalAt;lookupName:RENEWAL_DATE;supportCaseSensitive:false"`
 	RenewalLikelihood      string     `neo4jDb:"property:derivedRenewalLikelihood;lookupName:RENEWAL_LIKELIHOOD;supportCaseSensitive:false"`
 	RenewalLikelihoodOrder *int64
-}
-
-type RenewalLikelihood struct {
-	RenewalLikelihood         string
-	PreviousRenewalLikelihood string
-	Comment                   *string
-	UpdatedAt                 *time.Time
-	UpdatedBy                 *string
-}
-
-func (r RenewalLikelihood) String() string {
-	output := ""
-	output += fmt.Sprintf("RenewalLikelihood: %v, Previous: %v", r.RenewalLikelihood, r.PreviousRenewalLikelihood)
-	if r.Comment != nil {
-		output += fmt.Sprintf(", Comment: %v", *r.Comment)
-	} else {
-		output += ", Comment: nil"
-	}
-	if r.UpdatedAt != nil {
-		output += fmt.Sprintf(", UpdatedAt: %v", *r.UpdatedAt)
-	} else {
-		output += ", UpdatedAt: nil"
-	}
-	if r.UpdatedBy != nil {
-		output += fmt.Sprintf(", UpdatedBy: %v", *r.UpdatedBy)
-	} else {
-		output += ", UpdatedBy: nil"
-	}
-	return output
-}
-
-type RenewalForecast struct {
-	Amount          *float64 `neo4jDb:"property:renewalForecastAmount;lookupName:FORECAST_AMOUNT;supportCaseSensitive:false"`
-	PotentialAmount *float64
-	Comment         *string
-	UpdatedAt       *time.Time
-	UpdatedById     *string
-	Arr             *float64 `neo4jDb:"property:renewalForecastArr;lookupName:FORECAST_ARR;supportCaseSensitive:false"`
-	MaxArr          *float64
-}
-
-func (r RenewalForecast) String() string {
-	output := ""
-	if r.Amount != nil {
-		output += fmt.Sprintf("Amount: %v", *r.Amount)
-	} else {
-		output += "Amount: nil"
-	}
-	if r.PotentialAmount != nil {
-		output += fmt.Sprintf(", Potential: %v", *r.PotentialAmount)
-	} else {
-		output += ", Potential: nil"
-	}
-	if r.Comment != nil {
-		output += fmt.Sprintf(", Comment: %v", *r.Comment)
-	} else {
-		output += ", Comment: nil"
-	}
-	if r.UpdatedAt != nil {
-		output += fmt.Sprintf(", UpdatedAt: %v", *r.UpdatedAt)
-	} else {
-		output += ", UpdatedAt: nil"
-	}
-	if r.UpdatedById != nil {
-		output += fmt.Sprintf(", UpdatedById: %v", *r.UpdatedById)
-	} else {
-		output += ", UpdatedById: nil"
-	}
-	return output
-}
-
-type BillingDetails struct {
-	Amount            *float64
-	Frequency         string
-	RenewalCycle      string
-	RenewalCycleStart *time.Time
-	RenewalCycleNext  *time.Time `neo4jDb:"property:billingDetailsRenewalCycleNext;lookupName:RENEWAL_CYCLE_NEXT;supportCaseSensitive:false"`
-}
-
-func (b BillingDetails) String() string {
-	output := ""
-	if b.Amount != nil {
-		output += fmt.Sprintf("Amount: %v", *b.Amount)
-	} else {
-		output += "Amount: nil"
-	}
-	output += fmt.Sprintf(", Frequency: %v", b.Frequency)
-	output += fmt.Sprintf(", RenewalCycle: %v", b.RenewalCycle)
-	if b.RenewalCycleStart != nil {
-		output += fmt.Sprintf(", RenewalCycleStart: %v", *b.RenewalCycleStart)
-	} else {
-		output += ", RenewalCycleStart: nil"
-	}
-	if b.RenewalCycleNext != nil {
-		output += fmt.Sprintf(", RenewalCycleNext: %v", *b.RenewalCycleNext)
-	} else {
-		output += ", RenewalCycleNext: nil"
-	}
-	return output
 }
 
 func (organization OrganizationEntity) ToString() string {

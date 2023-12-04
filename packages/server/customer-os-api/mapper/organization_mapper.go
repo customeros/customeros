@@ -38,29 +38,6 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		LastTouchPointAt:              entity.LastTouchpointAt,
 		LastTouchPointType:            MapLastTouchpointTypeToModel(entity.LastTouchpointType),
 		AccountDetails: &model.OrgAccountDetails{
-			RenewalLikelihood: &model.RenewalLikelihood{
-				Probability:         MapRenewalLikelihoodToModel(entity.RenewalLikelihood.RenewalLikelihood),
-				PreviousProbability: MapRenewalLikelihoodToModel(entity.RenewalLikelihood.PreviousRenewalLikelihood),
-				Comment:             entity.RenewalLikelihood.Comment,
-				UpdatedAt:           entity.RenewalLikelihood.UpdatedAt,
-				UpdatedByID:         entity.RenewalLikelihood.UpdatedBy,
-			},
-			RenewalForecast: &model.RenewalForecast{
-				Amount:          entity.RenewalForecast.Amount,
-				PotentialAmount: entity.RenewalForecast.PotentialAmount,
-				Comment:         entity.RenewalForecast.Comment,
-				UpdatedAt:       entity.RenewalForecast.UpdatedAt,
-				UpdatedByID:     entity.RenewalForecast.UpdatedById,
-				Arr:             entity.RenewalForecast.Arr,
-				MaxArr:          entity.RenewalForecast.MaxArr,
-			},
-			BillingDetails: &model.BillingDetails{
-				Amount:            entity.BillingDetails.Amount,
-				Frequency:         MapRenewalCycleToModel(entity.BillingDetails.Frequency),
-				RenewalCycle:      MapRenewalCycleToModel(entity.BillingDetails.RenewalCycle),
-				RenewalCycleStart: entity.BillingDetails.RenewalCycleStart,
-				RenewalCycleNext:  entity.BillingDetails.RenewalCycleNext,
-			},
 			RenewalSummary: &model.RenewalSummary{
 				ArrForecast:       entity.RenewalSummary.ArrForecast,
 				MaxArrForecast:    entity.RenewalSummary.MaxArrForecast,
