@@ -13,6 +13,7 @@ import { HelpButton } from '../HelpButton';
 interface ChartCardProps extends CardProps {
   stat?: string;
   title: string;
+  hasData?: boolean;
   renderSubStat?: () => ReactNode;
   renderHelpContent?: () => ReactNode;
 }
@@ -20,6 +21,7 @@ interface ChartCardProps extends CardProps {
 export const ChartCard = ({
   stat,
   title,
+  hasData,
   children,
   renderSubStat,
   renderHelpContent,
@@ -50,8 +52,15 @@ export const ChartCard = ({
               <HelpButton isOpen={isOpen} onOpen={onOpen} />
             )}
           </Flex>
-          {stat && <Heading>{stat}</Heading>}
-          {renderSubStat && renderSubStat?.()}
+          {stat && (
+            <Heading
+              fontSize={hasData ? undefined : '18px'}
+              color={hasData ? 'gray.700' : 'gray.400'}
+            >
+              {hasData ? stat : 'No data yet'}
+            </Heading>
+          )}
+          {hasData && renderSubStat && renderSubStat?.()}
         </CardHeader>
         <CardBody px='6' pb='6'>
           {children}

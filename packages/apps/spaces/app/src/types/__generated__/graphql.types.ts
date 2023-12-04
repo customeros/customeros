@@ -43,6 +43,7 @@ export type ActionItem = {
 };
 
 export enum ActionType {
+  ContractStatusUpdated = 'CONTRACT_STATUS_UPDATED',
   Created = 'CREATED',
   RenewalForecastUpdated = 'RENEWAL_FORECAST_UPDATED',
   RenewalLikelihoodUpdated = 'RENEWAL_LIKELIHOOD_UPDATED',
@@ -101,6 +102,7 @@ export enum BilledType {
   Monthly = 'MONTHLY',
   None = 'NONE',
   Once = 'ONCE',
+  Quarterly = 'QUARTERLY',
   Usage = 'USAGE',
 }
 
@@ -401,6 +403,7 @@ export type Contract = Node & {
   opportunities?: Maybe<Array<Opportunity>>;
   owner?: Maybe<User>;
   renewalCycle: ContractRenewalCycle;
+  renewalPeriods?: Maybe<Scalars['Int64']>;
   serviceLineItems?: Maybe<Array<ServiceLineItem>>;
   serviceStartedAt?: Maybe<Scalars['Time']>;
   signedAt?: Maybe<Scalars['Time']>;
@@ -417,6 +420,7 @@ export type ContractInput = {
   name?: InputMaybe<Scalars['String']>;
   organizationId: Scalars['ID'];
   renewalCycle?: InputMaybe<ContractRenewalCycle>;
+  renewalPeriods?: InputMaybe<Scalars['Int64']>;
   serviceStartedAt?: InputMaybe<Scalars['Time']>;
   signedAt?: InputMaybe<Scalars['Time']>;
 };
@@ -425,6 +429,7 @@ export enum ContractRenewalCycle {
   AnnualRenewal = 'ANNUAL_RENEWAL',
   MonthlyRenewal = 'MONTHLY_RENEWAL',
   None = 'NONE',
+  QuarterlyRenewal = 'QUARTERLY_RENEWAL',
 }
 
 export enum ContractStatus {
@@ -441,6 +446,7 @@ export type ContractUpdateInput = {
   endedAt?: InputMaybe<Scalars['Time']>;
   name?: InputMaybe<Scalars['String']>;
   renewalCycle?: InputMaybe<ContractRenewalCycle>;
+  renewalPeriods?: InputMaybe<Scalars['Int64']>;
   serviceStartedAt?: InputMaybe<Scalars['Time']>;
   signedAt?: InputMaybe<Scalars['Time']>;
 };
@@ -633,7 +639,7 @@ export type DashboardArrBreakdownPerMonth = {
 
 export type DashboardCustomerMap = {
   __typename?: 'DashboardCustomerMap';
-  arr: Scalars['Int'];
+  arr: Scalars['Float'];
   contractSignedDate: Scalars['Time'];
   organization: Organization;
   organizationId: Scalars['ID'];
@@ -995,6 +1001,7 @@ export enum GCliSearchResultType {
 
 export type GlobalCache = {
   __typename?: 'GlobalCache';
+  contractsExist: Scalars['Boolean'];
   gCliCache: Array<GCliItem>;
   isGoogleActive: Scalars['Boolean'];
   isGoogleTokenExpired: Scalars['Boolean'];
@@ -2234,7 +2241,7 @@ export type Opportunity = Node & {
   comments: Scalars['String'];
   createdAt: Scalars['Time'];
   createdBy?: Maybe<User>;
-  estimatedClosedAt: Scalars['Time'];
+  estimatedClosedAt?: Maybe<Scalars['Time']>;
   externalLinks: Array<ExternalSystem>;
   externalStage: Scalars['String'];
   externalType: Scalars['String'];
@@ -2639,7 +2646,7 @@ export type Query = {
    */
   contacts: ContactsPage;
   contract: Contract;
-  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT, FORECAST_ARR */
+  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT, FORECAST_ARR, RENEWAL_DATE */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   dashboard_ARRBreakdown?: Maybe<DashboardArrBreakdown>;
   dashboard_CustomerMap?: Maybe<Array<DashboardCustomerMap>>;

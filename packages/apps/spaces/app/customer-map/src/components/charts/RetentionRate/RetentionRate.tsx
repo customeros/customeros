@@ -1,12 +1,13 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-import { useRetentionRateQuery } from '@customerMap/graphql/retentionRate.generated';
 
 import { Skeleton } from '@ui/presentation/Skeleton';
+import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { useRetentionRateQuery } from '@customerMap/graphql/retentionRate.generated';
 
 import { HelpContent } from './HelpContent';
 import { PercentageTrend } from '../../PercentageTrend';
@@ -18,8 +19,10 @@ const RetentionRateChart = dynamic(() => import('./RetentionRate.chart'), {
 
 export const RetentionRate = () => {
   const client = getGraphQLClient();
+  const { data: globalCache } = useGlobalCacheQuery(client);
   const { data, isLoading } = useRetentionRateQuery(client);
 
+  const hasContracts = globalCache?.global_Cache?.contractsExist;
   const chartData = (data?.dashboard_RetentionRate?.perMonth ?? []).map(
     (d) => ({
       month: d?.month,
@@ -38,6 +41,7 @@ export const RetentionRate = () => {
       flex='1'
       stat={stat}
       title='Retention rate'
+      hasData={hasContracts}
       renderHelpContent={HelpContent}
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
@@ -50,7 +54,11 @@ export const RetentionRate = () => {
             startColor='gray.300'
             isLoaded={!isLoading}
           >
-            <RetentionRateChart width={width} data={chartData} />
+            <RetentionRateChart
+              width={width}
+              data={chartData}
+              hasContracts={hasContracts}
+            />
           </Skeleton>
         )}
       </ParentSize>

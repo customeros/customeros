@@ -18,6 +18,7 @@ import { useToken } from '@ui/utils';
 import { Flex } from '@ui/layout/Flex';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
+import { mockData } from './mock';
 import { getMonthLabel } from '../util';
 
 const margin = {
@@ -38,6 +39,7 @@ export type MrrPerCustomerDatum = {
 interface MrrPerCustomerProps {
   width: number;
   height?: number;
+  hasContracts?: boolean;
   data?: MrrPerCustomerDatum[];
 }
 
@@ -46,9 +48,14 @@ const getDate = (d: MrrPerCustomerDatum) =>
 const bisectDate = bisector<MrrPerCustomerDatum, Date>((d) => getDate(d)).left;
 const getY = (d: MrrPerCustomerDatum) => d.value;
 
-const MrrPerCustomerChart = ({ data = [], width }: MrrPerCustomerProps) => {
+const MrrPerCustomerChart = ({
+  width,
+  hasContracts,
+  data: _data = [],
+}: MrrPerCustomerProps) => {
+  const data = hasContracts ? _data : mockData;
   const [primary600, gray300, gray700] = useToken('colors', [
-    'primary.600',
+    hasContracts ? 'primary.600' : 'gray.300',
     'gray.300',
     'gray.700',
   ]);
@@ -117,13 +124,13 @@ const MrrPerCustomerChart = ({ data = [], width }: MrrPerCustomerProps) => {
       <svg width={width || 500} height={height} style={{ overflow: 'visible' }}>
         <LinearGradient
           fromOpacity={0}
-          toOpacity={0.3}
+          toOpacity={hasContracts ? 0.3 : 0.8}
           to={'white'}
           from={primary600}
-          id='visx-area-gradient'
+          id='mrr-per-customer-gradient'
         />
         <MarkerCircle
-          id='marker-circle'
+          id='mrr-per-customer-marker-circle'
           fill={primary600}
           size={2}
           refX={2}
@@ -131,7 +138,7 @@ const MrrPerCustomerChart = ({ data = [], width }: MrrPerCustomerProps) => {
           stroke='white'
         />
         <MarkerCircle
-          id='marker-circle-end'
+          id='mrr-per-customer-marker-circle-end'
           stroke={primary600}
           size={2}
           refX={2}
@@ -145,7 +152,7 @@ const MrrPerCustomerChart = ({ data = [], width }: MrrPerCustomerProps) => {
           yScale={scaleY}
           strokeWidth={0}
           stroke={primary600}
-          fill='url(#visx-area-gradient)'
+          fill='url(#mrr-per-customer-gradient)'
           pointerEvents='none'
         />
 
@@ -157,9 +164,9 @@ const MrrPerCustomerChart = ({ data = [], width }: MrrPerCustomerProps) => {
           strokeWidth={2}
           stroke={primary600}
           shapeRendering='geometricPrecision'
-          markerMid='url(#marker-circle)'
-          markerStart='url(#marker-circle)'
-          markerEnd='url(#marker-circle-end)'
+          markerMid='url(#mrr-per-customer-marker-circle)'
+          markerStart='url(#mrr-per-customer-marker-circle)'
+          markerEnd='url(#mrr-per-customer-marker-circle-end)'
         />
         <Bar
           x={0}
@@ -234,9 +241,9 @@ const MrrPerCustomerChart = ({ data = [], width }: MrrPerCustomerProps) => {
                   : 'translateX(-50%)',
             }}
           >
-            {`${getMonthLabel(tooltipData.month)}: ${formatCurrency(
-              tooltipData.value,
-            )}`}
+            {`${getMonthLabel(tooltipData.month)}: ${
+              hasContracts ? formatCurrency(tooltipData.value) : 'No data yet'
+            }`}
           </TooltipWithBounds>
         )}
       </Flex>
