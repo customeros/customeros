@@ -51,6 +51,11 @@ export class DateTimeUtils {
     date: string | number,
     options?: { addSuffix?: boolean; includeSeconds?: boolean },
   ): string {
+    const isToday = this.isToday(this.getDate(date).toISOString());
+    if (isToday) {
+      return 'today';
+    }
+
     return formatDistanceToNow(this.getDate(date), options);
   }
 
