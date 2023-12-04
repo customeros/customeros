@@ -28,10 +28,6 @@ type OrganizationGrpcServiceClient interface {
 	LinkLocationToOrganization(ctx context.Context, in *LinkLocationToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkDomainToOrganization(ctx context.Context, in *LinkDomainToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpsertCustomFieldToOrganization(ctx context.Context, in *CustomFieldForOrganizationGrpcRequest, opts ...grpc.CallOption) (*CustomFieldIdGrpcResponse, error)
-	UpdateOrganizationRenewalLikelihood(ctx context.Context, in *OrganizationRenewalLikelihoodRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
-	UpdateOrganizationRenewalForecast(ctx context.Context, in *OrganizationRenewalForecastRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
-	UpdateOrganizationBillingDetails(ctx context.Context, in *OrganizationBillingDetailsRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
-	RequestRenewNextCycleDate(ctx context.Context, in *RequestRenewNextCycleDateRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	HideOrganization(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	ShowOrganization(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
@@ -101,42 +97,6 @@ func (c *organizationGrpcServiceClient) UpsertCustomFieldToOrganization(ctx cont
 	return out, nil
 }
 
-func (c *organizationGrpcServiceClient) UpdateOrganizationRenewalLikelihood(ctx context.Context, in *OrganizationRenewalLikelihoodRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/UpdateOrganizationRenewalLikelihood", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *organizationGrpcServiceClient) UpdateOrganizationRenewalForecast(ctx context.Context, in *OrganizationRenewalForecastRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/UpdateOrganizationRenewalForecast", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *organizationGrpcServiceClient) UpdateOrganizationBillingDetails(ctx context.Context, in *OrganizationBillingDetailsRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/UpdateOrganizationBillingDetails", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *organizationGrpcServiceClient) RequestRenewNextCycleDate(ctx context.Context, in *RequestRenewNextCycleDateRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/RequestRenewNextCycleDate", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *organizationGrpcServiceClient) HideOrganization(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
 	out := new(OrganizationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/HideOrganization", in, out, opts...)
@@ -192,10 +152,6 @@ type OrganizationGrpcServiceServer interface {
 	LinkLocationToOrganization(context.Context, *LinkLocationToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkDomainToOrganization(context.Context, *LinkDomainToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpsertCustomFieldToOrganization(context.Context, *CustomFieldForOrganizationGrpcRequest) (*CustomFieldIdGrpcResponse, error)
-	UpdateOrganizationRenewalLikelihood(context.Context, *OrganizationRenewalLikelihoodRequest) (*OrganizationIdGrpcResponse, error)
-	UpdateOrganizationRenewalForecast(context.Context, *OrganizationRenewalForecastRequest) (*OrganizationIdGrpcResponse, error)
-	UpdateOrganizationBillingDetails(context.Context, *OrganizationBillingDetailsRequest) (*OrganizationIdGrpcResponse, error)
-	RequestRenewNextCycleDate(context.Context, *RequestRenewNextCycleDateRequest) (*OrganizationIdGrpcResponse, error)
 	HideOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	ShowOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
@@ -224,18 +180,6 @@ func (UnimplementedOrganizationGrpcServiceServer) LinkDomainToOrganization(conte
 }
 func (UnimplementedOrganizationGrpcServiceServer) UpsertCustomFieldToOrganization(context.Context, *CustomFieldForOrganizationGrpcRequest) (*CustomFieldIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertCustomFieldToOrganization not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganizationRenewalLikelihood(context.Context, *OrganizationRenewalLikelihoodRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationRenewalLikelihood not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganizationRenewalForecast(context.Context, *OrganizationRenewalForecastRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationRenewalForecast not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganizationBillingDetails(context.Context, *OrganizationBillingDetailsRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationBillingDetails not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) RequestRenewNextCycleDate(context.Context, *RequestRenewNextCycleDateRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RequestRenewNextCycleDate not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) HideOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HideOrganization not implemented")
@@ -372,78 +316,6 @@ func _OrganizationGrpcService_UpsertCustomFieldToOrganization_Handler(srv interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrganizationGrpcService_UpdateOrganizationRenewalLikelihood_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrganizationRenewalLikelihoodRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).UpdateOrganizationRenewalLikelihood(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/UpdateOrganizationRenewalLikelihood",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).UpdateOrganizationRenewalLikelihood(ctx, req.(*OrganizationRenewalLikelihoodRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OrganizationGrpcService_UpdateOrganizationRenewalForecast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrganizationRenewalForecastRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).UpdateOrganizationRenewalForecast(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/UpdateOrganizationRenewalForecast",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).UpdateOrganizationRenewalForecast(ctx, req.(*OrganizationRenewalForecastRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OrganizationGrpcService_UpdateOrganizationBillingDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrganizationBillingDetailsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).UpdateOrganizationBillingDetails(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/UpdateOrganizationBillingDetails",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).UpdateOrganizationBillingDetails(ctx, req.(*OrganizationBillingDetailsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OrganizationGrpcService_RequestRenewNextCycleDate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RequestRenewNextCycleDateRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).RequestRenewNextCycleDate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/RequestRenewNextCycleDate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).RequestRenewNextCycleDate(ctx, req.(*RequestRenewNextCycleDateRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _OrganizationGrpcService_HideOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OrganizationIdGrpcRequest)
 	if err := dec(in); err != nil {
@@ -564,22 +436,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertCustomFieldToOrganization",
 			Handler:    _OrganizationGrpcService_UpsertCustomFieldToOrganization_Handler,
-		},
-		{
-			MethodName: "UpdateOrganizationRenewalLikelihood",
-			Handler:    _OrganizationGrpcService_UpdateOrganizationRenewalLikelihood_Handler,
-		},
-		{
-			MethodName: "UpdateOrganizationRenewalForecast",
-			Handler:    _OrganizationGrpcService_UpdateOrganizationRenewalForecast_Handler,
-		},
-		{
-			MethodName: "UpdateOrganizationBillingDetails",
-			Handler:    _OrganizationGrpcService_UpdateOrganizationBillingDetails_Handler,
-		},
-		{
-			MethodName: "RequestRenewNextCycleDate",
-			Handler:    _OrganizationGrpcService_RequestRenewNextCycleDate_Handler,
 		},
 		{
 			MethodName: "HideOrganization",
