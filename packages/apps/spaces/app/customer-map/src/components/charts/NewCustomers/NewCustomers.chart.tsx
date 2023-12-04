@@ -8,6 +8,7 @@ import { useToken } from '@ui/utils';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 
+import { mockData } from './mock';
 import { getMonthLabel } from '../util';
 
 export type NewCustomersDatum = {
@@ -15,67 +16,25 @@ export type NewCustomersDatum = {
   value: number;
 };
 
-const _mockData: NewCustomersDatum[] = [
-  {
-    month: 1,
-    value: 20,
-  },
-  {
-    month: 2,
-    value: 50,
-  },
-  {
-    month: 3,
-    value: 68,
-  },
-  {
-    month: 4,
-    value: 55,
-  },
-  {
-    month: 5,
-    value: 73,
-  },
-  {
-    month: 6,
-    value: 69,
-  },
-  {
-    month: 7,
-    value: 84,
-  },
-  {
-    month: 8,
-    value: 85,
-  },
-  {
-    month: 9,
-    value: 80,
-  },
-  {
-    month: 10,
-    value: 87,
-  },
-  {
-    month: 11,
-    value: 90,
-  },
-  {
-    month: 12,
-    value: 95,
-  },
-];
-
 interface NewCustomersProps {
   width?: number;
   height?: number;
+  hasContracts?: boolean;
   data: NewCustomersDatum[];
 }
 
 const getX = (d: NewCustomersDatum) => getMonthLabel(d.month);
 
-const NewCustomersChart = ({ width, data }: NewCustomersProps) => {
-  const [primary600, gray700] = useToken('colors', ['primary.600', 'gray.700']);
+const NewCustomersChart = ({
+  width,
+  data: _data,
+  hasContracts,
+}: NewCustomersProps) => {
+  const data = hasContracts ? _data : mockData;
+  const [primary600, gray700] = useToken('colors', [
+    hasContracts ? 'primary.600' : 'gray.200',
+    'gray.700',
+  ]);
 
   return (
     <>
@@ -153,7 +112,7 @@ const NewCustomersChart = ({ width, data }: NewCustomersProps) => {
                 <Text fontSize='sm' color='white' fontWeight='normal'>
                   {xLabel}
                   {': '}
-                  {value}
+                  {hasContracts ? value : 'No data yet'}
                 </Text>
               </Flex>
             );

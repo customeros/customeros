@@ -2,13 +2,9 @@
 import { useRouter } from 'next/navigation';
 import React, { useMemo, useState, useCallback } from 'react';
 
-import { sample } from 'lodash';
 import { Group } from '@visx/group';
 import { Circle } from '@visx/shape';
 import { useTooltip, TooltipWithBounds } from '@visx/tooltip';
-import genRandomNormalPoints, {
-  PointsRange,
-} from '@visx/mock-data/lib/generators/genRandomNormalPoints';
 
 import { useToken } from '@ui/utils';
 import { Flex } from '@ui/layout/Flex';
@@ -17,64 +13,9 @@ import { DateTimeUtils } from '@spaces/utils/date';
 import { DashboardCustomerMapState } from '@graphql/types';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
+import { mockData } from './mock';
 import { Legend } from '../../Legend';
 import { useDodge, DodgedCircleData } from './useDodge';
-
-const genTimeValue = () =>
-  sample([
-    new Date('2023-01-01'),
-    new Date('2023-01-15'),
-    new Date('2023-01-25'),
-    new Date('2023-02-01'),
-    new Date('2023-02-15'),
-    new Date('2023-02-25'),
-    new Date('2023-03-01'),
-    new Date('2023-03-15'),
-    new Date('2023-03-25'),
-    new Date('2023-04-01'),
-    new Date('2023-04-15'),
-    new Date('2023-04-25'),
-    new Date('2023-05-01'),
-    new Date('2023-05-15'),
-    new Date('2023-05-25'),
-    new Date('2023-06-01'),
-    new Date('2023-06-15'),
-    new Date('2023-06-25'),
-    new Date('2023-07-02'),
-    new Date('2023-07-15'),
-    new Date('2023-07-25'),
-    new Date('2023-08-01'),
-    new Date('2023-08-15'),
-    new Date('2023-08-25'),
-    new Date('2023-09-01'),
-    new Date('2023-09-15'),
-    new Date('2023-09-25'),
-    new Date('2023-10-01'),
-    new Date('2023-10-15'),
-    new Date('2023-10-25'),
-    new Date('2023-11-01'),
-    new Date('2023-11-15'),
-    new Date('2023-11-25'),
-    new Date('2023-12-01'),
-    new Date('2023-12-15'),
-    new Date('2023-12-31'),
-  ]);
-
-const points: PointsRange[] = genRandomNormalPoints(300, 0.5).filter(
-  (_, i) => i < 300,
-);
-
-const pointsWithRadii = points.map(([x, y]) => ({
-  x: genTimeValue(),
-  y: 0,
-  r: sample([2, 15, 6, 12, 22, 5, 10, 15, 25, 7, 120]),
-  values: {
-    id: `${Math.random()}`,
-    name: '',
-    status: sample(['OK', 'AT_RISK', 'CHURNED']),
-  },
-}));
-const _data = pointsWithRadii;
 
 export type CustomerMapDatum = {
   x: Date;
@@ -97,14 +38,17 @@ const margin = {
 interface CustomerMapChartProps {
   width: number;
   height: number;
+  hasContracts?: boolean;
   data: CustomerMapDatum[];
 }
 
 const CustomerMapChart = ({
-  data,
+  data: _data,
+  hasContracts,
   width: outerWidth = 800,
   height: outerHeight = 800,
 }: CustomerMapChartProps) => {
+  const data = hasContracts ? _data : mockData;
   const router = useRouter();
   const [crosshairX, setCrosshairX] = useState(0);
   const [hoveredId, setHoveredId] = useState('');
@@ -119,12 +63,12 @@ const CustomerMapChart = ({
     gray300,
     gray500,
   ] = useToken('colors', [
-    'greenLight.500',
-    'greenLight.400',
-    'warning.300',
-    'warning.200',
-    'warm.200',
-    'warm.300',
+    hasContracts ? 'greenLight.500' : 'gray.400',
+    hasContracts ? 'greenLight.400' : 'gray.300',
+    hasContracts ? 'warning.300' : 'gray.300',
+    hasContracts ? 'warning.200' : 'gray.200',
+    hasContracts ? 'warm.200' : 'gray.200',
+    hasContracts ? 'warm.300' : 'gray.300',
     'gray.700',
     'gray.300',
     'gray.500',
@@ -176,7 +120,7 @@ const CustomerMapChart = ({
   const legendData = [
     { color: greenLight500, label: 'All good' },
     { color: warning300, label: 'At risk' },
-    { color: warm200, label: 'Churned' },
+    { color: warm200, label: 'Churned', borderColor: warm300 },
   ];
 
   const getCircleColor = (
@@ -292,7 +236,10 @@ const CustomerMapChart = ({
                   setCrosshairX(d.x);
                   setHoveredId(d.data.values.id);
                 }}
-                onClick={() => router.push(`/organization/${d.data.values.id}`)}
+                onClick={() =>
+                  hasContracts &&
+                  router.push(`/organization/${d.data.values.id}`)
+                }
                 onPointerMove={handlePointerMove(d)}
                 cursor='pointer'
               />
@@ -313,8 +260,12 @@ const CustomerMapChart = ({
           }}
         >
           <Flex flexDir='column'>
-            <Text color='white'>{tooltipData?.values?.name}</Text>
-            <Text color='white'>{formatCurrency(tooltipData?.r ?? 0)}</Text>
+            <Text color='white'>
+              {hasContracts ? tooltipData?.values?.name : 'No data available'}
+            </Text>
+            <Text color='white'>
+              {formatCurrency(hasContracts ? tooltipData?.r ?? 0 : 0)}
+            </Text>
           </Flex>
         </TooltipWithBounds>
       )}
