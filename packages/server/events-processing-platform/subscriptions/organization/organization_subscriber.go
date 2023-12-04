@@ -121,10 +121,6 @@ func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event)
 		return s.organizationEventHandler.AdjustNewOrganizationFields(ctx, evt)
 	case orgevts.OrganizationUpdateV1:
 		return s.organizationEventHandler.AdjustUpdatedOrganizationFields(ctx, evt)
-	case orgevts.OrganizationRequestRenewalForecastV1:
-		return s.organizationEventHandler.OnRenewalForecastRequested(ctx, evt)
-	case orgevts.OrganizationRequestNextCycleDateV1:
-		return s.organizationEventHandler.OnNextCycleDateRequested(ctx, evt)
 	default:
 		return nil
 	}

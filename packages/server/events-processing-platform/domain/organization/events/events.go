@@ -3,7 +3,6 @@ package events
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
@@ -12,27 +11,32 @@ import (
 )
 
 const (
-	OrganizationCreateV1                  = "V1_ORGANIZATION_CREATE"
-	OrganizationUpdateV1                  = "V1_ORGANIZATION_UPDATE"
-	OrganizationPhoneNumberLinkV1         = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
-	OrganizationEmailLinkV1               = "V1_ORGANIZATION_EMAIL_LINK"
-	OrganizationLocationLinkV1            = "V1_ORGANIZATION_LOCATION_LINK"
-	OrganizationLinkDomainV1              = "V1_ORGANIZATION_LINK_DOMAIN"
-	OrganizationAddSocialV1               = "V1_ORGANIZATION_ADD_SOCIAL"
+	OrganizationCreateV1          = "V1_ORGANIZATION_CREATE"
+	OrganizationUpdateV1          = "V1_ORGANIZATION_UPDATE"
+	OrganizationPhoneNumberLinkV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
+	OrganizationEmailLinkV1       = "V1_ORGANIZATION_EMAIL_LINK"
+	OrganizationLocationLinkV1    = "V1_ORGANIZATION_LOCATION_LINK"
+	OrganizationLinkDomainV1      = "V1_ORGANIZATION_LINK_DOMAIN"
+	OrganizationAddSocialV1       = "V1_ORGANIZATION_ADD_SOCIAL"
+	//Deprecated
 	OrganizationUpdateRenewalLikelihoodV1 = "V1_ORGANIZATION_UPDATE_RENEWAL_LIKELIHOOD"
-	OrganizationUpdateRenewalForecastV1   = "V1_ORGANIZATION_UPDATE_RENEWAL_FORECAST"
-	OrganizationUpdateBillingDetailsV1    = "V1_ORGANIZATION_UPDATE_BILLING_DETAILS"
-	OrganizationRequestRenewalForecastV1  = "V1_ORGANIZATION_RECALCULATE_RENEWAL_FORECAST_REQUEST"
-	OrganizationRequestNextCycleDateV1    = "V1_ORGANIZATION_RECALCULATE_NEXT_CYCLE_DATE_REQUEST"
-	OrganizationRequestScrapeByWebsiteV1  = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
-	OrganizationHideV1                    = "V1_ORGANIZATION_HIDE"
-	OrganizationShowV1                    = "V1_ORGANIZATION_SHOW"
-	OrganizationRefreshLastTouchpointV1   = "V1_ORGANIZATION_REFRESH_LAST_TOUCHPOINT"
-	OrganizationUpsertCustomFieldV1       = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
-	OrganizationAddParentV1               = "V1_ORGANIZATION_ADD_PARENT"
-	OrganizationRemoveParentV1            = "V1_ORGANIZATION_REMOVE_PARENT"
-	OrganizationRefreshArrV1              = "V1_ORGANIZATION_REFRESH_ARR"
-	OrganizationRefreshRenewalSummaryV1   = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
+	//Deprecated
+	OrganizationUpdateRenewalForecastV1 = "V1_ORGANIZATION_UPDATE_RENEWAL_FORECAST"
+	//Deprecated
+	OrganizationUpdateBillingDetailsV1 = "V1_ORGANIZATION_UPDATE_BILLING_DETAILS"
+	//Deprecated
+	OrganizationRequestRenewalForecastV1 = "V1_ORGANIZATION_RECALCULATE_RENEWAL_FORECAST_REQUEST"
+	//Deprecated
+	OrganizationRequestNextCycleDateV1   = "V1_ORGANIZATION_RECALCULATE_NEXT_CYCLE_DATE_REQUEST"
+	OrganizationRequestScrapeByWebsiteV1 = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
+	OrganizationHideV1                   = "V1_ORGANIZATION_HIDE"
+	OrganizationShowV1                   = "V1_ORGANIZATION_SHOW"
+	OrganizationRefreshLastTouchpointV1  = "V1_ORGANIZATION_REFRESH_LAST_TOUCHPOINT"
+	OrganizationUpsertCustomFieldV1      = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
+	OrganizationAddParentV1              = "V1_ORGANIZATION_ADD_PARENT"
+	OrganizationRemoveParentV1           = "V1_ORGANIZATION_REMOVE_PARENT"
+	OrganizationRefreshArrV1             = "V1_ORGANIZATION_REFRESH_ARR"
+	OrganizationRefreshRenewalSummaryV1  = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
 )
 
 type OrganizationCreateEvent struct {
@@ -301,150 +305,6 @@ func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, pla
 	event := eventstore.NewBaseEvent(aggregate, OrganizationAddSocialV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationAddSocialEvent")
-	}
-	return event, nil
-}
-
-type OrganizationUpdateRenewalLikelihoodEvent struct {
-	Tenant             string                              `json:"tenant" validate:"required"`
-	PreviousLikelihood models.RenewalLikelihoodProbability `json:"previousLikelihood"`
-	RenewalLikelihood  models.RenewalLikelihoodProbability `json:"renewalLikelihood"`
-	UpdatedAt          time.Time                           `json:"updatedAt"`
-	UpdatedBy          string                              `json:"updatedBy"`
-	Comment            *string                             `json:"comment,omitempty"`
-}
-
-func (e OrganizationUpdateRenewalLikelihoodEvent) GetRenewalLikelihoodAsStringForGraphDb() string {
-	return string(mapper.MapRenewalLikelihoodToGraphDb(e.RenewalLikelihood))
-}
-
-func NewOrganizationUpdateRenewalLikelihoodEvent(aggregate eventstore.Aggregate, renewalLikelihood, previousLikelihood models.RenewalLikelihoodProbability, updatedBy string, comment *string, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := OrganizationUpdateRenewalLikelihoodEvent{
-		Tenant:             aggregate.GetTenant(),
-		PreviousLikelihood: previousLikelihood,
-		RenewalLikelihood:  renewalLikelihood,
-		UpdatedBy:          updatedBy,
-		UpdatedAt:          updatedAt,
-		Comment:            comment,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationUpdateRenewalLikelihoodEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateRenewalLikelihoodV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpdateRenewalLikelihoodEvent")
-	}
-	return event, nil
-}
-
-type OrganizationUpdateRenewalForecastEvent struct {
-	Tenant            string                              `json:"tenant" validate:"required"`
-	Amount            *float64                            `json:"amount"`
-	PotentialAmount   *float64                            `json:"potentialAmount"`
-	PreviousAmount    *float64                            `json:"previousAmount,omitempty"`
-	RenewalLikelihood models.RenewalLikelihoodProbability `json:"renewalLikelihood"`
-	UpdatedAt         time.Time                           `json:"updatedAt"`
-	UpdatedBy         string                              `json:"updatedBy"`
-	Comment           *string                             `json:"comment,omitempty"`
-}
-
-func NewOrganizationUpdateRenewalForecastEvent(aggregate eventstore.Aggregate, amount, potentialAmount, previousAmount *float64, updatedBy string, comment *string, updatedAt time.Time, renewalLikelihood models.RenewalLikelihoodProbability) (eventstore.Event, error) {
-	eventData := OrganizationUpdateRenewalForecastEvent{
-		Tenant:            aggregate.GetTenant(),
-		Amount:            amount,
-		PotentialAmount:   potentialAmount,
-		PreviousAmount:    previousAmount,
-		RenewalLikelihood: renewalLikelihood,
-		UpdatedBy:         updatedBy,
-		UpdatedAt:         updatedAt,
-		Comment:           comment,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationUpdateRenewalForecastEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateRenewalForecastV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpdateRenewalForecastEvent")
-	}
-	return event, nil
-}
-
-type OrganizationRequestRenewalForecastEvent struct {
-	Tenant      string    `json:"tenant" validate:"required"`
-	RequestedAt time.Time `json:"requestedAt"`
-}
-
-func NewOrganizationRequestRenewalForecastEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
-	eventData := OrganizationRequestRenewalForecastEvent{
-		Tenant:      aggregate.GetTenant(),
-		RequestedAt: utils.Now(),
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationRequestRenewalForecastEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationRequestRenewalForecastV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRequestRenewalForecastEvent")
-	}
-	return event, nil
-}
-
-type OrganizationUpdateBillingDetailsEvent struct {
-	Tenant            string     `json:"tenant" validate:"required"`
-	Amount            *float64   `json:"amount"`
-	Frequency         string     `json:"frequency"`
-	RenewalCycle      string     `json:"renewalCycle"`
-	RenewalCycleStart *time.Time `json:"renewalCycleStart"`
-	RenewalCycleNext  *time.Time `json:"renewalCycleNext"`
-	UpdatedBy         string     `json:"updatedBy"`
-}
-
-func NewOrganizationUpdateBillingDetailsEvent(aggregate eventstore.Aggregate, amount *float64, frequency, renewalCycle, updatedBy string, cycleStart, cycleNext *time.Time) (eventstore.Event, error) {
-	eventData := OrganizationUpdateBillingDetailsEvent{
-		Tenant:            aggregate.GetTenant(),
-		Amount:            amount,
-		Frequency:         frequency,
-		RenewalCycle:      renewalCycle,
-		RenewalCycleStart: cycleStart,
-		RenewalCycleNext:  cycleNext,
-		UpdatedBy:         updatedBy,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationUpdateBillingDetailsEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateBillingDetailsV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpdateBillingDetailsEvent")
-	}
-	return event, nil
-}
-
-type OrganizationRequestNextCycleDateEvent struct {
-	Tenant      string    `json:"tenant" validate:"required"`
-	RequestedAt time.Time `json:"requestedAt"`
-}
-
-func NewOrganizationRequestNextCycleDateEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
-	eventData := OrganizationRequestNextCycleDateEvent{
-		Tenant:      aggregate.GetTenant(),
-		RequestedAt: utils.Now(),
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationRequestNextCycleDateEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationRequestNextCycleDateV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRequestNextCycleDateEvent")
 	}
 	return event, nil
 }

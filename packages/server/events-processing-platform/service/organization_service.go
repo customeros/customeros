@@ -144,121 +144,17 @@ func (s *organizationService) LinkDomainToOrganization(ctx context.Context, requ
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
+	// handle deadlines
+	if err := ctx.Err(); err != nil {
+		return nil, status.Error(codes.Canceled, "Context canceled")
+	}
+
 	cmd := command.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), request.AppSource)
 	if err := s.organizationCommands.LinkDomainCommand.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
 		return nil, s.errResponse(err)
 	}
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
-func (s *organizationService) UpdateOrganizationRenewalLikelihood(ctx context.Context, request *organizationpb.OrganizationRenewalLikelihoodRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationRenewalLikelihood")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
-
-	// handle deadlines
-	if err := ctx.Err(); err != nil {
-		return nil, status.Error(codes.Canceled, "Context canceled")
-	}
-
-	fields := models.RenewalLikelihoodFields{
-		RenewalLikelihood: mapper.MapRenewalLikelihoodToModels(request.Likelihood),
-		Comment:           request.Comment,
-		UpdatedBy:         utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
-	}
-	command := command.NewUpdateRenewalLikelihoodCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), fields)
-	if err := s.organizationCommands.UpdateRenewalLikelihoodCommand.Handle(ctx, command); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed update renewal likelihood for tenant: %s organizationID: %s, err: %s", request.Tenant, request.OrganizationId, err.Error())
-		return nil, s.errResponse(err)
-	}
-
-	s.log.Infof("Updated renewal likelihood for tenant:%s organizationID: %s", request.Tenant, request.OrganizationId)
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
-func (s *organizationService) UpdateOrganizationRenewalForecast(ctx context.Context, request *organizationpb.OrganizationRenewalForecastRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationRenewalForecast")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
-
-	// handle deadlines
-	if err := ctx.Err(); err != nil {
-		return nil, status.Error(codes.Canceled, "Context canceled")
-	}
-
-	fields := models.RenewalForecastFields{
-		Amount:    request.Amount,
-		Comment:   request.Comment,
-		UpdatedBy: utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
-	}
-	command := command.NewUpdateRenewalForecastCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), fields, "")
-	if err := s.organizationCommands.UpdateRenewalForecastCommand.Handle(ctx, command); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed update renewal forecast for tenant: %s organizationID: %s, err: %s", request.Tenant, request.OrganizationId, err.Error())
-		return nil, s.errResponse(err)
-	}
-
-	s.log.Infof("Updated renewal forecast for tenant:%s organizationID: %s", request.Tenant, request.OrganizationId)
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
-func (s *organizationService) UpdateOrganizationBillingDetails(ctx context.Context, request *organizationpb.OrganizationBillingDetailsRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationBillingDetails")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
-
-	// handle deadlines
-	if err := ctx.Err(); err != nil {
-		return nil, status.Error(codes.Canceled, "Context canceled")
-	}
-
-	fields := models.BillingDetailsFields{
-		Amount:            request.Amount,
-		UpdatedBy:         utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
-		Frequency:         mapper.MapFrequencyToString(request.Frequency),
-		RenewalCycle:      mapper.MapFrequencyToString(request.RenewalCycle),
-		RenewalCycleStart: utils.TimestampProtoToTimePtr(request.CycleStart),
-	}
-	command := command.NewUpdateBillingDetailsCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), fields)
-	if err := s.organizationCommands.UpdateBillingDetailsCommand.Handle(ctx, command); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed update billing details for tenant: %s organizationID: %s, err: %s", request.Tenant, request.OrganizationId, err.Error())
-		return nil, s.errResponse(err)
-	}
-
-	s.log.Infof("Updated billing details for tenant:%s organizationID: %s", request.Tenant, request.OrganizationId)
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
-func (s *organizationService) RequestRenewNextCycleDate(ctx context.Context, request *organizationpb.RequestRenewNextCycleDateRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RequestRenewNextCycleDate")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
-
-	// handle deadlines
-	if err := ctx.Err(); err != nil {
-		return nil, status.Error(codes.Canceled, "Context canceled")
-	}
-
-	command := command.NewRequestNextCycleDateCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId)
-	if err := s.organizationCommands.RequestNextCycleDateCommand.Handle(ctx, command); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed request next cycle date for tenant: %s organizationID: %s, err: %s", request.Tenant, request.OrganizationId, err.Error())
-		return nil, s.errResponse(err)
-	}
-
-	s.log.Infof("Requested next cycle date renewal for tenant:%s organizationID: %s", request.Tenant, request.OrganizationId)
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
