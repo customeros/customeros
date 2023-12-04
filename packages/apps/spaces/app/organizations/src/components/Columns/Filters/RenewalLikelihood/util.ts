@@ -10,10 +10,10 @@ export const filterRenewalLikelihoodFn: FilterFn<Organization> = (
   const value = row.getValue<Organization['accountDetails']>(id);
 
   if (filterValue.length === 0) {
-    return value?.renewalLikelihood?.probability === null;
+    return value?.renewalSummary?.renewalLikelihood === null;
   }
 
-  return filterValue.includes(value?.renewalLikelihood?.probability);
+  return filterValue.includes(value?.renewalSummary?.renewalLikelihood);
 };
 filterRenewalLikelihoodFn.autoRemove = (filterValue) => {
   return !filterValue;

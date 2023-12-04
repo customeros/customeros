@@ -1,18 +1,18 @@
 import { atom, selector, useRecoilState } from 'recoil';
 
-import { RenewalLikelihoodProbability } from '@graphql/types';
+import { OpportunityRenewalLikelihood } from '@graphql/types';
 
 interface RenewalLiklihoodFilterState {
   isActive: boolean;
-  value: RenewalLikelihoodProbability[];
+  value: OpportunityRenewalLikelihood[];
 }
 
 export const defaultState: RenewalLiklihoodFilterState = {
   value: [
-    RenewalLikelihoodProbability.High,
-    RenewalLikelihoodProbability.Medium,
-    RenewalLikelihoodProbability.Low,
-    RenewalLikelihoodProbability.Zero,
+    OpportunityRenewalLikelihood.HighRenewal,
+    OpportunityRenewalLikelihood.MediumRenewal,
+    OpportunityRenewalLikelihood.LowRenewal,
+    OpportunityRenewalLikelihood.ZeroRenewal,
   ],
   isActive: false,
 };
