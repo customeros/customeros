@@ -1,11 +1,10 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 
-import { Dot } from '@ui/media/Dot';
 import { Flex } from '@ui/layout/Flex';
 import { Action } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
-import { XCircle } from '@ui/media/icons/XCircle';
+import { DotSingle } from '@ui/media/icons/DotSingle';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 interface ServiceUpdatedActionProps {
@@ -15,13 +14,6 @@ interface ServiceUpdatedActionProps {
 export const ServiceUpdatedAction: React.FC<ServiceUpdatedActionProps> = ({
   data,
 }) => {
-  const colorScheme = useMemo(() => {
-    return data?.content?.includes('added')
-      ? 'primary'
-      : data?.content?.includes('removed')
-      ? 'error'
-      : 'gray';
-  }, [data?.content]);
   const { openModal } = useTimelineEventPreviewMethodsContext();
   if (!data.content) return null;
 
@@ -31,8 +23,8 @@ export const ServiceUpdatedAction: React.FC<ServiceUpdatedActionProps> = ({
       onClick={() => openModal(data.id)}
       cursor='pointer'
     >
-      <FeaturedIcon size='md' minW='10' colorScheme={colorScheme}>
-        {data.content?.includes('removed') ? <XCircle /> : <Dot />}
+      <FeaturedIcon size='md' minW='10' colorScheme='gray'>
+        <DotSingle />
       </FeaturedIcon>
 
       <Text
