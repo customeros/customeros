@@ -25,6 +25,7 @@ type OpportunityGrpcServiceClient interface {
 	CreateOpportunity(ctx context.Context, in *CreateOpportunityGrpcRequest, opts ...grpc.CallOption) (*OpportunityIdGrpcResponse, error)
 	UpdateRenewalOpportunity(ctx context.Context, in *UpdateRenewalOpportunityGrpcRequest, opts ...grpc.CallOption) (*OpportunityIdGrpcResponse, error)
 	UpdateOpportunity(ctx context.Context, in *UpdateOpportunityGrpcRequest, opts ...grpc.CallOption) (*OpportunityIdGrpcResponse, error)
+	CloseLooseOpportunity(ctx context.Context, in *CloseLooseOpportunityGrpcRequest, opts ...grpc.CallOption) (*OpportunityIdGrpcResponse, error)
 }
 
 type opportunityGrpcServiceClient struct {
@@ -62,6 +63,15 @@ func (c *opportunityGrpcServiceClient) UpdateOpportunity(ctx context.Context, in
 	return out, nil
 }
 
+func (c *opportunityGrpcServiceClient) CloseLooseOpportunity(ctx context.Context, in *CloseLooseOpportunityGrpcRequest, opts ...grpc.CallOption) (*OpportunityIdGrpcResponse, error) {
+	out := new(OpportunityIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/opportunityGrpcService/CloseLooseOpportunity", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OpportunityGrpcServiceServer is the server API for OpportunityGrpcService service.
 // All implementations should embed UnimplementedOpportunityGrpcServiceServer
 // for forward compatibility
@@ -69,6 +79,7 @@ type OpportunityGrpcServiceServer interface {
 	CreateOpportunity(context.Context, *CreateOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error)
 	UpdateRenewalOpportunity(context.Context, *UpdateRenewalOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error)
 	UpdateOpportunity(context.Context, *UpdateOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error)
+	CloseLooseOpportunity(context.Context, *CloseLooseOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error)
 }
 
 // UnimplementedOpportunityGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -83,6 +94,9 @@ func (UnimplementedOpportunityGrpcServiceServer) UpdateRenewalOpportunity(contex
 }
 func (UnimplementedOpportunityGrpcServiceServer) UpdateOpportunity(context.Context, *UpdateOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOpportunity not implemented")
+}
+func (UnimplementedOpportunityGrpcServiceServer) CloseLooseOpportunity(context.Context, *CloseLooseOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CloseLooseOpportunity not implemented")
 }
 
 // UnsafeOpportunityGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -150,6 +164,24 @@ func _OpportunityGrpcService_UpdateOpportunity_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OpportunityGrpcService_CloseLooseOpportunity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloseLooseOpportunityGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OpportunityGrpcServiceServer).CloseLooseOpportunity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/opportunityGrpcService/CloseLooseOpportunity",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OpportunityGrpcServiceServer).CloseLooseOpportunity(ctx, req.(*CloseLooseOpportunityGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OpportunityGrpcService_ServiceDesc is the grpc.ServiceDesc for OpportunityGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -168,6 +200,10 @@ var OpportunityGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateOpportunity",
 			Handler:    _OpportunityGrpcService_UpdateOpportunity_Handler,
+		},
+		{
+			MethodName: "CloseLooseOpportunity",
+			Handler:    _OpportunityGrpcService_CloseLooseOpportunity_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -13,7 +13,6 @@ import (
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -39,7 +38,7 @@ func (s *opportunityService) CreateOpportunity(ctx context.Context, request *opp
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.CreateOpportunity")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.Object("request", request))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	// Validate organization ID
 	if request.OrganizationId == "" {
@@ -106,7 +105,7 @@ func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, reque
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.UpdateRenewalOpportunity")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.Object("request", request))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	// Check if the opportunity ID is valid
 	if request.Id == "" {
@@ -134,6 +133,38 @@ func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, reque
 	if err := s.opportunityCommandHandlers.UpdateRenewalOpportunity.Handle(ctx, updateRenewalOpportunityCommand); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateRenewalOpportunity.Handle) tenant:{%v}, opportunityId:{%v}, err: %v", request.Tenant, request.Id, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	// Return the ID of the newly created opportunity
+	return &opportunitypb.OpportunityIdGrpcResponse{Id: request.Id}, nil
+}
+
+func (s *opportunityService) CloseLooseOpportunity(ctx context.Context, request *opportunitypb.CloseLooseOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.CloseLooseOpportunity")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	// Check if the opportunity ID is valid
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	// Convert any protobuf timestamp to time.Time, if necessary
+	closedAt := utils.TimestampProtoToTimePtr(request.ClosedAt)
+
+	closeLooseOpportunityCommand := command.NewCloseLooseOpportunityCommand(
+		request.Id,
+		request.Tenant,
+		request.LoggedInUserId,
+		request.AppSource,
+		nil,
+		closedAt)
+
+	if err := s.opportunityCommandHandlers.CloseLooseOpportunity.Handle(ctx, closeLooseOpportunityCommand); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(CloseLooseOpportunity.Handle) tenant:{%v}, opportunityId:{%v}, err: %v", request.Tenant, request.Id, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 

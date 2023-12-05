@@ -49,6 +49,8 @@ func (s *contractService) UpkeepContracts() {
 
 	s.updateContractStatuses(ctx, now)
 	s.rolloutContractRenewals(ctx, now)
+	// this is a catch-all for contracts that have ended but still have active renewal opportunities
+	//s.closeEndedContractOpportunityRenewals(ctx, now)
 }
 
 func (s *contractService) updateContractStatuses(ctx context.Context, referenceTime time.Time) {
@@ -144,6 +146,54 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 		time.Sleep(5 * time.Second)
 	}
 }
+
+// TODO implement once grpc client is available
+//func (s *contractService) closeEndedContractOpportunityRenewals(ctx context.Context, referenceTime time.Time) {
+//	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.closeEndedContractOpportunityRenewals")
+//	defer span.Finish()
+//
+//	for {
+//		select {
+//		case <-ctx.Done():
+//			s.log.Infof("Context cancelled, stopping")
+//			return
+//		default:
+//			// continue as normal
+//		}
+//
+//		records, err := s.repositories.ContractRepository.GetContractsForRenewalRollout(ctx, referenceTime)
+//		if err != nil {
+//			tracing.TraceErr(span, err)
+//			s.log.Errorf("Error getting contracts for renewal rollout: %v", err)
+//			return
+//		}
+//
+//		// no contracts found for next cycle date renew
+//		if len(records) == 0 {
+//			return
+//		}
+//
+//		//process contracts
+//		for _, record := range records {
+//			_, err = s.eventsProcessingClient.ContractClient.RolloutRenewalOpportunityOnExpiration(ctx, &contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest{
+//				Tenant:    record.Tenant,
+//				Id:        record.ContractId,
+//				AppSource: constants.AppSourceDataUpkeeper,
+//			})
+//			if err != nil {
+//				tracing.TraceErr(span, err)
+//				s.log.Errorf("Error refreshing contract status: %s", err.Error())
+//				grpcErr, ok := status.FromError(err)
+//				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
+//					s.resyncContract(ctx, record.Tenant, record.ContractId)
+//				}
+//			}
+//		}
+//
+//		//sleep for async processing, then check again
+//		time.Sleep(5 * time.Second)
+//	}
+//}
 
 func (s *contractService) resyncContract(ctx context.Context, tenant, contractId string) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.resyncContract")
