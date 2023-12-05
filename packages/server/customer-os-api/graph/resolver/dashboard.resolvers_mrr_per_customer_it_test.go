@@ -444,6 +444,138 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_EndedAtEndOfMonth(
 	}
 }
 
+func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Yearly(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := time.Date(2023, 7, 31, 20, 59, 59, 999999999, time.UTC)
+	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, &sli1StartedAt, nil)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_mrr_per_customer",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_MRRPerCustomer model.DashboardMRRPerCustomer
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(2), month.Value)
+	}
+}
+
+func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Quarterly(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := time.Date(2023, 7, 31, 20, 59, 59, 999999999, time.UTC)
+	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 4, &sli1StartedAt, nil)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_mrr_per_customer",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_MRRPerCustomer model.DashboardMRRPerCustomer
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(2), month.Value)
+	}
+}
+
+func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Monthly(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := time.Date(2023, 7, 31, 20, 59, 59, 999999999, time.UTC)
+	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, &sli1StartedAt, nil)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_mrr_per_customer",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_MRRPerCustomer model.DashboardMRRPerCustomer
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(2), month.Value)
+	}
+}
+
 func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_SameMonth_SameOrganization(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
