@@ -218,6 +218,9 @@ export const RenewalDetailsModal = ({
             <ButtonGroup
               w='full'
               isAttached
+              isDisabled={
+                likelihood === OpportunityRenewalLikelihood.ZeroRenewal
+              }
               aria-describedby='likelihood-oprions-button'
             >
               {likelihoodButtons.map((button) => (

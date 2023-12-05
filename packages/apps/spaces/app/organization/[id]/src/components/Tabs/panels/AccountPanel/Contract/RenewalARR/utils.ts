@@ -17,11 +17,6 @@ export const getButtonStyles = (
 
 export const likelihoodButtons = [
   {
-    label: 'Zero',
-    colorScheme: 'gray',
-    likelihood: OpportunityRenewalLikelihood.ZeroRenewal,
-  },
-  {
     label: 'Low',
     colorScheme: 'error',
     likelihood: OpportunityRenewalLikelihood.LowRenewal,
