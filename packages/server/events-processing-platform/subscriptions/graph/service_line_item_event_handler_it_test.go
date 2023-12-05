@@ -317,7 +317,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
 	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Name:   "SLI Price Increase",
+		Name:   "Service 1",
 		Billed: model.MonthlyBilled.String(),
 		Price:  150.0,
 	})
@@ -384,8 +384,8 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
-	require.Equal(t, "logged-in user retroactively increased the price for SLI Price Increase from 150.00 / monthly to 200.00 / monthly", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"SLI Price Increase","price":200,"previousPrice":150}`, action.Metadata)
+	require.Equal(t, "logged-in user retroactively increased the price for Service 1 from 150.00 / monthly to 200.00 / monthly", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":200,"previousPrice":150}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_TimelineEvent(t *testing.T) {
@@ -402,7 +402,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
 	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Name:   "SLI Price Decrease",
+		Name:   "Service 1",
 		Billed: model.AnnuallyBilled.String(),
 		Price:  150.0,
 	})
@@ -425,7 +425,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	updateEvent, err := event.NewServiceLineItemUpdateEvent(
 		aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId),
 		model.ServiceLineItemDataFields{
-			Name:   "SLI Price Decrease V2",
+			Name:   "Service 1",
 			Price:  50.0,
 			Billed: model.AnnuallyBilled,
 		},
@@ -461,7 +461,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
 	require.Equal(t, model.AnnuallyBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, float64(50.0), serviceLineItem.Price)
-	require.Equal(t, "SLI Price Decrease V2", serviceLineItem.Name)
+	require.Equal(t, "Service 1", serviceLineItem.Name)
 
 	// verify action
 	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
@@ -472,8 +472,8 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
-	require.Equal(t, "logged-in user retroactively decreased the price for SLI Price Decrease V2 from 150.00 / annually to 50.00 / annually", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"SLI Price Decrease","price":50,"previousPrice":150}`, action.Metadata)
+	require.Equal(t, "logged-in user retroactively decreased the price for Service 1 from 150.00 / annually to 50.00 / annually", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":50,"previousPrice":150}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_TimelineEvent(t *testing.T) {
@@ -490,7 +490,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
 	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Name:     "SLI Quantity Increase",
+		Name:     "Service 1",
 		Quantity: 15,
 	})
 	// Assert Neo4j Node Counts
@@ -555,8 +555,8 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemQuantityUpdated, action.Type)
-	require.Equal(t, "logged-in user retroactively increased the quantity of SLI Quantity Increase from 15 to 20", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"SLI Quantity Increase","quantity":20,"previousQuantity":15}`, action.Metadata)
+	require.Equal(t, "logged-in user retroactively increased the quantity of Service 1 from 15 to 20", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":20,"previousQuantity":15}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_TimelineEvent(t *testing.T) {
@@ -573,7 +573,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
 	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Name:     "SLI Quantity Decrease",
+		Name:     "Service 1",
 		Quantity: 400,
 	})
 	// Assert Neo4j Node Counts
@@ -638,8 +638,8 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemQuantityUpdated, action.Type)
-	require.Equal(t, "logged-in user retroactively decreased the quantity of SLI Quantity Decrease from 400 to 350", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"SLI Quantity Decrease","quantity":350,"previousQuantity":400}`, action.Metadata)
+	require.Equal(t, "logged-in user retroactively decreased the quantity of Service 1 from 400 to 350", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":350,"previousQuantity":400}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing.T) {
@@ -656,7 +656,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
 	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Name:   "SLI billed type change",
+		Name:   "Service 1",
 		Price:  20,
 		Billed: model.AnnuallyBilled.String(),
 	})
@@ -679,7 +679,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 	updateEvent, err := event.NewServiceLineItemUpdateEvent(
 		aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId),
 		model.ServiceLineItemDataFields{
-			Name:   "SLI billed type change",
+			Name:   "Service 1",
 			Price:  20,
 			Billed: model.MonthlyBilled,
 		},
@@ -713,7 +713,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
 	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
-	require.Equal(t, "SLI billed type change", serviceLineItem.Name)
+	require.Equal(t, "Service 1", serviceLineItem.Name)
 
 	// verify action
 	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
@@ -724,6 +724,6 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemBilledTypeUpdated, action.Type)
-	require.Equal(t, "logged-in user changed the billing cycle for SLI billed type change from 20.00 / annually to 20.00 / monthly", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"SLI billed type change","billedType":"MONTHLY","previousBilledType":"ANNUALLY"}`, action.Metadata)
+	require.Equal(t, "logged-in user changed the billing cycle for Service 1 from 20.00 / annually to 20.00 / monthly", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","billedType":"MONTHLY","previousBilledType":"ANNUALLY"}`, action.Metadata)
 }
