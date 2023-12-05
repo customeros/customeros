@@ -4,26 +4,26 @@ import { Flex } from '@ui/layout/Flex';
 import { Action } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
+import { getMetadata } from '@organization/src/components/Timeline/events/action/utils';
 import { iconsByStatus } from '@organization/src/components/Timeline/events/action/contract/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
-interface ContractUpdatedActionProps {
+interface ContractStatusUpdatedActionProps {
   data: Action;
 }
 
-export const ContractUpdatedAction: React.FC<ContractUpdatedActionProps> = ({
-  data,
-}) => {
+export const ContractStatusUpdatedAction: React.FC<
+  ContractStatusUpdatedActionProps
+> = ({ data }) => {
   const { openModal } = useTimelineEventPreviewMethodsContext();
-  const state = useMemo(() => {
-    return data?.content?.includes('live')
-      ? 'live'
-      : data?.content?.includes('renewed')
-      ? 'renewed'
-      : 'ended';
-  }, [data?.content]);
+  const status = useMemo(() => {
+    return getMetadata(data?.metadata)?.status?.toLowerCase();
+  }, [data?.metadata]);
 
-  if (!data.content) return null;
+  // handle this situation
+  if (!data.content || !status) return null;
+
+  const content = data.content.substring(0, data.content.lastIndexOf(' '));
 
   return (
     <Flex
@@ -34,9 +34,9 @@ export const ContractUpdatedAction: React.FC<ContractUpdatedActionProps> = ({
       <FeaturedIcon
         size='md'
         minW='10'
-        colorScheme={iconsByStatus[state].colorScheme}
+        colorScheme={iconsByStatus[status].colorScheme as string}
       >
-        {iconsByStatus[state].icon}
+        {iconsByStatus[status].icon}
       </FeaturedIcon>
 
       <Text
@@ -47,9 +47,13 @@ export const ContractUpdatedAction: React.FC<ContractUpdatedActionProps> = ({
         fontSize='sm'
         color='gray.700'
       >
-        {data.content}
-        <Text as='span' fontWeight='semibold'>
-          {state}
+        {content}
+        <Text
+          as='span'
+          fontWeight={status === 'renewed' ? 'normal' : 'semibold'}
+          ml={1}
+        >
+          {status}
         </Text>
       </Text>
     </Flex>

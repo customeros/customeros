@@ -101,7 +101,8 @@ export const ContractCard = ({
       }
       timeoutRef.current = setTimeout(() => {
         queryClient.invalidateQueries(queryKey);
-      }, 1000);
+        queryClient.invalidateQueries(['GetTimeline.infinite']);
+      }, 800);
     },
   });
 

@@ -1,7 +1,6 @@
 import React from 'react';
 
-import { RenewalForecastUpdatedActionPreview } from './renewal-forecast/RenewalForecastUpdatedActionPreview';
-import { RenewalLikelihoodUpdatedActionPreview } from './renewal-likelihood/RenewalLikelihoodUpdatedActionPreview';
+import { ContractStatusUpdatedActionPreview } from './contract/ContractStatusUpdatedActionPreview';
 
 interface ActionPreviewModalProps {
   type: string;
@@ -11,10 +10,8 @@ export const ActionPreviewModal: React.FC<ActionPreviewModalProps> = ({
   type,
 }) => {
   switch (type) {
-    case 'RENEWAL_FORECAST_UPDATED':
-      return <RenewalForecastUpdatedActionPreview />;
-    case 'RENEWAL_LIKELIHOOD_UPDATED':
-      return <RenewalLikelihoodUpdatedActionPreview />;
+    case 'CONTRACT_STATUS_UPDATED':
+      return <ContractStatusUpdatedActionPreview />;
     default:
       return null;
   }

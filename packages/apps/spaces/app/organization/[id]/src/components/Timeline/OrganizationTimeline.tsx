@@ -149,9 +149,10 @@ export const OrganizationTimeline: FC = () => {
           );
         case 'Meeting':
         case 'LogEntry':
-        case 'Action':
         case 'Issue':
           return !!d.id;
+        case 'Action':
+          return !!d.id && d.actionType !== 'CREATED';
         default:
           return false;
       }
