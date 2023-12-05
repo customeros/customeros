@@ -5,9 +5,7 @@ import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/ge
 import {
   Maybe,
   BilledType,
-  RenewalCycle,
   ContractRenewalCycle,
-  RenewalLikelihoodProbability,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
@@ -18,23 +16,6 @@ export const invalidateAccountDetailsQuery = (
   queryClient.invalidateQueries(
     useOrganizationAccountDetailsQuery.getKey({ id }),
   );
-
-export function getARRColor(
-  renewalLikelihood?: Maybe<RenewalLikelihoodProbability> | undefined,
-) {
-  switch (renewalLikelihood) {
-    case 'HIGH':
-      return 'success';
-    case 'MEDIUM':
-      return 'warning';
-    case 'LOW':
-      return 'error';
-    case 'ZERO':
-      return 'gray';
-    default:
-      return 'gray';
-  }
-}
 
 export function getRenewalLikelihoodColor(
   renewalLikelihood?: Maybe<OpportunityRenewalLikelihood> | undefined,
@@ -68,15 +49,6 @@ export function getRenewalLikelihoodLabel(
       return '';
   }
 }
-
-export const frequencyOptions: SelectOption<RenewalCycle>[] = [
-  { label: 'Weekly', value: RenewalCycle.Weekly },
-  { label: 'Biweekly', value: RenewalCycle.Biweekly },
-  { label: 'Monthly', value: RenewalCycle.Monthly },
-  { label: 'Quarterly', value: RenewalCycle.Quarterly },
-  { label: 'Biannually', value: RenewalCycle.Biannually },
-  { label: 'Annually', value: RenewalCycle.Annually },
-];
 export const billingFrequencyOptions: SelectOption<ContractRenewalCycle>[] = [
   { label: 'Monthly', value: ContractRenewalCycle.MonthlyRenewal },
   { label: 'Annually', value: ContractRenewalCycle.AnnualRenewal },

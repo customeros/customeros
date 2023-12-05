@@ -1,9 +1,11 @@
-export const getMetadata = (metadataString?: string | null) => {
-  let metadata;
+export const getMetadata = (
+  metadataString?: string | null,
+): Record<string, string> => {
+  let metadata = {};
   try {
     metadata = metadataString && JSON.parse(metadataString);
   } catch (error) {
-    metadata = '';
+    metadata = {};
   }
 
   return metadata;
