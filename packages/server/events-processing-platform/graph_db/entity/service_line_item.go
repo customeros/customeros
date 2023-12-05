@@ -20,6 +20,7 @@ type ServiceLineItemEntity struct {
 	Quantity      int64
 	Comments      string
 	ParentId      string
+	IsCanceled    bool
 }
 
 type ServiceLineItemEntities []ServiceLineItemEntity

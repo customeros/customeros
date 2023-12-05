@@ -167,14 +167,18 @@ func (r *serviceLineItemRepository) Close(ctx context.Context, tenant, serviceLi
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
 
-	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$serviceLineItemId})
-							WHERE sli:ServiceLineItem_%s SET
-							sli.endedAt = $endedAt,
-							sli.updatedAt = $updatedAt`, tenant)
 	params := map[string]any{
 		"serviceLineItemId": serviceLineItemId,
 		"updatedAt":         evt.UpdatedAt,
 		"endedAt":           evt.EndedAt,
+	}
+	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$serviceLineItemId})
+							WHERE sli:ServiceLineItem_%s SET
+							sli.endedAt = $endedAt,
+							sli.updatedAt = $updatedAt`, tenant)
+	if evt.IsCanceled {
+		params["isCanceled"] = evt.IsCanceled
+		cypher += `, sli.isCanceled = $isCanceled`
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 

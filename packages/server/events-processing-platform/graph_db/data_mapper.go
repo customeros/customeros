@@ -370,6 +370,7 @@ func MapDbNodeToServiceLineItemEntity(node dbtype.Node) *entity.ServiceLineItemE
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
 		Comments:      utils.GetStringPropOrEmpty(props, "comments"),
 		ParentId:      utils.GetStringPropOrEmpty(props, "parentId"),
+		IsCanceled:    utils.GetBoolPropOrFalse(props, "isCanceled"),
 	}
 	return &serviceLineItem
 }
