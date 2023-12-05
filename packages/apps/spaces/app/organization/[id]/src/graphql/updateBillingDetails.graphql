@@ -1,3 +1,0 @@
-mutation updateBillingDetails($input: BillingDetailsInput!) {
-  organization_UpdateBillingDetailsAsync(input: $input)
-}

@@ -34,51 +34,6 @@ export type OrganizationAccountDetailsQuery = {
     id: string;
     name: string;
     note?: string | null;
-    accountDetails?: {
-      __typename?: 'OrgAccountDetails';
-      renewalForecast?: {
-        __typename?: 'RenewalForecast';
-        amount?: number | null;
-        potentialAmount?: number | null;
-        comment?: string | null;
-        updatedAt?: any | null;
-        updatedBy?: {
-          __typename?: 'User';
-          id: string;
-          firstName: string;
-          lastName: string;
-          emails?: Array<{
-            __typename?: 'Email';
-            email?: string | null;
-          }> | null;
-        } | null;
-      } | null;
-      renewalLikelihood?: {
-        __typename?: 'RenewalLikelihood';
-        probability?: Types.RenewalLikelihoodProbability | null;
-        previousProbability?: Types.RenewalLikelihoodProbability | null;
-        comment?: string | null;
-        updatedAt?: any | null;
-        updatedBy?: {
-          __typename?: 'User';
-          id: string;
-          firstName: string;
-          lastName: string;
-          emails?: Array<{
-            __typename?: 'Email';
-            email?: string | null;
-          }> | null;
-        } | null;
-      } | null;
-      billingDetails?: {
-        __typename?: 'BillingDetails';
-        renewalCycle?: Types.RenewalCycle | null;
-        frequency?: Types.RenewalCycle | null;
-        amount?: number | null;
-        renewalCycleStart?: any | null;
-        renewalCycleNext?: any | null;
-      } | null;
-    } | null;
   } | null;
 };
 
@@ -88,43 +43,6 @@ export const OrganizationAccountDetailsDocument = `
     id
     name
     note
-    accountDetails {
-      renewalForecast {
-        amount
-        potentialAmount
-        comment
-        updatedAt
-        updatedBy {
-          id
-          firstName
-          lastName
-          emails {
-            email
-          }
-        }
-      }
-      renewalLikelihood {
-        probability
-        previousProbability
-        comment
-        updatedBy {
-          id
-          firstName
-          lastName
-          emails {
-            email
-          }
-        }
-        updatedAt
-      }
-      billingDetails {
-        renewalCycle
-        frequency
-        amount
-        renewalCycleStart
-        renewalCycleNext
-      }
-    }
   }
 }
     `;

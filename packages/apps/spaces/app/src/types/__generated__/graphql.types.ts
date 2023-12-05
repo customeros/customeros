@@ -47,6 +47,9 @@ export enum ActionType {
   Created = 'CREATED',
   RenewalForecastUpdated = 'RENEWAL_FORECAST_UPDATED',
   RenewalLikelihoodUpdated = 'RENEWAL_LIKELIHOOD_UPDATED',
+  ServiceLineItemBilledTypeUpdated = 'SERVICE_LINE_ITEM_BILLED_TYPE_UPDATED',
+  ServiceLineItemPriceUpdated = 'SERVICE_LINE_ITEM_PRICE_UPDATED',
+  ServiceLineItemQuantityUpdated = 'SERVICE_LINE_ITEM_QUANTITY_UPDATED',
 }
 
 export type Analysis = Node & {
@@ -105,23 +108,6 @@ export enum BilledType {
   Quarterly = 'QUARTERLY',
   Usage = 'USAGE',
 }
-
-export type BillingDetails = {
-  __typename?: 'BillingDetails';
-  amount?: Maybe<Scalars['Float']>;
-  frequency?: Maybe<RenewalCycle>;
-  renewalCycle?: Maybe<RenewalCycle>;
-  renewalCycleNext?: Maybe<Scalars['Time']>;
-  renewalCycleStart?: Maybe<Scalars['Time']>;
-};
-
-export type BillingDetailsInput = {
-  amount?: InputMaybe<Scalars['Float']>;
-  frequency?: InputMaybe<RenewalCycle>;
-  id: Scalars['ID'];
-  renewalCycle?: InputMaybe<RenewalCycle>;
-  renewalCycleStart?: InputMaybe<Scalars['Time']>;
-};
 
 /**
  * Describes the relationship a Contact has with a Organization.
@@ -675,7 +661,8 @@ export type DashboardMrrPerCustomer = {
 export type DashboardMrrPerCustomerPerMonth = {
   __typename?: 'DashboardMRRPerCustomerPerMonth';
   month: Scalars['Int'];
-  value: Scalars['Int'];
+  value: Scalars['Float'];
+  year: Scalars['Int'];
 };
 
 export type DashboardNewCustomers = {
@@ -1542,15 +1529,6 @@ export type Mutation = {
   organization_ShowAll?: Maybe<Result>;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
-  organization_UpdateBillingDetails: Scalars['ID'];
-  /** @deprecated Use organization_UpdateBillingDetails instead */
-  organization_UpdateBillingDetailsAsync: Scalars['ID'];
-  organization_UpdateRenewalForecast: Scalars['ID'];
-  /** @deprecated Use organization_UpdateRenewalForecast instead */
-  organization_UpdateRenewalForecastAsync: Scalars['ID'];
-  organization_UpdateRenewalLikelihood: Scalars['ID'];
-  /** @deprecated Use organization_UpdateRenewalLikelihood instead */
-  organization_UpdateRenewalLikelihoodAsync: Scalars['ID'];
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
   phoneNumberMergeToUser: PhoneNumber;
@@ -2017,30 +1995,6 @@ export type MutationOrganization_UpdateArgs = {
   input: OrganizationUpdateInput;
 };
 
-export type MutationOrganization_UpdateBillingDetailsArgs = {
-  input: BillingDetailsInput;
-};
-
-export type MutationOrganization_UpdateBillingDetailsAsyncArgs = {
-  input: BillingDetailsInput;
-};
-
-export type MutationOrganization_UpdateRenewalForecastArgs = {
-  input: RenewalForecastInput;
-};
-
-export type MutationOrganization_UpdateRenewalForecastAsyncArgs = {
-  input: RenewalForecastInput;
-};
-
-export type MutationOrganization_UpdateRenewalLikelihoodArgs = {
-  input: RenewalLikelihoodInput;
-};
-
-export type MutationOrganization_UpdateRenewalLikelihoodAsyncArgs = {
-  input: RenewalLikelihoodInput;
-};
-
 export type MutationPhoneNumberMergeToContactArgs = {
   contactId: Scalars['ID'];
   input: PhoneNumberInput;
@@ -2293,12 +2247,6 @@ export type OpportunityUpdateInput = {
 
 export type OrgAccountDetails = {
   __typename?: 'OrgAccountDetails';
-  /** @deprecated No longer supported */
-  billingDetails?: Maybe<BillingDetails>;
-  /** @deprecated No longer supported */
-  renewalForecast?: Maybe<RenewalForecast>;
-  /** @deprecated No longer supported */
-  renewalLikelihood?: Maybe<RenewalLikelihood>;
   renewalSummary?: Maybe<RenewalSummary>;
 };
 
@@ -2646,7 +2594,7 @@ export type Query = {
    */
   contacts: ContactsPage;
   contract: Contract;
-  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT, FORECAST_ARR, RENEWAL_DATE */
+  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   dashboard_ARRBreakdown?: Maybe<DashboardArrBreakdown>;
   dashboard_CustomerMap?: Maybe<Array<DashboardCustomerMap>>;
@@ -2845,56 +2793,6 @@ export type QueryUsersArgs = {
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
 };
-
-export enum RenewalCycle {
-  Annually = 'ANNUALLY',
-  Biannually = 'BIANNUALLY',
-  Biweekly = 'BIWEEKLY',
-  Monthly = 'MONTHLY',
-  Quarterly = 'QUARTERLY',
-  Weekly = 'WEEKLY',
-}
-
-export type RenewalForecast = {
-  __typename?: 'RenewalForecast';
-  amount?: Maybe<Scalars['Float']>;
-  arr?: Maybe<Scalars['Float']>;
-  comment?: Maybe<Scalars['String']>;
-  maxArr?: Maybe<Scalars['Float']>;
-  potentialAmount?: Maybe<Scalars['Float']>;
-  updatedAt?: Maybe<Scalars['Time']>;
-  updatedBy?: Maybe<User>;
-  updatedById?: Maybe<Scalars['String']>;
-};
-
-export type RenewalForecastInput = {
-  amount?: InputMaybe<Scalars['Float']>;
-  comment?: InputMaybe<Scalars['String']>;
-  id: Scalars['ID'];
-};
-
-export type RenewalLikelihood = {
-  __typename?: 'RenewalLikelihood';
-  comment?: Maybe<Scalars['String']>;
-  previousProbability?: Maybe<RenewalLikelihoodProbability>;
-  probability?: Maybe<RenewalLikelihoodProbability>;
-  updatedAt?: Maybe<Scalars['Time']>;
-  updatedBy?: Maybe<User>;
-  updatedById?: Maybe<Scalars['String']>;
-};
-
-export type RenewalLikelihoodInput = {
-  comment?: InputMaybe<Scalars['String']>;
-  id: Scalars['ID'];
-  probability?: InputMaybe<RenewalLikelihoodProbability>;
-};
-
-export enum RenewalLikelihoodProbability {
-  High = 'HIGH',
-  Low = 'LOW',
-  Medium = 'MEDIUM',
-  Zero = 'ZERO',
-}
 
 export type RenewalSummary = {
   __typename?: 'RenewalSummary';
