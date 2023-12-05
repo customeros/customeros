@@ -31,6 +31,9 @@ type ActionPriceMetadata struct {
 type ActionQuantityMetadata struct {
 	Quantity int64 `json:"quantity"`
 }
+type ActionBilledTypeMetadata struct {
+	BilledType string `json:"billedType"`
+}
 
 func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnCreate")
@@ -84,6 +87,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	//we will use this booleans below to check if the price and/or quantity has changed
 	priceChanged := serviceLineItemEntity.Price != eventData.Price
 	quantityChanged := serviceLineItemEntity.Quantity != eventData.Quantity
+	billedTypeChanged := serviceLineItemEntity.Billed != eventData.Billed
 
 	err = h.repositories.ServiceLineItemRepository.Update(ctx, eventData.Tenant, serviceLineItemId, eventData)
 	if err != nil {
@@ -127,6 +131,15 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		h.log.Errorf("Failed to serialize quantity metadata: %s", err.Error())
 		return errors.Wrap(err, "Failed to serialize quantity metadata")
 	}
+	metadataBilledType, err := utils.ToJson(ActionBilledTypeMetadata{
+		BilledType: eventData.Billed,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to serialize billed type metadata: %s", err.Error())
+		return errors.Wrap(err, "Failed to serialize billed type metadata")
+	}
+
 	//check to make sure the name displays correctly in the action message
 	if eventData.Name == "" {
 		name = serviceLineItemEntity.Name
@@ -158,6 +171,14 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractId, err.Error())
+		}
+	}
+	if billedTypeChanged && serviceLineItemEntity.Billed != "" {
+		message = "changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " / " + serviceLineItemEntity.Billed + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " / " + eventData.Billed
+		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeUpdated, message, metadataBilledType, utils.Now())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed creating billed type update action for contract service line item %s: %s", contractId, err.Error())
 		}
 	}
 
