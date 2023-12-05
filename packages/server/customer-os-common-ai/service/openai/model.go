@@ -1,6 +1,9 @@
 package openai
 
-import "context"
+import (
+	"context"
+	"unicode"
+)
 
 func NewModel(apiKey, organization, model string) *OpenAiModel {
 	// TODO: use openai config object plus add logger to openai client
@@ -14,14 +17,22 @@ type OpenAiModel struct {
 }
 
 func limitTokens(s string, n int) string {
-	if len(s)/4 > n {
-		return s[:n]
+	lastSpaceIx := n
+	len := 0
+	for i, r := range s {
+		if unicode.IsSpace(r) {
+			lastSpaceIx = i
+		}
+		len++
+		if len > n {
+			return s[:lastSpaceIx]
+		}
 	}
 	return s
 }
 
 func (m *OpenAiModel) Inference(ctx context.Context, input string) (string, error) {
-	input = limitTokens(input, 16385)
+	input = limitTokens(input, 16385) // This model's maximum context length is 16385 tokens.
 	request := &CreateChatCompletionsRequest{
 		Model: m.Client.model,
 		Messages: []Message{
