@@ -1,19 +1,22 @@
 import React from 'react';
 
+import { ActionType } from '@graphql/types';
+
 import { ServiceUpdatedActionPreview } from './service/ServiceUpdatedActionPreview';
 import { ContractStatusUpdatedActionPreview } from './contract/ContractStatusUpdatedActionPreview';
 
 interface ActionPreviewModalProps {
-  type: string;
+  type: ActionType;
 }
 
 export const ActionPreviewModal: React.FC<ActionPreviewModalProps> = ({
   type,
 }) => {
   switch (type) {
-    case 'CONTRACT_STATUS_UPDATED':
+    case ActionType.ContractStatusUpdated:
       return <ContractStatusUpdatedActionPreview />;
-    case 'SERVICE_LINE_ITEM_QUANTITY_UPDATED':
+    case ActionType.ServiceLineItemQuantityUpdated:
+    case ActionType.ServiceLineItemPriceUpdated:
       return <ServiceUpdatedActionPreview />;
     default:
       return null;
