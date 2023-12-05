@@ -13,7 +13,15 @@ type OpenAiModel struct {
 	Client *OpenAiClient
 }
 
+func limitTokens(s string, n int) string {
+	if len(s)/4 > n {
+		return s[:n]
+	}
+	return s
+}
+
 func (m *OpenAiModel) Inference(ctx context.Context, input string) (string, error) {
+	input = limitTokens(input, 16385)
 	request := &CreateChatCompletionsRequest{
 		Model: m.Client.model,
 		Messages: []Message{
