@@ -43,7 +43,7 @@ func NewDomainScraper(log logger.Logger, cfg *config.Config, repositories *repos
 
 func (ds *DomainScraperV1) Scrape(domainOrWebsite, tenant, organizationId string, directScrape bool) (*WebscrapeResponseV1, error) {
 	domainUrl := strings.TrimSpace(domainOrWebsite)
-	if !strings.HasPrefix(domainUrl, "http") && !strings.HasPrefix(domainUrl, "www") {
+	if !strings.HasPrefix(domainUrl, "http") {
 		domainUrl = fmt.Sprintf("https://%s", domainUrl)
 	}
 	jsonStruct := jsonStructure()
