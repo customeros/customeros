@@ -4,6 +4,8 @@ go 1.21
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ../events-processing-common
 
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai => ../customer-os-common-ai
+
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
 require (
@@ -13,6 +15,7 @@ require (
 	github.com/coocood/freecache v1.2.4
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/golang/protobuf v1.5.3
+	github.com/google/go-querystring v1.1.0
 	github.com/google/uuid v1.4.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
@@ -39,6 +42,7 @@ require (
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
+	github.com/JohannesKaufmann/html-to-markdown v1.4.2
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/Microsoft/hcsshim v0.11.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
@@ -88,6 +92,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai v0.0.0-00010101000000-000000000000
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect

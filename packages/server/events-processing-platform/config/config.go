@@ -103,22 +103,48 @@ type Services struct {
 	ValidationApi     string `env:"VALIDATION_API" validate:"required"`
 	ValidationApiKey  string `env:"VALIDATION_API_KEY" validate:"required"`
 	ScrapingBeeApiKey string `env:"SCRAPING_BEE_API_KEY" validate:"required"`
-	OpenAi            struct {
+	PromptJsonSchema  string `env:"PROMPT_JSON_SCHEMA" validate:"required" envDefault:"{
+		"$schema": "http://json-schema.org/draft-07/schema#",
+		"type": "object",
+		"properties": {
+		  "companyName": {
+			"type": "string",
+			"description": "the name of the company"
+		  },
+		  "market": {
+			"type": "string",
+			"description": "One of the following options: [B2B, B2C, or Marketplace]"
+		  },
+		  "industry": {
+			"type": "string",
+			"description": "Industry category per the Global Industry Classification Standard (GISB)"
+		  },
+		  "industryGroup": {
+			"type": "string",
+			"description": "Industry Group per the Global Industry Classification Standard (GISB)"
+		  },
+		  "subIndustry": {
+			"type": "string",
+			"description": "Sub-industry category per the Global Industry Classification Standard (GISB)"
+		  },
+		  "targetAudience": {
+			"type": "string",
+			"description": "analysis of the company's target audience"
+		  },
+		  "valueProposition": {
+			"type": "string",
+			"description": "analysis of the company's core value proposition"
+		  }
+		},
+		"required": ["companyName", "market", "valueProposition", "industry"],
+		"additionalProperties": false
+	  }"`
+	OpenAi struct {
 		ApiPath             string `env:"OPENAI_API_PATH,required" envDefault:"N/A"`
 		ApiKey              string `env:"OPENAI_API_KEY,required" envDefault:"N/A"`
-		ScrapeCompanyPrompt string `env:"SCRAPE_COMPANY_PROMPT,required" envDefault:"Analyze the following text from a company website.
-                         {{text}}
-                         Analyze the text and respond (in English) as defined below:
-                         {
-                           companyName:  the name of the company,
-                           market: One of the following options: B2B, B2C, or Marketplace,
-                           industry: Industry per the Global Industry Classification Standard (GISB),
-                           industryGroup: Industry Group per the Global Industry Classification Standard (GISB),
-                           subIndustry: Sub-industry per the Global Industry Classification Standard (GISB),
-                           targetAudience: analysis of the company's target audience,
-                           valueProposition: analysis of the company's core value proposition,
-                         }"`
-		ScrapeDataPrompt string `env:"SCRAPE_DATA_PROMPT,required" envDefault:"The following is data scraped from a website:  Please combine and format the data into a clean json response
+		Organization        string `env:"OPENAI_ORGANIZATION,required" envDefault:""`
+		ScrapeCompanyPrompt string `env:"SCRAPE_COMPANY_PROMPT,required" envDefault:"Analyze the text below and return the complete schema {{jsonschema}}\n\nTEXT\n{{text}}"`
+		ScrapeDataPrompt    string `env:"SCRAPE_DATA_PROMPT,required" envDefault:"The following is data scraped from a website:  Please combine and format the data into a clean json response
 
                       {{ANALYSIS}}
 

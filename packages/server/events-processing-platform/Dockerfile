@@ -4,8 +4,17 @@ WORKDIR /workspace
 
 RUN mkdir /workspace/build
 RUN mkdir /workspace/build/customer-os-api
+RUN mkdir /workspace/build/customer-os-common-ai
 RUN mkdir /workspace/build/customer-os-common-module
 RUN mkdir /workspace/build/events-processing-common
+
+#copy and build AI module
+COPY customer-os-common-ai/go.mod /workspace/build/customer-os-common-ai/go.mod
+COPY customer-os-common-ai/go.sum /workspace/build/customer-os-common-ai/go.sum
+RUN cd /workspace/build/customer-os-common-ai && go mod download && go mod verify
+
+COPY customer-os-common-ai/. /workspace/build/customer-os-common-ai/
+RUN cd /workspace/build/customer-os-common-ai && go build
 
 #copy and build common module
 COPY customer-os-common-module/go.mod /workspace/build/customer-os-common-module/go.mod

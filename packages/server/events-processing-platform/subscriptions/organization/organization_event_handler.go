@@ -3,10 +3,12 @@ package organization
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/ai"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -22,7 +24,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 const (
@@ -64,7 +65,8 @@ type organizationEventHandler struct {
 	log                  logger.Logger
 	cfg                  *config.Config
 	caches               caches.Cache
-	domainScraper        *DomainScraper
+	domainScraper        WebScraper
+	aiModel              ai.AiModel
 }
 
 func (h *organizationEventHandler) WebscrapeOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
@@ -126,7 +128,7 @@ func (h *organizationEventHandler) webscrapeOrganization(ctx context.Context, te
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant), log.String("organizationId", organizationId), log.String("site", site))
 
-	result, err := h.domainScraper.Scrape(site, tenant, organizationId)
+	result, err := h.domainScraper.Scrape(site, tenant, organizationId, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error scraping website/domain %s: %v", site, err)
@@ -322,7 +324,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		span.LogFields(log.String("promptStoreLogId1", promptStoreLogId1))
 	}
 
-	firstResult, err := ai.InvokeAnthropic(ctx, h.cfg, h.log, firstPrompt)
+	firstResult, err := h.aiModel.Inference(ctx, firstPrompt) // ai.InvokeAnthropic(ctx, h.cfg, h.log, firstPrompt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err)
@@ -357,8 +359,11 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		Prompt:         secondPrompt,
 	}
 	promptStoreLogId2, err := h.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog2)
-
-	secondResult, err := ai.InvokeAnthropic(ctx, h.cfg, h.log, secondPrompt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error storing prompt log with error: %v", err)
+	}
+	secondResult, err := h.aiModel.Inference(ctx, secondPrompt) // ai.InvokeAnthropic(ctx, h.cfg, h.log, secondPrompt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err)
