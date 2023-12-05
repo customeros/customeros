@@ -89,6 +89,10 @@ func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
 	tracing.TraceErr(span, err, fields...)
 }
 
+func LogObjectAsJson(span opentracing.Span, name string, object any) {
+	tracing.LogObjectAsJson(span, name, object)
+}
+
 func SetNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span, tenant string) {
 	setTenantSpanTag(span, tenant)
 	span.SetTag(SpanTagComponent, constants.ComponentNeo4jRepository)

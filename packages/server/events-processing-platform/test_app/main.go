@@ -93,7 +93,8 @@ func main() {
 	//testUserLinkWithEmail()
 	//testCreateContract()
 	//testUpdateContract()
-	testAddContractService()
+	//testAddContractService()
+	//testCloseLooseOpportunity()
 }
 
 func testRequestGenerateSummaryRequest() {
@@ -543,13 +544,16 @@ func testUserLinkWithEmail() {
 func testCreateContract() {
 	tenant := "openline"
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	organizationId := "a00dc1f8-aec9-4107-bb77-48ef39f897bc"
+	organizationId := "d03ea434-51cb-43ed-b97d-63f46db6ff51"
+	yesterday := utils.Now().AddDate(0, 0, -1)
 
 	result, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organizationId,
-		LoggedInUserId: userId,
-		Name:           "Saturday contract 2",
+		Tenant:           tenant,
+		OrganizationId:   organizationId,
+		LoggedInUserId:   userId,
+		RenewalCycle:     contractpb.RenewalCycle_MONTHLY_RENEWAL,
+		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(&yesterday),
+		Name:             "test contract 1",
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
@@ -603,6 +607,23 @@ func testAddContractService() {
 		SourceFields: &commonpb.SourceFields{
 			AppSource: "test_app",
 		},
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testCloseLooseOpportunity() {
+	tenant := "openline"
+	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	opportunityId := "d8305351-8568-4d97-9fe9-c6cf701636d0"
+
+	result, err := clients.OpportunityClient.CloseLooseOpportunity(context.Background(), &opportunitypb.CloseLooseOpportunityGrpcRequest{
+		Tenant:         tenant,
+		Id:             opportunityId,
+		LoggedInUserId: userId,
+		AppSource:      appSource,
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())

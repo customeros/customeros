@@ -88,6 +88,14 @@ message UpdateOpportunityGrpcRequest {
   ExternalSystemFields externalSystemFields = 18;
 }
 
+message CloseLooseOpportunityGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+  google.protobuf.Timestamp closedAt = 5;
+}
+
 message OpportunityIdGrpcResponse {
   string id = 1;
 }
@@ -96,4 +104,5 @@ service opportunityGrpcService {
   rpc CreateOpportunity(CreateOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc UpdateRenewalOpportunity(UpdateRenewalOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc UpdateOpportunity(UpdateOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
+  rpc CloseLooseOpportunity(CloseLooseOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
 }

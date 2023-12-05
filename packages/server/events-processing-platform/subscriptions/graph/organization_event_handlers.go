@@ -507,7 +507,7 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummary(ctx context.Context, 
 			opportunities = append(opportunities, *graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode))
 		}
 		for _, opportunity := range opportunities {
-			if opportunity.RenewalDetails.RenewedAt != nil {
+			if opportunity.RenewalDetails.RenewedAt != nil && opportunity.RenewalDetails.RenewedAt.After(utils.Now()) {
 				if nextRenewalDate == nil || opportunity.RenewalDetails.RenewedAt.Before(*nextRenewalDate) {
 					nextRenewalDate = opportunity.RenewalDetails.RenewedAt
 				}
