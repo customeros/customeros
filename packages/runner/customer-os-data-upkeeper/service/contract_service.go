@@ -175,7 +175,7 @@ func (s *contractService) closeEndedContractOpportunityRenewals(ctx context.Cont
 
 		//process renewal opportunities
 		for _, record := range records {
-			_, err = s.eventsProcessingClient.OpportunityCLient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
+			_, err = s.eventsProcessingClient.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
 				Tenant:    record.Tenant,
 				Id:        record.OpportunityId,
 				AppSource: constants.AppSourceDataUpkeeper,
