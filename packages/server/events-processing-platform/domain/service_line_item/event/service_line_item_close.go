@@ -8,16 +8,18 @@ import (
 )
 
 type ServiceLineItemCloseEvent struct {
-	Tenant    string    `json:"tenant" validate:"required"`
-	EndedAt   time.Time `json:"endedAt" validate:"required"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	Tenant     string    `json:"tenant" validate:"required"`
+	EndedAt    time.Time `json:"endedAt" validate:"required"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+	IsCanceled bool      `json:"isCanceled"`
 }
 
-func NewServiceLineItemCloseEvent(aggregate eventstore.Aggregate, endedAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewServiceLineItemCloseEvent(aggregate eventstore.Aggregate, endedAt, updatedAt time.Time, isCanceled bool) (eventstore.Event, error) {
 	eventData := ServiceLineItemCloseEvent{
-		Tenant:    aggregate.GetTenant(),
-		EndedAt:   endedAt,
-		UpdatedAt: updatedAt,
+		Tenant:     aggregate.GetTenant(),
+		EndedAt:    endedAt,
+		UpdatedAt:  updatedAt,
+		IsCanceled: isCanceled,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

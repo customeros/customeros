@@ -259,7 +259,7 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 
 	now := utils.Now()
 	// Create a ServiceLineItemCloseEvent
-	closeEvent, err := event.NewServiceLineItemCloseEvent(aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId), now, now)
+	closeEvent, err := event.NewServiceLineItemCloseEvent(aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId), now, now, true)
 	require.Nil(t, err)
 
 	// Execute the event handler
@@ -281,6 +281,7 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
 	require.Equal(t, now, serviceLineItem.UpdatedAt)
 	require.Equal(t, now, *serviceLineItem.EndedAt)
+	require.True(t, serviceLineItem.IsCanceled)
 
 	// check event was generated
 	eventsMap := aggregateStore.GetEventMap()

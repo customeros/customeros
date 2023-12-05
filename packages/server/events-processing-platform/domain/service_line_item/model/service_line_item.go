@@ -22,6 +22,7 @@ type ServiceLineItem struct {
 	EndedAt    *time.Time         `json:"endedAt,omitempty"`
 	Source     commonmodel.Source `json:"source"`
 	IsDeleted  bool               `json:"isDeleted"`
+	IsCanceled bool               `json:"isCanceled"`
 }
 
 // ServiceLineItemDataFields contains all the fields that may be used to create or update a service line item.
