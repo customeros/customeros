@@ -47,7 +47,25 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	}
 
 	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.ServiceLineItemRepository.CreateForContract(ctx, eventData.Tenant, serviceLineItemId, eventData)
+
+	isNewVersionForExistingSLI := serviceLineItemId != eventData.ParentId && eventData.ParentId != ""
+	previousPrice := float64(0)
+	previousQuantity := int64(0)
+	previousBilled := ""
+	if isNewVersionForExistingSLI {
+		sliDbNode, err := h.repositories.ServiceLineItemRepository.GetLatestServiceLineItemByParentId(ctx, eventData.Tenant, eventData.ParentId, eventData.StartedAt)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while getting latest service line item with parent id %s: %s", eventData.ParentId, err.Error())
+		}
+		if sliDbNode != nil {
+			previousServiceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*sliDbNode)
+			previousPrice = previousServiceLineItem.Price
+			previousQuantity = previousServiceLineItem.Quantity
+			previousBilled = previousServiceLineItem.Billed
+		}
+	}
+	err := h.repositories.ServiceLineItemRepository.CreateForContract(ctx, eventData.Tenant, serviceLineItemId, eventData, isNewVersionForExistingSLI, previousQuantity, previousPrice, previousBilled)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving service line item %s: %s", serviceLineItemId, err.Error())

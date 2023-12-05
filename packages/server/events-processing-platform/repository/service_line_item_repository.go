@@ -12,15 +12,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"time"
 )
 
 type ServiceLineItemRepository interface {
-	CreateForContract(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemCreateEvent) error
+	CreateForContract(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemCreateEvent, isNewVersionForExistingSLI bool, previousQuantity int64, previousPrice float64, previousBilled string) error
 	GetServiceLineItemById(ctx context.Context, tenant, serviceLineItemId string) (*dbtype.Node, error)
 	Update(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemUpdateEvent) error
 	GetAllForContract(ctx context.Context, tenant, contractId string) ([]*neo4j.Node, error)
 	Delete(ctx context.Context, tenant, serviceLineItemId string) error
 	Close(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemCloseEvent) error
+	GetLatestServiceLineItemByParentId(ctx context.Context, tenant, serviceLineItemParentId string, beforeDate time.Time) (*dbtype.Node, error)
 }
 
 type serviceLineItemRepository struct {
@@ -35,11 +37,12 @@ func NewServiceLineItemRepository(driver *neo4j.DriverWithContext, database stri
 	}
 }
 
-func (r *serviceLineItemRepository) CreateForContract(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemCreateEvent) error {
+func (r *serviceLineItemRepository) CreateForContract(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemCreateEvent, isNewVersionForExistingSLI bool, previousQuantity int64, previousPrice float64, previousBilled string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.CreateForContract")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("serviceLineItemId", serviceLineItemId), log.Object("event", evt))
+	tracing.LogObjectAsJson(span, "event", evt)
+	span.LogFields(log.String("serviceLineItemId", serviceLineItemId), log.Bool("isNewVersionForExistingSLI", isNewVersionForExistingSLI), log.Int64("previousQuantity", previousQuantity), log.Float64("previousPrice", previousPrice), log.String("previousBilled", previousBilled))
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 							MERGE (c)-[:HAS_SERVICE]->(sli:ServiceLineItem {id:$serviceLineItemId})
@@ -75,7 +78,14 @@ func (r *serviceLineItemRepository) CreateForContract(ctx context.Context, tenan
 		"name":              evt.Name,
 		"billed":            evt.Billed,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	if isNewVersionForExistingSLI {
+		cypher += `, sli.previousQuantity=$previousQuantity, sli.previousPrice=$previousPrice, sli.previousBilled=$previousBilled`
+		params["previousQuantity"] = previousQuantity
+		params["previousPrice"] = previousPrice
+		params["previousBilled"] = previousBilled
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 }
@@ -195,6 +205,36 @@ func (r *serviceLineItemRepository) GetServiceLineItemById(ctx context.Context, 
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     serviceLineItemId,
+	}
+	span.LogFields(log.String("query", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *serviceLineItemRepository) GetLatestServiceLineItemByParentId(ctx context.Context, tenant, serviceLineItemParentId string, beforeDate time.Time) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.GetLatestServiceLineItemByParentId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("serviceLineItemParentId", serviceLineItemParentId), log.Object("beforeDate", beforeDate))
+
+	cypher := `MATCH(sli:ServiceLineItem {parentId:$parentId}) WHERE sli.startedAt < $before RETURN sli ORDER BY sli.startedAt DESC LIMIT 1`
+	params := map[string]any{
+		"tenant":   tenant,
+		"parentId": serviceLineItemParentId,
+		"before":   beforeDate.Add(time.Millisecond * 1),
 	}
 	span.LogFields(log.String("query", cypher), log.Object("params", params))
 

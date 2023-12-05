@@ -10,7 +10,7 @@ import (
 type Client struct {
 	OrganizationClient organizationpb.OrganizationGrpcServiceClient
 	ContractClient     contractpb.ContractGrpcServiceClient
-	OpportunityCLient  opportunitypb.OpportunityGrpcServiceClient
+	OpportunityClient  opportunitypb.OpportunityGrpcServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Client {
@@ -20,7 +20,7 @@ func InitClients(conn *grpc.ClientConn) *Client {
 	clients := Client{
 		OrganizationClient: organizationpb.NewOrganizationGrpcServiceClient(conn),
 		ContractClient:     contractpb.NewContractGrpcServiceClient(conn),
-		OpportunityCLient:  opportunitypb.NewOpportunityGrpcServiceClient(conn),
+		OpportunityClient:  opportunitypb.NewOpportunityGrpcServiceClient(conn),
 	}
 	return &clients
 }
