@@ -15,10 +15,14 @@ const password = "new-s3cr3t"
 
 func startContainer(ctx context.Context, username, password string) (testcontainers.Container, error) {
 	request := testcontainers.ContainerRequest{
-		Image:        "neo4j:5-community",
+		Image:        "neo4j:5.14.0-community",
 		ExposedPorts: []string{"7687/tcp"},
-		Env:          map[string]string{"NEO4J_AUTH": fmt.Sprintf("%s/%s", username, password)},
-		WaitingFor:   wait.ForLog("Bolt enabled").WithStartupTimeout(300 * time.Second),
+		Env: map[string]string{
+			"NEO4J_AUTH":                        fmt.Sprintf("%s/%s", username, password),
+			"NEO4J_dbms_transaction_timeout":    "5m",
+			"NEO4J_db_lock_acquisition_timeout": "0",
+		},
+		WaitingFor: wait.ForLog("Started.").WithStartupTimeout(300 * time.Second),
 	}
 	return testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: request,
