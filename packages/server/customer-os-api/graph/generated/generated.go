@@ -301,6 +301,7 @@ type ComplexityRoot struct {
 	DashboardMRRPerCustomerPerMonth struct {
 		Month func(childComplexity int) int
 		Value func(childComplexity int) int
+		Year  func(childComplexity int) int
 	}
 
 	DashboardNewCustomers struct {
@@ -2558,6 +2559,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DashboardMRRPerCustomerPerMonth.Value(childComplexity), true
+
+	case "DashboardMRRPerCustomerPerMonth.year":
+		if e.complexity.DashboardMRRPerCustomerPerMonth.Year == nil {
+			break
+		}
+
+		return e.complexity.DashboardMRRPerCustomerPerMonth.Year(childComplexity), true
 
 	case "DashboardNewCustomers.perMonth":
 		if e.complexity.DashboardNewCustomers.PerMonth == nil {
@@ -8573,8 +8581,9 @@ type DashboardMRRPerCustomer {
     perMonth: [DashboardMRRPerCustomerPerMonth]!
 }
 type DashboardMRRPerCustomerPerMonth {
+    year: Int!
     month: Int!
-    value: Int!
+    value: Float!
 }
 
 type DashboardGrossRevenueRetention {
@@ -21596,12 +21605,58 @@ func (ec *executionContext) fieldContext_DashboardMRRPerCustomer_perMonth(ctx co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "year":
+				return ec.fieldContext_DashboardMRRPerCustomerPerMonth_year(ctx, field)
 			case "month":
 				return ec.fieldContext_DashboardMRRPerCustomerPerMonth_month(ctx, field)
 			case "value":
 				return ec.fieldContext_DashboardMRRPerCustomerPerMonth_value(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DashboardMRRPerCustomerPerMonth", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardMRRPerCustomerPerMonth_year(ctx context.Context, field graphql.CollectedField, obj *model.DashboardMRRPerCustomerPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardMRRPerCustomerPerMonth_year(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Year, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardMRRPerCustomerPerMonth_year(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardMRRPerCustomerPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21677,9 +21732,9 @@ func (ec *executionContext) _DashboardMRRPerCustomerPerMonth_value(ctx context.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardMRRPerCustomerPerMonth_value(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21689,7 +21744,7 @@ func (ec *executionContext) fieldContext_DashboardMRRPerCustomerPerMonth_value(c
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -68257,6 +68312,11 @@ func (ec *executionContext) _DashboardMRRPerCustomerPerMonth(ctx context.Context
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("DashboardMRRPerCustomerPerMonth")
+		case "year":
+			out.Values[i] = ec._DashboardMRRPerCustomerPerMonth_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "month":
 			out.Values[i] = ec._DashboardMRRPerCustomerPerMonth_month(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

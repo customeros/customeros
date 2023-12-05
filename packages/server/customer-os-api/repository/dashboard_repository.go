@@ -22,6 +22,7 @@ type DashboardRepository interface {
 	GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardCustomerMapData(ctx context.Context, tenant string) ([]map[string]interface{}, error)
 	GetDashboardRevenueAtRiskData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
+	GetDashboardMRRPerCustomerData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 }
 
 type dashboardRepository struct {
@@ -615,6 +616,81 @@ func (r *dashboardRepository) GetDashboardRevenueAtRiskData(ctx context.Context,
 			record := map[string]interface{}{
 				"high":   high,
 				"atRisk": atRisk,
+			}
+
+			results = append(results, record)
+		}
+	}
+
+	return results, nil
+}
+
+func (r *dashboardRepository) GetDashboardMRRPerCustomerData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardMRRPerCustomerData")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			`
+					WITH $startDate AS startDate, $endDate AS endDate
+					WITH startDate.year AS startYear, startDate.month AS startMonth, endDate.year AS endYear, endDate.month AS endMonth
+					WITH range(startYear * 12 + startMonth - 1, endYear * 12 + endMonth - 1) AS monthsRange
+					UNWIND monthsRange AS monthsSinceEpoch
+					
+					WITH datetime({year: monthsSinceEpoch / 12, 
+									month: monthsSinceEpoch %s, 
+									day: 1}) AS currentDate
+					
+					WITH currentDate,
+						 datetime({year: currentDate.year, 
+									month: currentDate.month, 
+									day: 1, hour: 0, minute: 0, second: 0, nanosecond: 0o00000000}) as beginOfMonth,
+						 currentDate + duration({months: 1}) - duration({nanoseconds: 1}) as endOfMonth
+					
+					WITH DISTINCT currentDate.year AS year, currentDate.month AS month, beginOfMonth, endOfMonth
+					
+					OPTIONAL MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
+					WHERE 
+						o.hide = false AND o.isCustomer = true AND sli.startedAt is NOT null AND (sli.billed = 'MONTHLY' or sli.billed = 'ANNUALLY') AND
+						((sli.startedAt.year = beginOfMonth.year AND sli.startedAt.month = beginOfMonth.month) OR sli.startedAt < beginOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt >= endOfMonth)
+					
+					WITH beginOfMonth, endOfMonth, year, month, COLLECT(DISTINCT { id: sli.id, startedAt: sli.startedAt, endedAt: sli.endedAt, amountPerMonth: CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity ELSE sli.price * sli.quantity / 12 END }) AS contractDetails
+					
+					WITH beginOfMonth, endOfMonth, contractDetails, year, month,  REDUCE(sumHigh = 0, cd IN contractDetails | sumHigh + cd.amountPerMonth ) AS mrr
+					
+					return year, month, mrr
+				`, "% 12 + 1", tenant, tenant, tenant),
+			map[string]any{
+				"tenant":    tenant,
+				"startDate": startDate,
+				"endDate":   endDate,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	if dbRecords != nil {
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			year := v.Values[0].(int64)
+			month := v.Values[1].(int64)
+			amountPerMonth := getCorrectValueType(v.Values[2])
+
+			record := map[string]interface{}{
+				"year":           year,
+				"month":          month,
+				"amountPerMonth": amountPerMonth,
 			}
 
 			results = append(results, record)

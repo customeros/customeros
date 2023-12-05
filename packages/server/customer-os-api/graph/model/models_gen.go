@@ -556,8 +556,9 @@ type DashboardMRRPerCustomer struct {
 }
 
 type DashboardMRRPerCustomerPerMonth struct {
-	Month int `json:"month"`
-	Value int `json:"value"`
+	Year  int     `json:"year"`
+	Month int     `json:"month"`
+	Value float64 `json:"value"`
 }
 
 type DashboardNewCustomers struct {

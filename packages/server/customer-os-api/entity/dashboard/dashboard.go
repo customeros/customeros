@@ -63,8 +63,9 @@ type DashboardDashboardMRRPerCustomerData struct {
 	Months             []*DashboardDashboardMRRPerCustomerPerMonthData
 }
 type DashboardDashboardMRRPerCustomerPerMonthData struct {
+	Year  int
 	Month int
-	Value int
+	Value float64
 }
 
 type DashboardCustomerMapState string

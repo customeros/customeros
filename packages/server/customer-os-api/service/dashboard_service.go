@@ -138,16 +138,54 @@ func (s *dashboardService) GetDashboardMRRPerCustomerData(ctx context.Context, s
 
 	response := entityDashboard.DashboardDashboardMRRPerCustomerData{}
 
-	response.MrrPerCustomer = 4280
-	response.IncreasePercentage = -1.2
+	countCustomers, err := s.repositories.OrganizationRepository.CountCustomers(ctx, common.GetContext(ctx).Tenant)
+	if err != nil {
+		return nil, err
+	}
 
-	min := 0
-	max := 10000
-	for i := 1; i <= 12; i++ {
-		response.Months = append(response.Months, &entityDashboard.DashboardDashboardMRRPerCustomerPerMonthData{
-			Month: i,
-			Value: rand.Intn(max-min) + min,
-		})
+	data, err := s.repositories.DashboardRepository.GetDashboardMRRPerCustomerData(ctx, common.GetContext(ctx).Tenant, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range data {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+		amountPerMonth, _ := record["amountPerMonth"].(float64)
+
+		if amountPerMonth > 0 && countCustomers > 0 {
+			amountPerMonth = amountPerMonth / float64(countCustomers)
+		}
+
+		newData := &entityDashboard.DashboardDashboardMRRPerCustomerPerMonthData{
+			Year:  int(year),
+			Month: int(month),
+			Value: amountPerMonth,
+		}
+
+		response.Months = append(response.Months, newData)
+	}
+
+	if len(response.Months) == 0 {
+		response.IncreasePercentage = 0
+	} else if len(response.Months) == 1 {
+		response.IncreasePercentage = 0
+	} else {
+		//lastMonthMrrPerCustomer := response.Months[len(response.Months)-1].Value
+		//previousMonthMrrPerCustomer := response.Months[len(response.Months)-2].Value
+
+		//var percentageDifference float64
+		//if previousMonthMrrPerCustomer != 0 {
+		//	percentageDifference = float64((lastMonthMrrPerCustomer - previousMonthMrrPerCustomer) * 100 / previousMonthMrrPerCustomer)
+		//} else {
+		//	if lastMonthMrrPerCustomer != 0 {
+		//		percentageDifference = float64(100)
+		//	} else {
+		//		percentageDifference = float64(0)
+		//	}
+		//}
+
+		response.IncreasePercentage = 0
 	}
 
 	return &response, nil
