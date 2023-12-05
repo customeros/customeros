@@ -38,7 +38,9 @@ export const Notes = ({ data, id }: NotesProps) => {
 
   const { setDefaultValues } = useForm({
     formId: 'account-notes-form',
-
+    defaultValues: {
+      notes: data?.note ?? '',
+    },
     stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_BLUR') {
         setIsFocused(false);
