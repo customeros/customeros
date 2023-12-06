@@ -147,7 +147,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 			}
 		}
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-		err = contractHandler.UpdateRenewalArrAndNextCycleDate(ctx, eventData.Tenant, contractId)
+		err = contractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
@@ -156,6 +156,13 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 
 	if beforeUpdateContractEntity.Status != afterUpdateContractEntity.Status {
 		h.createActionForStatusChange(ctx, eventData.Tenant, contractId, afterUpdateContractEntity.Status, afterUpdateContractEntity.Name, span)
+	}
+
+	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+	err = contractHandler.UpdateActiveRenewalOpportunityLikelihood(ctx, eventData.Tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
 	}
 
 	return nil
@@ -239,7 +246,7 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 
 	if eventData.Status == string(model.ContractStatusStringEnded) {
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-		err := contractHandler.UpdateRenewalNextCycleDate(ctx, eventData.Tenant, contractId)
+		err := contractHandler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating contract's {%s} renewal date: %s", contractId, err.Error())

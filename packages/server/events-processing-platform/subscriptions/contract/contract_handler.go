@@ -37,13 +37,13 @@ func NewContractHandler(log logger.Logger, repositories *repository.Repositories
 	}
 }
 
-func (h *contractHandler) UpdateRenewalArrAndNextCycleDate(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.CalculateNextCycleDate")
+func (h *contractHandler) UpdateActiveRenewalOpportunityRenewDateAndArr(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("contractId", contractId))
 
-	contract, renewalOpportunity, done := h.AssertContractAndRenewalOpportunity(ctx, tenant, contractId)
+	contract, renewalOpportunity, done := h.assertContractAndRenewalOpportunity(ctx, tenant, contractId)
 	if done {
 		return nil
 	}
@@ -61,18 +61,84 @@ func (h *contractHandler) UpdateRenewalArrAndNextCycleDate(ctx context.Context, 
 	return nil
 }
 
-func (h *contractHandler) UpdateRenewalNextCycleDate(ctx context.Context, tenant, contractId string) error {
+func (h *contractHandler) UpdateActiveRenewalOpportunityNextCycleDate(ctx context.Context, tenant, contractId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.CalculateNextCycleDate")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("contractId", contractId))
 
-	contract, renewalOpportunity, done := h.AssertContractAndRenewalOpportunity(ctx, tenant, contractId)
+	contract, renewalOpportunity, done := h.assertContractAndRenewalOpportunity(ctx, tenant, contractId)
 	if done {
 		return nil
 	}
 
 	return h.updateRenewalNextCycleDate(ctx, tenant, contract, renewalOpportunity, span)
+}
+
+func (h *contractHandler) UpdateActiveRenewalOpportunityArr(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.UpdateActiveRenewalOpportunityArr")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	contract, renewalOpportunity, done := h.assertContractAndRenewalOpportunity(ctx, tenant, contractId)
+	if done {
+		return nil
+	}
+
+	return h.updateRenewalArr(ctx, tenant, contract, renewalOpportunity, span)
+}
+
+func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.UpdateActiveRenewalOpportunityLikelihood")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	opportunityDbNode, err := h.repositories.OpportunityRepository.GetOpenRenewalOpportunityForContract(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
+		return err
+	}
+	if opportunityDbNode == nil {
+		h.log.Infof("No open renewal opportunity found for contract %s", contractId)
+		return nil
+	}
+	contractDbNode, err := h.repositories.ContractRepository.GetContractById(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
+		return err
+	}
+	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	opportunityEntity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+
+	var renewalLikelihood opportunitymodel.RenewalLikelihoodString
+	if contractEntity.EndedAt != nil &&
+		opportunityEntity.RenewalDetails.RenewalLikelihood != string(opportunitymodel.RenewalLikelihoodStringZero) &&
+		opportunityEntity.RenewalDetails.RenewedAt != nil &&
+		contractEntity.EndedAt.Before(*opportunityEntity.RenewalDetails.RenewedAt) {
+		// check if likelihood should be set to Zero
+		renewalLikelihood = opportunitymodel.RenewalLikelihoodStringZero
+	} else if opportunityEntity.RenewalDetails.RenewalLikelihood == string(opportunitymodel.RenewalLikelihoodStringZero) &&
+		opportunityEntity.RenewalDetails.RenewedAt != nil &&
+		(contractEntity.EndedAt == nil || contractEntity.EndedAt.After(*opportunityEntity.RenewalDetails.RenewedAt)) {
+		// check if likelihood should be set to Medium
+		renewalLikelihood = opportunitymodel.RenewalLikelihoodStringMedium
+	}
+
+	if renewalLikelihood != "" {
+		err = h.opportunityCommands.UpdateRenewalOpportunity.Handle(ctx,
+			opportunitycmd.NewUpdateRenewalOpportunityCommand(opportunityEntity.Id, tenant, "", "", renewalLikelihood, 0, commonmodel.Source{AppSource: constants.AppSourceEventProcessingPlatform}, nil, []string{opportunitymodel.FieldMaskRenewalLikelihood}))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("UpdateRenewalOpportunity command failed: %v", err.Error())
+			return errors.Wrap(err, "UpdateRenewalOpportunity")
+		}
+	}
+
+	return nil
 }
 
 func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant string, contractEntity *entity.ContractEntity, renewalOpportunityEntity *entity.OpportunityEntity, span opentracing.Span) error {
@@ -126,20 +192,6 @@ func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, re
 		}
 	}
 	return &renewalCycleNext
-}
-
-func (h *contractHandler) UpdateRenewalArr(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.UpdateRenewalArr")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("contractId", contractId))
-
-	contract, renewalOpportunity, done := h.AssertContractAndRenewalOpportunity(ctx, tenant, contractId)
-	if done {
-		return nil
-	}
-
-	return h.updateRenewalArr(ctx, tenant, contract, renewalOpportunity, span)
 }
 
 func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, contract *entity.ContractEntity, renewalOpportunity *entity.OpportunityEntity, span opentracing.Span) error {
@@ -269,8 +321,8 @@ func (h *contractHandler) calculateCurrentArrByLikelihood(amount float64, likeli
 	return math.Trunc(amount*likelihoodFactor*100) / 100
 }
 
-func (h *contractHandler) AssertContractAndRenewalOpportunity(ctx context.Context, tenant, contractId string) (*entity.ContractEntity, *entity.OpportunityEntity, bool) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.AssertContractAndRenewalOpportunity")
+func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Context, tenant, contractId string) (*entity.ContractEntity, *entity.OpportunityEntity, bool) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.assertContractAndRenewalOpportunity")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("contractId", contractId))
