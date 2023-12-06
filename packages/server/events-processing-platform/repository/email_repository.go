@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"strings"
 	"time"
 )
 
@@ -157,10 +158,7 @@ func (r *emailRepository) EmailValidated(ctx context.Context, emailId string, ev
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
 	span.LogFields(log.String("emailId", emailId))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
 		 		SET e.validationError = $validationError,
 					e.email = $email,
 		     		e.validated = true,
@@ -183,30 +181,35 @@ func (r *emailRepository) EmailValidated(ctx context.Context, emailId string, ev
 								d.appSource=$source,
 								d.source=$appSource
 				WITH d, e
-				MERGE (e)-[:HAS_DOMAIN]->(d)`
+				MERGE (e)-[:HAS_DOMAIN]->(d)`, event.Tenant)
+	params := map[string]any{
+		"id":              emailId,
+		"tenant":          event.Tenant,
+		"validationError": event.ValidationError,
+		"email":           event.EmailAddress,
+		"domain":          strings.ToLower(event.Domain),
+		"acceptsMail":     event.AcceptsMail,
+		"canConnectSmtp":  event.CanConnectSmtp,
+		"hasFullInbox":    event.HasFullInbox,
+		"isCatchAll":      event.IsCatchAll,
+		"isDeliverable":   event.IsDeliverable,
+		"isDisabled":      event.IsDisabled,
+		"isValidSyntax":   event.IsValidSyntax,
+		"username":        event.Username,
+		"validatedAt":     event.ValidatedAt,
+		"isReachable":     event.IsReachable,
+		"now":             utils.Now(),
+		"source":          constants.SourceOpenline,
+		"appSource":       constants.AppSourceEventProcessingPlatform,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
-			map[string]any{
-				"id":              emailId,
-				"tenant":          event.Tenant,
-				"validationError": event.ValidationError,
-				"email":           event.EmailAddress,
-				"domain":          event.Domain,
-				"acceptsMail":     event.AcceptsMail,
-				"canConnectSmtp":  event.CanConnectSmtp,
-				"hasFullInbox":    event.HasFullInbox,
-				"isCatchAll":      event.IsCatchAll,
-				"isDeliverable":   event.IsDeliverable,
-				"isDisabled":      event.IsDisabled,
-				"isValidSyntax":   event.IsValidSyntax,
-				"username":        event.Username,
-				"validatedAt":     event.ValidatedAt,
-				"isReachable":     event.IsReachable,
-				"now":             utils.Now(),
-				"source":          constants.SourceOpenline,
-				"appSource":       constants.AppSourceEventProcessingPlatform,
-			})
+		_, err := tx.Run(ctx, cypher, params)
 		return nil, err
 	})
 	return err
