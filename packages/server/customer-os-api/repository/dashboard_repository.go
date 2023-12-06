@@ -735,12 +735,13 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 					WHERE 
 						o.hide = false AND o.isCustomer = true AND sli.startedAt is NOT null AND (sli.billed = 'MONTHLY' or sli.billed = 'QUARTERLY' or sli.billed = 'ANNUALLY')
 					
-					WITH year, month, COLLECT(DISTINCT { sliId: sli.id, sliCanceled: CASE WHEN sli.isCanceled IS NOT NULL THEN sli.isCanceled ELSE false END, sliStartedAt: sli.startedAt, sliEndedAt: sli.endedAt, sliAmountPerMonth: CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity ELSE CASE WHEN sli.billed = 'QUARTERLY' THEN  sli.price * sli.quantity / 4 ELSE CASE WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity / 12 ELSE 0 END END END }) AS contractDetails
+					WITH year, month, endOfMonth, COLLECT(DISTINCT { sliId: sli.id, serviceStartedAt: c.serviceStartedAt, serviceEndedAt: c.endedAt, sliCanceled: CASE WHEN sli.isCanceled IS NOT NULL THEN sli.isCanceled ELSE false END, sliStartedAt: sli.startedAt, sliEndedAt: sli.endedAt, sliAmountPerMonth: CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity ELSE CASE WHEN sli.billed = 'QUARTERLY' THEN  sli.price * sli.quantity / 4 ELSE CASE WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity / 12 ELSE 0 END END END }) AS contractDetails
 					
 					WITH year, month, contractDetails, 
+						REDUCE(s = 0, cd IN contractDetails | CASE WHEN cd.serviceStartedAt.year = year AND cd.serviceStartedAt.month = month AND (cd.serviceEndedAt IS NULL OR cd.serviceEndedAt > endOfMonth) AND cd.sliCanceled = false AND cd.sliEndedAt IS NULL THEN s + cd.sliAmountPerMonth ELSE s END ) AS newlyContracted,
 						REDUCE(s = 0, cd IN contractDetails | CASE WHEN cd.sliCanceled = true AND cd.sliEndedAt.year = year AND cd.sliEndedAt.month = month THEN s + cd.sliAmountPerMonth ELSE s END ) AS cancellations
 			
-					return year, month, 0 as newlyContracted, 0 as renewals, 0 as upsells, 0 as downgrades, cancellations, 0 as churned, contractDetails
+					return year, month, newlyContracted, 0 as renewals, 0 as upsells, 0 as downgrades, cancellations, 0 as churned, contractDetails
 				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
 				"tenant":    tenant,
@@ -757,10 +758,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 		return nil, err
 	}
 
-	//,
-	//REDUCE(newlyContracted = 0, cd IN contractDetails | CASE WHEN cd.status = 'ENDED' THEN newlyContracted + cd.sliAmountPerMonth ELSE churned END ) AS newlyContracted,
 	//	REDUCE(churned = 0, cd IN contractDetails | CASE WHEN cd.status = 'ENDED' THEN churned + cd.sliAmountPerMonth ELSE churned END ) AS churned,
-	//
 	//	REDUCE(cancellations = 0, cd IN contractDetails | CASE WHEN cd.sliCanceled = true THEN cancellations + cd.sliAmountPerMonth ELSE cancellations END ) AS downgrades,
 
 	var results []map[string]interface{}
