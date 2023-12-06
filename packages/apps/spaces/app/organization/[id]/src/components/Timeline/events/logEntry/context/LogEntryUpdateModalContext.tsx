@@ -99,7 +99,10 @@ export const LogEntryUpdateModalContextProvider = ({
         contentType: variables?.input?.contentType,
       };
 
-      updateTimelineCache({ id: variables.id, ...mappedData }, queryKey);
+      updateTimelineCache(
+        { id: variables.id, ...mappedData } as LogEntryWithAliases,
+        queryKey,
+      );
     },
   });
 

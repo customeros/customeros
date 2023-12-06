@@ -102,9 +102,9 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
       borderRadius='lg'
       opacity={isTemporary ? 0.5 : 1}
       onClick={() => !isTemporary && openModal(data.id)}
+      cursor={isTemporary ? 'progress' : 'pointer'}
       _hover={{ boxShadow: 'md' }}
       transition='all 0.2s ease-out'
-      cursor={isTemporary ? 'progress' : 'pointer'}
     >
       <CardBody px='3' py='2'>
         <Flex

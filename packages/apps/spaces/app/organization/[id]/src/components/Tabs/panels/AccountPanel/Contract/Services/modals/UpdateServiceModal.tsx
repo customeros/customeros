@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
 import { produce } from 'immer';
+import { useSession } from 'next-auth/react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
@@ -14,14 +15,17 @@ import { Heading } from '@ui/typography/Heading';
 import { toastError } from '@ui/presentation/Toast';
 import { DotSingle } from '@ui/media/icons/DotSingle';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
-import { BilledType, ServiceLineItem } from '@graphql/types';
 import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { Action, BilledType, ServiceLineItem } from '@graphql/types';
+import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
 import { useUpdateServiceMutation } from '@organization/src/graphql/updateService.generated';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import {
   GetContractsQuery,
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
+import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
 import {
   Modal,
   ModalBody,
@@ -30,6 +34,7 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal';
+import { getUpdateServiceEvents } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/utils';
 import { OneTimeServiceForm } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/OneTimeServiceForm';
 import { RecurringServiceFrom } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/RecurringService';
 import {
@@ -56,6 +61,12 @@ export const UpdateServiceModal = ({
   const queryClient = useQueryClient();
   const queryKey = useGetContractsQuery.getKey({ id });
   const defaultValues = ServiceDTO.toForm(data);
+  const updateTimelineCache = useUpdateCacheWithNewEvent();
+  const [timelineMeta] = useTimelineMeta();
+  const timelineQueryKey = useInfiniteGetTimelineQuery.getKey(
+    timelineMeta.getTimelineVariables,
+  );
+  const session = useSession();
 
   const updateService = useUpdateServiceMutation(client, {
     onMutate: ({ input }) => {
@@ -82,6 +93,7 @@ export const UpdateServiceModal = ({
           }
         });
       });
+
       const previousEntries =
         queryClient.getQueryData<GetContractsQuery>(queryKey);
 
@@ -94,7 +106,16 @@ export const UpdateServiceModal = ({
       );
       toastError('Failed to update service', 'update-service-error');
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      if (data) {
+        getUpdateServiceEvents(
+          data,
+          variables.input,
+          session?.data?.user?.name ?? '',
+          (event: Action) => updateTimelineCache(event, timelineQueryKey),
+        );
+      }
+
       onClose();
     },
     onSettled: () => {
@@ -103,6 +124,7 @@ export const UpdateServiceModal = ({
       }
       timeoutRef.current = setTimeout(() => {
         queryClient.invalidateQueries(queryKey);
+        queryClient.invalidateQueries(timelineQueryKey);
       }, 1000);
     },
   });

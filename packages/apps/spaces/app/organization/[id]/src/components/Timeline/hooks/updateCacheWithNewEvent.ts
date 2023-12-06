@@ -41,6 +41,7 @@ export function useUpdateCacheWithNewEvent<T>(
         } as InfiniteData<GetTimelineQuery>;
       },
     );
+
     virtuosoRef?.current?.scrollToIndex({
       index: (timelineEntries?.length ?? 0) + 1,
     });
