@@ -3,6 +3,7 @@ package neo4j
 import (
 	"context"
 	"fmt"
+	"github.com/docker/docker/api/types/container"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -23,6 +24,10 @@ func startContainer(ctx context.Context, username, password string) (testcontain
 			"NEO4J_db_lock_acquisition_timeout": "0",
 		},
 		WaitingFor: wait.ForLog("Started.").WithStartupTimeout(300 * time.Second),
+		HostConfigModifier: func(hc *container.HostConfig) {
+			hc.Memory = 2 * 1024 * 1024 * 1024   // 1GB
+			hc.NanoCPUs = 2 * 1000 * 1000 * 1000 // 1 CPU
+		},
 	}
 	return testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: request,

@@ -45,18 +45,18 @@ func TestWebScraping(t *testing.T) {
 	ctx := context.TODO()
 
 	defer tearDownTestCase(ctx, testDatabase)(t)
-	_, driver := neo4jt.InitTestNeo4jDB()
+	//_, driver := neo4jt.InitTestNeo4jDB()
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, entity.OrganizationEntity{Name: "org 1"})
-	_ = neo4jt.CreateLogEntryForOrg(ctx, driver, tenantName, organizationId, entity.LogEntryEntity{Content: "test content", StartedAt: utils.Now()})
+	organizationId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{Name: "org 1"})
+	_ = neo4jt.CreateLogEntryForOrg(ctx, testDatabase.Driver, tenantName, organizationId, entity.LogEntryEntity{Content: "test content", StartedAt: utils.Now()})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization":  1,
 		"LogEntry":      1,
 		"TimelineEvent": 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"CREATED_BY": 0,
 		"LOGGED":     1,
 	})
