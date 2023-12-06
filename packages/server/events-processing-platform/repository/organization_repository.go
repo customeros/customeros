@@ -533,15 +533,18 @@ func (r *organizationRepository) UpdateArr(ctx context.Context, tenant, organiza
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})-[:HAS_CONTRACT]->(c:Contract)-[:ACTIVE_RENEWAL]->(op:Opportunity)
-				WITH org, sum(op.amount) as arr, sum(op.maxAmount) as maxArr
+	cypher := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
+				OPTIONAL MATCH (org)-[:HAS_CONTRACT]->(c:Contract)
+				OPTIONAL MATCH (c)-[:ACTIVE_RENEWAL]->(op:Opportunity)
+				WITH org, COALESCE(sum(op.amount), 0) as arr, COALESCE(sum(op.maxAmount), 0) as maxArr
 				SET org.renewalForecastArr = arr, org.renewalForecastMaxArr = maxArr, org.updatedAt = $now`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
 		"now":            utils.Now(),
 	}
-	span.LogFields(log.String("query", cypher), log.Object("params", params))
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	return r.executeQuery(ctx, cypher, params)
 }
