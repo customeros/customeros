@@ -52,6 +52,7 @@ export type GetContractsQuery = {
       signedAt?: any | null;
       endedAt?: any | null;
       renewalCycle: Types.ContractRenewalCycle;
+      renewalPeriods?: any | null;
       status: Types.ContractStatus;
       contractUrl?: string | null;
       opportunities?: Array<{
@@ -108,6 +109,7 @@ export const GetContractsDocument = `
       signedAt
       endedAt
       renewalCycle
+      renewalPeriods
       status
       contractUrl
       opportunities {

@@ -49,10 +49,13 @@ export function getRenewalLikelihoodLabel(
       return '';
   }
 }
-export const billingFrequencyOptions: SelectOption<ContractRenewalCycle>[] = [
+export const billingFrequencyOptions: SelectOption<
+  ContractRenewalCycle | 'MULTI_YEAR'
+>[] = [
   { label: 'Monthly', value: ContractRenewalCycle.MonthlyRenewal },
   { label: 'Quarterly', value: ContractRenewalCycle.QuarterlyRenewal },
   { label: 'Annually', value: ContractRenewalCycle.AnnualRenewal },
+  { label: 'Multi-year', value: 'MULTI_YEAR' },
 ];
 
 export const billedTypeOptions: SelectOption<BilledType>[] = [

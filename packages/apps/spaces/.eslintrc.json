@@ -30,6 +30,7 @@
     "eslint-plugin-react-hooks"
   ],
   "rules": {
+    "no-fallthrough": "off",
     "@typescript-eslint/no-var-requires": "off",
     "@typescript-eslint/prefer-ts-expect-error": "warn",
     "prettier/prettier": "warn",
