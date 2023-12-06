@@ -9,6 +9,7 @@ type ServiceLineItemEntity struct {
 	UpdatedAt     time.Time
 	StartedAt     time.Time
 	EndedAt       *time.Time
+	IsCanceled    bool
 	Billed        BilledType
 	Price         float64
 	Quantity      int64

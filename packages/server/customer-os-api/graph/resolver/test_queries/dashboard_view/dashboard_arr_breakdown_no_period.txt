@@ -1,0 +1,16 @@
+query GetDashboard_ARRBreakdown {
+  dashboard_ARRBreakdown {
+    arrBreakdown
+    increasePercentage
+    perMonth {
+      year
+      month
+      newlyContracted
+      renewals
+      upsells
+      downgrades
+      cancellations
+      churned
+    }
+  }
+}

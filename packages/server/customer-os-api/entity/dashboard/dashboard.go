@@ -38,13 +38,14 @@ type DashboardARRBreakdownData struct {
 	Months             []*DashboardARRBreakdownPerMonthData
 }
 type DashboardARRBreakdownPerMonthData struct {
+	Year            int
 	Month           int
-	NewlyContracted int
-	Renewals        int
-	Upsells         int
-	Downgrades      int
-	Cancellations   int
-	Churned         int
+	NewlyContracted float64
+	Renewals        float64
+	Upsells         float64
+	Downgrades      float64
+	Cancellations   float64
+	Churned         float64
 }
 
 type DashboardGrossRevenueRetentionData struct {

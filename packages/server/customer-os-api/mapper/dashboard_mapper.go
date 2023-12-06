@@ -73,6 +73,7 @@ func MapDashboardARRBreakdownPerMonthData(months []*entityDashboard.DashboardARR
 	var result []*model.DashboardARRBreakdownPerMonth
 	for _, month := range months {
 		result = append(result, &model.DashboardARRBreakdownPerMonth{
+			Year:            month.Year,
 			Month:           month.Month,
 			NewlyContracted: month.NewlyContracted,
 			Renewals:        month.Renewals,

@@ -271,6 +271,7 @@ type ComplexityRoot struct {
 		NewlyContracted func(childComplexity int) int
 		Renewals        func(childComplexity int) int
 		Upsells         func(childComplexity int) int
+		Year            func(childComplexity int) int
 	}
 
 	DashboardCustomerMap struct {
@@ -2454,6 +2455,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DashboardARRBreakdownPerMonth.Upsells(childComplexity), true
+
+	case "DashboardARRBreakdownPerMonth.year":
+		if e.complexity.DashboardARRBreakdownPerMonth.Year == nil {
+			break
+		}
+
+		return e.complexity.DashboardARRBreakdownPerMonth.Year(childComplexity), true
 
 	case "DashboardCustomerMap.arr":
 		if e.complexity.DashboardCustomerMap.Arr == nil {
@@ -8605,13 +8613,14 @@ type DashboardARRBreakdown {
     perMonth: [DashboardARRBreakdownPerMonth]!
 }
 type DashboardARRBreakdownPerMonth {
+    year: Int!
     month: Int!
-    newlyContracted: Int!
-    renewals: Int!
-    upsells: Int!
-    downgrades: Int!
-    cancellations: Int!
-    churned: Int!
+    newlyContracted: Float!
+    renewals: Float!
+    upsells: Float!
+    downgrades: Float!
+    cancellations: Float!
+    churned: Float!
 }
 
 type DashboardRevenueAtRisk {
@@ -20606,6 +20615,8 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdown_perMonth(ctx cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "year":
+				return ec.fieldContext_DashboardARRBreakdownPerMonth_year(ctx, field)
 			case "month":
 				return ec.fieldContext_DashboardARRBreakdownPerMonth_month(ctx, field)
 			case "newlyContracted":
@@ -20622,6 +20633,50 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdown_perMonth(ctx cont
 				return ec.fieldContext_DashboardARRBreakdownPerMonth_churned(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DashboardARRBreakdownPerMonth", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardARRBreakdownPerMonth_year(ctx context.Context, field graphql.CollectedField, obj *model.DashboardARRBreakdownPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardARRBreakdownPerMonth_year(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Year, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_year(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardARRBreakdownPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -20697,9 +20752,9 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth_newlyContracted(ctx c
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_newlyContracted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20709,7 +20764,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_newlyCont
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -20741,9 +20796,9 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth_renewals(ctx context.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_renewals(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20753,7 +20808,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_renewals(
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -20785,9 +20840,9 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth_upsells(ctx context.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_upsells(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20797,7 +20852,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_upsells(c
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -20829,9 +20884,9 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth_downgrades(ctx contex
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_downgrades(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20841,7 +20896,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_downgrade
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -20873,9 +20928,9 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth_cancellations(ctx con
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_cancellations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20885,7 +20940,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_cancellat
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -20917,9 +20972,9 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth_churned(ctx context.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_churned(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20929,7 +20984,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_churned(c
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -68014,6 +68069,11 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth(ctx context.Context, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("DashboardARRBreakdownPerMonth")
+		case "year":
+			out.Values[i] = ec._DashboardARRBreakdownPerMonth_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "month":
 			out.Values[i] = ec._DashboardARRBreakdownPerMonth_month(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

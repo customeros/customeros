@@ -53,13 +53,14 @@ type DashboardARRBreakdown {
     perMonth: [DashboardARRBreakdownPerMonth]!
 }
 type DashboardARRBreakdownPerMonth {
+    year: Int!
     month: Int!
-    newlyContracted: Int!
-    renewals: Int!
-    upsells: Int!
-    downgrades: Int!
-    cancellations: Int!
-    churned: Int!
+    newlyContracted: Float!
+    renewals: Float!
+    upsells: Float!
+    downgrades: Float!
+    cancellations: Float!
+    churned: Float!
 }
 
 type DashboardRevenueAtRisk {
