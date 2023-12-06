@@ -22,13 +22,16 @@ func MapEntityToAction(entity *entity.ActionEntity) *model.Action {
 }
 
 var actionTypeByModel = map[model.ActionType]entity.ActionType{
-	model.ActionTypeCreated:                          entity.ActionCreated,
-	model.ActionTypeRenewalForecastUpdated:           entity.ActionRenewalForecastUpdated,
-	model.ActionTypeRenewalLikelihoodUpdated:         entity.ActionRenewalLikelihoodUpdated,
-	model.ActionTypeContractStatusUpdated:            entity.ActionContractStatusUpdated,
-	model.ActionTypeServiceLineItemPriceUpdated:      entity.ActionServiceLineItemPriceUpdated,
-	model.ActionTypeServiceLineItemQuantityUpdated:   entity.ActionServiceLineItemQuantityUpdated,
-	model.ActionTypeServiceLineItemBilledTypeUpdated: entity.ActionServiceLineItemBilledTypeUpdated,
+	model.ActionTypeCreated:                                   entity.ActionCreated,
+	model.ActionTypeRenewalForecastUpdated:                    entity.ActionRenewalForecastUpdated,
+	model.ActionTypeRenewalLikelihoodUpdated:                  entity.ActionRenewalLikelihoodUpdated,
+	model.ActionTypeContractStatusUpdated:                     entity.ActionContractStatusUpdated,
+	model.ActionTypeServiceLineItemPriceUpdated:               entity.ActionServiceLineItemPriceUpdated,
+	model.ActionTypeServiceLineItemQuantityUpdated:            entity.ActionServiceLineItemQuantityUpdated,
+	model.ActionTypeServiceLineItemBilledTypeUpdated:          entity.ActionServiceLineItemBilledTypeUpdated,
+	model.ActionTypeServiceLineItemBilledTypeRecurringCreated: entity.ActionServiceLineItemBilledTypeRecurringCreated,
+	model.ActionTypeServiceLineItemBilledTypeOnceCreated:      entity.ActionServiceLineItemBilledTypeOnceCreated,
+	model.ActionTypeServiceLineItemBilledTypeUsageCreated:     entity.ActionServiceLineItemBilledTypeUsageCreated,
 }
 
 var actionTypeByValue = utils.ReverseMap(actionTypeByModel)

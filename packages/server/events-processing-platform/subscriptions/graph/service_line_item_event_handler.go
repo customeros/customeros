@@ -9,6 +9,7 @@ import (
 	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -54,7 +55,9 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnCreate")
 	defer span.Finish()
 	setCommonSpanTagsAndLogFields(span, evt)
-
+	var user *dbtype.Node
+	var userEntity *entity.UserEntity
+	var message string
 	var eventData event.ServiceLineItemCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
@@ -86,6 +89,13 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		h.log.Errorf("Error while saving service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
+	serviceLineItemDbNode, err := h.repositories.ServiceLineItemRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting service line item by id %s: %s", serviceLineItemId, err.Error())
+		return err
+	}
+	serviceLineItemEntity := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
 
 	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
 	err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, eventData.ContractId)
@@ -93,6 +103,64 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating renewal opportunity for contract %s: %s", eventData.ContractId, err.Error())
 		return nil
+	}
+	contractDbNode, err := h.repositories.ContractRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+
+	// get user
+	usrMetadata := userMetadata{}
+	if err = json.Unmarshal(evt.Metadata, &usrMetadata); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "json.Unmarshal")
+	} else {
+		if usrMetadata.UserId != "" {
+			user, err = h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, usrMetadata.UserId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
+			}
+		}
+		userEntity = graph_db.MapDbNodeToUserEntity(*user)
+	}
+
+	metadataBilledType, err := utils.ToJson(ActionBilledTypeMetadata{
+		UserName:    userEntity.FirstName + " " + userEntity.LastName,
+		ServiceName: serviceLineItemEntity.Name,
+		BilledType:  eventData.Billed,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to serialize billed type metadata: %s", err.Error())
+		return errors.Wrap(err, "Failed to serialize billed type metadata")
+	}
+
+	if serviceLineItemEntity.Billed == model.AnnuallyBilled.String() || serviceLineItemEntity.Billed == model.QuarterlyBilled.String() || serviceLineItemEntity.Billed == model.MonthlyBilled.String() {
+		message = userEntity.FirstName + " " + userEntity.LastName + " added a recurring " + strings.ToLower(serviceLineItemEntity.Billed) + " service, " + serviceLineItemEntity.Name + " to " + contractEntity.Name + " at " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " x " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " / " + strings.ToLower(serviceLineItemEntity.Billed)
+		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, eventData.ContractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed creating recurring billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
+		}
+	}
+	if serviceLineItemEntity.Billed == model.OnceBilled.String() {
+		message = userEntity.FirstName + " " + userEntity.LastName + " added an once type service, " + serviceLineItemEntity.Name + " to " + contractEntity.Name + " at " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price)
+		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, eventData.ContractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed creating once billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
+		}
+	}
+	if serviceLineItemEntity.Billed == model.UsageBilled.String() {
+		message = userEntity.FirstName + " " + userEntity.LastName + " added a per use type service, " + serviceLineItemEntity.Name + " to " + contractEntity.Name + " at " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price)
+		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, eventData.ContractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed creating per use billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
+		}
 	}
 
 	return nil
