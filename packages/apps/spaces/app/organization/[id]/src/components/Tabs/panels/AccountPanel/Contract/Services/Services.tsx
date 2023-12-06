@@ -11,10 +11,15 @@ import { CreateServiceModal } from '@organization/src/components/Tabs/panels/Acc
 
 interface Props {
   contractId: string;
+  contractName: string;
   data?: Array<ServiceLineItem> | null;
 }
 
-export const Services: React.FC<Props> = ({ contractId, data }) => {
+export const Services: React.FC<Props> = ({
+  contractId,
+  contractName,
+  data,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const { modal } = useAddServiceModalContext();
 
@@ -40,6 +45,7 @@ export const Services: React.FC<Props> = ({ contractId, data }) => {
 
       {data?.length && <ServicesList data={data} contractId={contractId} />}
       <CreateServiceModal
+        contractName={contractName}
         contractId={contractId}
         isOpen={modal.isOpen && isOpen}
         onClose={() => {

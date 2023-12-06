@@ -147,6 +147,7 @@ export const ServicesList = ({ data, contractId }: ServicesListProps) => {
           }
         });
       });
+
       const previousEntries =
         queryClient.getQueryData<GetContractsQuery>(queryKey);
 

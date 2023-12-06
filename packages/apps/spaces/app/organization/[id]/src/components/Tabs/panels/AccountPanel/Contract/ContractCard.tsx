@@ -353,7 +353,11 @@ export const ContractCard = ({
           )}
         </Collapse>
 
-        <Services contractId={data.id} data={data?.serviceLineItems} />
+        <Services
+          contractId={data.id}
+          data={data?.serviceLineItems}
+          contractName={data.name}
+        />
       </CardFooter>
     </Card>
   );

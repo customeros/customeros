@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Action } from '@graphql/types';
@@ -12,7 +12,9 @@ import {
   useTimelineEventPreviewMethodsContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
-export const ServiceUpdatedActionPreview = () => {
+export const ServiceUpdatedActionPreview: FC<{
+  mode?: 'created' | 'updated';
+}> = ({ mode = 'updated' }) => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
   const event = modalContent as Action;
@@ -27,7 +29,11 @@ export const ServiceUpdatedActionPreview = () => {
       />
       <Card m={6} mt={3} p='4' boxShadow='xs' variant='outline'>
         <CardBody as={Flex} p='0' align='center'>
-          <FeaturedIcon size='md' minW='10' colorScheme='gray'>
+          <FeaturedIcon
+            size='md'
+            minW='10'
+            colorScheme={mode === 'created' ? 'primary' : 'gray'}
+          >
             <DotSingle />
           </FeaturedIcon>
           <Text

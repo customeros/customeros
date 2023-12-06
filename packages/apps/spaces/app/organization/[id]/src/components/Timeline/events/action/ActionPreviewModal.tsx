@@ -17,7 +17,12 @@ export const ActionPreviewModal: React.FC<ActionPreviewModalProps> = ({
       return <ContractStatusUpdatedActionPreview />;
     case ActionType.ServiceLineItemQuantityUpdated:
     case ActionType.ServiceLineItemPriceUpdated:
+    case ActionType.ServiceLineItemBilledTypeUpdated:
       return <ServiceUpdatedActionPreview />;
+    case ActionType.ServiceLineItemBilledTypeOnceCreated:
+    case ActionType.ServiceLineItemBilledTypeUsageCreated:
+    case ActionType.ServiceLineItemBilledTypeRecurringCreated:
+      return <ServiceUpdatedActionPreview mode='created' />;
     default:
       return null;
   }

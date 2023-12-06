@@ -9,21 +9,29 @@ import { useTimelineEventPreviewMethodsContext } from '@organization/src/compone
 
 interface ServiceUpdatedActionProps {
   data: Action;
+  mode?: 'created' | 'updated';
 }
 
 export const ServiceUpdatedAction: React.FC<ServiceUpdatedActionProps> = ({
   data,
+  mode = 'updated',
 }) => {
   const { openModal } = useTimelineEventPreviewMethodsContext();
   if (!data.content) return null;
+  const isTemporary = data.appSource === 'customeros-optimistic-update';
 
   return (
     <Flex
       alignItems='center'
-      onClick={() => openModal(data.id)}
-      cursor='pointer'
+      opacity={isTemporary ? 0.5 : 1}
+      onClick={() => !isTemporary && openModal(data.id)}
+      cursor={isTemporary ? 'progress' : 'pointer'}
     >
-      <FeaturedIcon size='md' minW='10' colorScheme='gray'>
+      <FeaturedIcon
+        size='md'
+        minW='10'
+        colorScheme={mode === 'created' ? 'primary' : 'gray'}
+      >
         <DotSingle />
       </FeaturedIcon>
 
