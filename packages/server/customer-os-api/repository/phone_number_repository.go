@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -84,7 +85,7 @@ func (r *phoneNumberRepository) MergePhoneNumberToInTx(ctx context.Context, tx n
 			"primary":        phoneNumberEntity.Primary,
 			"source":         phoneNumberEntity.Source,
 			"sourceOfTruth":  phoneNumberEntity.SourceOfTruth,
-			"appSource":      phoneNumberEntity.AppSource,
+			"appSource":      utils.StringFirstNonEmpty(phoneNumberEntity.AppSource, constants.AppSourceCustomerOsApi),
 			"now":            utils.Now(),
 		})
 	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)

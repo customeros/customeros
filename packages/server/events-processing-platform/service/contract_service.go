@@ -13,7 +13,6 @@ import (
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -39,7 +38,7 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.CreateContract")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.Object("request", request))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	// Validate organization ID
 	if request.OrganizationId == "" {
@@ -102,7 +101,7 @@ func (s *contractService) UpdateContract(ctx context.Context, request *contractp
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.UpdateContract")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.Object("request", request))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	// Check if the contract ID is valid
 	if request.Id == "" {
@@ -153,7 +152,7 @@ func (s *contractService) RefreshContractStatus(ctx context.Context, request *co
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.RefreshContractStatus")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.Object("request", request))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	if request.Id == "" {
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
@@ -174,7 +173,7 @@ func (s *contractService) RolloutRenewalOpportunityOnExpiration(ctx context.Cont
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.RefreshContractStatus")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.Object("request", request))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	if request.Id == "" {
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))

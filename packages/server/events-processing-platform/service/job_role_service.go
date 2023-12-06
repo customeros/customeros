@@ -11,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type jobRoleService struct {
@@ -33,7 +32,7 @@ func (jobRoleService *jobRoleService) CreateJobRole(ctx context.Context, request
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "JobRoleService.CreateJobRole")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, "") // TODO enhance request with LoggedInUserId
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	newObjectId, err := uuid.NewUUID()
 	if err != nil {
