@@ -12,6 +12,7 @@ interface FormSelectProps extends SelectProps {
   isLabelVisible?: boolean;
 }
 
+// TODO: Label props are different from FormInput. They should be in sync
 export const FormSelect = forwardRef<SelectInstance, FormSelectProps>(
   ({ name, formId, isLabelVisible, label, ...rest }, ref) => {
     const { getInputProps } = useField(name, formId);

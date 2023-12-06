@@ -12,6 +12,7 @@ import { AnalyticsProvider } from '@shared/components/Providers/AnalyticsProvide
 
 import { NextAuthProvider } from './SessionProvider';
 interface ProvidersProps {
+  isProduction?: boolean;
   children: React.ReactNode;
   sessionEmail?: string | null;
 }
@@ -19,7 +20,11 @@ interface ProvidersProps {
 const hostname =
   typeof window !== 'undefined' ? window?.location?.hostname : 'platform';
 
-export const Providers = ({ children, sessionEmail }: ProvidersProps) => {
+export const Providers = ({
+  children,
+  sessionEmail,
+  isProduction,
+}: ProvidersProps) => {
   const [persister] = useState(() =>
     createIDBPersister(`${sessionEmail ?? 'cos'}-${hostname}`),
   );
@@ -42,7 +47,9 @@ export const Providers = ({ children, sessionEmail }: ProvidersProps) => {
       <ReactQueryDevtools initialIsOpen={false} position='bottom-right' />
       <RecoilRoot>
         <NextAuthProvider>
-          <AnalyticsProvider>{children}</AnalyticsProvider>
+          <AnalyticsProvider isProduction={isProduction}>
+            {children}
+          </AnalyticsProvider>
         </NextAuthProvider>
       </RecoilRoot>
     </PersistQueryClientProvider>

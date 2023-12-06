@@ -14,7 +14,9 @@ declare const heap: {
 
 export const AnalyticsProvider = ({
   children,
+  isProduction = false,
 }: {
+  isProduction?: boolean;
   children: React.ReactNode;
 }) => {
   const { data: session } = useSession();
@@ -28,13 +30,13 @@ export const AnalyticsProvider = ({
       });
     }
 
-    if (session?.user?.email) {
+    if (session?.user?.email && isProduction) {
       H.identify(session?.user?.email, {
         name: session?.user?.name ?? 'Unknown',
         playerIdentityId: session.user.playerIdentityId,
       });
     }
-  }, [session]);
+  }, [session, isProduction]);
 
   return <>{children}</>;
 };

@@ -28,6 +28,7 @@ import { ContractSubtitle } from '@organization/src/components/Tabs/panels/Accou
 
 import { UrlInput } from './UrlInput';
 import { Services } from './Services/Services';
+import { FormPeriodInput } from './PeriodInput';
 import { billingFrequencyOptions } from '../utils';
 import { RenewalARRCard } from './RenewalARR/RenewalARRCard';
 import { ContractDTO, TimeToRenewalForm } from './Contract.dto';
@@ -119,13 +120,76 @@ export const ContractCard = ({
     organizationName,
     ...(data ?? {}),
   });
+
   const { setDefaultValues, state } = useForm<TimeToRenewalForm>({
     formId,
     defaultValues,
     stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        if (action.payload.name === 'name') {
-          updateContractDebounced({
+        switch (action.payload.name) {
+          case 'renewalPeriods':
+            return next;
+          case 'name': {
+            updateContractDebounced({
+              input: {
+                contractId: data.id,
+                ...ContractDTO.toPayload({
+                  ...state.values,
+                  [action.payload.name]: action.payload.value,
+                }),
+              },
+            });
+
+            return next;
+          }
+          case 'renewalCycle': {
+            let renewalPeriods = '2';
+
+            if (action.payload.value === 'MULTI_YEAR') {
+              renewalPeriods = !next.values?.renewalPeriods
+                ? '2'
+                : next.values.renewalPeriods;
+            }
+            updateContract.mutate({
+              input: {
+                contractId: data.id,
+                ...ContractDTO.toPayload({
+                  ...state.values,
+                  renewalCycle: action.payload.value,
+                  renewalPeriods,
+                }),
+              },
+            });
+
+            return {
+              ...next,
+              values: {
+                ...next.values,
+                renewalPeriods,
+              },
+            };
+          }
+          case 'contractUrl':
+            return next;
+          default: {
+            updateContract.mutate({
+              input: {
+                contractId: data.id,
+                ...ContractDTO.toPayload({
+                  ...state.values,
+                  [action.payload.name]: action.payload.value,
+                }),
+              },
+            });
+
+            return next;
+          }
+        }
+      }
+
+      if (action.type === 'FIELD_BLUR') {
+        if (action.payload.name === 'renewalPeriods') {
+          updateContract.mutate({
             input: {
               contractId: data.id,
               ...ContractDTO.toPayload({
@@ -135,21 +199,14 @@ export const ContractCard = ({
             },
           });
 
-          return next;
+          return {
+            ...next,
+            values: {
+              ...next.values,
+              renewalPeriods: action.payload?.value || '2',
+            },
+          };
         }
-        if (action.payload.name === 'contractUrl') {
-          return next;
-        }
-
-        updateContract.mutate({
-          input: {
-            contractId: data.id,
-            ...ContractDTO.toPayload({
-              ...state.values,
-              [action.payload.name]: action.payload.value,
-            }),
-          },
-        });
       }
 
       return next;
@@ -331,9 +388,16 @@ export const ContractCard = ({
               name='renewalCycle'
               formId={formId}
               options={billingFrequencyOptions}
-              // isClearable
             />
           </Flex>
+          {state.values.renewalCycle?.value === 'MULTI_YEAR' && (
+            <FormPeriodInput
+              formId={formId}
+              label='Renews every'
+              name='renewalPeriods'
+              placeholder='Renews every'
+            />
+          )}
         </CardBody>
       )}
       <CardFooter p='0' mt={1} w='full' flexDir='column'>

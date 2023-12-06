@@ -9,6 +9,7 @@ export interface TimeToRenewalData {
   serviceStartedAt?: Date;
   organizationName?: string;
   contractUrl?: string | null;
+  renewalPeriods?: number | null;
   renewalCycle?: ContractRenewalCycle;
 }
 export interface TimeToRenewalForm {
@@ -17,21 +18,25 @@ export interface TimeToRenewalForm {
   signedAt?: Date;
   serviceStartedAt?: Date;
   contractUrl?: string | null;
-  renewalCycle?: SelectOption<ContractRenewalCycle> | null;
+  renewalPeriods?: string | null;
+  renewalCycle?: SelectOption<ContractRenewalCycle | 'MULTI_YEAR'> | null;
 }
 
 export class ContractDTO implements TimeToRenewalForm {
   signedAt?: Date;
   endedAt?: Date;
   serviceStartedAt?: Date;
-  renewalCycle?: SelectOption<ContractRenewalCycle> | null;
+  renewalCycle?: SelectOption<ContractRenewalCycle | 'MULTI_YEAR'> | null;
   name?: string;
   contractUrl?: string | null;
+  renewalPeriods?: string | null;
 
   constructor(data?: TimeToRenewalData | null) {
     this.renewalCycle =
-      [...billingFrequencyOptions].find(
-        (o) => o.value === data?.renewalCycle,
+      [...billingFrequencyOptions].find(({ value }) =>
+        data?.renewalPeriods ?? 0 > 1
+          ? value === 'MULTI_YEAR'
+          : value === data?.renewalCycle,
       ) ?? undefined;
     this.signedAt = data?.signedAt && new Date(data.signedAt);
     this.endedAt = data?.endedAt && new Date(data.endedAt);
@@ -45,6 +50,7 @@ export class ContractDTO implements TimeToRenewalForm {
             : "Unnamed's"
         } contract`;
     this.contractUrl = data?.contractUrl ?? '';
+    this.renewalPeriods = String(data?.renewalPeriods ?? 2);
   }
 
   static toForm(data?: TimeToRenewalData | null): TimeToRenewalForm {
@@ -62,9 +68,18 @@ export class ContractDTO implements TimeToRenewalForm {
       serviceStartedAt: data?.serviceStartedAt,
       signedAt: data?.signedAt,
       endedAt: data?.endedAt,
-      renewalCycle: data?.renewalCycle?.value,
+      renewalCycle:
+        data?.renewalCycle?.value === 'MULTI_YEAR'
+          ? ContractRenewalCycle.AnnualRenewal
+          : data?.renewalCycle?.value,
       name: data?.name,
       contractUrl: data?.contractUrl,
+      renewalPeriods:
+        data?.renewalCycle?.value === 'MULTI_YEAR'
+          ? parseInt(data?.renewalPeriods || '2')
+          : data?.renewalPeriods
+          ? parseInt(data?.renewalPeriods)
+          : undefined,
     };
   }
 }
