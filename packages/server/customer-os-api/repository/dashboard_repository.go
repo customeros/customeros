@@ -23,6 +23,7 @@ type DashboardRepository interface {
 	GetDashboardCustomerMapData(ctx context.Context, tenant string) ([]map[string]interface{}, error)
 	GetDashboardRevenueAtRiskData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardMRRPerCustomerData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
+	GetDashboardARRBreakdownData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 }
 
 type dashboardRepository struct {
@@ -691,6 +692,98 @@ func (r *dashboardRepository) GetDashboardMRRPerCustomerData(ctx context.Context
 				"year":           year,
 				"month":          month,
 				"amountPerMonth": amountPerMonth,
+			}
+
+			results = append(results, record)
+		}
+	}
+
+	return results, nil
+}
+
+func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardARRBreakdownData")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			`
+					WITH $startDate AS startDate, $endDate AS endDate
+					WITH startDate.year AS startYear, startDate.month AS startMonth, endDate.year AS endYear, endDate.month AS endMonth
+					WITH range(startYear * 12 + startMonth - 1, endYear * 12 + endMonth - 1) AS monthsRange
+					UNWIND monthsRange AS monthsSinceEpoch
+					
+					WITH datetime({year: monthsSinceEpoch / 12, 
+									month: monthsSinceEpoch %s, 
+									day: 1}) AS currentDate
+					
+					WITH currentDate,
+						 datetime({year: currentDate.year, 
+									month: currentDate.month, 
+									day: 1, hour: 0, minute: 0, second: 0, nanosecond: 0o00000000}) as beginOfMonth,
+						 currentDate + duration({months: 1}) - duration({nanoseconds: 1}) as endOfMonth
+					
+					WITH DISTINCT currentDate.year AS year, currentDate.month AS month, beginOfMonth, endOfMonth
+					
+					OPTIONAL MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
+					WHERE 
+						o.hide = false AND o.isCustomer = true AND sli.startedAt is NOT null AND (sli.billed = 'MONTHLY' or sli.billed = 'QUARTERLY' or sli.billed = 'ANNUALLY')
+					
+					WITH year, month, COLLECT(DISTINCT { sliId: sli.id, sliCanceled: CASE WHEN sli.isCanceled IS NOT NULL THEN sli.isCanceled ELSE false END, sliStartedAt: sli.startedAt, sliEndedAt: sli.endedAt, sliAmountPerMonth: CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity ELSE CASE WHEN sli.billed = 'QUARTERLY' THEN  sli.price * sli.quantity / 4 ELSE CASE WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity / 12 ELSE 0 END END END }) AS contractDetails
+					
+					WITH year, month, contractDetails, 
+						REDUCE(s = 0, cd IN contractDetails | CASE WHEN cd.sliCanceled = true AND cd.sliEndedAt.year = year AND cd.sliEndedAt.month = month THEN s + cd.sliAmountPerMonth ELSE s END ) AS cancellations
+			
+					return year, month, 0 as newlyContracted, 0 as renewals, 0 as upsells, 0 as downgrades, cancellations, 0 as churned, contractDetails
+				`, "% 12 + 1", tenant, tenant, tenant),
+			map[string]any{
+				"tenant":    tenant,
+				"startDate": startDate,
+				"endDate":   endDate,
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	//,
+	//REDUCE(newlyContracted = 0, cd IN contractDetails | CASE WHEN cd.status = 'ENDED' THEN newlyContracted + cd.sliAmountPerMonth ELSE churned END ) AS newlyContracted,
+	//	REDUCE(churned = 0, cd IN contractDetails | CASE WHEN cd.status = 'ENDED' THEN churned + cd.sliAmountPerMonth ELSE churned END ) AS churned,
+	//
+	//	REDUCE(cancellations = 0, cd IN contractDetails | CASE WHEN cd.sliCanceled = true THEN cancellations + cd.sliAmountPerMonth ELSE cancellations END ) AS downgrades,
+
+	var results []map[string]interface{}
+	if dbRecords != nil {
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			year := v.Values[0].(int64)
+			month := v.Values[1].(int64)
+			newlyContracted := getCorrectValueType(v.Values[2])
+			renewals := getCorrectValueType(v.Values[3])
+			upsells := getCorrectValueType(v.Values[4])
+			downgrades := getCorrectValueType(v.Values[5])
+			cancellations := getCorrectValueType(v.Values[6])
+			churned := getCorrectValueType(v.Values[7])
+
+			record := map[string]interface{}{
+				"year":            year,
+				"month":           month,
+				"newlyContracted": newlyContracted,
+				"renewals":        renewals,
+				"upsells":         upsells,
+				"downgrades":      downgrades,
+				"cancellations":   cancellations,
+				"churned":         churned,
 			}
 
 			results = append(results, record)

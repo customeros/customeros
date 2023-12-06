@@ -224,21 +224,36 @@ func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, sta
 
 	response := entityDashboard.DashboardARRBreakdownData{}
 
-	response.ArrBreakdown = 1830990
-	response.IncreasePercentage = 2.3
+	response.ArrBreakdown = 0
+	response.IncreasePercentage = 0
 
-	min := 1
-	max := 50
-	for i := 1; i <= 12; i++ {
-		response.Months = append(response.Months, &entityDashboard.DashboardARRBreakdownPerMonthData{
-			Month:           i,
-			NewlyContracted: rand.Intn(max-min) + min,
-			Renewals:        rand.Intn(max-min) + min,
-			Upsells:         rand.Intn(max-min) + min,
-			Downgrades:      rand.Intn(max-min) + min,
-			Cancellations:   rand.Intn(max-min) + min,
-			Churned:         rand.Intn(max-min) + min,
-		})
+	data, err := s.repositories.DashboardRepository.GetDashboardARRBreakdownData(ctx, common.GetContext(ctx).Tenant, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range data {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+		newlyContracted, _ := record["newlyContracted"].(float64)
+		renewals, _ := record["renewals"].(float64)
+		upsells, _ := record["upsells"].(float64)
+		downgrades, _ := record["downgrades"].(float64)
+		cancellations, _ := record["cancellations"].(float64)
+		churned, _ := record["churned"].(float64)
+
+		newData := &entityDashboard.DashboardARRBreakdownPerMonthData{
+			Year:            int(year),
+			Month:           int(month),
+			NewlyContracted: newlyContracted,
+			Renewals:        renewals,
+			Upsells:         upsells,
+			Downgrades:      downgrades,
+			Cancellations:   cancellations,
+			Churned:         churned,
+		}
+
+		response.Months = append(response.Months, newData)
 	}
 
 	return &response, nil

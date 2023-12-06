@@ -1597,6 +1597,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 					sli.source=$source,
 					sli.sourceOfTruth=$sourceOfTruth,
 					sli.appSource=$appSource,
+					sli.isCanceled=$isCanceled,	
 					sli.billed=$billed,	
 					sli.quantity=$quantity,	
 					sli.price=$price,
@@ -1616,6 +1617,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 		"source":        serviceLineItem.Source,
 		"sourceOfTruth": serviceLineItem.SourceOfTruth,
 		"appSource":     serviceLineItem.AppSource,
+		"isCanceled":    serviceLineItem.IsCanceled,
 		"billed":        serviceLineItem.Billed,
 		"startedAt":     serviceLineItem.StartedAt,
 		"quantity":      serviceLineItem.Quantity,
@@ -1820,4 +1822,16 @@ func contains(slice []string, value string) bool {
 		}
 	}
 	return false
+}
+
+func FirstTimeOfMonth(year, month int) time.Time {
+	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+}
+
+func MiddleTimeOfMonth(year, month int) time.Time {
+	return FirstTimeOfMonth(year, month).AddDate(0, 0, 15)
+}
+
+func LastTimeOfMonth(year, month int) time.Time {
+	return FirstTimeOfMonth(year, month).AddDate(0, 1, 0).Add(-time.Nanosecond)
 }

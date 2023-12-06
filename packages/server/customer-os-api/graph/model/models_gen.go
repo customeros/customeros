@@ -521,13 +521,14 @@ type DashboardARRBreakdown struct {
 }
 
 type DashboardARRBreakdownPerMonth struct {
-	Month           int `json:"month"`
-	NewlyContracted int `json:"newlyContracted"`
-	Renewals        int `json:"renewals"`
-	Upsells         int `json:"upsells"`
-	Downgrades      int `json:"downgrades"`
-	Cancellations   int `json:"cancellations"`
-	Churned         int `json:"churned"`
+	Year            int     `json:"year"`
+	Month           int     `json:"month"`
+	NewlyContracted float64 `json:"newlyContracted"`
+	Renewals        float64 `json:"renewals"`
+	Upsells         float64 `json:"upsells"`
+	Downgrades      float64 `json:"downgrades"`
+	Cancellations   float64 `json:"cancellations"`
+	Churned         float64 `json:"churned"`
 }
 
 type DashboardCustomerMap struct {
