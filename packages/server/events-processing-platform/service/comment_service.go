@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/comment"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/command"
@@ -12,7 +11,6 @@ import (
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type commentService struct {
@@ -32,7 +30,7 @@ func (s *commentService) UpsertComment(ctx context.Context, request *commentpb.U
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "CommentService.UpsertComment")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	commentId := utils.NewUUIDIfEmpty(request.Id)
 

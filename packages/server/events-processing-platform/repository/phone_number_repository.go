@@ -72,11 +72,9 @@ func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, phoneNumb
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId))
+	tracing.LogObjectAsJson(span, "phoneNumberCreateEvent", event)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id}) 
 		 ON CREATE SET p.rawPhoneNumber = $rawPhoneNumber, 
 						p.validated = null,
@@ -87,8 +85,7 @@ func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, phoneNumb
 						p.updatedAt = $updatedAt,
 						p.syncedWithEventStore = true 
 		 ON MATCH SET 	p.syncedWithEventStore = true`, event.Tenant)
-
-	return r.executeQuery(ctx, query, map[string]any{
+	params := map[string]any{
 		"id":             phoneNumberId,
 		"rawPhoneNumber": event.RawPhoneNumber,
 		"tenant":         event.Tenant,
@@ -97,7 +94,12 @@ func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, phoneNumb
 		"appSource":      helper.GetAppSource(utils.StringFirstNonEmpty(event.SourceFields.AppSource, event.AppSource)),
 		"createdAt":      event.CreatedAt,
 		"updatedAt":      event.UpdatedAt,
-	})
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	return r.executeQuery(ctx, cypher, params)
 }
 
 func (r *phoneNumberRepository) UpdatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberUpdatedEvent) error {

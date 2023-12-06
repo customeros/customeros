@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	interactioneventpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -12,7 +11,6 @@ import (
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/opentracing/opentracing-go/log"
 	"strings"
 )
 
@@ -33,7 +31,7 @@ func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, re
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.UpsertInteractionEvent")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	interactionEventId := strings.TrimSpace(utils.NewUUIDIfEmpty(request.Id))
 
@@ -88,7 +86,7 @@ func (s *interactionEventService) RequestGenerateSummary(ctx context.Context, re
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.RequestGenerateSummary")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	cmd := command.NewRequestSummaryCommand(request.Tenant, request.InteractionEventId)
 	if err := s.interactionEventsCommandHandlers.RequestSummary.Handle(ctx, cmd); err != nil {
@@ -104,7 +102,7 @@ func (s *interactionEventService) RequestGenerateActionItems(ctx context.Context
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.RequestGenerateActionItems")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	cmd := command.NewRequestActionItemsCommand(request.Tenant, request.InteractionEventId)
 	if err := s.interactionEventsCommandHandlers.RequestActionItems.Handle(ctx, cmd); err != nil {
