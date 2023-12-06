@@ -52,7 +52,7 @@ func (r *interactionEventRepository) GetMatchedInteractionEvent(ctx context.Cont
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystem})
-				OPTIONAL MATCH (ext)<-[:IS_LINKED_WITH {externalId:$externalId}]-(ie:InteractionEvent_%s)
+				OPTIONAL MATCH (ext)<-[:IS_LINKED_WITH {externalId:$externalId, externalSource:$externalSource}]-(ie:InteractionEvent_%s)
 				WITH ie WHERE NOT ie IS NULL
 				RETURN ie.id limit 1`
 
@@ -62,6 +62,7 @@ func (r *interactionEventRepository) GetMatchedInteractionEvent(ctx context.Cont
 				"tenant":         tenant,
 				"externalSystem": event.ExternalSystem,
 				"externalId":     event.ExternalId,
+				"externalSource": event.ExternalSourceEntity,
 			})
 		if err != nil {
 			return nil, err

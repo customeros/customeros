@@ -30,6 +30,7 @@ func NewInteractionEventRepository(driver *neo4j.DriverWithContext, database str
 	}
 }
 
+// TODO when adding intercom chat introduce source entity for matching, as same external id value but different source should produce different interaction event nodes
 func (r *interactionEventRepository) GetMatchedInteractionEventId(ctx context.Context, tenant, externalId, externalSystem string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetMatchedInteractionEventId")
 	defer span.Finish()
@@ -37,12 +38,12 @@ func (r *interactionEventRepository) GetMatchedInteractionEventId(ctx context.Co
 	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId))
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
-				MATCH (i:InteractionEvent_%s)-[:IS_LINKED_WITH {externalId:$issueExternalId}]->(e)
+				MATCH (i:InteractionEvent_%s)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
 				RETURN i.id LIMIT 1`, tenant)
 	params := map[string]interface{}{
-		"tenant":          tenant,
-		"externalSystem":  externalSystem,
-		"issueExternalId": externalId,
+		"tenant":         tenant,
+		"externalSystem": externalSystem,
+		"externalId":     externalId,
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 

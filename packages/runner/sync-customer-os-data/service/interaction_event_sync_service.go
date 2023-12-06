@@ -145,13 +145,9 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 			found = true
 		}
 		if !found {
-			if err := dataService.MarkProcessed(ctx, interactionEventInput.SyncId, runId, true, true, "Interaction session not found: "+interactionEventInput.PartOfSession.ExternalId); err != nil {
-				*failed++
-				span.LogFields(log.Bool("failedSync", true))
-				return
-			}
-			*skipped++
-			span.LogFields(log.Bool("skippedSync", true))
+			_ = dataService.MarkProcessed(ctx, interactionEventInput.SyncId, runId, false, false, "Interaction session not found: "+interactionEventInput.PartOfSession.ExternalId)
+			*failed++
+			span.LogFields(log.Bool("failedSync", true))
 			return
 		}
 	}
