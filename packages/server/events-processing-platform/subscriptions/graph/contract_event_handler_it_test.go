@@ -146,6 +146,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
+		log:                  testLogger,
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
@@ -235,6 +236,7 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
+		log:                  testLogger,
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
@@ -448,6 +450,102 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 	require.Equal(t, opportunityevent.OpportunityUpdateV1, generatedEvent2.EventType)
 }
 
+func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		Name:         "test contract",
+		ContractUrl:  "http://contract.url",
+		RenewalCycle: string(model.MonthlyRenewalCycleString),
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		RenewalDetails: entity.RenewalDetails{
+			RenewedAt:         utils.Ptr(utils.Now().AddDate(0, 0, 20)),
+			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringHigh),
+		},
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Opportunity": 1})
+
+	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+	}
+	now := utils.Now()
+	yesterday := now.AddDate(0, 0, -1)
+	daysAgo2 := now.AddDate(0, 0, -2)
+	tomorrow := now.AddDate(0, 0, 1)
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
+		model.ContractDataFields{
+			Name:             "test contract updated",
+			ContractUrl:      "http://contract.url/updated",
+			ServiceStartedAt: &yesterday,
+			SignedAt:         &daysAgo2,
+			EndedAt:          &tomorrow,
+			RenewalCycle:     model.MonthlyRenewal,
+			Status:           model.Live,
+		},
+		commonmodel.ExternalSystem{},
+		constants.SourceOpenline,
+		now)
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err, "failed to execute event handler")
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
+
+	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	require.Nil(t, err)
+	require.NotNil(t, contractDbNode)
+
+	// verify contract
+	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	require.Equal(t, contractId, contract.Id)
+	require.Equal(t, "test contract updated", contract.Name)
+	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
+	require.Equal(t, model.Live.String(), contract.Status)
+	require.Equal(t, model.MonthlyRenewal.String(), contract.RenewalCycle)
+	require.True(t, now.Equal(contract.UpdatedAt))
+	require.True(t, yesterday.Equal(*contract.ServiceStartedAt))
+	require.True(t, daysAgo2.Equal(*contract.SignedAt))
+	require.True(t, tomorrow.Equal(*contract.EndedAt))
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
+
+	// Check create renewal opportunity command was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 4, len(eventList))
+
+	generatedEventUpdateRenewal := eventList[3]
+	require.Equal(t, opportunityevent.OpportunityUpdateRenewalV1, generatedEventUpdateRenewal.EventType)
+	var eventDataUpdateRenewal opportunityevent.OpportunityUpdateRenewalEvent
+	err = generatedEventUpdateRenewal.GetJsonData(&eventDataUpdateRenewal)
+	require.Nil(t, err)
+	require.Equal(t, tenantName, eventDataUpdateRenewal.Tenant)
+	require.Equal(t, string(opportunitymodel.RenewalLikelihoodStringZero), eventDataUpdateRenewal.RenewalLikelihood)
+	require.Equal(t, []string{opportunitymodel.FieldMaskRenewalLikelihood}, eventDataUpdateRenewal.FieldsMask)
+	test.AssertRecentTime(t, eventDataUpdateRenewal.UpdatedAt)
+}
+
 func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpenline(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
@@ -471,6 +569,7 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
+		log:                  testLogger,
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
@@ -536,7 +635,7 @@ func prepareRenewalOpportunity(t *testing.T, tenant, opportunityId string, aggre
 	require.Nil(t, err)
 }
 
-func TestContractEventHandler_OnUpdateStatusEnded(t *testing.T) {
+func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -598,7 +697,7 @@ func TestContractEventHandler_OnUpdateStatusEnded(t *testing.T) {
 	require.Equal(t, 0, len(eventsMap))
 }
 
-func TestContractEventHandler_OnUpdateStatusLive(t *testing.T) {
+func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 

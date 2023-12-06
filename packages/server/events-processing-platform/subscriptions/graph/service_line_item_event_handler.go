@@ -98,7 +98,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	serviceLineItemEntity := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
 
 	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-	err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, eventData.ContractId)
+	err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating renewal opportunity for contract %s: %s", eventData.ContractId, err.Error())
@@ -210,7 +210,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 		contractId = contract.Id
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-		err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contract.Id)
+		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contract.Id, err.Error())
@@ -340,7 +340,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 	if contractDbNode != nil {
 		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-		err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contract.Id)
+		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contract.Id, err.Error())
@@ -379,7 +379,7 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 	if contractDbNode != nil {
 		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-		err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contract.Id)
+		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contract.Id, err.Error())

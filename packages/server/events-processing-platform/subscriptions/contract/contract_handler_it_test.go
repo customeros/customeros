@@ -39,7 +39,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_CreateRenewalOpportunit
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
-	err := handler.UpdateRenewalNextCycleDate(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check create renewal opportunity command was generated
@@ -88,7 +88,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract(t *test
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
-	err := handler.UpdateRenewalNextCycleDate(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check create renewal opportunity command was generated
@@ -134,7 +134,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
-	err := handler.UpdateRenewalNextCycleDate(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check create renewal opportunity command was generated
@@ -181,7 +181,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testi
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
-	err := handler.UpdateRenewalNextCycleDate(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check create renewal opportunity command was generated
@@ -228,7 +228,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
-	err := handler.UpdateRenewalNextCycleDate(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check create renewal opportunity command was generated
@@ -279,17 +279,6 @@ func startOfNextMonth(current time.Time) time.Time {
 	return firstOfNextMonth
 }
 
-func startOfNextQuarter(current time.Time) time.Time {
-	year, month, _ := current.Date()
-	quarter := (month-1)/3 + 1
-	firstOfNextQuarter := time.Date(year, quarter*3+1, 1, 0, 0, 0, 0, current.Location())
-	// Handle year change transition
-	if quarter == 4 {
-		firstOfNextQuarter = time.Date(year+1, time.January, 1, 0, 0, 0, 0, current.Location())
-	}
-	return firstOfNextQuarter
-}
-
 func startOfNextYear(current time.Time) time.Time {
 	year, _, _ := current.Date()
 	firstOfNextYear := time.Date(year+1, time.January, 1, 0, 0, 0, 0, current.Location())
@@ -329,7 +318,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_OnlyOnceBilled(t *testing
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
-	err := handler.UpdateRenewalArr(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check create renewal opportunity command was generated
@@ -397,7 +386,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MultipleServices(t *testi
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
-	err := handler.UpdateRenewalArr(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check create renewal opportunity command was generated
@@ -454,7 +443,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MediumLikelihood(t *testi
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
-	err := handler.UpdateRenewalArr(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check create renewal opportunity command was generated
@@ -515,7 +504,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsBeforeNextRen
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
-	err := handler.UpdateRenewalArr(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check create renewal opportunity command was generated
@@ -576,7 +565,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsIn6Months_Pro
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
-	err := handler.UpdateRenewalArr(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check create renewal opportunity command was generated
@@ -637,7 +626,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsInMoreThan12M
 	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
-	err := handler.UpdateRenewalArr(ctx, tenantName, contractId)
+	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
 	// Check create renewal opportunity command was generated
@@ -658,4 +647,196 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsInMoreThan12M
 	require.Equal(t, float64(1000), eventData.MaxAmount)
 	require.Equal(t, float64(1000), eventData.Amount)
 	require.Equal(t, []string{opportunitymodel.FieldMaskAmount, opportunitymodel.FieldMaskMaxAmount}, eventData.FieldsMask)
+}
+
+func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedContract_UpdateLikelihood(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	tomorrow := utils.Now().AddDate(0, 0, 1)
+	afterTomorrow := utils.Now().AddDate(0, 0, 2)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		EndedAt:      &tomorrow,
+		RenewalCycle: string(model.AnnuallyRenewalCycleString),
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		RenewalDetails: entity.RenewalDetails{
+			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringLow),
+			RenewedAt:         &afterTomorrow,
+		},
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
+
+	// prepare event handler
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+
+	// EXECUTE
+	err := handler.UpdateActiveRenewalOpportunityLikelihood(ctx, tenantName, contractId)
+	require.Nil(t, err)
+
+	// Check create renewal opportunity command was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 2, len(eventList))
+
+	updateNextCycleDateEvent := eventList[1]
+	require.Equal(t, opportunityevent.OpportunityUpdateRenewalV1, updateNextCycleDateEvent.EventType)
+	var eventData opportunityevent.OpportunityUpdateRenewalEvent
+	err = updateNextCycleDateEvent.GetJsonData(&eventData)
+	require.Nil(t, err)
+	require.Equal(t, tenantName, eventData.Tenant)
+	require.Equal(t, string(opportunitymodel.RenewalLikelihoodStringZero), eventData.RenewalLikelihood)
+	require.Equal(t, []string{opportunitymodel.FieldMaskRenewalLikelihood}, eventData.FieldsMask)
+}
+
+func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedContract_LikelihoodAlreadyZero(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	tomorrow := utils.Now().AddDate(0, 0, 1)
+	afterTomorrow := utils.Now().AddDate(0, 0, 2)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		EndedAt:      &tomorrow,
+		RenewalCycle: string(model.AnnuallyRenewalCycleString),
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		RenewalDetails: entity.RenewalDetails{
+			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringZero),
+			RenewedAt:         &afterTomorrow,
+		},
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
+
+	// prepare event handler
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+
+	// EXECUTE
+	err := handler.UpdateActiveRenewalOpportunityLikelihood(ctx, tenantName, contractId)
+	require.Nil(t, err)
+
+	// Check create renewal opportunity command was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 1, len(eventList))
+
+	updateNextCycleDateEvent := eventList[0]
+	require.Equal(t, opportunityevent.OpportunityCreateRenewalV1, updateNextCycleDateEvent.EventType)
+}
+
+func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_ReinitiatedContract_UpdateLikelihood(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	afterTomorrow := utils.Now().AddDate(0, 0, 2)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		RenewalCycle: string(model.AnnuallyRenewalCycleString),
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		RenewalDetails: entity.RenewalDetails{
+			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringZero),
+			RenewedAt:         &afterTomorrow,
+		},
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
+
+	// prepare event handler
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+
+	// EXECUTE
+	err := handler.UpdateActiveRenewalOpportunityLikelihood(ctx, tenantName, contractId)
+	require.Nil(t, err)
+
+	// Check create renewal opportunity command was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 2, len(eventList))
+
+	updateNextCycleDateEvent := eventList[1]
+	require.Equal(t, opportunityevent.OpportunityUpdateRenewalV1, updateNextCycleDateEvent.EventType)
+	var eventData opportunityevent.OpportunityUpdateRenewalEvent
+	err = updateNextCycleDateEvent.GetJsonData(&eventData)
+	require.Nil(t, err)
+	require.Equal(t, tenantName, eventData.Tenant)
+	require.Equal(t, string(opportunitymodel.RenewalLikelihoodStringMedium), eventData.RenewalLikelihood)
+	require.Equal(t, []string{opportunitymodel.FieldMaskRenewalLikelihood}, eventData.FieldsMask)
+}
+
+func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_ReinitiatedContract_LikelihoodNotZero(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	afterTomorrow := utils.Now().AddDate(0, 0, 2)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		RenewalCycle: string(model.AnnuallyRenewalCycleString),
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		RenewalDetails: entity.RenewalDetails{
+			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringHigh),
+			RenewedAt:         &afterTomorrow,
+		},
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
+
+	// prepare event handler
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+
+	// EXECUTE
+	err := handler.UpdateActiveRenewalOpportunityLikelihood(ctx, tenantName, contractId)
+	require.Nil(t, err)
+
+	// Check create renewal opportunity command was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 1, len(eventList))
+
+	updateNextCycleDateEvent := eventList[0]
+	require.Equal(t, opportunityevent.OpportunityCreateRenewalV1, updateNextCycleDateEvent.EventType)
 }

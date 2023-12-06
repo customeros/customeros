@@ -85,7 +85,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 	}
 
 	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-	err = contractHandler.UpdateRenewalArrAndNextCycleDate(ctx, eventData.Tenant, eventData.ContractId)
+	err = contractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
@@ -113,6 +113,21 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating next cycle date for opportunity %s: %s", opportunityId, err.Error())
+	}
+
+	contractDbNode, err := h.repositories.ContractRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while getting contract for opportunity %s: %s", opportunityId, err.Error())
+	}
+	if contractDbNode != nil {
+		contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+		err = contractHandler.UpdateActiveRenewalOpportunityLikelihood(ctx, eventData.Tenant, contractEntity.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractEntity.Id, err.Error())
+		}
 	}
 
 	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
@@ -247,7 +262,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		}
 		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-		err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contract.Id)
+		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
