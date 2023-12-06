@@ -1836,13 +1836,16 @@ type WorkspaceInput struct {
 type ActionType string
 
 const (
-	ActionTypeCreated                          ActionType = "CREATED"
-	ActionTypeRenewalLikelihoodUpdated         ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
-	ActionTypeRenewalForecastUpdated           ActionType = "RENEWAL_FORECAST_UPDATED"
-	ActionTypeContractStatusUpdated            ActionType = "CONTRACT_STATUS_UPDATED"
-	ActionTypeServiceLineItemPriceUpdated      ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
-	ActionTypeServiceLineItemQuantityUpdated   ActionType = "SERVICE_LINE_ITEM_QUANTITY_UPDATED"
-	ActionTypeServiceLineItemBilledTypeUpdated ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_UPDATED"
+	ActionTypeCreated                                   ActionType = "CREATED"
+	ActionTypeRenewalLikelihoodUpdated                  ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
+	ActionTypeRenewalForecastUpdated                    ActionType = "RENEWAL_FORECAST_UPDATED"
+	ActionTypeContractStatusUpdated                     ActionType = "CONTRACT_STATUS_UPDATED"
+	ActionTypeServiceLineItemPriceUpdated               ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
+	ActionTypeServiceLineItemQuantityUpdated            ActionType = "SERVICE_LINE_ITEM_QUANTITY_UPDATED"
+	ActionTypeServiceLineItemBilledTypeUpdated          ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_UPDATED"
+	ActionTypeServiceLineItemBilledTypeRecurringCreated ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED"
+	ActionTypeServiceLineItemBilledTypeOnceCreated      ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED"
+	ActionTypeServiceLineItemBilledTypeUsageCreated     ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_USAGE_CREATED"
 )
 
 var AllActionType = []ActionType{
@@ -1853,11 +1856,14 @@ var AllActionType = []ActionType{
 	ActionTypeServiceLineItemPriceUpdated,
 	ActionTypeServiceLineItemQuantityUpdated,
 	ActionTypeServiceLineItemBilledTypeUpdated,
+	ActionTypeServiceLineItemBilledTypeRecurringCreated,
+	ActionTypeServiceLineItemBilledTypeOnceCreated,
+	ActionTypeServiceLineItemBilledTypeUsageCreated,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeServiceLineItemBilledTypeUpdated:
+	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeServiceLineItemBilledTypeUpdated, ActionTypeServiceLineItemBilledTypeRecurringCreated, ActionTypeServiceLineItemBilledTypeOnceCreated, ActionTypeServiceLineItemBilledTypeUsageCreated:
 		return true
 	}
 	return false
