@@ -1,6 +1,6 @@
 'use client';
 import { useParams } from 'next/navigation';
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
@@ -11,7 +11,6 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
-import { FormSelect } from '@ui/form/SyncSelect';
 import { toastError } from '@ui/presentation/Toast';
 import { Button, ButtonGroup } from '@ui/form/Button';
 import { AutoresizeTextarea } from '@ui/form/Textarea';
@@ -20,7 +19,6 @@ import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { Opportunity, OpportunityRenewalLikelihood } from '@graphql/types';
-import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
 import {
   GetContractsQuery,
   useGetContractsQuery,
@@ -54,31 +52,31 @@ export const RenewalDetailsModal = ({
   const orgId = useParams()?.id as string;
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
-  const formId = `renewal-details-form-${data.id}`;
+  // const formId = `renewal-details-form-${data.id}`;
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [likelihood, setLikelihood] = useState<
     OpportunityRenewalLikelihood | undefined | null
   >((data?.renewalLikelihood as OpportunityRenewalLikelihood) ?? null);
   const [amount, setAmount] = useState<string>(data?.amount?.toString() || '');
   const [reason, setReason] = useState<string>(data?.comments || '');
-  const [owner, setOwner] = useState<null | { value: string; label: string }>(
-    null,
-  );
-  const { data: usersData } = useGetUsersQuery(client, {
-    pagination: {
-      limit: 50,
-      page: 1,
-    },
-  });
-
-  const options = useMemo(() => {
-    return usersData?.users?.content
-      ?.filter((e) => Boolean(e.firstName) || Boolean(e.lastName))
-      ?.map((o) => ({
-        value: o.id,
-        label: `${o.firstName} ${o.lastName}`.trim(),
-      }));
-  }, [usersData?.users?.content?.length]);
+  // const [owner, setOwner] = useState<null | { value: string; label: string }>(
+  //   null,
+  // );
+  // const { data: usersData } = useGetUsersQuery(client, {
+  //   pagination: {
+  //     limit: 50,
+  //     page: 1,
+  //   },
+  // });
+  //
+  // const options = useMemo(() => {
+  //   return usersData?.users?.content
+  //     ?.filter((e) => Boolean(e.firstName) || Boolean(e.lastName))
+  //     ?.map((o) => ({
+  //       value: o.id,
+  //       label: `${o.firstName} ${o.lastName}`.trim(),
+  //     }));
+  // }, [usersData?.users?.content?.length]);
 
   const getContractsQueryKey = useGetContractsQuery.getKey({
     id: orgId,
@@ -191,20 +189,21 @@ export const RenewalDetailsModal = ({
           </Heading>
         </ModalHeader>
         <ModalBody as={Flex} flexDir='column' pb='0' gap={4}>
-          <FormSelect
-            formId={formId}
-            name='arrForecast'
-            isClearable
-            isDisabled
-            value={owner}
-            isLoading={false}
-            placeholder='Owner'
-            backspaceRemovesValue
-            onChange={setOwner}
-            options={options}
-            label='Owner'
-            isLabelVisible
-          />
+          {/*todo uncomment when BE is ready*/}
+          {/*<FormSelect*/}
+          {/*  formId={formId}*/}
+          {/*  name='arrForecast'*/}
+          {/*  isClearable*/}
+          {/*  isDisabled*/}
+          {/*  value={owner}*/}
+          {/*  isLoading={false}*/}
+          {/*  placeholder='Owner'*/}
+          {/*  backspaceRemovesValue*/}
+          {/*  onChange={setOwner}*/}
+          {/*  options={options}*/}
+          {/*  label='Owner'*/}
+          {/*  isLabelVisible*/}
+          {/*/>*/}
 
           <div>
             <Text
