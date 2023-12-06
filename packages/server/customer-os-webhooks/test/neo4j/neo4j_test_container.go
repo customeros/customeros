@@ -25,9 +25,8 @@ func startContainer(ctx context.Context, username, password string) (testcontain
 		},
 		WaitingFor: wait.ForLog("Started.").WithStartupTimeout(300 * time.Second),
 		HostConfigModifier: func(hc *container.HostConfig) {
-			hc.Memory = 1024 * 1024 * 1024       // 1GB
-			hc.NanoCPUs = 1 * 1000 * 1000 * 1000 // 1 CPU
-			hc.StorageOpt = map[string]string{"size": "2G"}
+			hc.Memory = 2 * 1024 * 1024 * 1024   // 1GB
+			hc.NanoCPUs = 2 * 1000 * 1000 * 1000 // 1 CPU
 		},
 	}
 	return testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
