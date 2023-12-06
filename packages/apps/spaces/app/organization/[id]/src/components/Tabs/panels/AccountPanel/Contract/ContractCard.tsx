@@ -371,7 +371,11 @@ export const ContractCard = ({
               calendarIconHidden
             />
           </Flex>
-          <Flex gap='4' flexGrow={0}>
+          <Flex
+            gap='4'
+            flexGrow={0}
+            mb={state.values.renewalCycle?.value === 'MULTI_YEAR' ? '2' : '0'}
+          >
             <DatePicker
               label='Service starts'
               placeholder='Start date'
