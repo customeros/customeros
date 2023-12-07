@@ -50,7 +50,7 @@ func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, cmd *comm
 			return err
 		}
 	} else {
-		if err = organizationAggregate.UpdateOrganization(ctx, orgFields, cmd.LoggedInUserId); err != nil {
+		if err = organizationAggregate.UpdateOrganization(ctx, orgFields, cmd.LoggedInUserId, cmd.FieldsMask); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}

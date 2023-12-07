@@ -16,7 +16,7 @@ import (
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -143,9 +143,10 @@ func (h *organizationEventHandler) webscrapeOrganization(ctx context.Context, te
 	}
 	currentOrgName := utils.GetStringPropOrEmpty(org.Props, "name")
 
+	fieldMask := []string{model.FieldMaskName, model.FieldMaskMarket, model.FieldMaskIndustry, model.FieldMaskIndustryGroup, model.FieldMaskSubIndustry, model.FieldMaskTargetAudience, model.FieldMaskValueProposition}
 	err = h.organizationCommands.UpdateOrganization.Handle(ctx,
 		cmd.NewUpdateOrganizationCommand(organizationId, tenant, constants.SourceWebscrape,
-			models.OrganizationDataFields{
+			model.OrganizationDataFields{
 				Name:             utils.StringFirstNonEmpty(currentOrgName, result.CompanyName),
 				Market:           result.Market,
 				Industry:         result.Industry,
@@ -154,7 +155,7 @@ func (h *organizationEventHandler) webscrapeOrganization(ctx context.Context, te
 				TargetAudience:   result.TargetAudience,
 				ValueProposition: result.ValueProposition,
 			},
-			utils.TimePtr(utils.Now()), true))
+			utils.TimePtr(utils.Now()), fieldMask))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error updating organization: %v", err)
@@ -250,12 +251,14 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, source, market, industry string, span opentracing.Span) error {
 	err := h.organizationCommands.UpdateOrganization.Handle(ctx,
 		cmd.NewUpdateOrganizationCommand(organizationId, tenant, source,
-			models.OrganizationDataFields{
+			model.OrganizationDataFields{
 				Market:   market,
 				Industry: industry,
 			},
 			utils.TimePtr(utils.Now()),
-			true))
+			[]string{
+				model.FieldMaskMarket, model.FieldMaskIndustry,
+			}))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error updating organization %s: %v", organizationId, err.Error())

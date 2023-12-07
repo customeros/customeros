@@ -222,9 +222,16 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		matchingOrganizationExists := organizationId != ""
 		span.LogFields(log.Bool("found matching organization", matchingOrganizationExists))
 
-		if orgInput.UpdateOnly && !matchingOrganizationExists {
-			span.LogFields(log.String("output", "skipped"))
-			return NewSkippedSyncStatus("Update only flag enabled and no matching organization found")
+		fieldsMask := make([]organizationpb.OrganizationMaskField, 0)
+		if orgInput.UpdateOnly {
+			if !matchingOrganizationExists {
+				span.LogFields(log.String("output", "skipped"))
+				return NewSkippedSyncStatus("Update only flag enabled and no matching organization found")
+			}
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HIDE)
+			if orgInput.Name != "" {
+				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
+			}
 		}
 
 		// Create new organization id if not found
@@ -256,11 +263,11 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			Hide:              !(orgHasWhitelistedDomain || orgInput.Whitelisted),
 			Note:              orgInput.Note,
 			ReferenceId:       orgInput.ReferenceId,
-			IgnoreEmptyFields: orgInput.UpdateOnly,
 			SourceFields: &commonpb.SourceFields{
 				Source:    orgInput.ExternalSystem,
 				AppSource: appSource,
 			},
+			FieldsMask: fieldsMask,
 			ExternalSystemFields: &commonpb.ExternalSystemFields{
 				ExternalSystemId: orgInput.ExternalSystem,
 				ExternalId:       orgInput.ExternalId,

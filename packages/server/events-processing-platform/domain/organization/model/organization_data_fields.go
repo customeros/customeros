@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -28,7 +28,6 @@ type OrganizationDataFields struct {
 type OrganizationFields struct {
 	ID                     string
 	Tenant                 string
-	IgnoreEmptyFields      bool
 	OrganizationDataFields OrganizationDataFields
 	CreatedAt              *time.Time
 	UpdatedAt              *time.Time
