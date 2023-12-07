@@ -39,7 +39,7 @@ export const AccountPanelSkeleton: React.FC = () => {
         </Flex>
       </Flex>
 
-      <SkeletonCard>
+      <SkeletonCard showBtnSection>
         <SkeletonCardFooter1 />
       </SkeletonCard>
       <SkeletonCard>
@@ -49,7 +49,13 @@ export const AccountPanelSkeleton: React.FC = () => {
   );
 };
 
-const SkeletonCard = ({ children }: { children?: React.ReactNode }) => {
+const SkeletonCard = ({
+  children,
+  showBtnSection,
+}: {
+  showBtnSection?: boolean;
+  children?: React.ReactNode;
+}) => {
   return (
     <Card
       size='sm'
@@ -62,7 +68,7 @@ const SkeletonCard = ({ children }: { children?: React.ReactNode }) => {
       mb={4}
     >
       <CardBody as={Flex} align='center' w='full' p='4'>
-        <Flex justify='space-between' w='full' align='center'>
+        <Flex justify='space-between' w='full' align='flex-start'>
           <SkeletonCircle size='10' startColor='gray.300' endColor='gray.100' />
           <Flex
             ml='5'
@@ -73,7 +79,7 @@ const SkeletonCard = ({ children }: { children?: React.ReactNode }) => {
             w='full'
           >
             <Skeleton
-              w='45%'
+              w='55%'
               h='4'
               borderRadius='full'
               startColor='gray.300'
@@ -87,6 +93,25 @@ const SkeletonCard = ({ children }: { children?: React.ReactNode }) => {
               endColor='gray.100'
             />
           </Flex>
+          {showBtnSection && (
+            <Flex alignItems='flex-start'>
+              <Skeleton
+                mr={2}
+                w='4'
+                h='4'
+                borderRadius='md'
+                startColor='gray.300'
+                endColor='gray.100'
+              />
+              <Skeleton
+                w='10'
+                h='4'
+                borderRadius='md'
+                startColor='gray.300'
+                endColor='gray.100'
+              />
+            </Flex>
+          )}
         </Flex>
       </CardBody>
 
