@@ -1,0 +1,26 @@
+message WebScrapeOrganizationGrpcRequest {
+  string website = 1;
+}
+
+message WebScrapeOrganizationGrpcResponse {
+  string name = 3;
+  string description = 4;
+  string website = 5;
+  string industry = 6;
+  bool isPublic = 7;
+  int64 employees = 8;
+  string market = 9;
+  google.protobuf.Timestamp  createdAt = 13;
+  google.protobuf.Timestamp  updatedAt = 14;
+  string subIndustry = 15;
+  string industryGroup = 16;
+  string targetAudience = 17;
+  string valueProposition = 18;
+  string lastFundingRound = 19;
+  string lastFundingAmount = 20;
+}
+
+service webscraperGrpcService {
+  rpc WebScrapeOrganization(WebScrapeOrganizationGrpcRequest) returns (WebScrapeOrganizationGrpcResponse);
+
+}
