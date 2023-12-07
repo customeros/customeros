@@ -153,7 +153,7 @@ message RemoveParentOrganizationGrpcRequest {
 message WebScrapeOrganizationGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
-  string website = 3;
+  string url = 3;
   string appSource = 4;
 }
 
