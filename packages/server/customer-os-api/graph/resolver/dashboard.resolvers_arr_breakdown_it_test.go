@@ -374,6 +374,91 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Monthly(t *testing.
 	}
 }
 
+func Test_Dashboard_ARR_Breakdown_Cancellations_Not_Customer(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: false,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeMonthly, 1, sli1StartedAt, sli1EndedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(0), month.Cancellations)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Cancellations_No_Recurring_SLI(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
+
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Price:      1,
+		Quantity:   2,
+		IsCanceled: true,
+		StartedAt:  sli1StartedAt,
+		EndedAt:    &sli1EndedAt,
+	})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(0), month.Cancellations)
+	}
+}
+
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_In_Month_Canceled_Next_Month(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -972,6 +1057,92 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_End_Of_Month(t *test
 	}
 }
 
+func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Not_Customer(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: false,
+	})
+
+	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(0), month.NewlyContracted)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_No_Recurring_SLI(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: false,
+	})
+
+	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Price:     12,
+		Quantity:  2,
+		StartedAt: sli1StartedAt,
+	})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(0), month.NewlyContracted)
+	}
+}
+
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Next_Month(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -1471,6 +1642,870 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_Active_SLI_1_Con
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
 		require.Equal(t, float64(4), month.NewlyContracted)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_Draft_Contract_In_Month(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus: entity.ContractStatusDraft,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(0), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_Live_Contract_In_Month(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(0), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(2), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month_No_Recurring_SLI(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Price:     12,
+		Quantity:  2,
+		StartedAt: sli1StartedAt,
+	})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(0), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month_Not_Customer(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: false,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(0), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_Contract_Before_Month(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(0), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_Contract_Beginning_Month(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(2), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_Contract_End_Month(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(2), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_Contract_Next_Month(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(0), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_Contract_Annually(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(2), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_Contract_Quarterly(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 4, sli1StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(2), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_Contract_Monthly(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, sli1StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(2), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_1_SLI_2_Versions(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, sli1StartedAt, sli1Id)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(4), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_1_Version(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contract1Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli2StartedAt,
+		EndedAt:          &sli2StartedAt,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 24, sli2StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(6), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_2_Versions(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	contract1Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 24, sli1StartedAt, sli1Id)
+
+	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli2MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli2StartedAt,
+		EndedAt:          &sli2StartedAt,
+	}, entity.OpportunityEntity{})
+	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 120, sli2StartedAt, sli2MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 240, sli1StartedAt, sli2Id)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(44), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &contractStartedAt,
+		EndedAt:          &contractStartedAt,
+	}, entity.OpportunityEntity{})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 24, sli2StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(6), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI_2_Versions(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &contractStartedAt,
+		EndedAt:          &contractStartedAt,
+	}, entity.OpportunityEntity{})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, sli1StartedAt, sli1Id)
+
+	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli2MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 120, sli2StartedAt, sli2MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 240, sli1StartedAt, sli2Id)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(44), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_2_Organizations_1_Contract_Each(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+
+	contract1Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, org1Id, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &contractStartedAt,
+		EndedAt:          &contractStartedAt,
+	}, entity.OpportunityEntity{})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	insertARRBreakdownServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, sli1StartedAt)
+
+	org2Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, org2Id, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &contractStartedAt,
+		EndedAt:          &contractStartedAt,
+	}, entity.OpportunityEntity{})
+
+	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	insertARRBreakdownServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 24, sli2StartedAt)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(6), month.Churned)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI_1_Canceled(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &contractStartedAt,
+		EndedAt:          &contractStartedAt,
+	}, entity.OpportunityEntity{})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, sli1StartedAt, sli1Id)
+
+	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli2MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	sli2EndedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 120, sli2StartedAt, sli2MiddleAt)
+	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 240, sli1StartedAt, sli2EndedAt, sli2Id)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(4), month.Churned)
 	}
 }
 
