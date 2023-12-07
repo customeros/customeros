@@ -1,11 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { FC } from 'react';
 
-import { Dot } from '@ui/media/Dot';
 import { Flex } from '@ui/layout/Flex';
 import { Action } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
-import { XCircle } from '@ui/media/icons/XCircle';
+import { DotSingle } from '@ui/media/icons/DotSingle';
 import { Card, CardBody } from '@ui/presentation/Card';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import {
@@ -13,31 +12,29 @@ import {
   useTimelineEventPreviewMethodsContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
-export const ServiceUpdatedActionPreview = () => {
+export const ServiceUpdatedActionPreview: FC<{
+  mode?: 'created' | 'updated';
+}> = ({ mode = 'updated' }) => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
   const event = modalContent as Action;
-
-  const colorScheme = useMemo(() => {
-    return event.content?.includes('added')
-      ? 'primary'
-      : event.content?.includes('removed')
-      ? 'error'
-      : 'gray';
-  }, [event.content]);
 
   return (
     <>
       <TimelineEventPreviewHeader
         date={event?.createdAt}
-        name={'Renewal likelihood'}
+        name='Service updated'
         onClose={closeModal}
         copyLabel='Copy link to this event'
       />
       <Card m={6} mt={3} p='4' boxShadow='xs' variant='outline'>
         <CardBody as={Flex} p='0' align='center'>
-          <FeaturedIcon size='md' minW='10' colorScheme={colorScheme}>
-            {event.content?.includes('removed') ? <XCircle /> : <Dot />}
+          <FeaturedIcon
+            size='md'
+            minW='10'
+            colorScheme={mode === 'created' ? 'primary' : 'gray'}
+          >
+            <DotSingle />
           </FeaturedIcon>
           <Text
             maxW='500px'
@@ -48,7 +45,6 @@ export const ServiceUpdatedActionPreview = () => {
           >
             {event.content}
           </Text>
-          {/* todo add ability to edit and undo removal */}
         </CardBody>
       </Card>
     </>

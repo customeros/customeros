@@ -263,7 +263,7 @@ func (r *organizationRepository) LinkWithDomain(ctx context.Context, tenant, org
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	query := `MERGE (d:Domain {domain:$domain}) 
+	cypher := `MERGE (d:Domain {domain:$domain}) 
 				ON CREATE SET 	d.id=randomUUID(), 
 								d.createdAt=$now, 
 								d.updatedAt=$now,
@@ -273,20 +273,21 @@ func (r *organizationRepository) LinkWithDomain(ctx context.Context, tenant, org
 				MERGE (org)-[rel:HAS_DOMAIN]->(d)
 				SET rel.syncedWithEventStore = true
 				RETURN rel`
-	span.LogFields(log.String("query", query))
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"domain":         strings.ToLower(domain),
+		"appSource":      constants.AppSourceEventProcessingPlatform,
+		"now":            utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]interface{}{
-				"tenant":         tenant,
-				"organizationId": organizationId,
-				"domain":         strings.ToLower(domain),
-				"appSource":      constants.AppSourceEventProcessingPlatform,
-				"now":            utils.Now(),
-			})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
@@ -305,22 +306,23 @@ func (r *organizationRepository) OrganizationWebscrapedForDomain(ctx context.Con
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("organizationId", organizationId), log.String("domain", domain))
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})-[:HAS_DOMAIN]->(d:Domain {domain:$domain})
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})-[:HAS_DOMAIN]->(d:Domain {domain:$domain})
 				WHERE org.sourceOfTruth = $webscrape
 				RETURN org`
-	span.LogFields(log.String("query", query))
+	params := map[string]any{
+		"webscrape":      constants.SourceWebscrape,
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"domain":         strings.ToLower(domain),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]interface{}{
-				"webscrape":      constants.SourceWebscrape,
-				"tenant":         tenant,
-				"organizationId": organizationId,
-				"domain":         strings.ToLower(domain),
-			})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
@@ -531,15 +533,18 @@ func (r *organizationRepository) UpdateArr(ctx context.Context, tenant, organiza
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})-[:HAS_CONTRACT]->(c:Contract)-[:ACTIVE_RENEWAL]->(op:Opportunity)
-				WITH org, sum(op.amount) as arr, sum(op.maxAmount) as maxArr
+	cypher := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
+				OPTIONAL MATCH (org)-[:HAS_CONTRACT]->(c:Contract)
+				OPTIONAL MATCH (c)-[:ACTIVE_RENEWAL]->(op:Opportunity)
+				WITH org, COALESCE(sum(op.amount), 0) as arr, COALESCE(sum(op.maxAmount), 0) as maxArr
 				SET org.renewalForecastArr = arr, org.renewalForecastMaxArr = maxArr, org.updatedAt = $now`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
 		"now":            utils.Now(),
 	}
-	span.LogFields(log.String("query", cypher), log.Object("params", params))
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	return r.executeQuery(ctx, cypher, params)
 }

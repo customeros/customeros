@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
@@ -13,7 +12,6 @@ import (
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/opentracing/opentracing-go/log"
 	"strings"
 )
 
@@ -34,7 +32,7 @@ func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *logentryp
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.UpsertLogEntry")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	logEntryId := request.Id
 	if strings.TrimSpace(logEntryId) == "" {
@@ -69,7 +67,7 @@ func (s *logEntryService) AddTag(ctx context.Context, request *logentrypb.AddTag
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.Addtag")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	cmd := command.NewAddTagCommand(request.Id, request.Tenant, request.UserId, request.TagId, utils.TimePtr(utils.Now()))
 	if err := s.logEntryCommands.AddTag.Handle(ctx, cmd); err != nil {
@@ -85,7 +83,7 @@ func (s *logEntryService) RemoveTag(ctx context.Context, request *logentrypb.Rem
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.RemoveTag")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	cmd := command.NewRemoveTagCommand(request.Id, request.Tenant, request.UserId, request.TagId)
 	if err := s.logEntryCommands.RemoveTag.Handle(ctx, cmd); err != nil {

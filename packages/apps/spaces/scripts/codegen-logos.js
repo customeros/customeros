@@ -38,7 +38,8 @@ files.forEach((name) => {
       .replaceAll('fill-rule', 'fillRule')
       .replaceAll('stop-color', 'stopColor')
       .replaceAll('clip-path', 'clipPath')
-      .replaceAll('clip-rule', 'clipRule');
+      .replaceAll('clip-rule', 'clipRule')
+      .replaceAll('stop-opacity', 'stopOpacity');
 
     const componentName = camelize(name.split('.')[0]);
     const outFileName = `${componentName}.tsx`;

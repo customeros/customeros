@@ -43,8 +43,8 @@ const genTimeValue = () =>
     new Date('2023-12-31'),
   ]);
 
-const points: PointsRange[] = genRandomNormalPoints(100, 0.5).filter(
-  (_, i) => i < 100,
+const points: PointsRange[] = genRandomNormalPoints(70, 0.5).filter(
+  (_, i) => i < 70,
 );
 
 export const mockData = points.map(() => ({

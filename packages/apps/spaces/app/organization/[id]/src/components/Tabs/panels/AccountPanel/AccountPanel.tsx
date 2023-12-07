@@ -24,10 +24,10 @@ import {
 } from './context/AccountModalsContext';
 
 const AccountPanelComponent = () => {
+  const client = getGraphQLClient();
   const id = useParams()?.id as string;
 
   const { isModalOpen } = useAccountPanelStateContext();
-  const client = getGraphQLClient();
   const { data, isInitialLoading } = useGetContractsQuery(client, {
     id,
   });

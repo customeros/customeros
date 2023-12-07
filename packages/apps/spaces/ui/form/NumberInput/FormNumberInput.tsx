@@ -10,20 +10,26 @@ import {
   InputGroup,
   InputLeftElement,
   InputRightElement,
+  InputLeftElementProps,
+  InputRightElementProps,
 } from '@ui/form/InputGroup/InputGroup';
 
 import { NumberInput, NumberInputProps } from './NumberInput';
 
-interface FormNumberInputProps extends NumberInputProps {
+export interface FormNumberInputProps extends NumberInputProps {
   name: string;
   formId: string;
   label?: string;
   isLabelVisible?: boolean;
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
+  leftElementProps?: InputLeftElementProps;
+  rightElementProps?: InputRightElementProps;
 }
-const blockInvalidChar = (e: { key: string; preventDefault: () => void }) =>
-  ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault();
+export const blockInvalidChar = (e: {
+  key: string;
+  preventDefault: () => void;
+}) => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault();
 
 export const FormNumberInput = forwardRef<
   HTMLInputElement,
@@ -37,6 +43,8 @@ export const FormNumberInput = forwardRef<
       label = '',
       leftElement,
       rightElement,
+      leftElementProps,
+      rightElementProps,
       ...props
     },
     ref,
@@ -44,7 +52,7 @@ export const FormNumberInput = forwardRef<
     const { getInputProps } = useField(name, formId);
 
     return (
-      <FormControl>
+      <FormControl w={props.w} width={props.width}>
         {isLabelVisible ? (
           <FormLabel
             fontWeight={600}
@@ -61,12 +69,15 @@ export const FormNumberInput = forwardRef<
         )}
         <InputGroup>
           {leftElement && (
-            <InputLeftElement w='4'>{leftElement}</InputLeftElement>
+            <InputLeftElement w='4' {...leftElementProps}>
+              {leftElement}
+            </InputLeftElement>
           )}
 
           <NumberInput
             {...getInputProps()}
             {...props}
+            w='full'
             autoComplete='off'
             onKeyDown={blockInvalidChar}
           >
@@ -80,7 +91,9 @@ export const FormNumberInput = forwardRef<
           </NumberInput>
 
           {rightElement && (
-            <InputRightElement>{rightElement}</InputRightElement>
+            <InputRightElement {...rightElementProps}>
+              {rightElement}
+            </InputRightElement>
           )}
         </InputGroup>
       </FormControl>

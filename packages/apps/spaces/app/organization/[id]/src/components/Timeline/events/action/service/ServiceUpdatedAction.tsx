@@ -1,38 +1,38 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 
-import { Dot } from '@ui/media/Dot';
 import { Flex } from '@ui/layout/Flex';
 import { Action } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
-import { XCircle } from '@ui/media/icons/XCircle';
+import { DotSingle } from '@ui/media/icons/DotSingle';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 interface ServiceUpdatedActionProps {
   data: Action;
+  mode?: 'created' | 'updated';
 }
 
 export const ServiceUpdatedAction: React.FC<ServiceUpdatedActionProps> = ({
   data,
+  mode = 'updated',
 }) => {
-  const colorScheme = useMemo(() => {
-    return data?.content?.includes('added')
-      ? 'primary'
-      : data?.content?.includes('removed')
-      ? 'error'
-      : 'gray';
-  }, [data?.content]);
   const { openModal } = useTimelineEventPreviewMethodsContext();
   if (!data.content) return null;
+  const isTemporary = data.appSource === 'customeros-optimistic-update';
 
   return (
     <Flex
       alignItems='center'
-      onClick={() => openModal(data.id)}
-      cursor='pointer'
+      opacity={isTemporary ? 0.5 : 1}
+      onClick={() => !isTemporary && openModal(data.id)}
+      cursor={isTemporary ? 'progress' : 'pointer'}
     >
-      <FeaturedIcon size='md' minW='10' colorScheme={colorScheme}>
-        {data.content?.includes('removed') ? <XCircle /> : <Dot />}
+      <FeaturedIcon
+        size='md'
+        minW='10'
+        colorScheme={mode === 'created' ? 'primary' : 'gray'}
+      >
+        <DotSingle />
       </FeaturedIcon>
 
       <Text

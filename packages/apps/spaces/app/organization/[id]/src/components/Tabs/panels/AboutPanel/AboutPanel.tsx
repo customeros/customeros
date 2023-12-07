@@ -1,9 +1,9 @@
 'use client';
-import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
+import { useEffect, useCallback } from 'react';
 
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
@@ -53,17 +53,6 @@ export const AboutPanel = () => {
   const { updateOrganization, addSocial, invalidateQuery } =
     useAboutPanelMethods({ id });
   const { data: tenantNameQueryData } = useTenantNameQuery(client);
-  const saveOrganization = debounce(
-    (variables?: Partial<OrganizationAboutForm>) => {
-      updateOrganization.mutate({
-        input: OrganizationAboutFormDto.toPayload({
-          ...state.values,
-          ...(variables ?? {}),
-        }),
-      });
-    },
-    300,
-  );
 
   const showSubOrgData = (() =>
     tenantNameQueryData?.tenant
@@ -74,15 +63,24 @@ export const AboutPanel = () => {
     data?.organization,
   );
 
-  const mutateOrganization = (variables?: Partial<OrganizationAboutForm>) => {
+  const mutateOrganization = (
+    previousValues: OrganizationAboutForm,
+    variables?: Partial<OrganizationAboutForm>,
+  ) => {
     updateOrganization.mutate({
       input: OrganizationAboutFormDto.toPayload({
-        ...state.values,
+        ...previousValues,
         ...(variables ?? {}),
       }),
     });
   };
-  const { state } = useForm<OrganizationAboutForm>({
+
+  const debouncedMutatOrganization = useCallback(
+    debounce(mutateOrganization, 300),
+    [updateOrganization.mutate],
+  );
+
+  useForm<OrganizationAboutForm>({
     formId: 'organization-about',
     defaultValues,
     stateReducer: (state, action, next) => {
@@ -93,7 +91,7 @@ export const AboutPanel = () => {
           case 'employees':
           case 'businessType':
           case 'lastFundingRound': {
-            mutateOrganization({
+            mutateOrganization(state.values, {
               [action.payload.name]: action.payload?.value,
             });
             break;
@@ -112,7 +110,7 @@ export const AboutPanel = () => {
             ) {
               return next;
             }
-            saveOrganization({
+            debouncedMutatOrganization(state.values, {
               [action.payload.name]: trimmedValue,
             });
             break;
@@ -128,7 +126,7 @@ export const AboutPanel = () => {
 
   useEffect(() => {
     return () => {
-      saveOrganization.flush();
+      debouncedMutatOrganization.flush();
     };
   }, []); // empty array so it runs just once
 
