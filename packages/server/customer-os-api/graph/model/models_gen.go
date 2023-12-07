@@ -1847,6 +1847,8 @@ const (
 	ActionTypeServiceLineItemBilledTypeRecurringCreated ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED"
 	ActionTypeServiceLineItemBilledTypeOnceCreated      ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED"
 	ActionTypeServiceLineItemBilledTypeUsageCreated     ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_USAGE_CREATED"
+	ActionTypeContractRenewed                           ActionType = "CONTRACT_RENEWED"
+	ActionTypeServiceLineItemRemoved                    ActionType = "SERVICE_LINE_ITEM_REMOVED"
 )
 
 var AllActionType = []ActionType{
@@ -1860,11 +1862,13 @@ var AllActionType = []ActionType{
 	ActionTypeServiceLineItemBilledTypeRecurringCreated,
 	ActionTypeServiceLineItemBilledTypeOnceCreated,
 	ActionTypeServiceLineItemBilledTypeUsageCreated,
+	ActionTypeContractRenewed,
+	ActionTypeServiceLineItemRemoved,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeServiceLineItemBilledTypeUpdated, ActionTypeServiceLineItemBilledTypeRecurringCreated, ActionTypeServiceLineItemBilledTypeOnceCreated, ActionTypeServiceLineItemBilledTypeUsageCreated:
+	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeServiceLineItemBilledTypeUpdated, ActionTypeServiceLineItemBilledTypeRecurringCreated, ActionTypeServiceLineItemBilledTypeOnceCreated, ActionTypeServiceLineItemBilledTypeUsageCreated, ActionTypeContractRenewed, ActionTypeServiceLineItemRemoved:
 		return true
 	}
 	return false

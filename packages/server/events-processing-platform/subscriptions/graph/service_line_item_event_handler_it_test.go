@@ -182,7 +182,7 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, "Updated Service Line Item", serviceLineItem.Name)
 }
 
-func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
+func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -190,6 +190,10 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+		FirstName: "logged-in",
+		LastName:  "user",
+	})
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		RenewalCycle: string(contractmodel.AnnuallyRenewalCycleString),
 	})
@@ -206,6 +210,7 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
+		"Action": 0, "TimelineEvent": 0,
 	})
 
 	// Prepare the event handler
@@ -221,6 +226,11 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 	)
 	require.Nil(t, err)
 
+	metadata := make(map[string]string)
+	metadata["user-id"] = userId
+	err = deleteEvent.SetMetadata(metadata)
+	require.Nil(t, err)
+
 	// Execute the event handler
 	err = serviceLineItemEventHandler.OnDelete(ctx, deleteEvent)
 	require.Nil(t, err)
@@ -229,7 +239,7 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 0, "ServiceLineItem_" + tenantName: 0,
-	})
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
 	// check event was generated
 	eventsMap := aggregateStore.GetEventMap()
@@ -240,6 +250,102 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 	}
 	require.Equal(t, 1, len(eventList))
 	require.Equal(t, opportunityevent.OpportunityUpdateV1, eventList[0].GetEventType())
+
+	// verify action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionServiceLineItemRemoved, action.Type)
+	require.Equal(t, "logged-in user removed unnamed service from unnamed contract", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"unnamed service"}`, action.Metadata)
+}
+
+func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// Prepare test data in Neo4j
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+		FirstName: "logged-in",
+		LastName:  "user",
+	})
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		Name:         "Contract 1",
+		RenewalCycle: string(contractmodel.AnnuallyRenewalCycleString),
+	})
+	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Name:   "Service 1",
+		Billed: model.MonthlyBilled.String(),
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
+		"Action": 0, "TimelineEvent": 0,
+	})
+
+	// Prepare the event handler
+	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+
+	// Create a ServiceLineItemDeleteEvent
+	deleteEvent, err := event.NewServiceLineItemDeleteEvent(
+		aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId),
+	)
+	require.Nil(t, err)
+
+	metadata := make(map[string]string)
+	metadata["user-id"] = userId
+	err = deleteEvent.SetMetadata(metadata)
+	require.Nil(t, err)
+
+	// Execute the event handler
+	err = serviceLineItemEventHandler.OnDelete(ctx, deleteEvent)
+	require.Nil(t, err)
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 0, "ServiceLineItem_" + tenantName: 0,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
+
+	// check event was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 1, len(eventList))
+	require.Equal(t, opportunityevent.OpportunityUpdateV1, eventList[0].GetEventType())
+
+	// verify action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionServiceLineItemRemoved, action.Type)
+	require.Equal(t, "logged-in user removed Service 1 from Contract 1", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1"}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnClose(t *testing.T) {

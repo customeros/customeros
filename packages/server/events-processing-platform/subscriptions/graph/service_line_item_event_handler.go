@@ -50,6 +50,10 @@ type ActionBilledTypeMetadata struct {
 	BilledType         string `json:"billedType"`
 	PreviousBilledType string `json:"previousBilledType"`
 }
+type ActionServiceLineItemRemovedMetadata struct {
+	UserName    string `json:"user-name"`
+	ServiceName string `json:"service-name"`
+}
 
 func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnCreate")
@@ -413,20 +417,56 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnDelete")
 	defer span.Finish()
 	setCommonSpanTagsAndLogFields(span, evt)
+	var user *dbtype.Node
+	var userEntity *entity.UserEntity
+	var serviceLineItemName string
+	var contractName string
 
 	var eventData event.ServiceLineItemDeleteEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-
 	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
+	serviceLineItemDbNode, err := h.repositories.ServiceLineItemRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	serviceLineItemEntity := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	if serviceLineItemEntity.Name != "" {
+		serviceLineItemName = serviceLineItemEntity.Name
+	} else {
+		serviceLineItemName = "unnamed service"
+	}
+
+	// get user
+	usrMetadata := userMetadata{}
+	if err := json.Unmarshal(evt.Metadata, &usrMetadata); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "json.Unmarshal")
+	} else {
+		if usrMetadata.UserId != "" {
+			user, err = h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, usrMetadata.UserId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
+			}
+		}
+		userEntity = graph_db.MapDbNodeToUserEntity(*user)
+	}
 
 	contractDbNode, err := h.repositories.ContractRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting contract for service line item %s: %s", serviceLineItemId, err.Error())
 		return nil
+	}
+	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	if contract.Name != "" {
+		contractName = contract.Name
+	} else {
+		contractName = "unnamed contract"
 	}
 
 	err = h.repositories.ServiceLineItemRepository.Delete(ctx, eventData.Tenant, serviceLineItemId)
@@ -437,7 +477,6 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 	}
 
 	if contractDbNode != nil {
-		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
 		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
@@ -445,6 +484,17 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contract.Id, err.Error())
 			return nil
 		}
+	}
+	metadata, err := utils.ToJson(ActionServiceLineItemRemovedMetadata{
+		UserName:    userEntity.FirstName + " " + userEntity.LastName,
+		ServiceName: serviceLineItemName,
+	})
+	message := userEntity.FirstName + " " + userEntity.LastName + " removed " + serviceLineItemName + " from " + contractName
+
+	_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contract.Id, entity.CONTRACT, entity.ActionServiceLineItemRemoved, message, metadata, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed remove service line item action for contract %s: %s", contract.Id, err.Error())
 	}
 
 	return nil

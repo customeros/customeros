@@ -30,6 +30,8 @@ const (
 	ActionServiceLineItemBilledTypeRecurringCreated ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED"
 	ActionServiceLineItemBilledTypeOnceCreated      ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED"
 	ActionServiceLineItemBilledTypeUsageCreated     ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_USAGE_CREATED"
+	ActionContractRenewed                           ActionType = "CONTRACT_RENEWED"
+	ActionServiceLineItemRemoved                    ActionType = "SERVICE_LINE_ITEM_REMOVED"
 )
 
 var AllActionType = []ActionType{
@@ -43,6 +45,8 @@ var AllActionType = []ActionType{
 	ActionServiceLineItemBilledTypeRecurringCreated,
 	ActionServiceLineItemBilledTypeOnceCreated,
 	ActionServiceLineItemBilledTypeUsageCreated,
+	ActionContractRenewed,
+	ActionServiceLineItemRemoved,
 }
 
 func GetActionType(s string) ActionType {
