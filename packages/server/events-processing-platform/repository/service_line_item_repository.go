@@ -230,7 +230,7 @@ func (r *serviceLineItemRepository) GetLatestServiceLineItemByParentId(ctx conte
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("serviceLineItemParentId", serviceLineItemParentId), log.Object("beforeDate", beforeDate))
 
-	cypher := `MATCH(sli:ServiceLineItem {parentId:$parentId}) WHERE sli.startedAt < $before RETURN sli ORDER BY sli.startedAt DESC LIMIT 1`
+	cypher := `MATCH (sli:ServiceLineItem {parentId:$parentId}) WHERE sli.startedAt < $before RETURN sli ORDER BY sli.startedAt DESC LIMIT 1`
 	params := map[string]any{
 		"tenant":   tenant,
 		"parentId": serviceLineItemParentId,
