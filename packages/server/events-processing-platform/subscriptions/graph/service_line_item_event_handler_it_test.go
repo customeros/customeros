@@ -393,7 +393,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
-	require.Equal(t, "logged-in user retroactively increased the price for Service 1 from 150.00 / monthly to 200.00 / monthly", action.Content)
+	require.Equal(t, "logged-in user retroactively increased the price for Service 1 from 150.00/monthly to 200.00/monthly", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":200,"previousPrice":150}`, action.Metadata)
 }
 
@@ -567,7 +567,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
-	require.Equal(t, "logged-in user retroactively decreased the price for Service 1 from 150.00 / annually to 50.00 / annually", action.Content)
+	require.Equal(t, "logged-in user retroactively decreased the price for Service 1 from 150.00/annually to 50.00/annually", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":50,"previousPrice":150}`, action.Metadata)
 }
 
@@ -907,7 +907,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemBilledTypeUpdated, action.Type)
-	require.Equal(t, "logged-in user changed the billing cycle for Service 1 from 20.00 / annually to 20.00 / monthly", action.Content)
+	require.Equal(t, "logged-in user changed the billing cycle for Service 1 from 20.00/annually to 20.00/monthly", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","billedType":"MONTHLY","previousBilledType":"ANNUALLY"}`, action.Metadata)
 }
 
@@ -1006,7 +1006,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemBilledTypeRecurringCreated, action.Type)
-	require.Equal(t, "logged-in user added a recurring monthly service to Contract 1: Service 1 at 10 x 170.25 / monthly", action.Content)
+	require.Equal(t, "logged-in user added a recurring service to Contract 1: Service 1 at 10 x 170.25/monthly", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","billedType":"MONTHLY","previousBilledType":""}`, action.Metadata)
 }
 
@@ -1105,7 +1105,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemBilledTypeRecurringCreated, action.Type)
-	require.Equal(t, "logged-in user added a recurring annually service to Contract 1: Service 1 at 10 x 170.25 / annually", action.Content)
+	require.Equal(t, "logged-in user added a recurring service to Contract 1: Service 1 at 10 x 170.25/annually", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","billedType":"ANNUALLY","previousBilledType":""}`, action.Metadata)
 }
 
@@ -1204,7 +1204,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemBilledTypeRecurringCreated, action.Type)
-	require.Equal(t, "logged-in user added a recurring quarterly service to Contract 1: Service 1 at 10 x 170.25 / quarterly", action.Content)
+	require.Equal(t, "logged-in user added a recurring service to Contract 1: Service 1 at 10 x 170.25/quarterly", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","billedType":"QUARTERLY","previousBilledType":""}`, action.Metadata)
 }
 
@@ -1301,7 +1301,7 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemBilledTypeOnceCreated, action.Type)
-	require.Equal(t, "logged-in user added an once type service to Contract 1: Service 1 at 170.25", action.Content)
+	require.Equal(t, "logged-in user added an one time service to Contract 1: Service 1 at 170.25", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","billedType":"ONCE","previousBilledType":""}`, action.Metadata)
 }
 
@@ -1398,6 +1398,309 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemBilledTypeUsageCreated, action.Type)
-	require.Equal(t, "logged-in user added a per use type service to Contract 1: Service 1 at 170.25", action.Content)
+	require.Equal(t, "logged-in user added a per use service to Contract 1: Service 1 at 170.25", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","billedType":"USAGE","previousBilledType":""}`, action.Metadata)
+}
+
+func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantityDecrease(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// Setup test environment
+	serviceLineItemId := "service-line-item-id-1"
+	contractId := "contract-id-1"
+
+	// Prepare Neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+		FirstName: "logged-in",
+		LastName:  "user",
+	})
+	neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		Id:   contractId,
+		Name: "Contract 1",
+	})
+
+	serviceLineItemParentId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Name:     "Service Parent",
+		Quantity: 400,
+	})
+
+	// Prepare the event handler
+	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+
+	// Create a ServiceLineItemCreateEvent
+	timeNow := utils.Now()
+	serviceLineItemAggregate := aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId)
+	createEvent, err := event.NewServiceLineItemCreateEvent(
+		serviceLineItemAggregate,
+		model.ServiceLineItemDataFields{
+			Billed:     model.MonthlyBilled,
+			Quantity:   10,
+			Name:       "Test service line item",
+			ContractId: contractId,
+			ParentId:   serviceLineItemParentId,
+		},
+		commonmodel.Source{
+			Source:    constants.SourceOpenline,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+		timeNow,
+		timeNow,
+		timeNow,
+		nil,
+	)
+	require.Nil(t, err, "failed to create service line item create event")
+
+	metadata := make(map[string]string)
+	metadata["user-id"] = userId
+	err = createEvent.SetMetadata(metadata)
+	require.Nil(t, err)
+
+	// Execute the event handler
+	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	require.Nil(t, err, "failed to execute service line item create event handler")
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 2, "ServiceLineItem_" + tenantName: 2,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
+	})
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
+
+	// Validate that the service line item is saved in the repository
+	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	require.Nil(t, err)
+	require.NotNil(t, serviceLineItemDbNode)
+
+	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
+	require.Equal(t, serviceLineItemParentId, serviceLineItem.ParentId)
+	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	require.Equal(t, int64(10), serviceLineItem.Quantity)
+	require.Equal(t, "Test service line item", serviceLineItem.Name)
+	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
+	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Nil(t, serviceLineItem.EndedAt)
+
+	// verify action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionServiceLineItemQuantityUpdated, action.Type)
+	require.Equal(t, "logged-in user decreased the quantity of Test service line item from 400 to 10", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Test service line item","quantity":10,"previousQuantity":400}`, action.Metadata)
+}
+
+func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceIncrease(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// Setup test environment
+	serviceLineItemId := "service-line-item-id-1"
+	contractId := "contract-id-1"
+
+	// Prepare Neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+		FirstName: "logged-in",
+		LastName:  "user",
+	})
+	neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		Id:   contractId,
+		Name: "Contract 1",
+	})
+
+	serviceLineItemParentId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Name:  "Service Parent",
+		Price: 1500.56,
+	})
+
+	// Prepare the event handler
+	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+
+	// Create a ServiceLineItemCreateEvent
+	timeNow := utils.Now()
+	serviceLineItemAggregate := aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId)
+	createEvent, err := event.NewServiceLineItemCreateEvent(
+		serviceLineItemAggregate,
+		model.ServiceLineItemDataFields{
+			Billed:     model.MonthlyBilled,
+			Price:      850.75,
+			Name:       "Test service line item",
+			ContractId: contractId,
+			ParentId:   serviceLineItemParentId,
+		},
+		commonmodel.Source{
+			Source:    constants.SourceOpenline,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+		timeNow,
+		timeNow,
+		timeNow,
+		nil,
+	)
+	require.Nil(t, err, "failed to create service line item create event")
+
+	metadata := make(map[string]string)
+	metadata["user-id"] = userId
+	err = createEvent.SetMetadata(metadata)
+	require.Nil(t, err)
+
+	// Execute the event handler
+	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	require.Nil(t, err, "failed to execute service line item create event handler")
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 2, "ServiceLineItem_" + tenantName: 2,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
+	})
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
+
+	// Validate that the service line item is saved in the repository
+	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	require.Nil(t, err)
+	require.NotNil(t, serviceLineItemDbNode)
+
+	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
+	require.Equal(t, serviceLineItemParentId, serviceLineItem.ParentId)
+	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	require.Equal(t, float64(850.75), serviceLineItem.Price)
+	require.Equal(t, "Test service line item", serviceLineItem.Name)
+	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
+	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Nil(t, serviceLineItem.EndedAt)
+
+	// verify action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
+	require.Equal(t, "logged-in user decreased the price for Test service line item from 1500.56/monthly to 850.75/monthly", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Test service line item","price":850.75,"previousPrice":1500.56}`, action.Metadata)
+}
+
+func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceIncreaseNoNameService(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// Setup test environment
+	serviceLineItemId := "service-line-item-id-1"
+	contractId := "contract-id-1"
+
+	// Prepare Neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+		FirstName: "logged-in",
+		LastName:  "user",
+	})
+	neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		Id:   contractId,
+		Name: "Contract 1",
+	})
+
+	serviceLineItemParentId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Price: 1500.56,
+	})
+
+	// Prepare the event handler
+	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+
+	// Create a ServiceLineItemCreateEvent
+	timeNow := utils.Now()
+	serviceLineItemAggregate := aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId)
+	createEvent, err := event.NewServiceLineItemCreateEvent(
+		serviceLineItemAggregate,
+		model.ServiceLineItemDataFields{
+			Billed:     model.MonthlyBilled,
+			Price:      850.75,
+			ContractId: contractId,
+			ParentId:   serviceLineItemParentId,
+		},
+		commonmodel.Source{
+			Source:    constants.SourceOpenline,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+		timeNow,
+		timeNow,
+		timeNow,
+		nil,
+	)
+	require.Nil(t, err, "failed to create service line item create event")
+
+	metadata := make(map[string]string)
+	metadata["user-id"] = userId
+	err = createEvent.SetMetadata(metadata)
+	require.Nil(t, err)
+
+	// Execute the event handler
+	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	require.Nil(t, err, "failed to execute service line item create event handler")
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 2, "ServiceLineItem_" + tenantName: 2,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
+	})
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
+
+	// Validate that the service line item is saved in the repository
+	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	require.Nil(t, err)
+	require.NotNil(t, serviceLineItemDbNode)
+
+	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
+	require.Equal(t, serviceLineItemParentId, serviceLineItem.ParentId)
+	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	require.Equal(t, float64(850.75), serviceLineItem.Price)
+	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
+	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Nil(t, serviceLineItem.EndedAt)
+
+	// verify action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
+	require.Equal(t, "logged-in user decreased the price for unnamed service from 1500.56/monthly to 850.75/monthly", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"unnamed service","price":850.75,"previousPrice":1500.56}`, action.Metadata)
 }
