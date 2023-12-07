@@ -1231,6 +1231,77 @@ func (x *RemoveParentOrganizationGrpcRequest) GetAppSource() string {
 	return ""
 }
 
+type WebScrapeOrganizationGrpcRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Tenant         string `protobuf:"bytes,1,opt,name=tenant,proto3" json:"tenant,omitempty"`
+	OrganizationId string `protobuf:"bytes,2,opt,name=organizationId,proto3" json:"organizationId,omitempty"`
+	Website        string `protobuf:"bytes,3,opt,name=website,proto3" json:"website,omitempty"`
+	AppSource      string `protobuf:"bytes,4,opt,name=appSource,proto3" json:"appSource,omitempty"`
+}
+
+func (x *WebScrapeOrganizationGrpcRequest) Reset() {
+	*x = WebScrapeOrganizationGrpcRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_organization_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *WebScrapeOrganizationGrpcRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WebScrapeOrganizationGrpcRequest) ProtoMessage() {}
+
+func (x *WebScrapeOrganizationGrpcRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_organization_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WebScrapeOrganizationGrpcRequest.ProtoReflect.Descriptor instead.
+func (*WebScrapeOrganizationGrpcRequest) Descriptor() ([]byte, []int) {
+	return file_organization_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *WebScrapeOrganizationGrpcRequest) GetTenant() string {
+	if x != nil {
+		return x.Tenant
+	}
+	return ""
+}
+
+func (x *WebScrapeOrganizationGrpcRequest) GetOrganizationId() string {
+	if x != nil {
+		return x.OrganizationId
+	}
+	return ""
+}
+
+func (x *WebScrapeOrganizationGrpcRequest) GetWebsite() string {
+	if x != nil {
+		return x.Website
+	}
+	return ""
+}
+
+func (x *WebScrapeOrganizationGrpcRequest) GetAppSource() string {
+	if x != nil {
+		return x.AppSource
+	}
+	return ""
+}
+
 type OrganizationIdGrpcResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1242,7 +1313,7 @@ type OrganizationIdGrpcResponse struct {
 func (x *OrganizationIdGrpcResponse) Reset() {
 	*x = OrganizationIdGrpcResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[10]
+		mi := &file_organization_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1255,7 +1326,7 @@ func (x *OrganizationIdGrpcResponse) String() string {
 func (*OrganizationIdGrpcResponse) ProtoMessage() {}
 
 func (x *OrganizationIdGrpcResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[10]
+	mi := &file_organization_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1268,7 +1339,7 @@ func (x *OrganizationIdGrpcResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OrganizationIdGrpcResponse.ProtoReflect.Descriptor instead.
 func (*OrganizationIdGrpcResponse) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{10}
+	return file_organization_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *OrganizationIdGrpcResponse) GetId() string {
@@ -1289,7 +1360,7 @@ type CustomFieldIdGrpcResponse struct {
 func (x *CustomFieldIdGrpcResponse) Reset() {
 	*x = CustomFieldIdGrpcResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[11]
+		mi := &file_organization_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1302,7 +1373,7 @@ func (x *CustomFieldIdGrpcResponse) String() string {
 func (*CustomFieldIdGrpcResponse) ProtoMessage() {}
 
 func (x *CustomFieldIdGrpcResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[11]
+	mi := &file_organization_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1315,7 +1386,7 @@ func (x *CustomFieldIdGrpcResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CustomFieldIdGrpcResponse.ProtoReflect.Descriptor instead.
 func (*CustomFieldIdGrpcResponse) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{11}
+	return file_organization_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CustomFieldIdGrpcResponse) GetId() string {
@@ -1885,7 +1956,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OrganizationIdGrpcResponse); i {
+			switch v := v.(*WebScrapeOrganizationGrpcRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1897,6 +1968,18 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*OrganizationIdGrpcResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_organization_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CustomFieldIdGrpcResponse); i {
 			case 0:
 				return &v.state

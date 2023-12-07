@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrganizationGrpcServiceClient interface {
 	UpsertOrganization(ctx context.Context, in *UpsertOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	WebScrapeOrganization(ctx context.Context, in *WebScrapeOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization(ctx context.Context, in *LinkPhoneNumberToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkEmailToOrganization(ctx context.Context, in *LinkEmailToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkLocationToOrganization(ctx context.Context, in *LinkLocationToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
@@ -46,6 +47,15 @@ func NewOrganizationGrpcServiceClient(cc grpc.ClientConnInterface) OrganizationG
 func (c *organizationGrpcServiceClient) UpsertOrganization(ctx context.Context, in *UpsertOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
 	out := new(OrganizationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/UpsertOrganization", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *organizationGrpcServiceClient) WebScrapeOrganization(ctx context.Context, in *WebScrapeOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
+	out := new(OrganizationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/WebScrapeOrganization", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -147,6 +157,7 @@ func (c *organizationGrpcServiceClient) RemoveParentOrganization(ctx context.Con
 // for forward compatibility
 type OrganizationGrpcServiceServer interface {
 	UpsertOrganization(context.Context, *UpsertOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	WebScrapeOrganization(context.Context, *WebScrapeOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization(context.Context, *LinkPhoneNumberToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkEmailToOrganization(context.Context, *LinkEmailToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkLocationToOrganization(context.Context, *LinkLocationToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
@@ -165,6 +176,9 @@ type UnimplementedOrganizationGrpcServiceServer struct {
 
 func (UnimplementedOrganizationGrpcServiceServer) UpsertOrganization(context.Context, *UpsertOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertOrganization not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) WebScrapeOrganization(context.Context, *WebScrapeOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WebScrapeOrganization not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) LinkPhoneNumberToOrganization(context.Context, *LinkPhoneNumberToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkPhoneNumberToOrganization not implemented")
@@ -222,6 +236,24 @@ func _OrganizationGrpcService_UpsertOrganization_Handler(srv interface{}, ctx co
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrganizationGrpcServiceServer).UpsertOrganization(ctx, req.(*UpsertOrganizationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrganizationGrpcService_WebScrapeOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WebScrapeOrganizationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).WebScrapeOrganization(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/WebScrapeOrganization",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).WebScrapeOrganization(ctx, req.(*WebScrapeOrganizationGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -416,6 +448,10 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertOrganization",
 			Handler:    _OrganizationGrpcService_UpsertOrganization_Handler,
+		},
+		{
+			MethodName: "WebScrapeOrganization",
+			Handler:    _OrganizationGrpcService_WebScrapeOrganization_Handler,
 		},
 		{
 			MethodName: "LinkPhoneNumberToOrganization",
