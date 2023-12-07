@@ -212,6 +212,17 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 			h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
 		}
 	}
+	status := "Renewed"
+	metadata, err := utils.ToJson(ActionStatusMetadata{
+		Status: status,
+	})
+	message := contractEntity.Name + " renewed"
+
+	_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionContractRenewed, message, metadata, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())
+	}
 
 	return nil
 }

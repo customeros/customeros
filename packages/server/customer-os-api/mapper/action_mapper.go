@@ -32,6 +32,8 @@ var actionTypeByModel = map[model.ActionType]entity.ActionType{
 	model.ActionTypeServiceLineItemBilledTypeRecurringCreated: entity.ActionServiceLineItemBilledTypeRecurringCreated,
 	model.ActionTypeServiceLineItemBilledTypeOnceCreated:      entity.ActionServiceLineItemBilledTypeOnceCreated,
 	model.ActionTypeServiceLineItemBilledTypeUsageCreated:     entity.ActionServiceLineItemBilledTypeUsageCreated,
+	model.ActionTypeContractRenewed:                           entity.ActionContractRenewed,
+	model.ActionTypeServiceLineItemRemoved:                    entity.ActionServiceLineItemRemoved,
 }
 
 var actionTypeByValue = utils.ReverseMap(actionTypeByModel)

@@ -7841,6 +7841,8 @@ enum ActionType {
     SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED
     SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED
     SERVICE_LINE_ITEM_BILLED_TYPE_USAGE_CREATED
+    CONTRACT_RENEWED
+    SERVICE_LINE_ITEM_REMOVED
 }`, BuiltIn: false},
 	{Name: "../schemas/action_item.graphqls", Input: `type ActionItem {
     id: ID!
