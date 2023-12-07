@@ -43,7 +43,7 @@ export const getDisplayNameAndAvatar = (
           ? {
               id: users?.[0]?.id,
               displayName:
-                users?.[0]?.name ??
+                users?.[0]?.name ||
                 [users?.[0]?.firstName, users?.[0]?.lastName]
                   .filter(Boolean)
                   .join(' '),
@@ -51,7 +51,11 @@ export const getDisplayNameAndAvatar = (
             }
           : {
               id: contacts?.[0]?.id,
-              displayName: contacts?.[0]?.name ?? '',
+              displayName:
+                contacts?.[0]?.name ||
+                [contacts?.[0]?.firstName, contacts?.[0]?.lastName]
+                  .filter(Boolean)
+                  .join(' '),
               photoUrl: contacts?.[0]?.profilePhotoUrl ?? '',
             },
     )
