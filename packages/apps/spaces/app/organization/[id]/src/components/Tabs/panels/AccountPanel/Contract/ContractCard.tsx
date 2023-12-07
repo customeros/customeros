@@ -143,13 +143,12 @@ export const ContractCard = ({
             return next;
           }
           case 'renewalCycle': {
-            let renewalPeriods = '2';
+            let renewalPeriods = '1';
 
-            if (action.payload.value === 'MULTI_YEAR') {
-              renewalPeriods = !next.values?.renewalPeriods
-                ? '2'
-                : next.values.renewalPeriods;
+            if (action.payload.value.value === 'MULTI_YEAR') {
+              renewalPeriods = '2';
             }
+
             updateContract.mutate({
               input: {
                 contractId: data.id,
