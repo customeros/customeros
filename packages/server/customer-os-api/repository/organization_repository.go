@@ -41,8 +41,6 @@ type OrganizationRepository interface {
 	GetAllOrganizationEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetSuggestedMergePrimaryOrganizations(ctx context.Context, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 
-	// TODO deprecated, remove when decomission organization renewal forecast
-	GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error)
 	GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error)
 }
 
@@ -82,16 +80,19 @@ func (r *organizationRepository) CountOrganizations(ctx context.Context, tenant 
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false
+			RETURN count(org)`
+	params := map[string]any{
+		"tenant": tenant,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false
-			RETURN count(org)`,
-			map[string]any{
-				"tenant": tenant,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return queryResult.Single(ctx)
@@ -100,7 +101,9 @@ func (r *organizationRepository) CountOrganizations(ctx context.Context, tenant 
 	if err != nil {
 		return 0, err
 	}
-	return dbRecord.(*db.Record).Values[0].(int64), nil
+	organizationsCount := dbRecord.(*db.Record).Values[0].(int64)
+	span.LogFields(log.Int64("result - organizationsCount", organizationsCount))
+	return organizationsCount, nil
 }
 
 func (r *organizationRepository) CountCustomers(ctx context.Context, tenant string) (int64, error) {
@@ -858,52 +861,6 @@ func (r *organizationRepository) GetSuggestedMergePrimaryOrganizations(ctx conte
 		return nil, err
 	}
 	return result.([]*utils.DbNodeWithRelationAndId), err
-}
-
-func (r *organizationRepository) GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMinMaxRenewalForecastAmount")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := `CALL { MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
-              return min(o.renewalForecastAmount) as min, max(o.renewalForecastAmount) as max }
-		      RETURN min, max`
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant": common.GetTenantFromContext(ctx),
-			}); err != nil {
-			return nil, err
-		} else {
-			record, err := queryResult.Single(ctx)
-			if err != nil {
-				return nil, err
-			}
-
-			return record, nil
-		}
-	})
-	if err != nil {
-		return 0, 0, err
-	}
-	if result != nil {
-		record := result.(*db.Record)
-		if record.Values[0] == nil || record.Values[1] == nil {
-			return 0, 0, nil
-		}
-		minValue, minOk := record.Values[0].(float64)
-		maxValue, maxOk := record.Values[1].(float64)
-		if !minOk || !maxOk {
-			return 0, 0, errors.New("unexpected type for min or max value")
-		}
-		return minValue, maxValue, nil
-	} else {
-		return 0, 0, nil
-	}
 }
 
 func (r *organizationRepository) GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error) {

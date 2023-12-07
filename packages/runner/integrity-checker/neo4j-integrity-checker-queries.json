@@ -65,7 +65,7 @@
       "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain) with t, d, count(org) as size_orgs where size_orgs > 1 return count(d)"
     },
     {
-      "name": "Check missing properties",
+      "name": "Check organization missing properties",
       "query": "CALL {MATCH (n:Organization) WHERE n.hide IS NULL RETURN count(n) as cnt } return sum(cnt)",
       "description": "Checks: 1 - Organization with missing hide property."
     },

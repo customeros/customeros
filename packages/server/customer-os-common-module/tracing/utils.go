@@ -19,6 +19,9 @@ func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
 }
 
 func LogObjectAsJson(span opentracing.Span, name string, object any) {
+	if object == nil {
+		span.LogFields(log.String(name, "nil"))
+	}
 	jsonObject, err := json.Marshal(object)
 	if err == nil {
 		span.LogFields(log.String(name, string(jsonObject)))
