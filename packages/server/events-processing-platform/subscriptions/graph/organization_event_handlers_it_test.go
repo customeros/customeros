@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
@@ -49,9 +49,9 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
-	event, err := events.NewOrganizationCreateEvent(orgAggregate, &models.OrganizationFields{
+	event, err := events.NewOrganizationCreateEvent(orgAggregate, &model.OrganizationFields{
 		ID: orgId,
-		OrganizationDataFields: models.OrganizationDataFields{
+		OrganizationDataFields: model.OrganizationDataFields{
 			Name: "test org",
 		},
 	}, now, now)

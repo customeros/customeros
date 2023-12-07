@@ -8,9 +8,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
-	locerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/errors"
+	localerror "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -56,7 +56,7 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 	}
 }
 
-func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organizationFields *models.OrganizationFields, userId string) error {
+func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organizationFields *model.OrganizationFields, userId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.CreateOrganization")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
@@ -88,7 +88,7 @@ func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organiza
 	return a.ApplyAll(eventsOnCreate)
 }
 
-func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organizationFields *models.OrganizationFields, userId string) error {
+func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organizationFields *model.OrganizationFields, loggedInUserId string, fieldsMask []string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.UpdateOrganization")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
@@ -97,22 +97,31 @@ func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organiza
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, utils.Now())
 
-	event, err := events.NewOrganizationUpdateEvent(a, organizationFields, updatedAtNotNil, organizationFields.IgnoreEmptyFields)
+	event, err := events.NewOrganizationUpdateEvent(a, organizationFields, updatedAtNotNil, fieldsMask)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, userId)
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: loggedInUserId,
+		App:    organizationFields.Source.AppSource,
+	})
 	eventsOnUpdate = append(eventsOnUpdate, event)
 
-	// if website updated, request webscrape
-	if organizationFields.OrganizationDataFields.Website != "" && organizationFields.OrganizationDataFields.Website != a.Organization.Website {
+	// if website updated, request webscrape by website
+	websiteChanged := organizationFields.OrganizationDataFields.Website != a.Organization.Website && (len(fieldsMask) == 0 || utils.Contains(fieldsMask, model.FieldMaskWebsite))
+	if organizationFields.OrganizationDataFields.Website != "" && websiteChanged {
 		webscrapeEvent, err := events.NewOrganizationRequestScrapeByWebsite(a, organizationFields.OrganizationDataFields.Website)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationCreateEvent")
 		}
-		aggregate.EnrichEventWithMetadata(&webscrapeEvent, &span, a.Tenant, userId)
+		aggregate.EnrichEventWithMetadataExtended(&webscrapeEvent, span, aggregate.EventMetadata{
+			Tenant: a.Tenant,
+			UserId: loggedInUserId,
+			App:    organizationFields.Source.AppSource,
+		})
 		eventsOnUpdate = append(eventsOnUpdate, webscrapeEvent)
 	}
 
@@ -162,7 +171,7 @@ func (a *OrganizationAggregate) SetPhoneNumberNonPrimary(ctx context.Context, te
 
 	phoneNumber, ok := a.Organization.PhoneNumbers[phoneNumberId]
 	if !ok {
-		return locerr.ErrPhoneNumberNotFound
+		return localerror.ErrPhoneNumberNotFound
 	}
 
 	if phoneNumber.Primary {
@@ -240,7 +249,7 @@ func (a *OrganizationAggregate) SetEmailNonPrimary(ctx context.Context, emailId,
 
 	email, ok := a.Organization.Emails[emailId]
 	if !ok {
-		return locerr.ErrEmailNotFound
+		return localerror.ErrEmailNotFound
 	}
 
 	if email.Primary {

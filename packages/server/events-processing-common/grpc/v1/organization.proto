@@ -6,6 +6,28 @@ import "common/external_system.proto";
 
 option go_package = "api/grpc/v1/organization;organization_grpc_service";
 
+enum OrganizationMaskField {
+  ORGANIZATION_PROPERTY_NONE = 0; // No property, ignored by the server
+  ORGANIZATION_PROPERTY_ALL = 1; // All properties, if present in the list all other properties are ignored
+  ORGANIZATION_PROPERTY_NAME = 2;
+  ORGANIZATION_PROPERTY_VALUE_PROPOSITION = 3;
+  ORGANIZATION_PROPERTY_TARGET_AUDIENCE = 4;
+  ORGANIZATION_PROPERTY_REFERENCE_ID = 5;
+  ORGANIZATION_PROPERTY_IS_CUSTOMER = 6;
+  ORGANIZATION_PROPERTY_IS_PUBLIC = 7;
+  ORGANIZATION_PROPERTY_HIDE = 8;
+  ORGANIZATION_PROPERTY_DESCRIPTION = 9;
+  ORGANIZATION_PROPERTY_WEBSITE = 10;
+  ORGANIZATION_PROPERTY_INDUSTRY = 11;
+  ORGANIZATION_PROPERTY_SUB_INDUSTRY = 12;
+  ORGANIZATION_PROPERTY_INDUSTRY_GROUP = 13;
+  ORGANIZATION_PROPERTY_MARKET = 14;
+  ORGANIZATION_PROPERTY_EMPLOYEES = 15;
+  ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND = 16;
+  ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT = 17;
+  ORGANIZATION_PROPERTY_NOTE = 18;
+}
+
 message UpsertOrganizationGrpcRequest {
   string id = 1;
   string tenant = 2;
@@ -29,12 +51,13 @@ message UpsertOrganizationGrpcRequest {
   string lastFundingAmount = 20;
   bool hide = 22;
   string note = 23;
-  bool ignoreEmptyFields = 24;
+//  bool ignoreEmptyFields = 24 [deprecated = true];
   SourceFields sourceFields = 25;
   ExternalSystemFields externalSystemFields = 26;
   string loggedInUserId = 27;
   string referenceId = 28;
   bool isCustomer = 29;
+  repeated OrganizationMaskField fieldsMask = 31;
 }
 
 message OrganizationIdGrpcRequest {

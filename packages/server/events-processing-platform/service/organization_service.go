@@ -9,7 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -41,7 +41,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 
 	organizationId := utils.NewUUIDIfEmpty(request.Id)
 
-	dataFields := models.OrganizationDataFields{
+	dataFields := model.OrganizationDataFields{
 		Name:              request.Name,
 		Hide:              request.Hide,
 		Description:       request.Description,
@@ -69,9 +69,10 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	command := command.NewUpsertOrganizationCommand(organizationId, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId),
-		sourceFields, externalSystem, dataFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt), request.IgnoreEmptyFields)
-	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {
+	upsertCommand := command.NewUpsertOrganizationCommand(organizationId, request.Tenant, request.LoggedInUserId, sourceFields, externalSystem, dataFields,
+		utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt),
+		extractOrganizationMaskFields(request.FieldsMask))
+	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, upsertCommand); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertSyncOrganization.Handle) tenant:%s, organizationID: %s , err: {%v}", request.Tenant, organizationId, err)
 		return nil, s.errResponse(err)
@@ -239,11 +240,11 @@ func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Contex
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	customField := models.CustomField{
+	customField := model.CustomField{
 		Id:         customFieldId,
 		Name:       request.CustomFieldName,
 		TemplateId: request.CustomFieldTemplateId,
-		CustomFieldValue: models.CustomFieldValue{
+		CustomFieldValue: model.CustomFieldValue{
 			Str:     request.CustomFieldValue.StringValue,
 			Bool:    request.CustomFieldValue.BoolValue,
 			Time:    utils.TimestampProtoToTimePtr(request.CustomFieldValue.DatetimeValue),
@@ -299,4 +300,62 @@ func (s *organizationService) RemoveParentOrganization(ctx context.Context, requ
 
 func (s *organizationService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
+}
+
+func extractOrganizationMaskFields(requestMaskFields []organizationpb.OrganizationMaskField) []string {
+	fieldsMask := make([]string, 0)
+	if requestMaskFields == nil || len(requestMaskFields) == 0 {
+		return fieldsMask
+	}
+	if containsOrganizationMaskFieldAll(requestMaskFields) {
+		return fieldsMask
+	}
+	for _, field := range requestMaskFields {
+		switch field {
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME:
+			fieldsMask = append(fieldsMask, model.FieldMaskName)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE:
+			fieldsMask = append(fieldsMask, model.FieldMaskTargetAudience)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION:
+			fieldsMask = append(fieldsMask, model.FieldMaskValueProposition)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY:
+			fieldsMask = append(fieldsMask, model.FieldMaskIndustry)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY:
+			fieldsMask = append(fieldsMask, model.FieldMaskSubIndustry)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP:
+			fieldsMask = append(fieldsMask, model.FieldMaskIndustryGroup)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE:
+			fieldsMask = append(fieldsMask, model.FieldMaskWebsite)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES:
+			fieldsMask = append(fieldsMask, model.FieldMaskEmployees)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET:
+			fieldsMask = append(fieldsMask, model.FieldMaskMarket)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND:
+			fieldsMask = append(fieldsMask, model.FieldMaskLastFundingRound)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT:
+			fieldsMask = append(fieldsMask, model.FieldMaskLastFundingAmount)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_REFERENCE_ID:
+			fieldsMask = append(fieldsMask, model.FieldMaskReferenceId)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NOTE:
+			fieldsMask = append(fieldsMask, model.FieldMaskNote)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC:
+			fieldsMask = append(fieldsMask, model.FieldMaskIsPublic)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_CUSTOMER:
+			fieldsMask = append(fieldsMask, model.FieldMaskIsCustomer)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HIDE:
+			fieldsMask = append(fieldsMask, model.FieldMaskHide)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION:
+			fieldsMask = append(fieldsMask, model.FieldMaskDescription)
+		}
+	}
+	return utils.RemoveDuplicates(fieldsMask)
+}
+
+func containsOrganizationMaskFieldAll(fields []organizationpb.OrganizationMaskField) bool {
+	for _, field := range fields {
+		if field == organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_ALL {
+			return true
+		}
+	}
+	return false
 }

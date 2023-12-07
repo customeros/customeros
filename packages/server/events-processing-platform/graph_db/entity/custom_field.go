@@ -1,6 +1,6 @@
 package entity
 
-import "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
+import "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 
 type nodeLabel string
 
@@ -32,15 +32,15 @@ func (p propertyName) String() string {
 
 func NodeLabelForCustomFieldDataType(dataType string) string {
 	switch dataType {
-	case string(models.CustomFieldDataTypeText):
+	case string(model.CustomFieldDataTypeText):
 		return textNodeLabel.String()
-	case string(models.CustomFieldDataTypeInteger):
+	case string(model.CustomFieldDataTypeInteger):
 		return intNodeLabel.String()
-	case string(models.CustomFieldDataTypeDecimal):
+	case string(model.CustomFieldDataTypeDecimal):
 		return floatNodeLabel.String()
-	case string(models.CustomFieldDataTypeDatetime):
+	case string(model.CustomFieldDataTypeDatetime):
 		return timeNodeLabel.String()
-	case string(models.CustomFieldDataTypeBool):
+	case string(model.CustomFieldDataTypeBool):
 		return boolNodeLabel.String()
 	}
 	return ""
@@ -48,15 +48,15 @@ func NodeLabelForCustomFieldDataType(dataType string) string {
 
 func PropertyNameForCustomFieldDataType(dataType string) string {
 	switch dataType {
-	case string(models.CustomFieldDataTypeText):
+	case string(model.CustomFieldDataTypeText):
 		return CustomFieldTextProperty.String()
-	case string(models.CustomFieldDataTypeInteger):
+	case string(model.CustomFieldDataTypeInteger):
 		return CustomFieldIntProperty.String()
-	case string(models.CustomFieldDataTypeDecimal):
+	case string(model.CustomFieldDataTypeDecimal):
 		return CustomFieldFloatProperty.String()
-	case string(models.CustomFieldDataTypeDatetime):
+	case string(model.CustomFieldDataTypeDatetime):
 		return CustomFieldTimeProperty.String()
-	case string(models.CustomFieldDataTypeBool):
+	case string(model.CustomFieldDataTypeBool):
 		return CustomFieldBoolProperty.String()
 	}
 	return ""

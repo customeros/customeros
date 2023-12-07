@@ -2,64 +2,10 @@ package command
 
 import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"time"
 )
-
-type UpsertOrganizationCommand struct {
-	eventstore.BaseCommand
-	IsCreateCommand   bool
-	IgnoreEmptyFields bool
-	DataFields        models.OrganizationDataFields
-	Source            cmnmod.Source
-	ExternalSystem    cmnmod.ExternalSystem
-	CreatedAt         *time.Time
-	UpdatedAt         *time.Time
-}
-
-func UpsertOrganizationCommandToOrganizationFieldsStruct(command *UpsertOrganizationCommand) *models.OrganizationFields {
-	return &models.OrganizationFields{
-		ID:                     command.ObjectID,
-		Tenant:                 command.Tenant,
-		OrganizationDataFields: command.DataFields,
-		Source:                 command.Source,
-		ExternalSystem:         command.ExternalSystem,
-		CreatedAt:              command.CreatedAt,
-		UpdatedAt:              command.UpdatedAt,
-		IgnoreEmptyFields:      command.IgnoreEmptyFields,
-	}
-}
-
-func NewUpsertOrganizationCommand(organizationId, tenant, userId string, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, coreFields models.OrganizationDataFields, createdAt, updatedAt *time.Time, ignoreEmptyFields bool) *UpsertOrganizationCommand {
-	return &UpsertOrganizationCommand{
-		BaseCommand:       eventstore.NewBaseCommand(organizationId, tenant, userId),
-		IgnoreEmptyFields: ignoreEmptyFields,
-		DataFields:        coreFields,
-		Source:            source,
-		ExternalSystem:    externalSystem,
-		CreatedAt:         createdAt,
-		UpdatedAt:         updatedAt,
-	}
-}
-
-type UpdateOrganizationCommand struct {
-	eventstore.BaseCommand
-	IgnoreEmptyFields bool
-	DataFields        models.OrganizationDataFields
-	Source            string
-	UpdatedAt         *time.Time
-}
-
-func NewUpdateOrganizationCommand(organizationId, tenant, source string, dataFields models.OrganizationDataFields, updatedAt *time.Time, ignoreEmptyFields bool) *UpdateOrganizationCommand {
-	return &UpdateOrganizationCommand{
-		BaseCommand:       eventstore.NewBaseCommand(organizationId, tenant, ""),
-		IgnoreEmptyFields: ignoreEmptyFields,
-		DataFields:        dataFields,
-		Source:            source,
-		UpdatedAt:         updatedAt,
-	}
-}
 
 type LinkPhoneNumberCommand struct {
 	eventstore.BaseCommand
@@ -182,11 +128,11 @@ type UpsertCustomFieldCommand struct {
 	Source          cmnmod.Source
 	CreatedAt       *time.Time
 	UpdatedAt       *time.Time
-	CustomFieldData models.CustomField
+	CustomFieldData model.CustomField
 }
 
 func NewUpsertCustomFieldCommand(organizationId, tenant, source, sourceOfTruth, appSource, userId string,
-	createdAt, updatedAt *time.Time, customField models.CustomField) *UpsertCustomFieldCommand {
+	createdAt, updatedAt *time.Time, customField model.CustomField) *UpsertCustomFieldCommand {
 	return &UpsertCustomFieldCommand{
 		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant, userId),
 		Source: cmnmod.Source{

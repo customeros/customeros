@@ -140,14 +140,12 @@ func testUpdateOrganization() {
 	organizationId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	website := "xtz.com"
 	lastFoundingAmont := "1Million"
-	partial := true
 
 	result, _ := clients.OrganizationClient.UpsertOrganization(context.Background(), &organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:            tenant,
 		Id:                organizationId,
 		Website:           website,
 		LastFundingAmount: lastFoundingAmont,
-		IgnoreEmptyFields: partial,
 	})
 	print(result)
 }

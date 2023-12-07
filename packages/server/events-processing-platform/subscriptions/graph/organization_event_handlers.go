@@ -159,17 +159,12 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	var err error
-	if eventData.IgnoreEmptyFields {
-		err = h.repositories.OrganizationRepository.UpdateOrganizationIgnoreEmptyInputParams(ctx, organizationId, eventData)
-	} else {
-		err = h.repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
-		// set customer os id
-		customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
-		if customerOsErr != nil {
-			tracing.TraceErr(span, customerOsErr)
-			h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
-		}
+	err := h.repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
+	// set customer os id
+	customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
+	if customerOsErr != nil {
+		tracing.TraceErr(span, customerOsErr)
+		h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
 	}
 	if err != nil {
 		tracing.TraceErr(span, err)
