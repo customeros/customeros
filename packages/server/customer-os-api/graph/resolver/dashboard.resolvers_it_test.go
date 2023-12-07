@@ -14,7 +14,7 @@ import (
 )
 
 func TestQueryResolver_Search_Organization_By_Name(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -54,7 +54,7 @@ func assert_Search_Organization_By_Name(t *testing.T, searchTerm string, include
 }
 
 func TestQueryResolver_Search_Organization_By_Website(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -98,7 +98,7 @@ func assert_Search_Organization_By_Website(t *testing.T, searchTerm string, incl
 }
 
 func TestQueryResolver_Search_Organization_By_ORGANIZATION_Filter(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -163,7 +163,7 @@ func assert_Search_Organization_By_ORGANIZATION(t *testing.T, searchTerm string)
 }
 
 func TestQueryResolver_Search_Organization_By_Regions(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -230,7 +230,7 @@ func assert_Search_Organization_By_Regions(t *testing.T, region1 string, region2
 }
 
 func TestQueryResolver_Search_Organization_By_Name_And_Regions(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -306,7 +306,7 @@ func assert_Search_Organization_By_Name_And_Regions(t *testing.T, region1 string
 }
 
 func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyFalse(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -343,7 +343,7 @@ func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyFalse(t *tes
 }
 
 func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyTrue(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -380,7 +380,7 @@ func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyTrue(t *test
 }
 
 func TestQueryResolver_Sort_Organizations_ByLastTouchpointAt(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -421,7 +421,7 @@ func TestQueryResolver_Sort_Organizations_ByLastTouchpointAt(t *testing.T) {
 }
 
 func TestQueryResolver_Sort_Organizations_ByLastTouchpointType(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -462,7 +462,7 @@ func TestQueryResolver_Sort_Organizations_ByLastTouchpointType(t *testing.T) {
 }
 
 func TestQueryResolver_Sort_Organizations_ByForecastAmount(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -515,7 +515,7 @@ func TestQueryResolver_Sort_Organizations_ByForecastAmount(t *testing.T) {
 }
 
 func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -568,7 +568,7 @@ func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
 }
 
 func TestQueryResolver_Sort_Organizations_ByRenewalDate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -617,7 +617,7 @@ func TestQueryResolver_Sort_Organizations_ByRenewalDate(t *testing.T) {
 }
 
 func TestQueryResolver_Sort_Organizations_ByOrganizationName_WithOrganizationHierarchy(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 

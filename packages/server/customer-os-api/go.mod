@@ -11,6 +11,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 require (
 	github.com/99designs/gqlgen v0.17.41
 	github.com/caarlos0/env/v6 v6.10.1
+	github.com/docker/docker v24.0.7+incompatible
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-contrib/zap v0.2.0
 	github.com/gin-gonic/gin v1.9.1
@@ -59,7 +60,6 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v24.0.7+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -76,22 +75,12 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.Int("skip", skip), log.Int("limit", limit))
-	if where != nil {
-		whereJSON, err := json.Marshal(where)
-		if err == nil {
-			span.LogFields(log.String("where", string(whereJSON)))
-		}
-	}
-	if sort != nil {
-		sortJSON, err := json.Marshal(sort)
-		if err == nil {
-			span.LogFields(log.Object("sort", sortJSON))
-		}
-	}
+	tracing.LogObjectAsJson(span, "where", where)
+	tracing.LogObjectAsJson(span, "sort", sort)
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
-	organizationfilterCypher, organizationFilterParams := "", make(map[string]interface{})
+	organizationFilterCypher, organizationFilterParams := "", make(map[string]interface{})
 	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
@@ -167,7 +156,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 
 		if len(organizationFilter.Filters) > 0 {
-			organizationfilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
+			organizationFilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
 		}
 		if len(emailFilter.Filters) > 0 {
 			emailFilterCypher, emailFilterParams = emailFilter.BuildCypherFilterFragmentWithParamName("e", "e_param_")
@@ -194,25 +183,25 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		utils.MergeMapToMap(locationFilterParams, params)
 
 		//region count query
-		countQuery := fmt.Sprintf(`MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH * `, tenant)
+		countQuery := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 		if len(ownerId) > 0 {
-			countQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
+			countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`
 		}
 		if emailFilterCypher != "" {
-			countQuery += fmt.Sprintf(` MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
+			countQuery += ` MATCH (o)-[:HAS]->(e:Email) WITH *`
 		}
 		if locationFilterCypher != "" {
-			countQuery += fmt.Sprintf(` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
+			countQuery += ` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`
 		}
-		countQuery += fmt.Sprintf(` WHERE (o.hide = false OR o.hide is null)`)
+		countQuery += ` WHERE o.hide = false `
 
-		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
+		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
 			countQuery += " AND "
 		}
 
 		countQueryParts := []string{}
-		if organizationfilterCypher != "" {
-			countQueryParts = append(countQueryParts, organizationfilterCypher)
+		if organizationFilterCypher != "" {
+			countQueryParts = append(countQueryParts, organizationFilterCypher)
 		}
 		if len(ownerId) > 0 {
 			if ownerIncludeEmpty {
@@ -245,7 +234,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		//endregion
 
 		//region query to fetch data
-		query := fmt.Sprintf(` MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH * `, tenant)
+		query := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 		if len(ownerId) > 0 {
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
 		}
@@ -255,15 +244,15 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		if sort != nil && sort.By == "OWNER" {
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
 		}
-		query += ` WHERE (o.hide = false OR o.hide is null) `
+		query += ` WHERE (o.hide = false) `
 
-		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
+		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
 			query += " AND "
 		}
 
 		queryParts := []string{}
-		if organizationfilterCypher != "" {
-			queryParts = append(queryParts, organizationfilterCypher)
+		if organizationFilterCypher != "" {
+			queryParts = append(queryParts, organizationFilterCypher)
 		}
 		if len(ownerId) > 0 {
 			if ownerIncludeEmpty {
@@ -387,10 +376,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		query += fmt.Sprintf(` SKIP $skip LIMIT $limit`)
 
 		span.LogFields(log.Object("query", query))
-		paramsJson, err := json.Marshal(params)
-		if err == nil {
-			span.LogFields(log.String("params", string(paramsJson)))
-		}
+		tracing.LogObjectAsJson(span, "params", params)
 
 		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
