@@ -57,6 +57,7 @@ message UpsertOrganizationGrpcRequest {
   string loggedInUserId = 27;
   string referenceId = 28;
   bool isCustomer = 29;
+  bool webScrapeMetadata = 30;
   repeated OrganizationMaskField fieldsMask = 31;
 }
 
@@ -149,6 +150,12 @@ message RemoveParentOrganizationGrpcRequest {
   string appSource = 5;
 }
 
+message WebScrapeOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string website = 3;
+}
+
 message OrganizationIdGrpcResponse {
   string id = 1;
 }
@@ -159,6 +166,7 @@ message CustomFieldIdGrpcResponse {
 
 service organizationGrpcService {
   rpc UpsertOrganization(UpsertOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc WebScrapeOrganization(WebScrapeOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkPhoneNumberToOrganization(LinkPhoneNumberToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkEmailToOrganization(LinkEmailToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
