@@ -3,9 +3,9 @@ import sample from 'lodash/sample';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
+import { Minus } from '@ui/media/icons/Minus';
 import { TrendUp01 } from '@ui/media/icons/TrendUp01';
 import { TrendDown01 } from '@ui/media/icons/TrendDown01';
-import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
 
 const quotes = [
   'As stable as a turtle on tranquilizers',
@@ -25,7 +25,7 @@ const quotes = [
 export const PercentageTrend = ({ percentage }: { percentage: number }) => {
   const icon =
     percentage === 0 ? (
-      <ArrowNarrowRight />
+      <Minus boxSize='5' color='gray.700' />
     ) : percentage > 0 ? (
       <TrendUp01 boxSize='5' color='green.500' />
     ) : (
@@ -40,9 +40,11 @@ export const PercentageTrend = ({ percentage }: { percentage: number }) => {
   return (
     <Flex align='center' gap='1'>
       {icon}
-      <Text fontSize='sm' color={color}>
-        {Math.abs(percentage)}%
-      </Text>
+      {percentage > 0 && (
+        <Text fontSize='sm' color={color}>
+          {Math.abs(percentage)}%
+        </Text>
+      )}
       <Text fontSize='sm'>{quote}</Text>
     </Flex>
   );
