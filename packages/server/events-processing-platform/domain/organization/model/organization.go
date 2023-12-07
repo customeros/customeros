@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	"fmt"
@@ -6,13 +6,24 @@ import (
 	"time"
 )
 
-type RenewalLikelihoodProbability string
-
 const (
-	RenewalLikelihoodHIGH   RenewalLikelihoodProbability = "HIGH"
-	RenewalLikelihoodMEDIUM RenewalLikelihoodProbability = "MEDIUM"
-	RenewalLikelihoodLOW    RenewalLikelihoodProbability = "LOW"
-	RenewalLikelihoodZERO   RenewalLikelihoodProbability = "ZERO"
+	FieldMaskName              = "name"
+	FieldMaskTargetAudience    = "targetAudience"
+	FieldMaskValueProposition  = "valueProposition"
+	FieldMaskIndustry          = "industry"
+	FieldMaskSubIndustry       = "subIndustry"
+	FieldMaskIndustryGroup     = "industryGroup"
+	FieldMaskMarket            = "market"
+	FieldMaskHide              = "hide"
+	FieldMaskDescription       = "description"
+	FieldMaskNote              = "note"
+	FieldMaskIsPublic          = "isPublic"
+	FieldMaskIsCustomer        = "isCustomer"
+	FieldMaskEmployees         = "employees"
+	FieldMaskLastFundingRound  = "lastFundingRound"
+	FieldMaskLastFundingAmount = "lastFundingAmount"
+	FieldMaskReferenceId       = "referenceId"
+	FieldMaskWebsite           = "website"
 )
 
 type CustomFieldDataType string
@@ -24,20 +35,6 @@ const (
 	CustomFieldDataTypeInteger  CustomFieldDataType = "INTEGER"
 	CustomFieldDataTypeDecimal  CustomFieldDataType = "DECIMAL"
 )
-
-func (r RenewalLikelihoodProbability) CamelCaseString() string {
-	switch r {
-	case RenewalLikelihoodHIGH:
-		return "High"
-	case RenewalLikelihoodMEDIUM:
-		return "Medium"
-	case RenewalLikelihoodLOW:
-		return "Low"
-	case RenewalLikelihoodZERO:
-		return "Zero"
-	}
-	return ""
-}
 
 type Social struct {
 	PlatformName string `json:"platformName"`

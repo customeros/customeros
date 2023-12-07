@@ -127,7 +127,7 @@ func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, reque
 		request.Amount,
 		source,
 		updatedAt,
-		extractMaskFields(request.MaskFields),
+		extractOpportunityMaskFields(request.MaskFields),
 	)
 
 	if err := s.opportunityCommandHandlers.UpdateRenewalOpportunity.Handle(ctx, updateRenewalOpportunityCommand); err != nil {
@@ -186,33 +186,32 @@ func (s *opportunityService) checkOrganizationExists(ctx context.Context, tenant
 	return true, nil // The organization exists
 }
 
-func extractMaskFields(requestMaskFields []opportunitypb.OpportunityMaskFields) []string {
+func extractOpportunityMaskFields(requestMaskFields []opportunitypb.OpportunityMaskField) []string {
 	maskFields := make([]string, 0)
 	if requestMaskFields == nil || len(requestMaskFields) == 0 {
 		return maskFields
 	}
-	if containsAllFields(requestMaskFields) {
+	if containsOpportunityMaskFieldAll(requestMaskFields) {
 		return maskFields
 	}
 	for _, field := range requestMaskFields {
 		switch field {
-		case opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_NAME:
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_NAME:
 			maskFields = append(maskFields, model.FieldMaskName)
-		case opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_AMOUNT:
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT:
 			maskFields = append(maskFields, model.FieldMaskAmount)
-		case opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_COMMENTS:
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS:
 			maskFields = append(maskFields, model.FieldMaskComments)
-		case opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD:
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD:
 			maskFields = append(maskFields, model.FieldMaskRenewalLikelihood)
 		}
-
 	}
 	return utils.RemoveDuplicates(maskFields)
 }
 
-func containsAllFields(fields []opportunitypb.OpportunityMaskFields) bool {
+func containsOpportunityMaskFieldAll(fields []opportunitypb.OpportunityMaskField) bool {
 	for _, field := range fields {
-		if field == opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_ALL {
+		if field == opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ALL {
 			return true
 		}
 	}

@@ -183,12 +183,51 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 			ID: input.ID,
 		}, nil
 	}
+	fieldsMask := []organizationpb.OrganizationMaskField{}
+	if input.Patch != nil && *input.Patch {
+		if input.Name != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
+		}
+		if utils.IfNotNilString(input.ReferenceID) != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_REFERENCE_ID)
+		}
+		if utils.IfNotNilString(input.Description) != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
+		}
+		if utils.IfNotNilString(input.Website) != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
+		}
+		if utils.IfNotNilString(input.Industry) != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
+		}
+		if utils.IfNotNilString(input.SubIndustry) != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY)
+		}
+		if utils.IfNotNilString(input.IndustryGroup) != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP)
+		}
+		if input.Market != nil {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
+		}
+		if utils.IfNotNilString(input.TargetAudience) != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE)
+		}
+		if utils.IfNotNilString(input.ValueProposition) != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
+		}
+		if utils.IfNotNilString(input.LastFundingAmount) != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT)
+		}
+		if input.LastFundingRound != nil {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND)
+		}
+	}
 
 	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:            common.GetTenantFromContext(ctx),
 		LoggedInUserId:    common.GetUserIdFromContext(ctx),
 		Id:                input.ID,
-		IgnoreEmptyFields: utils.IfNotNilBool(input.Patch),
+		FieldsMask:        fieldsMask,
 		Name:              input.Name,
 		ReferenceId:       utils.IfNotNilString(input.ReferenceID),
 		Description:       utils.IfNotNilString(input.Description),
