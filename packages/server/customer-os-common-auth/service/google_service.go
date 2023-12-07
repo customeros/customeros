@@ -6,6 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository"
 	authEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -23,24 +25,36 @@ type googleService struct {
 }
 
 type GoogleService interface {
-	ServiceAccountCredentialsExistsForTenant(tenant string) (bool, error)
+	ServiceAccountCredentialsExistsForTenant(ctx context.Context, tenant string) (bool, error)
 
-	GetGmailService(username, tenant string) (*gmail.Service, error)
+	GetGmailService(ctx context.Context, username, tenant string) (*gmail.Service, error)
 
-	GetGmailServiceWithServiceAccount(username string, tenant string) (*gmail.Service, error)
-	GetGCalServiceWithServiceAccount(username string, tenant string) (*calendar.Service, error)
+	GetGmailServiceWithServiceAccount(ctx context.Context, username string, tenant string) (*gmail.Service, error)
+	GetGCalServiceWithServiceAccount(ctx context.Context, username string, tenant string) (*calendar.Service, error)
 
-	GetGmailServiceWithOauthToken(tokenEntity authEntity.OAuthTokenEntity) (*gmail.Service, error)
-	GetGCalServiceWithOauthToken(tokenEntity authEntity.OAuthTokenEntity) (*calendar.Service, error)
+	GetGmailServiceWithOauthToken(ctx context.Context, tokenEntity authEntity.OAuthTokenEntity) (*gmail.Service, error)
+	GetGCalServiceWithOauthToken(ctx context.Context, tokenEntity authEntity.OAuthTokenEntity) (*calendar.Service, error)
 }
 
-func (s *googleService) ServiceAccountCredentialsExistsForTenant(tenant string) (bool, error) {
-	privateKey, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, authEntity.GSUITE_SERVICE_PRIVATE_KEY)
+func NewGoogleService(cfg *config.Config, repositories *repository.Repositories, services *Services) GoogleService {
+	return &googleService{
+		cfg:          cfg,
+		repositories: repositories,
+		services:     services,
+	}
+}
+
+func (s *googleService) ServiceAccountCredentialsExistsForTenant(ctx context.Context, tenant string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.ServiceAccountCredentialsExistsForTenant")
+	defer span.Finish()
+	span.LogFields(log.String("tenant", tenant))
+
+	privateKey, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(ctx, tenant, authEntity.GSUITE_SERVICE_PRIVATE_KEY)
 	if err != nil {
 		return false, nil
 	}
 
-	serviceEmail, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, authEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
+	serviceEmail, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(ctx, tenant, authEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
 	if err != nil {
 		return false, nil
 	}
@@ -52,16 +66,19 @@ func (s *googleService) ServiceAccountCredentialsExistsForTenant(tenant string) 
 	return true, nil
 }
 
-func (s *googleService) GetGmailService(username, tenant string) (*gmail.Service, error) {
+func (s *googleService) GetGmailService(ctx context.Context, username, tenant string) (*gmail.Service, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.GetGmailService")
+	defer span.Finish()
+	span.LogFields(log.String("username", username), log.String("tenant", tenant))
 
-	serviceAccountExistsForTenant, err := s.ServiceAccountCredentialsExistsForTenant(tenant)
+	serviceAccountExistsForTenant, err := s.ServiceAccountCredentialsExistsForTenant(ctx, tenant)
 	if err != nil {
 		logrus.Error(err)
 		return nil, err
 	}
 
 	if serviceAccountExistsForTenant {
-		gmailService, err := s.GetGmailServiceWithServiceAccount(username, tenant)
+		gmailService, err := s.GetGmailServiceWithServiceAccount(ctx, username, tenant)
 		if err != nil {
 			logrus.Errorf("failed to create gmail service: %v", err)
 			return nil, err
@@ -69,7 +86,7 @@ func (s *googleService) GetGmailService(username, tenant string) (*gmail.Service
 
 		return gmailService, nil
 	} else {
-		tokenEntity, err := s.repositories.OAuthTokenRepository.GetForEmail("google", tenant, username)
+		tokenEntity, err := s.repositories.OAuthTokenRepository.GetForEmail(ctx, "google", tenant, username)
 		if err != nil {
 			return nil, err
 		}
@@ -77,10 +94,10 @@ func (s *googleService) GetGmailService(username, tenant string) (*gmail.Service
 			return nil, nil
 		} else if tokenEntity != nil {
 			if tokenEntity.RefreshToken == "" {
-				err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+				err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 				return nil, err
 			} else {
-				gmailService, err := s.GetGmailServiceWithOauthToken(*tokenEntity)
+				gmailService, err := s.GetGmailServiceWithOauthToken(ctx, *tokenEntity)
 				if err != nil {
 					logrus.Errorf("failed to create gmail service: %v", err)
 					return nil, err
@@ -93,25 +110,28 @@ func (s *googleService) GetGmailService(username, tenant string) (*gmail.Service
 	}
 }
 
-func (s *googleService) GetGmailServiceWithServiceAccount(username string, tenant string) (*gmail.Service, error) {
-	tok, err := s.getGmailServiceAccountAuthToken(username, tenant)
+func (s *googleService) GetGmailServiceWithServiceAccount(ctx context.Context, username, tenant string) (*gmail.Service, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.GetGmailServiceWithServiceAccount")
+	defer span.Finish()
+	span.LogFields(log.String("username", username), log.String("tenant", tenant))
+
+	tok, err := s.getGmailServiceAccountAuthToken(ctx, username, tenant)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
 	}
-	ctx := context.Background()
 	client := tok.Client(ctx)
 
 	srv, err := gmail.NewService(ctx, option.WithHTTPClient(client))
 	return srv, err
 }
 
-func (s *googleService) getGmailServiceAccountAuthToken(identityId, tenant string) (*jwt.Config, error) {
-	privateKey, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, authEntity.GSUITE_SERVICE_PRIVATE_KEY)
+func (s *googleService) getGmailServiceAccountAuthToken(ctx context.Context, identityId, tenant string) (*jwt.Config, error) {
+	privateKey, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(ctx, tenant, authEntity.GSUITE_SERVICE_PRIVATE_KEY)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve private key for gmail service: %v", err)
 	}
 
-	serviceEmail, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, authEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
+	serviceEmail, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(ctx, tenant, authEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve service email for gmail service: %v", err)
 	}
@@ -125,25 +145,27 @@ func (s *googleService) getGmailServiceAccountAuthToken(identityId, tenant strin
 	return conf, nil
 }
 
-func (s *googleService) GetGCalServiceWithServiceAccount(username string, tenant string) (*calendar.Service, error) {
-	tok, err := s.getGCalServiceAccountAuthToken(username, tenant)
+func (s *googleService) GetGCalServiceWithServiceAccount(ctx context.Context, username, tenant string) (*calendar.Service, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.GetGCalServiceWithServiceAccount")
+	defer span.Finish()
+
+	tok, err := s.getGCalServiceAccountAuthToken(ctx, username, tenant)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
 	}
-	ctx := context.Background()
 	client := tok.Client(ctx)
 
 	srv, err := calendar.NewService(ctx, option.WithHTTPClient(client))
 	return srv, err
 }
 
-func (s *googleService) getGCalServiceAccountAuthToken(identityId, tenant string) (*jwt.Config, error) {
-	privateKey, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, authEntity.GSUITE_SERVICE_PRIVATE_KEY)
+func (s *googleService) getGCalServiceAccountAuthToken(ctx context.Context, identityId, tenant string) (*jwt.Config, error) {
+	privateKey, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(ctx, tenant, authEntity.GSUITE_SERVICE_PRIVATE_KEY)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve private key for gmail service: %v", err)
 	}
 
-	serviceEmail, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, authEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
+	serviceEmail, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(ctx, tenant, authEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve service email for gmail service: %v", err)
 	}
@@ -157,7 +179,10 @@ func (s *googleService) getGCalServiceAccountAuthToken(identityId, tenant string
 	return conf, nil
 }
 
-func (s *googleService) GetGmailServiceWithOauthToken(tokenEntity authEntity.OAuthTokenEntity) (*gmail.Service, error) {
+func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, tokenEntity authEntity.OAuthTokenEntity) (*gmail.Service, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.GetGmailServiceWithOauthToken")
+	defer span.Finish()
+
 	oauth2Config := &oauth2.Config{
 		ClientID:     s.cfg.GoogleOAuth.ClientId,
 		ClientSecret: s.cfg.GoogleOAuth.ClientSecret,
@@ -170,13 +195,13 @@ func (s *googleService) GetGmailServiceWithOauthToken(tokenEntity authEntity.OAu
 		Expiry:       tokenEntity.ExpiresAt,
 	}
 
-	tokenSource := oauth2Config.TokenSource(context.TODO(), &token)
+	tokenSource := oauth2Config.TokenSource(ctx, &token)
 	reuseTokenSource := oauth2.ReuseTokenSource(&token, tokenSource)
 
 	if !token.Valid() {
 		newToken, err := reuseTokenSource.Token()
 		if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
-			err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+			err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 			if err != nil {
 				logrus.Errorf("failed to mark token for manual refresh: %v", err)
 				return nil, err
@@ -189,7 +214,7 @@ func (s *googleService) GetGmailServiceWithOauthToken(tokenEntity authEntity.OAu
 
 		if newToken.AccessToken != tokenEntity.AccessToken {
 
-			_, err := s.repositories.OAuthTokenRepository.Update(tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
+			_, err := s.repositories.OAuthTokenRepository.Update(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
 			if err != nil {
 				logrus.Errorf("failed to update token: %v", err)
 				return nil, err
@@ -198,9 +223,9 @@ func (s *googleService) GetGmailServiceWithOauthToken(tokenEntity authEntity.OAu
 
 	}
 
-	gmailService, err := gmail.NewService(context.TODO(), option.WithTokenSource(reuseTokenSource))
+	gmailService, err := gmail.NewService(ctx, option.WithTokenSource(reuseTokenSource))
 	if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
-		err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+		err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 		if err != nil {
 			logrus.Errorf("failed to mark token for manual refresh: %v", err)
 			return nil, err
@@ -215,7 +240,7 @@ func (s *googleService) GetGmailServiceWithOauthToken(tokenEntity authEntity.OAu
 	//See https://developers.google.com/identity/sign-in/web/devconsole-project.
 	_, err2 := gmailService.Users.GetProfile("me").Do()
 	if err2 != nil && err2.(*googleapi.Error) != nil && err2.(*googleapi.Error).Code == 401 {
-		err3 := s.repositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+		err3 := s.repositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 		if err3 != nil {
 			logrus.Errorf("failed to mark token for manual refresh: %v", err)
 			return nil, err3
@@ -229,7 +254,10 @@ func (s *googleService) GetGmailServiceWithOauthToken(tokenEntity authEntity.OAu
 	return gmailService, nil
 }
 
-func (s *googleService) GetGCalServiceWithOauthToken(tokenEntity authEntity.OAuthTokenEntity) (*calendar.Service, error) {
+func (s *googleService) GetGCalServiceWithOauthToken(ctx context.Context, tokenEntity authEntity.OAuthTokenEntity) (*calendar.Service, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.GetGCalServiceWithOauthToken")
+	defer span.Finish()
+
 	oauth2Config := &oauth2.Config{
 		ClientID:     s.cfg.GoogleOAuth.ClientId,
 		ClientSecret: s.cfg.GoogleOAuth.ClientSecret,
@@ -242,13 +270,13 @@ func (s *googleService) GetGCalServiceWithOauthToken(tokenEntity authEntity.OAut
 		Expiry:       tokenEntity.ExpiresAt,
 	}
 
-	tokenSource := oauth2Config.TokenSource(context.TODO(), &token)
+	tokenSource := oauth2Config.TokenSource(ctx, &token)
 	reuseTokenSource := oauth2.ReuseTokenSource(&token, tokenSource)
 
 	if !token.Valid() {
 		newToken, err := reuseTokenSource.Token()
 		if err != nil && err.(*oauth2.RetrieveError) != nil && (err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" || err.(*oauth2.RetrieveError).ErrorCode == "unauthorized_client") {
-			err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+			err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 			if err != nil {
 				logrus.Errorf("failed to mark token for manual refresh: %v", err)
 				return nil, err
@@ -261,7 +289,7 @@ func (s *googleService) GetGCalServiceWithOauthToken(tokenEntity authEntity.OAut
 
 		if newToken.AccessToken != tokenEntity.AccessToken {
 
-			_, err := s.repositories.OAuthTokenRepository.Update(tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
+			_, err := s.repositories.OAuthTokenRepository.Update(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
 			if err != nil {
 				logrus.Errorf("failed to update token: %v", err)
 				return nil, err
@@ -270,9 +298,9 @@ func (s *googleService) GetGCalServiceWithOauthToken(tokenEntity authEntity.OAut
 
 	}
 
-	gCalService, err := calendar.NewService(context.TODO(), option.WithTokenSource(reuseTokenSource))
+	gCalService, err := calendar.NewService(ctx, option.WithTokenSource(reuseTokenSource))
 	if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
-		err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+		err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 		if err != nil {
 			logrus.Errorf("failed to mark token for manual refresh: %v", err)
 			return nil, err
@@ -287,7 +315,7 @@ func (s *googleService) GetGCalServiceWithOauthToken(tokenEntity authEntity.OAut
 	//See https://developers.google.com/identity/sign-in/web/devconsole-project.
 	_, err2 := gCalService.CalendarList.Get("primary").Do()
 	if err2 != nil && err2.(*googleapi.Error) != nil && err2.(*googleapi.Error).Code == 401 {
-		err3 := s.repositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+		err3 := s.repositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 		if err3 != nil {
 			logrus.Errorf("failed to mark token for manual refresh: %v", err)
 			return nil, err3
@@ -299,12 +327,4 @@ func (s *googleService) GetGCalServiceWithOauthToken(tokenEntity authEntity.OAut
 	}
 
 	return gCalService, nil
-}
-
-func NewGoogleService(cfg *config.Config, repositories *repository.Repositories, services *Services) GoogleService {
-	return &googleService{
-		cfg:          cfg,
-		repositories: repositories,
-		services:     services,
-	}
 }

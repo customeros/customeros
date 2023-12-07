@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	postgrest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/test/postgres"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,7 +16,7 @@ func TestServiceAccountCredentialsExistsForTenant(t *testing.T) {
 	require.NoError(t, err)
 
 	// positive case
-	exists, err := serviceContainer.GoogleService.ServiceAccountCredentialsExistsForTenant(tenant)
+	exists, err := serviceContainer.GoogleService.ServiceAccountCredentialsExistsForTenant(context.Background(), tenant)
 	require.NoError(t, err)
 	assert.True(t, exists)
 }
