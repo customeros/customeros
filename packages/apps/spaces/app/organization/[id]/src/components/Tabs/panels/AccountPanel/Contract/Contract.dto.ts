@@ -34,7 +34,7 @@ export class ContractDTO implements TimeToRenewalForm {
   constructor(data?: TimeToRenewalData | null) {
     this.renewalCycle =
       [...billingFrequencyOptions].find(({ value }) =>
-        data?.renewalPeriods ?? 0 > 1
+        (data?.renewalPeriods ?? 0) > 1
           ? value === 'MULTI_YEAR'
           : value === data?.renewalCycle,
       ) ?? undefined;
