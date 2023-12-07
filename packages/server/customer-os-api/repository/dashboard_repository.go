@@ -191,7 +191,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			countQuery += ` MATCH (o)-[:HAS]->(e:Email) WITH *`
 		}
 		if locationFilterCypher != "" {
-			countQuery += ` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`
+			countQuery += ` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
 		}
 		countQuery += ` WHERE o.hide = false `
 
