@@ -170,7 +170,7 @@ export const UpdateServiceModal = ({
         }}
       >
         <ModalHeader>
-          <FeaturedIcon size='lg' colorScheme='primary'>
+          <FeaturedIcon size='lg' colorScheme='gray'>
             <DotSingle color='primary.600' />
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>

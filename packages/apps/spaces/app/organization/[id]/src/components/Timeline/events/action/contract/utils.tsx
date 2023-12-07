@@ -1,24 +1,25 @@
 import React, { ReactElement } from 'react';
 
-import { FolderCheck } from '@ui/media/icons/FolderCheck';
-import { FolderClosed } from '@ui/media/icons/FolderClosed';
+import { FileX02 } from '@ui/media/icons/FileX02';
+import { FileHeart02 } from '@ui/media/icons/FileHeart02';
+import { FileCheck02 } from '@ui/media/icons/FileCheck02';
 
 export const iconsByStatus: Record<
   string,
   Record<string, string | ReactElement>
 > = {
   live: {
-    icon: <FolderCheck />,
+    icon: <FileHeart02 />,
     colorScheme: 'primary',
     text: 'is now',
   },
   renewed: {
-    icon: <FolderCheck />,
+    icon: <FileCheck02 />,
     colorScheme: 'success',
     text: '',
   },
   ended: {
-    icon: <FolderClosed />,
+    icon: <FileX02 />,
     colorScheme: 'gray',
     text: 'has',
   },
