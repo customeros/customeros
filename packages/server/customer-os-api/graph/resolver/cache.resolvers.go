@@ -44,12 +44,12 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	response.IsOwner = *isOwner
 
 	if userEmail != "" {
-		privateKey, err := r.Services.CommonAuthServices.CommonAuthRepositories.ApiKeyRepository.GetApiKeyByTenantService(tenantName, authEntity.GSUITE_SERVICE_PRIVATE_KEY)
+		privateKey, err := r.Services.CommonAuthServices.CommonAuthRepositories.ApiKeyRepository.GetApiKeyByTenantService(ctx, tenantName, authEntity.GSUITE_SERVICE_PRIVATE_KEY)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
-		serviceEmail, err := r.Services.CommonAuthServices.CommonAuthRepositories.ApiKeyRepository.GetApiKeyByTenantService(tenantName, authEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
+		serviceEmail, err := r.Services.CommonAuthServices.CommonAuthRepositories.ApiKeyRepository.GetApiKeyByTenantService(ctx, tenantName, authEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -59,7 +59,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 			response.IsGoogleActive = true
 			response.IsGoogleTokenExpired = false
 		} else {
-			userGoogleOauthToken, err := r.Services.CommonAuthServices.CommonAuthRepositories.OAuthTokenRepository.GetForEmail("google", tenantName, userEmail)
+			userGoogleOauthToken, err := r.Services.CommonAuthServices.CommonAuthRepositories.OAuthTokenRepository.GetForEmail(ctx, "google", tenantName, userEmail)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "Failed GlobalCache - get gmail token needs manual refresh")
