@@ -133,9 +133,9 @@ func (s *OrganizationWebscrapeSubscriber) When(ctx context.Context, evt eventsto
 
 	switch evt.GetEventType() {
 	case orgevts.OrganizationLinkDomainV1:
-		return s.organizationEventHandler.WebscrapeOrganizationByDomain(ctx, evt)
+		return s.organizationEventHandler.WebScrapeOrganizationByDomain(ctx, evt)
 	case orgevts.OrganizationRequestScrapeByWebsiteV1:
-		return s.organizationEventHandler.WebscrapeOrganizationByWebsite(ctx, evt)
+		return s.organizationEventHandler.WebScrapeOrganizationByWebsite(ctx, evt)
 	default:
 		return nil
 	}

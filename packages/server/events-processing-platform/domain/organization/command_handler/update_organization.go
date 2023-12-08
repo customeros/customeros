@@ -58,7 +58,7 @@ func (h *updateOrganizationCommandHandler) Handle(ctx context.Context, cmd *comm
 		if err != nil {
 			return err
 		}
-		if err = organizationAggregate.UpdateOrganization(ctx, orgFields, "", cmd.FieldsMask); err != nil {
+		if err = organizationAggregate.UpdateOrganization(ctx, orgFields, "", cmd.WebScrapedUrl, cmd.FieldsMask); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}

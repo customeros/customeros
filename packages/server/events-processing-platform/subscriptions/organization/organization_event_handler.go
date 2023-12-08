@@ -3,6 +3,7 @@ package organization
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"strings"
 
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
@@ -69,8 +70,8 @@ type organizationEventHandler struct {
 	aiModel              ai.AiModel
 }
 
-func (h *organizationEventHandler) WebscrapeOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.WebscrapeOrganizationByDomain")
+func (h *organizationEventHandler) WebScrapeOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.WebScrapeOrganizationByDomain")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -87,22 +88,11 @@ func (h *organizationEventHandler) WebscrapeOrganizationByDomain(ctx context.Con
 		return nil
 	}
 
-	alreadyWebscraped, err := h.repositories.OrganizationRepository.OrganizationWebscrapedForDomain(ctx, eventData.Tenant, organizationId, eventData.Domain)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error checking if organization %s already webscraped: %v", organizationId, err)
-		return nil
-	}
-	if alreadyWebscraped {
-		h.log.Infof("Organization %s already webscraped for domain %s", organizationId, eventData.Domain)
-		return nil
-	}
-
-	return h.webscrapeOrganization(ctx, eventData.Tenant, organizationId, eventData.Domain)
+	return h.webScrapeOrganization(ctx, eventData.Tenant, organizationId, eventData.Domain)
 }
 
-func (h *organizationEventHandler) WebscrapeOrganizationByWebsite(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.WebscrapeOrganizationByWebsite")
+func (h *organizationEventHandler) WebScrapeOrganizationByWebsite(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.WebScrapeOrganizationByWebsite")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -120,34 +110,56 @@ func (h *organizationEventHandler) WebscrapeOrganizationByWebsite(ctx context.Co
 		return nil
 	}
 
-	return h.webscrapeOrganization(ctx, eventData.Tenant, organizationId, eventData.Website)
+	return h.webScrapeOrganization(ctx, eventData.Tenant, organizationId, eventData.Website)
 }
 
-func (h *organizationEventHandler) webscrapeOrganization(ctx context.Context, tenant, organizationId, site string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.webscrapeOrganization")
+func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, tenant, organizationId, url string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.webScrapeOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant), log.String("organizationId", organizationId), log.String("site", site))
+	span.LogFields(log.String("tenant", tenant), log.String("organizationId", organizationId), log.String("url", url))
 
-	result, err := h.domainScraper.Scrape(site, tenant, organizationId, false)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error scraping website/domain %s: %v", site, err)
-		return nil
-	}
-
-	org, err := h.repositories.OrganizationRepository.GetOrganization(ctx, tenant, organizationId)
+	organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting organization with id %s: %v", organizationId, err)
 		return nil
 	}
-	currentOrgName := utils.GetStringPropOrEmpty(org.Props, "name")
+	if organizationDbNode == nil {
+		tracing.TraceErr(span, errors.New("organization not found"))
+		h.log.Errorf("Organization with id %s not found", organizationId)
+		return nil
+	}
+	organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+
+	// if already webscraped for this url, skip
+	if organization.WebScrapeDetails.WebScrapedUrl == url {
+		h.log.Infof("Organization {%s} already web scraped for url {%s}", organizationId, url)
+		return nil
+	}
+
+	// register web scraping request and attempts
+	attempt := int64(1)
+	if organization.WebScrapeDetails.WebScrapeLastRequestedUrl == url {
+		attempt = organization.WebScrapeDetails.WebScrapeAttempts + 1
+	}
+	err = h.repositories.OrganizationRepository.WebScrapeRequested(ctx, tenant, organizationId, url, attempt, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error registering web scrape request: %v", err)
+	}
+
+	result, err := h.domainScraper.Scrape(url, tenant, organizationId, false)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error scraping url %s: %v", url, err)
+		return nil
+	}
 
 	fieldMask := []string{model.FieldMaskName, model.FieldMaskMarket, model.FieldMaskIndustry, model.FieldMaskIndustryGroup, model.FieldMaskSubIndustry, model.FieldMaskTargetAudience, model.FieldMaskValueProposition}
 	err = h.organizationCommands.UpdateOrganization.Handle(ctx,
-		cmd.NewUpdateOrganizationCommand(organizationId, tenant, constants.SourceWebscrape,
+		cmd.NewUpdateOrganizationCommand(organizationId, tenant, "", constants.AppSourceEventProcessingPlatform, constants.SourceWebscrape,
 			model.OrganizationDataFields{
-				Name:             utils.StringFirstNonEmpty(currentOrgName, result.CompanyName),
+				Name:             utils.StringFirstNonEmpty(organization.Name, result.CompanyName),
 				Market:           result.Market,
 				Industry:         result.Industry,
 				IndustryGroup:    result.IndustryGroup,
@@ -155,7 +167,7 @@ func (h *organizationEventHandler) webscrapeOrganization(ctx context.Context, te
 				TargetAudience:   result.TargetAudience,
 				ValueProposition: result.ValueProposition,
 			},
-			utils.TimePtr(utils.Now()), fieldMask))
+			utils.TimePtr(utils.Now()), url, fieldMask))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error updating organization: %v", err)
@@ -250,12 +262,13 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 
 func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, source, market, industry string, span opentracing.Span) error {
 	err := h.organizationCommands.UpdateOrganization.Handle(ctx,
-		cmd.NewUpdateOrganizationCommand(organizationId, tenant, source,
+		cmd.NewUpdateOrganizationCommand(organizationId, tenant, "", constants.AppSourceEventProcessingPlatform, source,
 			model.OrganizationDataFields{
 				Market:   market,
 				Industry: industry,
 			},
 			utils.TimePtr(utils.Now()),
+			"",
 			[]string{
 				model.FieldMaskMarket, model.FieldMaskIndustry,
 			}))

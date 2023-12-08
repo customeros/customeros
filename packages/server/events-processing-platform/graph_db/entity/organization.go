@@ -40,7 +40,8 @@ type OrganizationEntity struct {
 		SuggestedBy *string
 		Confidence  *float64
 	}
-	RenewalSummary RenewalSummary
+	RenewalSummary   RenewalSummary
+	WebScrapeDetails WebScrapeDetails
 
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 
@@ -53,6 +54,14 @@ type RenewalSummary struct {
 	NextRenewalAt          *time.Time
 	RenewalLikelihood      string
 	RenewalLikelihoodOrder *int64
+}
+
+type WebScrapeDetails struct {
+	WebScrapedUrl             string
+	WebScrapedAt              *time.Time
+	WebScrapeLastRequestedAt  *time.Time
+	WebScrapeLastRequestedUrl string
+	WebScrapeAttempts         int64
 }
 
 func (organization OrganizationEntity) ToString() string {

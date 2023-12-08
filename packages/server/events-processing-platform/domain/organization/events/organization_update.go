@@ -35,9 +35,10 @@ type OrganizationUpdateEvent struct {
 	Note              string                `json:"note"`
 	ExternalSystem    cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 	FieldsMask        []string              `json:"fieldsMask"`
+	WebScrapedUrl     string                `json:"webScrapedUrl,omitempty"`
 }
 
-func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFields *model.OrganizationFields, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
+func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFields *model.OrganizationFields, updatedAt time.Time, webScrapedUrl string, fieldsMask []string) (eventstore.Event, error) {
 	eventData := OrganizationUpdateEvent{
 		IgnoreEmptyFields: false,
 		Tenant:            aggregate.GetTenant(),
@@ -61,6 +62,7 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 		UpdatedAt:         updatedAt,
 		Source:            organizationFields.Source.Source,
 		FieldsMask:        fieldsMask,
+		WebScrapedUrl:     webScrapedUrl,
 	}
 	if organizationFields.ExternalSystem.Available() {
 		eventData.ExternalSystem = organizationFields.ExternalSystem
