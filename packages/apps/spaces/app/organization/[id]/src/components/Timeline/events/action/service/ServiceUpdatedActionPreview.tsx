@@ -1,11 +1,13 @@
 import React, { FC } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
-import { Action } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
+import { Action, BilledType } from '@graphql/types';
 import { DotSingle } from '@ui/media/icons/DotSingle';
 import { Card, CardBody } from '@ui/presentation/Card';
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { getMetadata } from '@organization/src/components/Timeline/events/action/utils';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import {
   useTimelineEventPreviewStateContext,
@@ -17,7 +19,25 @@ export const ServiceUpdatedActionPreview: FC<{
 }> = ({ mode = 'updated' }) => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
+
   const event = modalContent as Action;
+  const metadata = getMetadata(event?.metadata);
+
+  const formattedContent = (event?.content ?? '')
+    .replace(
+      metadata?.price,
+      formatCurrency(
+        Number(metadata?.price),
+        metadata?.billedType === BilledType.Usage ? 4 : 2,
+      ),
+    )
+    .replace(
+      metadata?.previousPrice,
+      formatCurrency(
+        Number(metadata?.previousPrice),
+        metadata?.billedType === BilledType.Usage ? 4 : 2,
+      ),
+    );
 
   return (
     <>
@@ -43,7 +63,7 @@ export const ServiceUpdatedActionPreview: FC<{
             fontSize='sm'
             color='gray.700'
           >
-            {event.content}
+            {formattedContent}
           </Text>
         </CardBody>
       </Card>

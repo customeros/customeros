@@ -17,10 +17,10 @@ export const ContractStatusUpdatedActionPreview = () => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
   const event = modalContent as Action;
-  const status = useMemo(() => {
-    return getMetadata(event?.metadata)?.status?.toLowerCase();
+  const metadata = useMemo(() => {
+    return getMetadata(event?.metadata);
   }, [event?.metadata]);
-
+  const status = metadata?.status?.toLowerCase();
   // todo remove when contract name is passed from BE in metadata
   const getContractName = () => {
     const content = event.content ?? '';

@@ -17,6 +17,7 @@ export const UserActionStub: FC<ActionStubProps> = ({ data }) => {
 
   switch (data.actionType) {
     case ActionType.ContractStatusUpdated:
+    case ActionType.ContractRenewed:
       return <ContractStatusUpdatedAction data={data} />;
     case ActionType.ServiceLineItemQuantityUpdated:
     case ActionType.ServiceLineItemPriceUpdated:
@@ -26,6 +27,8 @@ export const UserActionStub: FC<ActionStubProps> = ({ data }) => {
     case ActionType.ServiceLineItemBilledTypeUsageCreated:
     case ActionType.ServiceLineItemBilledTypeRecurringCreated:
       return <ServiceUpdatedAction data={data} mode='created' />;
+    case ActionType.ServiceLineItemRemoved:
+      return <ServiceUpdatedAction data={data} mode='removed' />;
   }
 
   return null;
