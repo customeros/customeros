@@ -17,12 +17,17 @@ type Config struct {
 	Jaeger           tracing.JaegerConfig
 	Cron             cronconf.Config
 	EventsProcessing EventsProcessingConfig
+	ProcessConfig    ProcessConfig
 }
 
 type EventsProcessingConfig struct {
 	EventsProcessingPlatformEnabled bool   `env:"EVENTS_PROCESSING_PLATFORM_ENABLED" envDefault:"true"`
 	EventsProcessingPlatformUrl     string `env:"EVENTS_PROCESSING_PLATFORM_URL"`
 	EventsProcessingPlatformApiKey  string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY"`
+}
+
+type ProcessConfig struct {
+	WebScrapedOrganizationsPerCycle int `env:"WEB_SCRAPED_ORGANIZATIONS_PER_CYCLE" envDefault:"200"`
 }
 
 func Load() *Config {
