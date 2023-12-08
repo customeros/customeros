@@ -14,6 +14,7 @@ export const ActionPreviewModal: React.FC<ActionPreviewModalProps> = ({
 }) => {
   switch (type) {
     case ActionType.ContractStatusUpdated:
+    case ActionType.ContractRenewed:
       return <ContractStatusUpdatedActionPreview />;
     case ActionType.ServiceLineItemQuantityUpdated:
     case ActionType.ServiceLineItemPriceUpdated:

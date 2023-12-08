@@ -43,6 +43,7 @@ export type ActionItem = {
 };
 
 export enum ActionType {
+  ContractRenewed = 'CONTRACT_RENEWED',
   ContractStatusUpdated = 'CONTRACT_STATUS_UPDATED',
   Created = 'CREATED',
   RenewalForecastUpdated = 'RENEWAL_FORECAST_UPDATED',
@@ -53,6 +54,7 @@ export enum ActionType {
   ServiceLineItemBilledTypeUsageCreated = 'SERVICE_LINE_ITEM_BILLED_TYPE_USAGE_CREATED',
   ServiceLineItemPriceUpdated = 'SERVICE_LINE_ITEM_PRICE_UPDATED',
   ServiceLineItemQuantityUpdated = 'SERVICE_LINE_ITEM_QUANTITY_UPDATED',
+  ServiceLineItemRemoved = 'SERVICE_LINE_ITEM_REMOVED',
 }
 
 export type Analysis = Node & {
@@ -617,13 +619,14 @@ export type DashboardArrBreakdown = {
 
 export type DashboardArrBreakdownPerMonth = {
   __typename?: 'DashboardARRBreakdownPerMonth';
-  cancellations: Scalars['Int'];
-  churned: Scalars['Int'];
-  downgrades: Scalars['Int'];
+  cancellations: Scalars['Float'];
+  churned: Scalars['Float'];
+  downgrades: Scalars['Float'];
   month: Scalars['Int'];
-  newlyContracted: Scalars['Int'];
-  renewals: Scalars['Int'];
-  upsells: Scalars['Int'];
+  newlyContracted: Scalars['Float'];
+  renewals: Scalars['Float'];
+  upsells: Scalars['Float'];
+  year: Scalars['Int'];
 };
 
 export type DashboardCustomerMap = {

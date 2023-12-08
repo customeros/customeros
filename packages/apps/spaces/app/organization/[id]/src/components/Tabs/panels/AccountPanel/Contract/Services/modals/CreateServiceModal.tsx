@@ -146,6 +146,10 @@ export const CreateServiceModal = ({
         BilledType.Monthly,
         BilledType.Quarterly,
       ].includes(variables?.input?.billed as BilledType);
+      const metadata = JSON.stringify({
+        price: variables?.input?.price,
+        billedType: variables?.input?.billed,
+      });
       const user = session?.data?.user?.name ?? '';
       const actionType = isRecurring
         ? ActionType.ServiceLineItemBilledTypeRecurringCreated
@@ -161,7 +165,7 @@ export const CreateServiceModal = ({
           actionType,
           appSource: 'customeros-optimistic-update',
           source: 'customeros-optimistic-update',
-          metadata: '{}',
+          metadata,
           actionCreatedBy: {
             firstName: user,
             lastName: '',
@@ -172,7 +176,7 @@ export const CreateServiceModal = ({
               : variables?.input.billed === BilledType.Usage
               ? 'use based'
               : 'one-time'
-          } service to ${contractName} ${
+          } service to ${contractName}: ${
             variables.input.name
           } , at ${formatCurrency(variables.input.price ?? 0)}`,
         },

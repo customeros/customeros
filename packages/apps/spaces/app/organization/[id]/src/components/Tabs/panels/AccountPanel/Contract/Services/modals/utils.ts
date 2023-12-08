@@ -29,6 +29,12 @@ const update = ({ content, metadata, actionType, user }: UpdateInput) => ({
   content,
 });
 
+const cycleCopy: Record<string, string> = {
+  [BilledType.Monthly]: 'month',
+  [BilledType.Annually]: 'year',
+  [BilledType.Quarterly]: 'quarter',
+};
+
 export const getUpdateServiceEvents = (
   prev: ServiceLineItem,
   next: ServiceLineItemUpdateInput,
@@ -40,11 +46,16 @@ export const getUpdateServiceEvents = (
     BilledType.Monthly,
     BilledType.Quarterly,
   ].includes(prev.billed);
+  const metadata = JSON.stringify({
+    price: next.price,
+    previousPrice: prev.price,
+    billedType: next.billed,
+  });
   if (prev?.price !== next?.price) {
     const decreased = parseFloat(`${prev.price}`) > parseFloat(`${next.price}`);
 
     const event = update({
-      metadata: '{}',
+      metadata,
       user,
       actionType: ActionType.ServiceLineItemPriceUpdated,
       content: `${user} ${
@@ -52,17 +63,17 @@ export const getUpdateServiceEvents = (
       }${decreased ? 'decreased' : 'increased'} the price for ${
         next.name
       } from ${formatCurrency(prev.price)}
-      ${isRecurring ? ' / ' : ''}
+      ${isRecurring ? '/' : ''}
       ${prev.billed} to ${formatCurrency(next.price ?? 0)}${
-        isRecurring ? ' / ' : ''
-      }${isRecurring ? prev.billed : ''}`,
+        isRecurring ? '/' : ''
+      }${isRecurring ? cycleCopy?.[prev.billed] : ''}`,
     });
     updateTimelineCache(event as Action);
   }
 
   if (prev?.billed !== next?.billed) {
     const event = update({
-      metadata: '{}',
+      metadata,
       user,
       actionType: ActionType.ServiceLineItemBilledTypeUpdated,
       content: `${user} ${
@@ -70,8 +81,8 @@ export const getUpdateServiceEvents = (
       } changed the billing cycle for ${next.name} from ${formatCurrency(
         prev.price,
       )}${prev.billed} to ${formatCurrency(next.price ?? 0)}${
-        isRecurring ? ' / ' : ''
-      }${isRecurring ? prev.billed : ''}`,
+        isRecurring ? '/' : ''
+      }${isRecurring ? cycleCopy?.[prev.billed] : ''}`,
     });
     updateTimelineCache(event as Action);
   }
@@ -79,7 +90,7 @@ export const getUpdateServiceEvents = (
   if (prev?.quantity !== next?.quantity) {
     const decreased = parseFloat(prev.quantity) > parseFloat(next.quantity);
     const event = update({
-      metadata: '{}',
+      metadata,
       user,
       actionType: ActionType.ServiceLineItemQuantityUpdated,
       content: `${user} ${
