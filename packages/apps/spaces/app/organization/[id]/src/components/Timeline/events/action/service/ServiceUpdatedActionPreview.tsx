@@ -3,9 +3,10 @@ import React, { FC } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
+import { File02 } from '@ui/media/icons/File02';
 import { Action, BilledType } from '@graphql/types';
 import { DotSingle } from '@ui/media/icons/DotSingle';
-import { Card, CardBody } from '@ui/presentation/Card';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { getMetadata } from '@organization/src/components/Timeline/events/action/utils';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
@@ -66,6 +67,29 @@ export const ServiceUpdatedActionPreview: FC<{
             {formattedContent}
           </Text>
         </CardBody>
+
+        {metadata?.comment && (
+          <CardFooter
+            as={Flex}
+            p='0'
+            pt='3'
+            mt='4'
+            align='center'
+            borderTop='1px solid'
+            borderTopColor='gray.200'
+          >
+            <File02 color='gray.400' />
+            <Text
+              maxW='500px'
+              noOfLines={2}
+              ml={2}
+              fontSize='sm'
+              color='gray.500'
+            >
+              {metadata.content}
+            </Text>
+          </CardFooter>
+        )}
       </Card>
     </>
   );

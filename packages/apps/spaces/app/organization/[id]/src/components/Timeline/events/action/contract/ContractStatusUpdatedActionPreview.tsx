@@ -4,7 +4,8 @@ import { Flex } from '@ui/layout/Flex';
 import { Action } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
-import { Card, CardBody } from '@ui/presentation/Card';
+import { File02 } from '@ui/media/icons/File02';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { getMetadata } from '@organization/src/components/Timeline/events/action/utils';
 import { iconsByStatus } from '@organization/src/components/Timeline/events/action/contract/utils';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
@@ -75,6 +76,28 @@ export const ContractStatusUpdatedActionPreview = () => {
             </Text>
           </Text>
         </CardBody>
+        {metadata?.comment && (
+          <CardFooter
+            as={Flex}
+            p='0'
+            pt='3'
+            mt='4'
+            align='center'
+            borderTop='1px solid'
+            borderTopColor='gray.200'
+          >
+            <File02 color='gray.400' />
+            <Text
+              maxW='500px'
+              noOfLines={2}
+              ml={2}
+              fontSize='sm'
+              color='gray.500'
+            >
+              {metadata.content}
+            </Text>
+          </CardFooter>
+        )}
       </Card>
     </>
   );
