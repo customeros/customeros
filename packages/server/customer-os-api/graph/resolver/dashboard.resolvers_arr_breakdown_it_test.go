@@ -14,7 +14,7 @@ import (
 )
 
 func Test_Dashboard_ARR_Breakdown_No_Period_No_Data_In_DB(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -45,7 +45,7 @@ func Test_Dashboard_ARR_Breakdown_No_Period_No_Data_In_DB(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_InvalidPeriod(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -61,7 +61,7 @@ func Test_Dashboard_ARR_Breakdown_InvalidPeriod(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_PeriodIntervals(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -103,7 +103,7 @@ func assert_Dashboard_ARR_Breakdown_PeriodIntervals(t *testing.T, start, end str
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Not_Canceled(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -114,7 +114,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Not_Canceled(t *testing.T) {
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -141,7 +141,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Not_Canceled(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Before_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -153,7 +153,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Before_Month(t *tes
 	sli1StartedAt := time.Date(2023, 6, 1, 0, 0, 0, 0, time.UTC)
 	sli1EndedAt := time.Date(2023, 6, 30, 23, 59, 59, 999999999, time.UTC)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
-	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1EndedAt)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -180,7 +180,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Before_Month(t *tes
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_Before_Canceled_End_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -192,7 +192,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_Before_Canceled_End_
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
-	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1EndedAt)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -219,7 +219,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_Before_Canceled_End_
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_In_Month_Canceled_End_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -231,7 +231,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_In_Month_Canceled_En
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
-	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1EndedAt)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -258,7 +258,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_In_Month_Canceled_En
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Annually(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -270,7 +270,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Annually(t *testing
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
-	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1EndedAt)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -297,7 +297,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Annually(t *testing
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Quarterly(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -309,7 +309,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Quarterly(t *testin
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
-	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeQuarterly, 4, sli1StartedAt, sli1EndedAt)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeQuarterly, 4, 2, sli1StartedAt, sli1EndedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -336,7 +336,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Quarterly(t *testin
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Monthly(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -348,7 +348,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Monthly(t *testing.
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
-	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeMonthly, 1, sli1StartedAt, sli1EndedAt)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 2, sli1StartedAt, sli1EndedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -375,7 +375,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Monthly(t *testing.
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_Not_Customer(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -387,7 +387,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_Not_Customer(t *testing.T) {
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
-	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeMonthly, 1, sli1StartedAt, sli1EndedAt)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 2, sli1StartedAt, sli1EndedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -414,7 +414,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_Not_Customer(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_No_Recurring_SLI(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -460,7 +460,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_No_Recurring_SLI(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_In_Month_Canceled_Next_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -472,7 +472,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_In_Month_Canceled_Ne
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli1EndedAt := neo4jt.MiddleTimeOfMonth(2023, 8)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
-	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1EndedAt)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -499,7 +499,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_In_Month_Canceled_Ne
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_Before_Not_Canceled(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -512,8 +512,8 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_Before_No
 	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 6)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
 
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1MiddleAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -540,7 +540,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_Before_No
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_Before_Canceled_Before_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -554,8 +554,8 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_Before_Ca
 	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 6)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
 
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1MiddleAt, sli1EndedAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1EndedAt, sli1Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -582,7 +582,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_Before_Ca
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_Before_Canceled_End_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -596,8 +596,8 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_Before_Ca
 	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
 
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1MiddleAt, sli1EndedAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1EndedAt, sli1Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -619,12 +619,12 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_Before_Ca
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(2), month.Cancellations)
+		require.Equal(t, float64(4), month.Cancellations)
 	}
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_In_Canceled_End_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -638,8 +638,8 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_In_Cancel
 	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
 
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1MiddleAt, sli1EndedAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1EndedAt, sli1Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -661,12 +661,12 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_In_Cancel
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(2), month.Cancellations)
+		require.Equal(t, float64(4), month.Cancellations)
 	}
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_2_Contracts_1_Active_SLI_1_Canceled_SLI(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -681,11 +681,11 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_2_Contracts_1_Active_SLI_1_Cance
 
 	contract1Id := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
 
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, sli1MiddleAt, sli1EndedAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1EndedAt, sli1Id)
 
 	contract2Id := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
-	insertARRBreakdownServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -707,12 +707,12 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_2_Contracts_1_Active_SLI_1_Cance
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(2), month.Cancellations)
+		require.Equal(t, float64(4), month.Cancellations)
 	}
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_2_Contracts_With_1_Canceled_SLI(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -725,10 +725,10 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_2_Contracts_With_1_Canceled_SLI(
 	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 
 	contract1Id := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
-	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
 
 	contract2Id := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
-	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -755,7 +755,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_2_Contracts_With_1_Canceled_SLI(
 }
 
 func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_In_Canceled_Next_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -769,8 +769,8 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_In_Cancel
 	sli1EndedAt := neo4jt.MiddleTimeOfMonth(2023, 8)
 	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
 
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1MiddleAt, sli1EndedAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1EndedAt, sli1Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -797,7 +797,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_In_Cancel
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Draft_Contract_In_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -810,7 +810,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Draft_Contract_In_Month(t *te
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus: entity.ContractStatusDraft,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -837,7 +837,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Draft_Contract_In_Month(t *te
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Live_Contract_In_Month_No_Recurring_SLI(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -885,7 +885,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Live_Contract_In_Month_No_Rec
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Ended_Contract_In_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -935,7 +935,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Ended_Contract_In_Month(t *te
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Before_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -949,7 +949,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Before_Month(t *test
 		ContractStatus:   entity.ContractStatusEnded,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -976,7 +976,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Before_Month(t *test
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Beginning_Of_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -990,7 +990,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Beginning_Of_Month(t
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1017,7 +1017,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Beginning_Of_Month(t
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_End_Of_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1031,7 +1031,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_End_Of_Month(t *test
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1058,7 +1058,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_End_Of_Month(t *test
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Not_Customer(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1072,7 +1072,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Not_Customer(t *test
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1099,7 +1099,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Not_Customer(t *test
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_No_Recurring_SLI(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1144,7 +1144,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_No_Recurring_SLI(t *
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Next_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1158,7 +1158,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Next_Month(t *testin
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1185,7 +1185,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Next_Month(t *testin
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_SLI_2_Versions(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1201,8 +1201,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_SLI_2_Versions(t
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
 
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1MiddleAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1224,12 +1224,12 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_SLI_2_Versions(t
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(2), month.NewlyContracted)
+		require.Equal(t, float64(4), month.NewlyContracted)
 	}
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Annually(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1243,7 +1243,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Annually(t *testing.
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1270,7 +1270,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Annually(t *testing.
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Quarterly(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1284,7 +1284,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Quarterly(t *testing
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 4, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 4, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1311,7 +1311,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Quarterly(t *testing
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Monthly(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1325,7 +1325,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Monthly(t *testing.T
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1352,7 +1352,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Monthly(t *testing.T
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_SLI_3_Versions(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1370,9 +1370,9 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_SLI_3_Versions(t
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
 
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemEndedWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, sli1MiddleAt, sli1Middle2At, sli1Id)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 36, sli1MiddleAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemEndedWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1Middle2At, sli1Id)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 36, 8, entity.BilledTypeAnnually, 12, 4, sli1MiddleAt, sli1Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1394,12 +1394,12 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_SLI_3_Versions(t
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(6), month.NewlyContracted)
+		require.Equal(t, float64(24), month.NewlyContracted)
 	}
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_2_Contracts_1_SLI_1_Version(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1414,13 +1414,13 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_2_Contracts_1_SLI_1_Version(t
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 24, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 24, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1447,7 +1447,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_2_Contracts_1_SLI_1_Version(t
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_2_Contracts_1_SLI_2_Versions(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1464,16 +1464,16 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_2_Contracts_1_SLI_2_Versions(
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
 
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 24, sli1MiddleAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1Id)
 
 	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
 
-	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 120, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 240, sli1MiddleAt, sli2Id)
+	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 120, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 240, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli2Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1495,12 +1495,12 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_2_Contracts_1_SLI_2_Versions(
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(44), month.NewlyContracted)
+		require.Equal(t, float64(88), month.NewlyContracted)
 	}
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_2_SLI(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1516,8 +1516,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_2_SLI(t *testing.T
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
 
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 120, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 120, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1544,7 +1544,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_2_SLI(t *testing.T
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_2_SLI_2_Versions(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1561,11 +1561,11 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_2_SLI_2_Versions(t
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
 
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, sli1MiddleAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1Id)
 
-	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 120, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 240, sli1MiddleAt, sli2Id)
+	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 120, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 240, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli2Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1587,12 +1587,12 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_2_SLI_2_Versions(t
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(44), month.NewlyContracted)
+		require.Equal(t, float64(88), month.NewlyContracted)
 	}
 }
 
 func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_Active_SLI_1_Contract_1_Canceled_SLI(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1610,16 +1610,16 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_Active_SLI_1_Con
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
 
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 24, sli1MiddleAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1Id)
 
 	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
 
-	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 120, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 240, sli1MiddleAt, sli1EndedAt, sli2Id)
+	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 120, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 240, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1EndedAt, sli2Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1641,12 +1641,12 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_Active_SLI_1_Con
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(4), month.NewlyContracted)
+		require.Equal(t, float64(8), month.NewlyContracted)
 	}
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_Draft_Contract_In_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1659,7 +1659,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Draft_Contract_In_Month(t *testing.T) 
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus: entity.ContractStatusDraft,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1686,7 +1686,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Draft_Contract_In_Month(t *testing.T) 
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_Live_Contract_In_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1700,7 +1700,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Live_Contract_In_Month(t *testing.T) {
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1727,7 +1727,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Live_Contract_In_Month(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1742,7 +1742,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month(t *testing.T) {
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1769,7 +1769,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month_No_Recurring_SLI(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1815,7 +1815,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month_No_Recurring_SLI(t *
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month_Not_Customer(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1830,7 +1830,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month_Not_Customer(t *test
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1857,7 +1857,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month_Not_Customer(t *test
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_Contract_Before_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1872,7 +1872,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Before_Month(t *testing.T) {
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1899,7 +1899,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Before_Month(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_Contract_Beginning_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1914,7 +1914,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Beginning_Month(t *testing.T)
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1941,7 +1941,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Beginning_Month(t *testing.T)
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_Contract_End_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1956,7 +1956,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_End_Month(t *testing.T) {
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1983,7 +1983,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_End_Month(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_Contract_Next_Month(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -1998,7 +1998,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Next_Month(t *testing.T) {
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2025,7 +2025,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Next_Month(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_Contract_Annually(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -2040,7 +2040,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Annually(t *testing.T) {
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2067,7 +2067,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Annually(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_Contract_Quarterly(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -2082,7 +2082,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Quarterly(t *testing.T) {
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 4, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 4, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2109,7 +2109,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Quarterly(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_Contract_Monthly(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -2124,7 +2124,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Monthly(t *testing.T) {
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2151,7 +2151,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Monthly(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_1_SLI_2_Versions(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -2167,8 +2167,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_1_SLI_2_Versions(t *testing
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, sli1StartedAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2190,12 +2190,12 @@ func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_1_SLI_2_Versions(t *testing
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(4), month.Churned)
+		require.Equal(t, float64(8), month.Churned)
 	}
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_1_Version(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -2210,7 +2210,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_1_Version(t *testing
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
@@ -2218,7 +2218,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_1_Version(t *testing
 		ServiceStartedAt: &sli2StartedAt,
 		EndedAt:          &sli2StartedAt,
 	}, entity.OpportunityEntity{})
-	insertARRBreakdownServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 24, sli2StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 24, 2, sli2StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2245,7 +2245,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_1_Version(t *testing
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_2_Versions(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -2261,8 +2261,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_2_Versions(t *testin
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 24, sli1StartedAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1Id)
 
 	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli2MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
@@ -2271,8 +2271,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_2_Versions(t *testin
 		ServiceStartedAt: &sli2StartedAt,
 		EndedAt:          &sli2StartedAt,
 	}, entity.OpportunityEntity{})
-	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 120, sli2StartedAt, sli2MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 240, sli1StartedAt, sli2Id)
+	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 120, 2, sli2StartedAt, sli2MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 240, 4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli2Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2294,12 +2294,12 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_2_Versions(t *testin
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(44), month.Churned)
+		require.Equal(t, float64(88), month.Churned)
 	}
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -2317,10 +2317,10 @@ func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI(t *testing.T) {
 	}, entity.OpportunityEntity{})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 24, sli2StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 24, 2, sli2StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2347,7 +2347,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI(t *testing.T) {
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI_2_Versions(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -2366,13 +2366,13 @@ func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI_2_Versions(t *testing
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, sli1StartedAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1Id)
 
 	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli2MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
-	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 120, sli2StartedAt, sli2MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 240, sli1StartedAt, sli2Id)
+	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 120, 2, sli2StartedAt, sli2MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 240, 4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli2Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2394,12 +2394,12 @@ func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI_2_Versions(t *testing
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(44), month.Churned)
+		require.Equal(t, float64(88), month.Churned)
 	}
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_2_Organizations_1_Contract_Each(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -2417,7 +2417,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Organizations_1_Contract_Each(t *tes
 	}, entity.OpportunityEntity{})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	insertARRBreakdownServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, sli1StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	org2Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
@@ -2430,7 +2430,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Organizations_1_Contract_Each(t *tes
 	}, entity.OpportunityEntity{})
 
 	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	insertARRBreakdownServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 24, sli2StartedAt)
+	insertARRBreakdownServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 24, 2, sli2StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2457,7 +2457,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Organizations_1_Contract_Each(t *tes
 }
 
 func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI_1_Canceled(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -2476,14 +2476,14 @@ func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI_1_Canceled(t *testing
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
-	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, sli1StartedAt, sli1MiddleAt)
-	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, sli1StartedAt, sli1Id)
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1Id)
 
 	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli2MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	sli2EndedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
-	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 120, sli2StartedAt, sli2MiddleAt)
-	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 240, sli1StartedAt, sli2EndedAt, sli2Id)
+	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 120, 2, sli2StartedAt, sli2MiddleAt)
+	insertARRBreakdownServiceLineItemCanceledWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 240, 4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli2EndedAt, sli2Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2505,7 +2505,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI_1_Canceled(t *testing
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(4), month.Churned)
+		require.Equal(t, float64(8), month.Churned)
 	}
 }
 
@@ -2520,7 +2520,7 @@ func insertARRBreakdownContractWithOpportunityExtended(ctx context.Context, driv
 	return contractId
 }
 
-func insertARRBreakdownServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, startedAt time.Time) string {
+func insertARRBreakdownServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt time.Time) string {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
 	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
@@ -2528,13 +2528,13 @@ func insertARRBreakdownServiceLineItem(ctx context.Context, driver *neo4j.Driver
 		ParentID:  id,
 		Billed:    billedType,
 		Price:     price,
-		Quantity:  2,
+		Quantity:  quantity,
 		StartedAt: startedAt,
 	})
 	return id
 }
 
-func insertARRBreakdownServiceLineItemEnded(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, startedAt, endedAt time.Time) string {
+func insertARRBreakdownServiceLineItemEnded(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
 	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
@@ -2542,14 +2542,14 @@ func insertARRBreakdownServiceLineItemEnded(ctx context.Context, driver *neo4j.D
 		ParentID:  id,
 		Billed:    billedType,
 		Price:     price,
-		Quantity:  2,
+		Quantity:  quantity,
 		StartedAt: startedAt,
 		EndedAt:   &endedAt,
 	})
 	return id
 }
 
-func insertARRBreakdownServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, startedAt, endedAt time.Time) string {
+func insertARRBreakdownServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
 	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
@@ -2557,7 +2557,7 @@ func insertARRBreakdownServiceLineItemCanceled(ctx context.Context, driver *neo4
 		ParentID:   id,
 		Billed:     billedType,
 		Price:      price,
-		Quantity:   2,
+		Quantity:   quantity,
 		IsCanceled: true,
 		StartedAt:  startedAt,
 		EndedAt:    &endedAt,
@@ -2565,44 +2565,53 @@ func insertARRBreakdownServiceLineItemCanceled(ctx context.Context, driver *neo4
 	return id
 }
 
-func insertARRBreakdownServiceLineItemWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, startedAt time.Time, parentId string) {
+func insertARRBreakdownServiceLineItemWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt time.Time, parentId string) {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
 	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		ID:        id,
-		ParentID:  parentId,
-		Billed:    billedType,
-		Price:     price,
-		Quantity:  2,
-		StartedAt: startedAt,
+		ID:               id,
+		ParentID:         parentId,
+		Billed:           billedType,
+		Price:            price,
+		Quantity:         quantity,
+		PreviousBilled:   previousBilledType,
+		PreviousPrice:    previousPrice,
+		PreviousQuantity: previousQuantity,
+		StartedAt:        startedAt,
 	})
 }
 
-func insertARRBreakdownServiceLineItemEndedWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, startedAt, endedAt time.Time, parentId string) {
+func insertARRBreakdownServiceLineItemEndedWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
 	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		ID:        id,
-		ParentID:  parentId,
-		Billed:    billedType,
-		Price:     price,
-		Quantity:  2,
-		StartedAt: startedAt,
-		EndedAt:   &endedAt,
+		ID:               id,
+		ParentID:         parentId,
+		Billed:           billedType,
+		Price:            price,
+		Quantity:         quantity,
+		PreviousBilled:   previousBilledType,
+		PreviousPrice:    previousPrice,
+		PreviousQuantity: previousQuantity,
+		StartedAt:        startedAt,
+		EndedAt:          &endedAt,
 	})
 }
 
-func insertARRBreakdownServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, startedAt, endedAt time.Time, parentId string) {
+func insertARRBreakdownServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
 	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		ID:         id,
-		ParentID:   parentId,
-		Billed:     billedType,
-		Price:      price,
-		Quantity:   2,
-		IsCanceled: true,
-		StartedAt:  startedAt,
-		EndedAt:    &endedAt,
+		ID:               id,
+		ParentID:         parentId,
+		Billed:           billedType,
+		Price:            price,
+		Quantity:         quantity,
+		PreviousBilled:   previousBilledType,
+		PreviousPrice:    previousPrice,
+		PreviousQuantity: previousQuantity,
+		IsCanceled:       true,
+		StartedAt:        startedAt,
+		EndedAt:          &endedAt,
 	})
 }

@@ -12,7 +12,7 @@ import (
 )
 
 func TestQueryResolver_Dashboard_Customer_Map_No_Data_In_DB(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -32,7 +32,7 @@ func TestQueryResolver_Dashboard_Customer_Map_No_Data_In_DB(t *testing.T) {
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_Empty_Contract(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -60,7 +60,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Empty_Contract(t *testing.T) {
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_Draft_Contract(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -100,7 +100,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Draft_Contract(t *testing.T) {
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_HIDDEN_Organization_With_Contract_Is_Not_Returned(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -144,7 +144,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_HIDDEN_Organization_With_Contr
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_Renewal_Contract_High_Renewal_Should_Be_OK_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -192,7 +192,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_Renew
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_Renewal_Contract_Medium_Renewal_Should_Be_AT_RISK_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -240,7 +240,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_Renew
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_Renewal_Contract_Low_Renewal_Should_Be_AT_RISK_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -288,7 +288,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_Renew
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_Renewal_Contract_Zero_Renewal_Should_Be_AT_RISK_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -336,7 +336,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_Renew
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Ended_Renewal_Contract_Should_Be_CHURNED_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -385,7 +385,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Ended_Rene
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renewal_Contracts_High_Should_Be_OK_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -450,7 +450,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renewal_Contracts_One_HIGH_One_MEDIUM_Should_Be_AT_RISK_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -514,7 +514,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renewal_Contracts_One_HIGH_One_LOW_Should_Be_AT_RISK_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -578,7 +578,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renewal_Contracts_One_HIGH_One_ZERO_Should_Be_AT_RISK_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -642,7 +642,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renewal_Contracts_One_MEDIUM_One_LOW_Should_Be_AT_RISK_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -706,7 +706,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_1_Closed_Renewal_Contracts_One_HIGH_Should_Be_OK_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -771,7 +771,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_1_Clo
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_1_Closed_Renewal_Contracts_One_MEDIUM_Should_Be_AT_RISK_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -836,7 +836,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_1_Clo
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Renewal_Contracts_Should_Be_CHURNED_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -902,7 +902,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Ren
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Closed_1_Live_Renewal_Contracts_First_Close_Second_Live_Should_Be_AT_RISK_State(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -967,7 +967,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Closed_1_L
 }
 
 func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_Each(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -1041,7 +1041,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 }
 
 func TestQueryResolver_Dashboard_Customer_MMR_1_Live_Contract(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -1091,7 +1091,7 @@ func TestQueryResolver_Dashboard_Customer_MMR_1_Live_Contract(t *testing.T) {
 }
 
 func TestQueryResolver_Dashboard_Customer_MMR_1_Closed_Contract(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
