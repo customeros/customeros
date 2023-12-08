@@ -34,6 +34,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "updateContractsStatusAndRenewal", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleWebScrapeOrganization, func() {
+		lockAndRunJob(cont, organizationGroup, webScrapeOrganizations)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "webScrapeOrganizations", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -55,4 +62,8 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 
 func updateContractsStatusAndRenewal(cont *container.Container) {
 	service.NewContractService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpkeepContracts()
+}
+
+func webScrapeOrganizations(cont *container.Container) {
+	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).WebScrapeOrganizations()
 }

@@ -301,7 +301,7 @@ func (s *organizationService) WebScrapeOrganization(ctx context.Context, request
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	cmd := command.NewWebScrapeOrganizationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.AppSource, request.Url)
+	cmd := command.NewWebScrapeOrganizationCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId, request.AppSource, request.Url)
 	if err := s.organizationCommands.WebScrapeOrganization.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(WebScrapeOrganization.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
