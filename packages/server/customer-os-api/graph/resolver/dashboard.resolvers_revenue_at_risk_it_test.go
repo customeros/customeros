@@ -13,7 +13,7 @@ import (
 )
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_No_Period_No_Data_In_Db(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -34,7 +34,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_No_Period_No_Data_In_Db(t *test
 }
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_No_Data_In_DB(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -58,7 +58,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_No_Data_In_DB(t *testing.T) {
 }
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_Draft_Contract(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -102,7 +102,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Draft_Contract(t *testing.T) {
 }
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_Closed_Contract(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -149,7 +149,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Closed_Contract(t *testing.T) {
 }
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_One_HIDDEN_Organization_With_Contract_Is_Not_Returned(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -197,7 +197,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_HIDDEN_Organization_With_Co
 }
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Renewal_Contract_High_Should_Be_HIGH(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -208,7 +208,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Re
 }
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Renewal_Contract_Medium_Should_Be_AT_RISK(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -219,7 +219,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Re
 }
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Renewal_Contract_Low_Should_Be_AT_RISK(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -230,7 +230,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Re
 }
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Contract_Zero_Should_Be_AT_RISK(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -241,7 +241,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Co
 }
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_High_1_At_Risk(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
@@ -274,7 +274,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_High_1_
 }
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_At_Risk(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)

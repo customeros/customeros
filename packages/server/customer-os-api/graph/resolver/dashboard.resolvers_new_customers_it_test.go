@@ -12,7 +12,7 @@ import (
 )
 
 func TestQueryResolver_Dashboard_New_Customers_No_Period_No_Data_In_DB(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -38,7 +38,7 @@ func TestQueryResolver_Dashboard_New_Customers_No_Period_No_Data_In_DB(t *testin
 }
 
 func TestQueryResolver_Dashboard_New_Customers_InvalidPeriod(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -54,7 +54,7 @@ func TestQueryResolver_Dashboard_New_Customers_InvalidPeriod(t *testing.T) {
 }
 
 func TestQueryResolver_Dashboard_New_Customers_PeriodIntervals(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -86,7 +86,7 @@ func assert_Dashboard_New_Customers_PeriodIntervals(t *testing.T, start, end str
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonthForHiddenOrganiation(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -128,7 +128,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonthForHiddenOrg
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedBeforeMonth(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -168,7 +168,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedBeforeMonth(t *test
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedAfterMonth(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -208,7 +208,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAfterMonth(t *testi
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtBeginningOfMonth(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -248,7 +248,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtBeginningOfMonth(
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtEndOfMonth(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -288,7 +288,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtEndOfMonth(t *tes
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedImmediately(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -330,7 +330,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedImmedi
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedAtEndOfMonth(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -372,7 +372,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedAtEndO
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedNextMonth(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -414,7 +414,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedNextMo
 }
 
 func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_SameOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -463,7 +463,7 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_Sa
 }
 
 func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInDifferentMonths_SameOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -512,7 +512,7 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInDifferen
 }
 
 func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_DifferentOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -562,7 +562,7 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_Di
 }
 
 func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -650,7 +650,7 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
 }
 
 func TestQueryResolver_Dashboard_New_Customers_GeneralCount2(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
