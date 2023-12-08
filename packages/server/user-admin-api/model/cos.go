@@ -47,6 +47,18 @@ type CreateOrganizationResponse struct {
 	} `json:"organization_Create"`
 }
 
+type CreateContractResponse struct {
+	ContractCreate struct {
+		Id string `json:"id"`
+	} `json:"contract_Create"`
+}
+
+type CreateServiceLineItemResponse struct {
+	ServiceLineItemCreate struct {
+		Id string `json:"id"`
+	} `json:"serviceLineItemCreate"`
+}
+
 type CreateMeetingResponse struct {
 	MeetingCreate struct {
 		Id string `json:"id"`

@@ -29,6 +29,8 @@ type CustomerOsClient interface {
 	AddUserRoles(tenant, userId string, roles []model.Role) (*model.UserResponse, error)
 	CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error)
 	CreateOrganization(tenant, username, organizationName, domain string) (string, error)
+	CreateContract(tenant, username string, input model.ContractInput) (string, error)
+	CreateServiceLine(tenant, username string, input interface{}) (string, error)
 	CreateMeeting(tenant, username string, input model.MeetingInput) (string, error)
 
 	CreateInteractionSession(tenant, username string, options ...InteractionSessionBuilderOption) (*string, error)
@@ -405,6 +407,62 @@ func (s *customerOsClient) CreateOrganization(tenant, username, organizationName
 	}
 
 	return graphqlResponse.OrganizationCreate.Id, nil
+}
+
+func (s *customerOsClient) CreateContract(tenant, username string, input model.ContractInput) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation createContract($input: ContractInput!) {
+				contract_Create(input: $input) {
+					id
+			}
+		}`)
+
+	graphqlRequest.Var("input", input)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.CreateContractResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("contract_Create: %w", err)
+	}
+
+	return graphqlResponse.ContractCreate.Id, nil
+}
+
+func (s *customerOsClient) CreateServiceLine(tenant, username string, input interface{}) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation createService($input: ServiceLineItemInput!) {
+				serviceLineItemCreate(input: $input) {
+					id
+			}
+		}`)
+
+	graphqlRequest.Var("input", input)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.CreateServiceLineItemResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("serviceLineItem_Create: %w", err)
+	}
+
+	return graphqlResponse.ServiceLineItemCreate.Id, nil
 }
 
 func (s *customerOsClient) AddContactToOrganization(tenant, username, contactId, organizationId, jobTitle, description string) error {

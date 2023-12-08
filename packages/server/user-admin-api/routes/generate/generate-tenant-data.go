@@ -147,6 +147,72 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 				}
 			}
 
+			//create Contracts with Service Lines in org
+			for _, contract := range organization.Contracts {
+				contractInput := cosModel.ContractInput{
+					OrganizationId:   organizationId,
+					Name:             contract.Name,
+					RenewalCycle:     contract.RenewalCycle,
+					RenewalPeriods:   contract.RenewalPeriods,
+					ContractUrl:      contract.ContractUrl,
+					ServiceStartedAt: contract.ServiceStartedAt,
+					SignedAt:         contract.SignedAt,
+				}
+				contractId, err := services.CustomerOsClient.CreateContract(tenant, username, contractInput)
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+
+				if contractId == "" {
+					context.JSON(500, gin.H{
+						"error": "contractId is nil",
+					})
+					return
+				}
+
+				for _, serviceLine := range contract.ServiceLines {
+
+					serviceLineInput := func() interface{} {
+						if serviceLine.EndedAt.IsZero() {
+							return cosModel.ServiceLineInput{
+								ContractId: contractId,
+								Name:       serviceLine.Name,
+								Billed:     serviceLine.Billed,
+								Price:      serviceLine.Price,
+								Quantity:   serviceLine.Quantity,
+								StartedAt:  serviceLine.StartedAt,
+							}
+						}
+						return cosModel.ServiceLineEndedInput{
+							ContractId: contractId,
+							Name:       serviceLine.Name,
+							Billed:     serviceLine.Billed,
+							Price:      serviceLine.Price,
+							Quantity:   serviceLine.Quantity,
+							StartedAt:  serviceLine.StartedAt,
+							EndedAt:    serviceLine.EndedAt,
+						}
+					}()
+					serviceLineId, err := services.CustomerOsClient.CreateServiceLine(tenant, username, serviceLineInput)
+					if err != nil {
+						context.JSON(500, gin.H{
+							"error": err.Error(),
+						})
+						return
+					}
+
+					if serviceLineId == "" {
+						context.JSON(500, gin.H{
+							"error": "serviceLineId is nil",
+						})
+						return
+					}
+				}
+			}
+
 			//create people in org
 			for _, people := range organization.People {
 				var contactId string
