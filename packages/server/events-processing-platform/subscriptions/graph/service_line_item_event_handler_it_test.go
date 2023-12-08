@@ -499,7 +499,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
-	require.Equal(t, "logged-in user retroactively increased the price for Service 1 from 150.00/monthly to 200.00/monthly", action.Content)
+	require.Equal(t, "logged-in user retroactively increased the price for Service 1 from 150.00/month to 200.00/month", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":200,"previousPrice":150}`, action.Metadata)
 }
 
@@ -673,7 +673,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
-	require.Equal(t, "logged-in user retroactively decreased the price for Service 1 from 150.00/annually to 50.00/annually", action.Content)
+	require.Equal(t, "logged-in user retroactively decreased the price for Service 1 from 150.00/year to 50.00/year", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":50,"previousPrice":150}`, action.Metadata)
 }
 
@@ -1013,7 +1013,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemBilledTypeUpdated, action.Type)
-	require.Equal(t, "logged-in user changed the billing cycle for Service 1 from 20.00/annually to 20.00/monthly", action.Content)
+	require.Equal(t, "logged-in user changed the billing cycle for Service 1 from 20.00/year to 20.00/month", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","billedType":"MONTHLY","previousBilledType":"ANNUALLY"}`, action.Metadata)
 }
 
@@ -1112,7 +1112,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemBilledTypeRecurringCreated, action.Type)
-	require.Equal(t, "logged-in user added a recurring service to Contract 1: Service 1 at 10 x 170.25/monthly", action.Content)
+	require.Equal(t, "logged-in user added a recurring service to Contract 1: Service 1 at 10 x 170.25/month", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","billedType":"MONTHLY","previousBilledType":""}`, action.Metadata)
 }
 
@@ -1211,7 +1211,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemBilledTypeRecurringCreated, action.Type)
-	require.Equal(t, "logged-in user added a recurring service to Contract 1: Service 1 at 10 x 170.25/annually", action.Content)
+	require.Equal(t, "logged-in user added a recurring service to Contract 1: Service 1 at 10 x 170.25/year", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","billedType":"ANNUALLY","previousBilledType":""}`, action.Metadata)
 }
 
@@ -1310,7 +1310,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemBilledTypeRecurringCreated, action.Type)
-	require.Equal(t, "logged-in user added a recurring service to Contract 1: Service 1 at 10 x 170.25/quarterly", action.Content)
+	require.Equal(t, "logged-in user added a recurring service to Contract 1: Service 1 at 10 x 170.25/quarter", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","billedType":"QUARTERLY","previousBilledType":""}`, action.Metadata)
 }
 
@@ -1708,7 +1708,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
-	require.Equal(t, "logged-in user decreased the price for Test service line item from 1500.56/monthly to 850.75/monthly", action.Content)
+	require.Equal(t, "logged-in user decreased the price for Test service line item from 1500.56/month to 850.75/month", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Test service line item","price":850.75,"previousPrice":1500.56}`, action.Metadata)
 }
 
@@ -1807,6 +1807,6 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
-	require.Equal(t, "logged-in user decreased the price for unnamed service from 1500.56/monthly to 850.75/monthly", action.Content)
+	require.Equal(t, "logged-in user decreased the price for unnamed service from 1500.56/month to 850.75/month", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"unnamed service","price":850.75,"previousPrice":1500.56}`, action.Metadata)
 }

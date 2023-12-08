@@ -20,7 +20,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"strconv"
-	"strings"
 )
 
 type ServiceLineItemEventHandler struct {
@@ -181,9 +180,28 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "Failed to serialize billed type metadata")
 	}
 
+	var oldCycle string
+	switch serviceLineItemEntity.Billed {
+	case model.AnnuallyBilled.String():
+		oldCycle = "year"
+	case model.QuarterlyBilled.String():
+		oldCycle = "quarter"
+	case model.MonthlyBilled.String():
+		oldCycle = "month"
+	}
+
+	var cycle string
+	switch eventData.Billed {
+	case model.AnnuallyBilled.String():
+		cycle = "year"
+	case model.QuarterlyBilled.String():
+		cycle = "quarter"
+	case model.MonthlyBilled.String():
+		cycle = "month"
+	}
 	if !isNewVersionForExistingSLI {
 		if serviceLineItemEntity.Billed == model.AnnuallyBilled.String() || serviceLineItemEntity.Billed == model.QuarterlyBilled.String() || serviceLineItemEntity.Billed == model.MonthlyBilled.String() {
-			message = userEntity.FirstName + " " + userEntity.LastName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " x " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + strings.ToLower(serviceLineItemEntity.Billed)
+			message = userEntity.FirstName + " " + userEntity.LastName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " x " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle
 			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, eventData.ContractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now())
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -210,10 +228,10 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	if isNewVersionForExistingSLI {
 		if priceChanged && (eventData.Billed == model.AnnuallyBilled.String() || eventData.Billed == model.QuarterlyBilled.String() || eventData.Billed == model.MonthlyBilled.String()) {
 			if eventData.Price > previousPrice {
-				message = userEntity.FirstName + " " + userEntity.LastName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + strings.ToLower(serviceLineItemEntity.Billed) + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + strings.ToLower(eventData.Billed)
+				message = userEntity.FirstName + " " + userEntity.LastName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 			}
 			if eventData.Price < previousPrice {
-				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + strings.ToLower(serviceLineItemEntity.Billed) + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + strings.ToLower(eventData.Billed)
+				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 			}
 			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now())
 			if err != nil {
@@ -361,13 +379,32 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		h.log.Errorf("Failed to serialize billed type metadata: %s", err.Error())
 		return errors.Wrap(err, "Failed to serialize billed type metadata")
 	}
+	var oldCycle string
+	switch serviceLineItemEntity.Billed {
+	case model.AnnuallyBilled.String():
+		oldCycle = "year"
+	case model.QuarterlyBilled.String():
+		oldCycle = "quarter"
+	case model.MonthlyBilled.String():
+		oldCycle = "month"
+	}
+
+	var cycle string
+	switch eventData.Billed {
+	case model.AnnuallyBilled.String():
+		cycle = "year"
+	case model.QuarterlyBilled.String():
+		cycle = "quarter"
+	case model.MonthlyBilled.String():
+		cycle = "month"
+	}
 
 	if priceChanged && (eventData.Billed == model.AnnuallyBilled.String() || eventData.Billed == model.QuarterlyBilled.String() || eventData.Billed == model.MonthlyBilled.String()) {
 		if eventData.Price > serviceLineItemEntity.Price {
-			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + strings.ToLower(serviceLineItemEntity.Billed) + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + strings.ToLower(eventData.Billed)
+			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 		}
 		if eventData.Price < serviceLineItemEntity.Price {
-			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + strings.ToLower(serviceLineItemEntity.Billed) + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + strings.ToLower(eventData.Billed)
+			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 		}
 		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now())
 		if err != nil {
@@ -403,7 +440,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		}
 	}
 	if billedTypeChanged && serviceLineItemEntity.Billed != "" {
-		message = userEntity.FirstName + " " + userEntity.LastName + " changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + strings.ToLower(serviceLineItemEntity.Billed) + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + strings.ToLower(eventData.Billed)
+		message = userEntity.FirstName + " " + userEntity.LastName + " changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
 		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeUpdated, message, metadataBilledType, utils.Now())
 		if err != nil {
 			tracing.TraceErr(span, err)
