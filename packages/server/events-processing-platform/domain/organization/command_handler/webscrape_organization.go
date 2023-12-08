@@ -16,22 +16,22 @@ import (
 	"time"
 )
 
-type LinkDomainCommandHandler interface {
-	Handle(ctx context.Context, command *command.LinkDomainCommand) error
+type WebScrapeOrganizationCommandHandler interface {
+	Handle(ctx context.Context, cmd *command.WebScrapeOrganizationCommand) error
 }
 
-type linkDomainCommandHandler struct {
+type webScrapeOrganizationCommandHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 	cfg config.Utils
 }
 
-func NewLinkDomainCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) LinkDomainCommandHandler {
-	return &linkDomainCommandHandler{log: log, es: es, cfg: cfg}
+func NewWebScrapeOrganizationCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) WebScrapeOrganizationCommandHandler {
+	return &webScrapeOrganizationCommandHandler{log: log, es: es, cfg: cfg}
 }
 
-func (h *linkDomainCommandHandler) Handle(ctx context.Context, cmd *command.LinkDomainCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LinkDomainCommandHandler.Handle")
+func (h *webScrapeOrganizationCommandHandler) Handle(ctx context.Context, cmd *command.WebScrapeOrganizationCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebScrapeOrganizationCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "command", cmd)
