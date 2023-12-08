@@ -34,7 +34,7 @@ func (h *refreshArrCommandHandler) Handle(ctx context.Context, cmd *command.Refr
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RefreshArrCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
-	span.LogFields(log.Object("command", cmd))
+	tracing.LogObjectAsJson(span, "command", cmd)
 
 	validationError, done := validator.Validate(cmd, span)
 	if done {

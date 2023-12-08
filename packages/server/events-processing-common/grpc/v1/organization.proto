@@ -38,9 +38,6 @@ message UpsertOrganizationGrpcRequest {
   bool isPublic = 7;
   int64 employees = 8;
   string market = 9;
-  string appSource = 10 [deprecated = true];
-  string source = 11 [deprecated = true];
-  string sourceOfTruth = 12 [deprecated = true];
   google.protobuf.Timestamp  createdAt = 13;
   google.protobuf.Timestamp  updatedAt = 14;
   string subIndustry = 15;
@@ -51,7 +48,6 @@ message UpsertOrganizationGrpcRequest {
   string lastFundingAmount = 20;
   bool hide = 22;
   string note = 23;
-//  bool ignoreEmptyFields = 24 [deprecated = true];
   SourceFields sourceFields = 25;
   ExternalSystemFields externalSystemFields = 26;
   string loggedInUserId = 27;
@@ -155,6 +151,7 @@ message WebScrapeOrganizationGrpcRequest {
   string organizationId = 2;
   string url = 3;
   string appSource = 4;
+  string loggedInUserId = 5;
 }
 
 message OrganizationIdGrpcResponse {
