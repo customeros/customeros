@@ -80,7 +80,7 @@
     },
     {
       "name": "Check source fields",
-      "query": "MATCH (n:User|Email|PhoneNumber|Organization|Issue|Comment|Contract|Opportunity|ServiceLineItem) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
+      "query": "MATCH (n:User|Contact|Email|PhoneNumber|Organization|Issue|Comment|Contract|Opportunity|ServiceLineItem) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
     },
     {
       "name": "Check for comments without parent",
