@@ -1,12 +1,11 @@
 package repository
 
 import (
-	"errors"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -32,13 +31,12 @@ func (repo *ApiKeyRepositoryImpl) GetApiKeyByTenantService(ctx context.Context, 
 	err := repo.gormDb.First(&result, "tenant_name = ? AND key = ?", tenantName, serviceId).Error
 
 	if err != nil {
-		tracing.TraceErr(span, err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			span.LogFields(log.String("result", "record not found"))
-			// handle record not found error
 			return "", nil
 		} else {
-			return "", fmt.Errorf("GetApiKeyByTenantService: %s", err.Error())
+			tracing.TraceErr(span, err)
+			return "", errors.Wrap(err, "GetApiKeyByTenantService")
 		}
 	}
 	return result.Value, nil
