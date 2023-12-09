@@ -75,7 +75,7 @@ func (h *updateOrganizationCommandHandler) Handle(ctx context.Context, cmd *comm
 			continue                                           // Retry
 		} else {
 			// Some other error occurred
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "failed to save organization aggregate"))
 			return err
 		}
 	}
