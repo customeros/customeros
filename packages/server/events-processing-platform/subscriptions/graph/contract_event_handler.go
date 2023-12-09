@@ -25,7 +25,9 @@ import (
 )
 
 type ActionStatusMetadata struct {
-	Status string `json:"status"`
+	Status       string `json:"status"`
+	ContractName string `json:"contract-name"`
+	Comment      string `json:"comment"`
 }
 
 type ContractEventHandler struct {
@@ -273,11 +275,19 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 func (h *ContractEventHandler) createActionForStatusChange(ctx context.Context, tenant, contractId, status, contractName string, span opentracing.Span) {
 	span, ctx = opentracing.StartSpanFromContext(ctx, "ContractEventHandler.createActionForStatusChange")
 	defer span.Finish()
+	var name string
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("contractId", contractId), log.String("status", status), log.String("contractName", contractName))
 
+	if contractName != "" {
+		name = contractName
+	} else {
+		name = "unnamed contract"
+	}
 	metadata, err := utils.ToJson(ActionStatusMetadata{
-		Status: status,
+		Status:       status,
+		ContractName: name,
+		Comment:      name + " is now " + status,
 	})
 	message := ""
 

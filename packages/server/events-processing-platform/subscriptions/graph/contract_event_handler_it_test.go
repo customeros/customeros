@@ -690,7 +690,7 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionContractStatusUpdated, action.Type)
 	require.Equal(t, "test contract has ended", action.Content)
-	require.Equal(t, `{"status":"ENDED"}`, action.Metadata)
+	require.Equal(t, `{"status":"ENDED","contract-name":"test contract","comment":"test contract is now ENDED"}`, action.Metadata)
 
 	// Check request was not generated
 	eventsMap := aggregateStore.GetEventMap()
@@ -752,7 +752,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionContractStatusUpdated, action.Type)
 	require.Equal(t, "test contract is now live", action.Content)
-	require.Equal(t, `{"status":"LIVE"}`, action.Metadata)
+	require.Equal(t, `{"status":"LIVE","contract-name":"test contract","comment":"test contract is now LIVE"}`, action.Metadata)
 
 	// Check request was not generated
 	eventsMap := aggregateStore.GetEventMap()
