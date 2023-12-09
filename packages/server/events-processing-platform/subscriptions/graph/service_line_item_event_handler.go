@@ -34,24 +34,34 @@ type userMetadata struct {
 type ActionPriceMetadata struct {
 	UserName      string  `json:"user-name"`
 	ServiceName   string  `json:"service-name"`
+	Quantity      int64   `json:"quantity"`
 	Price         float64 `json:"price"`
 	PreviousPrice float64 `json:"previousPrice"`
+	BilledType    string  `json:"billedType"`
+	Comment       string  `json:"comment"`
 }
 type ActionQuantityMetadata struct {
-	UserName         string `json:"user-name"`
-	ServiceName      string `json:"service-name"`
-	Quantity         int64  `json:"quantity"`
-	PreviousQuantity int64  `json:"previousQuantity"`
+	UserName         string  `json:"user-name"`
+	ServiceName      string  `json:"service-name"`
+	Quantity         int64   `json:"quantity"`
+	PreviousQuantity int64   `json:"previousQuantity"`
+	Price            float64 `json:"price"`
+	BilledType       string  `json:"billedType"`
+	Comment          string  `json:"comment"`
 }
 type ActionBilledTypeMetadata struct {
-	UserName           string `json:"user-name"`
-	ServiceName        string `json:"service-name"`
-	BilledType         string `json:"billedType"`
-	PreviousBilledType string `json:"previousBilledType"`
+	UserName           string  `json:"user-name"`
+	ServiceName        string  `json:"service-name"`
+	Price              float64 `json:"price"`
+	Quantity           int64   `json:"quantity"`
+	BilledType         string  `json:"billedType"`
+	PreviousBilledType string  `json:"previousBilledType"`
+	Comment            string  `json:"comment"`
 }
 type ActionServiceLineItemRemovedMetadata struct {
 	UserName    string `json:"user-name"`
 	ServiceName string `json:"service-name"`
+	Comment     string `json:"comment"`
 }
 
 func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
@@ -150,8 +160,11 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	metadataPrice, err := utils.ToJson(ActionPriceMetadata{
 		UserName:      userEntity.FirstName + " " + userEntity.LastName,
 		ServiceName:   name,
-		Price:         eventData.Price,
+		Quantity:      eventData.Quantity,
+		BilledType:    eventData.Billed,
 		PreviousPrice: previousPrice,
+		Price:         eventData.Price,
+		Comment:       "price is " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " for service " + name,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -161,8 +174,11 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	metadataQuantity, err := utils.ToJson(ActionQuantityMetadata{
 		UserName:         userEntity.FirstName + " " + userEntity.LastName,
 		ServiceName:      name,
+		Price:            eventData.Price,
 		PreviousQuantity: previousQuantity,
 		Quantity:         eventData.Quantity,
+		BilledType:       eventData.Billed,
+		Comment:          "quantity is " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " for service " + name,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -173,6 +189,9 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		UserName:    userEntity.FirstName + " " + userEntity.LastName,
 		ServiceName: name,
 		BilledType:  eventData.Billed,
+		Quantity:    eventData.Quantity,
+		Price:       eventData.Price,
+		Comment:     "billed type is " + serviceLineItemEntity.Billed + " for service " + name,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -351,6 +370,9 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		ServiceName:   serviceLineItemEntity.Name,
 		Price:         eventData.Price,
 		PreviousPrice: serviceLineItemEntity.Price,
+		BilledType:    serviceLineItemEntity.Billed,
+		Quantity:      serviceLineItemEntity.Quantity,
+		Comment:       "price changed is " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " for service " + name,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -362,6 +384,9 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		ServiceName:      serviceLineItemEntity.Name,
 		PreviousQuantity: serviceLineItemEntity.Quantity,
 		Quantity:         eventData.Quantity,
+		Price:            serviceLineItemEntity.Price,
+		BilledType:       serviceLineItemEntity.Billed,
+		Comment:          "quantity changed is " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " for service " + name,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -373,6 +398,9 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		ServiceName:        serviceLineItemEntity.Name,
 		BilledType:         eventData.Billed,
 		PreviousBilledType: serviceLineItemEntity.Billed,
+		Quantity:           serviceLineItemEntity.Quantity,
+		Price:              serviceLineItemEntity.Price,
+		Comment:            "billed type changed is " + serviceLineItemEntity.Billed + " for service " + name,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -525,6 +553,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 	metadata, err := utils.ToJson(ActionServiceLineItemRemovedMetadata{
 		UserName:    userEntity.FirstName + " " + userEntity.LastName,
 		ServiceName: serviceLineItemName,
+		Comment:     "service line item removed is " + serviceLineItemName + " from " + contractName + " by " + userEntity.FirstName + " " + userEntity.LastName + "",
 	})
 	message := userEntity.FirstName + " " + userEntity.LastName + " removed " + serviceLineItemName + " from " + contractName
 
