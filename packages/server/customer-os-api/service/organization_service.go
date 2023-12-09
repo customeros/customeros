@@ -46,6 +46,7 @@ type OrganizationService interface {
 	UpdateLastTouchpointByPhoneNumber(ctx context.Context, phoneNumber string)
 	GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
 	GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error)
+	GetOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -787,6 +788,24 @@ func (s *organizationService) updateLastTouchpoint(ctx context.Context, organiza
 		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
 		tracing.TraceErr(span, err, log.String("grpcMethod", "RefreshLastTouchpoint"))
 	}
+}
+
+func (s *organizationService) GetOrganizations(parentCtx context.Context, organizationIds []string) (*entity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "OrganizationService.GetOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("organizationIds", organizationIds))
+
+	organizationDbNodes, err := s.repositories.OrganizationRepository.GetOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
+	if err != nil {
+		return nil, err
+	}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(organizationDbNodes))
+	for _, dbNode := range organizationDbNodes {
+		organizationEntity := s.mapDbNodeToOrganizationEntity(*dbNode)
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
 }
 
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {

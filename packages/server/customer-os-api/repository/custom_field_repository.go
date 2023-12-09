@@ -31,12 +31,14 @@ type CustomFieldRepository interface {
 }
 
 type customFieldRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewCustomFieldRepository(driver *neo4j.DriverWithContext) CustomFieldRepository {
+func NewCustomFieldRepository(driver *neo4j.DriverWithContext, database string) CustomFieldRepository {
 	return &customFieldRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 

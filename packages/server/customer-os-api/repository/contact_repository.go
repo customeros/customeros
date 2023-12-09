@@ -55,12 +55,14 @@ type ContactRepository interface {
 }
 
 type contactRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewContactRepository(driver *neo4j.DriverWithContext) ContactRepository {
+func NewContactRepository(driver *neo4j.DriverWithContext, database string) ContactRepository {
 	return &contactRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 

@@ -36,21 +36,22 @@ type OrganizationRepository interface {
 	GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 	ReplaceOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error)
 	RemoveOwner(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
-
 	GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetAllOrganizationEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetSuggestedMergePrimaryOrganizations(ctx context.Context, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error)
-
 	GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error)
+	GetOrganizations(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 }
 
 type organizationRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepository {
+func NewOrganizationRepository(driver *neo4j.DriverWithContext, database string) OrganizationRepository {
 	return &organizationRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 
@@ -136,18 +137,20 @@ func (r *organizationRepository) GetOrganizationById(ctx context.Context, tenant
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationById")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId))
+
+	cypher := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) RETURN org`
+	params := map[string]any{
+		"organizationId": organizationId,
+		"tenant":         tenant,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
-
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			RETURN org`,
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationId,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return queryResult.Single(ctx)
@@ -907,4 +910,36 @@ func (r *organizationRepository) GetMinMaxRenewalForecastArr(ctx context.Context
 	} else {
 		return 0, 0, nil
 	}
+}
+
+func (r *organizationRepository) GetOrganizations(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
+			WHERE org.id IN $ids
+			RETURN org`
+	params := map[string]any{
+		"tenant": tenant,
+		"ids":    ids,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dbRecords.([]*dbtype.Node), err
 }
