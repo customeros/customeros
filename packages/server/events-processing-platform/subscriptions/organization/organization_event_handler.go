@@ -225,8 +225,11 @@ func (h *organizationEventHandler) AdjustNewOrganizationFields(ctx context.Conte
 	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
 
 	if eventData.Market != market || eventData.Industry != industry {
-		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry, span)
-		return err
+		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	} else {
 		h.log.Infof("No need to update organization %s", organizationId)
 	}
@@ -237,6 +240,7 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.AdjustUpdatedOrganizationFields")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	tracing.LogObjectAsJson(span, "eventData", evt)
 
 	var eventData events.OrganizationUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -249,32 +253,31 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
 
 	if eventData.Market != market || eventData.Industry != industry {
-		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.Source, market, industry, span)
+		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.Source, market, industry)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			return err
 		}
-		return err
 	} else {
 		h.log.Infof("No need to update organization %s", organizationId)
 	}
 	return nil
 }
 
-func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, source, market, industry string, span opentracing.Span) error {
+func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, source, market, industry string) error {
 	err := h.organizationCommands.UpdateOrganization.Handle(ctx,
 		cmd.NewUpdateOrganizationCommand(organizationId, tenant, "", constants.AppSourceEventProcessingPlatform, source,
 			model.OrganizationDataFields{
 				Market:   market,
 				Industry: industry,
 			},
-			utils.TimePtr(utils.Now()),
+			utils.NowPtr(),
 			"",
 			[]string{
 				model.FieldMaskMarket, model.FieldMaskIndustry,
 			}))
 	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error updating organization %s: %v", organizationId, err.Error())
+		h.log.Errorf("Error updating organization %s: %s", organizationId, err.Error())
 		return err
 	}
 	return nil

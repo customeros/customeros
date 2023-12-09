@@ -50,7 +50,7 @@ func (ds *DomainScraperV1) Scrape(domainOrWebsite, tenant, organizationId string
 
 	html, err := ds.getHtml(domainUrl, directScrape)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to getHtml domain: %s", domainUrl))
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to getHtml. domain: %s ", domainUrl))
 	}
 	socialLinks, err := ds.extractSocialLinks(html)
 	if err != nil {
