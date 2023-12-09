@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -20,7 +21,7 @@ import (
 
 // Organization is the resolver for the organization field.
 func (r *dashboardCustomerMapResolver) Organization(ctx context.Context, obj *model.DashboardCustomerMap) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Organization", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "DashboardCustomerMapResolver.Organization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", obj.OrganizationID))
@@ -30,7 +31,7 @@ func (r *dashboardCustomerMapResolver) Organization(ctx context.Context, obj *mo
 		return nil, nil
 	}
 
-	organizationEntityPtr, err := r.Services.OrganizationService.GetById(ctx, obj.OrganizationID)
+	organizationEntityPtr, err := dataloader.For(ctx).GetOrganization(ctx, obj.OrganizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get organization by id %s", obj.OrganizationID)

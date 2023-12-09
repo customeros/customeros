@@ -2,12 +2,13 @@ package dataloader
 
 import (
 	"context"
-	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"reflect"
 )
 
@@ -71,6 +72,18 @@ func (i *Loaders) GetSuggestedMergeToForOrganization(ctx context.Context, organi
 	}
 	resultObj := result.(entity.OrganizationEntities)
 	return &resultObj, nil
+}
+
+func (i *Loaders) GetOrganization(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error) {
+	thunk := i.Organization.Load(ctx, dataloader.StringKey(organizationId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*entity.OrganizationEntity), nil
 }
 
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -360,6 +373,55 @@ func (b *organizationBatcher) getSuggestedMergeToForOrganization(ctx context.Con
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
+
+	return results
+}
+
+func (b *organizationBatcher) getOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	organizationEntities, err := b.organizationService.GetOrganizations(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	organizationEntityById := make(map[string]entity.OrganizationEntity)
+	for _, val := range *organizationEntities {
+		organizationEntityById[val.ID] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for id, _ := range organizationEntityById {
+		if ix, ok := keyOrder[id]; ok {
+			val := organizationEntityById[id]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, id)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.OrganizationEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
 
 	return results
 }
