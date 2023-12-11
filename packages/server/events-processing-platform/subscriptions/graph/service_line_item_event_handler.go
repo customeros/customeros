@@ -226,7 +226,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			}
 		}
 		if serviceLineItemEntity.Billed == model.UsageBilled.String() {
-			message = userEntity.FirstName + " " + userEntity.LastName + " added a per use service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price)
+			message = userEntity.FirstName + " " + userEntity.LastName + " added a per use service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price)
 			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, eventData.ContractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now())
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -249,12 +249,25 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			}
 		}
 
-		if priceChanged && (eventData.Billed == model.OnceBilled.String() || eventData.Billed == model.UsageBilled.String()) {
+		if priceChanged && eventData.Billed == model.OnceBilled.String() {
 			if eventData.Price > previousPrice {
 				message = userEntity.FirstName + " " + userEntity.LastName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + " to " + fmt.Sprintf("%.2f", eventData.Price)
 			}
 			if eventData.Price < serviceLineItemEntity.Price {
 				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + " to " + fmt.Sprintf("%.2f", eventData.Price)
+			}
+			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now())
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+			}
+		}
+		if priceChanged && eventData.Billed == model.UsageBilled.String() {
+			if eventData.Price > previousPrice {
+				message = userEntity.FirstName + " " + userEntity.LastName + " increased the price for " + name + " from " + fmt.Sprintf("%.4f", previousPrice) + " to " + fmt.Sprintf("%.4f", eventData.Price)
+			}
+			if eventData.Price < serviceLineItemEntity.Price {
+				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the price for " + name + " from " + fmt.Sprintf("%.4f", previousPrice) + " to " + fmt.Sprintf("%.4f", eventData.Price)
 			}
 			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now())
 			if err != nil {
@@ -422,7 +435,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		}
 	}
 
-	if priceChanged && (eventData.Billed == model.OnceBilled.String() || eventData.Billed == model.UsageBilled.String()) {
+	if priceChanged && eventData.Billed == model.OnceBilled.String() {
 		if eventData.Price > serviceLineItemEntity.Price {
 			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", eventData.Price)
 		}
@@ -435,6 +448,20 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 			h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractId, err.Error())
 		}
 	}
+	if priceChanged && eventData.Billed == model.UsageBilled.String() {
+		if eventData.Price > serviceLineItemEntity.Price {
+			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", eventData.Price)
+		}
+		if eventData.Price < serviceLineItemEntity.Price {
+			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", eventData.Price)
+		}
+		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractId, err.Error())
+		}
+	}
+
 	if quantityChanged {
 		if eventData.Quantity > serviceLineItemEntity.Quantity {
 			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively increased the quantity of " + name + " from " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10)
