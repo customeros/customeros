@@ -1,11 +1,11 @@
-import { useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useRef, useMemo, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useLocalStorage } from 'usehooks-ts';
 
-import { SortingState } from '@ui/presentation/Table';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { SortingState, TableInstance } from '@ui/presentation/Table';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import {
@@ -34,6 +34,7 @@ export const useOrganizationsPageData = ({
   const [_, setLastActivePosition] = useLocalStorage<{
     [key: string]: string;
   }>(`customeros-player-last-position`, { root: 'organization' });
+  const tableRef = useRef<TableInstance<Organization> | null>(null);
 
   const preset = searchParams?.get('preset');
   const searchTerm = searchParams?.get('search');
@@ -291,9 +292,12 @@ export const useOrganizationsPageData = ({
         draft.root = `organizations?${searchParams?.toString()}`;
       }),
     );
+
+    tableRef.current?.resetRowSelection();
   }, [sortBy, searchParams?.toString(), data?.pageParams]);
 
   return {
+    tableRef,
     isLoading,
     isFetching,
     totalCount,

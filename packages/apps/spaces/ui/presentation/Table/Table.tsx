@@ -8,7 +8,15 @@ import type {
   Table as TableInstance,
 } from '@tanstack/react-table';
 
-import { memo, useRef, useMemo, useState, useEffect, forwardRef } from 'react';
+import {
+  memo,
+  useRef,
+  useMemo,
+  useState,
+  useEffect,
+  forwardRef,
+  MutableRefObject,
+} from 'react';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
@@ -25,6 +33,16 @@ import { Center } from '@ui/layout/Center';
 import { Checkbox } from '@ui/form/Checkbox';
 import { Flex, FlexProps } from '@ui/layout/Flex';
 
+// Needed so that we can wrap InnerTable with forwardRef in a typesafe way
+declare module 'react' {
+  function forwardRef<T, P = object>(
+    render: (
+      props: P,
+      ref: React.MutableRefObject<T>,
+    ) => React.ReactNode | null,
+  ): (props: P & React.RefAttributes<T>) => React.ReactNode | null;
+}
+
 declare module '@tanstack/table-core' {
   // REASON: TData & TValue are not used in this interface but need to be defined
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -37,7 +55,6 @@ declare module '@tanstack/table-core' {
 
 interface TableProps<T extends object> {
   data: T[];
-  // REASON: Typing TValue is too exhaustive and has no benefit
   isLoading?: boolean;
   totalItems?: number;
   sorting?: SortingState;
@@ -48,22 +65,25 @@ interface TableProps<T extends object> {
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
   onSortingChange?: OnChangeFn<SortingState>;
+  // REASON: Typing TValue is too exhaustive and has no benefit
   renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
 }
-
-export const Table = <T extends object>({
-  data,
-  columns,
-  isLoading,
-  onFetchMore,
-  canFetchMore,
-  totalItems = 40,
-  onSortingChange,
-  sorting: _sorting,
-  renderTableActions,
-  enableRowSelection,
-  enableTableActions,
-}: TableProps<T>) => {
+const InnerTable = <T extends object>(
+  {
+    data,
+    columns,
+    isLoading,
+    onFetchMore,
+    canFetchMore,
+    totalItems = 40,
+    onSortingChange,
+    sorting: _sorting,
+    renderTableActions,
+    enableRowSelection,
+    enableTableActions,
+  }: TableProps<T>,
+  ref: MutableRefObject<TableInstance<T>>,
+) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -112,6 +132,12 @@ export const Table = <T extends object>({
     virtualRows,
     canFetchMore,
   ]);
+
+  useEffect(() => {
+    if (ref) {
+      ref.current = table;
+    }
+  }, [table]);
 
   const skeletonRow = useMemo(
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
@@ -392,4 +418,5 @@ export type {
   TableInstance,
   ColumnFiltersState,
 };
+export const Table = forwardRef(InnerTable);
 export { createColumnHelper } from '@tanstack/react-table';
