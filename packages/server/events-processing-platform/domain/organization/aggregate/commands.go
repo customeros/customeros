@@ -76,10 +76,14 @@ func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organiza
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&createEvent, &span, a.Tenant, userId)
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: userId,
+		App:    organizationFields.Source.AppSource,
+	})
 	eventsOnCreate = append(eventsOnCreate, createEvent)
 
-	if organizationFields.OrganizationDataFields.Website != "" {
+	if organizationFields.OrganizationDataFields.Website != "" && strings.Contains(organizationFields.OrganizationDataFields.Website, ".") {
 		webscrapeEvent, err := events.NewOrganizationRequestScrapeByWebsite(a, organizationFields.OrganizationDataFields.Website)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -116,20 +120,20 @@ func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organiza
 	})
 	eventsOnUpdate = append(eventsOnUpdate, event)
 
-	// if website updated, request webscrape by website
+	// if website updated, request web scrape by website
 	websiteChanged := organizationFields.OrganizationDataFields.Website != a.Organization.Website && (len(fieldsMask) == 0 || utils.Contains(fieldsMask, model.FieldMaskWebsite))
-	if organizationFields.OrganizationDataFields.Website != "" && websiteChanged {
-		webscrapeEvent, err := events.NewOrganizationRequestScrapeByWebsite(a, organizationFields.OrganizationDataFields.Website)
+	if organizationFields.OrganizationDataFields.Website != "" && websiteChanged && strings.Contains(organizationFields.OrganizationDataFields.Website, ".") {
+		webScrapeEvent, err := events.NewOrganizationRequestScrapeByWebsite(a, organizationFields.OrganizationDataFields.Website)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationCreateEvent")
 		}
-		aggregate.EnrichEventWithMetadataExtended(&webscrapeEvent, span, aggregate.EventMetadata{
+		aggregate.EnrichEventWithMetadataExtended(&webScrapeEvent, span, aggregate.EventMetadata{
 			Tenant: a.Tenant,
 			UserId: loggedInUserId,
 			App:    organizationFields.Source.AppSource,
 		})
-		eventsOnUpdate = append(eventsOnUpdate, webscrapeEvent)
+		eventsOnUpdate = append(eventsOnUpdate, webScrapeEvent)
 	}
 
 	return a.ApplyAll(eventsOnUpdate)
