@@ -76,7 +76,7 @@ func (ds *DomainScraperV1) Scrape(domainOrWebsite, tenant, organizationId string
 
 	if r.Linkedin != "" {
 		lId := getLinkedinId(r.Linkedin)
-		_, err = ds.addLinkedinData(lId, r, httpClient)
+		r, err = ds.addLinkedinData(ds.cfg.Services.ScrapingDogApiKey, lId, r, httpClient)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to add linkedin data")
 		}
@@ -295,8 +295,8 @@ func (ds *DomainScraperV1) runDataPrompt(analysis, domainUrl, socials, jsonStruc
 	return &scrapeResponse, nil
 }
 
-func (ds *DomainScraperV1) addLinkedinData(companyLinkedinId string, scrapedContent *WebscrapeResponseV1, httpClient *http.Client) (*WebscrapeResponseV1, error) {
-	linkedinData, err := ds.getLinkedinData(companyLinkedinId, httpClient)
+func (ds *DomainScraperV1) addLinkedinData(apiKey, companyLinkedinId string, scrapedContent *WebscrapeResponseV1, httpClient *http.Client) (*WebscrapeResponseV1, error) {
+	linkedinData, err := ds.getLinkedinData(apiKey, companyLinkedinId, httpClient)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get linkedin data")
 	}
@@ -323,11 +323,11 @@ func (ds *DomainScraperV1) addLinkedinData(companyLinkedinId string, scrapedCont
 	scrapedContent.YearFounded = (*linkedinData)[0].Founded
 	scrapedContent.HeadquartersLocation = (*linkedinData)[0].Headquarters
 	scrapedContent.EmployeeGrowthRate = "" // not available in linkedin scraped data
-	return nil, nil
+	return scrapedContent, nil
 }
 
-func (ds *DomainScraperV1) getLinkedinData(companyLinkedinId string, httpClient *http.Client) (*LinkedinScrapeResponse, error) {
-	url := fmt.Sprintf("https://api.scrapingdog.com/linkedin/?api_key=%s&type=company&linkId=%s", ds.cfg.Services.ScrapingDogApiKey, companyLinkedinId)
+func (ds *DomainScraperV1) getLinkedinData(apiKey, companyLinkedinId string, httpClient *http.Client) (*LinkedinScrapeResponse, error) {
+	url := fmt.Sprintf("https://api.scrapingdog.com/linkedin/?api_key=%s&type=company&linkId=%s", apiKey, companyLinkedinId)
 
 	linkedinScrape := &LinkedinScrapeResponse{}
 	r, err := httpClient.Get(url)
@@ -336,7 +336,9 @@ func (ds *DomainScraperV1) getLinkedinData(companyLinkedinId string, httpClient 
 	}
 	defer r.Body.Close()
 
-	json.NewDecoder(r.Body).Decode(linkedinScrape)
+	if err := json.NewDecoder(r.Body).Decode(linkedinScrape); err != nil {
+		return nil, errors.Wrap(err, "failed to decode linkedin scrape response")
+	}
 
 	return linkedinScrape, nil
 }
