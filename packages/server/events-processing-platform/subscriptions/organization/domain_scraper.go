@@ -75,7 +75,8 @@ func (ds *DomainScraperV1) Scrape(domainOrWebsite, tenant, organizationId string
 	}
 
 	if r.Linkedin != "" {
-		_, err = ds.addLinkedinData(r.Linkedin, r, httpClient)
+		lId := getLinkedinId(r.Linkedin)
+		_, err = ds.addLinkedinData(lId, r, httpClient)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to add linkedin data")
 		}
@@ -419,4 +420,15 @@ func jsonStructure() *string {
 
 	s := string(jsonStructure)
 	return &s
+}
+
+func getLinkedinId(linkedinUrl string) string {
+	s := strings.Split(linkedinUrl, "/")
+	lim := len(s)
+	for i, word := range s {
+		if word == "company" && i+1 < lim {
+			return s[i+1]
+		}
+	}
+	return ""
 }
