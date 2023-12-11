@@ -26,7 +26,7 @@ type GraphInteractionEventHandler struct {
 func (h *GraphInteractionEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphInteractionEventHandler.OnCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.InteractionEventCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -89,7 +89,7 @@ func (h *GraphInteractionEventHandler) OnCreate(ctx context.Context, evt eventst
 func (h *GraphInteractionEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphInteractionEventHandler.OnUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.InteractionEventUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -121,7 +121,7 @@ func (h *GraphInteractionEventHandler) OnUpdate(ctx context.Context, evt eventst
 func (h *GraphInteractionEventHandler) OnSummaryReplace(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphInteractionEventHandler.OnSummaryReplace")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.InteractionEventReplaceSummaryEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -143,7 +143,7 @@ func (h *GraphInteractionEventHandler) OnSummaryReplace(ctx context.Context, evt
 func (h *GraphInteractionEventHandler) OnActionItemsReplace(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphInteractionEventHandler.OnActionItemsReplace")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.InteractionEventReplaceActionItemsEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

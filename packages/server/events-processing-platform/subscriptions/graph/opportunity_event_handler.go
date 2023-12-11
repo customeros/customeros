@@ -28,7 +28,7 @@ type OpportunityEventHandler struct {
 func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.OpportunityCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -68,7 +68,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnCreateRenewal")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.OpportunityCreateRenewalEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -100,7 +100,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnUpdateNextCycleDate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.OpportunityUpdateNextCycleDateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -157,7 +157,7 @@ func (h *OpportunityEventHandler) sendEventToUpdateOrganizationRenewalSummary(ct
 func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.OpportunityUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -219,7 +219,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnUpdateRenewal")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.OpportunityUpdateRenewalEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -294,7 +294,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 func (h *OpportunityEventHandler) OnCloseWin(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnCloseWin")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.OpportunityCloseWinEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -316,7 +316,7 @@ func (h *OpportunityEventHandler) OnCloseWin(ctx context.Context, evt eventstore
 func (h *OpportunityEventHandler) OnCloseLoose(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnCloseLoose")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.OpportunityCloseLooseEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
