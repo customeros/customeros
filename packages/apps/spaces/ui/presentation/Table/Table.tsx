@@ -33,16 +33,6 @@ import { Center } from '@ui/layout/Center';
 import { Checkbox } from '@ui/form/Checkbox';
 import { Flex, FlexProps } from '@ui/layout/Flex';
 
-// Needed so that we can wrap InnerTable with forwardRef in a typesafe way
-declare module 'react' {
-  function forwardRef<T, P = object>(
-    render: (
-      props: P,
-      ref: React.MutableRefObject<T>,
-    ) => React.ReactNode | null,
-  ): (props: P & React.RefAttributes<T>) => React.ReactNode | null;
-}
-
 declare module '@tanstack/table-core' {
   // REASON: TData & TValue are not used in this interface but need to be defined
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -65,25 +55,25 @@ interface TableProps<T extends object> {
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
   onSortingChange?: OnChangeFn<SortingState>;
+  tableRef: MutableRefObject<TableInstance<T> | null>;
   // REASON: Typing TValue is too exhaustive and has no benefit
   renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
 }
-const InnerTable = <T extends object>(
-  {
-    data,
-    columns,
-    isLoading,
-    onFetchMore,
-    canFetchMore,
-    totalItems = 40,
-    onSortingChange,
-    sorting: _sorting,
-    renderTableActions,
-    enableRowSelection,
-    enableTableActions,
-  }: TableProps<T>,
-  ref: MutableRefObject<TableInstance<T>>,
-) => {
+
+export const Table = <T extends object>({
+  data,
+  columns,
+  tableRef,
+  isLoading,
+  onFetchMore,
+  canFetchMore,
+  totalItems = 40,
+  onSortingChange,
+  sorting: _sorting,
+  renderTableActions,
+  enableRowSelection,
+  enableTableActions,
+}: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -134,8 +124,8 @@ const InnerTable = <T extends object>(
   ]);
 
   useEffect(() => {
-    if (ref) {
-      ref.current = table;
+    if (tableRef) {
+      tableRef.current = table;
     }
   }, [table]);
 
@@ -418,5 +408,5 @@ export type {
   TableInstance,
   ColumnFiltersState,
 };
-export const Table = forwardRef(InnerTable);
+
 export { createColumnHelper } from '@tanstack/react-table';

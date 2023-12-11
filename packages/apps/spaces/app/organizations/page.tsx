@@ -46,10 +46,10 @@ export default function OrganizationsPage() {
       <Search />
 
       <Table<Organization>
-        ref={tableRef}
         data={data}
         columns={columns}
         sorting={sorting}
+        tableRef={tableRef}
         enableTableActions
         enableRowSelection
         canFetchMore={hasNextPage}
