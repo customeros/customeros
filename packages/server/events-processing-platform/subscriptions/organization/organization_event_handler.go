@@ -35,6 +35,7 @@ const (
 type WebscrapeRequest struct {
 	Domain string `json:"scrape"`
 }
+
 type Socials struct {
 	Github    string `json:"github,omitempty"`
 	Linkedin  string `json:"linkedin,omitempty"`
@@ -158,19 +159,29 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 		return nil
 	}
 
-	fieldMask := []string{model.FieldMaskName, model.FieldMaskMarket, model.FieldMaskIndustry, model.FieldMaskIndustryGroup, model.FieldMaskSubIndustry, model.FieldMaskTargetAudience, model.FieldMaskValueProposition}
+	fieldsMask := []string{model.FieldMaskMarket, model.FieldMaskIndustry, model.FieldMaskIndustryGroup, model.FieldMaskSubIndustry, model.FieldMaskTargetAudience, model.FieldMaskValueProposition}
+	organizationFields := model.OrganizationDataFields{
+		Market:           result.Market,
+		Industry:         result.Industry,
+		IndustryGroup:    result.IndustryGroup,
+		SubIndustry:      result.SubIndustry,
+		TargetAudience:   result.TargetAudience,
+		ValueProposition: result.ValueProposition,
+	}
+	// name organization name if missing
+	if organization.Name == "" {
+		organizationFields.Name = result.CompanyName
+		fieldsMask = append(fieldsMask, model.FieldMaskName)
+	}
+	// set website if missing
+	if organization.Website == "" {
+		organizationFields.Website = result.Website
+		fieldsMask = append(fieldsMask, model.FieldMaskWebsite)
+	}
 	err = h.organizationCommands.UpdateOrganization.Handle(ctx,
-		cmd.NewUpdateOrganizationCommand(organizationId, tenant, "", constants.AppSourceEventProcessingPlatform, constants.SourceWebscrape,
-			model.OrganizationDataFields{
-				Name:             utils.StringFirstNonEmpty(organization.Name, result.CompanyName),
-				Market:           result.Market,
-				Industry:         result.Industry,
-				IndustryGroup:    result.IndustryGroup,
-				SubIndustry:      result.SubIndustry,
-				TargetAudience:   result.TargetAudience,
-				ValueProposition: result.ValueProposition,
-			},
-			utils.TimePtr(utils.Now()), url, fieldMask))
+		cmd.NewUpdateOrganizationCommand(
+			organizationId, tenant, "", constants.AppSourceEventProcessingPlatform, constants.SourceWebscrape,
+			organizationFields, utils.TimePtr(utils.Now()), url, fieldsMask))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error updating organization: %v", err)
