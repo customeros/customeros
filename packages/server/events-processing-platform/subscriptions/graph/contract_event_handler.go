@@ -282,7 +282,7 @@ func (h *ContractEventHandler) createActionForStatusChange(ctx context.Context, 
 	if contractName != "" {
 		name = contractName
 	} else {
-		name = "unnamed contract"
+		name = "Unnamed contract"
 	}
 	metadata, err := utils.ToJson(ActionStatusMetadata{
 		Status:       status,
