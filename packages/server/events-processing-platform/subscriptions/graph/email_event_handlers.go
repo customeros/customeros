@@ -18,7 +18,7 @@ type GraphEmailEventHandler struct {
 func (h *GraphEmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.EmailCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -35,7 +35,7 @@ func (h *GraphEmailEventHandler) OnEmailCreate(ctx context.Context, evt eventsto
 func (h *GraphEmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.EmailUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -52,7 +52,7 @@ func (h *GraphEmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventsto
 func (h *GraphEmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailValidationFailed")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.EmailFailedValidationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -69,7 +69,7 @@ func (h *GraphEmailEventHandler) OnEmailValidationFailed(ctx context.Context, ev
 func (h *GraphEmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailValidated")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.EmailValidatedEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

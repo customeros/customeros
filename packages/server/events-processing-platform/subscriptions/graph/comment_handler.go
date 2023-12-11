@@ -22,7 +22,7 @@ type GraphCommentEventHandler struct {
 func (h *GraphCommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphCommentEventHandler.OnCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.CommentCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -68,7 +68,7 @@ func (h *GraphCommentEventHandler) OnCreate(ctx context.Context, evt eventstore.
 func (h *GraphCommentEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphCommentEventHandler.OnCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.CommentUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

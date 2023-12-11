@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"strings"
 
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
@@ -131,7 +132,7 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 	}
 	organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
 
-	// if already webscraped for this url, skip
+	// if already web scraped for this url, skip
 	if organization.WebScrapeDetails.WebScrapedUrl == url {
 		h.log.Infof("Organization {%s} already web scraped for url {%s}", organizationId, url)
 		return nil
@@ -152,6 +153,8 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error scraping url %s: %v", url, err)
+		// if organization name is empty set it to the domain name
+		h.updateOrganizationNameIfEmpty(ctx, tenant, url, organization, span)
 		return nil
 	}
 
@@ -193,6 +196,21 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 	}
 
 	return nil
+}
+
+func (h *organizationEventHandler) updateOrganizationNameIfEmpty(ctx context.Context, tenant, url string, organization *entity.OrganizationEntity, span opentracing.Span) {
+	if organization.Name == "" && strings.Contains(url, ".") {
+		err := h.organizationCommands.UpdateOrganization.Handle(ctx,
+			cmd.NewUpdateOrganizationCommand(organization.ID, tenant, "", constants.AppSourceEventProcessingPlatform, constants.SourceWebscrape,
+				model.OrganizationDataFields{
+					Name: utils.ExtractFirstPart(utils.ExtractDomain(url), "."),
+				},
+				utils.TimePtr(utils.Now()), "", []string{model.FieldMaskName}))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error updating organization: %v", err)
+		}
+	}
 }
 
 func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId, tenant, platform, url string) {
