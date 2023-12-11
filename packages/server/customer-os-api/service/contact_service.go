@@ -153,6 +153,7 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 			upsertContactRequest.ExternalSystemFields.SyncDate = timestamppb.New(*contactDetails.ExternalReference.Relationship.SyncDate)
 		}
 	}
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
 	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
 		user, findErr := s.GetById(ctx, response.Id)
@@ -175,6 +176,7 @@ func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSo
 		s.log.Errorf("Failed to create email address for contact %s: %s", contactId, err.Error())
 	}
 	if emailId != "" {
+		ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 		_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactgrpc.LinkEmailToContactGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -201,6 +203,7 @@ func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId,
 		s.log.Errorf("Failed to create phone number for contact %s: %s", contactId, err.Error())
 	}
 	if phoneNumberId != "" {
+		ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 		_, err = s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactgrpc.LinkPhoneNumberToContactGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -260,6 +263,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 		Timezone:        contactDetails.Timezone,
 		ProfilePhotoUrl: utils.StringFirstNonEmpty(contactDetails.ProfilePhotoUrl, currentContactEntity.ProfilePhotoUrl),
 	}
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -598,6 +602,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 
 	contextWithTimeout, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	contactId, err := s.grpcClients.ContactClient.UpsertContact(contextWithTimeout, contactCreateRequest)
 	if err != nil {
 		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
