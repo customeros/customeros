@@ -1810,3 +1810,224 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, "logged-in user decreased the price for unnamed service from 1500.56/month to 850.75/month", action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"unnamed service","quantity":0,"price":850.75,"previousPrice":1500.56,"billedType":"MONTHLY","comment":"price is 850.75 for service unnamed service"}`, action.Metadata)
 }
+
+func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExistingSLI(t *testing.T) {
+	//in this test we will test the following scenario:
+	// 1. create a service line item with billed type annually
+	// 2. create a service line item with billed type quarterly & use as parent id the id of the service line item created in step 1
+	// 3. Figure out the action message
+	// 4. This is a new version of an existing service line item where only the billed type is changed(for retroactive changes on billed type we have a different test)
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// Setup test environment
+	serviceLineItemId1 := "service-line-item-id-1"
+	serviceLineItemId2 := "service-line-item-id-2"
+	contractId := "contract-id-1"
+
+	// Prepare Neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+		FirstName: "logged-in",
+		LastName:  "user",
+	})
+	neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		Id:   contractId,
+		Name: "Contract 1",
+	})
+
+	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Id:       serviceLineItemId1,
+		Name:     "service 1",
+		Billed:   model.AnnuallyBilled.String(),
+		Price:    170.25,
+		Quantity: 10,
+	})
+
+	// Prepare the event handler
+	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+
+	// Create a ServiceLineItemCreateEvent
+	timeNow := utils.Now()
+	serviceLineItemAggregate := aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId2)
+	createEvent, err := event.NewServiceLineItemCreateEvent(
+		serviceLineItemAggregate,
+		model.ServiceLineItemDataFields{
+			Billed:     model.QuarterlyBilled,
+			Quantity:   10,
+			Price:      170.25,
+			Name:       "Service 1",
+			ContractId: contractId,
+			ParentId:   serviceLineItemId1,
+		},
+		commonmodel.Source{
+			Source:    constants.SourceOpenline,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+		timeNow,
+		timeNow,
+		timeNow,
+		nil,
+	)
+	require.Nil(t, err, "failed to create service line item create event")
+
+	metadata := make(map[string]string)
+	metadata["user-id"] = userId
+	err = createEvent.SetMetadata(metadata)
+	require.Nil(t, err)
+
+	// Execute the event handler
+	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	require.Nil(t, err, "failed to execute service line item create event handler")
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 2, "ServiceLineItem_" + tenantName: 2,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
+	})
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId2)
+
+	// Validate that the service line item is saved in the repository
+	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId2)
+	require.Nil(t, err)
+	require.NotNil(t, serviceLineItemDbNode)
+
+	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId2, serviceLineItem.Id)
+	require.Equal(t, serviceLineItemId1, serviceLineItem.ParentId)
+	require.Equal(t, model.QuarterlyBilled.String(), serviceLineItem.Billed)
+	require.Equal(t, int64(10), serviceLineItem.Quantity)
+	require.Equal(t, float64(170.25), serviceLineItem.Price)
+	require.Equal(t, "Service 1", serviceLineItem.Name)
+	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
+	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Nil(t, serviceLineItem.EndedAt)
+
+	// verify action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionServiceLineItemBilledTypeUpdated, action.Type)
+	require.Equal(t, "logged-in user changed the billing cycle for Service 1 from 170.25/year to 170.25/quarter", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"quantity":10,"billedType":"QUARTERLY","previousBilledType":"ANNUALLY","comment":"billed type is QUARTERLY for service Service 1"}`, action.Metadata)
+}
+
+func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveForExistingSLI(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// Setup test environment
+	serviceLineItemId1 := "service-line-item-id-1"
+	serviceLineItemId2 := "service-line-item-id-2"
+	contractId := "contract-id-1"
+
+	// Prepare Neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+		FirstName: "logged-in",
+		LastName:  "user",
+	})
+	neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		Id:   contractId,
+		Name: "Contract 1",
+	})
+
+	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Id:       serviceLineItemId1,
+		Name:     "service 1",
+		Billed:   model.AnnuallyBilled.String(),
+		Price:    170.25,
+		Quantity: 10,
+	})
+
+	// Prepare the event handler
+	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+
+	// Create a ServiceLineItemCreateEvent
+	timeNow := utils.Now()
+	serviceLineItemAggregate := aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId2)
+	createEvent, err := event.NewServiceLineItemCreateEvent(
+		serviceLineItemAggregate,
+		model.ServiceLineItemDataFields{
+			Billed:     model.MonthlyBilled,
+			Quantity:   10,
+			Price:      100,
+			Name:       "Service 1",
+			ContractId: contractId,
+			ParentId:   serviceLineItemId1,
+		},
+		commonmodel.Source{
+			Source:    constants.SourceOpenline,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+		timeNow,
+		timeNow,
+		timeNow,
+		nil,
+	)
+	require.Nil(t, err, "failed to create service line item create event")
+
+	metadata := make(map[string]string)
+	metadata["user-id"] = userId
+	err = createEvent.SetMetadata(metadata)
+	require.Nil(t, err)
+
+	// Execute the event handler
+	err = serviceLineItemEventHandler.OnCreate(ctx, createEvent)
+	require.Nil(t, err, "failed to execute service line item create event handler")
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 2, "ServiceLineItem_" + tenantName: 2,
+		"TimelineEvent": 2, "TimelineEvent_" + tenantName: 2,
+	})
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId2)
+
+	// Validate that the service line item is saved in the repository
+	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId2)
+	require.Nil(t, err)
+	require.NotNil(t, serviceLineItemDbNode)
+
+	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId2, serviceLineItem.Id)
+	require.Equal(t, serviceLineItemId1, serviceLineItem.ParentId)
+	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	require.Equal(t, int64(10), serviceLineItem.Quantity)
+	require.Equal(t, float64(100), serviceLineItem.Price)
+	require.Equal(t, "Service 1", serviceLineItem.Name)
+	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
+	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Nil(t, serviceLineItem.EndedAt)
+
+	// verify action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
+	require.Equal(t, "logged-in user decreased the price for Service 1 from 170.25/year to 100.00/month", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":10,"price":100,"previousPrice":170.25,"billedType":"MONTHLY","comment":"price is 100.00 for service Service 1"}`, action.Metadata)
+}

@@ -74,6 +74,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	var name string
 	var priceChanged bool
 	var quantityChanged bool
+	var billedTypeChanged bool
 	var eventData event.ServiceLineItemCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
@@ -102,6 +103,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			//use the booleans below to create the appropriate action message
 			priceChanged = previousServiceLineItem.Price != eventData.Price
 			quantityChanged = previousServiceLineItem.Quantity != eventData.Quantity
+			billedTypeChanged = previousServiceLineItem.Billed != eventData.Billed
 		}
 	}
 	err := h.repositories.ServiceLineItemRepository.CreateForContract(ctx, eventData.Tenant, serviceLineItemId, eventData, isNewVersionForExistingSLI, previousQuantity, previousPrice, previousBilled)
@@ -186,12 +188,13 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "Failed to serialize quantity metadata")
 	}
 	metadataBilledType, err := utils.ToJson(ActionBilledTypeMetadata{
-		UserName:    userEntity.FirstName + " " + userEntity.LastName,
-		ServiceName: name,
-		BilledType:  eventData.Billed,
-		Quantity:    eventData.Quantity,
-		Price:       eventData.Price,
-		Comment:     "billed type is " + serviceLineItemEntity.Billed + " for service " + name,
+		UserName:           userEntity.FirstName + " " + userEntity.LastName,
+		ServiceName:        name,
+		BilledType:         eventData.Billed,
+		PreviousBilledType: previousBilled,
+		Quantity:           eventData.Quantity,
+		Price:              eventData.Price,
+		Comment:            "billed type is " + serviceLineItemEntity.Billed + " for service " + name,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -199,28 +202,15 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "Failed to serialize billed type metadata")
 	}
 
-	var oldCycle string
-	switch serviceLineItemEntity.Billed {
-	case model.AnnuallyBilled.String():
-		oldCycle = "year"
-	case model.QuarterlyBilled.String():
-		oldCycle = "quarter"
-	case model.MonthlyBilled.String():
-		oldCycle = "month"
+	cycle := getBillingCycleNamingConvention(eventData.Billed)
+	previousCycle := getBillingCycleNamingConvention(previousBilled)
+	if previousCycle == "" {
+		previousCycle = getBillingCycleNamingConvention(serviceLineItemEntity.Billed)
 	}
 
-	var cycle string
-	switch eventData.Billed {
-	case model.AnnuallyBilled.String():
-		cycle = "year"
-	case model.QuarterlyBilled.String():
-		cycle = "quarter"
-	case model.MonthlyBilled.String():
-		cycle = "month"
-	}
 	if !isNewVersionForExistingSLI {
 		if serviceLineItemEntity.Billed == model.AnnuallyBilled.String() || serviceLineItemEntity.Billed == model.QuarterlyBilled.String() || serviceLineItemEntity.Billed == model.MonthlyBilled.String() {
-			message = userEntity.FirstName + " " + userEntity.LastName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " x " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle
+			message = userEntity.FirstName + " " + userEntity.LastName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " x " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
 			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, eventData.ContractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now())
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -247,10 +237,10 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	if isNewVersionForExistingSLI {
 		if priceChanged && (eventData.Billed == model.AnnuallyBilled.String() || eventData.Billed == model.QuarterlyBilled.String() || eventData.Billed == model.MonthlyBilled.String()) {
 			if eventData.Price > previousPrice {
-				message = userEntity.FirstName + " " + userEntity.LastName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
+				message = userEntity.FirstName + " " + userEntity.LastName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 			}
 			if eventData.Price < previousPrice {
-				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
+				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 			}
 			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now())
 			if err != nil {
@@ -283,6 +273,14 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+			}
+		}
+		if billedTypeChanged && previousBilled != "" {
+			message = userEntity.FirstName + " " + userEntity.LastName + " changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
+			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeUpdated, message, metadataBilledType, utils.Now())
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Failed creating billed type update action for contract service line item %s: %s", contractEntity.Id, err.Error())
 			}
 		}
 	}
@@ -407,25 +405,8 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		h.log.Errorf("Failed to serialize billed type metadata: %s", err.Error())
 		return errors.Wrap(err, "Failed to serialize billed type metadata")
 	}
-	var oldCycle string
-	switch serviceLineItemEntity.Billed {
-	case model.AnnuallyBilled.String():
-		oldCycle = "year"
-	case model.QuarterlyBilled.String():
-		oldCycle = "quarter"
-	case model.MonthlyBilled.String():
-		oldCycle = "month"
-	}
-
-	var cycle string
-	switch eventData.Billed {
-	case model.AnnuallyBilled.String():
-		cycle = "year"
-	case model.QuarterlyBilled.String():
-		cycle = "quarter"
-	case model.MonthlyBilled.String():
-		cycle = "month"
-	}
+	oldCycle := getBillingCycleNamingConvention(serviceLineItemEntity.Billed)
+	cycle := getBillingCycleNamingConvention(eventData.Billed)
 
 	if priceChanged && (eventData.Billed == model.AnnuallyBilled.String() || eventData.Billed == model.QuarterlyBilled.String() || eventData.Billed == model.MonthlyBilled.String()) {
 		if eventData.Price > serviceLineItemEntity.Price {
@@ -603,4 +584,17 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 	}
 
 	return nil
+}
+
+func getBillingCycleNamingConvention(billedType string) string {
+	switch billedType {
+	case model.AnnuallyBilled.String():
+		return "year"
+	case model.QuarterlyBilled.String():
+		return "quarter"
+	case model.MonthlyBilled.String():
+		return "month"
+	default:
+		return ""
+	}
 }
