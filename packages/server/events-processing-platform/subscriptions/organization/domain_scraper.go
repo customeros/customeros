@@ -43,12 +43,13 @@ func NewDomainScraper(log logger.Logger, cfg *config.Config, repositories *repos
 
 func (ds *DomainScraperV1) Scrape(domainOrWebsite, tenant, organizationId string, directScrape bool) (*WebscrapeResponseV1, error) {
 	domainUrl := strings.TrimSpace(domainOrWebsite)
+	httpClient := &http.Client{} // have one client to be reused around the scraper
 	if !strings.HasPrefix(domainUrl, "http") {
 		domainUrl = fmt.Sprintf("https://%s", domainUrl)
 	}
 	jsonStruct := jsonStructure()
 
-	html, err := ds.getHtml(domainUrl, directScrape)
+	html, err := ds.getHtml(domainUrl, directScrape, httpClient)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to getHtml. domain: %s ", domainUrl))
 	}
@@ -72,10 +73,18 @@ func (ds *DomainScraperV1) Scrape(domainOrWebsite, tenant, organizationId string
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run data prompt")
 	}
+
+	if r.Linkedin != "" {
+		_, err = ds.addLinkedinData(r.Linkedin, r, httpClient)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to add linkedin data")
+		}
+	}
+
 	return r, nil
 }
 
-func (ds *DomainScraperV1) getHtml(domainUrl string, directGet bool) (*string, error) {
+func (ds *DomainScraperV1) getHtml(domainUrl string, directGet bool, httpClient *http.Client) (*string, error) {
 	var response *http.Response
 	var err error
 	if directGet {
@@ -84,7 +93,7 @@ func (ds *DomainScraperV1) getHtml(domainUrl string, directGet bool) (*string, e
 			return nil, errors.Wrap(err, "failed to execute request")
 		}
 	} else {
-		response, err = ds.proxyGetRequest(ds.cfg.Services.ScrapingBeeApiKey, domainUrl)
+		response, err = ds.proxyGetRequest(ds.cfg.Services.ScrapingBeeApiKey, domainUrl, httpClient)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to execute request")
 		}
@@ -158,10 +167,7 @@ func (ds *DomainScraperV1) getRequest(domainUrl string) (*http.Response, error) 
 	return resp, nil // Return the response
 }
 
-func (ds *DomainScraperV1) proxyGetRequest(apiKey string, domainUrl string) (*http.Response, error) {
-	// Create client
-	client := &http.Client{}
-
+func (ds *DomainScraperV1) proxyGetRequest(apiKey string, domainUrl string, httpClient *http.Client) (*http.Response, error) {
 	urlEscaped := url.QueryEscape(domainUrl) // Encoding the URL
 	// Create request
 	req, err := http.NewRequest("GET", "https://app.scrapingbee.com/api/v1/?api_key="+apiKey+"&url="+urlEscaped, nil)
@@ -174,7 +180,7 @@ func (ds *DomainScraperV1) proxyGetRequest(apiKey string, domainUrl string) (*ht
 	}
 
 	// Fetch Request
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch request")
 	}
@@ -286,6 +292,109 @@ func (ds *DomainScraperV1) runDataPrompt(analysis, domainUrl, socials, jsonStruc
 	}
 
 	return &scrapeResponse, nil
+}
+
+func (ds *DomainScraperV1) addLinkedinData(companyLinkedinId string, scrapedContent *WebscrapeResponseV1, httpClient *http.Client) (*WebscrapeResponseV1, error) {
+	linkedinData, err := ds.getLinkedinData(companyLinkedinId, httpClient)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get linkedin data")
+	}
+	// Fallback if the scraped data is empty
+	if scrapedContent.CompanyName == "" {
+		scrapedContent.CompanyName = (*linkedinData)[0].CompanyName
+	}
+
+	if scrapedContent.Industry == "" {
+		scrapedContent.Industry = (*linkedinData)[0].Industry
+	}
+
+	if scrapedContent.Website == "" {
+		scrapedContent.Website = (*linkedinData)[0].Website
+	}
+
+	if scrapedContent.ValueProposition == "" {
+		scrapedContent.ValueProposition = (*linkedinData)[0].About
+	}
+
+	// enrich org data with linkedin data
+	scrapedContent.LogoUrl = (*linkedinData)[0].ProfilePhoto
+	scrapedContent.CompanySize = (*linkedinData)[0].CompanySizeOnLinkedin // actual value
+	scrapedContent.YearFounded = (*linkedinData)[0].Founded
+	scrapedContent.HeadquartersLocation = (*linkedinData)[0].Headquarters
+	scrapedContent.EmployeeGrowthRate = "" // not available in linkedin scraped data
+	return nil, nil
+}
+
+func (ds *DomainScraperV1) getLinkedinData(companyLinkedinId string, httpClient *http.Client) (*LinkedinScrapeResponse, error) {
+	url := fmt.Sprintf("https://api.scrapingdog.com/linkedin/?api_key=%s&type=company&linkId=%s", ds.cfg.Services.ScrapingDogApiKey, companyLinkedinId)
+
+	linkedinScrape := &LinkedinScrapeResponse{}
+	r, err := httpClient.Get(url)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch linkedin scrape request")
+	}
+	defer r.Body.Close()
+
+	json.NewDecoder(r.Body).Decode(linkedinScrape)
+
+	return linkedinScrape, nil
+}
+
+type LinkedinScrapeResponse []struct {
+	CompanyName             string `json:"company_name"`
+	UniversalNameID         string `json:"universal_name_id"`
+	BackgroundCoverImageURL string `json:"background_cover_image_url"`
+	LinkedinInternalID      string `json:"linkedin_internal_id"`
+	ProfilePhoto            string `json:"profile_photo"`
+	Industry                string `json:"industry"`
+	Location                string `json:"location"`
+	FollowerCount           string `json:"follower_count"`
+	Tagline                 string `json:"tagline"`
+	CompanySizeOnLinkedin   string `json:"company_size_on_linkedin"`
+	About                   string `json:"about"`
+	Website                 string `json:"website"`
+	Industries              string `json:"industries"`
+	CompanySize             string `json:"company_size"`
+	Headquarters            string `json:"headquarters"`
+	Type                    string `json:"type"`
+	Founded                 string `json:"founded"`
+	Specialties             string `json:"specialties"`
+	Description             struct {
+	} `json:"description"`
+	Locations []struct {
+		IsHq               bool   `json:"is_hq"`
+		OfficeAddressLine1 string `json:"office_address_line_1"`
+		OfficeAddressLine2 string `json:"office_address_line_2"`
+		OfficeLocaionLink  string `json:"office_locaion_link"`
+	} `json:"locations"`
+	Employees []struct {
+		EmployeePhoto      string `json:"employee_photo"`
+		EmployeeName       string `json:"employee_name"`
+		EmployeePosition   string `json:"employee_position"`
+		EmployeeProfileURL string `json:"employee_profile_url"`
+	} `json:"employees"`
+	Updates []struct {
+		Text              string `json:"text"`
+		ArticlePostedDate string `json:"article_posted_date"`
+		TotalLikes        string `json:"total_likes"`
+		ArticleTitle      string `json:"article_title"`
+		ArticleSubTitle   string `json:"article_sub_title"`
+		ArticleLink       any    `json:"article_link"`
+		ArticleImage      any    `json:"article_image"`
+	} `json:"updates"`
+	SimilarCompanies []struct {
+		Link     string `json:"link"`
+		Name     string `json:"name"`
+		Summary  string `json:"summary"`
+		Location string `json:"location"`
+	} `json:"similar_companies"`
+	AffiliatedCompanies []struct {
+		Link     string `json:"link"`
+		Name     string `json:"name"`
+		Industry string `json:"industry"`
+		Location string `json:"location"`
+	} `json:"affiliated_companies"`
+	Product []any `json:"product"`
 }
 
 func jsonStructure() *string {
