@@ -24,7 +24,7 @@ type GraphLogEntryEventHandler struct {
 func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.LogEntryCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -59,9 +59,9 @@ func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore
 }
 
 func (h *GraphLogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnCreate")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.LogEntryUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -82,7 +82,7 @@ func (h *GraphLogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore
 func (h *GraphLogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnAddTag")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.LogEntryAddTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -103,7 +103,7 @@ func (h *GraphLogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore
 func (h *GraphLogEntryEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnRemoveTag")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.LogEntryRemoveTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

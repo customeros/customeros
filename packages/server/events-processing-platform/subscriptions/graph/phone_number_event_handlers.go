@@ -18,7 +18,7 @@ type GraphPhoneNumberEventHandler struct {
 func (h *GraphPhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphPhoneNumberEventHandler.OnPhoneNumberCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.PhoneNumberCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -35,7 +35,7 @@ func (h *GraphPhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, 
 func (h *GraphPhoneNumberEventHandler) OnPhoneNumberUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphPhoneNumberEventHandler.OnPhoneNumberUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.PhoneNumberUpdatedEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -52,7 +52,7 @@ func (h *GraphPhoneNumberEventHandler) OnPhoneNumberUpdate(ctx context.Context, 
 func (e *GraphPhoneNumberEventHandler) OnPhoneNumberValidated(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphPhoneNumberEventHandler.OnPhoneNumberValidated")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.PhoneNumberValidatedEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -69,7 +69,7 @@ func (e *GraphPhoneNumberEventHandler) OnPhoneNumberValidated(ctx context.Contex
 func (h *GraphPhoneNumberEventHandler) OnPhoneNumberValidationFailed(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphPhoneNumberEventHandler.OnPhoneNumberValidationFailed")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.PhoneNumberFailedValidationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

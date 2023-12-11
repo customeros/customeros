@@ -23,7 +23,7 @@ func NewGraphJobRoleEventHandler(repositories *repository.Repositories) *GraphJo
 func (h *GraphJobRoleEventHandler) OnJobRoleCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphJobRoleEventHandler.OnJobRoleCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.JobRoleCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
