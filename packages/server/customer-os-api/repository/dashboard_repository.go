@@ -705,7 +705,6 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 					WITH startDate.year AS startYear, startDate.month AS startMonth, endDate.year AS endYear, endDate.month AS endMonth
 					WITH range(startYear * 12 + startMonth - 1, endYear * 12 + endMonth - 1) AS monthsRange
 					UNWIND monthsRange AS monthsSinceEpoch
-					
 					WITH datetime({
 						year: monthsSinceEpoch / 12,
 						month: monthsSinceEpoch %s,
@@ -722,77 +721,129 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 							 second: 0,
 							 nanosecond: 0o00000000
 						 }) as beginOfMonth,
-						 currentDate + duration({months: 1}) - duration({nanoseconds: 1}) as endOfMonth
+						 currentDate + duration({months: 1}) - duration({nanoseconds: 1}) as endOfMonth,
+						 currentDate + duration({months: 1}) as startOfNextMonth
 					
-					WITH DISTINCT currentDate.year AS year, currentDate.month AS month, beginOfMonth, endOfMonth
+					WITH DISTINCT currentDate.year AS year, currentDate.month AS month, beginOfMonth, endOfMonth, startOfNextMonth
 					
 					OPTIONAL MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
 					WHERE o.hide = false AND o.isCustomer = true AND sli.startedAt IS NOT NULL AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 					
-					WITH year, month, endOfMonth,
-						 COLLECT(DISTINCT {
-							 sliId: sli.id,
-							 sliParentId: sli.parentId,
-							 contractStatus: c.status,
-							 contractStartedAt: c.serviceStartedAt,
-							 contractEndedAt: c.endedAt,
-							 sliCanceled: CASE WHEN sli.isCanceled IS NOT NULL THEN sli.isCanceled ELSE false END,
-							 sliStartedAt: sli.startedAt,
-							 sliEndedAt: sli.endedAt,
-							 sliAmountPerMonth: CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity ELSE CASE WHEN sli.billed = 'QUARTERLY' THEN sli.price * sli.quantity / 4 ELSE CASE WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity / 12 ELSE 0 END END END,
-							 sliPreviousAmountPerMonth: CASE WHEN sli.previousBilled = 'MONTHLY' THEN sli.previousPrice * sli.previousQuantity ELSE CASE WHEN sli.previousBilled = 'QUARTERLY' THEN sli.previousPrice * sli.previousQuantity / 4 ELSE CASE WHEN sli.previousBilled = 'ANNUALLY' THEN sli.previousPrice * sli.previousQuantity / 12 ELSE 0 END END END
-						 }) AS sliDetailsV1
+					WITH year, month, endOfMonth, startOfNextMonth, c, sli ORDER BY sli.parentId ASC
 					
-					WITH year, month, endOfMonth, sliDetailsV1,
-						 REDUCE(sliMap = [], s IN sliDetailsV1 |
-							 CASE 
-								 WHEN NOT s.sliParentId IN [x IN sliMap WHERE x[0].sliParentId = s.sliParentId] THEN sliMap + [[s]]
-								 ELSE [x IN sliMap | 
-									 CASE WHEN x[0].sliParentId = s.sliParentId THEN x + [s] ELSE x END
-								 ]
-							 END
-						 ) AS sliMap
+					WITH year, month, endOfMonth, startOfNextMonth, c, 
+						COLLECT({
+							id: sli.id, 
+							parentId: sli.parentId,
+							sliCanceled: CASE WHEN sli.isCanceled IS NOT NULL THEN sli.isCanceled ELSE false END,
+							sliStartedAt: sli.startedAt,
+							sliEndedAt: sli.endedAt,
+							sliAmountPerMonth: toFloat(CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity * 12 ELSE CASE WHEN sli.billed = 'QUARTERLY' THEN sli.price * sli.quantity * 4 ELSE CASE WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity ELSE 0 END END END),
+							sliPreviousAmountPerMonth: toFloat(CASE WHEN sli.previousBilled = 'MONTHLY' THEN sli.previousPrice * sli.previousQuantity * 12 ELSE CASE WHEN sli.previousBilled = 'QUARTERLY' THEN sli.previousPrice * sli.previousQuantity * 4 ELSE CASE WHEN sli.previousBilled = 'ANNUALLY' THEN sli.previousPrice * sli.previousQuantity ELSE 0 END END END)
+						}) AS sliDetails
 					
-					WITH year, month, endOfMonth, sliMap,
-						 [s IN sliDetailsV1 | {
-							 sliId: s.sliId,
-							 sliParentId: s.sliParentId,
-							 contractStatus: s.contractStatus,
-							 contractStartedAt: s.contractStartedAt,
-							 contractEndedAt: s.contractEndedAt,
-							 sliCanceled: s.sliCanceled,
-							 sliStartedAt: s.sliStartedAt,
-							 sliEndedAt: s.sliEndedAt,
-							 sliAmountPerMonth: s.sliAmountPerMonth,
-							 sliPreviousAmountPerMonth: s.sliPreviousAmountPerMonth,
-							 sliList: [x IN sliMap WHERE x[0].sliParentId = s.sliParentId | x],
-							 lastSli: REDUCE(lastSli = null, l IN [x IN sliMap WHERE x[0].sliParentId = s.sliParentId | x] | 
-								 CASE WHEN l[0].sliStartedAt > lastSli.sliStartedAt OR lastSli IS NULL THEN l[0] ELSE lastSli END
-							 )
-						 }] AS restructuredSliDetails
+					WITH year, month, endOfMonth, startOfNextMonth, c.id AS contractId, c.status AS contractStatus, c.serviceStartedAt AS contractStartedAt, c.endedAt AS contractEndedAt, COLLECT(sliDetails) AS sliList
 					
-					WITH year, month, restructuredSliDetails,
-						 REDUCE(s = 0, cd IN restructuredSliDetails | 
-							 CASE WHEN cd.contractStartedAt.year = year AND cd.contractStartedAt.month = month 
-									AND (cd.contractEndedAt IS NULL OR cd.contractEndedAt > endOfMonth) 
-									AND cd.sliCanceled = false AND cd.sliEndedAt IS NULL THEN s + cd.sliAmountPerMonth 
-							 ELSE s END
-						 ) AS newlyContracted,
-						 REDUCE(s = 0, cd IN restructuredSliDetails | 
-							 CASE WHEN cd.sliCanceled = false THEN s + cd.sliPreviousAmountPerMonth ELSE s END
-						 ) AS upsells,
-						 REDUCE(s = 0, cd IN restructuredSliDetails | 
-							 CASE WHEN cd.sliCanceled = true AND cd.sliEndedAt.year = year 
-									AND cd.sliEndedAt.month = month THEN s + cd.sliAmountPerMonth 
-							 ELSE s END
-						 ) AS cancellations,
-						 REDUCE(s = 0, cd IN restructuredSliDetails | 
-							 CASE WHEN cd.contractEndedAt.year = year AND cd.contractEndedAt.month = month 
-									AND cd.contractStatus = 'ENDED' AND cd.sliEndedAt IS NULL THEN s + cd.sliAmountPerMonth 
-							 ELSE s END
-						 ) AS churned
+					WITH year, month, endOfMonth, startOfNextMonth, COLLECT(DISTINCT {contractId: contractId, contractStatus: contractStatus, contractStartedAt: contractStartedAt, contractEndedAt: contractEndedAt, sliList: sliList}) AS contractDetails
 					
-					RETURN year, month, newlyContracted, 0 as renewals, upsells, 0 as downgrades, cancellations, churned
+					WITH year, month, endOfMonth, startOfNextMonth, contractDetails, 
+
+						REDUCE(newlyContracted = 0, cd IN REDUCE (f = [], cd in contractDetails | CASE WHEN cd.contractStartedAt.year = year AND cd.contractStartedAt.month = month AND (cd.contractEndedAt IS NULL OR cd.contractEndedAt > endOfMonth) THEN f + [cd] ELSE f END) |
+							newlyContracted + REDUCE(totalSli = 0, sliItem IN cd.sliList |
+								REDUCE(cc = 0, arr IN sliItem |
+									cc + REDUCE(innerTotal = 0, innerSliItem IN arr |
+										CASE WHEN innerSliItem.sliCanceled = false AND innerSliItem.sliEndedAt IS NULL 
+											 THEN innerTotal + innerSliItem.sliAmountPerMonth 
+											 ELSE innerTotal 
+										END
+									)
+								)
+							)
+						) AS newlyContracted,
+
+						REDUCE(upsells = 0, cd IN REDUCE(f = [], cd IN contractDetails | 
+								CASE 
+									WHEN cd.contractStartedAt IS NOT NULL 
+										 AND (cd.contractEndedAt IS NULL OR cd.contractEndedAt >= startOfNextMonth) 
+									THEN f + [cd] 
+									ELSE f 
+								END
+							) |
+							upsells + 
+							REDUCE(sliUpsells = 0, sliList IN cd.sliList |
+								REDUCE(innerUpsells = 0, sliItemVersions IN sliList |
+									innerUpsells + 
+									REDUCE(versionUpsells = 0, sliItem IN sliItemVersions |
+										CASE 
+											WHEN sliItem.id <> sliItem.parentId 
+												AND sliItem.sliStartedAt.year = year 
+												AND sliItem.sliStartedAt.month = month
+												AND (sliItem.sliEndedAt IS NULL OR sliItem.sliEndedAt >= startOfNextMonth)
+												AND sliItem.sliCanceled = false
+											THEN versionUpsells + (sliItem.sliAmountPerMonth - sliItem.sliPreviousAmountPerMonth)
+											ELSE versionUpsells
+										END
+									)
+								)
+							)
+						) AS upsells,
+						
+						REDUCE(downgrades = 0, cd IN REDUCE(f = [], cd IN contractDetails | 
+							CASE 
+								WHEN cd.contractStartedAt IS NOT NULL 
+									AND (cd.contractEndedAt IS NULL OR cd.contractEndedAt >= startOfNextMonth) 
+								THEN f + [cd] 
+								ELSE f 
+							END
+						) |
+							downgrades + 
+							REDUCE(sliDowngrades = 0, sliList IN cd.sliList |
+								REDUCE(innerDowngrades = 0, sliItemVersions IN sliList |
+									// Compute the total amount of downgrades if any
+									innerDowngrades + 
+									REDUCE(versionDowngrades = 0, sliItem IN sliItemVersions |
+										CASE 
+											WHEN sliItem.id <> sliItem.parentId 
+												AND sliItem.sliStartedAt.year = year 
+												AND sliItem.sliStartedAt.month = month
+												AND sliItem.sliCanceled = false
+												AND sliItem.sliPreviousAmountPerMonth IS NOT NULL
+												AND (sliItem.sliAmountPerMonth - sliItem.sliPreviousAmountPerMonth) < 0
+											THEN versionDowngrades + (sliItem.sliAmountPerMonth - sliItem.sliPreviousAmountPerMonth)
+											ELSE versionDowngrades
+										END
+									)
+								)
+							)
+						) AS downgrades,
+
+						REDUCE(cancellations = 0, cd IN contractDetails |
+							cancellations + REDUCE(totalSli = 0, sliItem IN cd.sliList |
+								REDUCE(cc = 0, arr IN sliItem |
+									cc + REDUCE(innerTotal = 0, innerSliItem IN arr |
+										CASE WHEN innerSliItem.sliCanceled = true AND innerSliItem.sliEndedAt.year = year AND innerSliItem.sliEndedAt.month = month 
+											 THEN innerTotal + innerSliItem.sliAmountPerMonth 
+											 ELSE innerTotal 
+										END
+									)
+								)
+							)
+						) AS cancellations,
+
+						REDUCE(churned = 0, cd IN REDUCE (f = [], cd in contractDetails | CASE WHEN cd.contractEndedAt.year = year AND cd.contractEndedAt.month = month AND cd.contractStatus = 'ENDED' THEN f + [cd] ELSE f END) |
+							churned + REDUCE(totalSli = 0, sliItem IN cd.sliList |
+								REDUCE(cc = 0, arr IN sliItem |
+									cc + REDUCE(innerTotal = 0, innerSliItem IN arr |
+										CASE WHEN innerSliItem.sliCanceled = false AND innerSliItem.sliEndedAt IS NULL 
+											 THEN innerTotal + innerSliItem.sliAmountPerMonth 
+											 ELSE innerTotal 
+										END
+									)
+								)
+							)
+						) AS churned
+					
+					RETURN year, month, newlyContracted, 0 as renewals, CASE WHEN upsells < 0 THEN 0 ELSE upsells END, CASE WHEN downgrades > 0 THEN 0 ELSE -downgrades END, cancellations, churned, contractDetails
 
 				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
@@ -809,9 +860,6 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-
-	//	REDUCE(churned = 0, cd IN contractDetails | CASE WHEN cd.status = 'ENDED' THEN churned + cd.sliAmountPerMonth ELSE churned END ) AS churned,
-	//	REDUCE(cancellations = 0, cd IN contractDetails | CASE WHEN cd.sliCanceled = true THEN cancellations + cd.sliAmountPerMonth ELSE cancellations END ) AS downgrades,
 
 	var results []map[string]interface{}
 	if dbRecords != nil {
