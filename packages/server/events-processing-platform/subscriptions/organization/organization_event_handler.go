@@ -3,9 +3,10 @@ package organization
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
-	"strings"
 
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
@@ -46,20 +47,25 @@ type Socials struct {
 }
 
 type WebscrapeResponseV1 struct {
-	CompanyName      string `json:"companyName,omitempty"`
-	Website          string `json:"website,omitempty"`
-	Market           string `json:"market,omitempty"`
-	Industry         string `json:"industry,omitempty"`
-	IndustryGroup    string `json:"industryGroup,omitempty"`
-	SubIndustry      string `json:"subIndustry,omitempty"`
-	TargetAudience   string `json:"targetAudience,omitempty"`
-	ValueProposition string `json:"valueProposition,omitempty"`
-	Github           string `json:"github,omitempty"`
-	Linkedin         string `json:"linkedin,omitempty"`
-	Twitter          string `json:"twitter,omitempty"`
-	Youtube          string `json:"youtube,omitempty"`
-	Instagram        string `json:"instagram,omitempty"`
-	Facebook         string `json:"facebook,omitempty"`
+	CompanyName          string `json:"companyName,omitempty"`
+	Website              string `json:"website,omitempty"`
+	Market               string `json:"market,omitempty"`
+	Industry             string `json:"industry,omitempty"`
+	IndustryGroup        string `json:"industryGroup,omitempty"`
+	SubIndustry          string `json:"subIndustry,omitempty"`
+	TargetAudience       string `json:"targetAudience,omitempty"`
+	ValueProposition     string `json:"valueProposition,omitempty"`
+	Github               string `json:"github,omitempty"`
+	Linkedin             string `json:"linkedin,omitempty"`
+	Twitter              string `json:"twitter,omitempty"`
+	Youtube              string `json:"youtube,omitempty"`
+	Instagram            string `json:"instagram,omitempty"`
+	Facebook             string `json:"facebook,omitempty"`
+	CompanySize          string `json:"companySize,omitempty"`
+	EmployeeGrowthRate   string `json:"employeeGrowthRate,omitempty"`
+	HeadquartersLocation string `json:"headquartersLocation,omitempty"`
+	YearFounded          string `json:"yearFounded,omitempty"`
+	LogoUrl              string `json:"logoUrl,omitempty"`
 }
 
 type organizationEventHandler struct {
