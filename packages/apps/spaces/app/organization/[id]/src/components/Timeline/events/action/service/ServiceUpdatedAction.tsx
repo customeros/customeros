@@ -23,21 +23,7 @@ export const ServiceUpdatedAction: React.FC<ServiceUpdatedActionProps> = ({
   const metadata = getMetadata(data?.metadata);
   if (!data.content) return null;
   const isTemporary = data.appSource === 'customeros-optimistic-update';
-  const formattedContent = data.content
-    .replace(
-      metadata?.price,
-      formatCurrency(
-        Number(metadata?.price),
-        metadata?.billedType === BilledType.Usage ? 4 : 2,
-      ),
-    )
-    .replace(
-      metadata?.previousPrice,
-      formatCurrency(
-        Number(metadata?.previousPrice),
-        metadata?.billedType === BilledType.Usage ? 4 : 2,
-      ),
-    );
+  const formattedContent = formatString(data.content, metadata?.billedType);
 
   return (
     <Flex
@@ -67,3 +53,13 @@ export const ServiceUpdatedAction: React.FC<ServiceUpdatedActionProps> = ({
     </Flex>
   );
 };
+
+function formatString(str: string, type: string) {
+  const digitCount = type === BilledType.Usage ? 4 : 2;
+  const regex =
+    type === BilledType.Usage ? /\b(\d+\.\d{4})\b/g : /\b(\d+\.\d{2})\b/g;
+
+  return str.replace(regex, (_, number) => {
+    return formatCurrency(Number(number), digitCount);
+  });
+}
