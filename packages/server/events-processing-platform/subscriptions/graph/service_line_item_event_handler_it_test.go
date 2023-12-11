@@ -260,8 +260,8 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemRemoved, action.Type)
-	require.Equal(t, "logged-in user removed unnamed service from unnamed contract", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"unnamed service","comment":"service line item removed is unnamed service from unnamed contract by logged-in user"}`, action.Metadata)
+	require.Equal(t, "logged-in user removed Unnamed service from Unnamed contract", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Unnamed service","comment":"service line item removed is Unnamed service from Unnamed contract by logged-in user"}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
@@ -1807,8 +1807,8 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
-	require.Equal(t, "logged-in user decreased the price for unnamed service from 1500.56/month to 850.75/month", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"unnamed service","quantity":0,"price":850.75,"previousPrice":1500.56,"billedType":"MONTHLY","comment":"price is 850.75 for service unnamed service"}`, action.Metadata)
+	require.Equal(t, "logged-in user decreased the price for Unnamed service from 1500.56/month to 850.75/month", action.Content)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Unnamed service","quantity":0,"price":850.75,"previousPrice":1500.56,"billedType":"MONTHLY","comment":"price is 850.75 for service Unnamed service"}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExistingSLI(t *testing.T) {

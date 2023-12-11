@@ -156,7 +156,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		name = serviceLineItemEntity.Name
 	}
 	if name == "" {
-		name = "unnamed service"
+		name = "Unnamed service"
 	}
 
 	metadataPrice, err := utils.ToJson(ActionPriceMetadata{
@@ -345,7 +345,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		name = eventData.Name
 	}
 	if name == "" {
-		name = "unnamed service"
+		name = "Unnamed service"
 	}
 	// get user
 	usrMetadata := userMetadata{}
@@ -483,7 +483,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 	if serviceLineItemEntity.Name != "" {
 		serviceLineItemName = serviceLineItemEntity.Name
 	} else {
-		serviceLineItemName = "unnamed service"
+		serviceLineItemName = "Unnamed service"
 	}
 
 	// get user
@@ -512,7 +512,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 	if contract.Name != "" {
 		contractName = contract.Name
 	} else {
-		contractName = "unnamed contract"
+		contractName = "Unnamed contract"
 	}
 
 	err = h.repositories.ServiceLineItemRepository.Delete(ctx, eventData.Tenant, serviceLineItemId)
