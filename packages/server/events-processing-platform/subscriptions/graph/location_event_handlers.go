@@ -18,7 +18,7 @@ type GraphLocationEventHandler struct {
 func (h *GraphLocationEventHandler) OnLocationCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLocationEventHandler.OnLocationCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.LocationCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -35,7 +35,7 @@ func (h *GraphLocationEventHandler) OnLocationCreate(ctx context.Context, evt ev
 func (h *GraphLocationEventHandler) OnLocationUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLocationEventHandler.OnLocationUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.LocationUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -52,7 +52,7 @@ func (h *GraphLocationEventHandler) OnLocationUpdate(ctx context.Context, evt ev
 func (e *GraphLocationEventHandler) OnLocationValidated(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLocationEventHandler.OnLocationValidated")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.LocationValidatedEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -69,7 +69,7 @@ func (e *GraphLocationEventHandler) OnLocationValidated(ctx context.Context, evt
 func (h *GraphLocationEventHandler) OnLocationValidationFailed(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLocationEventHandler.OnLocationValidationFailed")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.LocationFailedValidationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

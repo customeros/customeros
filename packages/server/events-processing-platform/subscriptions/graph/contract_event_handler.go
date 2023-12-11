@@ -40,7 +40,7 @@ type ContractEventHandler struct {
 func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.ContractCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -79,7 +79,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.ContractUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -173,7 +173,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnRolloutRenewalOpportunity")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.ContractUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -232,7 +232,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnUpdateStatus")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.ContractUpdateStatusEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

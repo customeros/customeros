@@ -67,7 +67,7 @@ type ActionServiceLineItemRemovedMetadata struct {
 func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 	var user *dbtype.Node
 	var userEntity *entity.UserEntity
 	var message string
@@ -291,7 +291,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 	var contractId string
 	var user *dbtype.Node
 	var userEntity *entity.UserEntity
@@ -462,7 +462,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnDelete")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 	var user *dbtype.Node
 	var userEntity *entity.UserEntity
 	var serviceLineItemName string
@@ -550,7 +550,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnClose")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.ServiceLineItemCloseEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

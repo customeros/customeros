@@ -23,7 +23,7 @@ type ContactEventHandler struct {
 func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnContactCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.ContactCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -63,7 +63,7 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnContactUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.ContactUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -106,7 +106,7 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 func (e *ContactEventHandler) OnPhoneNumberLinkToContact(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnPhoneNumberLinkToContact")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.ContactLinkPhoneNumberEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -123,7 +123,7 @@ func (e *ContactEventHandler) OnPhoneNumberLinkToContact(ctx context.Context, ev
 func (h *ContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnEmailLinkToContact")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.ContactLinkEmailEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -140,7 +140,7 @@ func (h *ContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt even
 func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnLocationLinkToContact")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.ContactLinkLocationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -157,7 +157,7 @@ func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt e
 func (h *ContactEventHandler) OnContactLinkToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnContactLinkToOrganization")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.ContactLinkWithOrganizationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
