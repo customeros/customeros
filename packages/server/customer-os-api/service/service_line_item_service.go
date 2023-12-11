@@ -112,6 +112,7 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
 	}
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	response, err := s.grpcClients.ServiceLineItemClient.CreateServiceLineItem(ctx, &createServiceLineItemRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -199,6 +200,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 		serviceLineItemUpdateRequest.ContractId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*contractDbNode), "id")
 	}
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	_, err := s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -235,6 +237,7 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 		AppSource:      constants.AppSourceCustomerOsApi,
 	}
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	_, err = s.grpcClients.ServiceLineItemClient.DeleteServiceLineItem(ctx, &deleteRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -285,6 +288,7 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 		EndedAt:        utils.ConvertTimeToTimestampPtr(endedAt),
 	}
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	_, err = s.grpcClients.ServiceLineItemClient.CloseServiceLineItem(ctx, &closeRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)

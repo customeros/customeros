@@ -145,6 +145,7 @@ func (s *opportunityService) Update(ctx context.Context, opportunity *entity.Opp
 		},
 	}
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	_, err := s.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunityUpdateRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -210,6 +211,7 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_ZERO_RENEWAL
 	}
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	_, err := s.grpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunityRenewalUpdateRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)

@@ -58,6 +58,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	}
 
 	var err error
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -223,6 +224,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		}
 	}
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:            common.GetTenantFromContext(ctx),
 		LoggedInUserId:    common.GetUserIdFromContext(ctx),
@@ -316,6 +318,7 @@ func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (str
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationId", id))
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	response, err := r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: id,
@@ -337,6 +340,7 @@ func (r *mutationResolver) OrganizationHideAll(ctx context.Context, ids []string
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationIds", ids))
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	for _, orgId := range ids {
 		_, err := r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
@@ -361,6 +365,7 @@ func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (str
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationId", id))
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	response, err := r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: id,
@@ -393,6 +398,7 @@ func (r *mutationResolver) OrganizationShowAll(ctx context.Context, ids []string
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationIds", ids))
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	for _, orgId := range ids {
 		_, err := r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),

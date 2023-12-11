@@ -49,11 +49,6 @@ type OrganizationService interface {
 	GetOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
-
-	// Deprecated
-	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
-	// Deprecated
-	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
 }
 
 type OrganizationCreateData struct {
@@ -348,6 +343,7 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		return err
 	}
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	_, err = s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
 		Tenant:               common.GetTenantFromContext(ctx),
 		OrganizationId:       subOrganizationId,
@@ -395,6 +391,7 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 		return err
 	}
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	_, err = s.grpcClients.OrganizationClient.RemoveParentOrganization(ctx, &organizationpb.RemoveParentOrganizationGrpcRequest{
 		Tenant:               common.GetTenantFromContext(ctx),
 		OrganizationId:       subOrganizationId,
@@ -493,82 +490,6 @@ func (s *organizationService) RemoveOwner(ctx context.Context, organizationID st
 		return nil, err
 	}
 	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
-}
-
-func (s *organizationService) UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error) {
-	processedRecords := 0
-	failedRecords := 0
-	outputErr := error(nil)
-	for size > 0 {
-		batchSize := constants.Neo4jBatchSize
-		if size < constants.Neo4jBatchSize {
-			batchSize = size
-		}
-		records, err := s.repositories.OrganizationRepository.GetAllOrganizationPhoneNumberRelationships(ctx, batchSize)
-		if err != nil {
-			return 0, 0, err
-		}
-		for _, v := range records {
-			_, err := s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(context.Background(), &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
-				Primary:        utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
-				Label:          utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
-				OrganizationId: v.Values[1].(string),
-				PhoneNumberId:  v.Values[2].(string),
-				Tenant:         v.Values[3].(string),
-			})
-			if err != nil {
-				failedRecords++
-				if outputErr != nil {
-					outputErr = err
-				}
-				s.log.Errorf("(organizationService.UpsertPhoneNumberRelationInEventStore) Failed to call method: {%v}", err.Error())
-			} else {
-				processedRecords++
-			}
-		}
-
-		size -= batchSize
-	}
-
-	return processedRecords, failedRecords, outputErr
-}
-
-func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error) {
-	processedRecords := 0
-	failedRecords := 0
-	outputErr := error(nil)
-	for size > 0 {
-		batchSize := constants.Neo4jBatchSize
-		if size < constants.Neo4jBatchSize {
-			batchSize = size
-		}
-		records, err := s.repositories.OrganizationRepository.GetAllOrganizationEmailRelationships(ctx, batchSize)
-		if err != nil {
-			return 0, 0, err
-		}
-		for _, v := range records {
-			_, err := s.grpcClients.OrganizationClient.LinkEmailToOrganization(context.Background(), &organizationpb.LinkEmailToOrganizationGrpcRequest{
-				Primary:        utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
-				Label:          utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
-				OrganizationId: v.Values[1].(string),
-				EmailId:        v.Values[2].(string),
-				Tenant:         v.Values[3].(string),
-			})
-			if err != nil {
-				failedRecords++
-				if outputErr != nil {
-					outputErr = err
-				}
-				s.log.Errorf("(organizationService.UpsertEmailRelationInEventStore) Failed to call method: {%v}", err.Error())
-			} else {
-				processedRecords++
-			}
-		}
-
-		size -= batchSize
-	}
-
-	return processedRecords, failedRecords, outputErr
 }
 
 func (s *organizationService) UpdateLastTouchpoint(ctx context.Context, organizationID string) {
@@ -778,6 +699,7 @@ func (s *organizationService) updateLastTouchpoint(ctx context.Context, organiza
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationID", organizationID))
 
+	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
 	_, err := s.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: organizationID,
