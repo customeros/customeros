@@ -174,7 +174,7 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 		TargetAudience:     result.TargetAudience,
 		ValueProposition:   result.ValueProposition,
 		Employees:          result.CompanySize,
-		YearFounded:        result.YearFounded,
+		YearFounded:        &result.YearFounded,
 		Headquarters:       result.HeadquartersLocation,
 		EmployeeGrowthRate: result.EmployeeGrowthRate,
 		LogoUrl:            result.LogoUrl,
@@ -226,7 +226,7 @@ func (h *organizationEventHandler) addFieldMasks(orgFields *model.OrganizationDa
 	if orgFields.Employees != 0 {
 		*fieldMasks = append(*fieldMasks, model.FieldMaskEmployees)
 	}
-	if orgFields.YearFounded != 0 {
+	if *orgFields.YearFounded != 0 {
 		*fieldMasks = append(*fieldMasks, model.FieldMaskYearFounded)
 	}
 	if orgFields.Headquarters != "" {
