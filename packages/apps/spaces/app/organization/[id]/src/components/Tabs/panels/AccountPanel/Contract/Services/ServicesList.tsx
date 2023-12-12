@@ -34,6 +34,8 @@ function getBilledTypeLabel(billedType: BilledType): string {
       return ' one-time';
     case BilledType.Usage:
       return '/use';
+    case BilledType.Quarterly:
+      return '/quarter';
     default:
       return '';
   }

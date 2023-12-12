@@ -43,6 +43,7 @@ query getContracts($id: ID!) {
         price
         quantity
         source
+        comments
         sourceOfTruth
         appSource
         endedAt

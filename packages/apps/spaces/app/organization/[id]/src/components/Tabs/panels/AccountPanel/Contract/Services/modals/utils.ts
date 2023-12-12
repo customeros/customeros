@@ -1,8 +1,6 @@
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import {
   Action,
   ActionType,
-  BilledType,
   ServiceLineItem,
   ServiceLineItemUpdateInput,
 } from '@graphql/types';
@@ -29,28 +27,18 @@ const update = ({ content, metadata, actionType, user }: UpdateInput) => ({
   content,
 });
 
-const cycleCopy: Record<string, string> = {
-  [BilledType.Monthly]: 'month',
-  [BilledType.Annually]: 'year',
-  [BilledType.Quarterly]: 'quarter',
-};
-
 export const getUpdateServiceEvents = (
   prev: ServiceLineItem,
   next: ServiceLineItemUpdateInput,
   user: string,
   updateTimelineCache: (event: Action) => void,
 ) => {
-  const isRecurring = [
-    BilledType.Annually,
-    BilledType.Monthly,
-    BilledType.Quarterly,
-  ].includes(prev.billed);
   const metadata = JSON.stringify({
     price: next.price,
     previousPrice: prev.price,
     billedType: next.billed,
   });
+
   if (prev?.price !== next?.price) {
     const decreased = parseFloat(`${prev.price}`) > parseFloat(`${next.price}`);
 
@@ -60,13 +48,7 @@ export const getUpdateServiceEvents = (
       actionType: ActionType.ServiceLineItemPriceUpdated,
       content: `${user} ${
         next.isRetroactiveCorrection ? 'retroactively ' : ''
-      }${decreased ? 'decreased' : 'increased'} the price for ${
-        next.name
-      } from ${formatCurrency(prev.price)}
-      ${isRecurring ? '/' : ''}
-      ${prev.billed} to ${formatCurrency(next.price ?? 0)}${
-        isRecurring ? '/' : ''
-      }${isRecurring ? cycleCopy?.[prev.billed] : ''}`,
+      }${decreased ? 'decreased' : 'increased'} the price for ${next.name}`,
     });
     updateTimelineCache(event as Action);
   }
@@ -78,11 +60,7 @@ export const getUpdateServiceEvents = (
       actionType: ActionType.ServiceLineItemBilledTypeUpdated,
       content: `${user} ${
         next.isRetroactiveCorrection ? 'retroactively ' : ''
-      } changed the billing cycle for ${next.name} from ${formatCurrency(
-        prev.price,
-      )}${prev.billed} to ${formatCurrency(next.price ?? 0)}${
-        isRecurring ? '/' : ''
-      }${isRecurring ? cycleCopy?.[prev.billed] : ''}`,
+      } changed the billing cycle for ${next.name}`,
     });
     updateTimelineCache(event as Action);
   }
@@ -95,9 +73,7 @@ export const getUpdateServiceEvents = (
       actionType: ActionType.ServiceLineItemQuantityUpdated,
       content: `${user} ${
         next.isRetroactiveCorrection ? 'retroactively ' : ''
-      }${decreased ? 'decreased' : 'increased'} the quantity of ${
-        next.name
-      } from ${prev.quantity} to ${next.quantity}`,
+      }${decreased ? 'decreased' : 'increased'} the quantity of ${next.name}`,
     });
     updateTimelineCache(event as Action);
   }
