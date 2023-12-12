@@ -37,7 +37,7 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 		return nil, nil
 	}
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	if input.Player != nil {
 		_, err = r.Clients.UserClient.AddPlayerInfo(ctx, &usergrpc.AddPlayerInfoGrpcRequest{
 			UserId:         userId,

@@ -4,8 +4,10 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	postgrest "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/postgres"
 	"github.com/stretchr/testify/require"
@@ -47,6 +49,12 @@ func SetupTestDatabase() (TestDatabase, func()) {
 		postgrest.Terminate(postgresContainer, context.Background())
 	}
 	return testDBs, shutdown
+}
+
+func SetupMockedTestGrpcClient() *grpc_client.Clients {
+	testDialFactory := mocked_grpc.NewMockedTestDialFactory()
+	grpcConn, _ := testDialFactory.GetEventsProcessingPlatformConn()
+	return grpc_client.InitClients(grpcConn)
 }
 
 func AssertRecentTime(t *testing.T, checkTime time.Time) {

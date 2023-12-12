@@ -6,23 +6,27 @@ import (
 )
 
 type OrganizationDataFields struct {
-	Name              string
-	Hide              bool
-	Description       string
-	Website           string
-	Industry          string
-	SubIndustry       string
-	IndustryGroup     string
-	TargetAudience    string
-	ValueProposition  string
-	IsPublic          bool
-	IsCustomer        bool
-	Employees         int64
-	Market            string
-	LastFundingRound  string
-	LastFundingAmount string
-	ReferenceId       string
-	Note              string
+	Name               string
+	Hide               bool
+	Description        string
+	Website            string
+	Industry           string
+	SubIndustry        string
+	IndustryGroup      string
+	TargetAudience     string
+	ValueProposition   string
+	IsPublic           bool
+	IsCustomer         bool
+	Employees          int64
+	Market             string
+	LastFundingRound   string
+	LastFundingAmount  string
+	ReferenceId        string
+	Note               string
+	YearFounded        int64
+	Headquarters       string
+	EmployeeGrowthRate string
+	LogoUrl            string
 }
 
 type OrganizationFields struct {

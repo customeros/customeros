@@ -242,6 +242,7 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 				})
 			}
 		}
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = s.grpcClients.InteractionEventClient.UpsertInteractionEvent(ctx, &interactionEventGrpcRequest)
 		if err != nil {
 			failedSync = true

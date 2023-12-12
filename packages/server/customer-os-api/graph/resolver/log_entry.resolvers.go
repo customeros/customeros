@@ -80,7 +80,7 @@ func (r *mutationResolver) LogEntryCreateForOrganization(ctx context.Context, or
 		return "", nil
 	}
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := r.Clients.LogEntryClient.UpsertLogEntry(ctx, &logentrygrpc.UpsertLogEntryGrpcRequest{
 		Tenant:      common.GetTenantFromContext(ctx),
 		UserId:      common.GetUserIdFromContext(ctx),
@@ -155,7 +155,7 @@ func (r *mutationResolver) LogEntryUpdate(ctx context.Context, id string, input 
 		grpcRequestMessage.StartedAt = timestamppb.New(*input.StartedAt)
 	}
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := r.Clients.LogEntryClient.UpsertLogEntry(ctx, &grpcRequestMessage)
 
 	if err != nil {
@@ -191,7 +191,7 @@ func (r *mutationResolver) LogEntryAddTag(ctx context.Context, id string, input 
 		}
 	}
 	if tagId != "" {
-		ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err := r.Clients.LogEntryClient.AddTag(ctx, &logentrygrpc.AddTagGrpcRequest{
 			Tenant: common.GetTenantFromContext(ctx),
 			UserId: common.GetUserIdFromContext(ctx),
@@ -226,7 +226,7 @@ func (r *mutationResolver) LogEntryRemoveTag(ctx context.Context, id string, inp
 
 	tagId := GetTagId(ctx, r.Services, input.ID, input.Name)
 	if tagId != "" {
-		ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = r.Clients.LogEntryClient.RemoveTag(ctx, &logentrygrpc.RemoveTagGrpcRequest{
 			Tenant: common.GetTenantFromContext(ctx),
 			UserId: common.GetUserIdFromContext(ctx),
@@ -283,7 +283,7 @@ func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, inp
 		}
 	}
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, currentTagId := range currentTagIds {
 		if !utils.Contains(newTagIds, currentTagId) {
 			_, err = r.Clients.LogEntryClient.RemoveTag(ctx, &logentrygrpc.RemoveTagGrpcRequest{

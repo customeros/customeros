@@ -29,7 +29,7 @@ func (r *mutationResolver) PlayerMerge(ctx context.Context, userID string, input
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID), log.String("IdentityID", utils.IfNotNilString(input.IdentityID)), log.String("AuthID", input.AuthID), log.String("Provider", input.Provider))
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := r.Clients.UserClient.AddPlayerInfo(ctx, &usergrpc.AddPlayerInfoGrpcRequest{
 		UserId:         userID,
 		Tenant:         common.GetTenantFromContext(ctx),

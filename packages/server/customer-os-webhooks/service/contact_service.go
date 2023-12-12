@@ -185,6 +185,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		span.LogFields(log.String("contactId", contactId))
 
 		// Create or update contact
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = s.grpcClients.ContactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
 			Tenant:          tenant,
 			Id:              contactId,

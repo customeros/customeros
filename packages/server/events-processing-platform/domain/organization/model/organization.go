@@ -24,6 +24,10 @@ const (
 	FieldMaskLastFundingAmount = "lastFundingAmount"
 	FieldMaskReferenceId       = "referenceId"
 	FieldMaskWebsite           = "website"
+	FieldMaskYearFounded       = "yearFounded"
+	FieldMaskHeadquarters      = "headquarters"
+	FieldMaskLogoUrl           = "logoUrl"
+	FieldEmployeeGrowthRate    = "employeeGrowthRate"
 )
 
 type CustomFieldDataType string

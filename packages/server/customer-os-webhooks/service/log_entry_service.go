@@ -233,6 +233,7 @@ func (s *logEntryService) sendLogEntryToEventStoreForLoggedOrganization(ctx cont
 	}
 	failedSync := false
 	reason := ""
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.LogEntryClient.UpsertLogEntry(ctx, request)
 	if err != nil {
 		failedSync = true

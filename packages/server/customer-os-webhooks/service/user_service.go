@@ -164,6 +164,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		span.LogFields(log.String("userId", userId))
 
 		// Create or update user
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = s.grpcClients.UserClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
 			Tenant:          tenant,
 			Id:              userId,

@@ -51,6 +51,7 @@ func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, phoneNumber,
 	phoneNumberEntity, _ = s.GetByPhoneNumber(ctx, phoneNumber)
 	if phoneNumberEntity == nil {
 		// phone number not exist, create new one
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		response, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(ctx, &phonenumberpb.UpsertPhoneNumberGrpcRequest{
 			Tenant:      common.GetTenantFromContext(ctx),
 			PhoneNumber: phoneNumber,
