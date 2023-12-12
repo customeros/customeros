@@ -44,12 +44,8 @@ func NewDomainScraper(log logger.Logger, cfg *config.Config, repositories *repos
 func (ds *DomainScraperV1) Scrape(domainOrWebsite, tenant, organizationId string, directScrape bool) (*WebscrapeResponseV1, error) {
 	domainUrl := strings.TrimSpace(domainOrWebsite)
 	httpClient := &http.Client{} // have one client to be reused around the scraper
-	if !strings.HasPrefix(domainUrl, "http") {
-		domainUrl = fmt.Sprintf("https://%s", domainUrl)
-	}
 	jsonStruct := jsonStructure()
-
-	html, err := ds.getHtml(domainUrl, directScrape, httpClient)
+	html, err := ds.getHtmlWithRetry(domainUrl, directScrape, httpClient)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to getHtml. domain: %s ", domainUrl))
 	}
@@ -83,6 +79,25 @@ func (ds *DomainScraperV1) Scrape(domainOrWebsite, tenant, organizationId string
 	}
 
 	return r, nil
+}
+
+func (ds *DomainScraperV1) getHtmlWithRetry(domainUrl string, directScrape bool, httpClient *http.Client) (*string, error) {
+	var dUrl string
+	if !strings.HasPrefix(domainUrl, "http") {
+		dUrl = fmt.Sprintf("https://%s", domainUrl)
+	}
+	html, err := ds.getHtml(dUrl, directScrape, httpClient)
+	if err != nil {
+		ds.log.Warnf("Error getting html, retrying for domain: %s", dUrl)
+		if !strings.HasPrefix(domainUrl, "http") {
+			dUrl = fmt.Sprintf("http://%s", domainUrl)
+		}
+		html, err = ds.getHtml(dUrl, directScrape, httpClient)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to getHtml. domain: %s ", dUrl))
+		}
+	}
+	return html, nil
 }
 
 func (ds *DomainScraperV1) getHtml(domainUrl string, directGet bool, httpClient *http.Client) (*string, error) {
