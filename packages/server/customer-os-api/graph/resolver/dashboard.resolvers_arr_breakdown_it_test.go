@@ -2632,7 +2632,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Live_Contract_No_Upsell_In_Month(t *te
 	}
 }
 
-func Test_Dashboard_ARR_Breakdown_Upsells_Live_Contract_With_Upsell_In_Month(t *testing.T) {
+func Test_Dashboard_ARR_Breakdown_Upsells_Live_Contract_With_Upsell_In_Month_Should_Be_0(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -2674,7 +2674,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Live_Contract_With_Upsell_In_Month(t *
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(72), month.Upsells)
+		require.Equal(t, float64(0), month.Upsells)
 	}
 }
 
@@ -3191,7 +3191,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_2_SLI_Versions_Both_Annually(t *testin
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -3237,7 +3237,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_2_SLI_Versions_1_Annually_1_Quarterly(
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -3283,7 +3283,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_2_SLI_Versions_1_Annually_1_Monthly(t 
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -3329,7 +3329,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_2_SLI_Versions_Both_Quarterly(t *testi
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -3375,7 +3375,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_2_SLI_Versions_1_Quarterly_1_Monthly(t
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -3421,7 +3421,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_2_SLI_Versions_Both_Monthly(t *testing
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -3550,7 +3550,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Live_Contract_With_Downgrade_In_Mon
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4099,7 +4099,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_2_SLI_Versions_Both_Annually(t *tes
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4145,7 +4145,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_2_SLI_Versions_1_Annually_1_Quarter
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4191,7 +4191,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_2_SLI_Versions_1_Annually_1_Monthly
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4237,7 +4237,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_2_SLI_Versions_Both_Quarterly(t *te
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4283,7 +4283,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_2_SLI_Versions_1_Quarterly_1_Monthl
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4329,7 +4329,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_2_SLI_Versions_Both_Monthly(t *test
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4376,7 +4376,7 @@ func Test_Dashboard_ARR_Breakdown_1_Contract_With_Upsell_1_Contract_Without_Upse
 	})
 
 	//contract 1
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4430,7 +4430,7 @@ func Test_Dashboard_ARR_Breakdown_1_Contract_With_Downgrade_1_Contract_Without_D
 	})
 
 	//contract 1
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4484,7 +4484,7 @@ func Test_Dashboard_ARR_Breakdown_2_Contracts_With_Upsells(t *testing.T) {
 	})
 
 	//contract 1
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4540,7 +4540,7 @@ func Test_Dashboard_ARR_Breakdown_2_Contracts_With_2_Upsells(t *testing.T) {
 	})
 
 	//contract 1
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contract1Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4606,7 +4606,7 @@ func Test_Dashboard_ARR_Breakdown_2_Contracts_With_Downgrades(t *testing.T) {
 	})
 
 	//contract 1
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4662,7 +4662,7 @@ func Test_Dashboard_ARR_Breakdown_2_Contracts_With_2_Downgrades(t *testing.T) {
 	})
 
 	//contract 1
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contract1Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4727,7 +4727,7 @@ func Test_Dashboard_ARR_Breakdown_2_Organizations_1_Contract_With_Upsell_Each(t 
 	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, org1Id, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4785,7 +4785,7 @@ func Test_Dashboard_ARR_Breakdown_2_Organizations_1_Contract_With_Downgrade_Each
 	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, org1Id, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4843,7 +4843,7 @@ func Test_Dashboard_ARR_Breakdown_2_Contracts_With_Downgrade_Each(t *testing.T) 
 	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, org1Id, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
@@ -4891,189 +4891,188 @@ func Test_Dashboard_ARR_Breakdown_2_Contracts_With_Downgrade_Each(t *testing.T) 
 	}
 }
 
-//TODO REWORK upsells and downgrades
-//func Test_Dashboard_ARR_Breakdown_1_Organization_With_1_Contract_With_Downgrade_1_Contract_With_Upsell_SLI_2_Versions(t *testing.T) {
-//	ctx := context.Background()
-//	defer tearDownTestCase(ctx)(t)
-//	neo4jt.CreateTenant(ctx, driver, tenantName)
-//	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-//
-//	//contract 1
-//	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
-//		IsCustomer: true,
-//	})
-//	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-//	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
-//	contract1Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
-//		ContractStatus:   entity.ContractStatusLive,
-//		ServiceStartedAt: &sli1StartedAt,
-//	}, entity.OpportunityEntity{})
-//	// 24 / year
-//	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
-//	// 12 / year
-//	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 6, 2, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1Id)
-//
-//	//contract 2
-//	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
-//		ContractStatus:   entity.ContractStatusLive,
-//		ServiceStartedAt: &sli1StartedAt,
-//	}, entity.OpportunityEntity{})
-//	// 12 / year
-//	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 2, sli1StartedAt, sli1MiddleAt)
-//	// 24 / year
-//	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, entity.BilledTypeAnnually, 6, 2, sli1MiddleAt, sli2Id)
-//
-//	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
-//		map[string]interface{}{
-//			"start": "2023-07-01T00:00:00.000Z",
-//			"end":   "2023-07-01T00:00:00.000Z",
-//		})
-//
-//	var dashboardReport struct {
-//		Dashboard_ARRBreakdown model.DashboardARRBreakdown
-//	}
-//
-//	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
-//	require.Nil(t, err)
-//
-//	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-//	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
-//	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
-//
-//	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
-//		require.Equal(t, 2023, month.Year)
-//		require.Equal(t, 7, month.Month)
-//		require.Equal(t, float64(36), month.NewlyContracted)
-//		require.Equal(t, float64(12), month.Upsells)
-//		require.Equal(t, float64(12), month.Downgrades)
-//	}
-//}
-//
-//func Test_Dashboard_ARR_Breakdown_1_Organization_With_1_Contract_With_Downgrade_1_Contract_With_Upsell_SLI_3_Versions(t *testing.T) {
-//	ctx := context.Background()
-//	defer tearDownTestCase(ctx)(t)
-//	neo4jt.CreateTenant(ctx, driver, tenantName)
-//	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-//
-//	//contract 1
-//	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
-//		IsCustomer: true,
-//	})
-//	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-//	sli1EndAt := neo4jt.MiddleTimeOfMonth(2023, 7)
-//	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
-//		ContractStatus:   entity.ContractStatusLive,
-//		ServiceStartedAt: &sli1StartedAt,
-//	}, entity.OpportunityEntity{})
-//	// 24 / year
-//	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndAt)
-//	// 12 / year
-//	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 6, 2, entity.BilledTypeAnnually, 12, 2, sli1EndAt, sli1Id)
-//	// 6 / year
-//	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 3, 2, entity.BilledTypeAnnually, 6, 2, sli1EndAt, sli1Id)
-//
-//	//contract 2
-//	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
-//		ContractStatus:   entity.ContractStatusLive,
-//		ServiceStartedAt: &sli1StartedAt,
-//	}, entity.OpportunityEntity{})
-//	// 12 / year
-//	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 2, sli1StartedAt, sli1EndAt)
-//	// 24 / year
-//	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 4, entity.BilledTypeAnnually, 6, 2, sli1EndAt, sli2Id)
-//	// 36 / year
-//	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 6, entity.BilledTypeAnnually, 6, 4, sli1EndAt, sli2Id)
-//
-//	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
-//		map[string]interface{}{
-//			"start": "2023-07-01T00:00:00.000Z",
-//			"end":   "2023-07-01T00:00:00.000Z",
-//		})
-//
-//	var dashboardReport struct {
-//		Dashboard_ARRBreakdown model.DashboardARRBreakdown
-//	}
-//
-//	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
-//	require.Nil(t, err)
-//
-//	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-//	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
-//	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
-//
-//	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
-//		require.Equal(t, 2023, month.Year)
-//		require.Equal(t, 7, month.Month)
-//		require.Equal(t, float64(24), month.Upsells)
-//		require.Equal(t, float64(18), month.Downgrades)
-//	}
-//}
-//
-//func Test_Dashboard_ARR_Breakdown_1_Organization_With_1_Contract_With_Downgrade_1_Contract_With_Upsell_SLI_4_Versions_UP_DOWN_IN_MIDDLE(t *testing.T) {
-//	ctx := context.Background()
-//	defer tearDownTestCase(ctx)(t)
-//	neo4jt.CreateTenant(ctx, driver, tenantName)
-//	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-//
-//	//contract 1
-//	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
-//		IsCustomer: true,
-//	})
-//	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-//	sli1End1At := neo4jt.MiddleTimeOfMonth(2023, 7)
-//	sli1End2At := neo4jt.MiddleTimeOfMonth(2023, 7)
-//	sli1End3At := neo4jt.MiddleTimeOfMonth(2023, 7)
-//	contract1Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
-//		ContractStatus:   entity.ContractStatusLive,
-//		ServiceStartedAt: &sli1StartedAt,
-//	}, entity.OpportunityEntity{})
-//	// 24 / year
-//	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1End1At)
-//	// 12 / year
-//	insertARRBreakdownServiceLineItemEndedWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 6, 2, entity.BilledTypeAnnually, 12, 2, sli1End1At, sli1End2At, sli1Id)
-//	// 48 / year
-//	insertARRBreakdownServiceLineItemEndedWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 24, 2, entity.BilledTypeAnnually, 6, 2, sli1End2At, sli1End3At, sli1Id)
-//	// 6 / year
-//	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 3, 2, entity.BilledTypeAnnually, 24, 2, sli1End3At, sli1Id)
-//
-//	//contract 2
-//	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
-//		ContractStatus:   entity.ContractStatusLive,
-//		ServiceStartedAt: &sli1StartedAt,
-//	}, entity.OpportunityEntity{})
-//	// 12 / year
-//	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 2, sli1StartedAt, sli1End1At)
-//	// 24 / year
-//	insertARRBreakdownServiceLineItemEndedWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 4, entity.BilledTypeAnnually, 6, 2, sli1End1At, sli1End2At, sli2Id)
-//	// 6 / year
-//	insertARRBreakdownServiceLineItemEndedWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 1, entity.BilledTypeAnnually, 6, 4, sli1End2At, sli1End3At, sli2Id)
-//	// 36 / year
-//	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 6, entity.BilledTypeAnnually, 6, 1, sli1End3At, sli2Id)
-//
-//	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
-//		map[string]interface{}{
-//			"start": "2023-07-01T00:00:00.000Z",
-//			"end":   "2023-07-01T00:00:00.000Z",
-//		})
-//
-//	var dashboardReport struct {
-//		Dashboard_ARRBreakdown model.DashboardARRBreakdown
-//	}
-//
-//	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
-//	require.Nil(t, err)
-//
-//	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-//	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
-//	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
-//
-//	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
-//		require.Equal(t, 2023, month.Year)
-//		require.Equal(t, 7, month.Month)
-//		require.Equal(t, float64(24), month.Upsells)
-//		require.Equal(t, float64(18), month.Downgrades)
-//	}
-//}
+func Test_Dashboard_ARR_Breakdown_1_Organization_With_1_Contract_With_Downgrade_1_Contract_With_Upsell_SLI_2_Versions(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	//contract 1
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	contract1Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	// 24 / year
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
+	// 12 / year
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 6, 2, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1Id)
+
+	//contract 2
+	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	// 12 / year
+	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 2, sli1StartedAt, sli1MiddleAt)
+	// 24 / year
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, entity.BilledTypeAnnually, 6, 2, sli1MiddleAt, sli2Id)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(12), month.Upsells)
+		require.Equal(t, float64(12), month.Downgrades)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_1_Organization_With_1_Contract_With_Downgrade_1_Contract_With_Upsell_SLI_3_Versions(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	//contract 1
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1End1At := neo4jt.MiddleTimeOfMonth(2023, 7)
+	sli1End2At := sli1End1At.Add(time.Hour * 24)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	// 24 / year
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1End1At)
+	// 12 / year
+	insertARRBreakdownServiceLineItemEndedWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 6, 2, entity.BilledTypeAnnually, 12, 2, sli1End1At, sli1End2At, sli1Id)
+	// 6 / year
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 3, 2, entity.BilledTypeAnnually, 6, 2, sli1End2At, sli1Id)
+
+	//contract 2
+	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	// 12 / year
+	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 2, sli1StartedAt, sli1End1At)
+	// 24 / year
+	insertARRBreakdownServiceLineItemEndedWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 4, entity.BilledTypeAnnually, 6, 2, sli1End1At, sli1End2At, sli2Id)
+	// 36 / year
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 6, entity.BilledTypeAnnually, 6, 4, sli1End2At, sli2Id)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(24), month.Upsells)
+		require.Equal(t, float64(18), month.Downgrades)
+	}
+}
+
+func Test_Dashboard_ARR_Breakdown_1_Organization_With_1_Contract_With_Downgrade_1_Contract_With_Upsell_SLI_4_Versions_UP_DOWN_IN_MIDDLE(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	//contract 1
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1End1At := neo4jt.MiddleTimeOfMonth(2023, 7)
+	sli1End2At := sli1End1At.Add(time.Hour * 24)
+	sli1End3At := sli1End2At.Add(time.Hour * 24)
+	contract1Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	// 24 / year
+	sli1Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1End1At)
+	// 12 / year
+	insertARRBreakdownServiceLineItemEndedWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 6, 2, entity.BilledTypeAnnually, 12, 2, sli1End1At, sli1End2At, sli1Id)
+	// 48 / year
+	insertARRBreakdownServiceLineItemEndedWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 24, 2, entity.BilledTypeAnnually, 6, 2, sli1End2At, sli1End3At, sli1Id)
+	// 6 / year
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 3, 2, entity.BilledTypeAnnually, 24, 2, sli1End3At, sli1Id)
+
+	//contract 2
+	contract2Id := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+	// 12 / year
+	sli2Id := insertARRBreakdownServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 2, sli1StartedAt, sli1End1At)
+	// 24 / year
+	insertARRBreakdownServiceLineItemEndedWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 4, entity.BilledTypeAnnually, 6, 2, sli1End1At, sli1End2At, sli2Id)
+	// 6 / year
+	insertARRBreakdownServiceLineItemEndedWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 1, entity.BilledTypeAnnually, 6, 4, sli1End2At, sli1End3At, sli2Id)
+	// 36 / year
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 6, entity.BilledTypeAnnually, 6, 1, sli1End3At, sli2Id)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(24), month.Upsells)
+		require.Equal(t, float64(18), month.Downgrades)
+	}
+}
 
 func insertARRBreakdownContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string) string {
 	return insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})

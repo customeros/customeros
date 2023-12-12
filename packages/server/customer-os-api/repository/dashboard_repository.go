@@ -23,6 +23,7 @@ type DashboardRepository interface {
 	GetDashboardRevenueAtRiskData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardMRRPerCustomerData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardARRBreakdownData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
+	GetDashboardARRBreakdownUpsellsAndDowngradesData(ctx context.Context, tenant, queryType string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 }
 
 type dashboardRepository struct {
@@ -761,62 +762,6 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 							)
 						) AS newlyContracted,
 
-						REDUCE(upsells = 0, cd IN REDUCE(f = [], cd IN contractDetails | 
-								CASE 
-									WHEN cd.contractStartedAt IS NOT NULL 
-										 AND (cd.contractEndedAt IS NULL OR cd.contractEndedAt >= startOfNextMonth) 
-									THEN f + [cd] 
-									ELSE f 
-								END
-							) |
-							upsells + 
-							REDUCE(sliUpsells = 0, sliList IN cd.sliList |
-								REDUCE(innerUpsells = 0, sliItemVersions IN sliList |
-									innerUpsells + 
-									REDUCE(versionUpsells = 0, sliItem IN sliItemVersions |
-										CASE 
-											WHEN sliItem.id <> sliItem.parentId 
-												AND sliItem.sliStartedAt.year = year 
-												AND sliItem.sliStartedAt.month = month
-												AND (sliItem.sliEndedAt IS NULL OR sliItem.sliEndedAt >= startOfNextMonth)
-												AND sliItem.sliCanceled = false
-											THEN versionUpsells + (sliItem.sliAmountPerMonth - sliItem.sliPreviousAmountPerMonth)
-											ELSE versionUpsells
-										END
-									)
-								)
-							)
-						) AS upsells,
-						
-						REDUCE(downgrades = 0, cd IN REDUCE(f = [], cd IN contractDetails | 
-							CASE 
-								WHEN cd.contractStartedAt IS NOT NULL 
-									AND (cd.contractEndedAt IS NULL OR cd.contractEndedAt >= startOfNextMonth) 
-								THEN f + [cd] 
-								ELSE f 
-							END
-						) |
-							downgrades + 
-							REDUCE(sliDowngrades = 0, sliList IN cd.sliList |
-								REDUCE(innerDowngrades = 0, sliItemVersions IN sliList |
-									// Compute the total amount of downgrades if any
-									innerDowngrades + 
-									REDUCE(versionDowngrades = 0, sliItem IN sliItemVersions |
-										CASE 
-											WHEN sliItem.id <> sliItem.parentId 
-												AND sliItem.sliStartedAt.year = year 
-												AND sliItem.sliStartedAt.month = month
-												AND sliItem.sliCanceled = false
-												AND sliItem.sliPreviousAmountPerMonth IS NOT NULL
-												AND (sliItem.sliAmountPerMonth - sliItem.sliPreviousAmountPerMonth) < 0
-											THEN versionDowngrades + (sliItem.sliAmountPerMonth - sliItem.sliPreviousAmountPerMonth)
-											ELSE versionDowngrades
-										END
-									)
-								)
-							)
-						) AS downgrades,
-
 						REDUCE(cancellations = 0, cd IN contractDetails |
 							cancellations + REDUCE(totalSli = 0, sliItem IN cd.sliList |
 								REDUCE(cc = 0, arr IN sliItem |
@@ -843,7 +788,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 							)
 						) AS churned
 					
-					RETURN year, month, newlyContracted, 0 as renewals, CASE WHEN upsells < 0 THEN 0 ELSE upsells END, CASE WHEN downgrades > 0 THEN 0 ELSE -downgrades END, cancellations, churned, contractDetails
+					RETURN year, month, newlyContracted, 0 as renewals, cancellations, churned, contractDetails
 
 				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
@@ -868,20 +813,122 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 			month := v.Values[1].(int64)
 			newlyContracted := getCorrectValueType(v.Values[2])
 			renewals := getCorrectValueType(v.Values[3])
-			upsells := getCorrectValueType(v.Values[4])
-			downgrades := getCorrectValueType(v.Values[5])
-			cancellations := getCorrectValueType(v.Values[6])
-			churned := getCorrectValueType(v.Values[7])
+			cancellations := getCorrectValueType(v.Values[4])
+			churned := getCorrectValueType(v.Values[5])
 
 			record := map[string]interface{}{
 				"year":            year,
 				"month":           month,
 				"newlyContracted": newlyContracted,
 				"renewals":        renewals,
-				"upsells":         upsells,
-				"downgrades":      downgrades,
 				"cancellations":   cancellations,
 				"churned":         churned,
+			}
+
+			results = append(results, record)
+		}
+	}
+
+	return results, nil
+}
+func (r *dashboardRepository) GetDashboardARRBreakdownUpsellsAndDowngradesData(ctx context.Context, tenant, queryType string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardARRBreakdownUpsellsAndDowngradesData")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	var q string
+	if queryType == "UPSELLS" {
+		q = "<"
+	} else {
+		q = ">"
+	}
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			`
+					WITH $startDate AS startDate, $endDate AS endDate
+					
+					WITH startDate.YEAR AS startYear, startDate.MONTH AS startMonth, endDate.YEAR AS endYear, endDate.MONTH AS endMonth
+					WITH RANGE(startYear * 12 + startMonth - 1, endYear * 12 + endMonth - 1) AS monthsRange
+					UNWIND monthsRange AS monthsSinceEpoch
+					
+					WITH datetime({
+						YEAR: monthsSinceEpoch / 12,
+						MONTH: monthsSinceEpoch %s,
+						DAY: 1
+					}) AS currentDate
+					
+					WITH currentDate,
+						 datetime({
+							 YEAR: currentDate.YEAR,
+							 MONTH: currentDate.MONTH,
+							 DAY: 1,
+							 HOUR: 0,
+							 MINUTE: 0,
+							 SECOND: 0,
+							 NANOSECOND: 0o00000000
+						 }) AS beginOfMonth,
+						 currentDate + duration({MONTHS: 1}) - duration({NANOSECONDS: 1}) AS endOfMonth,
+						 currentDate + duration({MONTHS: 1}) AS startOfNextMonth
+					
+					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth, startOfNextMonth
+					
+					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
+					WHERE (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < startOfNextMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					
+					WITH year, month, beginOfMonth, endOfMonth, startOfNextMonth, sli ORDER BY sli.startedAt ASC
+					
+					WITH year, month, beginOfMonth, endOfMonth, startOfNextMonth, sli.parentId AS pp, COLLECT(sli) AS versions
+					WHERE SIZE(versions) > 1
+					
+					WITH year, month, beginOfMonth, endOfMonth, startOfNextMonth, pp, HEAD(versions) AS baseSliVersion, LAST(versions) AS lastSliVersion
+
+					WITH year, month, beginOfMonth, endOfMonth, startOfNextMonth, pp, baseSliVersion, lastSliVersion,
+						 TOFLOAT(CASE WHEN baseSliVersion.billed = 'MONTHLY' THEN baseSliVersion.price * baseSliVersion.quantity * 12 ELSE CASE WHEN baseSliVersion.billed = 'QUARTERLY' THEN baseSliVersion.price * baseSliVersion.quantity * 4 ELSE CASE WHEN baseSliVersion.billed = 'ANNUALLY' THEN baseSliVersion.price * baseSliVersion.quantity ELSE 0 END END END) AS headAmount,
+						 TOFLOAT(CASE WHEN lastSliVersion.billed = 'MONTHLY' THEN lastSliVersion.price * lastSliVersion.quantity * 12 ELSE CASE WHEN lastSliVersion.billed = 'QUARTERLY' THEN lastSliVersion.price * lastSliVersion.quantity * 4 ELSE CASE WHEN lastSliVersion.billed = 'ANNUALLY' THEN lastSliVersion.price * lastSliVersion.quantity ELSE 0 END END END) AS lastAmount
+					WHERE 
+						baseSliVersion.startedAt < beginOfMonth 
+						AND (lastSliVersion.endedAt IS NULL OR lastSliVersion.endedAt > endOfMonth)
+						AND lastSliVersion.startedAt < startOfNextMonth 
+						AND lastSliVersion.startedAt >= beginOfMonth
+						AND headAmount %s lastAmount
+					
+					WITH year, month, SUM(lastAmount) AS totalHigh, SUM(headAmount) AS totalLow
+					
+					WITH year, month, totalHigh - totalLow AS total
+					
+					RETURN year, month, CASE WHEN total < 0 THEN -total ELSE total END AS total
+				`, "% 12 + 1", tenant, tenant, q),
+			map[string]any{
+				"tenant":    tenant,
+				"startDate": startDate,
+				"endDate":   endDate,
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	if dbRecords != nil {
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			year := v.Values[0].(int64)
+			month := v.Values[1].(int64)
+			value := getCorrectValueType(v.Values[2])
+			record := map[string]interface{}{
+				"year":  year,
+				"month": month,
+				"value": value,
 			}
 
 			results = append(results, record)
