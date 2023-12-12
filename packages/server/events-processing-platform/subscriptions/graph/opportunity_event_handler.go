@@ -238,7 +238,14 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 	amountChanged := eventData.UpdateAmount() && opportunity.Amount != eventData.Amount
 	likelihoodChanged := eventData.UpdateRenewalLikelihood() && opportunity.RenewalDetails.RenewalLikelihood != eventData.RenewalLikelihood
 	setUpdatedByUserId := (amountChanged || likelihoodChanged) && eventData.UpdatedByUserId != ""
-
+	if eventData.OwnerUserId != "" {
+		err = h.repositories.OpportunityRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
+			return err
+		}
+	}
 	err = h.repositories.OpportunityRepository.UpdateRenewal(ctx, eventData.Tenant, opportunityId, eventData, setUpdatedByUserId)
 	if err != nil {
 		tracing.TraceErr(span, err)

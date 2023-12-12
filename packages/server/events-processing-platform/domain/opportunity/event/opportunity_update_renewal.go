@@ -18,9 +18,10 @@ type OpportunityUpdateRenewalEvent struct {
 	Amount            float64   `json:"amount"`
 	Source            string    `json:"source"`
 	FieldsMask        []string  `json:"fieldsMask"`
+	OwnerUserId       string    `json:"ownerUserId"`
 }
 
-func NewOpportunityUpdateRenewalEvent(aggregate eventstore.Aggregate, renewalLikelihood, comments, updatedByUserId, source string, amount float64, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
+func NewOpportunityUpdateRenewalEvent(aggregate eventstore.Aggregate, renewalLikelihood, comments, updatedByUserId, source string, amount float64, updatedAt time.Time, fieldsMask []string, ownerUserId string) (eventstore.Event, error) {
 	eventData := OpportunityUpdateRenewalEvent{
 		Tenant:            aggregate.GetTenant(),
 		UpdatedAt:         updatedAt,
@@ -30,6 +31,7 @@ func NewOpportunityUpdateRenewalEvent(aggregate eventstore.Aggregate, renewalLik
 		UpdatedByUserId:   updatedByUserId,
 		Amount:            amount,
 		FieldsMask:        fieldsMask,
+		OwnerUserId:       ownerUserId,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

@@ -9563,6 +9563,7 @@ input OpportunityRenewalUpdateInput {
     renewalLikelihood:  OpportunityRenewalLikelihood
     comments:           String
     appSource:          String
+    ownerUserId:        String
 }
 
 input OpportunityUpdateInput {
@@ -64263,7 +64264,7 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "renewalLikelihood", "comments", "appSource"}
+	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "renewalLikelihood", "comments", "appSource", "ownerUserId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -64312,6 +64313,13 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 				return it, err
 			}
 			it.AppSource = data
+		case "ownerUserId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerUserId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OwnerUserID = data
 		}
 	}
 

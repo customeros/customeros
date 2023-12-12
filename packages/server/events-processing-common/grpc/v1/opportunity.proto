@@ -68,6 +68,7 @@ message UpdateRenewalOpportunityGrpcRequest {
   double amount = 7;
   SourceFields sourceFields = 8;
   repeated OpportunityMaskField maskFields = 9;
+  string ownerUserId = 10;
 }
 
 message UpdateOpportunityGrpcRequest {
