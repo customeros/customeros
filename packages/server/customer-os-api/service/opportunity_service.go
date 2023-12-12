@@ -21,7 +21,7 @@ import (
 
 type OpportunityService interface {
 	Update(ctx context.Context, opportunity *entity.OpportunityEntity) error
-	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, appSource string) error
+	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error
 	GetById(ctx context.Context, id string) (*entity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*entity.OpportunityEntities, error)
 }
@@ -156,7 +156,7 @@ func (s *opportunityService) Update(ctx context.Context, opportunity *entity.Opp
 	return nil
 }
 
-func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, appSource string) error {
+func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.UpdateRenewal")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -183,6 +183,7 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		Amount:         utils.IfNotNilFloat64(amount),
 		Comments:       utils.IfNotNilString(comments),
+		OwnerUserId:    utils.IfNotNilString(ownerUserId),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(entity.DataSourceOpenline),
 			AppSource: appSource,

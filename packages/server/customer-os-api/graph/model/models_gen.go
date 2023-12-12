@@ -1266,6 +1266,7 @@ type OpportunityRenewalUpdateInput struct {
 	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
 	Comments          *string                       `json:"comments,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
+	OwnerUserID       *string                       `json:"ownerUserId,omitempty"`
 }
 
 type OpportunityUpdateInput struct {

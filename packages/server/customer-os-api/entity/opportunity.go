@@ -26,6 +26,7 @@ type OpportunityEntity struct {
 	Source                 DataSource
 	SourceOfTruth          DataSource
 	AppSource              string
+	OwnerUserId            string
 
 	DataloaderKey string
 }

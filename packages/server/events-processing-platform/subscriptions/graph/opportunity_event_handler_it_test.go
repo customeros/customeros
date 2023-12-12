@@ -393,7 +393,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 		"openline",
 		float64(10),
 		now,
-		[]string{})
+		[]string{},
+		"user-123")
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -477,7 +478,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 		"openline",
 		float64(10000),
 		now,
-		[]string{})
+		[]string{},
+		"user-123")
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -547,7 +549,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 		"openline",
 		float64(10000),
 		now,
-		[]string{})
+		[]string{},
+		"user-123")
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -661,4 +664,129 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, now, *opportunity.ClosedAt)
 	require.Equal(t, string(model.OpportunityInternalStageStringClosedLost), opportunity.InternalStage)
+}
+
+func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	userIdOwner := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	userIdCreator := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	userIdOwnerNew := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, "sf")
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Organization": 1, "User": 3, "ExternalSystem": 1, "Opportunity": 0})
+
+	// Prepare the event handler
+	opportunityEventHandler := &OpportunityEventHandler{
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+	}
+
+	// Create an OpportunityCreateEvent
+	opportunityId := uuid.New().String()
+	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
+	timeNow := utils.Now()
+	opportunityData := model.OpportunityDataFields{
+		Name:              "New Opportunity",
+		Amount:            10000,
+		InternalType:      model.NBO,
+		ExternalType:      "TypeA",
+		InternalStage:     model.OPEN,
+		ExternalStage:     "Stage1",
+		EstimatedClosedAt: &timeNow,
+		OwnerUserId:       userIdOwner,
+		CreatedByUserId:   userIdCreator,
+		GeneralNotes:      "Some general notes about the opportunity",
+		NextSteps:         "Next steps to proceed with the opportunity",
+		OrganizationId:    orgId,
+	}
+	createEvent, err := event.NewOpportunityCreateEvent(
+		opportunityAggregate,
+		opportunityData,
+		commonmodel.Source{
+			Source:    constants.SourceOpenline,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+		commonmodel.ExternalSystem{
+			ExternalSystemId: "sf",
+			ExternalId:       "ext-id-1",
+		},
+		timeNow,
+		timeNow,
+	)
+	require.Nil(t, err, "failed to create opportunity create event")
+
+	// EXECUTE
+	err = opportunityEventHandler.OnCreate(context.Background(), createEvent)
+	require.Nil(t, err, "failed to execute opportunity create event handler")
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Organization":   1,
+		"User":           3,
+		"ExternalSystem": 1,
+		"Opportunity":    1, "Opportunity_" + tenantName: 1})
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, userIdOwner, "OWNS", opportunityId)
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, opportunityId, "CREATED_BY", userIdCreator)
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "HAS_OPPORTUNITY", opportunityId)
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, opportunityId, "IS_LINKED_WITH", "sf")
+
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Opportunity_"+tenantName, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+
+	// verify opportunity
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	require.Equal(t, opportunityId, opportunity.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), opportunity.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, opportunity.AppSource)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), opportunity.SourceOfTruth)
+	require.Equal(t, timeNow, opportunity.CreatedAt)
+	test.AssertRecentTime(t, opportunity.UpdatedAt)
+	require.Equal(t, timeNow, *opportunity.EstimatedClosedAt)
+	require.Equal(t, opportunityData.Name, opportunity.Name)
+	require.Equal(t, opportunityData.Amount, opportunity.Amount)
+	require.Equal(t, string(opportunityData.InternalType.StringValue()), opportunity.InternalType)
+	require.Equal(t, opportunityData.ExternalType, opportunity.ExternalType)
+	require.Equal(t, string(opportunityData.InternalStage.StringValue()), opportunity.InternalStage)
+	require.Equal(t, opportunityData.ExternalStage, opportunity.ExternalStage)
+	require.Equal(t, opportunityData.GeneralNotes, opportunity.GeneralNotes)
+	require.Equal(t, opportunityData.NextSteps, opportunity.NextSteps)
+
+	now := utils.Now()
+	opportunityAggregate1 := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
+	updateEvent, err := event.NewOpportunityUpdateRenewalEvent(opportunityAggregate1,
+		"MEDIUM",
+		"Updated likelihood",
+		"user-123",
+		"openline",
+		float64(10000),
+		now,
+		[]string{},
+		userIdOwnerNew) //Changing the owner here
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1, constants.NodeLabel_Opportunity + "_" + tenantName: 1})
+	//checking if the owner changed
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, userIdOwnerNew, "OWNS", opportunityId)
+
+	opportunityDbNode1, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode1)
+
+	// verify opportunity
+	opportunity1 := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode1)
+	require.Equal(t, opportunityId, opportunity1.Id)
+
 }

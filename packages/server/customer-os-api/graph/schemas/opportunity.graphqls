@@ -61,6 +61,7 @@ input OpportunityRenewalUpdateInput {
     renewalLikelihood:  OpportunityRenewalLikelihood
     comments:           String
     appSource:          String
+    ownerUserId:        String
 }
 
 input OpportunityUpdateInput {
