@@ -83,7 +83,7 @@ func (ds *DomainScraperV1) Scrape(domainOrWebsite, tenant, organizationId string
 }
 
 func (ds *DomainScraperV1) getHtmlWithRetry(domainUrl string, directScrape bool, httpClient *http.Client) (*string, error) {
-	var dUrl string
+	dUrl := domainUrl
 	if !strings.HasPrefix(domainUrl, "http") {
 		dUrl = fmt.Sprintf("https://%s", domainUrl)
 	}
