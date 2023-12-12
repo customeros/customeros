@@ -100,7 +100,7 @@ func LogObjectAsJson(span opentracing.Span, name string, object any) {
 	tracing.LogObjectAsJson(span, name, object)
 }
 
-func InjectSpanIntoGrpcRequestMetadata(ctx context.Context, span opentracing.Span) context.Context {
+func InjectSpanContextIntoGrpcMetadata(ctx context.Context, span opentracing.Span) context.Context {
 	if span != nil {
 		// Inject the span context into the gRPC request metadata.
 		textMapCarrier := make(opentracing.TextMapCarrier)

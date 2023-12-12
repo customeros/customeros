@@ -228,6 +228,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				issueGrpcRequest.SubmittedByUserId = &submitterId
 			}
 		}
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = s.grpcClients.IssueClient.UpsertIssue(ctx, &issueGrpcRequest)
 		if err != nil {
 			failedSync = true

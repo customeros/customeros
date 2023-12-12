@@ -198,6 +198,7 @@ func (s *commentService) syncComment(ctx context.Context, syncMutex *sync.Mutex,
 		if commentedIssueId != "" {
 			request.CommentedIssueId = utils.StringPtr(commentedIssueId)
 		}
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		response, err := s.grpcClients.CommentClient.UpsertComment(ctx, &request)
 		if err != nil {
 			failedSync = true

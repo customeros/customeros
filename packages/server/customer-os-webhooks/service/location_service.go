@@ -43,6 +43,7 @@ func (s *locationService) CreateLocation(ctx context.Context, locationId, extern
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.LocationClient.UpsertLocation(ctx, &locationpb.UpsertLocationGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
 		Id:     locationId,

@@ -126,7 +126,7 @@ func (s *contractService) Update(ctx context.Context, contract *entity.ContractE
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_NONE
 	}
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.ContractClient.UpdateContract(ctx, &contractUpdateRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -177,7 +177,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		}
 	}
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
 
 	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {

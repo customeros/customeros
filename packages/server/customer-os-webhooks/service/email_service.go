@@ -51,6 +51,7 @@ func (s *emailService) CreateEmail(ctx context.Context, email, source, appSource
 	emailEntity, _ = s.GetByEmailAddress(ctx, strings.TrimSpace(email))
 	if emailEntity == nil {
 		// email address not exist, create new one
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		response, err := s.grpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
 			Tenant:   common.GetTenantFromContext(ctx),
 			RawEmail: email,
