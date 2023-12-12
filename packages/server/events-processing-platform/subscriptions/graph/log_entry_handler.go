@@ -2,12 +2,12 @@ package graph
 
 import (
 	"context"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
-	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
-	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -16,9 +16,9 @@ import (
 )
 
 type GraphLogEntryEventHandler struct {
-	log                  logger.Logger
-	organizationCommands *orgcmdhnd.CommandHandlers
-	repositories         *repository.Repositories
+	log          logger.Logger
+	repositories *repository.Repositories
+	grpcClients  *grpc_client.Clients
 }
 
 func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
@@ -49,10 +49,15 @@ func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore
 		}
 	}
 
-	err = h.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd.NewRefreshLastTouchpointCommand(eventData.Tenant, eventData.LoggedOrganizationId, "", constants.AppSourceEventProcessingPlatform))
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = h.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+		Tenant:         eventData.Tenant,
+		OrganizationId: eventData.LoggedOrganizationId,
+		AppSource:      constants.AppSourceEventProcessingPlatform,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("RefreshLastTouchpointCommand failed: %v", err.Error())
+		h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", eventData.LoggedOrganizationId, err.Error())
 	}
 
 	return nil

@@ -2,7 +2,7 @@ package grpc_client
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"google.golang.org/grpc"
 	"log"
 )
@@ -28,9 +28,9 @@ func (dfi DialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientConn, 
 	if dfi.eventsProcessingPlatformConn != nil {
 		return dfi.eventsProcessingPlatformConn, nil
 	}
-	conn, err := grpc.Dial(dfi.conf.Service.EventsProcessingPlatformUrl, grpc.WithInsecure(),
+	conn, err := grpc.Dial(dfi.conf.Services.EventsProcessingPlatformUrl, grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(
-			interceptor.ApiKeyEnricher(dfi.conf.Service.EventsProcessingPlatformApiKey),
+			interceptor.ApiKeyEnricher(dfi.conf.Services.EventsProcessingPlatformApiKey),
 		))
 
 	dfi.eventsProcessingPlatformConn = conn
