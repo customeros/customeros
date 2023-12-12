@@ -108,6 +108,10 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	if eventData.ExternalSystem.Available() {
 		a.Organization.ExternalSystems = []cmnmod.ExternalSystem{eventData.ExternalSystem}
 	}
+	a.Organization.YearFounded = eventData.YearFounded
+	a.Organization.Headquarters = eventData.Headquarters
+	a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+	a.Organization.LogoUrl = eventData.LogoUrl
 	return nil
 }
 
@@ -169,6 +173,18 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		if !a.Organization.IsCustomer && eventData.UpdateIsCustomer() {
 			a.Organization.IsCustomer = eventData.IsCustomer
 		}
+		if a.Organization.YearFounded == nil && eventData.UpdateYearFounded() {
+			a.Organization.YearFounded = eventData.YearFounded
+		}
+		if a.Organization.Headquarters == "" && eventData.UpdateHeadquarters() {
+			a.Organization.Headquarters = eventData.Headquarters
+		}
+		if a.Organization.EmployeeGrowthRate == "" && eventData.UpdateEmployeeGrowthRate() {
+			a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+		}
+		if a.Organization.LogoUrl == "" && eventData.UpdateLogoUrl() {
+			a.Organization.LogoUrl = eventData.LogoUrl
+		}
 	} else {
 		if !eventData.IgnoreEmptyFields {
 			if eventData.UpdateIsPublic() {
@@ -222,6 +238,18 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 			if eventData.UpdateMarket() {
 				a.Organization.Market = eventData.Market
 			}
+			if eventData.UpdateYearFounded() {
+				a.Organization.YearFounded = eventData.YearFounded
+			}
+			if eventData.UpdateHeadquarters() {
+				a.Organization.Headquarters = eventData.Headquarters
+			}
+			if eventData.UpdateEmployeeGrowthRate() {
+				a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+			}
+			if eventData.UpdateLogoUrl() {
+				a.Organization.LogoUrl = eventData.LogoUrl
+			}
 		} else {
 			if eventData.Name != "" {
 				a.Organization.Name = eventData.Name
@@ -267,6 +295,18 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 			}
 			if eventData.IsCustomer {
 				a.Organization.IsCustomer = eventData.IsCustomer
+			}
+			if eventData.YearFounded != nil {
+				a.Organization.YearFounded = eventData.YearFounded
+			}
+			if eventData.Headquarters != "" {
+				a.Organization.Headquarters = eventData.Headquarters
+			}
+			if eventData.EmployeeGrowthRate != "" {
+				a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+			}
+			if eventData.LogoUrl != "" {
+				a.Organization.LogoUrl = eventData.LogoUrl
 			}
 		}
 	}

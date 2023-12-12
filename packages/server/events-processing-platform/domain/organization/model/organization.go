@@ -109,6 +109,10 @@ type Organization struct {
 	CustomFields        map[string]CustomField             `json:"customFields,omitempty"`
 	ExternalSystems     []cmnmod.ExternalSystem            `json:"externalSystems"`
 	ParentOrganizations map[string]ParentOrganization      `json:"parentOrganizations,omitempty"`
+	LogoUrl             string                             `json:"logoUrl,omitempty"`
+	YearFounded         *int64                             `json:"yearFounded,omitempty"`
+	Headquarters        string                             `json:"headquarters,omitempty"`
+	EmployeeGrowthRate  string                             `json:"employeeGrowthRate,omitempty"`
 }
 
 type OrganizationPhoneNumber struct {

@@ -47,6 +47,10 @@ type Organization implements Node {
     isCustomer:  Boolean
     market:      Market
     employees:   Int64
+    yearFounded: Int64
+    headquarters: String
+    employeeGrowthRate: String
+    logoUrl:      String
     lastFundingRound: FundingRound
     lastFundingAmount: String
     source: DataSource!
@@ -120,33 +124,41 @@ input OrganizationInput {
     fieldSets:     [FieldSetInput!] @deprecated
     templateId:    ID @deprecated
     market:        Market
+    logoUrl:            String
+    employeeGrowthRate: String
+    headquarters:       String
+    yearFounded:        Int64
     employees:     Int64
     appSource:     String
 }
 
 input OrganizationUpdateInput {
-    id:   ID!
+    id: ID!
     referenceId: String
     """
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """
-    patch:             Boolean
-    name:              String!
-    description:       String
-    note:              String
-    domains:           [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
-    website:           String
-    industry:          String
-    subIndustry:       String
-    industryGroup:     String
-    isPublic:          Boolean
-    isCustomer:        Boolean
-    market:            Market
-    employees:         Int64
-    targetAudience:    String
-    valueProposition:  String
-    lastFundingRound:  FundingRound
-    lastFundingAmount: String
+    patch:              Boolean
+    name:               String!
+    description:        String
+    note:               String
+    domains:            [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    website:            String
+    industry:           String
+    subIndustry:        String
+    industryGroup:      String
+    isPublic:           Boolean
+    isCustomer:         Boolean
+    market:             Market
+    employees:          Int64
+    targetAudience:     String
+    valueProposition:   String
+    lastFundingRound:   FundingRound
+    lastFundingAmount:  String
+    logoUrl:            String
+    employeeGrowthRate: String
+    headquarters:       String
+    yearFounded:        Int64
 }
 
 input LinkOrganizationsInput {

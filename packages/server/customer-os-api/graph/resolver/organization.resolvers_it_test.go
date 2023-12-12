@@ -56,21 +56,25 @@ func TestQueryResolver_Organization(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	inputOrganizationEntity := entity.OrganizationEntity{
-		Name:              "Organization name",
-		CustomerOsId:      "C-123-ABC",
-		ReferenceId:       "100/200",
-		Description:       "Organization description",
-		Website:           "Organization_website.com",
-		Industry:          "tech",
-		SubIndustry:       "tech-sub",
-		IndustryGroup:     "tech-group",
-		TargetAudience:    "tech-audience",
-		ValueProposition:  "value-proposition",
-		LastFundingRound:  "Seed",
-		LastFundingAmount: "10k",
-		Note:              "Some note",
-		IsPublic:          true,
-		IsCustomer:        true,
+		Name:               "Organization name",
+		CustomerOsId:       "C-123-ABC",
+		ReferenceId:        "100/200",
+		Description:        "Organization description",
+		Website:            "Organization_website.com",
+		Industry:           "tech",
+		SubIndustry:        "tech-sub",
+		IndustryGroup:      "tech-group",
+		TargetAudience:     "tech-audience",
+		ValueProposition:   "value-proposition",
+		LastFundingRound:   "Seed",
+		LastFundingAmount:  "10k",
+		Note:               "Some note",
+		IsPublic:           true,
+		IsCustomer:         true,
+		YearFounded:        utils.ToPtr(int64(2019)),
+		Headquarters:       "San Francisco, CA",
+		EmployeeGrowthRate: "10%",
+		LogoUrl:            "https://www.openline.ai/logo.png",
 	}
 	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, inputOrganizationEntity)
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain1.com")
@@ -104,6 +108,10 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, model.FundingRoundSeed, *organizationStruct.Organization.LastFundingRound)
 	require.Equal(t, inputOrganizationEntity.LastFundingAmount, *organizationStruct.Organization.LastFundingAmount)
 	require.Equal(t, "Some note", *organizationStruct.Organization.Note)
+	require.Equal(t, inputOrganizationEntity.YearFounded, organizationStruct.Organization.YearFounded)
+	require.Equal(t, inputOrganizationEntity.Headquarters, *organizationStruct.Organization.Headquarters)
+	require.Equal(t, inputOrganizationEntity.EmployeeGrowthRate, *organizationStruct.Organization.EmployeeGrowthRate)
+	require.Equal(t, inputOrganizationEntity.LogoUrl, *organizationStruct.Organization.LogoURL)
 	require.NotNil(t, organizationStruct.Organization.CreatedAt)
 }
 
