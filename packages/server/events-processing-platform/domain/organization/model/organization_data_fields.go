@@ -1,8 +1,9 @@
 package model
 
 import (
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"time"
+
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 )
 
 type OrganizationDataFields struct {
