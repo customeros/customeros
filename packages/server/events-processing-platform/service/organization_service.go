@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
@@ -370,7 +371,7 @@ func extractOrganizationMaskFields(requestMaskFields []organizationpb.Organizati
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED:
 			fieldsMask = append(fieldsMask, model.FieldMaskYearFounded)
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE:
-			fieldsMask = append(fieldsMask, model.FieldEmployeeGrowthRate)
+			fieldsMask = append(fieldsMask, model.FieldMaskEmployeeGrowthRate)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)
