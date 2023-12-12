@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
@@ -116,8 +117,17 @@ func (server *server) Start(parentCtx context.Context) error {
 	server.aggregateStore = aggregateStore
 	server.commandHandlers = command.NewCommandHandlers(server.log, server.cfg, aggregateStore, server.repositories)
 
+	// Setting up gRPC client
+	df := grpc_client.NewDialFactory(server.cfg)
+	gRPCconn, err := df.GetEventsProcessingPlatformConn()
+	if err != nil {
+		server.log.Fatalf("Failed to connect: %v", err)
+	}
+	defer df.Close(gRPCconn)
+	grpcClients := grpc_client.InitClients(gRPCconn)
+
 	if server.cfg.Subscriptions.GraphSubscription.Enabled {
-		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, esdb, server.repositories, server.commandHandlers, server.cfg)
+		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, esdb, server.repositories, server.commandHandlers, grpcClients, server.cfg)
 		go func() {
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {

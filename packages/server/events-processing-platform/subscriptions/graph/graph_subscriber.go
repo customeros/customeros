@@ -19,6 +19,7 @@ import (
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
@@ -50,9 +51,10 @@ type GraphSubscriber struct {
 	opportunityEventHandler     *OpportunityEventHandler
 	contractEventHandler        *ContractEventHandler
 	serviceLineItemEventHandler *ServiceLineItemEventHandler
+	grpcClients                 *grpc_client.Clients
 }
 
-func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commandHandlers *command.CommandHandlers, cfg *config.Config) *GraphSubscriber {
+func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commandHandlers *command.CommandHandlers, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphSubscriber {
 	return &GraphSubscriber{
 		log:                         log,
 		db:                          db,
@@ -66,7 +68,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		locationEventHandler:        &GraphLocationEventHandler{Repositories: repositories},
 		jobRoleEventHandler:         &GraphJobRoleEventHandler{Repositories: repositories},
 		interactionEventHandler:     &GraphInteractionEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
-		logEntryEventHandler:        &GraphLogEntryEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
+		logEntryEventHandler:        &GraphLogEntryEventHandler{repositories: repositories, log: log, grpcClients: grpcClients},
 		issueEventHandler:           &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
 		commentEventHandler:         &GraphCommentEventHandler{repositories: repositories, log: log},
 		opportunityEventHandler:     &OpportunityEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity, organizationCommands: commandHandlers.Organization},

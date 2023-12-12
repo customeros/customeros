@@ -121,3 +121,24 @@ func setUseridSpanTag(span opentracing.Span, userId string) {
 		span.SetTag(SpanTagUserId, userId)
 	}
 }
+
+func InjectSpanContextIntoGrpcMetadata(ctx context.Context, span opentracing.Span) context.Context {
+	if span != nil {
+		// Inject the span context into the gRPC request metadata.
+		textMapCarrier := make(opentracing.TextMapCarrier)
+		err := span.Tracer().Inject(span.Context(), opentracing.TextMap, textMapCarrier)
+		if err == nil {
+			// Add the injected metadata to the gRPC context.
+			md, ok := metadata.FromOutgoingContext(ctx)
+			if !ok {
+				md = metadata.New(nil)
+			}
+			for key, val := range textMapCarrier {
+				md.Set(key, val)
+			}
+			ctx = metadata.NewOutgoingContext(ctx, md)
+			return ctx
+		}
+	}
+	return ctx
+}

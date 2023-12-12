@@ -174,7 +174,7 @@ func testShowOrganization() {
 
 func testCreateLogEntry() {
 	tenant := "openline"
-	organizationId := "5e72b6fb-5f20-4973-9b96-52f4543a0df3"
+	organizationId := "2829263d-b489-4e92-b0ba-b1bca9ff4d04"
 	userId := "development@openline.ai"
 	authorId := "c61f8af2-0e46-4464-a5db-ded8e4fe242f"
 
