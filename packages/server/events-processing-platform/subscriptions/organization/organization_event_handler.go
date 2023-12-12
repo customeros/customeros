@@ -167,13 +167,17 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 
 	fieldsMask := []string{model.FieldMaskMarket, model.FieldMaskIndustry, model.FieldMaskIndustryGroup, model.FieldMaskSubIndustry, model.FieldMaskTargetAudience, model.FieldMaskValueProposition}
 	organizationFields := model.OrganizationDataFields{
-		Market:           result.Market,
-		Industry:         result.Industry,
-		IndustryGroup:    result.IndustryGroup,
-		SubIndustry:      result.SubIndustry,
-		TargetAudience:   result.TargetAudience,
-		ValueProposition: result.ValueProposition,
-		Employees:        result.CompanySize,
+		Market:             result.Market,
+		Industry:           result.Industry,
+		IndustryGroup:      result.IndustryGroup,
+		SubIndustry:        result.SubIndustry,
+		TargetAudience:     result.TargetAudience,
+		ValueProposition:   result.ValueProposition,
+		Employees:          result.CompanySize,
+		YearFounded:        result.YearFounded,
+		Headquarters:       result.HeadquartersLocation,
+		EmployeeGrowthRate: result.EmployeeGrowthRate,
+		LogoUrl:            result.LogoUrl,
 	}
 	// name organization name if missing
 	if organization.Name == "" {
