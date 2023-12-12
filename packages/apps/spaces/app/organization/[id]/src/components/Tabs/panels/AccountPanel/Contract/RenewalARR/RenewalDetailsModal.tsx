@@ -19,7 +19,11 @@ import { CurrencyInput } from '@ui/form/CurrencyInput';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
-import { Opportunity, OpportunityRenewalLikelihood } from '@graphql/types';
+import {
+  Opportunity,
+  InternalStage,
+  OpportunityRenewalLikelihood,
+} from '@graphql/types';
 // import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
 import {
   GetContractsQuery,
@@ -61,6 +65,7 @@ export const RenewalDetailsModal = ({
   >((data?.renewalLikelihood as OpportunityRenewalLikelihood) ?? null);
   const [amount, setAmount] = useState<string>(data?.amount?.toString() || '');
   const [reason, setReason] = useState<string>(data?.comments || '');
+
   // const [owner, setOwner] = useState<null | { value: string; label: string }>(
   //   null,
   // );
@@ -170,7 +175,10 @@ export const RenewalDetailsModal = ({
   }, []);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal
+      isOpen={data?.internalStage !== InternalStage.ClosedLost && isOpen}
+      onClose={onClose}
+    >
       <ModalOverlay />
       <ModalContent
         borderRadius='2xl'

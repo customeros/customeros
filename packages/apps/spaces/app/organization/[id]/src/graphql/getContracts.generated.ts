@@ -79,6 +79,7 @@ export type GetContractsQuery = {
         price: number;
         quantity: any;
         source: Types.DataSource;
+        comments: string;
         sourceOfTruth: Types.DataSource;
         appSource: string;
         endedAt?: any | null;
@@ -134,6 +135,7 @@ export const GetContractsDocument = `
         price
         quantity
         source
+        comments
         sourceOfTruth
         appSource
         endedAt

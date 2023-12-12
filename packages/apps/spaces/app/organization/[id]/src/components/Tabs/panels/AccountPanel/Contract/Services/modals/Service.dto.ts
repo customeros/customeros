@@ -11,8 +11,8 @@ import {
 export interface ServiceForm {
   name?: string;
   price?: number;
+  reason?: string;
   quantity?: number;
-
   appSource?: string;
   serviceStartedAt?: Date;
   externalReference?: string;
@@ -26,6 +26,7 @@ type ServiceItem = Omit<ServiceLineItem, 'id'>;
 export class ServiceDTO implements ServiceForm {
   name?: string;
   price?: number;
+  reason?: string;
   quantity?: number;
   appSource?: string;
   billed?: SelectOption<BilledType> | null;
@@ -43,6 +44,7 @@ export class ServiceDTO implements ServiceForm {
       billedTypeOptions.find((o) => o.value === data?.billed) ??
       billedTypeOptions[2];
     this.isRetroactiveCorrection = false;
+    this.reason = data?.comments || '';
   }
 
   static toForm(data?: ServiceItem): ServiceForm {
@@ -55,9 +57,9 @@ export class ServiceDTO implements ServiceForm {
   ): ServiceLineItemInput {
     return {
       contractId,
-      quantity: data?.quantity,
       name: data?.name,
       price: data?.price,
+      quantity: data?.quantity,
       appSource: data?.appSource,
       billed: data?.billed?.value,
     };
@@ -66,9 +68,10 @@ export class ServiceDTO implements ServiceForm {
     data: ServiceForm,
   ): Omit<ServiceLineItemUpdateInput, 'serviceLineItemId'> {
     return {
-      quantity: data?.quantity,
       name: data?.name,
       price: data?.price,
+      comments: data?.reason,
+      quantity: data?.quantity,
       appSource: data?.appSource,
       billed: data?.billed?.value,
       isRetroactiveCorrection: data?.isRetroactiveCorrection,

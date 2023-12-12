@@ -71,6 +71,7 @@ export const UpdateServiceModal = ({
   const updateService = useUpdateServiceMutation(client, {
     onMutate: ({ input }) => {
       queryClient.cancelQueries({ queryKey });
+
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
         return produce(currentCache, (draft) => {
           if (draft?.['organization']?.['contracts']) {
