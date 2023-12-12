@@ -800,10 +800,12 @@ type ComplexityRoot struct {
 		Description                   func(childComplexity int) int
 		Domains                       func(childComplexity int) int
 		Emails                        func(childComplexity int) int
+		EmployeeGrowthRate            func(childComplexity int) int
 		Employees                     func(childComplexity int) int
 		EntityTemplate                func(childComplexity int) int
 		ExternalLinks                 func(childComplexity int) int
 		FieldSets                     func(childComplexity int) int
+		Headquarters                  func(childComplexity int) int
 		ID                            func(childComplexity int) int
 		Industry                      func(childComplexity int) int
 		IndustryGroup                 func(childComplexity int) int
@@ -818,6 +820,7 @@ type ComplexityRoot struct {
 		LastTouchPointTimelineEventID func(childComplexity int) int
 		LastTouchPointType            func(childComplexity int) int
 		Locations                     func(childComplexity int) int
+		LogoURL                       func(childComplexity int) int
 		Market                        func(childComplexity int) int
 		Name                          func(childComplexity int) int
 		Note                          func(childComplexity int) int
@@ -839,6 +842,7 @@ type ComplexityRoot struct {
 		UpdatedAt                     func(childComplexity int) int
 		ValueProposition              func(childComplexity int) int
 		Website                       func(childComplexity int) int
+		YearFounded                   func(childComplexity int) int
 	}
 
 	OrganizationPage struct {
@@ -5996,6 +6000,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Emails(childComplexity), true
 
+	case "Organization.employeeGrowthRate":
+		if e.complexity.Organization.EmployeeGrowthRate == nil {
+			break
+		}
+
+		return e.complexity.Organization.EmployeeGrowthRate(childComplexity), true
+
 	case "Organization.employees":
 		if e.complexity.Organization.Employees == nil {
 			break
@@ -6023,6 +6034,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.FieldSets(childComplexity), true
+
+	case "Organization.headquarters":
+		if e.complexity.Organization.Headquarters == nil {
+			break
+		}
+
+		return e.complexity.Organization.Headquarters(childComplexity), true
 
 	case "Organization.id":
 		if e.complexity.Organization.ID == nil {
@@ -6121,6 +6139,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.Locations(childComplexity), true
+
+	case "Organization.logoUrl":
+		if e.complexity.Organization.LogoURL == nil {
+			break
+		}
+
+		return e.complexity.Organization.LogoURL(childComplexity), true
 
 	case "Organization.market":
 		if e.complexity.Organization.Market == nil {
@@ -6283,6 +6308,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.Website(childComplexity), true
+
+	case "Organization.yearFounded":
+		if e.complexity.Organization.YearFounded == nil {
+			break
+		}
+
+		return e.complexity.Organization.YearFounded(childComplexity), true
 
 	case "OrganizationPage.content":
 		if e.complexity.OrganizationPage.Content == nil {
@@ -9628,6 +9660,10 @@ type Organization implements Node {
     isCustomer:  Boolean
     market:      Market
     employees:   Int64
+    yearFounded: Int64
+    headquarters: String
+    employeeGrowthRate: String
+    logoUrl:      String
     lastFundingRound: FundingRound
     lastFundingAmount: String
     source: DataSource!
@@ -9701,33 +9737,41 @@ input OrganizationInput {
     fieldSets:     [FieldSetInput!] @deprecated
     templateId:    ID @deprecated
     market:        Market
+    logoUrl:            String
+    employeeGrowthRate: String
+    headquarters:       String
+    yearFounded:        Int64
     employees:     Int64
     appSource:     String
 }
 
 input OrganizationUpdateInput {
-    id:   ID!
+    id: ID!
     referenceId: String
     """
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """
-    patch:             Boolean
-    name:              String!
-    description:       String
-    note:              String
-    domains:           [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
-    website:           String
-    industry:          String
-    subIndustry:       String
-    industryGroup:     String
-    isPublic:          Boolean
-    isCustomer:        Boolean
-    market:            Market
-    employees:         Int64
-    targetAudience:    String
-    valueProposition:  String
-    lastFundingRound:  FundingRound
-    lastFundingAmount: String
+    patch:              Boolean
+    name:               String!
+    description:        String
+    note:               String
+    domains:            [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    website:            String
+    industry:           String
+    subIndustry:        String
+    industryGroup:      String
+    isPublic:           Boolean
+    isCustomer:         Boolean
+    market:             Market
+    employees:          Int64
+    targetAudience:     String
+    valueProposition:   String
+    lastFundingRound:   FundingRound
+    lastFundingAmount:  String
+    logoUrl:            String
+    employeeGrowthRate: String
+    headquarters:       String
+    yearFounded:        Int64
 }
 
 input LinkOrganizationsInput {
@@ -21114,6 +21158,14 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(ctx c
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -23295,6 +23347,14 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -28954,6 +29014,14 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -29697,6 +29765,14 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -37633,6 +37709,14 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -40034,6 +40118,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -40219,6 +40311,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -40918,6 +41018,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -41103,6 +41211,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -41288,6 +41404,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -41715,6 +41839,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -41900,6 +42032,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -48092,6 +48232,170 @@ func (ec *executionContext) fieldContext_Organization_employees(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_yearFounded(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_yearFounded(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.YearFounded, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	fc.Result = res
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_yearFounded(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_headquarters(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_headquarters(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Headquarters, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_headquarters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_employeeGrowthRate(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EmployeeGrowthRate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_employeeGrowthRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_logoUrl(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_logoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LogoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_logoUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_lastFundingRound(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_lastFundingRound(ctx, field)
 	if err != nil {
@@ -49868,6 +50172,14 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -50144,6 +50456,14 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -51525,6 +51845,14 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -54846,6 +55174,14 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -57779,6 +58115,14 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -64423,7 +64767,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"referenceId", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "isCustomer", "customFields", "fieldSets", "templateId", "market", "employees", "appSource"}
+	fieldsInOrder := [...]string{"referenceId", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "isCustomer", "customFields", "fieldSets", "templateId", "market", "logoUrl", "employeeGrowthRate", "headquarters", "yearFounded", "employees", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -64535,6 +64879,34 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.Market = data
+		case "logoUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LogoURL = data
+		case "employeeGrowthRate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("employeeGrowthRate"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmployeeGrowthRate = data
+		case "headquarters":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("headquarters"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Headquarters = data
+		case "yearFounded":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("yearFounded"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.YearFounded = data
 		case "employees":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("employees"))
 			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
@@ -64562,7 +64934,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "referenceId", "patch", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "isCustomer", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount"}
+	fieldsInOrder := [...]string{"id", "referenceId", "patch", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "isCustomer", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount", "logoUrl", "employeeGrowthRate", "headquarters", "yearFounded"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -64702,6 +65074,34 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 				return it, err
 			}
 			it.LastFundingAmount = data
+		case "logoUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LogoURL = data
+		case "employeeGrowthRate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("employeeGrowthRate"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmployeeGrowthRate = data
+		case "headquarters":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("headquarters"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Headquarters = data
+		case "yearFounded":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("yearFounded"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.YearFounded = data
 		}
 	}
 
@@ -73028,6 +73428,14 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_market(ctx, field, obj)
 		case "employees":
 			out.Values[i] = ec._Organization_employees(ctx, field, obj)
+		case "yearFounded":
+			out.Values[i] = ec._Organization_yearFounded(ctx, field, obj)
+		case "headquarters":
+			out.Values[i] = ec._Organization_headquarters(ctx, field, obj)
+		case "employeeGrowthRate":
+			out.Values[i] = ec._Organization_employeeGrowthRate(ctx, field, obj)
+		case "logoUrl":
+			out.Values[i] = ec._Organization_logoUrl(ctx, field, obj)
 		case "lastFundingRound":
 			out.Values[i] = ec._Organization_lastFundingRound(ctx, field, obj)
 		case "lastFundingAmount":

@@ -23,7 +23,7 @@ type OrganizationDataFields struct {
 	LastFundingAmount  string
 	ReferenceId        string
 	Note               string
-	YearFounded        int64
+	YearFounded        *int64
 	Headquarters       string
 	EmployeeGrowthRate string
 	LogoUrl            string

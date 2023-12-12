@@ -42,23 +42,27 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 	organizationId := utils.NewUUIDIfEmpty(request.Id)
 
 	dataFields := model.OrganizationDataFields{
-		Name:              request.Name,
-		Hide:              request.Hide,
-		Description:       request.Description,
-		Website:           request.Website,
-		Industry:          request.Industry,
-		SubIndustry:       request.SubIndustry,
-		IndustryGroup:     request.IndustryGroup,
-		TargetAudience:    request.TargetAudience,
-		ValueProposition:  request.ValueProposition,
-		IsPublic:          request.IsPublic,
-		IsCustomer:        request.IsCustomer,
-		Employees:         request.Employees,
-		Market:            request.Market,
-		LastFundingRound:  request.LastFundingRound,
-		LastFundingAmount: request.LastFundingAmount,
-		ReferenceId:       request.ReferenceId,
-		Note:              request.Note,
+		Name:               request.Name,
+		Hide:               request.Hide,
+		Description:        request.Description,
+		Website:            request.Website,
+		Industry:           request.Industry,
+		SubIndustry:        request.SubIndustry,
+		IndustryGroup:      request.IndustryGroup,
+		TargetAudience:     request.TargetAudience,
+		ValueProposition:   request.ValueProposition,
+		IsPublic:           request.IsPublic,
+		IsCustomer:         request.IsCustomer,
+		Employees:          request.Employees,
+		Market:             request.Market,
+		LastFundingRound:   request.LastFundingRound,
+		LastFundingAmount:  request.LastFundingAmount,
+		ReferenceId:        request.ReferenceId,
+		Note:               request.Note,
+		LogoUrl:            request.LogoUrl,
+		Headquarters:       request.Headquarters,
+		YearFounded:        request.YearFounded,
+		EmployeeGrowthRate: request.EmployeeGrowthRate,
 	}
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
@@ -359,6 +363,14 @@ func extractOrganizationMaskFields(requestMaskFields []organizationpb.Organizati
 			fieldsMask = append(fieldsMask, model.FieldMaskHide)
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION:
 			fieldsMask = append(fieldsMask, model.FieldMaskDescription)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL:
+			fieldsMask = append(fieldsMask, model.FieldMaskLogoUrl)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS:
+			fieldsMask = append(fieldsMask, model.FieldMaskHeadquarters)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED:
+			fieldsMask = append(fieldsMask, model.FieldMaskYearFounded)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE:
+			fieldsMask = append(fieldsMask, model.FieldEmployeeGrowthRate)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)

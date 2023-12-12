@@ -40,57 +40,65 @@ const (
 )
 
 type OrganizationCreateEvent struct {
-	Tenant            string                `json:"tenant" validate:"required"`
-	Name              string                `json:"name"`
-	Hide              bool                  `json:"hide"`
-	Description       string                `json:"description"`
-	Website           string                `json:"website"`
-	Industry          string                `json:"industry"`
-	SubIndustry       string                `json:"subIndustry"`
-	IndustryGroup     string                `json:"industryGroup"`
-	TargetAudience    string                `json:"targetAudience"`
-	ValueProposition  string                `json:"valueProposition"`
-	IsPublic          bool                  `json:"isPublic"`
-	IsCustomer        bool                  `json:"isCustomer"`
-	Employees         int64                 `json:"employees"`
-	Market            string                `json:"market"`
-	LastFundingRound  string                `json:"lastFundingRound"`
-	LastFundingAmount string                `json:"lastFundingAmount"`
-	ReferenceId       string                `json:"referenceId"`
-	Note              string                `json:"note"`
-	Source            string                `json:"source"`
-	SourceOfTruth     string                `json:"sourceOfTruth"`
-	AppSource         string                `json:"appSource"`
-	CreatedAt         time.Time             `json:"createdAt"`
-	UpdatedAt         time.Time             `json:"updatedAt"`
-	ExternalSystem    cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
+	Tenant             string                `json:"tenant" validate:"required"`
+	Name               string                `json:"name"`
+	Hide               bool                  `json:"hide"`
+	Description        string                `json:"description"`
+	Website            string                `json:"website"`
+	Industry           string                `json:"industry"`
+	SubIndustry        string                `json:"subIndustry"`
+	IndustryGroup      string                `json:"industryGroup"`
+	TargetAudience     string                `json:"targetAudience"`
+	ValueProposition   string                `json:"valueProposition"`
+	IsPublic           bool                  `json:"isPublic"`
+	IsCustomer         bool                  `json:"isCustomer"`
+	Employees          int64                 `json:"employees"`
+	Market             string                `json:"market"`
+	LastFundingRound   string                `json:"lastFundingRound"`
+	LastFundingAmount  string                `json:"lastFundingAmount"`
+	ReferenceId        string                `json:"referenceId"`
+	Note               string                `json:"note"`
+	Source             string                `json:"source"`
+	SourceOfTruth      string                `json:"sourceOfTruth"`
+	AppSource          string                `json:"appSource"`
+	CreatedAt          time.Time             `json:"createdAt"`
+	UpdatedAt          time.Time             `json:"updatedAt"`
+	ExternalSystem     cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
+	LogoUrl            string                `json:"logoUrl,omitempty"`
+	YearFounded        *int64                `json:"yearFounded,omitempty"`
+	Headquarters       string                `json:"headquarters,omitempty"`
+	EmployeeGrowthRate string                `json:"employeeGrowthRate,omitempty"`
 }
 
 func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFields *model.OrganizationFields, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationCreateEvent{
-		Tenant:            aggregate.GetTenant(),
-		Name:              organizationFields.OrganizationDataFields.Name,
-		Hide:              organizationFields.OrganizationDataFields.Hide,
-		Description:       organizationFields.OrganizationDataFields.Description,
-		Website:           organizationFields.OrganizationDataFields.Website,
-		Industry:          organizationFields.OrganizationDataFields.Industry,
-		SubIndustry:       organizationFields.OrganizationDataFields.SubIndustry,
-		IndustryGroup:     organizationFields.OrganizationDataFields.IndustryGroup,
-		TargetAudience:    organizationFields.OrganizationDataFields.TargetAudience,
-		ValueProposition:  organizationFields.OrganizationDataFields.ValueProposition,
-		IsPublic:          organizationFields.OrganizationDataFields.IsPublic,
-		IsCustomer:        organizationFields.OrganizationDataFields.IsCustomer,
-		Employees:         organizationFields.OrganizationDataFields.Employees,
-		Market:            organizationFields.OrganizationDataFields.Market,
-		LastFundingRound:  organizationFields.OrganizationDataFields.LastFundingRound,
-		LastFundingAmount: organizationFields.OrganizationDataFields.LastFundingAmount,
-		ReferenceId:       organizationFields.OrganizationDataFields.ReferenceId,
-		Note:              organizationFields.OrganizationDataFields.Note,
-		Source:            organizationFields.Source.Source,
-		SourceOfTruth:     organizationFields.Source.SourceOfTruth,
-		AppSource:         organizationFields.Source.AppSource,
-		CreatedAt:         createdAt,
-		UpdatedAt:         updatedAt,
+		Tenant:             aggregate.GetTenant(),
+		Name:               organizationFields.OrganizationDataFields.Name,
+		Hide:               organizationFields.OrganizationDataFields.Hide,
+		Description:        organizationFields.OrganizationDataFields.Description,
+		Website:            organizationFields.OrganizationDataFields.Website,
+		Industry:           organizationFields.OrganizationDataFields.Industry,
+		SubIndustry:        organizationFields.OrganizationDataFields.SubIndustry,
+		IndustryGroup:      organizationFields.OrganizationDataFields.IndustryGroup,
+		TargetAudience:     organizationFields.OrganizationDataFields.TargetAudience,
+		ValueProposition:   organizationFields.OrganizationDataFields.ValueProposition,
+		IsPublic:           organizationFields.OrganizationDataFields.IsPublic,
+		IsCustomer:         organizationFields.OrganizationDataFields.IsCustomer,
+		Employees:          organizationFields.OrganizationDataFields.Employees,
+		Market:             organizationFields.OrganizationDataFields.Market,
+		LastFundingRound:   organizationFields.OrganizationDataFields.LastFundingRound,
+		LastFundingAmount:  organizationFields.OrganizationDataFields.LastFundingAmount,
+		ReferenceId:        organizationFields.OrganizationDataFields.ReferenceId,
+		Note:               organizationFields.OrganizationDataFields.Note,
+		Source:             organizationFields.Source.Source,
+		SourceOfTruth:      organizationFields.Source.SourceOfTruth,
+		AppSource:          organizationFields.Source.AppSource,
+		CreatedAt:          createdAt,
+		UpdatedAt:          updatedAt,
+		LogoUrl:            organizationFields.OrganizationDataFields.LogoUrl,
+		YearFounded:        organizationFields.OrganizationDataFields.YearFounded,
+		Headquarters:       organizationFields.OrganizationDataFields.Headquarters,
+		EmployeeGrowthRate: organizationFields.OrganizationDataFields.EmployeeGrowthRate,
 	}
 	if organizationFields.ExternalSystem.Available() {
 		eventData.ExternalSystem = organizationFields.ExternalSystem

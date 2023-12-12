@@ -60,19 +60,23 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	var err error
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		Name:           input.Name,
-		ReferenceId:    utils.IfNotNilString(input.ReferenceID),
-		Description:    utils.IfNotNilString(input.Description),
-		Website:        utils.IfNotNilString(input.Website),
-		Industry:       utils.IfNotNilString(input.Industry),
-		SubIndustry:    utils.IfNotNilString(input.SubIndustry),
-		IndustryGroup:  utils.IfNotNilString(input.IndustryGroup),
-		IsPublic:       utils.IfNotNilBool(input.IsPublic),
-		IsCustomer:     utils.IfNotNilBool(input.IsCustomer),
-		Market:         mapper.MapMarketFromModel(input.Market),
-		Employees:      utils.IfNotNilInt64(input.Employees),
+		Tenant:             common.GetTenantFromContext(ctx),
+		LoggedInUserId:     common.GetUserIdFromContext(ctx),
+		Name:               input.Name,
+		ReferenceId:        utils.IfNotNilString(input.ReferenceID),
+		Description:        utils.IfNotNilString(input.Description),
+		Website:            utils.IfNotNilString(input.Website),
+		Industry:           utils.IfNotNilString(input.Industry),
+		SubIndustry:        utils.IfNotNilString(input.SubIndustry),
+		IndustryGroup:      utils.IfNotNilString(input.IndustryGroup),
+		IsPublic:           utils.IfNotNilBool(input.IsPublic),
+		IsCustomer:         utils.IfNotNilBool(input.IsCustomer),
+		Market:             mapper.MapMarketFromModel(input.Market),
+		Employees:          utils.IfNotNilInt64(input.Employees),
+		YearFounded:        input.YearFounded,
+		LogoUrl:            utils.IfNotNilString(input.LogoURL),
+		Headquarters:       utils.IfNotNilString(input.Headquarters),
+		EmployeeGrowthRate: utils.IfNotNilString(input.EmployeeGrowthRate),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(entity.DataSourceOpenline),
 			AppSource: utils.IfNotNilString(input.AppSource),
@@ -222,30 +226,46 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		if input.LastFundingRound != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND)
 		}
+		if input.YearFounded != nil {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
+		}
+		if utils.IfNotNilString(input.Headquarters) != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
+		}
+		if utils.IfNotNilString(input.LogoURL) != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
+		}
+		if utils.IfNotNilString(input.EmployeeGrowthRate) != "" {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
+		}
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
-		Tenant:            common.GetTenantFromContext(ctx),
-		LoggedInUserId:    common.GetUserIdFromContext(ctx),
-		Id:                input.ID,
-		FieldsMask:        fieldsMask,
-		Name:              input.Name,
-		ReferenceId:       utils.IfNotNilString(input.ReferenceID),
-		Description:       utils.IfNotNilString(input.Description),
-		Website:           utils.IfNotNilString(input.Website),
-		Industry:          utils.IfNotNilString(input.Industry),
-		SubIndustry:       utils.IfNotNilString(input.SubIndustry),
-		IndustryGroup:     utils.IfNotNilString(input.IndustryGroup),
-		IsPublic:          utils.IfNotNilBool(input.IsPublic),
-		IsCustomer:        utils.IfNotNilBool(input.IsCustomer),
-		Market:            mapper.MapMarketFromModel(input.Market),
-		Employees:         utils.IfNotNilInt64(input.Employees),
-		TargetAudience:    utils.IfNotNilString(input.TargetAudience),
-		ValueProposition:  utils.IfNotNilString(input.ValueProposition),
-		LastFundingAmount: utils.IfNotNilString(input.LastFundingAmount),
-		LastFundingRound:  mapper.MapFundingRoundFromModel(input.LastFundingRound),
-		Note:              utils.IfNotNilString(input.Note),
+		Tenant:             common.GetTenantFromContext(ctx),
+		LoggedInUserId:     common.GetUserIdFromContext(ctx),
+		Id:                 input.ID,
+		FieldsMask:         fieldsMask,
+		Name:               input.Name,
+		ReferenceId:        utils.IfNotNilString(input.ReferenceID),
+		Description:        utils.IfNotNilString(input.Description),
+		Website:            utils.IfNotNilString(input.Website),
+		Industry:           utils.IfNotNilString(input.Industry),
+		SubIndustry:        utils.IfNotNilString(input.SubIndustry),
+		IndustryGroup:      utils.IfNotNilString(input.IndustryGroup),
+		IsPublic:           utils.IfNotNilBool(input.IsPublic),
+		IsCustomer:         utils.IfNotNilBool(input.IsCustomer),
+		Market:             mapper.MapMarketFromModel(input.Market),
+		Employees:          utils.IfNotNilInt64(input.Employees),
+		TargetAudience:     utils.IfNotNilString(input.TargetAudience),
+		ValueProposition:   utils.IfNotNilString(input.ValueProposition),
+		LastFundingAmount:  utils.IfNotNilString(input.LastFundingAmount),
+		LastFundingRound:   mapper.MapFundingRoundFromModel(input.LastFundingRound),
+		Note:               utils.IfNotNilString(input.Note),
+		YearFounded:        input.YearFounded,
+		LogoUrl:            utils.IfNotNilString(input.LogoURL),
+		Headquarters:       utils.IfNotNilString(input.Headquarters),
+		EmployeeGrowthRate: utils.IfNotNilString(input.EmployeeGrowthRate),
 		SourceFields: &commonpb.SourceFields{
 			Source: string(entity.DataSourceOpenline),
 		},

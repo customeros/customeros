@@ -12,57 +12,65 @@ import (
 
 type OrganizationUpdateEvent struct {
 	// Deprecated
-	IgnoreEmptyFields bool                  `json:"ignoreEmptyFields"`
-	Tenant            string                `json:"tenant" validate:"required"`
-	Source            string                `json:"source"`
-	UpdatedAt         time.Time             `json:"updatedAt"`
-	Name              string                `json:"name"`
-	Hide              bool                  `json:"hide"`
-	Description       string                `json:"description"`
-	Website           string                `json:"website"`
-	Industry          string                `json:"industry"`
-	SubIndustry       string                `json:"subIndustry"`
-	IndustryGroup     string                `json:"industryGroup"`
-	TargetAudience    string                `json:"targetAudience"`
-	ValueProposition  string                `json:"valueProposition"`
-	IsPublic          bool                  `json:"isPublic"`
-	IsCustomer        bool                  `json:"isCustomer"`
-	Employees         int64                 `json:"employees"`
-	Market            string                `json:"market"`
-	LastFundingRound  string                `json:"lastFundingRound"`
-	LastFundingAmount string                `json:"lastFundingAmount"`
-	ReferenceId       string                `json:"referenceId"`
-	Note              string                `json:"note"`
-	ExternalSystem    cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
-	FieldsMask        []string              `json:"fieldsMask"`
-	WebScrapedUrl     string                `json:"webScrapedUrl,omitempty"`
+	IgnoreEmptyFields  bool                  `json:"ignoreEmptyFields"`
+	Tenant             string                `json:"tenant" validate:"required"`
+	Source             string                `json:"source"`
+	UpdatedAt          time.Time             `json:"updatedAt"`
+	Name               string                `json:"name"`
+	Hide               bool                  `json:"hide"`
+	Description        string                `json:"description"`
+	Website            string                `json:"website"`
+	Industry           string                `json:"industry"`
+	SubIndustry        string                `json:"subIndustry"`
+	IndustryGroup      string                `json:"industryGroup"`
+	TargetAudience     string                `json:"targetAudience"`
+	ValueProposition   string                `json:"valueProposition"`
+	IsPublic           bool                  `json:"isPublic"`
+	IsCustomer         bool                  `json:"isCustomer"`
+	Employees          int64                 `json:"employees"`
+	Market             string                `json:"market"`
+	LastFundingRound   string                `json:"lastFundingRound"`
+	LastFundingAmount  string                `json:"lastFundingAmount"`
+	ReferenceId        string                `json:"referenceId"`
+	Note               string                `json:"note"`
+	ExternalSystem     cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
+	FieldsMask         []string              `json:"fieldsMask"`
+	WebScrapedUrl      string                `json:"webScrapedUrl,omitempty"`
+	YearFounded        *int64                `json:"yearFounded"`
+	Headquarters       string                `json:"headquarters"`
+	EmployeeGrowthRate string                `json:"employeeGrowthRate"`
+	LogoUrl            string                `json:"logoUrl"`
 }
 
 func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFields *model.OrganizationFields, updatedAt time.Time, webScrapedUrl string, fieldsMask []string) (eventstore.Event, error) {
 	eventData := OrganizationUpdateEvent{
-		IgnoreEmptyFields: false,
-		Tenant:            aggregate.GetTenant(),
-		Name:              organizationFields.OrganizationDataFields.Name,
-		Hide:              organizationFields.OrganizationDataFields.Hide,
-		Description:       organizationFields.OrganizationDataFields.Description,
-		Website:           organizationFields.OrganizationDataFields.Website,
-		Industry:          organizationFields.OrganizationDataFields.Industry,
-		SubIndustry:       organizationFields.OrganizationDataFields.SubIndustry,
-		IndustryGroup:     organizationFields.OrganizationDataFields.IndustryGroup,
-		TargetAudience:    organizationFields.OrganizationDataFields.TargetAudience,
-		ValueProposition:  organizationFields.OrganizationDataFields.ValueProposition,
-		IsPublic:          organizationFields.OrganizationDataFields.IsPublic,
-		IsCustomer:        organizationFields.OrganizationDataFields.IsCustomer,
-		Employees:         organizationFields.OrganizationDataFields.Employees,
-		Market:            organizationFields.OrganizationDataFields.Market,
-		LastFundingRound:  organizationFields.OrganizationDataFields.LastFundingRound,
-		LastFundingAmount: organizationFields.OrganizationDataFields.LastFundingAmount,
-		ReferenceId:       organizationFields.OrganizationDataFields.ReferenceId,
-		Note:              organizationFields.OrganizationDataFields.Note,
-		UpdatedAt:         updatedAt,
-		Source:            organizationFields.Source.Source,
-		FieldsMask:        fieldsMask,
-		WebScrapedUrl:     webScrapedUrl,
+		IgnoreEmptyFields:  false,
+		Tenant:             aggregate.GetTenant(),
+		Name:               organizationFields.OrganizationDataFields.Name,
+		Hide:               organizationFields.OrganizationDataFields.Hide,
+		Description:        organizationFields.OrganizationDataFields.Description,
+		Website:            organizationFields.OrganizationDataFields.Website,
+		Industry:           organizationFields.OrganizationDataFields.Industry,
+		SubIndustry:        organizationFields.OrganizationDataFields.SubIndustry,
+		IndustryGroup:      organizationFields.OrganizationDataFields.IndustryGroup,
+		TargetAudience:     organizationFields.OrganizationDataFields.TargetAudience,
+		ValueProposition:   organizationFields.OrganizationDataFields.ValueProposition,
+		IsPublic:           organizationFields.OrganizationDataFields.IsPublic,
+		IsCustomer:         organizationFields.OrganizationDataFields.IsCustomer,
+		Employees:          organizationFields.OrganizationDataFields.Employees,
+		Market:             organizationFields.OrganizationDataFields.Market,
+		LastFundingRound:   organizationFields.OrganizationDataFields.LastFundingRound,
+		LastFundingAmount:  organizationFields.OrganizationDataFields.LastFundingAmount,
+		ReferenceId:        organizationFields.OrganizationDataFields.ReferenceId,
+		Note:               organizationFields.OrganizationDataFields.Note,
+		LogoUrl:            organizationFields.OrganizationDataFields.LogoUrl,
+		YearFounded:        organizationFields.OrganizationDataFields.YearFounded,
+		Headquarters:       organizationFields.OrganizationDataFields.Headquarters,
+		EmployeeGrowthRate: organizationFields.OrganizationDataFields.EmployeeGrowthRate,
+		UpdatedAt:          updatedAt,
+		Source:             organizationFields.Source.Source,
+		FieldsMask:         fieldsMask,
+		WebScrapedUrl:      webScrapedUrl,
 	}
 	if organizationFields.ExternalSystem.Available() {
 		eventData.ExternalSystem = organizationFields.ExternalSystem
@@ -149,4 +157,20 @@ func (e OrganizationUpdateEvent) UpdateReferenceId() bool {
 
 func (e OrganizationUpdateEvent) UpdateNote() bool {
 	return (len(e.FieldsMask) == 0 && e.shouldUpdateFieldIfNotIgnored(e.Note)) || utils.Contains(e.FieldsMask, model.FieldMaskNote)
+}
+
+func (e OrganizationUpdateEvent) UpdateYearFounded() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldMaskYearFounded)
+}
+
+func (e OrganizationUpdateEvent) UpdateHeadquarters() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldMaskHeadquarters)
+}
+
+func (e OrganizationUpdateEvent) UpdateEmployeeGrowthRate() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldEmployeeGrowthRate)
+}
+
+func (e OrganizationUpdateEvent) UpdateLogoUrl() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldMaskLogoUrl)
 }

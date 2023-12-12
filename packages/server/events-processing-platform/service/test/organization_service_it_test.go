@@ -3,6 +3,7 @@ package servicet
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	organizationAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
@@ -29,24 +30,28 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	organizationId := uuid.New().String()
 	tenant := "ziggy"
 	response, err := organizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
-		Tenant:            tenant,
-		Id:                organizationId,
-		Name:              "Test Organization",
-		Description:       "This is a organization description",
-		Website:           "https://www.openline.ai",
-		Employees:         int64(12),
-		Market:            "B2B",
-		Industry:          "Software",
-		SubIndustry:       "sub-industry",
-		IndustryGroup:     "industry-group",
-		TargetAudience:    "target-audience",
-		ValueProposition:  "value-proposition",
-		LastFundingRound:  "Seed",
-		LastFundingAmount: "1.000.000",
-		ReferenceId:       "100/200",
-		Note:              "Some important notes",
-		IsPublic:          false,
-		IsCustomer:        true,
+		Tenant:             tenant,
+		Id:                 organizationId,
+		Name:               "Test Organization",
+		Description:        "This is a organization description",
+		Website:            "https://www.openline.ai",
+		Employees:          int64(12),
+		Market:             "B2B",
+		Industry:           "Software",
+		SubIndustry:        "sub-industry",
+		IndustryGroup:      "industry-group",
+		TargetAudience:     "target-audience",
+		ValueProposition:   "value-proposition",
+		LastFundingRound:   "Seed",
+		LastFundingAmount:  "1.000.000",
+		ReferenceId:        "100/200",
+		Note:               "Some important notes",
+		IsPublic:           false,
+		IsCustomer:         true,
+		YearFounded:        utils.ToPtr(int64(2019)),
+		Headquarters:       "San Francisco, CA",
+		EmployeeGrowthRate: "10%",
+		LogoUrl:            "https://www.openline.ai/logo.png",
 		SourceFields: &commonpb.SourceFields{
 			AppSource: "unit-test",
 			Source:    "N/A",
@@ -91,6 +96,10 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	require.Equal(t, "Some important notes", eventData.Note)
 	require.Equal(t, false, eventData.IsPublic)
 	require.Equal(t, true, eventData.IsCustomer)
+	require.Equal(t, utils.ToPtr(int64(2019)), eventData.YearFounded)
+	require.Equal(t, "San Francisco, CA", eventData.Headquarters)
+	require.Equal(t, "10%", eventData.EmployeeGrowthRate)
+	require.Equal(t, "https://www.openline.ai/logo.png", eventData.LogoUrl)
 
 	require.Equal(t, organizationEvents.OrganizationRequestScrapeByWebsiteV1, eventList[1].GetEventType())
 	var eventDataScrapeRequest organizationEvents.OrganizationRequestScrapeByWebsite

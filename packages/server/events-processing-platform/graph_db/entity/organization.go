@@ -6,32 +6,36 @@ import (
 )
 
 type OrganizationEntity struct {
-	ID                string
-	CustomerOsId      string
-	Name              string
-	Description       string
-	Website           string
-	Industry          string
-	SubIndustry       string
-	IndustryGroup     string
-	TargetAudience    string
-	ValueProposition  string
-	IsPublic          bool
-	IsCustomer        bool
-	Hide              bool
-	Market            string
-	LastFundingRound  string
-	LastFundingAmount string
-	ReferenceId       string
-	Note              string
-	Employees         int64
-	CreatedAt         time.Time
-	LastTouchpointAt  *time.Time
-	UpdatedAt         time.Time
-	LastTouchpointId  *string
-	Source            DataSource
-	SourceOfTruth     DataSource
-	AppSource         string
+	ID                 string
+	CustomerOsId       string
+	Name               string
+	Description        string
+	Website            string
+	Industry           string
+	SubIndustry        string
+	IndustryGroup      string
+	TargetAudience     string
+	ValueProposition   string
+	IsPublic           bool
+	IsCustomer         bool
+	Hide               bool
+	Market             string
+	LastFundingRound   string
+	LastFundingAmount  string
+	ReferenceId        string
+	Note               string
+	Employees          int64
+	CreatedAt          time.Time
+	LastTouchpointAt   *time.Time
+	UpdatedAt          time.Time
+	LastTouchpointId   *string
+	Source             DataSource
+	SourceOfTruth      DataSource
+	AppSource          string
+	YearFounded        *int64
+	Headquarters       string
+	EmployeeGrowthRate string
+	LogoUrl            string
 
 	LinkedOrganizationType *string
 

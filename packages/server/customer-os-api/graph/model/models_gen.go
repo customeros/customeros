@@ -1306,6 +1306,10 @@ type Organization struct {
 	IsCustomer                    *bool                         `json:"isCustomer,omitempty"`
 	Market                        *Market                       `json:"market,omitempty"`
 	Employees                     *int64                        `json:"employees,omitempty"`
+	YearFounded                   *int64                        `json:"yearFounded,omitempty"`
+	Headquarters                  *string                       `json:"headquarters,omitempty"`
+	EmployeeGrowthRate            *string                       `json:"employeeGrowthRate,omitempty"`
+	LogoURL                       *string                       `json:"logoUrl,omitempty"`
 	LastFundingRound              *FundingRound                 `json:"lastFundingRound,omitempty"`
 	LastFundingAmount             *string                       `json:"lastFundingAmount,omitempty"`
 	Source                        DataSource                    `json:"source"`
@@ -1346,23 +1350,27 @@ func (this Organization) GetID() string { return this.ID }
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
-	ReferenceID   *string             `json:"referenceId,omitempty"`
-	Name          string              `json:"name"`
-	Description   *string             `json:"description,omitempty"`
-	Note          *string             `json:"note,omitempty"`
-	Domains       []string            `json:"domains,omitempty"`
-	Website       *string             `json:"website,omitempty"`
-	Industry      *string             `json:"industry,omitempty"`
-	SubIndustry   *string             `json:"subIndustry,omitempty"`
-	IndustryGroup *string             `json:"industryGroup,omitempty"`
-	IsPublic      *bool               `json:"isPublic,omitempty"`
-	IsCustomer    *bool               `json:"isCustomer,omitempty"`
-	CustomFields  []*CustomFieldInput `json:"customFields,omitempty"`
-	FieldSets     []*FieldSetInput    `json:"fieldSets,omitempty"`
-	TemplateID    *string             `json:"templateId,omitempty"`
-	Market        *Market             `json:"market,omitempty"`
-	Employees     *int64              `json:"employees,omitempty"`
-	AppSource     *string             `json:"appSource,omitempty"`
+	ReferenceID        *string             `json:"referenceId,omitempty"`
+	Name               string              `json:"name"`
+	Description        *string             `json:"description,omitempty"`
+	Note               *string             `json:"note,omitempty"`
+	Domains            []string            `json:"domains,omitempty"`
+	Website            *string             `json:"website,omitempty"`
+	Industry           *string             `json:"industry,omitempty"`
+	SubIndustry        *string             `json:"subIndustry,omitempty"`
+	IndustryGroup      *string             `json:"industryGroup,omitempty"`
+	IsPublic           *bool               `json:"isPublic,omitempty"`
+	IsCustomer         *bool               `json:"isCustomer,omitempty"`
+	CustomFields       []*CustomFieldInput `json:"customFields,omitempty"`
+	FieldSets          []*FieldSetInput    `json:"fieldSets,omitempty"`
+	TemplateID         *string             `json:"templateId,omitempty"`
+	Market             *Market             `json:"market,omitempty"`
+	LogoURL            *string             `json:"logoUrl,omitempty"`
+	EmployeeGrowthRate *string             `json:"employeeGrowthRate,omitempty"`
+	Headquarters       *string             `json:"headquarters,omitempty"`
+	YearFounded        *int64              `json:"yearFounded,omitempty"`
+	Employees          *int64              `json:"employees,omitempty"`
+	AppSource          *string             `json:"appSource,omitempty"`
 }
 
 type OrganizationPage struct {
@@ -1397,23 +1405,27 @@ type OrganizationUpdateInput struct {
 	ID          string  `json:"id"`
 	ReferenceID *string `json:"referenceId,omitempty"`
 	// Set to true when partial update is needed. Empty or missing fields will not be ignored.
-	Patch             *bool         `json:"patch,omitempty"`
-	Name              string        `json:"name"`
-	Description       *string       `json:"description,omitempty"`
-	Note              *string       `json:"note,omitempty"`
-	Domains           []string      `json:"domains,omitempty"`
-	Website           *string       `json:"website,omitempty"`
-	Industry          *string       `json:"industry,omitempty"`
-	SubIndustry       *string       `json:"subIndustry,omitempty"`
-	IndustryGroup     *string       `json:"industryGroup,omitempty"`
-	IsPublic          *bool         `json:"isPublic,omitempty"`
-	IsCustomer        *bool         `json:"isCustomer,omitempty"`
-	Market            *Market       `json:"market,omitempty"`
-	Employees         *int64        `json:"employees,omitempty"`
-	TargetAudience    *string       `json:"targetAudience,omitempty"`
-	ValueProposition  *string       `json:"valueProposition,omitempty"`
-	LastFundingRound  *FundingRound `json:"lastFundingRound,omitempty"`
-	LastFundingAmount *string       `json:"lastFundingAmount,omitempty"`
+	Patch              *bool         `json:"patch,omitempty"`
+	Name               string        `json:"name"`
+	Description        *string       `json:"description,omitempty"`
+	Note               *string       `json:"note,omitempty"`
+	Domains            []string      `json:"domains,omitempty"`
+	Website            *string       `json:"website,omitempty"`
+	Industry           *string       `json:"industry,omitempty"`
+	SubIndustry        *string       `json:"subIndustry,omitempty"`
+	IndustryGroup      *string       `json:"industryGroup,omitempty"`
+	IsPublic           *bool         `json:"isPublic,omitempty"`
+	IsCustomer         *bool         `json:"isCustomer,omitempty"`
+	Market             *Market       `json:"market,omitempty"`
+	Employees          *int64        `json:"employees,omitempty"`
+	TargetAudience     *string       `json:"targetAudience,omitempty"`
+	ValueProposition   *string       `json:"valueProposition,omitempty"`
+	LastFundingRound   *FundingRound `json:"lastFundingRound,omitempty"`
+	LastFundingAmount  *string       `json:"lastFundingAmount,omitempty"`
+	LogoURL            *string       `json:"logoUrl,omitempty"`
+	EmployeeGrowthRate *string       `json:"employeeGrowthRate,omitempty"`
+	Headquarters       *string       `json:"headquarters,omitempty"`
+	YearFounded        *int64        `json:"yearFounded,omitempty"`
 }
 
 type PageView struct {

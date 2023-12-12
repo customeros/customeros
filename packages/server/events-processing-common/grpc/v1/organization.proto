@@ -26,6 +26,10 @@ enum OrganizationMaskField {
   ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND = 16;
   ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT = 17;
   ORGANIZATION_PROPERTY_NOTE = 18;
+  ORGANIZATION_PROPERTY_YEAR_FOUNDED = 19;
+  ORGANIZATION_PROPERTY_LOGO_URL = 20;
+  ORGANIZATION_PROPERTY_HEADQUARTERS = 21;
+  ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE = 22;
 }
 
 message UpsertOrganizationGrpcRequest {
@@ -55,6 +59,10 @@ message UpsertOrganizationGrpcRequest {
   bool isCustomer = 29;
   bool webScrapeMetadata = 30;
   repeated OrganizationMaskField fieldsMask = 31;
+  string logoUrl = 32;
+  string headquarters = 33;
+  string employeeGrowthRate = 34;
+  optional int64 yearFounded = 35;
 }
 
 message OrganizationIdGrpcRequest {
