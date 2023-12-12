@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
@@ -334,10 +335,16 @@ func (ds *DomainScraperV1) addLinkedinData(apiKey, companyLinkedinId string, scr
 
 	// enrich org data with linkedin data
 	scrapedContent.LogoUrl = (*linkedinData)[0].ProfilePhoto
-	scrapedContent.CompanySize = (*linkedinData)[0].CompanySizeOnLinkedin // actual value
-	scrapedContent.YearFounded = (*linkedinData)[0].Founded
+	scrapedContent.CompanySize, err = strconv.ParseInt((*linkedinData)[0].CompanySizeOnLinkedin, 10, 64) // actual value
+	if err != nil {
+		scrapedContent.CompanySize = 0
+	}
+	scrapedContent.YearFounded, err = strconv.ParseInt((*linkedinData)[0].Founded, 10, 64)
+	if err != nil {
+		scrapedContent.YearFounded = 0
+	}
 	scrapedContent.HeadquartersLocation = (*linkedinData)[0].Headquarters
-	scrapedContent.EmployeeGrowthRate = "" // not available in linkedin scraped data
+	scrapedContent.EmployeeGrowthRate = "" // FIXME: not available in linkedin scraped data we need to decide how to calculate this
 	return scrapedContent, nil
 }
 

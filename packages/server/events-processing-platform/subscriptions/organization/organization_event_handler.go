@@ -61,10 +61,10 @@ type WebscrapeResponseV1 struct {
 	Youtube              string `json:"youtube,omitempty"`
 	Instagram            string `json:"instagram,omitempty"`
 	Facebook             string `json:"facebook,omitempty"`
-	CompanySize          string `json:"companySize,omitempty"`
+	CompanySize          int64  `json:"companySize,omitempty"`
 	EmployeeGrowthRate   string `json:"employeeGrowthRate,omitempty"`
 	HeadquartersLocation string `json:"headquartersLocation,omitempty"`
-	YearFounded          string `json:"yearFounded,omitempty"`
+	YearFounded          int64  `json:"yearFounded,omitempty"`
 	LogoUrl              string `json:"logoUrl,omitempty"`
 }
 
@@ -173,6 +173,7 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 		SubIndustry:      result.SubIndustry,
 		TargetAudience:   result.TargetAudience,
 		ValueProposition: result.ValueProposition,
+		Employees:        result.CompanySize,
 	}
 	// name organization name if missing
 	if organization.Name == "" {
