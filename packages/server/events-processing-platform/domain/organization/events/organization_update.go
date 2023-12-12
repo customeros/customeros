@@ -1,13 +1,14 @@
 package events
 
 import (
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type OrganizationUpdateEvent struct {
@@ -168,7 +169,7 @@ func (e OrganizationUpdateEvent) UpdateHeadquarters() bool {
 }
 
 func (e OrganizationUpdateEvent) UpdateEmployeeGrowthRate() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldEmployeeGrowthRate)
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldMaskEmployeeGrowthRate)
 }
 
 func (e OrganizationUpdateEvent) UpdateLogoUrl() bool {
