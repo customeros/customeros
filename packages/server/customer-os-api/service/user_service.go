@@ -94,7 +94,7 @@ func (s *userService) Update(ctx context.Context, userId, firstName, lastName st
 		}
 	}
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.UserClient.UpsertUser(ctx, &usergrpc.UpsertUserGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -162,7 +162,7 @@ func (s *userService) AddRole(parentCtx context.Context, userId string, role mod
 		return nil, fmt.Errorf("logged-in user can not add role: %s", role)
 	}
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.UserClient.AddRole(ctx, &usergrpc.AddRoleGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -229,7 +229,7 @@ func (s *userService) AddRoleInTenant(parentCtx context.Context, userId, tenant 
 		return nil, fmt.Errorf("logged-in user can not add role: %s", role)
 	}
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.UserClient.AddRole(ctx, &usergrpc.AddRoleGrpcRequest{
 		Tenant:         tenant,
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -254,7 +254,7 @@ func (s *userService) RemoveRole(parentCtx context.Context, userId string, role 
 		return nil, fmt.Errorf("logged-in user can not remove role: %s", role)
 	}
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.UserClient.RemoveRole(ctx, &usergrpc.RemoveRoleGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -279,7 +279,7 @@ func (s *userService) RemoveRoleInTenant(parentCtx context.Context, userId strin
 		return nil, fmt.Errorf("logged-in user can not remove role: %s", role)
 	}
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.UserClient.RemoveRole(ctx, &usergrpc.RemoveRoleGrpcRequest{
 		Tenant:         tenant,
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -647,7 +647,7 @@ func (s *userService) Create(ctx context.Context, userEntity entity.UserEntity) 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("userEntity", userEntity))
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.UserClient.UpsertUser(ctx, &usergrpc.UpsertUserGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
 		SourceFields: &commongrpc.SourceFields{

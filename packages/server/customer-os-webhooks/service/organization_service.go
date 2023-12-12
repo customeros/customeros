@@ -240,6 +240,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		span.LogFields(log.String("organizationId", organizationId))
 
 		// Create or update organization
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = s.grpcClients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
 			Tenant:            tenant,
 			Id:                organizationId,

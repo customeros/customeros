@@ -150,7 +150,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 		return nil, err
 	}
 
-	ctx = tracing.InjectSpanIntoGrpcRequestMetadata(ctx, span)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = r.Clients.UserClient.LinkEmailToUser(ctx, &usergrpc.LinkEmailToUserGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		UserId:         userID,
