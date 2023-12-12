@@ -189,6 +189,8 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 		organizationFields.Website = result.Website
 		fieldsMask = append(fieldsMask, model.FieldMaskWebsite)
 	}
+	h.addFieldMasks(&organizationFields, &fieldsMask)
+
 	err = h.organizationCommands.UpdateOrganization.Handle(ctx,
 		cmd.NewUpdateOrganizationCommand(
 			organizationId, tenant, "", constants.AppSourceEventProcessingPlatform, constants.SourceWebscrape,
@@ -218,6 +220,25 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 	}
 
 	return nil
+}
+
+func (h *organizationEventHandler) addFieldMasks(orgFields *model.OrganizationDataFields, fieldMasks *[]string) *[]string {
+	if orgFields.Employees != 0 {
+		*fieldMasks = append(*fieldMasks, model.FieldMaskEmployees)
+	}
+	if orgFields.YearFounded != 0 {
+		*fieldMasks = append(*fieldMasks, model.FieldMaskYearFounded)
+	}
+	if orgFields.Headquarters != "" {
+		*fieldMasks = append(*fieldMasks, model.FieldMaskHeadquarters)
+	}
+	if orgFields.EmployeeGrowthRate != "" {
+		*fieldMasks = append(*fieldMasks, model.FieldMaskEmployeeGrowthRate)
+	}
+	if orgFields.LogoUrl != "" {
+		*fieldMasks = append(*fieldMasks, model.FieldMaskLogoUrl)
+	}
+	return fieldMasks
 }
 
 func (h *organizationEventHandler) updateOrganizationNameIfEmpty(ctx context.Context, tenant, url string, organization *entity.OrganizationEntity, span opentracing.Span) {
