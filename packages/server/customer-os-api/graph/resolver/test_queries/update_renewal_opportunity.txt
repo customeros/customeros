@@ -1,4 +1,4 @@
-mutation UpdateRenewalOpportunity($opportunityId: ID!) {
+mutation UpdateRenewalOpportunity($opportunityId: ID!, $ownerUserId: ID) {
 opportunityRenewalUpdate(
     input: {
         opportunityId: $opportunityId
@@ -7,9 +7,13 @@ opportunityRenewalUpdate(
         renewalLikelihood: HIGH_RENEWAL
         comments: "test comments"
         appSource: "test app source"
+        ownerUserId: $ownerUserId
     }
   ) {
     id
     name
+    owner {
+            id
+        }
   }
 }

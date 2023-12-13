@@ -686,7 +686,7 @@ type ComplexityRoot struct {
 		NoteLinkAttachment                      func(childComplexity int, noteID string, attachmentID string) int
 		NoteUnlinkAttachment                    func(childComplexity int, noteID string, attachmentID string) int
 		NoteUpdate                              func(childComplexity int, input model.NoteUpdateInput) int
-		OpportunityRenewalUpdate                func(childComplexity int, input model.OpportunityRenewalUpdateInput) int
+		OpportunityRenewalUpdate                func(childComplexity int, input model.OpportunityRenewalUpdateInput, ownerUserID *string) int
 		OpportunityUpdate                       func(childComplexity int, input model.OpportunityUpdateInput) int
 		OrganizationAddNewLocation              func(childComplexity int, organizationID string) int
 		OrganizationAddSocial                   func(childComplexity int, organizationID string, input model.SocialInput) int
@@ -1257,7 +1257,7 @@ type MutationResolver interface {
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error)
-	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput) (*model.Opportunity, error)
+	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationArchive(ctx context.Context, id string) (*model.Result, error)
@@ -5062,7 +5062,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.OpportunityRenewalUpdate(childComplexity, args["input"].(model.OpportunityRenewalUpdateInput)), true
+		return e.complexity.Mutation.OpportunityRenewalUpdate(childComplexity, args["input"].(model.OpportunityRenewalUpdateInput), args["ownerUserId"].(*string)), true
 
 	case "Mutation.opportunityUpdate":
 		if e.complexity.Mutation.OpportunityUpdate == nil {
@@ -9537,7 +9537,7 @@ input NoteUpdateInput {
 }
 extend type Mutation {
     opportunityUpdate(input: OpportunityUpdateInput!): Opportunity!
-    opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!): Opportunity!
+    opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!, ownerUserId: ID): Opportunity!
 }
 
 type Opportunity implements Node {
@@ -9595,7 +9595,7 @@ input OpportunityRenewalUpdateInput {
     renewalLikelihood:  OpportunityRenewalLikelihood
     comments:           String
     appSource:          String
-    ownerUserId:        String
+    ownerUserId:        ID
 }
 
 input OpportunityUpdateInput {
@@ -12214,6 +12214,15 @@ func (ec *executionContext) field_Mutation_opportunityRenewalUpdate_args(ctx con
 		}
 	}
 	args["input"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["ownerUserId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerUserId"))
+		arg1, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ownerUserId"] = arg1
 	return args, nil
 }
 
@@ -39920,7 +39929,7 @@ func (ec *executionContext) _Mutation_opportunityRenewalUpdate(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().OpportunityRenewalUpdate(rctx, fc.Args["input"].(model.OpportunityRenewalUpdateInput))
+		return ec.resolvers.Mutation().OpportunityRenewalUpdate(rctx, fc.Args["input"].(model.OpportunityRenewalUpdateInput), fc.Args["ownerUserId"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -64659,7 +64668,7 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 			it.AppSource = data
 		case "ownerUserId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerUserId"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
