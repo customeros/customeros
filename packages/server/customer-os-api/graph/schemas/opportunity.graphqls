@@ -3,7 +3,7 @@ extend type Query {
 }
 extend type Mutation {
     opportunityUpdate(input: OpportunityUpdateInput!): Opportunity!
-    opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!): Opportunity!
+    opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!, ownerUserId: ID): Opportunity!
 }
 
 type Opportunity implements Node {
@@ -61,7 +61,7 @@ input OpportunityRenewalUpdateInput {
     renewalLikelihood:  OpportunityRenewalLikelihood
     comments:           String
     appSource:          String
-    ownerUserId:        String
+    ownerUserId:        ID
 }
 
 input OpportunityUpdateInput {
