@@ -130,7 +130,7 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 
 	if renewalLikelihood != "" {
 		err = h.opportunityCommands.UpdateRenewalOpportunity.Handle(ctx,
-			opportunitycmd.NewUpdateRenewalOpportunityCommand(opportunityEntity.Id, tenant, "", "", renewalLikelihood, 0, commonmodel.Source{AppSource: constants.AppSourceEventProcessingPlatform}, nil, []string{opportunitymodel.FieldMaskRenewalLikelihood}))
+			opportunitycmd.NewUpdateRenewalOpportunityCommand(opportunityEntity.Id, tenant, "", "", renewalLikelihood, 0, commonmodel.Source{AppSource: constants.AppSourceEventProcessingPlatform}, nil, []string{opportunitymodel.FieldMaskRenewalLikelihood}, ""))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("UpdateRenewalOpportunity command failed: %v", err.Error())

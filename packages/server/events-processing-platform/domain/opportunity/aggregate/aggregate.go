@@ -139,7 +139,6 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 			a.Opportunity.MaxAmount = eventData.MaxAmount
 		}
 	}
-
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 
 	if eventData.ExternalSystem.Available() {
@@ -190,7 +189,6 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 	if eventData.OwnerUserId != "" {
 		a.Opportunity.OwnerUserId = eventData.OwnerUserId
 	}
-
 	return nil
 }
 

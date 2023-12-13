@@ -128,6 +128,7 @@ func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, reque
 		source,
 		updatedAt,
 		extractOpportunityMaskFields(request.MaskFields),
+		request.OwnerUserId,
 	)
 
 	if err := s.opportunityCommandHandlers.UpdateRenewalOpportunity.Handle(ctx, updateRenewalOpportunityCommand); err != nil {

@@ -180,6 +180,7 @@ func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
 		Tenant:            tenant,
 		Id:                opportunityId,
 		Amount:            10000,
+		OwnerUserId:       "user-id-123",
 		RenewalLikelihood: opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL,
 		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
@@ -211,6 +212,7 @@ func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
 	require.Equal(t, 10000.0, eventData.Amount)
 	test.AssertRecentTime(t, eventData.UpdatedAt)
 	require.Equal(t, "user-id-123", eventData.UpdatedByUserId)
+	require.Equal(t, "user-id-123", eventData.OwnerUserId)
 	require.Equal(t, "Some comments", eventData.Comments)
 	require.Equal(t, string(model.RenewalLikelihoodStringMedium), eventData.RenewalLikelihood)
 	require.Equal(t, "openline", eventData.Source)
