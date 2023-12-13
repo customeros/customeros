@@ -187,9 +187,7 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 	if eventData.Source == constants.SourceOpenline {
 		a.Opportunity.Source.SourceOfTruth = eventData.Source
 	}
-	if eventData.OwnerUserId != "" {
-		a.Opportunity.OwnerUserId = eventData.OwnerUserId
-	}
+	a.Opportunity.OwnerUserId = eventData.OwnerUserId
 
 	return nil
 }
