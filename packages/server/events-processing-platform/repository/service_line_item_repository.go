@@ -59,7 +59,8 @@ func (r *serviceLineItemRepository) CreateForContract(ctx context.Context, tenan
 								sli.price=$price,
 								sli.quantity=$quantity,
 								sli.billed=$billed,
-								sli.parentId=$parentId
+								sli.parentId=$parentId,
+				                sli.comments=$comments
 							`, tenant)
 	params := map[string]any{
 		"tenant":            tenant,
@@ -77,6 +78,7 @@ func (r *serviceLineItemRepository) CreateForContract(ctx context.Context, tenan
 		"quantity":          evt.Quantity,
 		"name":              evt.Name,
 		"billed":            evt.Billed,
+		"comments":          evt.Comments,
 	}
 	if isNewVersionForExistingSLI {
 		cypher += `, sli.previousQuantity=$previousQuantity, sli.previousPrice=$previousPrice, sli.previousBilled=$previousBilled`

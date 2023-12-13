@@ -541,8 +541,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 	updateEvent, err := event.NewServiceLineItemUpdateEvent(
 		aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId),
 		model.ServiceLineItemDataFields{
-			Price:  200.0,
-			Billed: model.UsageBilled,
+			Price:    200.0,
+			Billed:   model.UsageBilled,
+			Comments: "test reason for change",
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -576,6 +577,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
 	require.Equal(t, model.UsageBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, float64(200.0), serviceLineItem.Price)
+	require.Equal(t, "test reason for change", serviceLineItem.Comments)
 
 	// verify action
 	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
@@ -587,7 +589,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
 	require.Equal(t, "logged-in user retroactively increased the price for Service 1 from 150.0000 to 200.0000", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":0,"price":200,"previousPrice":150,"billedType":"USAGE","comment":"price changed is 150.00 for service Service 1","reasonForChange":""}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","quantity":0,"price":200,"previousPrice":150,"billedType":"USAGE","comment":"price changed is 150.00 for service Service 1","reasonForChange":"test reason for change"}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_TimelineEvent(t *testing.T) {
@@ -1593,6 +1595,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
 	require.Equal(t, "Test service line item", serviceLineItem.Name)
+	require.Equal(t, "reason for what change?", serviceLineItem.Comments)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
 	require.Equal(t, timeNow, serviceLineItem.StartedAt)
@@ -1755,6 +1758,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 			Price:      850.75,
 			ContractId: contractId,
 			ParentId:   serviceLineItemParentId,
+			Comments:   "This is a reason for change",
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -1794,6 +1798,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, serviceLineItemParentId, serviceLineItem.ParentId)
 	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, float64(850.75), serviceLineItem.Price)
+	require.Equal(t, "This is a reason for change", serviceLineItem.Comments)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
 	require.Equal(t, timeNow, serviceLineItem.StartedAt)
@@ -1809,7 +1814,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemPriceUpdated, action.Type)
 	require.Equal(t, "logged-in user decreased the price for Unnamed service from 1500.56/month to 850.75/month", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Unnamed service","quantity":0,"price":850.75,"previousPrice":1500.56,"billedType":"MONTHLY","comment":"price is 850.75 for service Unnamed service","reasonForChange":""}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Unnamed service","quantity":0,"price":850.75,"previousPrice":1500.56,"billedType":"MONTHLY","comment":"price is 850.75 for service Unnamed service","reasonForChange":"This is a reason for change"}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExistingSLI(t *testing.T) {
@@ -1866,6 +1871,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 			Name:       "Service 1",
 			ContractId: contractId,
 			ParentId:   serviceLineItemId1,
+			Comments:   "Reason for change",
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -1907,6 +1913,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
 	require.Equal(t, float64(170.25), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
+	require.Equal(t, "Reason for change", serviceLineItem.Comments)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
 	require.Equal(t, timeNow, serviceLineItem.StartedAt)
@@ -1922,7 +1929,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemBilledTypeUpdated, action.Type)
 	require.Equal(t, "logged-in user changed the billing cycle for Service 1 from 170.25/year to 170.25/quarter", action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"quantity":10,"billedType":"QUARTERLY","previousBilledType":"ANNUALLY","comment":"billed type is QUARTERLY for service Service 1","reasonForChange":""}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"quantity":10,"billedType":"QUARTERLY","previousBilledType":"ANNUALLY","comment":"billed type is QUARTERLY for service Service 1","reasonForChange":"Reason for change"}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveForExistingSLI(t *testing.T) {
