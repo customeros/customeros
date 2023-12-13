@@ -7,15 +7,16 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"
@@ -31,6 +32,7 @@ type OrganizationEventHandler struct {
 	repositories         *repository.Repositories
 	organizationCommands *cmdhnd.CommandHandlers
 	log                  logger.Logger
+	grpcClients          *grpc_client.Clients
 }
 
 type eventMetadata struct {
@@ -103,13 +105,18 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	}
 
 	// Request last touch point update
-	err = h.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd.NewRefreshLastTouchpointCommand(eventData.Tenant, organizationId, "", constants.AppSourceEventProcessingPlatform))
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = h.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+		Tenant:         eventData.Tenant,
+		OrganizationId: organizationId,
+		AppSource:      constants.AppSourceEventProcessingPlatform,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("RefreshLastTouchpointCommand failed: %v", err.Error())
+		h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", organizationId, err.Error())
 	}
 
-	return err
+	return nil
 }
 
 func (h *OrganizationEventHandler) setCustomerOsId(ctx context.Context, tenant, organizationId string) error {

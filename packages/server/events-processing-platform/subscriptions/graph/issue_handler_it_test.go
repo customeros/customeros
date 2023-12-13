@@ -4,18 +4,15 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/model"
-	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
-	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -25,8 +22,6 @@ import (
 func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstore.NewTestAggregateStore()
 
 	// prepare neo4j data
 	externalSystemId := "sf"
@@ -38,12 +33,26 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "Organization": 2, "ExternalSystem": 1, "Issue": 0, "TimelineEvent": 0})
 
-	// prepare event handler
-	issueEventHandler := &GraphIssueEventHandler{
-		Repositories:         testDatabase.Repositories,
-		organizationCommands: orgcmdhnd.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+	// prepare grpc mock
+	lastTouchpointInvoked := false
+	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, reporterOrgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			lastTouchpointInvoked = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: reporterOrgId,
+			}, nil
+		},
 	}
-	orgAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenantName, reporterOrgId)
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
+	// prepare event handler
+	issueEventHandler := &IssueEventHandler{
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
 	now := utils.Now()
 	issueId := uuid.New().String()
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
@@ -102,17 +111,8 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, now, issue.CreatedAt)
 	require.Equal(t, now, issue.UpdatedAt)
 
-	// Check refresh last touchpoint event was generated
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-	eventList := eventsMap[orgAggregate.GetID()]
-	require.Equal(t, 1, len(eventList))
-	generatedEvent := eventList[0]
-	require.Equal(t, orgevents.OrganizationRefreshLastTouchpointV1, generatedEvent.EventType)
-	var eventData orgevents.OrganizationRefreshLastTouchpointEvent
-	err = generatedEvent.GetJsonData(&eventData)
-	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData.Tenant)
+	// Check refresh last touchpoint
+	require.Truef(t, lastTouchpointInvoked, "RefreshLastTouchpoint was not invoked")
 }
 
 func TestGraphIssueEventHandler_OnUpdate(t *testing.T) {
@@ -133,8 +133,8 @@ func TestGraphIssueEventHandler_OnUpdate(t *testing.T) {
 		"Organization": 1, "Issue": 1, "TimelineEvent": 1})
 
 	// prepare event handler
-	issueEventHandler := &GraphIssueEventHandler{
-		Repositories: testDatabase.Repositories,
+	issueEventHandler := &IssueEventHandler{
+		repositories: testDatabase.Repositories,
 	}
 	now := utils.Now()
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
@@ -187,8 +187,8 @@ func TestGraphIssueEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOp
 		"Organization": 1, "Issue": 1, "TimelineEvent": 1})
 
 	// prepare event handler
-	issueEventHandler := &GraphIssueEventHandler{
-		Repositories: testDatabase.Repositories,
+	issueEventHandler := &IssueEventHandler{
+		repositories: testDatabase.Repositories,
 	}
 	now := utils.Now()
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
@@ -236,8 +236,8 @@ func TestGraphIssueEventHandler_OnAddUserAssignee(t *testing.T) {
 	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"ASSIGNED_TO": 0})
 
 	// prepare event handler
-	issueEventHandler := &GraphIssueEventHandler{
-		Repositories: testDatabase.Repositories,
+	issueEventHandler := &IssueEventHandler{
+		repositories: testDatabase.Repositories,
 	}
 	updatedAt := utils.Now().Add(time.Duration(-1) * time.Minute)
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
@@ -274,8 +274,8 @@ func TestGraphIssueEventHandler_OnRemoveUserAssignee(t *testing.T) {
 	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"ASSIGNED_TO": 1})
 
 	// prepare event handler
-	issueEventHandler := &GraphIssueEventHandler{
-		Repositories: testDatabase.Repositories,
+	issueEventHandler := &IssueEventHandler{
+		repositories: testDatabase.Repositories,
 	}
 	updatedAt := utils.Now().Add(time.Duration(-1) * time.Hour)
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
@@ -311,8 +311,8 @@ func TestGraphIssueEventHandler_OnAddUserFollower(t *testing.T) {
 	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"FOLLOWED_BY": 0})
 
 	// prepare event handler
-	issueEventHandler := &GraphIssueEventHandler{
-		Repositories: testDatabase.Repositories,
+	issueEventHandler := &IssueEventHandler{
+		repositories: testDatabase.Repositories,
 	}
 	updatedAt := utils.Now().Add(time.Duration(-10) * time.Minute)
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
@@ -349,8 +349,8 @@ func TestGraphIssueEventHandler_OnRemoveUserFollower(t *testing.T) {
 	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"FOLLOWED_BY": 1})
 
 	// prepare event handler
-	issueEventHandler := &GraphIssueEventHandler{
-		Repositories: testDatabase.Repositories,
+	issueEventHandler := &IssueEventHandler{
+		repositories: testDatabase.Repositories,
 	}
 	updatedAt := utils.Now().Add(time.Duration(-1) * time.Hour)
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)

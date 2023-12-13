@@ -15,14 +15,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-type GraphLogEntryEventHandler struct {
+type LogEntryEventHandler struct {
 	log          logger.Logger
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 }
 
-func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnCreate")
+func (h *LogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryEventHandler.OnCreate")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -63,8 +63,8 @@ func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore
 	return nil
 }
 
-func (h *GraphLogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnUpdate")
+func (h *LogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryEventHandler.OnUpdate")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -84,8 +84,8 @@ func (h *GraphLogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore
 	return err
 }
 
-func (h *GraphLogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnAddTag")
+func (h *LogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryEventHandler.OnAddTag")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -105,8 +105,8 @@ func (h *GraphLogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore
 	return err
 }
 
-func (h *GraphLogEntryEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnRemoveTag")
+func (h *LogEntryEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryEventHandler.OnRemoveTag")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
@@ -14,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"regexp"
@@ -26,8 +28,6 @@ const customerOsIdPattern = `^C-[A-HJ-NP-Z2-9]{3}-[A-HJ-NP-Z2-9]{3}$`
 func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstore.NewTestAggregateStore()
 
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -42,10 +42,25 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 
 	orgId := uuid.New().String()
 
+	// prepare grpc mock
+	lastTouchpointInvoked := false
+	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			lastTouchpointInvoked = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
-		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -100,17 +115,8 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	require.Equal(t, "", action.Content)
 	require.Equal(t, "", action.Metadata)
 
-	// Check last touch point request was generated
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-	eventList := eventsMap[orgAggregate.ID]
-	require.Equal(t, 1, len(eventList))
-	generatedEvent := eventList[0]
-	require.Equal(t, events.OrganizationRefreshLastTouchpointV1, generatedEvent.EventType)
-	var eventData events.OrganizationRefreshLastTouchpointEvent
-	err = generatedEvent.GetJsonData(&eventData)
-	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData.Tenant)
+	// Check refresh last touch point
+	require.Truef(t, lastTouchpointInvoked, "RefreshLastTouchpoint was not invoked")
 }
 
 func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {

@@ -44,9 +44,9 @@ type GraphSubscriber struct {
 	userEventHandler            *GraphUserEventHandler
 	locationEventHandler        *GraphLocationEventHandler
 	jobRoleEventHandler         *GraphJobRoleEventHandler
-	interactionEventHandler     *GraphInteractionEventHandler
-	logEntryEventHandler        *GraphLogEntryEventHandler
-	issueEventHandler           *GraphIssueEventHandler
+	interactionEventHandler     *InteractionEventHandler
+	logEntryEventHandler        *LogEntryEventHandler
+	issueEventHandler           *IssueEventHandler
 	commentEventHandler         *GraphCommentEventHandler
 	opportunityEventHandler     *OpportunityEventHandler
 	contractEventHandler        *ContractEventHandler
@@ -61,15 +61,15 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		repositories:                repositories,
 		cfg:                         cfg,
 		contactEventHandler:         &ContactEventHandler{repositories: repositories},
-		organizationEventHandler:    &OrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commandHandlers.Organization},
+		organizationEventHandler:    &OrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commandHandlers.Organization, grpcClients: grpcClients},
 		phoneNumberEventHandler:     &GraphPhoneNumberEventHandler{Repositories: repositories},
 		emailEventHandler:           &GraphEmailEventHandler{Repositories: repositories},
 		userEventHandler:            &GraphUserEventHandler{repositories: repositories, log: log},
 		locationEventHandler:        &GraphLocationEventHandler{Repositories: repositories},
 		jobRoleEventHandler:         &GraphJobRoleEventHandler{Repositories: repositories},
-		interactionEventHandler:     &GraphInteractionEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
-		logEntryEventHandler:        &GraphLogEntryEventHandler{repositories: repositories, log: log, grpcClients: grpcClients},
-		issueEventHandler:           &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
+		interactionEventHandler:     &InteractionEventHandler{repositories: repositories, log: log, grpcClients: grpcClients},
+		logEntryEventHandler:        &LogEntryEventHandler{repositories: repositories, log: log, grpcClients: grpcClients},
+		issueEventHandler:           &IssueEventHandler{repositories: repositories, log: log, grpcClients: grpcClients},
 		commentEventHandler:         &GraphCommentEventHandler{repositories: repositories, log: log},
 		opportunityEventHandler:     &OpportunityEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity, organizationCommands: commandHandlers.Organization},
 		contractEventHandler:        &ContractEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity, organizationCommands: commandHandlers.Organization},
