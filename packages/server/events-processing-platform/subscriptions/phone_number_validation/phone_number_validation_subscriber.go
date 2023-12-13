@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
@@ -23,10 +24,9 @@ type PhoneNumberValidationSubscriber struct {
 	db                      *esdb.Client
 	cfg                     *config.Config
 	phoneNumberEventHandler *PhoneNumberEventHandler
-	repositories            *repository.Repositories
 }
 
-func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, phoneNumberCommands *command_handler.CommandHandlers, repositories *repository.Repositories) *PhoneNumberValidationSubscriber {
+func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, phoneNumberCommands *command_handler.CommandHandlers, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *PhoneNumberValidationSubscriber {
 	return &PhoneNumberValidationSubscriber{
 		log: log,
 		db:  db,
@@ -36,6 +36,7 @@ func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg 
 			cfg:                 cfg,
 			phoneNumberCommands: phoneNumberCommands,
 			repositories:        repositories,
+			grpcClients:         grpcClients,
 		},
 	}
 }

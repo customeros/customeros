@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PhoneNumberGrpcServiceClient interface {
 	UpsertPhoneNumber(ctx context.Context, in *UpsertPhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberIdGrpcResponse, error)
+	FailPhoneNumberValidation(ctx context.Context, in *FailPhoneNumberValidationGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberIdGrpcResponse, error)
 }
 
 type phoneNumberGrpcServiceClient struct {
@@ -42,11 +43,21 @@ func (c *phoneNumberGrpcServiceClient) UpsertPhoneNumber(ctx context.Context, in
 	return out, nil
 }
 
+func (c *phoneNumberGrpcServiceClient) FailPhoneNumberValidation(ctx context.Context, in *FailPhoneNumberValidationGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberIdGrpcResponse, error) {
+	out := new(PhoneNumberIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/phoneNumberGrpcService/FailPhoneNumberValidation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PhoneNumberGrpcServiceServer is the server API for PhoneNumberGrpcService service.
 // All implementations should embed UnimplementedPhoneNumberGrpcServiceServer
 // for forward compatibility
 type PhoneNumberGrpcServiceServer interface {
 	UpsertPhoneNumber(context.Context, *UpsertPhoneNumberGrpcRequest) (*PhoneNumberIdGrpcResponse, error)
+	FailPhoneNumberValidation(context.Context, *FailPhoneNumberValidationGrpcRequest) (*PhoneNumberIdGrpcResponse, error)
 }
 
 // UnimplementedPhoneNumberGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -55,6 +66,9 @@ type UnimplementedPhoneNumberGrpcServiceServer struct {
 
 func (UnimplementedPhoneNumberGrpcServiceServer) UpsertPhoneNumber(context.Context, *UpsertPhoneNumberGrpcRequest) (*PhoneNumberIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertPhoneNumber not implemented")
+}
+func (UnimplementedPhoneNumberGrpcServiceServer) FailPhoneNumberValidation(context.Context, *FailPhoneNumberValidationGrpcRequest) (*PhoneNumberIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FailPhoneNumberValidation not implemented")
 }
 
 // UnsafePhoneNumberGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -86,6 +100,24 @@ func _PhoneNumberGrpcService_UpsertPhoneNumber_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PhoneNumberGrpcService_FailPhoneNumberValidation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FailPhoneNumberValidationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PhoneNumberGrpcServiceServer).FailPhoneNumberValidation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/phoneNumberGrpcService/FailPhoneNumberValidation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PhoneNumberGrpcServiceServer).FailPhoneNumberValidation(ctx, req.(*FailPhoneNumberValidationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PhoneNumberGrpcService_ServiceDesc is the grpc.ServiceDesc for PhoneNumberGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -96,6 +128,10 @@ var PhoneNumberGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertPhoneNumber",
 			Handler:    _PhoneNumberGrpcService_UpsertPhoneNumber_Handler,
+		},
+		{
+			MethodName: "FailPhoneNumberValidation",
+			Handler:    _PhoneNumberGrpcService_FailPhoneNumberValidation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
