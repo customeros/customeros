@@ -256,6 +256,40 @@ func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, sta
 		response.Months = append(response.Months, newData)
 	}
 
+	upsells, err := s.repositories.DashboardRepository.GetDashboardARRBreakdownUpsellsAndDowngradesData(ctx, common.GetContext(ctx).Tenant, "UPSELLS", start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range upsells {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+		value, _ := record["value"].(float64)
+
+		for _, monthData := range response.Months {
+			if monthData.Year == int(year) && monthData.Month == int(month) {
+				monthData.Upsells = value
+			}
+		}
+	}
+
+	downgrades, err := s.repositories.DashboardRepository.GetDashboardARRBreakdownUpsellsAndDowngradesData(ctx, common.GetContext(ctx).Tenant, "DOWNGRADES", start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range downgrades {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+		value, _ := record["value"].(float64)
+
+		for _, monthData := range response.Months {
+			if monthData.Year == int(year) && monthData.Month == int(month) {
+				monthData.Downgrades = value
+			}
+		}
+	}
+
 	return &response, nil
 }
 
