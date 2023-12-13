@@ -149,7 +149,7 @@ func (server *server) Start(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.PhoneNumberValidationSubscription.Enabled {
-		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.PhoneNumber, server.repositories)
+		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.PhoneNumber, server.repositories, grpcClients)
 		go func() {
 			err := phoneNumberValidationSubscriber.Connect(ctx, phoneNumberValidationSubscriber.ProcessEvents)
 			if err != nil {

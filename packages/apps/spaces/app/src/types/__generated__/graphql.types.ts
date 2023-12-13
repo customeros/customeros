@@ -2235,6 +2235,7 @@ export type OpportunityRenewalUpdateInput = {
   comments?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   opportunityId: Scalars['ID'];
+  ownerUserId?: InputMaybe<Scalars['String']>;
   renewalLikelihood?: InputMaybe<OpportunityRenewalLikelihood>;
 };
 
@@ -2268,10 +2269,12 @@ export type Organization = Node & {
   description?: Maybe<Scalars['String']>;
   domains: Array<Scalars['String']>;
   emails: Array<Email>;
+  employeeGrowthRate?: Maybe<Scalars['String']>;
   employees?: Maybe<Scalars['Int64']>;
   entityTemplate?: Maybe<EntityTemplate>;
   externalLinks: Array<ExternalSystem>;
   fieldSets: Array<FieldSet>;
+  headquarters?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
   industry?: Maybe<Scalars['String']>;
   industryGroup?: Maybe<Scalars['String']>;
@@ -2286,6 +2289,7 @@ export type Organization = Node & {
   lastTouchPointTimelineEventId?: Maybe<Scalars['ID']>;
   lastTouchPointType?: Maybe<LastTouchpointType>;
   locations: Array<Location>;
+  logoUrl?: Maybe<Scalars['String']>;
   market?: Maybe<Market>;
   name: Scalars['String'];
   note?: Maybe<Scalars['String']>;
@@ -2307,6 +2311,7 @@ export type Organization = Node & {
   updatedAt: Scalars['Time'];
   valueProposition?: Maybe<Scalars['String']>;
   website?: Maybe<Scalars['String']>;
+  yearFounded?: Maybe<Scalars['Int64']>;
 };
 
 export type OrganizationContactsArgs = {
@@ -2334,12 +2339,15 @@ export type OrganizationInput = {
   customFields?: InputMaybe<Array<CustomFieldInput>>;
   description?: InputMaybe<Scalars['String']>;
   domains?: InputMaybe<Array<Scalars['String']>>;
+  employeeGrowthRate?: InputMaybe<Scalars['String']>;
   employees?: InputMaybe<Scalars['Int64']>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
+  headquarters?: InputMaybe<Scalars['String']>;
   industry?: InputMaybe<Scalars['String']>;
   industryGroup?: InputMaybe<Scalars['String']>;
   isCustomer?: InputMaybe<Scalars['Boolean']>;
   isPublic?: InputMaybe<Scalars['Boolean']>;
+  logoUrl?: InputMaybe<Scalars['String']>;
   market?: InputMaybe<Market>;
   name: Scalars['String'];
   note?: InputMaybe<Scalars['String']>;
@@ -2351,6 +2359,7 @@ export type OrganizationInput = {
   subIndustry?: InputMaybe<Scalars['String']>;
   templateId?: InputMaybe<Scalars['ID']>;
   website?: InputMaybe<Scalars['String']>;
+  yearFounded?: InputMaybe<Scalars['Int64']>;
 };
 
 export type OrganizationPage = Pages & {
@@ -2370,7 +2379,9 @@ export type OrganizationParticipant = {
 export type OrganizationUpdateInput = {
   description?: InputMaybe<Scalars['String']>;
   domains?: InputMaybe<Array<Scalars['String']>>;
+  employeeGrowthRate?: InputMaybe<Scalars['String']>;
   employees?: InputMaybe<Scalars['Int64']>;
+  headquarters?: InputMaybe<Scalars['String']>;
   id: Scalars['ID'];
   industry?: InputMaybe<Scalars['String']>;
   industryGroup?: InputMaybe<Scalars['String']>;
@@ -2378,6 +2389,7 @@ export type OrganizationUpdateInput = {
   isPublic?: InputMaybe<Scalars['Boolean']>;
   lastFundingAmount?: InputMaybe<Scalars['String']>;
   lastFundingRound?: InputMaybe<FundingRound>;
+  logoUrl?: InputMaybe<Scalars['String']>;
   market?: InputMaybe<Market>;
   name: Scalars['String'];
   note?: InputMaybe<Scalars['String']>;
@@ -2388,6 +2400,7 @@ export type OrganizationUpdateInput = {
   targetAudience?: InputMaybe<Scalars['String']>;
   valueProposition?: InputMaybe<Scalars['String']>;
   website?: InputMaybe<Scalars['String']>;
+  yearFounded?: InputMaybe<Scalars['Int64']>;
 };
 
 export type PageView = Node &

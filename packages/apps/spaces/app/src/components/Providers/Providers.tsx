@@ -11,6 +11,7 @@ import { createIDBPersister } from '@shared/util/indexedDBPersister';
 import { AnalyticsProvider } from '@shared/components/Providers/AnalyticsProvider';
 
 import { NextAuthProvider } from './SessionProvider';
+import { GrowthbookProvider } from './GrowthbookProvider';
 interface ProvidersProps {
   isProduction?: boolean;
   children: React.ReactNode;
@@ -47,9 +48,11 @@ export const Providers = ({
       <ReactQueryDevtools initialIsOpen={false} position='bottom-right' />
       <RecoilRoot>
         <NextAuthProvider>
-          <AnalyticsProvider isProduction={isProduction}>
-            {children}
-          </AnalyticsProvider>
+          <GrowthbookProvider>
+            <AnalyticsProvider isProduction={isProduction}>
+              {children}
+            </AnalyticsProvider>
+          </GrowthbookProvider>
         </NextAuthProvider>
       </RecoilRoot>
     </PersistQueryClientProvider>

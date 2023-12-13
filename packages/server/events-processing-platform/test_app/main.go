@@ -75,7 +75,7 @@ func main() {
 	//testUpdateLogEntry()
 	//testAddCustomField()
 	//testCreateEmail()
-	//testCreatePhoneNumber()
+	testCreatePhoneNumber()
 	//testAddParentOrganization()
 	//testRemoveParentOrganization()
 	//testCreateContact()
@@ -245,7 +245,7 @@ func testCreateEmail() {
 func testCreatePhoneNumber() {
 	tenant := "openline"
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
-	rawPhoneNumber := "+1234"
+	rawPhoneNumber := "+12345"
 
 	result, _ := clients.PhoneNumberClient.UpsertPhoneNumber(context.Background(), &phonenumberpb.UpsertPhoneNumberGrpcRequest{
 		Tenant:         tenant,

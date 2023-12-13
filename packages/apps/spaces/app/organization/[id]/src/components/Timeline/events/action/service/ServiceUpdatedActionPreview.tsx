@@ -23,6 +23,7 @@ export const ServiceUpdatedActionPreview: FC<{
 
   const event = modalContent as Action;
   const metadata = getMetadata(event?.metadata);
+  const reasonForChange = metadata?.reasonForChange;
 
   const formattedContent = (event?.content ?? '')
     .replace(
@@ -86,7 +87,7 @@ export const ServiceUpdatedActionPreview: FC<{
               fontSize='sm'
               color='gray.500'
             >
-              {metadata.content}
+              {reasonForChange}
             </Text>
           </CardFooter>
         )}

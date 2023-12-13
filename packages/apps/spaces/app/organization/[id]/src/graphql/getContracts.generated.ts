@@ -68,6 +68,13 @@ export type GetContractsQuery = {
         renewalUpdatedByUserId: string;
         renewalUpdatedByUserAt: any;
         renewedAt: any;
+        owner?: {
+          __typename?: 'User';
+          id: string;
+          firstName: string;
+          lastName: string;
+          name?: string | null;
+        } | null;
       }> | null;
       serviceLineItems?: Array<{
         __typename?: 'ServiceLineItem';
@@ -125,6 +132,12 @@ export const GetContractsDocument = `
         renewalUpdatedByUserId
         renewalUpdatedByUserAt
         renewedAt
+        owner {
+          id
+          firstName
+          lastName
+          name
+        }
       }
       serviceLineItems {
         id

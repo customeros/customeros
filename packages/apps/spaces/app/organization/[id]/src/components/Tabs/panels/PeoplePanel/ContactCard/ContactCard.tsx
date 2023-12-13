@@ -58,7 +58,6 @@ export const ContactCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [roleIsFocused, setRoleIsFocused] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
-
   useOutsideClick({
     ref: cardRef,
     handler: () => setIsExpanded(false),

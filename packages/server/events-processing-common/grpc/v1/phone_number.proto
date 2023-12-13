@@ -18,10 +18,21 @@ message UpsertPhoneNumberGrpcRequest {
   SourceFields sourceFields = 10;
 }
 
+message FailPhoneNumberValidationGrpcRequest {
+  string tenant = 1;
+  string phoneNumberId = 2;
+  string phoneNumber = 3;
+  string countryCodeA2 = 4;
+  string errorMessage = 5;
+  string appSource = 6;
+  string loggedInUserId = 7;
+}
+
 message PhoneNumberIdGrpcResponse {
   string id = 1;
 }
 
 service phoneNumberGrpcService {
   rpc UpsertPhoneNumber(UpsertPhoneNumberGrpcRequest) returns (PhoneNumberIdGrpcResponse);
+  rpc FailPhoneNumberValidation(FailPhoneNumberValidationGrpcRequest) returns (PhoneNumberIdGrpcResponse);
 }

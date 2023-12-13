@@ -33,6 +33,12 @@ query getContracts($id: ID!) {
         renewalUpdatedByUserId
         renewalUpdatedByUserAt
         renewedAt
+        owner {
+          id
+          firstName
+          lastName
+          name
+        }
       }
       serviceLineItems {
         id
