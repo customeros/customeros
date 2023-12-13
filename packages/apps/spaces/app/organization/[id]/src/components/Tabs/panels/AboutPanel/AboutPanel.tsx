@@ -4,6 +4,7 @@ import { useForm } from 'react-inverted-form';
 import { useEffect, useCallback } from 'react';
 
 import debounce from 'lodash/debounce';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
@@ -20,7 +21,6 @@ import { FormNumberInputGroup } from '@ui/form/InputGroup';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/branches/Branches';
 import { OwnerInput } from '@organization/src/components/Tabs/panels/AboutPanel/owner/OwnerInput';
@@ -50,14 +50,11 @@ export const AboutPanel = () => {
   const id = useParams()?.id as string;
   const [_, copyToClipboard] = useCopyToClipboard();
   const { data } = useOrganizationQuery(client, { id });
+  const showParentRelationshipSelector = useFeatureIsOn(
+    'show-parent-relationship-selector',
+  );
   const { updateOrganization, addSocial, invalidateQuery } =
     useAboutPanelMethods({ id });
-  const { data: tenantNameQueryData } = useTenantNameQuery(client);
-
-  const showSubOrgData = (() =>
-    tenantNameQueryData?.tenant
-      ? ['gasposco', 'openlineai'].includes(tenantNameQueryData.tenant)
-      : false)();
 
   const defaultValues: OrganizationAboutForm = new OrganizationAboutFormDto(
     data?.organization,
@@ -218,21 +215,23 @@ export const AboutPanel = () => {
           placeholder={placeholders.valueProposition}
         />
 
-        {!data?.organization?.subsidiaries?.length && showSubOrgData && (
-          <ParentOrgInput
-            id={id}
-            parentOrg={
-              data?.organization?.subsidiaryOf?.[0]?.organization?.id
-                ? {
-                    label:
-                      data?.organization?.subsidiaryOf?.[0]?.organization?.name,
-                    value:
-                      data?.organization?.subsidiaryOf?.[0]?.organization?.id,
-                  }
-                : null
-            }
-          />
-        )}
+        {!data?.organization?.subsidiaries?.length &&
+          showParentRelationshipSelector && (
+            <ParentOrgInput
+              id={id}
+              parentOrg={
+                data?.organization?.subsidiaryOf?.[0]?.organization?.id
+                  ? {
+                      label:
+                        data?.organization?.subsidiaryOf?.[0]?.organization
+                          ?.name,
+                      value:
+                        data?.organization?.subsidiaryOf?.[0]?.organization?.id,
+                    }
+                  : null
+              }
+            />
+          )}
 
         <VStack
           flex='1'
@@ -330,15 +329,16 @@ export const AboutPanel = () => {
             leftElement={<Icons.Share7 color='gray.500' />}
           />
 
-          {!!data?.organization?.subsidiaries?.length && showSubOrgData && (
-            <Branches
-              id={id}
-              branches={
-                (data?.organization
-                  ?.subsidiaries as Organization['subsidiaries']) ?? []
-              }
-            />
-          )}
+          {!!data?.organization?.subsidiaries?.length &&
+            showParentRelationshipSelector && (
+              <Branches
+                id={id}
+                branches={
+                  (data?.organization
+                    ?.subsidiaries as Organization['subsidiaries']) ?? []
+                }
+              />
+            )}
         </VStack>
 
         {data?.organization?.customerOsId && (

@@ -144,7 +144,11 @@ export const Table = <T extends object>({
         >
           {table.getHeaderGroups().map((headerGroup) => (
             <THeaderGroup key={headerGroup.id}>
-              {enableRowSelection && <THeaderCell w='28px' p='0' />}
+              <THeaderCell
+                p='0'
+                w='28px'
+                visibility={enableRowSelection ? 'visible' : 'hidden'}
+              />
               {headerGroup.headers.map((header, index) => (
                 <THeaderCell
                   key={header.id}
@@ -203,18 +207,21 @@ export const Table = <T extends object>({
                   },
                 }}
               >
-                {enableRowSelection && (
-                  <TCell maxW='fit-content' pl='2' pr='0'>
-                    <Flex align='center' flexDir='row' h='full'>
-                      <MemoizedCheckbox
-                        key={`checkbox-${virtualRow.index}`}
-                        isSelected={row?.getIsSelected()}
-                        isDisabled={!row || !row?.getCanSelect()}
-                        onChange={row?.getToggleSelectedHandler()}
-                      />
-                    </Flex>
-                  </TCell>
-                )}
+                <TCell
+                  pl='2'
+                  pr='0'
+                  maxW='fit-content'
+                  visibility={enableRowSelection ? 'visible' : 'hidden'}
+                >
+                  <Flex align='center' flexDir='row' h='full'>
+                    <MemoizedCheckbox
+                      key={`checkbox-${virtualRow.index}`}
+                      isSelected={row?.getIsSelected()}
+                      isDisabled={!row || !row?.getCanSelect()}
+                      onChange={row?.getToggleSelectedHandler()}
+                    />
+                  </Flex>
+                </TCell>
                 {(row ?? skeletonRow).getAllCells()?.map((cell, index) => {
                   return (
                     <TCell
