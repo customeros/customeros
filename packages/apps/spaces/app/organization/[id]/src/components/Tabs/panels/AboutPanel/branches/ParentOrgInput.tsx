@@ -22,12 +22,14 @@ import {
 
 interface ParentOrgInputProps {
   id: string;
+  isReadOnly?: boolean;
   parentOrg: { label: string; value: string } | null;
 }
 
 export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
-  parentOrg,
   id,
+  parentOrg,
+  isReadOnly,
 }) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
@@ -203,6 +205,7 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
   return (
     <Select
       isClearable
+      isReadOnly={isReadOnly}
       value={parentOrg || ''}
       onChange={(e) => {
         if (!e && parentOrg) {

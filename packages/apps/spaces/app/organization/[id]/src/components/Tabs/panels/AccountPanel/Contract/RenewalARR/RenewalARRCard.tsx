@@ -11,6 +11,7 @@ import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import {
   Opportunity,
+  InternalStage,
   ContractRenewalCycle,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
@@ -69,6 +70,7 @@ export const RenewalARRCard = ({
         borderColor='gray.200'
         position='relative'
         onClick={() => {
+          if (opportunity?.internalStage === InternalStage.ClosedLost) return;
           modal.onOpen();
           setIsLocalOpen(true);
         }}
