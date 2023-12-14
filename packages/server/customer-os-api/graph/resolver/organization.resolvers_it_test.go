@@ -1569,3 +1569,44 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, secondContract.Source)
 	require.Equal(t, "test2", secondContract.AppSource)
 }
+
+func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+
+	calledEventsPlatform := false
+
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, organizationId, org.OrganizationId)
+			require.Equal(t, testUserId, org.LoggedInUserId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
+			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_DONE, org.OnboardingStatus)
+			require.Equal(t, "Set to done", org.Comments)
+			calledEventsPlatform = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: organizationId,
+			}, nil
+		},
+	}
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "organization/update_onboarding_status",
+		map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization_UpdateOnboardingStatus model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_UpdateOnboardingStatus
+	require.Equal(t, organizationId, organization.ID)
+	require.True(t, calledEventsPlatform)
+}

@@ -162,6 +162,26 @@ message WebScrapeOrganizationGrpcRequest {
   string loggedInUserId = 5;
 }
 
+message UpdateOnboardingStatusGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string loggedInUserId = 3;
+  OnboardingStatus onboardingStatus = 4;
+  string comments = 5;
+  google.protobuf.Timestamp updatedAt = 6;
+  string appSource = 7;
+}
+
+enum OnboardingStatus {
+  ONBOARDING_STATUS_NOT_APPLICABLE = 0;
+  ONBOARDING_STATUS_NOT_STARTED = 1;
+  ONBOARDING_STATUS_ON_TRACK = 2;
+  ONBOARDING_STATUS_LATE = 3;
+  ONBOARDING_STATUS_STUCK = 4;
+  ONBOARDING_STATUS_DONE = 5;
+  ONBOARDING_STATUS_SUCCESSFUL = 6;
+}
+
 message OrganizationIdGrpcResponse {
   string id = 1;
 }
@@ -183,4 +203,5 @@ service organizationGrpcService {
   rpc RefreshLastTouchpoint(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc AddParentOrganization(AddParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RemoveParentOrganization(RemoveParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc UpdateOnboardingStatus(UpdateOnboardingStatusGrpcRequest) returns (OrganizationIdGrpcResponse);
 }

@@ -10,6 +10,7 @@ import (
 const (
 	SpanTagTenant    = "tenant"
 	SpanTagUserId    = "user-id"
+	SpanTagEntityId  = "entity-id"
 	SpanTagComponent = "component"
 )
 

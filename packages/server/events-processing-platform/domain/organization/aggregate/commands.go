@@ -51,6 +51,8 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 		return a.removeParentOrganization(ctx, c)
 	case *command.WebScrapeOrganizationCommand:
 		return a.webScrapeOrganization(ctx, c)
+	case *command.UpdateOnboardingStatusCommand:
+		return a.updateOnboardingStatus(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -351,6 +353,7 @@ func (a *OrganizationAggregate) hideOrganization(ctx context.Context, cmd *comma
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
@@ -370,6 +373,7 @@ func (a *OrganizationAggregate) showOrganization(ctx context.Context, cmd *comma
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
@@ -389,6 +393,7 @@ func (a *OrganizationAggregate) refreshLastTouchpoint(ctx context.Context, cmd *
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
@@ -412,6 +417,7 @@ func (a *OrganizationAggregate) refreshArr(ctx context.Context, cmd *command.Ref
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
@@ -435,6 +441,7 @@ func (a *OrganizationAggregate) refreshRenewalSummary(ctx context.Context, cmd *
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
@@ -458,6 +465,7 @@ func (a *OrganizationAggregate) upsertCustomField(ctx context.Context, cmd *comm
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
@@ -498,6 +506,7 @@ func (a *OrganizationAggregate) addParentOrganization(ctx context.Context, cmd *
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
@@ -521,6 +530,7 @@ func (a *OrganizationAggregate) removeParentOrganization(ctx context.Context, cm
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
@@ -544,6 +554,7 @@ func (a *OrganizationAggregate) webScrapeOrganization(ctx context.Context, cmd *
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
@@ -551,6 +562,32 @@ func (a *OrganizationAggregate) webScrapeOrganization(ctx context.Context, cmd *
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRequestScrapeByWebsite")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.AppSource,
+	})
+
+	return a.Apply(event)
+}
+
+func (a *OrganizationAggregate) updateOnboardingStatus(ctx context.Context, cmd *command.UpdateOnboardingStatusCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.updateOnboardingStatus")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
+
+	event, err := events.NewUpdateOnboardingStatusEvent(a, cmd.Status, cmd.Comments, cmd.LoggedInUserId, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewUpdateOnboardingStatusEvent")
 	}
 
 	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{

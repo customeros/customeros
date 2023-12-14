@@ -579,6 +579,54 @@ func (r *mutationResolver) OrganizationUnsetOwner(ctx context.Context, organizat
 	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
+// OrganizationUpdateOnboardingStatus is the resolver for the organization_UpdateOnboardingStatus field.
+func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Context, input model.OnboardingStatusInput) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUpdateOnboardingStatus", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, input.OrganizationID)
+	span.LogFields(log.String("request.OrganizationId", input.OrganizationID), log.Object("request.Status", input.Status), log.String("request.Comments", utils.IfNotNilString(input.Comments)))
+
+	grpcRequest := organizationpb.UpdateOnboardingStatusGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		OrganizationId: input.OrganizationID,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		Comments:       utils.IfNotNilString(input.Comments),
+		AppSource:      constants.AppSourceCustomerOsApi,
+	}
+	switch input.Status {
+	case model.OnboardingStatusNotApplicable:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_APPLICABLE
+	case model.OnboardingStatusNotStarted:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED
+	case model.OnboardingStatusOnTrack:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_ON_TRACK
+	case model.OnboardingStatusLate:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_LATE
+	case model.OnboardingStatusStuck:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_STUCK
+	case model.OnboardingStatusDone:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_DONE
+	case model.OnboardingStatusSuccessful:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_SUCCESSFUL
+	default:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_APPLICABLE
+	}
+
+	_, err := r.Clients.OrganizationClient.UpdateOnboardingStatus(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update onboarding status for organization %s", input.OrganizationID)
+	}
+	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.OrganizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch organization %s", input.OrganizationID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))

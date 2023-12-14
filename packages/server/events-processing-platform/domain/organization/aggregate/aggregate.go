@@ -62,6 +62,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onAddParent(event)
 	case events.OrganizationRemoveParentV1:
 		return a.onRemoveParent(event)
+	case events.OrganizationUpdateOnboardingStatusV1:
+		return a.onOnboardingStatusUpdate(event)
 	case events.OrganizationRequestRenewalForecastV1,
 		events.OrganizationRequestNextCycleDateV1,
 		events.OrganizationRefreshLastTouchpointV1,
@@ -474,5 +476,20 @@ func (a *OrganizationAggregate) onRemoveParent(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	delete(a.Organization.ParentOrganizations, eventData.ParentOrganizationId)
+	return nil
+}
+
+func (a *OrganizationAggregate) onOnboardingStatusUpdate(event eventstore.Event) error {
+	var eventData events.UpdateOnboardingStatusEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Organization.OnboardingDetails = model.OnboardingDetails{
+		Status:    eventData.Status,
+		Comments:  eventData.Comments,
+		UpdatedAt: eventData.UpdatedAt,
+	}
+
 	return nil
 }
