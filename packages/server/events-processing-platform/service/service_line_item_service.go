@@ -173,6 +173,7 @@ func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, requ
 				Name:       request.Name,
 				ContractId: request.ContractId,
 				ParentId:   request.Id,
+				Comments:   request.Comments,
 			},
 			source,
 			utils.NowPtr(),
