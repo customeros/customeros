@@ -1,9 +1,11 @@
 'use client';
+import { PanelContainer } from './PanelContainer';
+import { OnboardingStatus } from './OnboardingStatus';
 
 export const SuccessPanel = () => {
   return (
-    <>
-      <p>Success</p>
-    </>
+    <PanelContainer title='Success'>
+      <OnboardingStatus />
+    </PanelContainer>
   );
 };

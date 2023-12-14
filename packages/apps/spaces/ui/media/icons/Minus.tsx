@@ -6,7 +6,7 @@ export const Minus = (props: IconProps) => (
       <path
         id='Icon'
         d='M5 12H19'
-        stroke='#0C111D'
+        stroke='currentColor'
         strokeWidth='2'
         strokeLinecap='round'
         strokeLinejoin='round'

@@ -12,6 +12,7 @@ import { Text } from '@ui/typography/Text';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
 import { Ticket02 } from '@ui/media/icons/Ticket02';
+import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
@@ -137,6 +138,17 @@ export const OrganizationSidenav = () => {
           icon={
             <Ticket02
               color={checkIsActive('issues') ? 'gray.700' : 'gray.500'}
+              boxSize='6'
+            />
+          }
+        />
+        <SidenavItem
+          label='Success'
+          isActive={checkIsActive('success')}
+          onClick={handleItemClick('success')}
+          icon={
+            <Trophy01
+              color={checkIsActive('success') ? 'gray.700' : 'gray.500'}
               boxSize='6'
             />
           }
