@@ -358,7 +358,7 @@ func (ds *DomainScraperV1) getLinkedinData(apiKey, companyLinkedinId string, htt
 	}
 	defer r.Body.Close()
 
-	if err := json.NewDecoder(r.Body).Decode(linkedinScrape); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&linkedinScrape); err != nil {
 		return nil, errors.Wrap(err, "failed to decode linkedin scrape response")
 	}
 
