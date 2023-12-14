@@ -758,6 +758,12 @@ type ComplexityRoot struct {
 		TotalPages    func(childComplexity int) int
 	}
 
+	OnboardingDetails struct {
+		Comments  func(childComplexity int) int
+		Status    func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+	}
+
 	Opportunity struct {
 		Amount                 func(childComplexity int) int
 		AppSource              func(childComplexity int) int
@@ -786,6 +792,7 @@ type ComplexityRoot struct {
 	}
 
 	OrgAccountDetails struct {
+		Onboarding     func(childComplexity int) int
 		RenewalSummary func(childComplexity int) int
 	}
 
@@ -5750,6 +5757,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NotePage.TotalPages(childComplexity), true
 
+	case "OnboardingDetails.comments":
+		if e.complexity.OnboardingDetails.Comments == nil {
+			break
+		}
+
+		return e.complexity.OnboardingDetails.Comments(childComplexity), true
+
+	case "OnboardingDetails.status":
+		if e.complexity.OnboardingDetails.Status == nil {
+			break
+		}
+
+		return e.complexity.OnboardingDetails.Status(childComplexity), true
+
+	case "OnboardingDetails.updatedAt":
+		if e.complexity.OnboardingDetails.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.OnboardingDetails.UpdatedAt(childComplexity), true
+
 	case "Opportunity.amount":
 		if e.complexity.Opportunity.Amount == nil {
 			break
@@ -5917,6 +5945,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Opportunity.UpdatedAt(childComplexity), true
+
+	case "OrgAccountDetails.onboarding":
+		if e.complexity.OrgAccountDetails.Onboarding == nil {
+			break
+		}
+
+		return e.complexity.OrgAccountDetails.Onboarding(childComplexity), true
 
 	case "OrgAccountDetails.renewalSummary":
 		if e.complexity.OrgAccountDetails.RenewalSummary == nil {
@@ -9701,6 +9736,7 @@ type Organization implements Node {
 
 type OrgAccountDetails {
     renewalSummary: RenewalSummary
+    onboarding: OnboardingDetails
 }
 
 type RenewalSummary {
@@ -9708,6 +9744,12 @@ type RenewalSummary {
     maxArrForecast:    Float
     renewalLikelihood: OpportunityRenewalLikelihood
     nextRenewalDate:   Time
+}
+
+type OnboardingDetails {
+    status: OnboardingStatus!
+    comments: String
+    updatedAt: Time
 }
 
 type OrganizationPage implements Pages {
@@ -9723,7 +9765,7 @@ input OrganizationInput {
     **Required.**
     """
     referenceId:   String
-    name:          String!
+    name:          String
     description:   String
     note:          String
     domains:       [String!]
@@ -9752,7 +9794,7 @@ input OrganizationUpdateInput {
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """
     patch:              Boolean
-    name:               String!
+    name:               String
     description:        String
     note:               String
     domains:            [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
@@ -9806,6 +9848,16 @@ enum FundingRound {
     FRIENDS_AND_FAMILY
     ANGEL
     BRIDGE
+}
+
+enum OnboardingStatus {
+    NOT_APPLICABLE
+    NOT_STARTED
+    ON_TRACK
+    LATE
+    STUCK
+    DONE
+    SUCCESSFUL
 }
 
 enum LastTouchpointType {
@@ -46164,6 +46216,132 @@ func (ec *executionContext) fieldContext_NotePage_totalElements(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _OnboardingDetails_status(ctx context.Context, field graphql.CollectedField, obj *model.OnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OnboardingDetails_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.OnboardingStatus)
+	fc.Result = res
+	return ec.marshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OnboardingDetails_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OnboardingStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OnboardingDetails_comments(ctx context.Context, field graphql.CollectedField, obj *model.OnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OnboardingDetails_comments(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Comments, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OnboardingDetails_comments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OnboardingDetails_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.OnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OnboardingDetails_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OnboardingDetails_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Opportunity_id(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Opportunity_id(ctx, field)
 	if err != nil {
@@ -47439,6 +47617,55 @@ func (ec *executionContext) fieldContext_OrgAccountDetails_renewalSummary(ctx co
 				return ec.fieldContext_RenewalSummary_nextRenewalDate(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RenewalSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrgAccountDetails_onboarding(ctx context.Context, field graphql.CollectedField, obj *model.OrgAccountDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrgAccountDetails_onboarding(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Onboarding, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OnboardingDetails)
+	fc.Result = res
+	return ec.marshalOOnboardingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingDetails(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrgAccountDetails_onboarding(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrgAccountDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "status":
+				return ec.fieldContext_OnboardingDetails_status(ctx, field)
+			case "comments":
+				return ec.fieldContext_OnboardingDetails_comments(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_OnboardingDetails_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OnboardingDetails", field.Name)
 		},
 	}
 	return fc, nil
@@ -50097,6 +50324,8 @@ func (ec *executionContext) fieldContext_Organization_accountDetails(ctx context
 			switch field.Name {
 			case "renewalSummary":
 				return ec.fieldContext_OrgAccountDetails_renewalSummary(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_OrgAccountDetails_onboarding(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrgAccountDetails", field.Name)
 		},
@@ -64792,7 +65021,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			it.ReferenceID = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -64973,7 +65202,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			it.Patch = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -73065,6 +73294,49 @@ func (ec *executionContext) _NotePage(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var onboardingDetailsImplementors = []string{"OnboardingDetails"}
+
+func (ec *executionContext) _OnboardingDetails(ctx context.Context, sel ast.SelectionSet, obj *model.OnboardingDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, onboardingDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OnboardingDetails")
+		case "status":
+			out.Values[i] = ec._OnboardingDetails_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "comments":
+			out.Values[i] = ec._OnboardingDetails_comments(ctx, field, obj)
+		case "updatedAt":
+			out.Values[i] = ec._OnboardingDetails_updatedAt(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var opportunityImplementors = []string{"Opportunity", "Node"}
 
 func (ec *executionContext) _Opportunity(ctx context.Context, sel ast.SelectionSet, obj *model.Opportunity) graphql.Marshaler {
@@ -73316,6 +73588,8 @@ func (ec *executionContext) _OrgAccountDetails(ctx context.Context, sel ast.Sele
 			out.Values[i] = graphql.MarshalString("OrgAccountDetails")
 		case "renewalSummary":
 			out.Values[i] = ec._OrgAccountDetails_renewalSummary(ctx, field, obj)
+		case "onboarding":
+			out.Values[i] = ec._OrgAccountDetails_onboarding(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -79513,6 +79787,16 @@ func (ec *executionContext) marshalNNotedEntity2ᚕgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
+func (ec *executionContext) unmarshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingStatus(ctx context.Context, v interface{}) (model.OnboardingStatus, error) {
+	var res model.OnboardingStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingStatus(ctx context.Context, sel ast.SelectionSet, v model.OnboardingStatus) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNOpportunity2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v model.Opportunity) graphql.Marshaler {
 	return ec._Opportunity(ctx, sel, &v)
 }
@@ -81445,6 +81729,13 @@ func (ec *executionContext) unmarshalONoteUpdateInput2ᚖgithubᚗcomᚋopenline
 	}
 	res, err := ec.unmarshalInputNoteUpdateInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOOnboardingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingDetails(ctx context.Context, sel ast.SelectionSet, v *model.OnboardingDetails) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._OnboardingDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Opportunity) graphql.Marshaler {

@@ -88,6 +88,7 @@ type Organization implements Node {
 
 type OrgAccountDetails {
     renewalSummary: RenewalSummary
+    onboarding: OnboardingDetails
 }
 
 type RenewalSummary {
@@ -95,6 +96,12 @@ type RenewalSummary {
     maxArrForecast:    Float
     renewalLikelihood: OpportunityRenewalLikelihood
     nextRenewalDate:   Time
+}
+
+type OnboardingDetails {
+    status: OnboardingStatus!
+    comments: String
+    updatedAt: Time
 }
 
 type OrganizationPage implements Pages {
@@ -110,7 +117,7 @@ input OrganizationInput {
     **Required.**
     """
     referenceId:   String
-    name:          String!
+    name:          String
     description:   String
     note:          String
     domains:       [String!]
@@ -139,7 +146,7 @@ input OrganizationUpdateInput {
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """
     patch:              Boolean
-    name:               String!
+    name:               String
     description:        String
     note:               String
     domains:            [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
@@ -193,6 +200,16 @@ enum FundingRound {
     FRIENDS_AND_FAMILY
     ANGEL
     BRIDGE
+}
+
+enum OnboardingStatus {
+    NOT_APPLICABLE
+    NOT_STARTED
+    ON_TRACK
+    LATE
+    STUCK
+    DONE
+    SUCCESSFUL
 }
 
 enum LastTouchpointType {

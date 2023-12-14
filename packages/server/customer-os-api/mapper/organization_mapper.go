@@ -48,6 +48,11 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 				NextRenewalDate:   entity.RenewalSummary.NextRenewalAt,
 				RenewalLikelihood: MapOpportunityRenewalLikelihoodToModelPtr(entity.RenewalSummary.RenewalLikelihood),
 			},
+			Onboarding: &model.OnboardingDetails{
+				Status:    MapOnboardingStatusToModel(entity.OnboardingDetails.Status),
+				UpdatedAt: entity.OnboardingDetails.UpdatedAt,
+				Comments:  utils.StringPtr(entity.OnboardingDetails.Comments),
+			},
 		},
 	}
 }

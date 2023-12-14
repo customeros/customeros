@@ -62,7 +62,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:             common.GetTenantFromContext(ctx),
 		LoggedInUserId:     common.GetUserIdFromContext(ctx),
-		Name:               input.Name,
+		Name:               utils.IfNotNilString(input.Name),
 		ReferenceId:        utils.IfNotNilString(input.ReferenceID),
 		Description:        utils.IfNotNilString(input.Description),
 		Website:            utils.IfNotNilString(input.Website),
@@ -190,37 +190,37 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	}
 	fieldsMask := []organizationpb.OrganizationMaskField{}
 	if input.Patch != nil && *input.Patch {
-		if input.Name != "" {
+		if utils.IfNotNilString(input.Name) != "" {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
 		}
-		if utils.IfNotNilString(input.ReferenceID) != "" {
+		if input.ReferenceID != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_REFERENCE_ID)
 		}
-		if utils.IfNotNilString(input.Description) != "" {
+		if input.Description != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
 		}
-		if utils.IfNotNilString(input.Website) != "" {
+		if input.Website != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
 		}
-		if utils.IfNotNilString(input.Industry) != "" {
+		if input.Industry != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
 		}
-		if utils.IfNotNilString(input.SubIndustry) != "" {
+		if input.SubIndustry != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY)
 		}
-		if utils.IfNotNilString(input.IndustryGroup) != "" {
+		if input.IndustryGroup != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP)
 		}
 		if input.Market != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
 		}
-		if utils.IfNotNilString(input.TargetAudience) != "" {
+		if input.TargetAudience != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE)
 		}
-		if utils.IfNotNilString(input.ValueProposition) != "" {
+		if input.ValueProposition != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
 		}
-		if utils.IfNotNilString(input.LastFundingAmount) != "" {
+		if input.LastFundingAmount != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT)
 		}
 		if input.LastFundingRound != nil {
@@ -229,14 +229,17 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		if input.YearFounded != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
 		}
-		if utils.IfNotNilString(input.Headquarters) != "" {
+		if input.Headquarters != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
 		}
-		if utils.IfNotNilString(input.LogoURL) != "" {
+		if input.LogoURL != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
 		}
-		if utils.IfNotNilString(input.EmployeeGrowthRate) != "" {
+		if input.EmployeeGrowthRate != nil {
 			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
+		}
+		if input.Note != nil {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NOTE)
 		}
 	}
 
@@ -246,7 +249,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		LoggedInUserId:     common.GetUserIdFromContext(ctx),
 		Id:                 input.ID,
 		FieldsMask:         fieldsMask,
-		Name:               input.Name,
+		Name:               utils.IfNotNilString(input.Name),
 		ReferenceId:        utils.IfNotNilString(input.ReferenceID),
 		Description:        utils.IfNotNilString(input.Description),
 		Website:            utils.IfNotNilString(input.Website),
