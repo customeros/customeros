@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -187,4 +188,77 @@ func TestServiceLineItemService_DeleteServiceLineItem(t *testing.T) {
 	err = createEvent.GetJsonData(&eventData)
 	require.Nil(t, err)
 	require.Equal(t, tenant, eventData.Tenant)
+}
+
+func TestServiceLineItemService_UpdateServiceLineItemCreateNewVersion(t *testing.T) {
+	//test if the update service line item creates a new version of the service line item
+	//and if we provide comments in the update request, it should be added to the new version of the service line item
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// Setup test environment
+	tenant := "ziggy"
+	contractId := uuid.New().String()
+	serviceLineItemId := "SLI123"
+
+	// Create and save the initial Service Line Item aggregate
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	serviceLineItemAggregate := aggregate.NewServiceLineItemAggregateWithTenantAndID(tenant, serviceLineItemId)
+	aggregateStore.Save(ctx, serviceLineItemAggregate)
+	contractAggregate := contractaggregate.NewContractAggregateWithTenantAndID(tenant, contractId)
+	aggregateStore.Save(ctx, contractAggregate)
+
+	// Prepare the gRPC connection and client
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err, "Failed to connect to processing platform")
+	serviceLineItemClient := servicelineitempb.NewServiceLineItemGrpcServiceClient(grpcConnection)
+
+	// Create the update request
+	updatedAt := utils.Now()
+	updateRequest := &servicelineitempb.UpdateServiceLineItemGrpcRequest{
+		Tenant:                  tenant,
+		LoggedInUserId:          "User456",
+		Id:                      serviceLineItemId,
+		ContractId:              contractId,
+		Name:                    "Updated Service Line Item",
+		Quantity:                10,
+		Price:                   150.0004,
+		Comments:                "Some comments",
+		IsRetroactiveCorrection: false,
+		UpdatedAt:               timestamppb.New(updatedAt),
+		SourceFields: &commonpb.SourceFields{
+			Source:    "openline",
+			AppSource: "unit-test",
+		},
+	}
+
+	// Call the update service
+	response, err := serviceLineItemClient.UpdateServiceLineItem(ctx, updateRequest)
+	require.Nil(t, err, "Failed to update service line item")
+
+	// Assertions
+	require.NotNil(t, response)
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 3, len(eventsMap))
+	var eventList []eventstore.Event
+	//pick the latest event which is creating a new version of the service line item
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 1, len(eventList))
+
+	createEvent := eventList[0]
+	require.Equal(t, event.ServiceLineItemCreateV1, createEvent.GetEventType())
+
+	var eventData event.ServiceLineItemCreateEvent
+	err = createEvent.GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+	require.Equal(t, model.MonthlyBilled.String(), eventData.Billed)
+	require.Equal(t, int64(10), eventData.Quantity)
+	require.Equal(t, 150.0004, eventData.Price)
+	require.Equal(t, "Some comments", eventData.Comments)
+	require.Equal(t, "Updated Service Line Item", eventData.Name)
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, "Some comments", eventData.Comments)
 }
