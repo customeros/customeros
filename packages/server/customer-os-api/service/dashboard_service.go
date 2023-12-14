@@ -290,6 +290,23 @@ func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, sta
 		}
 	}
 
+	renewals, err := s.repositories.DashboardRepository.GetDashboardARRBreakdownRenewalsData(ctx, common.GetContext(ctx).Tenant, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range renewals {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+		value, _ := record["value"].(float64)
+
+		for _, monthData := range response.Months {
+			if monthData.Year == int(year) && monthData.Month == int(month) {
+				monthData.Renewals = value
+			}
+		}
+	}
+
 	return &response, nil
 }
 
