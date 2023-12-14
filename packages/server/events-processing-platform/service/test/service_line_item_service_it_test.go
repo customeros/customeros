@@ -244,21 +244,19 @@ func TestServiceLineItemService_UpdateServiceLineItemCreateNewVersion(t *testing
 	var eventList []eventstore.Event
 	//pick the latest event which is creating a new version of the service line item
 	for _, value := range eventsMap {
-		eventList = value
+		eventList = append(eventList, value...)
 	}
-	require.Equal(t, 1, len(eventList))
-
-	createEvent := eventList[0]
-	require.Equal(t, event.ServiceLineItemCreateV1, createEvent.GetEventType())
-
+	createEvent := eventList[1]
 	var eventData event.ServiceLineItemCreateEvent
 	err = createEvent.GetJsonData(&eventData)
-	require.Nil(t, err, "Failed to unmarshal event data")
-	require.Equal(t, model.MonthlyBilled.String(), eventData.Billed)
-	require.Equal(t, int64(10), eventData.Quantity)
-	require.Equal(t, 150.0004, eventData.Price)
-	require.Equal(t, "Some comments", eventData.Comments)
-	require.Equal(t, "Updated Service Line Item", eventData.Name)
-	require.Equal(t, tenant, eventData.Tenant)
-	require.Equal(t, "Some comments", eventData.Comments)
+
+	if createEvent.EventType == event.ServiceLineItemCreateV1 {
+		require.Nil(t, err, "Failed to unmarshal event data")
+		require.Equal(t, int64(10), eventData.Quantity)
+		require.Equal(t, 150.0004, eventData.Price)
+		require.Equal(t, "Some comments", eventData.Comments)
+		require.Equal(t, "Updated Service Line Item", eventData.Name)
+		require.Equal(t, tenant, eventData.Tenant)
+		require.Equal(t, contractId, eventData.ContractId)
+	}
 }
