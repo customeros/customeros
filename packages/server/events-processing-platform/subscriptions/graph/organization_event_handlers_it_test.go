@@ -100,6 +100,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	require.Equal(t, "test org", organization.Name)
 	require.Equal(t, now, organization.CreatedAt)
 	require.NotNil(t, organization.UpdatedAt)
+	require.Equal(t, string(entity.OnboardingStatusNotApplicable), organization.OnboardingDetails.Status)
 
 	// verify action
 	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)

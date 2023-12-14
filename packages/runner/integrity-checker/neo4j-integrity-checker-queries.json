@@ -108,7 +108,12 @@
     {
       "name": "Check organization derived data consistency",
       "query": "CALL {\n     MATCH (org:Organization) WHERE org.derivedNextRenewalAt < datetime()-duration({minutes: 30}) RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NOT NULL AND NOT org.derivedRenewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(org) as cnt\n} RETURN sum(cnt)",
-      "description": "Checks: 1 - Organization with wrong derivedNextRenewalAt date. 2 - Organization with wrong derivedRenewalLikelihood value."
+      "description": "Checks: 1 - Organizations with wrong derivedNextRenewalAt date. 2 - Organizations with wrong derivedRenewalLikelihood value."
+    },
+    {
+      "name": "Check organization data consistency",
+      "query": "CALL {\n     MATCH (org:Organization) WHERE org.onboardingStatus IS NULL OR NOT org.onboardingStatus IN ['NOT_APPLICABLE','NOT_STARTED','ON_TRACK','LATE','STUCK','DONE','SUCCESSFUL'] with org RETURN count(org) as cnt\n} RETURN sum(cnt)",
+      "description": "Checks: 1 - Organizations with wrong onboardingStatus value."
     },
     {
       "name": "Check renewal opportunity data consistency",
