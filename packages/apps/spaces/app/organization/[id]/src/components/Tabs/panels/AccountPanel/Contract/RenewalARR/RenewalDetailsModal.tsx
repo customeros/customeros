@@ -156,7 +156,6 @@ export const RenewalDetailsModal = ({
   const { state, handleSubmit } = useForm({
     formId,
     defaultValues,
-    debug: true,
     onSubmit: async ({ amount, owner, reason, renewalLikelihood }) => {
       updateOpportunityMutation.mutate({
         input: {
