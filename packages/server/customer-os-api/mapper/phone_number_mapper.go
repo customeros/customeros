@@ -30,6 +30,7 @@ func MapPhoneNumberUpdateInputToEntity(input *model.PhoneNumberUpdateInput) *ent
 		Primary:        utils.IfNotNilBool(input.Primary),
 		RawPhoneNumber: utils.IfNotNilString(input.PhoneNumber),
 		SourceOfTruth:  entity.DataSourceOpenline,
+		Source:         entity.DataSourceOpenline,
 	}
 	return &phoneNumberEntity
 }
