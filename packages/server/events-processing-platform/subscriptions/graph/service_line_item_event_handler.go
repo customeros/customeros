@@ -90,7 +90,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	previousPrice := float64(0)
 	previousQuantity := int64(0)
 	previousBilled := ""
-	reasonForChange := ""
+	reasonForChange := eventData.Comments
 	if isNewVersionForExistingSLI {
 		//get the previous service line item to get the previous price and quantity
 		sliDbNode, err := h.repositories.ServiceLineItemRepository.GetServiceLineItemById(ctx, eventData.Tenant, eventData.ParentId)
@@ -103,7 +103,6 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			previousPrice = previousServiceLineItem.Price
 			previousQuantity = previousServiceLineItem.Quantity
 			previousBilled = previousServiceLineItem.Billed
-			reasonForChange = eventData.Comments
 			//use the booleans below to create the appropriate action message
 			priceChanged = previousServiceLineItem.Price != eventData.Price
 			quantityChanged = previousServiceLineItem.Quantity != eventData.Quantity
