@@ -1229,6 +1229,12 @@ type NoteUpdateInput struct {
 	ContentType *string `json:"contentType,omitempty"`
 }
 
+type OnboardingDetails struct {
+	Status    OnboardingStatus `json:"status"`
+	Comments  *string          `json:"comments,omitempty"`
+	UpdatedAt *time.Time       `json:"updatedAt,omitempty"`
+}
+
 type Opportunity struct {
 	ID                     string                       `json:"id"`
 	CreatedAt              time.Time                    `json:"createdAt"`
@@ -1283,7 +1289,8 @@ type OpportunityUpdateInput struct {
 }
 
 type OrgAccountDetails struct {
-	RenewalSummary *RenewalSummary `json:"renewalSummary,omitempty"`
+	RenewalSummary *RenewalSummary    `json:"renewalSummary,omitempty"`
+	Onboarding     *OnboardingDetails `json:"onboarding,omitempty"`
 }
 
 type Organization struct {
@@ -1351,7 +1358,7 @@ type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
 	ReferenceID        *string             `json:"referenceId,omitempty"`
-	Name               string              `json:"name"`
+	Name               *string             `json:"name,omitempty"`
 	Description        *string             `json:"description,omitempty"`
 	Note               *string             `json:"note,omitempty"`
 	Domains            []string            `json:"domains,omitempty"`
@@ -1406,7 +1413,7 @@ type OrganizationUpdateInput struct {
 	ReferenceID *string `json:"referenceId,omitempty"`
 	// Set to true when partial update is needed. Empty or missing fields will not be ignored.
 	Patch              *bool         `json:"patch,omitempty"`
-	Name               string        `json:"name"`
+	Name               *string       `json:"name,omitempty"`
 	Description        *string       `json:"description,omitempty"`
 	Note               *string       `json:"note,omitempty"`
 	Domains            []string      `json:"domains,omitempty"`
@@ -2892,6 +2899,57 @@ func (e *MeetingStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e MeetingStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type OnboardingStatus string
+
+const (
+	OnboardingStatusNotApplicable OnboardingStatus = "NOT_APPLICABLE"
+	OnboardingStatusNotStarted    OnboardingStatus = "NOT_STARTED"
+	OnboardingStatusOnTrack       OnboardingStatus = "ON_TRACK"
+	OnboardingStatusLate          OnboardingStatus = "LATE"
+	OnboardingStatusStuck         OnboardingStatus = "STUCK"
+	OnboardingStatusDone          OnboardingStatus = "DONE"
+	OnboardingStatusSuccessful    OnboardingStatus = "SUCCESSFUL"
+)
+
+var AllOnboardingStatus = []OnboardingStatus{
+	OnboardingStatusNotApplicable,
+	OnboardingStatusNotStarted,
+	OnboardingStatusOnTrack,
+	OnboardingStatusLate,
+	OnboardingStatusStuck,
+	OnboardingStatusDone,
+	OnboardingStatusSuccessful,
+}
+
+func (e OnboardingStatus) IsValid() bool {
+	switch e {
+	case OnboardingStatusNotApplicable, OnboardingStatusNotStarted, OnboardingStatusOnTrack, OnboardingStatusLate, OnboardingStatusStuck, OnboardingStatusDone, OnboardingStatusSuccessful:
+		return true
+	}
+	return false
+}
+
+func (e OnboardingStatus) String() string {
+	return string(e)
+}
+
+func (e *OnboardingStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OnboardingStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OnboardingStatus", str)
+	}
+	return nil
+}
+
+func (e OnboardingStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

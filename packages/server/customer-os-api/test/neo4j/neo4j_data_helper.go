@@ -793,7 +793,10 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 							org.renewalForecastMaxArr=$renewalForecastMaxArr,
 							org.derivedNextRenewalAt=$derivedNextRenewalAt,
 							org.derivedRenewalLikelihood=$derivedRenewalLikelihood,
-							org.derivedRenewalLikelihoodOrder=$derivedRenewalLikelihoodOrder
+							org.derivedRenewalLikelihoodOrder=$derivedRenewalLikelihoodOrder,
+							org.onboardingStatus=$onboardingStatus,
+							org.onboardingUpdatedAt=$onboardingUpdatedAt,
+							org.onboardingComments=$onboardingComments
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                            organizationId.String(),
@@ -825,6 +828,9 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"derivedNextRenewalAt":          utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalSummary.NextRenewalAt),
 		"derivedRenewalLikelihood":      organization.RenewalSummary.RenewalLikelihood,
 		"derivedRenewalLikelihoodOrder": organization.RenewalSummary.RenewalLikelihoodOrder,
+		"onboardingStatus":              string(organization.OnboardingDetails.Status),
+		"onboardingUpdatedAt":           utils.TimePtrFirstNonNilNillableAsAny(organization.OnboardingDetails.UpdatedAt),
+		"onboardingComments":            organization.OnboardingDetails.Comments,
 		"now":                           utils.Now(),
 	})
 	return organizationId.String()

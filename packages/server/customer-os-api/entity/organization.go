@@ -45,7 +45,8 @@ type OrganizationEntity struct {
 		SuggestedBy *string
 		Confidence  *float64
 	}
-	RenewalSummary RenewalSummary
+	RenewalSummary    RenewalSummary
+	OnboardingDetails OnboardingDetails
 
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 
@@ -58,6 +59,12 @@ type RenewalSummary struct {
 	NextRenewalAt          *time.Time `neo4jDb:"property:derivedNextRenewalAt;lookupName:RENEWAL_DATE;supportCaseSensitive:false"`
 	RenewalLikelihood      string     `neo4jDb:"property:derivedRenewalLikelihood;lookupName:RENEWAL_LIKELIHOOD;supportCaseSensitive:false"`
 	RenewalLikelihoodOrder *int64
+}
+
+type OnboardingDetails struct {
+	Status    OnboardingStatus
+	UpdatedAt *time.Time
+	Comments  string
 }
 
 func (organization OrganizationEntity) ToString() string {
