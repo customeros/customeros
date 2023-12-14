@@ -56,6 +56,11 @@ func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity 
 			WebScrapeLastRequestedUrl: utils.GetStringPropOrEmpty(props, "webScrapeLastRequestedUrl"),
 			WebScrapeAttempts:         utils.GetInt64PropOrZero(props, "webScrapeAttempts"),
 		},
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:    utils.GetStringPropOrEmpty(props, "onboardingStatus"),
+			UpdatedAt: utils.GetTimePropOrNil(props, "onboardingUpdatedAt"),
+			Comments:  utils.GetStringPropOrEmpty(props, "onboardingComments"),
+		},
 	}
 	return &output
 }

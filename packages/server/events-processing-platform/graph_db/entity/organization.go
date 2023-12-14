@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+type OnboardingStatus string
+
+const (
+	OnboardingStatusNotApplicable OnboardingStatus = "NOT_APPLICABLE"
+)
+
 type OrganizationEntity struct {
 	ID                 string
 	CustomerOsId       string
@@ -44,12 +50,11 @@ type OrganizationEntity struct {
 		SuggestedBy *string
 		Confidence  *float64
 	}
-	RenewalSummary   RenewalSummary
-	WebScrapeDetails WebScrapeDetails
+	RenewalSummary    RenewalSummary
+	OnboardingDetails OnboardingDetails
+	WebScrapeDetails  WebScrapeDetails
 
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
-
-	DataloaderKey string
 }
 
 type RenewalSummary struct {
@@ -58,6 +63,12 @@ type RenewalSummary struct {
 	NextRenewalAt          *time.Time
 	RenewalLikelihood      string
 	RenewalLikelihoodOrder *int64
+}
+
+type OnboardingDetails struct {
+	Status    string
+	UpdatedAt *time.Time
+	Comments  string
 }
 
 type WebScrapeDetails struct {
@@ -82,10 +93,6 @@ func (OrganizationEntity) IsInteractionEventParticipant() {}
 
 func (OrganizationEntity) ParticipantLabel() string {
 	return NodeLabel_Organization
-}
-
-func (organization OrganizationEntity) GetDataloaderKey() string {
-	return organization.DataloaderKey
 }
 
 type OrganizationEntities []OrganizationEntity

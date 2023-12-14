@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -96,6 +97,7 @@ func (r *organizationRepository) CreateOrganizationInTx(ctx context.Context, tx 
 						org.appSource = $appSource,
 						org.createdAt = $createdAt,
 						org.updatedAt = $updatedAt,
+						org.onboardingStatus = $onboardingStatus,
 						org.syncedWithEventStore = true 
 		 ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.name is null OR org.name = '' THEN $name ELSE org.name END,
 						org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.description is null OR org.description = '' THEN $description ELSE org.description END,
@@ -149,6 +151,7 @@ func (r *organizationRepository) CreateOrganizationInTx(ctx context.Context, tx 
 		"appSource":          helper.GetSource(event.AppSource),
 		"createdAt":          event.CreatedAt,
 		"updatedAt":          event.UpdatedAt,
+		"onboardingStatus":   string(entity.OnboardingStatusNotApplicable),
 		"overwrite":          helper.GetSource(event.Source) == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
