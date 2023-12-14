@@ -649,7 +649,7 @@ func (r *dashboardRepository) GetDashboardMRRPerCustomerData(ctx context.Context
 						o.hide = false AND o.isCustomer = true AND sli.startedAt is NOT null AND (sli.billed = 'MONTHLY' or sli.billed = 'QUARTERLY' or sli.billed = 'ANNUALLY') AND
 						((sli.startedAt.year = beginOfMonth.year AND sli.startedAt.month = beginOfMonth.month) OR sli.startedAt < beginOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt >= endOfMonth)
 					
-					WITH beginOfMonth, endOfMonth, year, month, COLLECT(DISTINCT { id: sli.id, startedAt: sli.startedAt, endedAt: sli.endedAt, amountPerMonth: CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity ELSE CASE WHEN sli.billed = 'QUARTERLY' THEN  sli.price * sli.quantity / 4 ELSE CASE WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity / 12 ELSE 0 END END END }) AS contractDetails
+					WITH beginOfMonth, endOfMonth, year, month, COLLECT(DISTINCT { id: sli.id, startedAt: sli.startedAt, endedAt: sli.endedAt, amountPerMonth: CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity ELSE CASE WHEN sli.billed = 'QUARTERLY' THEN  sli.price * sli.quantity / 3 ELSE CASE WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity / 12 ELSE 0 END END END }) AS contractDetails
 					
 					WITH beginOfMonth, endOfMonth, contractDetails, year, month,  REDUCE(sumHigh = 0, cd IN contractDetails | sumHigh + cd.amountPerMonth ) AS mrr
 					

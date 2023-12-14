@@ -97,9 +97,9 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_HiddenOrganization
 		Hide: true,
 	})
 
-	sli1StartedAt := time.Date(2024, 7, 1, 0, 0, 0, 0, time.UTC)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2024, 7)
 	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, &sli1StartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -141,9 +141,9 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_ProspectOrganizati
 		IsCustomer: false,
 	})
 
-	sli1StartedAt := time.Date(2023, 7, 1, 0, 0, 0, 0, time.UTC)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, &sli1StartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -175,6 +175,94 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_ProspectOrganizati
 	}
 }
 
+func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_Hidden_Organization(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+		Hide:       true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_mrr_per_customer",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_MRRPerCustomer model.DashboardMRRPerCustomer
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(0), month.Value)
+	}
+}
+
+func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Canceled(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1EndedAt := neo4jt.FirstTimeOfMonth(2023, 9)
+	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
+	insertMRRPerCustomerServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, &sli1StartedAt, &sli1EndedAt)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_mrr_per_customer",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-09-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_MRRPerCustomer model.DashboardMRRPerCustomer
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, 3, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
+
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 7, 2)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 8, 2)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 9, 0)
+}
+
 func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_BeforeMonth(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -186,9 +274,9 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_BeforeMonth(t *testing.T) 
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := time.Date(2023, 6, 30, 23, 59, 59, 999999999, time.UTC)
+	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 6)
 	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, &sli1StartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -230,9 +318,9 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_AfterMonth(t *testing.T) {
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
 	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, &sli1StartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -276,8 +364,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_AtBeginningOfMonth(t *test
 
 	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
 
-	sli1StartedAt := time.Date(2023, 7, 1, 0, 0, 0, 0, time.UTC)
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, &sli1StartedAt, nil)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -319,9 +407,9 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_AtEndOfMonth(t *testing.T)
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := time.Date(2023, 7, 31, 20, 59, 59, 999999999, time.UTC)
+	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, &sli1StartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -364,9 +452,9 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_EndedImmediately(t
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
+	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, &sli1StartedAt, &sli1StartedAt)
+	insertMRRPerCustomerServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -409,10 +497,10 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_EndedAtEndOfMonth(
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
-	sli1EndedAt := time.Date(2023, 7, 31, 23, 59, 59, 999999999, time.UTC)
+	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, &sli1StartedAt, &sli1EndedAt)
+	insertMRRPerCustomerServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -454,9 +542,9 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Yearly(t *testing.T) {
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := time.Date(2023, 7, 31, 20, 59, 59, 999999999, time.UTC)
+	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, &sli1StartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -498,9 +586,9 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Quarterly(t *testing.T) {
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := time.Date(2023, 7, 31, 20, 59, 59, 999999999, time.UTC)
+	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 4, &sli1StartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 3, 1, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -528,7 +616,7 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Quarterly(t *testing.T) {
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(2), month.Value)
+		require.Equal(t, float64(1), month.Value)
 	}
 }
 
@@ -542,9 +630,9 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Monthly(t *testing.T) {
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := time.Date(2023, 7, 31, 20, 59, 59, 999999999, time.UTC)
+	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 7)
 	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, &sli1StartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -587,13 +675,13 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_SameMonth_SameOrganizati
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
+	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contract1Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, &sli1StartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
-	contract2ServiceStartedAt := time.Date(2023, 7, 20, 0, 0, 0, 0, time.UTC)
+	contract2ServiceStartedAt := neo4jt.MiddleTimeOfMonth(2023, 7).Add(10 * 24 * time.Hour)
 	contract2Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, &contract2ServiceStartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, contract2ServiceStartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -639,13 +727,13 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_SameMonth_DifferentOrgan
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
+	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contract1Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId1)
-	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, &sli1StartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
-	contract2ServiceStartedAt := time.Date(2023, 7, 20, 0, 0, 0, 0, time.UTC)
+	contract2ServiceStartedAt := neo4jt.MiddleTimeOfMonth(2023, 7).Add(10 * 24 * time.Hour)
 	contract2Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId2)
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, &contract2ServiceStartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, contract2ServiceStartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
@@ -688,13 +776,13 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_DifferentMonths_SameOrga
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
+	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contract1Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, &sli1StartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
-	contract2ServiceStartedAt := time.Date(2023, 9, 20, 0, 0, 0, 0, time.UTC)
+	contract2ServiceStartedAt := neo4jt.MiddleTimeOfMonth(2023, 9)
 	contract2Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, &contract2ServiceStartedAt, nil)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, contract2ServiceStartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -741,12 +829,12 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_DifferentMonths_Differen
 	})
 
 	contract1Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId1)
-	sli1StartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
-	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, &sli1StartedAt, nil)
+	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	contract2Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId2)
-	sli2StartedAt := time.Date(2023, 8, 20, 0, 0, 0, 0, time.UTC)
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, &sli2StartedAt, nil)
+	sli2StartedAt := neo4jt.MiddleTimeOfMonth(2023, 8)
+	insertMRRPerCustomerServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, sli2StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
@@ -790,14 +878,14 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_SameOrganization_Overlap
 	})
 
 	contract1Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId1)
-	sli1StartedAt := time.Date(2023, 6, 01, 0, 0, 0, 0, time.UTC)
-	sli1EndedAt := time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC)
-	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, &sli1StartedAt, &sli1EndedAt)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1EndedAt := neo4jt.FirstTimeOfMonth(2023, 9)
+	insertMRRPerCustomerServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
 
 	contract2Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId1)
-	sli2StartedAt := time.Date(2023, 7, 01, 0, 0, 0, 0, time.UTC)
-	sli2EndedAt := time.Date(2023, 10, 1, 0, 0, 0, 0, time.UTC)
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, &sli2StartedAt, &sli2EndedAt)
+	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli2EndedAt := neo4jt.FirstTimeOfMonth(2023, 10)
+	insertMRRPerCustomerServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, sli2StartedAt, sli2EndedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -822,35 +910,12 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_SameOrganization_Overlap
 	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 6, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
-	may := dashboardReport.Dashboard_MRRPerCustomer.PerMonth[0]
-	require.Equal(t, 2023, may.Year)
-	require.Equal(t, 5, may.Month)
-	require.Equal(t, float64(0), may.Value)
-
-	june := dashboardReport.Dashboard_MRRPerCustomer.PerMonth[1]
-	require.Equal(t, 2023, june.Year)
-	require.Equal(t, 6, june.Month)
-	require.Equal(t, float64(2), june.Value)
-
-	july := dashboardReport.Dashboard_MRRPerCustomer.PerMonth[2]
-	require.Equal(t, 2023, july.Year)
-	require.Equal(t, 7, july.Month)
-	require.Equal(t, float64(4), july.Value)
-
-	august := dashboardReport.Dashboard_MRRPerCustomer.PerMonth[3]
-	require.Equal(t, 2023, august.Year)
-	require.Equal(t, 8, august.Month)
-	require.Equal(t, float64(4), august.Value)
-
-	september := dashboardReport.Dashboard_MRRPerCustomer.PerMonth[4]
-	require.Equal(t, 2023, september.Year)
-	require.Equal(t, 9, september.Month)
-	require.Equal(t, float64(2), september.Value)
-
-	october := dashboardReport.Dashboard_MRRPerCustomer.PerMonth[5]
-	require.Equal(t, 2023, october.Year)
-	require.Equal(t, 10, october.Month)
-	require.Equal(t, float64(0), october.Value)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 5, 0)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 6, 2)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 7, 4)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 8, 4)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 9, 2)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 10, 0)
 }
 
 func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_DifferentOrganization_Overlaps_2_Months(t *testing.T) {
@@ -868,14 +933,14 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_DifferentOrganization_Ov
 	})
 
 	contract1Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId1)
-	sli1StartedAt := time.Date(2023, 6, 01, 0, 0, 0, 0, time.UTC)
-	sli1EndedAt := time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC)
-	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, &sli1StartedAt, &sli1EndedAt)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1EndedAt := neo4jt.FirstTimeOfMonth(2023, 9)
+	insertMRRPerCustomerServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
 
 	contract2Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId2)
-	sli2StartedAt := time.Date(2023, 7, 01, 0, 0, 0, 0, time.UTC)
-	sli2EndedAt := time.Date(2023, 10, 1, 0, 0, 0, 0, time.UTC)
-	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, &sli2StartedAt, &sli2EndedAt)
+	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli2EndedAt := neo4jt.FirstTimeOfMonth(2023, 10)
+	insertMRRPerCustomerServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, sli2StartedAt, sli2EndedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
@@ -900,35 +965,27 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_DifferentOrganization_Ov
 	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 6, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
-	may := dashboardReport.Dashboard_MRRPerCustomer.PerMonth[0]
-	require.Equal(t, 2023, may.Year)
-	require.Equal(t, 5, may.Month)
-	require.Equal(t, float64(0), may.Value)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 5, 0)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 6, 1)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 7, 2)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 8, 2)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 9, 1)
+	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 10, 0)
+}
 
-	june := dashboardReport.Dashboard_MRRPerCustomer.PerMonth[1]
-	require.Equal(t, 2023, june.Year)
-	require.Equal(t, 6, june.Month)
-	require.Equal(t, float64(1), june.Value)
+func assertMRRMonthData(t *testing.T, dashboardReport *model.DashboardMRRPerCustomer, year, month int, expected float64) {
+	// Find the index corresponding to the given year and month in the PerMonth slice
+	var index int
+	for i, data := range dashboardReport.PerMonth {
+		if data.Year == year && data.Month == month {
+			index = i
+			break
+		}
+	}
 
-	july := dashboardReport.Dashboard_MRRPerCustomer.PerMonth[2]
-	require.Equal(t, 2023, july.Year)
-	require.Equal(t, 7, july.Month)
-	require.Equal(t, float64(2), july.Value)
-
-	august := dashboardReport.Dashboard_MRRPerCustomer.PerMonth[3]
-	require.Equal(t, 2023, august.Year)
-	require.Equal(t, 8, august.Month)
-	require.Equal(t, float64(2), august.Value)
-
-	september := dashboardReport.Dashboard_MRRPerCustomer.PerMonth[4]
-	require.Equal(t, 2023, september.Year)
-	require.Equal(t, 9, september.Month)
-	require.Equal(t, float64(1), september.Value)
-
-	october := dashboardReport.Dashboard_MRRPerCustomer.PerMonth[5]
-	require.Equal(t, 2023, october.Year)
-	require.Equal(t, 10, october.Month)
-	require.Equal(t, float64(0), october.Value)
+	require.Equal(t, year, dashboardReport.PerMonth[index].Year)
+	require.Equal(t, month, dashboardReport.PerMonth[index].Month)
+	require.Equal(t, expected, dashboardReport.PerMonth[index].Value)
 }
 
 func insertMRRPerCustomerContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string) string {
@@ -938,12 +995,32 @@ func insertMRRPerCustomerContractWithOpportunity(ctx context.Context, driver *ne
 	return contractId
 }
 
-func insertServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, startedAt, endedAt *time.Time) {
+func insertMRRPerCustomerServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt time.Time) {
 	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
 		Billed:    billedType,
 		Price:     price,
-		Quantity:  2,
-		StartedAt: *startedAt,
-		EndedAt:   endedAt,
+		Quantity:  quantity,
+		StartedAt: startedAt,
+	})
+}
+
+func insertMRRPerCustomerServiceLineItemEnded(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) {
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Billed:    billedType,
+		Price:     price,
+		Quantity:  quantity,
+		StartedAt: startedAt,
+		EndedAt:   &endedAt,
+	})
+}
+
+func insertMRRPerCustomerServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt *time.Time) {
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		IsCanceled: true,
+		Billed:     billedType,
+		Price:      price,
+		Quantity:   quantity,
+		StartedAt:  *startedAt,
+		EndedAt:    endedAt,
 	})
 }
