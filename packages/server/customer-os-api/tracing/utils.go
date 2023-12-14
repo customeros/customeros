@@ -16,6 +16,7 @@ import (
 const (
 	SpanTagTenant    = tracing.SpanTagTenant
 	SpanTagComponent = tracing.SpanTagComponent
+	SpanTagEntityId  = tracing.SpanTagEntityId
 )
 
 type spanCtxKey struct{}

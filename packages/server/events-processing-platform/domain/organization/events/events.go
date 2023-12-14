@@ -37,6 +37,7 @@ const (
 	OrganizationRemoveParentV1           = "V1_ORGANIZATION_REMOVE_PARENT"
 	OrganizationRefreshArrV1             = "V1_ORGANIZATION_REFRESH_ARR"
 	OrganizationRefreshRenewalSummaryV1  = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
+	OrganizationUpdateOnboardingStatusV1 = "V1_ORGANIZATION_UPDATE_ONBOARDING_STATUS"
 )
 
 type OrganizationCreateEvent struct {

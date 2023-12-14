@@ -219,6 +219,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnLinkWithParentOrganization(ctx, evt)
 	case orgevents.OrganizationRemoveParentV1:
 		return s.organizationEventHandler.OnUnlinkFromParentOrganization(ctx, evt)
+	case orgevents.OrganizationUpdateOnboardingStatusV1:
+		return s.organizationEventHandler.OnUpdateOnboardingStatus(ctx, evt)
 	case orgevents.OrganizationRequestRenewalForecastV1,
 		orgevents.OrganizationRequestNextCycleDateV1,
 		orgevents.OrganizationUpdateRenewalLikelihoodV1,

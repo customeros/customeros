@@ -12,6 +12,7 @@ type MockOrganizationServiceCallbacks struct {
 	LinkEmailToOrganization       func(context context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization func(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint         func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	UpdateOnboardingStatus        func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 }
 
 var organizationCallbacks = &MockOrganizationServiceCallbacks{}
@@ -64,4 +65,11 @@ func (MockOrganizationService) RemoveParentOrganization(context context.Context,
 		panic("organizationCallbacks.RemoveParent is not set")
 	}
 	return organizationCallbacks.RemoveParent(context, proto)
+}
+
+func (MockOrganizationService) UpdateOnboardingStatus(context context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	if organizationCallbacks.UpdateOnboardingStatus == nil {
+		panic("organizationCallbacks.UpdateOnboardingStatus is not set")
+	}
+	return organizationCallbacks.UpdateOnboardingStatus(context, proto)
 }

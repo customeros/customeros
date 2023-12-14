@@ -17,6 +17,7 @@ const (
 	SpanTagUserId                = "user-id"
 	SpanTagComponent             = "component"
 	SpanTagAggregateId           = "aggregateID"
+	SpanTagEntityId              = "entity-id"
 	SpanTagRedundantEventSkipped = "redundantEventSkipped"
 )
 

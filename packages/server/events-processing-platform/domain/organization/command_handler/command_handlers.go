@@ -25,6 +25,7 @@ type CommandHandlers struct {
 	RefreshArr                   RefreshArrCommandHandler
 	RefreshRenewalSummary        RefreshRenewalSummaryCommandHandler
 	WebScrapeOrganization        WebScrapeOrganizationCommandHandler
+	UpdateOnboardingStatus       UpdateOnboardingStatusCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, repositories *repository.Repositories) *CommandHandlers {
@@ -45,5 +46,6 @@ func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.Agg
 		RefreshArr:                   NewRefreshArrCommandHandler(log, es, cfg.Utils),
 		RefreshRenewalSummary:        NewRefreshRenewalSummaryCommandHandler(log, es, cfg.Utils),
 		WebScrapeOrganization:        NewWebScrapeOrganizationCommandHandler(log, es, cfg.Utils),
+		UpdateOnboardingStatus:       NewUpdateOnboardingStatusCommandHandler(log, es, cfg.Utils),
 	}
 }

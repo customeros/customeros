@@ -114,6 +114,13 @@ type Organization struct {
 	YearFounded         *int64                             `json:"yearFounded,omitempty"`
 	Headquarters        string                             `json:"headquarters,omitempty"`
 	EmployeeGrowthRate  string                             `json:"employeeGrowthRate,omitempty"`
+	OnboardingDetails   OnboardingDetails                  `json:"onboardingDetails,omitempty"`
+}
+
+type OnboardingDetails struct {
+	Status    string    `json:"status"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	Comments  string    `json:"comments"`
 }
 
 type OrganizationPhoneNumber struct {

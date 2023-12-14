@@ -1235,6 +1235,12 @@ type OnboardingDetails struct {
 	UpdatedAt *time.Time       `json:"updatedAt,omitempty"`
 }
 
+type OnboardingStatusInput struct {
+	OrganizationID string           `json:"organizationId"`
+	Status         OnboardingStatus `json:"status"`
+	Comments       *string          `json:"comments,omitempty"`
+}
+
 type Opportunity struct {
 	ID                     string                       `json:"id"`
 	CreatedAt              time.Time                    `json:"createdAt"`

@@ -463,3 +463,40 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 0, len(eventsMap))
 }
+
+func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+		Name: "test org",
+		Hide: true,
+	})
+	orgEventHandler := &OrganizationEventHandler{
+		repositories:         testDatabase.Repositories,
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	now := utils.Now()
+	event, err := events.NewUpdateOnboardingStatusEvent(orgAggregate, "DONE", "Some comments", "user-id-123", now)
+	require.Nil(t, err)
+	err = orgEventHandler.OnUpdateOnboardingStatus(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
+	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant"})
+
+	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
+
+	require.Equal(t, orgId, organization.ID)
+	require.Equal(t, "DONE", organization.OnboardingDetails.Status)
+	require.Equal(t, "Some comments", organization.OnboardingDetails.Comments)
+	require.Equal(t, now, *organization.OnboardingDetails.UpdatedAt)
+}

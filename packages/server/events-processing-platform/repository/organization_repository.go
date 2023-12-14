@@ -35,6 +35,7 @@ type OrganizationRepository interface {
 	GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
 	GetOrganizationByContractId(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error
+	UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, updatedAt time.Time) error
 }
 
 type organizationRepository struct {
@@ -652,7 +653,36 @@ func (r *organizationRepository) WebScrapeRequested(ctx context.Context, tenant,
 	tracing.LogObjectAsJson(span, "params", params)
 
 	return r.executeQuery(ctx, cypher, params)
+}
 
+func (r *organizationRepository) UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateOnboardingStatus")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+				WHERE org.onboardingStatus IS NULL OR org.onboardingStatus <> $status
+				SET org.onboardingStatus=$status, 
+					org.onboardingComments=$comments,
+					org.onboardingUpdatedAt=$updatedAt,
+					org.updatedAt=$now`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"status":         status,
+		"comments":       comments,
+		"updatedAt":      updatedAt,
+		"now":            utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := r.executeQuery(ctx, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
 }
 
 // Common database interaction method
