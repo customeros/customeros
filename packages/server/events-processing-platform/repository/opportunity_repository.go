@@ -144,24 +144,28 @@ func (r *opportunityRepository) ReplaceOwner(ctx context.Context, tenant, opport
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("opportunityId", opportunityId), log.String("userId", userId))
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity {id:$opportunityId})
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s
+			WITH op, t
 			OPTIONAL MATCH (:User)-[rel:OWNS]->(op)
 			DELETE rel
 			WITH op, t
 			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
 			WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null)
 			MERGE (u)-[:OWNS]->(op)
-			SET op.updatedAt=$now`
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
-
-	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
+			SET op.updatedAt=$now`, tenant)
+	params := map[string]any{
 		"tenant":        tenant,
 		"opportunityId": opportunityId,
 		"userId":        userId,
 		"now":           utils.Now(),
-	})
+	}
+	span.LogFields(log.String("query", query))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
 }
 
 func (r *opportunityRepository) UpdateNextCycleDate(ctx context.Context, tenant, opportunityId string, evt event.OpportunityUpdateNextCycleDateEvent) error {
