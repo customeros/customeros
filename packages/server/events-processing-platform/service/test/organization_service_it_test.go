@@ -157,13 +157,6 @@ func TestOrganizationService_UpdateOnboardingStatus(t *testing.T) {
 	organizationId := uuid.New().String()
 
 	aggregateStore := eventstore.NewTestAggregateStore()
-	//opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenant, opportunityId)
-	//createEvent, err := event.NewOpportunityCreateEvent(opportunityAggregate, model.OpportunityDataFields{
-	//	OrganizationId: "org-123",
-	//}, commonmodel.Source{}, commonmodel.ExternalSystem{}, utils.Now(), utils.Now())
-	//require.Nil(t, err)
-	//opportunityAggregate.UncommittedEvents = append(opportunityAggregate.UncommittedEvents, createEvent)
-	//aggregateStore.Save(ctx, opportunityAggregate)
 
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	require.Nil(t, err)
