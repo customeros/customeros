@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -5072,6 +5073,2450 @@ func Test_Dashboard_ARR_Breakdown_1_Organization_With_1_Contract_With_Downgrade_
 		require.Equal(t, float64(24), month.Upsells)
 		require.Equal(t, float64(18), month.Downgrades)
 	}
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Draft_Contract_Monthly_SLI(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus: entity.ContractStatusDraft,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 12, 2, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 12)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 18, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Draft_Contract_Quarterly_SLI(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus: entity.ContractStatusDraft,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 12, 2, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 12)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 18, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Draft_Contract_Annually_SLI(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus: entity.ContractStatusDraft,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 12)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 18, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_In_Month_No_Recurring_SLI(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+	}, entity.OpportunityEntity{})
+
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:        "1",
+		ParentID:  "1",
+		Price:     1,
+		Quantity:  1,
+		StartedAt: sli1StartedAt,
+	})
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 12)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 18, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Not_Customer(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: false,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 2, sli1StartedAt, sli1EndedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 12)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 18, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Hidden_Organization(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+		Hide:       true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
+	contractId := insertARRBreakdownContractWithOpportunity(ctx, driver, orgId)
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 2, sli1StartedAt, sli1EndedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 12)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 18, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_Monthly_Canceled(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1EndedAt := neo4jt.FirstTimeOfMonth(2023, 10)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 1, sli1StartedAt, sli1EndedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2023, 11)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 5, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Ended_Contract_Monthly_Renewal_1_SLI_Monthly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1EndedAt := neo4jt.FirstTimeOfMonth(2023, 10)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1EndedAt,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2023, 11)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 5, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V1_Monthly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 3)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 5)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V2_Monthly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2023, 9)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 2, entity.BilledTypeMonthly, 5, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 3)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 10)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 10)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 10)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 10)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 10)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 10)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_Quarterly_Canceled(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1EndedAt := neo4jt.FirstTimeOfMonth(2024, 1)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeQuarterly, 5, 1, sli1StartedAt, sli1EndedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 3)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Ended_Contract_Monthly_Renewal_1_SLI_Quarterly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1EndedAt := neo4jt.FirstTimeOfMonth(2024, 1)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1EndedAt,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 3)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V1_Quarterly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 3)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 5)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V2_Quarterly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 1)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeQuarterly, 3, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeQuarterly, 5, 1, entity.BilledTypeQuarterly, 3, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 3)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 3)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 5)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_Annually_Canceled(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1EndedAt := neo4jt.FirstTimeOfMonth(2024, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 5, 1, sli1StartedAt, sli1EndedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 0)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Ended_Contract_Monthly_Renewal_1_SLI_Annually(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1EndedAt := neo4jt.FirstTimeOfMonth(2024, 7)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		EndedAt:          &sli1EndedAt,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 0)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V1_Annually(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 5)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V2_Annually(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 5, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 10, 1, entity.BilledTypeAnnually, 5, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 10)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI_V1_Monthly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleQuarterlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 3)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 15)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 15)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 15)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI_V2_Monthly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 1)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleQuarterlyRenewal,
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 2, entity.BilledTypeMonthly, 5, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 15)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 15)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 30)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 30)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI_V1_Quarterly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleQuarterlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 3)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 5)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI_V2_Quarterly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 1)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleQuarterlyRenewal,
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeQuarterly, 3, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeQuarterly, 5, 1, entity.BilledTypeQuarterly, 3, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 3)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 3)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 5)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI_V1_Annually(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleQuarterlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 5)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI_V2_Annually(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleQuarterlyRenewal,
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 5, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 10, 1, entity.BilledTypeAnnually, 5, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 10)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V1_Monthly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 60)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V2_Monthly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 1)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 2, entity.BilledTypeMonthly, 5, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 120)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V1_Quarterly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 20)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V2_Quarterly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 1)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeQuarterly, 3, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeQuarterly, 5, 1, entity.BilledTypeQuarterly, 3, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2024, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 20)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V1_Annually(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 5)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V2_Annually(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 5, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 10, 1, entity.BilledTypeAnnually, 5, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 10)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_SLI_V1_Monthly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		RenewalPeriods:   utils.Ptr[int64](1),
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 60)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 60)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_SLI_V1_Monthly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		RenewalPeriods:   utils.Ptr[int64](2),
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 120)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_SLI_V2_Monthly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 1)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		RenewalPeriods:   utils.Ptr[int64](1),
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 2, entity.BilledTypeMonthly, 5, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 120)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 120)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_SLI_V2_Monthly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 1)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		RenewalPeriods:   utils.Ptr[int64](2),
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeMonthly, 5, 2, entity.BilledTypeMonthly, 5, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 240)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_SLI_V1_Quarterly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		RenewalPeriods:   utils.Ptr[int64](1),
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 20)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 20)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_SLI_V1_Quarterly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		RenewalPeriods:   utils.Ptr[int64](2),
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 40)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_SLI_V2_Quarterly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 1)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		RenewalPeriods:   utils.Ptr[int64](1),
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeQuarterly, 3, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeQuarterly, 5, 1, entity.BilledTypeQuarterly, 3, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 20)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 20)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_SLI_V2_Quarterly(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 1)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		RenewalPeriods:   utils.Ptr[int64](1),
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeQuarterly, 3, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeQuarterly, 5, 1, entity.BilledTypeQuarterly, 3, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 20)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 20)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_SLI_V1_Annually(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		RenewalPeriods:   utils.Ptr[int64](1),
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 5)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_SLI_V1_Annually(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1StartedAt,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		RenewalPeriods:   utils.Ptr[int64](2),
+	}, entity.OpportunityEntity{})
+	insertARRBreakdownServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 5, 1, sli1StartedAt)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 10)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_SLI_V2_Annually(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2022, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		RenewalPeriods:   utils.Ptr[int64](1),
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 5, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 10, 1, entity.BilledTypeAnnually, 5, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 5)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 10)
+}
+
+func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_SLI_V2_Annually(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sli1date := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli2date := neo4jt.FirstTimeOfMonth(2024, 6)
+	contractId := insertARRBreakdownContractWithOpportunityExtended(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sli1date,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		RenewalPeriods:   utils.Ptr[int64](2),
+	}, entity.OpportunityEntity{})
+	sliId := insertARRBreakdownServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 5, 1, sli1date, sli2date)
+	insertARRBreakdownServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 10, 1, entity.BilledTypeAnnually, 5, 1, sli2date, sliId)
+
+	format := "2006-01-02T15:04:05.000Z"
+	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
+	endTime := neo4jt.FirstTimeOfMonth(2025, 6)
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
+		map[string]interface{}{
+			"start": startTime.Format(format),
+			"end":   endTime.Format(format),
+		})
+
+	var dashboardReport struct {
+		Dashboard_ARRBreakdown model.DashboardARRBreakdown
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 6, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2024, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2025, 6, 20)
+}
+
+func assertRenewalsMonthData(t *testing.T, dashboardReport *model.DashboardARRBreakdown, year, month int, expectedRenewals float64) {
+	// Find the index corresponding to the given year and month in the PerMonth slice
+	var index int
+	for i, data := range dashboardReport.PerMonth {
+		if data.Year == year && data.Month == month {
+			index = i
+			break
+		}
+	}
+
+	require.Equal(t, year, dashboardReport.PerMonth[index].Year)
+	require.Equal(t, month, dashboardReport.PerMonth[index].Month)
+	require.Equal(t, expectedRenewals, dashboardReport.PerMonth[index].Renewals)
 }
 
 func insertARRBreakdownContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string) string {
