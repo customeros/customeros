@@ -14464,9 +14464,9 @@ react-hook-form@7.47.0:
   integrity sha512-F/TroLjTICipmHeFlMrLtNLceO2xr1jU3CyiNla5zdwsGUGu2UOxxR4UyJgLlhMwLW/Wzp4cpJ7CPfgJIeKdSg==
 
 react-inverted-form@^1.2.11:
-  version "1.2.11"
-  resolved "https://registry.yarnpkg.com/react-inverted-form/-/react-inverted-form-1.2.11.tgz#51962e1f27149d11d332c16c419c1b2a82dc8a5d"
-  integrity sha512-Z1jRSmyIOil6qUm6BMsNFzEwjXVfcFG+KWcNvAzfsbcDXMTDIRRdfYPie4xPRtwxvoVxr2Ykzkbm4Ih3p9fSAA==
+  version "1.2.12"
+  resolved "https://registry.yarnpkg.com/react-inverted-form/-/react-inverted-form-1.2.12.tgz#ac3ab883dad71f759bb5761cba964fa11e09506a"
+  integrity sha512-kbSRm7Te+/UTgS7zVJUiLYJ12MVSCWBF8JSkf9VO3Lawbb4Iks3riunBqW6CUZxCFoXsb5/DwsREClQb/+NTVg==
 
 react-is@^16.13.1, react-is@^16.7.0:
   version "16.13.1"
