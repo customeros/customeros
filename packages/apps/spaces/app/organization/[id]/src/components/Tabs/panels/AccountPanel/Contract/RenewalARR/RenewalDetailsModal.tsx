@@ -146,14 +146,17 @@ export const RenewalDetailsModal = ({
       }));
   }, [usersData?.users?.content?.length]);
 
+  const defaultValues = {
+    renewalLikelihood: data?.renewalLikelihood,
+    amount: data?.amount?.toString(),
+    reason: data?.comments,
+    owner: options?.find((o) => o.value === data?.owner?.id),
+  };
+
   const { state, handleSubmit } = useForm({
     formId,
-    defaultValues: {
-      renewalLikelihood: data?.renewalLikelihood,
-      amount: data?.amount?.toString(),
-      reason: data?.comments,
-      owner: options?.find((o) => o.value === data?.owner?.id),
-    },
+    defaultValues,
+    debug: true,
     onSubmit: async ({ amount, owner, reason, renewalLikelihood }) => {
       updateOpportunityMutation.mutate({
         input: {
@@ -206,6 +209,7 @@ export const RenewalDetailsModal = ({
             isClearable
             name='owner'
             label='Owner'
+            isLabelVisible
             formId={formId}
             isLoading={false}
             options={options}

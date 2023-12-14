@@ -53,6 +53,9 @@ export const AboutPanel = () => {
   const showParentRelationshipSelector = useFeatureIsOn(
     'show-parent-relationship-selector',
   );
+  const parentRelationshipReadOnly = useFeatureIsOn(
+    'parent-relationship-selector-read-only',
+  );
   const { updateOrganization, addSocial, invalidateQuery } =
     useAboutPanelMethods({ id });
 
@@ -219,6 +222,7 @@ export const AboutPanel = () => {
           showParentRelationshipSelector && (
             <ParentOrgInput
               id={id}
+              isReadOnly={parentRelationshipReadOnly}
               parentOrg={
                 data?.organization?.subsidiaryOf?.[0]?.organization?.id
                   ? {
@@ -333,6 +337,7 @@ export const AboutPanel = () => {
             showParentRelationshipSelector && (
               <Branches
                 id={id}
+                isReadOnly={parentRelationshipReadOnly}
                 branches={
                   (data?.organization
                     ?.subsidiaries as Organization['subsidiaries']) ?? []
