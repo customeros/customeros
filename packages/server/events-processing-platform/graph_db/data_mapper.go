@@ -225,20 +225,21 @@ func MapDbNodeToContractEntity(node *dbtype.Node) *entity.ContractEntity {
 	}
 	props := utils.GetPropsFromNode(*node)
 	contract := entity.ContractEntity{
-		Id:               utils.GetStringPropOrEmpty(props, "id"),
-		Name:             utils.GetStringPropOrEmpty(props, "name"),
-		ContractUrl:      utils.GetStringPropOrEmpty(props, "contractUrl"),
-		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		ServiceStartedAt: utils.GetTimePropOrNil(props, "serviceStartedAt"),
-		SignedAt:         utils.GetTimePropOrNil(props, "signedAt"),
-		EndedAt:          utils.GetTimePropOrNil(props, "endedAt"),
-		RenewalCycle:     utils.GetStringPropOrEmpty(props, "renewalCycle"),
-		RenewalPeriods:   utils.GetInt64PropOrNil(props, "renewalPeriods"),
-		Status:           utils.GetStringPropOrEmpty(props, "status"),
+		Id:                              utils.GetStringPropOrEmpty(props, "id"),
+		Name:                            utils.GetStringPropOrEmpty(props, "name"),
+		ContractUrl:                     utils.GetStringPropOrEmpty(props, "contractUrl"),
+		CreatedAt:                       utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:                       utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:                       utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:                          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:                   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		ServiceStartedAt:                utils.GetTimePropOrNil(props, "serviceStartedAt"),
+		SignedAt:                        utils.GetTimePropOrNil(props, "signedAt"),
+		EndedAt:                         utils.GetTimePropOrNil(props, "endedAt"),
+		RenewalCycle:                    utils.GetStringPropOrEmpty(props, "renewalCycle"),
+		RenewalPeriods:                  utils.GetInt64PropOrNil(props, "renewalPeriods"),
+		Status:                          utils.GetStringPropOrEmpty(props, "status"),
+		TriggeredOnboardingStatusChange: utils.GetBoolPropOrFalse(props, "triggeredOnboardingStatusChange"),
 	}
 	return &contract
 }

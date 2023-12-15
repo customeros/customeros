@@ -6,12 +6,13 @@ import (
 )
 
 type MockOrganizationServiceCallbacks struct {
-	CreateOrganization            func(context.Context, *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	AddParent                     func(context.Context, *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	RemoveParent                  func(context.Context, *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	LinkEmailToOrganization       func(context context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	LinkPhoneNumberToOrganization func(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	CreateOrganization            func(ctx context.Context, proto *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	AddParent                     func(ctx context.Context, proto *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	RemoveParent                  func(ctx context.Context, proto *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	LinkEmailToOrganization       func(ctx context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	LinkPhoneNumberToOrganization func(ctx context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint         func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	UpdateOnboardingStatus        func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 }
 
 var organizationCallbacks = &MockOrganizationServiceCallbacks{}
@@ -24,39 +25,39 @@ type MockOrganizationService struct {
 	organizationpb.UnimplementedOrganizationGrpcServiceServer
 }
 
-func (MockOrganizationService) UpsertOrganization(context context.Context, proto *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+func (MockOrganizationService) UpsertOrganization(ctx context.Context, proto *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	if organizationCallbacks.CreateOrganization == nil {
 		panic("organizationCallbacks.CreateOrganization is not set")
 	}
-	return organizationCallbacks.CreateOrganization(context, proto)
+	return organizationCallbacks.CreateOrganization(ctx, proto)
 }
 
-func (MockOrganizationService) LinkEmailToOrganization(context context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+func (MockOrganizationService) LinkEmailToOrganization(ctx context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	if organizationCallbacks.LinkEmailToOrganization == nil {
 		panic("organizationCallbacks.LinkEmailToOrganization is not set")
 	}
-	return organizationCallbacks.LinkEmailToOrganization(context, proto)
+	return organizationCallbacks.LinkEmailToOrganization(ctx, proto)
 }
 
-func (MockOrganizationService) LinkPhoneNumberToOrganization(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+func (MockOrganizationService) LinkPhoneNumberToOrganization(ctx context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	if organizationCallbacks.LinkPhoneNumberToOrganization == nil {
 		panic("organizationCallbacks.LinkPhoneNumberToOrganization is not set")
 	}
-	return organizationCallbacks.LinkPhoneNumberToOrganization(context, proto)
+	return organizationCallbacks.LinkPhoneNumberToOrganization(ctx, proto)
 }
 
-func (MockOrganizationService) RefreshLastTouchpoint(context context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+func (MockOrganizationService) RefreshLastTouchpoint(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	if organizationCallbacks.RefreshLastTouchpoint == nil {
 		panic("organizationCallbacks.RefreshLastTouchpoint is not set")
 	}
-	return organizationCallbacks.RefreshLastTouchpoint(context, proto)
+	return organizationCallbacks.RefreshLastTouchpoint(ctx, proto)
 }
 
-func (MockOrganizationService) AddParentOrganization(context context.Context, proto *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+func (MockOrganizationService) AddParentOrganization(ctx context.Context, proto *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	if organizationCallbacks.AddParent == nil {
 		panic("organizationCallbacks.AddParent is not set")
 	}
-	return organizationCallbacks.AddParent(context, proto)
+	return organizationCallbacks.AddParent(ctx, proto)
 }
 
 func (MockOrganizationService) RemoveParentOrganization(context context.Context, proto *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
@@ -64,4 +65,11 @@ func (MockOrganizationService) RemoveParentOrganization(context context.Context,
 		panic("organizationCallbacks.RemoveParent is not set")
 	}
 	return organizationCallbacks.RemoveParent(context, proto)
+}
+
+func (MockOrganizationService) UpdateOnboardingStatus(context context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	if organizationCallbacks.UpdateOnboardingStatus == nil {
+		panic("organizationCallbacks.UpdateOnboardingStatus is not set")
+	}
+	return organizationCallbacks.UpdateOnboardingStatus(context, proto)
 }

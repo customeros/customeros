@@ -323,7 +323,7 @@ func (s *organizationService) UpdateOnboardingStatus(ctx context.Context, reques
 	tracing.LogObjectAsJson(span, "request", request)
 
 	cmd := command.NewUpdateOnboardingStatusCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId, request.AppSource,
-		model.OnboardingStatus(request.OnboardingStatus).String(), request.Comments, utils.TimestampProtoToTimePtr(request.UpdatedAt))
+		model.OnboardingStatus(request.OnboardingStatus).String(), request.Comments, request.CausedByContractId, utils.TimestampProtoToTimePtr(request.UpdatedAt))
 	if err := s.organizationCommands.UpdateOnboardingStatus.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateOnboardingStatus.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)

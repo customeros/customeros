@@ -584,7 +584,7 @@ func (a *OrganizationAggregate) updateOnboardingStatus(ctx context.Context, cmd 
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
-	event, err := events.NewUpdateOnboardingStatusEvent(a, cmd.Status, cmd.Comments, cmd.LoggedInUserId, updatedAtNotNil)
+	event, err := events.NewUpdateOnboardingStatusEvent(a, cmd.Status, cmd.Comments, cmd.LoggedInUserId, cmd.CausedByContractId, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUpdateOnboardingStatusEvent")

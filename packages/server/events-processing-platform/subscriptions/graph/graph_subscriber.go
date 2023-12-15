@@ -72,7 +72,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		issueEventHandler:           &IssueEventHandler{repositories: repositories, log: log, grpcClients: grpcClients},
 		commentEventHandler:         &GraphCommentEventHandler{repositories: repositories, log: log},
 		opportunityEventHandler:     &OpportunityEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity, organizationCommands: commandHandlers.Organization},
-		contractEventHandler:        &ContractEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity, organizationCommands: commandHandlers.Organization},
+		contractEventHandler:        &ContractEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity, organizationCommands: commandHandlers.Organization, grpcClients: grpcClients},
 		serviceLineItemEventHandler: &ServiceLineItemEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity},
 	}
 }

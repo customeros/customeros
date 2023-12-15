@@ -170,6 +170,7 @@ message UpdateOnboardingStatusGrpcRequest {
   string comments = 5;
   google.protobuf.Timestamp updatedAt = 6;
   string appSource = 7;
+  string causedByContractId = 8;
 }
 
 enum OnboardingStatus {

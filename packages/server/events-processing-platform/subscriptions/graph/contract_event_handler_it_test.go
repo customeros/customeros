@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -21,6 +22,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -45,6 +47,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+		grpcClients:          testMockedGrpcClient,
 	}
 
 	// Create a ContractCreateEvent
@@ -74,7 +77,26 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 		timeNow,
 		timeNow,
 	)
-	require.Nil(t, err, "failed to create contract create event")
+	require.Nil(t, err)
+
+	// prepare grpc mock for onboarding status update
+	calledEventsPlatformForOnboardingStatusChange := false
+	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED, org.OnboardingStatus)
+			require.Equal(t, "", org.LoggedInUserId)
+			require.Equal(t, "", org.Comments)
+			require.Equal(t, contractId, org.CausedByContractId)
+			calledEventsPlatformForOnboardingStatusChange = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	// Execute
 	err = contractEventHandler.OnCreate(context.Background(), createEvent)
@@ -108,6 +130,9 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, contract.EndedAt)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), contract.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, contract.AppSource)
+
+	// Verify event platform was called
+	require.True(t, calledEventsPlatformForOnboardingStatusChange)
 
 	// Check create renewal opportunity command was generated
 	eventsMap := aggregateStore.GetEventMap()
@@ -150,6 +175,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+		grpcClients:          testMockedGrpcClient,
 	}
 	now := utils.Now()
 	yesterday := now.AddDate(0, 0, -1)
@@ -240,6 +266,7 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+		grpcClients:          testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -293,6 +320,7 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+		grpcClients:          testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -348,6 +376,7 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+		grpcClients:          testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -420,6 +449,7 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+		grpcClients:          testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -482,6 +512,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+		grpcClients:          testMockedGrpcClient,
 	}
 	now := utils.Now()
 	yesterday := now.AddDate(0, 0, -1)
@@ -573,6 +604,7 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+		grpcClients:          testMockedGrpcClient,
 	}
 	yesterday := now.AddDate(0, 0, -1)
 	daysAgo2 := now.AddDate(0, 0, -2)
@@ -657,11 +689,31 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+		grpcClients:          testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	now := utils.Now()
 	event, err := event.NewContractUpdateStatusEvent(contractAggregate, string(model.ContractStatusStringEnded), &now, nil)
 	require.Nil(t, err)
+
+	// prepare grpc mock for onboarding status update
+	calledEventsPlatformForOnboardingStatusChange := false
+	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED, org.OnboardingStatus)
+			require.Equal(t, "", org.LoggedInUserId)
+			require.Equal(t, "", org.Comments)
+			require.Equal(t, contractId, org.CausedByContractId)
+			calledEventsPlatformForOnboardingStatusChange = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	// EXECUTE
 	err = contractEventHandler.OnUpdateStatus(context.Background(), event)
@@ -679,6 +731,9 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	// verify contract
 	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
+
+	// verify grpc was called
+	require.True(t, calledEventsPlatformForOnboardingStatusChange)
 
 	// verify action
 	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
@@ -719,11 +774,31 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 		repositories:         testDatabase.Repositories,
 		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+		grpcClients:          testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	now := utils.Now()
 	event, err := event.NewContractUpdateStatusEvent(contractAggregate, string(model.ContractStatusStringLive), &now, nil)
 	require.Nil(t, err)
+
+	// prepare grpc mock for onboarding status update
+	calledEventsPlatformForOnboardingStatusChange := false
+	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED, org.OnboardingStatus)
+			require.Equal(t, "", org.LoggedInUserId)
+			require.Equal(t, "", org.Comments)
+			require.Equal(t, contractId, org.CausedByContractId)
+			calledEventsPlatformForOnboardingStatusChange = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	// EXECUTE
 	err = contractEventHandler.OnUpdateStatus(context.Background(), event)
@@ -741,6 +816,9 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	// verify contract
 	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
+
+	// verify grpc was called
+	require.True(t, calledEventsPlatformForOnboardingStatusChange)
 
 	// verify action
 	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
