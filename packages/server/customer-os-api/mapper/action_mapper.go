@@ -21,22 +21,21 @@ func MapEntityToAction(entity *entity.ActionEntity) *model.Action {
 	}
 }
 
-var actionTypeByModel = map[model.ActionType]entity.ActionType{
-	model.ActionTypeCreated:                                   entity.ActionCreated,
-	model.ActionTypeRenewalForecastUpdated:                    entity.ActionRenewalForecastUpdated,
-	model.ActionTypeRenewalLikelihoodUpdated:                  entity.ActionRenewalLikelihoodUpdated,
-	model.ActionTypeContractStatusUpdated:                     entity.ActionContractStatusUpdated,
-	model.ActionTypeServiceLineItemPriceUpdated:               entity.ActionServiceLineItemPriceUpdated,
-	model.ActionTypeServiceLineItemQuantityUpdated:            entity.ActionServiceLineItemQuantityUpdated,
-	model.ActionTypeServiceLineItemBilledTypeUpdated:          entity.ActionServiceLineItemBilledTypeUpdated,
-	model.ActionTypeServiceLineItemBilledTypeRecurringCreated: entity.ActionServiceLineItemBilledTypeRecurringCreated,
-	model.ActionTypeServiceLineItemBilledTypeOnceCreated:      entity.ActionServiceLineItemBilledTypeOnceCreated,
-	model.ActionTypeServiceLineItemBilledTypeUsageCreated:     entity.ActionServiceLineItemBilledTypeUsageCreated,
-	model.ActionTypeContractRenewed:                           entity.ActionContractRenewed,
-	model.ActionTypeServiceLineItemRemoved:                    entity.ActionServiceLineItemRemoved,
+var actionTypeByValue = map[entity.ActionType]model.ActionType{
+	entity.ActionCreated:                                   model.ActionTypeCreated,
+	entity.ActionRenewalForecastUpdated:                    model.ActionTypeRenewalForecastUpdated,
+	entity.ActionRenewalLikelihoodUpdated:                  model.ActionTypeRenewalLikelihoodUpdated,
+	entity.ActionContractStatusUpdated:                     model.ActionTypeContractStatusUpdated,
+	entity.ActionServiceLineItemPriceUpdated:               model.ActionTypeServiceLineItemPriceUpdated,
+	entity.ActionServiceLineItemQuantityUpdated:            model.ActionTypeServiceLineItemQuantityUpdated,
+	entity.ActionServiceLineItemBilledTypeUpdated:          model.ActionTypeServiceLineItemBilledTypeUpdated,
+	entity.ActionServiceLineItemBilledTypeRecurringCreated: model.ActionTypeServiceLineItemBilledTypeRecurringCreated,
+	entity.ActionServiceLineItemBilledTypeOnceCreated:      model.ActionTypeServiceLineItemBilledTypeOnceCreated,
+	entity.ActionServiceLineItemBilledTypeUsageCreated:     model.ActionTypeServiceLineItemBilledTypeUsageCreated,
+	entity.ActionContractRenewed:                           model.ActionTypeContractRenewed,
+	entity.ActionServiceLineItemRemoved:                    model.ActionTypeServiceLineItemRemoved,
+	entity.ActionOnboardingStatusChanged:                   model.ActionTypeOnboardingStatusChanged,
 }
-
-var actionTypeByValue = utils.ReverseMap(actionTypeByModel)
 
 func MapActionTypeToModel(input entity.ActionType) model.ActionType {
 	return actionTypeByValue[input]

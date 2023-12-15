@@ -8,6 +8,7 @@ type UserEntity struct {
 	Id               string
 	FirstName        string
 	LastName         string
+	Name             string
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	Source           DataSource
@@ -23,3 +24,14 @@ type UserEntity struct {
 }
 
 type UserEntities []UserEntity
+
+func (u UserEntity) GetFullName() string {
+	fullName := u.FirstName
+	if u.LastName != "" {
+		fullName += " " + u.LastName
+	}
+	if fullName == "" {
+		fullName = u.Name
+	}
+	return fullName
+}

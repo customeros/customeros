@@ -139,15 +139,15 @@ func (r *actionRepository) MergeByActionType(ctx context.Context, tenant, entity
 		log.String("actionType", string(actionType)),
 		log.String("content", content))
 
-	query := ""
+	cypher := ""
 	switch entityType {
 	case entity.ORGANIZATION:
-		query = fmt.Sprintf(`MATCH  (n:Organization_%s {id:$entityId}) `, tenant)
+		cypher = fmt.Sprintf(`MATCH  (n:Organization_%s {id:$entityId}) `, tenant)
 	case entity.CONTRACT:
-		query = fmt.Sprintf(`MATCH  (n:Contract_%s {id:$entityId}) `, tenant)
+		cypher = fmt.Sprintf(`MATCH  (n:Contract_%s {id:$entityId}) `, tenant)
 	}
 
-	query += fmt.Sprintf(`WITH n
+	cypher += fmt.Sprintf(`WITH n
 								OPTIONAL MATCH (n)<-[:ACTION_ON]-(checkA:Action {type:$type})
 								FOREACH (ignore IN CASE WHEN checkA IS NULL THEN [1] ELSE [] END |
 								MERGE (n)<-[:ACTION_ON]-(a:Action {id:randomUUID()}) 
@@ -161,27 +161,28 @@ func (r *actionRepository) MergeByActionType(ctx context.Context, tenant, entity
 								a:Action_%s, 
 								a:TimelineEvent, 
 								a:TimelineEvent_%s)`, tenant, tenant)
-	query += ` 	WITH n
+	cypher += ` 	WITH n
 				MATCH (n)<-[:ACTION_ON]-(act:Action {type:$type})
 				RETURN act `
-	span.LogFields(log.String("query", query))
+	params := map[string]any{
+		"tenant":        tenant,
+		"entityId":      entityId,
+		"type":          actionType,
+		"content":       content,
+		"metadata":      metadata,
+		"source":        constants.SourceOpenline,
+		"sourceOfTruth": constants.SourceOpenline,
+		"appSource":     constants.AppSourceEventProcessingPlatform,
+		"createdAt":     createdAt,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":        tenant,
-				"entityId":      entityId,
-				"type":          actionType,
-				"content":       content,
-				"metadata":      metadata,
-				"source":        constants.SourceOpenline,
-				"sourceOfTruth": constants.SourceOpenline,
-				"appSource":     constants.AppSourceEventProcessingPlatform,
-				"createdAt":     createdAt,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)

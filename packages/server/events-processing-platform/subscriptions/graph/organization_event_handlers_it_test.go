@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
@@ -469,6 +470,10 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+		FirstName: "Olivia",
+		LastName:  "Rhye",
+	})
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: "test org",
 	})
@@ -478,23 +483,43 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
 	now := utils.Now()
-	event, err := events.NewUpdateOnboardingStatusEvent(orgAggregate, "DONE", "Some comments", "user-id-123", "", now)
+	event, err := events.NewUpdateOnboardingStatusEvent(orgAggregate, "DONE", "Some comments", userId, "", now)
 	require.Nil(t, err)
 	err = orgEventHandler.OnUpdateOnboardingStatus(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
-	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant"})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Organization":                1,
+		"Organization_" + tenantName:  1,
+		"Action":                      1,
+		"Action_" + tenantName:        1,
+		"TimelineEvent":               1,
+		"TimelineEvent_" + tenantName: 1,
+	})
+	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant",
+		"Action", "Action_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName, "User", "User_" + tenantName})
 
+	// Check organization
 	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
-
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, "DONE", organization.OnboardingDetails.Status)
 	require.Equal(t, "Some comments", organization.OnboardingDetails.Comments)
 	require.Equal(t, now, *organization.OnboardingDetails.UpdatedAt)
+
+	// Check action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionOnboardingStatusChanged, action.Type)
+	require.Equal(t, "Olivia Rhye changed the onboarding status to Done", action.Content)
+	require.Equal(t, fmt.Sprintf(`{"status":"%s","comments":"%s","userId":"%s","contractId":"%s"}`, "DONE", "Some comments", userId, ""), action.Metadata)
 }
 
 func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContractChange(t *testing.T) {
@@ -513,23 +538,28 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
 	now := utils.Now()
-	event, err := events.NewUpdateOnboardingStatusEvent(orgAggregate, "DONE", "Some comments", "user-id-123", contractId, now)
+	event, err := events.NewUpdateOnboardingStatusEvent(orgAggregate, "NOT_STARTED", "Some comments", "", contractId, now)
 	require.Nil(t, err)
 	// EXECUTE
 	err = orgEventHandler.OnUpdateOnboardingStatus(context.Background(), event)
 	require.Nil(t, err)
 
 	// Verify nodes
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Organization": 1, "Organization_" + tenantName: 1,
+		"Contract": 1, "Contract_" + tenantName: 1,
+		"Action": 1, "Action_" + tenantName: 1,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
+	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant",
+		"Action", "Action_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName, "Contract", "Contract_" + tenantName})
 
 	// Verify Organization
 	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
-
 	require.Equal(t, orgId, organization.ID)
-	require.Equal(t, "DONE", organization.OnboardingDetails.Status)
+	require.Equal(t, "NOT_STARTED", organization.OnboardingDetails.Status)
 	require.Equal(t, "Some comments", organization.OnboardingDetails.Comments)
 	require.Equal(t, now, *organization.OnboardingDetails.UpdatedAt)
 
@@ -539,4 +569,16 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	contract := graph_db.MapDbNodeToContractEntity(dbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.True(t, contract.TriggeredOnboardingStatusChange)
+
+	// Verify Action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionOnboardingStatusChanged, action.Type)
+	require.Equal(t, "The onboarding status was automatically set to Not started", action.Content)
+	require.Equal(t, fmt.Sprintf(`{"status":"%s","comments":"%s","userId":"%s","contractId":"%s"}`, "NOT_STARTED", "Some comments", "", contractId), action.Metadata)
 }
