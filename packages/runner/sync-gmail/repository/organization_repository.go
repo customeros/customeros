@@ -57,18 +57,20 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4
 		"				org.sourceOfTruth=$sourceOfTruth, " +
 		"				org.appSource=$appSource, " +
 		"				org.hide=$hide, " +
+		"				org.onboardingStatus=$onboardingStatus, " +
 		"				org:%s " +
 		" RETURN org"
 
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Organization_"+tenant),
 		map[string]interface{}{
-			"tenant":        tenant,
-			"name":          name,
-			"source":        source,
-			"sourceOfTruth": sourceOfTruth,
-			"appSource":     appSource,
-			"now":           date,
-			"hide":          hide,
+			"tenant":           tenant,
+			"name":             name,
+			"source":           source,
+			"sourceOfTruth":    sourceOfTruth,
+			"appSource":        appSource,
+			"now":              date,
+			"hide":             hide,
+			"onboardingStatus": "NOT_APPLICABLE",
 		})
 	if err != nil {
 		return nil, err
