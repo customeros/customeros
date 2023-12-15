@@ -33,13 +33,13 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 		"Organization": 1, "User": 1, "ExternalSystem": 1, "LogEntry": 0, "TimelineEvent": 0})
 
 	// prepare grpc mock
-	lastTouchpointInvoked := false
+	calledEventsPlatform := false
 	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
 		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, orgId, org.OrganizationId)
 			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
-			lastTouchpointInvoked = true
+			calledEventsPlatform = true
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: orgId,
 			}, nil
@@ -103,7 +103,7 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, now, logEntry.StartedAt)
 
 	// Check refresh last touch point
-	require.Truef(t, lastTouchpointInvoked, "RefreshLastTouchpoint was not invoked")
+	require.Truef(t, calledEventsPlatform, "RefreshLastTouchpoint was not invoked")
 }
 
 func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {

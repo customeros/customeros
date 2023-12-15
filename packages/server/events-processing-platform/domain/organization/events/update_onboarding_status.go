@@ -8,20 +8,22 @@ import (
 )
 
 type UpdateOnboardingStatusEvent struct {
-	Tenant          string    `json:"tenant" validate:"required"`
-	Status          string    `json:"status" validate:"required"`
-	Comments        string    `json:"comments"`
-	UpdatedByUserId string    `json:"updatedByUserId"`
-	UpdatedAt       time.Time `json:"updatedAt"`
+	Tenant             string    `json:"tenant" validate:"required"`
+	Status             string    `json:"status" validate:"required"`
+	Comments           string    `json:"comments"`
+	UpdatedByUserId    string    `json:"updatedByUserId"`
+	UpdatedAt          time.Time `json:"updatedAt"`
+	CausedByContractId string    `json:"causedByContractId"`
 }
 
-func NewUpdateOnboardingStatusEvent(aggregate eventstore.Aggregate, status, comments, updatedByUserId string, updatedAt time.Time) (eventstore.Event, error) {
+func NewUpdateOnboardingStatusEvent(aggregate eventstore.Aggregate, status, comments, updatedByUserId, causedByContractId string, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := UpdateOnboardingStatusEvent{
-		Tenant:          aggregate.GetTenant(),
-		Status:          status,
-		Comments:        comments,
-		UpdatedByUserId: updatedByUserId,
-		UpdatedAt:       updatedAt,
+		Tenant:             aggregate.GetTenant(),
+		Status:             status,
+		Comments:           comments,
+		UpdatedByUserId:    updatedByUserId,
+		UpdatedAt:          updatedAt,
+		CausedByContractId: causedByContractId,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

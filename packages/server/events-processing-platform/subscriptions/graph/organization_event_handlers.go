@@ -628,10 +628,19 @@ func (h *OrganizationEventHandler) OnUpdateOnboardingStatus(ctx context.Context,
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	err := h.repositories.OrganizationRepository.UpdateOnboardingStatus(ctx, eventData.Tenant, organizationId, eventData.Status, eventData.Comments, eventData.UpdatedAt)
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to update onboarding status for organization %s: %s", organizationId, err.Error())
 		return err
+	}
+
+	if eventData.CausedByContractId != "" {
+		err = h.repositories.ContractRepository.ContractCausedOnboardingStatusChange(ctx, eventData.Tenant, eventData.CausedByContractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to update contract %s caused onboarding status change: %s", eventData.CausedByContractId, err.Error())
+		}
 	}
 
 	return nil

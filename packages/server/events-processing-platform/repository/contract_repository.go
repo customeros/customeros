@@ -24,6 +24,7 @@ type ContractRepository interface {
 	UpdateStatus(ctx context.Context, tenant, contractId string, evt event.ContractUpdateStatusEvent) error
 	SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error
 	ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error
+	ContractCausedOnboardingStatusChange(ctx context.Context, tenant, contractId string) error
 }
 
 type contractRepository struct {
@@ -304,4 +305,27 @@ func (r *contractRepository) ActivateSuspendedRenewalOpportunity(ctx context.Con
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
 	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *contractRepository) ContractCausedOnboardingStatusChange(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.ContractCausedOnboardingStatusChange")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
+				SET ct.triggeredOnboardingStatusChange=true`
+	params := map[string]any{
+		"tenant":     tenant,
+		"contractId": contractId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
 }

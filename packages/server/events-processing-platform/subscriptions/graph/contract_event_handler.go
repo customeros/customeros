@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
@@ -15,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/contract"
@@ -31,10 +33,13 @@ type ActionStatusMetadata struct {
 }
 
 type ContractEventHandler struct {
-	log                  logger.Logger
-	repositories         *repository.Repositories
-	opportunityCommands  *opportunitycmdhandler.CommandHandlers
+	log          logger.Logger
+	repositories *repository.Repositories
+	//Deprecated
+	opportunityCommands *opportunitycmdhandler.CommandHandlers
+	//Deprecated
 	organizationCommands *organizationcmdhandler.CommandHandlers
+	grpcClients          *grpc_client.Clients
 }
 
 func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
@@ -72,6 +77,8 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 			h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
 		}
 	}
+
+	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
 
 	return nil
 }
@@ -166,6 +173,8 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
 	}
+
+	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
 
 	return nil
 }
@@ -269,6 +278,9 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 	if statusChanged {
 		h.createActionForStatusChange(ctx, eventData.Tenant, contractId, eventData.Status, contractEntity.Name, span)
 	}
+
+	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
+
 	return nil
 }
 
@@ -301,5 +313,42 @@ func (h *ContractEventHandler) createActionForStatusChange(ctx context.Context, 
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating status update action for contract %s: %s", contractId, err.Error())
+	}
+}
+
+func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, tenant, contractId string, span opentracing.Span) {
+	contractDbNode, err := h.repositories.ContractRepository.GetContractById(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+	if contractDbNode == nil {
+		return
+	}
+	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+
+	if contractEntity.IsEligibleToStartOnboarding() {
+		organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganizationByContractId(ctx, tenant, contractEntity.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while getting organization for contract %s: %s", contractEntity.Id, err.Error())
+			return
+		}
+		if organizationDbNode == nil {
+			return
+		}
+		organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = h.grpcClients.OrganizationClient.UpdateOnboardingStatus(ctx, &organizationpb.UpdateOnboardingStatusGrpcRequest{
+			Tenant:             tenant,
+			OrganizationId:     organization.ID,
+			CausedByContractId: contractEntity.Id,
+			OnboardingStatus:   organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED,
+			AppSource:          constants.AppSourceEventProcessingPlatform,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("UpdateOnboardingStatus gRPC request failed: %v", err.Error())
+		}
 	}
 }
