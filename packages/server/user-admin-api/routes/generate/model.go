@@ -16,9 +16,13 @@ type SourceData struct {
 		ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 	} `json:"contacts"`
 	Organizations []struct {
-		Id        string `json:"id"`
-		Name      string `json:"name"`
-		Domain    string `json:"domain"`
+		Id                    string `json:"id"`
+		Name                  string `json:"name"`
+		Domain                string `json:"domain"`
+		OnboardingStatusInput struct {
+			Status   string `json:"status"`
+			Comments string `json:"comments"`
+		} `json:"onboardingStatusInput"`
 		Contracts []struct {
 			Name             string    `json:"name"`
 			RenewalCycle     string    `json:"renewalCycle"`

@@ -47,6 +47,12 @@ type CreateOrganizationResponse struct {
 	} `json:"organization_Create"`
 }
 
+type UpdateOrganizationResponse struct {
+	OrganizationUpdate struct {
+		Id string `json:"id"`
+	} `json:"organization_Update"`
+}
+
 type CreateContractResponse struct {
 	ContractCreate struct {
 		Id string `json:"id"`

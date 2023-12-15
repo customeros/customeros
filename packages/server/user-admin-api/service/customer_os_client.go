@@ -29,6 +29,7 @@ type CustomerOsClient interface {
 	AddUserRoles(tenant, userId string, roles []model.Role) (*model.UserResponse, error)
 	CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error)
 	CreateOrganization(tenant, username, organizationName, domain string) (string, error)
+	UpdateOrganizationOnboardingStatus(tenant, username string, onboardingStatus model.OrganizationUpdateOnboardingStatus) (string, error)
 	CreateContract(tenant, username string, input model.ContractInput) (string, error)
 	CreateServiceLine(tenant, username string, input interface{}) (string, error)
 	CreateMeeting(tenant, username string, input model.MeetingInput) (string, error)
@@ -407,6 +408,39 @@ func (s *customerOsClient) CreateOrganization(tenant, username, organizationName
 	}
 
 	return graphqlResponse.OrganizationCreate.Id, nil
+}
+func (s *customerOsClient) UpdateOrganizationOnboardingStatus(tenant, username string, onboardingStatus model.OrganizationUpdateOnboardingStatus) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation UpdateOrganizationOnboardingStatus($organizationId: ID!, $onboardingStatus: OnboardingStatus!, $onboardingComments: String) {
+  				organization_UpdateOnboardingStatus(input: {
+					organizationId: $organizationId,
+					status: $onboardingStatus,
+					comments: $onboardingComments,
+					}) {
+					id
+			}
+		}`)
+
+	graphqlRequest.Var("organizationId", onboardingStatus.OrganizationId)
+	graphqlRequest.Var("onboardingStatus", onboardingStatus.Status)
+	graphqlRequest.Var("onboardingComments", onboardingStatus.Comments)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.UpdateOrganizationResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("organization_UpdateOnboardingStatus: %w", err)
+	}
+
+	return graphqlResponse.OrganizationUpdate.Id, nil
 }
 
 func (s *customerOsClient) CreateContract(tenant, username string, input model.ContractInput) (string, error) {

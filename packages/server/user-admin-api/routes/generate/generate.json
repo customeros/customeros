@@ -248,6 +248,10 @@
       "id": "",
       "name": "Acme",
       "domain": "acme.com",
+      "onboardingStatusInput": {
+        "status": "LATE",
+        "comments": "There must be a reason for status change - embrace the change"
+      },
       "people": [
         {
           "email": "daniel.kim@acme.com"

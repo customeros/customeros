@@ -128,3 +128,9 @@ type MeetingInput struct {
 	AppSource          *string                    `json:"appSource,omitempty"`
 	Status             *MeetingStatus             `json:"status,omitempty"`
 }
+
+type OrganizationUpdateOnboardingStatus struct {
+	OrganizationId string `json:"organizationId"`
+	Status         string `json:"status"`
+	Comments       string `json:"comments,omitempty"`
+}
