@@ -21,6 +21,7 @@ type DashboardRetentionRateData struct {
 	Months             []*DashboardRetentionRatePerMonthData
 }
 type DashboardRetentionRatePerMonthData struct {
+	Year          int
 	Month         int
 	RenewCount    int
 	ChurnCount    int

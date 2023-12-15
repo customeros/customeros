@@ -3,6 +3,8 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
+	"github.com/google/uuid"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
@@ -681,4 +683,107 @@ func TestQueryResolver_Sort_Organizations_ByOrganizationName_WithOrganizationHie
 	require.Equal(t, parent2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[4].ID)
 	require.Equal(t, sub2_1OrgId, organizationsPageStruct.DashboardView_Organizations.Content[5].ID)
 	require.Equal(t, sub2_2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[6].ID)
+}
+
+func insertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, contract)
+	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, opportunity)
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opportunityId)
+	return contractId
+}
+
+func insertServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt time.Time) string {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:        id,
+		ParentID:  id,
+		Billed:    billedType,
+		Price:     price,
+		Quantity:  quantity,
+		StartedAt: startedAt,
+	})
+	return id
+}
+
+func insertServiceLineItemEnded(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:        id,
+		ParentID:  id,
+		Billed:    billedType,
+		Price:     price,
+		Quantity:  quantity,
+		StartedAt: startedAt,
+		EndedAt:   &endedAt,
+	})
+	return id
+}
+
+func insertServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:         id,
+		ParentID:   id,
+		Billed:     billedType,
+		Price:      price,
+		Quantity:   quantity,
+		IsCanceled: true,
+		StartedAt:  startedAt,
+		EndedAt:    &endedAt,
+	})
+	return id
+}
+
+func insertServiceLineItemWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt time.Time, parentId string) {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:               id,
+		ParentID:         parentId,
+		Billed:           billedType,
+		Price:            price,
+		Quantity:         quantity,
+		PreviousBilled:   previousBilledType,
+		PreviousPrice:    previousPrice,
+		PreviousQuantity: previousQuantity,
+		StartedAt:        startedAt,
+	})
+}
+
+func insertServiceLineItemEndedWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:               id,
+		ParentID:         parentId,
+		Billed:           billedType,
+		Price:            price,
+		Quantity:         quantity,
+		PreviousBilled:   previousBilledType,
+		PreviousPrice:    previousPrice,
+		PreviousQuantity: previousQuantity,
+		StartedAt:        startedAt,
+		EndedAt:          &endedAt,
+	})
+}
+
+func insertServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:               id,
+		ParentID:         parentId,
+		Billed:           billedType,
+		Price:            price,
+		Quantity:         quantity,
+		PreviousBilled:   previousBilledType,
+		PreviousPrice:    previousPrice,
+		PreviousQuantity: previousQuantity,
+		IsCanceled:       true,
+		StartedAt:        startedAt,
+		EndedAt:          &endedAt,
+	})
 }

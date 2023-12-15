@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
@@ -98,8 +97,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_HiddenOrganization
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2024, 7)
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -142,8 +141,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_ProspectOrganizati
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -187,8 +186,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_Hidden_Organizatio
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -232,8 +231,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Canceled(t *testing.T) {
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli1EndedAt := neo4jt.FirstTimeOfMonth(2023, 9)
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, &sli1StartedAt, &sli1EndedAt)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItemCanceled(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -275,8 +274,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_BeforeMonth(t *testing.T) 
 	})
 
 	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 6)
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -319,8 +318,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_AfterMonth(t *testing.T) {
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -362,10 +361,10 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_AtBeginningOfMonth(t *test
 		IsCustomer: true,
 	})
 
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -408,8 +407,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_AtEndOfMonth(t *testing.T)
 	})
 
 	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 7)
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -453,8 +452,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_EndedImmediately(t
 	})
 
 	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1StartedAt)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -499,8 +498,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_EndedAtEndOfMonth(
 
 	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -543,8 +542,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Yearly(t *testing.T) {
 	})
 
 	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 7)
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -587,8 +586,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Quarterly(t *testing.T) {
 	})
 
 	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 7)
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 3, 1, sli1StartedAt)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 3, 1, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -631,8 +630,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Monthly(t *testing.T) {
 	})
 
 	sli1StartedAt := neo4jt.LastTimeOfMonth(2023, 7)
-	contractId := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 2, sli1StartedAt)
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -676,12 +675,12 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_SameMonth_SameOrganizati
 	})
 
 	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
-	contract1Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	contract2ServiceStartedAt := neo4jt.MiddleTimeOfMonth(2023, 7).Add(10 * 24 * time.Hour)
-	contract2Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, contract2ServiceStartedAt)
+	contract2Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, contract2ServiceStartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -723,17 +722,16 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_SameMonth_DifferentOrgan
 	orgId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
+	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	contract1Id := insertContractWithOpportunity(ctx, driver, orgId1, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
 	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-
-	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
-	contract1Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId1)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
-
 	contract2ServiceStartedAt := neo4jt.MiddleTimeOfMonth(2023, 7).Add(10 * 24 * time.Hour)
-	contract2Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId2)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, contract2ServiceStartedAt)
+	contract2Id := insertContractWithOpportunity(ctx, driver, orgId2, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, contract2ServiceStartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
@@ -777,12 +775,12 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_DifferentMonths_SameOrga
 	})
 
 	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
-	contract1Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	contract2ServiceStartedAt := neo4jt.MiddleTimeOfMonth(2023, 9)
-	contract2Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, contract2ServiceStartedAt)
+	contract2Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, contract2ServiceStartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -824,17 +822,16 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_DifferentMonths_Differen
 	orgId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
+	contract1Id := insertContractWithOpportunity(ctx, driver, orgId1, entity.ContractEntity{}, entity.OpportunityEntity{})
+	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
+	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
 	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-
-	contract1Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId1)
-	sli1StartedAt := neo4jt.MiddleTimeOfMonth(2023, 7)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
-
-	contract2Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId2)
+	contract2Id := insertContractWithOpportunity(ctx, driver, orgId2, entity.ContractEntity{}, entity.OpportunityEntity{})
 	sli2StartedAt := neo4jt.MiddleTimeOfMonth(2023, 8)
-	insertMRRPerCustomerServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, sli2StartedAt)
+	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, sli2StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
@@ -873,19 +870,19 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_SameOrganization_Overlap
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contract1Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId1)
+	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndedAt := neo4jt.FirstTimeOfMonth(2023, 9)
-	insertMRRPerCustomerServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
+	insertServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
 
-	contract2Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId1)
+	contract2Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
 	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli2EndedAt := neo4jt.FirstTimeOfMonth(2023, 10)
-	insertMRRPerCustomerServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, sli2StartedAt, sli2EndedAt)
+	insertServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, sli2StartedAt, sli2EndedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -928,19 +925,19 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_DifferentOrganization_Ov
 	orgId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
+
+	contract1Id := insertContractWithOpportunity(ctx, driver, orgId1, entity.ContractEntity{}, entity.OpportunityEntity{})
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sli1EndedAt := neo4jt.FirstTimeOfMonth(2023, 9)
+	insertServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
+
 	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
-
-	contract1Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId1)
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	sli1EndedAt := neo4jt.FirstTimeOfMonth(2023, 9)
-	insertMRRPerCustomerServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
-
-	contract2Id := insertMRRPerCustomerContractWithOpportunity(ctx, driver, orgId2)
+	contract2Id := insertContractWithOpportunity(ctx, driver, orgId2, entity.ContractEntity{}, entity.OpportunityEntity{})
 	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	sli2EndedAt := neo4jt.FirstTimeOfMonth(2023, 10)
-	insertMRRPerCustomerServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, sli2StartedAt, sli2EndedAt)
+	insertServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, sli2StartedAt, sli2EndedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
@@ -986,41 +983,4 @@ func assertMRRMonthData(t *testing.T, dashboardReport *model.DashboardMRRPerCust
 	require.Equal(t, year, dashboardReport.PerMonth[index].Year)
 	require.Equal(t, month, dashboardReport.PerMonth[index].Month)
 	require.Equal(t, expected, dashboardReport.PerMonth[index].Value)
-}
-
-func insertMRRPerCustomerContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string) string {
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
-	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{})
-	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opportunityId)
-	return contractId
-}
-
-func insertMRRPerCustomerServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt time.Time) {
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Billed:    billedType,
-		Price:     price,
-		Quantity:  quantity,
-		StartedAt: startedAt,
-	})
-}
-
-func insertMRRPerCustomerServiceLineItemEnded(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) {
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Billed:    billedType,
-		Price:     price,
-		Quantity:  quantity,
-		StartedAt: startedAt,
-		EndedAt:   &endedAt,
-	})
-}
-
-func insertMRRPerCustomerServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt *time.Time) {
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		IsCanceled: true,
-		Billed:     billedType,
-		Price:      price,
-		Quantity:   quantity,
-		StartedAt:  *startedAt,
-		EndedAt:    endedAt,
-	})
 }

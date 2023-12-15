@@ -202,7 +202,17 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Re
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.OpportunityRenewalLikelihoodHigh)
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+
+	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
+	insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+		ServiceStartedAt: &contract1ServiceStartedAt,
+		ContractStatus:   entity.ContractStatusLive,
+	}, entity.OpportunityEntity{
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
 
 	assertFor1Organization(ctx, t, driver, float64(10), float64(0))
 }
@@ -213,7 +223,19 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Re
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.OpportunityRenewalLikelihoodMedium)
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
+	insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+		ServiceStartedAt: &contract1ServiceStartedAt,
+		ContractStatus:   entity.ContractStatusLive,
+	}, entity.OpportunityEntity{
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	})
 
 	assertFor1Organization(ctx, t, driver, float64(0), float64(10))
 }
@@ -224,7 +246,19 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Re
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.OpportunityRenewalLikelihoodLow)
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
+	insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+		ServiceStartedAt: &contract1ServiceStartedAt,
+		ContractStatus:   entity.ContractStatusLive,
+	}, entity.OpportunityEntity{
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
+	})
 
 	assertFor1Organization(ctx, t, driver, float64(0), float64(10))
 }
@@ -235,7 +269,19 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Co
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.OpportunityRenewalLikelihoodZero)
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
+	insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+		ServiceStartedAt: &contract1ServiceStartedAt,
+		ContractStatus:   entity.ContractStatusLive,
+	}, entity.OpportunityEntity{
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodZero,
+	})
 
 	assertFor1Organization(ctx, t, driver, float64(0), float64(10))
 }
@@ -246,10 +292,28 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_High_1_
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
 
-	insertContractWithOpportunity(ctx, driver, orgId, entity.OpportunityRenewalLikelihoodHigh)
-	insertContractWithOpportunity(ctx, driver, orgId, entity.OpportunityRenewalLikelihoodMedium)
+	contractServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
+	insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+		ServiceStartedAt: &contractServiceStartedAt,
+		ContractStatus:   entity.ContractStatusLive,
+	}, entity.OpportunityEntity{
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
+
+	insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+		ServiceStartedAt: &contractServiceStartedAt,
+		ContractStatus:   entity.ContractStatusLive,
+	}, entity.OpportunityEntity{
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	})
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -279,8 +343,32 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_A
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.OpportunityRenewalLikelihoodHigh)
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.OpportunityRenewalLikelihoodMedium)
+	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contractServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
+	insertContractWithOpportunity(ctx, driver, org1Id, entity.ContractEntity{
+		ServiceStartedAt: &contractServiceStartedAt,
+		ContractStatus:   entity.ContractStatusLive,
+	}, entity.OpportunityEntity{
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
+
+	org2Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	insertContractWithOpportunity(ctx, driver, org2Id, entity.ContractEntity{
+		ServiceStartedAt: &contractServiceStartedAt,
+		ContractStatus:   entity.ContractStatusLive,
+	}, entity.OpportunityEntity{
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	})
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
@@ -302,29 +390,6 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_A
 
 	require.Equal(t, float64(10), dashboardReport.Dashboard_RevenueAtRisk.HighConfidence)
 	require.Equal(t, float64(10), dashboardReport.Dashboard_RevenueAtRisk.AtRisk)
-}
-
-func insert1OrganizationWith1ContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, renewalLikelihood entity.OpportunityRenewalLikelihood) {
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-
-	insertContractWithOpportunity(ctx, driver, orgId, renewalLikelihood)
-}
-
-func insertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, renewalLikelihood entity.OpportunityRenewalLikelihood) {
-	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
-	})
-	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		Name:              "opportunity 1",
-		CreatedAt:         contract1ServiceStartedAt,
-		UpdatedAt:         contract1ServiceStartedAt,
-		MaxAmount:         10,
-		InternalType:      entity.InternalTypeRenewal,
-		RenewalLikelihood: renewalLikelihood,
-	})
-	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opportunityId)
 }
 
 func assertFor1Organization(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, expectedHighConfidence float64, expectedAtRisk float64) {
