@@ -23,14 +23,17 @@ export interface SelectProps extends Props<any, any, any> {
 
 export const Select = forwardRef<SelectInstance, SelectProps>(
   ({ leftElement, chakraStyles, components: _components, ...props }, ref) => {
-    const Control = useCallback(({ children, ...rest }: ControlProps) => {
-      return (
-        <chakraComponents.Control {...rest}>
-          {leftElement}
-          {children}
-        </chakraComponents.Control>
-      );
-    }, []);
+    const Control = useCallback(
+      ({ children, ...rest }: ControlProps) => {
+        return (
+          <chakraComponents.Control {...rest}>
+            {leftElement}
+            {children}
+          </chakraComponents.Control>
+        );
+      },
+      [leftElement],
+    );
     const ClearIndicator = useCallback(
       ({ children, ...rest }: ClearIndicatorProps) => {
         const boxSize = (() => {

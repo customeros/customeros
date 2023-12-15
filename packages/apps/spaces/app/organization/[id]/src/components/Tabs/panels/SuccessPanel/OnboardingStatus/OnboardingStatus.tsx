@@ -4,11 +4,16 @@ import { Flex } from '@ui/layout/Flex';
 import { useDisclosure } from '@ui/utils';
 import { Text } from '@ui/typography/Text';
 import { Flag04 } from '@ui/media/icons/Flag04';
+import { OnboardingDetails } from '@graphql/types';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 
 import { OnboardingStatusModal } from './OnboardingStatusModal';
 
-export const OnboardingStatus = () => {
+interface OnboardingStatusProps {
+  data?: OnboardingDetails | null;
+}
+
+export const OnboardingStatus = ({ data }: OnboardingStatusProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
@@ -35,7 +40,7 @@ export const OnboardingStatus = () => {
         </Flex>
       </Flex>
 
-      <OnboardingStatusModal isOpen={isOpen} onClose={onClose} />
+      <OnboardingStatusModal data={data} isOpen={isOpen} onClose={onClose} />
     </>
   );
 };

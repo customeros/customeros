@@ -39,5 +39,11 @@ query Organization($id: ID!) {
       firstName
       lastName
     }
+    accountDetails {
+      onboarding {
+        status
+        comments
+      }
+    }
   }
 }
