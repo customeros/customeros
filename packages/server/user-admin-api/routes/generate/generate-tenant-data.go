@@ -145,6 +145,17 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 					})
 					return
 				}
+				if organization.OnboardingStatusInput.Status != "" {
+					organizationOnboardingStatus := cosModel.OrganizationUpdateOnboardingStatus{
+						OrganizationId: organizationId,
+						Status:         organization.OnboardingStatusInput.Status,
+						Comments:       organization.OnboardingStatusInput.Comments,
+					}
+					_, err := services.CustomerOsClient.UpdateOrganizationOnboardingStatus(tenant, username, organizationOnboardingStatus)
+					if err != nil {
+						return
+					}
+				}
 			}
 
 			//create Contracts with Service Lines in org
