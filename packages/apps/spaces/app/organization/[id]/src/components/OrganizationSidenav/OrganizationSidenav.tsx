@@ -2,6 +2,7 @@
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 
 import { useLocalStorage } from 'usehooks-ts';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -12,6 +13,7 @@ import { Text } from '@ui/typography/Text';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
 import { Ticket02 } from '@ui/media/icons/Ticket02';
+import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
@@ -20,6 +22,7 @@ export const OrganizationSidenav = () => {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
+  const isOnboardingFeatureOn = useFeatureIsOn('onboarding-status');
 
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
@@ -141,6 +144,19 @@ export const OrganizationSidenav = () => {
             />
           }
         />
+        {isOnboardingFeatureOn && (
+          <SidenavItem
+            label='Success'
+            isActive={checkIsActive('success')}
+            onClick={handleItemClick('success')}
+            icon={
+              <Trophy01
+                color={checkIsActive('success') ? 'gray.700' : 'gray.500'}
+                boxSize='6'
+              />
+            }
+          />
+        )}
       </VStack>
     </GridItem>
   );

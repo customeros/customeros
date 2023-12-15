@@ -1535,6 +1535,7 @@ export type Mutation = {
   organization_ShowAll?: Maybe<Result>;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
+  organization_UpdateOnboardingStatus: Organization;
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
   phoneNumberMergeToUser: PhoneNumber;
@@ -1931,6 +1932,7 @@ export type MutationNote_UpdateArgs = {
 
 export type MutationOpportunityRenewalUpdateArgs = {
   input: OpportunityRenewalUpdateInput;
+  ownerUserId?: InputMaybe<Scalars['ID']>;
 };
 
 export type MutationOpportunityUpdateArgs = {
@@ -1999,6 +2001,10 @@ export type MutationOrganization_UnsetOwnerArgs = {
 
 export type MutationOrganization_UpdateArgs = {
   input: OrganizationUpdateInput;
+};
+
+export type MutationOrganization_UpdateOnboardingStatusArgs = {
+  input: OnboardingStatusInput;
 };
 
 export type MutationPhoneNumberMergeToContactArgs = {
@@ -2194,6 +2200,29 @@ export type NoteUpdateInput = {
 
 export type NotedEntity = Contact | Organization;
 
+export type OnboardingDetails = {
+  __typename?: 'OnboardingDetails';
+  comments?: Maybe<Scalars['String']>;
+  status: OnboardingStatus;
+  updatedAt?: Maybe<Scalars['Time']>;
+};
+
+export enum OnboardingStatus {
+  Done = 'DONE',
+  Late = 'LATE',
+  NotApplicable = 'NOT_APPLICABLE',
+  NotStarted = 'NOT_STARTED',
+  OnTrack = 'ON_TRACK',
+  Stuck = 'STUCK',
+  Successful = 'SUCCESSFUL',
+}
+
+export type OnboardingStatusInput = {
+  comments?: InputMaybe<Scalars['String']>;
+  organizationId: Scalars['ID'];
+  status: OnboardingStatus;
+};
+
 export type Opportunity = Node & {
   __typename?: 'Opportunity';
   amount: Scalars['Float'];
@@ -2235,7 +2264,7 @@ export type OpportunityRenewalUpdateInput = {
   comments?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   opportunityId: Scalars['ID'];
-  ownerUserId?: InputMaybe<Scalars['String']>;
+  ownerUserId?: InputMaybe<Scalars['ID']>;
   renewalLikelihood?: InputMaybe<OpportunityRenewalLikelihood>;
 };
 
@@ -2254,6 +2283,7 @@ export type OpportunityUpdateInput = {
 
 export type OrgAccountDetails = {
   __typename?: 'OrgAccountDetails';
+  onboarding?: Maybe<OnboardingDetails>;
   renewalSummary?: Maybe<RenewalSummary>;
 };
 
@@ -2349,7 +2379,7 @@ export type OrganizationInput = {
   isPublic?: InputMaybe<Scalars['Boolean']>;
   logoUrl?: InputMaybe<Scalars['String']>;
   market?: InputMaybe<Market>;
-  name: Scalars['String'];
+  name?: InputMaybe<Scalars['String']>;
   note?: InputMaybe<Scalars['String']>;
   /**
    * The name of the organization.
@@ -2391,7 +2421,7 @@ export type OrganizationUpdateInput = {
   lastFundingRound?: InputMaybe<FundingRound>;
   logoUrl?: InputMaybe<Scalars['String']>;
   market?: InputMaybe<Market>;
-  name: Scalars['String'];
+  name?: InputMaybe<Scalars['String']>;
   note?: InputMaybe<Scalars['String']>;
   /** Set to true when partial update is needed. Empty or missing fields will not be ignored. */
   patch?: InputMaybe<Scalars['Boolean']>;

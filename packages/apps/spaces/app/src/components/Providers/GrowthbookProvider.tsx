@@ -5,6 +5,7 @@ import { GrowthBookProvider } from '@growthbook/growthbook-react';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 export const growthbook = new GrowthBook({
   apiHost: 'https://cdn.growthbook.io',
@@ -22,7 +23,12 @@ export const GrowthbookProvider = ({
   children: React.ReactNode;
 }) => {
   const client = getGraphQLClient();
-  const { data } = useTenantNameQuery(client);
+  const { data: tenantQuery } = useTenantNameQuery(client);
+  const { data: globalCacheQuery } = useGlobalCacheQuery(client);
+
+  const tenant = tenantQuery?.tenant;
+  const id = globalCacheQuery?.global_Cache?.user.id;
+  const email = globalCacheQuery?.global_Cache?.user?.emails?.[0]?.email;
 
   useEffect(() => {
     growthbook.loadFeatures();
@@ -30,9 +36,11 @@ export const GrowthbookProvider = ({
 
   useEffect(() => {
     growthbook.setAttributes({
-      tenant: data?.tenant,
+      id,
+      email,
+      tenant,
     });
-  }, [data?.tenant]);
+  }, [tenant, id, email]);
 
   return (
     <GrowthBookProvider growthbook={growthbook}>{children}</GrowthBookProvider>
