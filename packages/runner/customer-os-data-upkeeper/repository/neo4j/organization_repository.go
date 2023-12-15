@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"time"
 )
 
 type OrganizationForWebScrape struct {
@@ -38,16 +39,18 @@ func (r *organizationRepository) GetOrganizationsForWebScrape(ctx context.Contex
 		limit = 1
 	}
 
+	aDayAgo := utils.Now().Add(-24 * time.Hour)
 	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant)
-				WHERE (org.webScrapeLastRequestedAt IS NULL OR org.webScrapeLastRequestedAt < (datetime().epochSeconds - 86400))
+				WHERE (org.webScrapeLastRequestedAt IS NULL OR org.webScrapeLastRequestedAt < $aDayAgo)
 					AND (org.webScrapeAttempts < 4 or org.webScrapeAttempts IS NULL)
-				WITH org, t OPTIONAL MATCH (org)-[:HAS_DOMAIN]->(domain:Domain)
+				WITH org, t OPTIONAL MATCH (org)-[:HAS_DOMAIN]->(domain:Domain) WHERE domain.domain <> "" AND domain.domain IS NOT NULL
 				WITH t, org, COLLECT(DISTINCT domain.domain) as domains
 				WITH t, org, CASE WHEN org.website IS NOT NULL AND org.website <> "" THEN (domains + org.website) ELSE domains END AS urls
 				WHERE size(urls) > 0 AND (org.webScrapedUrl IS NULL OR NOT org.webScrapedUrl in urls)
 				RETURN t.name AS tenant_name, org.id AS org_id, HEAD(urls) AS url ORDER BY org.createdAt DESC LIMIT $limit`
 	params := map[string]any{
-		"limit": limit,
+		"limit":   limit,
+		"aDayAgo": aDayAgo,
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
