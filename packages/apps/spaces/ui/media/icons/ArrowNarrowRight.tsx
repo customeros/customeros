@@ -6,7 +6,7 @@ export const ArrowNarrowRight = (props: IconProps) => (
       <path
         id='Icon'
         d='M4 12H20M20 12L14 6M20 12L14 18'
-        stroke='#0C111D'
+        stroke='currentColor'
         strokeWidth='2'
         strokeLinecap='round'
         strokeLinejoin='round'
