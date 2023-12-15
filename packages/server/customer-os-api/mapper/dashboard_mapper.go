@@ -41,6 +41,7 @@ func MapDashboardRetentionRatePerMonthData(months []*entityDashboard.DashboardRe
 	var result []*model.DashboardRetentionRatePerMonth
 	for _, month := range months {
 		result = append(result, &model.DashboardRetentionRatePerMonth{
+			Year:       month.Year,
 			Month:      month.Month,
 			RenewCount: month.RenewCount,
 			ChurnCount: month.ChurnCount,

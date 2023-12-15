@@ -342,18 +342,44 @@ func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, st
 
 	response := entityDashboard.DashboardRetentionRateData{}
 
-	response.RetentionRate = 86
-	response.IncreasePercentage = 2.6
-
-	min := 2
-	max := 5
-	for i := 1; i <= 12; i++ {
-		response.Months = append(response.Months, &entityDashboard.DashboardRetentionRatePerMonthData{
-			Month:      i,
-			RenewCount: i*(rand.Intn(max-min)+min) + 7,
-			ChurnCount: i + 2,
-		})
+	contractsRenewalsData, err := s.repositories.DashboardRepository.GetDashboardRetentionRateContractsRenewalsData(ctx, common.GetContext(ctx).Tenant, start, end)
+	if err != nil {
+		return nil, err
 	}
+
+	for _, record := range contractsRenewalsData {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+		renewCount, _ := record["value"].(int64)
+
+		newData := &entityDashboard.DashboardRetentionRatePerMonthData{
+			Year:       int(year),
+			Month:      int(month),
+			RenewCount: int(renewCount),
+		}
+
+		response.Months = append(response.Months, newData)
+	}
+
+	contractsChurnedData, err := s.repositories.DashboardRepository.GetDashboardRetentionRateContractsChurnedData(ctx, common.GetContext(ctx).Tenant, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range contractsChurnedData {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+		churnCount, _ := record["value"].(int64)
+
+		for _, monthData := range response.Months {
+			if monthData.Year == int(year) && monthData.Month == int(month) {
+				monthData.ChurnCount = int(churnCount)
+			}
+		}
+	}
+
+	response.RetentionRate = 0
+	response.IncreasePercentage = 0
 
 	return &response, nil
 }

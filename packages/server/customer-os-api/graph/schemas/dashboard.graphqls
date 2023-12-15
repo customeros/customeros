@@ -74,6 +74,7 @@ type DashboardRetentionRate {
     perMonth: [DashboardRetentionRatePerMonth]!
 }
 type DashboardRetentionRatePerMonth {
+    year: Int!
     month: Int!
     renewCount: Int!
     churnCount: Int!

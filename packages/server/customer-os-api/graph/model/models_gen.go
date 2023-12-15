@@ -586,6 +586,7 @@ type DashboardRetentionRate struct {
 }
 
 type DashboardRetentionRatePerMonth struct {
+	Year       int `json:"year"`
 	Month      int `json:"month"`
 	RenewCount int `json:"renewCount"`
 	ChurnCount int `json:"churnCount"`
