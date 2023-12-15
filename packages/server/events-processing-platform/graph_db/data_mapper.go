@@ -71,6 +71,7 @@ func MapDbNodeToUserEntity(node dbtype.Node) *entity.UserEntity {
 		Id:              utils.GetStringPropOrEmpty(props, "id"),
 		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
 		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
+		Name:            utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),

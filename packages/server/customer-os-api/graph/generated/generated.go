@@ -7933,6 +7933,7 @@ enum ActionType {
     SERVICE_LINE_ITEM_BILLED_TYPE_USAGE_CREATED
     CONTRACT_RENEWED
     SERVICE_LINE_ITEM_REMOVED
+    ONBOARDING_STATUS_CHANGED
 }`, BuiltIn: false},
 	{Name: "../schemas/action_item.graphqls", Input: `type ActionItem {
     id: ID!
