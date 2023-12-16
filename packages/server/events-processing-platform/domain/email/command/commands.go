@@ -47,9 +47,9 @@ func NewUpsertEmailCommand(objectId, tenant, loggedInUserId, rawEmail string, so
 	}
 }
 
-func NewFailedEmailValidationCommand(objectID, tenant, validationError string) *FailedEmailValidationCommand {
+func NewFailedEmailValidationCommand(objectID, tenant, loggedInUserId, appSource, validationError string) *FailedEmailValidationCommand {
 	return &FailedEmailValidationCommand{
-		BaseCommand:     eventstore.NewBaseCommand(objectID, tenant, ""),
+		BaseCommand:     eventstore.NewBaseCommand(objectID, tenant, loggedInUserId).WithAppSource(appSource),
 		ValidationError: validationError,
 	}
 }

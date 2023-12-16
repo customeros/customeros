@@ -138,7 +138,7 @@ func (server *server) Start(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.EmailValidationSubscription.Enabled {
-		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.Email)
+		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.Email, grpcClients)
 		go func() {
 			err := emailValidationSubscriber.Connect(ctx, emailValidationSubscriber.ProcessEvents)
 			if err != nil {

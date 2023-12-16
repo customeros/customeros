@@ -23,21 +23,15 @@ type PhoneNumberValidationSubscriber struct {
 	log                     logger.Logger
 	db                      *esdb.Client
 	cfg                     *config.Config
-	phoneNumberEventHandler *PhoneNumberEventHandler
+	phoneNumberEventHandler *phoneNumberEventHandler
 }
 
 func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, phoneNumberCommands *command_handler.CommandHandlers, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *PhoneNumberValidationSubscriber {
 	return &PhoneNumberValidationSubscriber{
-		log: log,
-		db:  db,
-		cfg: cfg,
-		phoneNumberEventHandler: &PhoneNumberEventHandler{
-			log:                 log,
-			cfg:                 cfg,
-			phoneNumberCommands: phoneNumberCommands,
-			repositories:        repositories,
-			grpcClients:         grpcClients,
-		},
+		log:                     log,
+		db:                      db,
+		cfg:                     cfg,
+		phoneNumberEventHandler: NewPhoneNumberEventHandler(repositories, phoneNumberCommands, log, cfg, grpcClients),
 	}
 }
 

@@ -99,9 +99,9 @@ func SetNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span, tena
 	span.SetTag(SpanTagComponent, constants.ComponentNeo4jRepository)
 }
 
-func SetServiceSpanTags(ctx context.Context, span opentracing.Span, tenant, userId string) {
+func SetServiceSpanTags(ctx context.Context, span opentracing.Span, tenant, loggedInUserId string) {
 	setTenantSpanTag(span, tenant)
-	setUseridSpanTag(span, userId)
+	setUseridSpanTag(span, loggedInUserId)
 	span.SetTag(SpanTagComponent, constants.ComponentService)
 }
 

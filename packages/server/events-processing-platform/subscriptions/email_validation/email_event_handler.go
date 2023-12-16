@@ -6,12 +6,15 @@ import (
 	"encoding/json"
 	common_module "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
@@ -26,6 +29,16 @@ type emailEventHandler struct {
 	emailCommands *command_handler.CommandHandlers
 	log           logger.Logger
 	cfg           *config.Config
+	grpcClients   *grpc_client.Clients
+}
+
+func NewEmailEventHandler(emailCommands *command_handler.CommandHandlers, log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients) *emailEventHandler {
+	return &emailEventHandler{
+		emailCommands: emailCommands,
+		log:           log,
+		cfg:           cfg,
+		grpcClients:   grpcClients,
+	}
 }
 
 type EmailValidate struct {
@@ -65,21 +78,22 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 	}
 
 	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, emailId)
 
 	preValidationErr := validator.GetValidator().Struct(emailValidate)
 	if preValidationErr != nil {
-		return h.emailCommands.FailEmailValidation.Handle(ctx, command.NewFailedEmailValidationCommand(emailId, eventData.Tenant, preValidationErr.Error()))
+		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, preValidationErr.Error(), span)
 	}
 	evJSON, err := json.Marshal(emailValidate)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, emailId, eventData.Tenant, err.Error())
+		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error(), span)
 	}
 	requestBody := []byte(string(evJSON))
 	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validateEmail", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, emailId, eventData.Tenant, err.Error())
+		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error(), span)
 	}
 	// Set the request headers
 	req.Header.Set(common_module.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
@@ -90,18 +104,18 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 	response, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, emailId, eventData.Tenant, err.Error())
+		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error(), span)
 	}
 	defer response.Body.Close()
 	var result EmailValidationResponseV1
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, emailId, eventData.Tenant, err.Error())
+		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error(), span)
 	}
 	if result.IsReachable == "" {
 		errMsg := utils.StringFirstNonEmpty(result.Error, "IsReachable flag not set. Email not passed validation.")
-		return h.sendEmailFailedValidationEvent(ctx, emailId, eventData.Tenant, errMsg)
+		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, errMsg, span)
 	}
 	email := utils.StringFirstNonEmpty(result.Address, result.NormalizedEmail)
 	return h.emailCommands.EmailValidated.Handle(ctx, command.NewEmailValidatedCommand(emailId, eventData.Tenant, emailValidate.Email, result.IsReachable,
@@ -109,7 +123,18 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 		result.HasFullInbox, result.IsCatchAll, result.IsDisabled, result.IsValidSyntax))
 }
 
-func (h *emailEventHandler) sendEmailFailedValidationEvent(ctx context.Context, emailId, tenant string, errMsg string) error {
-	h.log.Errorf("Failed validating email %s for tenant %s: %s", emailId, tenant, errMsg)
-	return h.emailCommands.FailEmailValidation.Handle(ctx, command.NewFailedEmailValidationCommand(emailId, tenant, errMsg))
+func (h *emailEventHandler) sendEmailFailedValidationEvent(ctx context.Context, tenant, emailId string, errorMessage string, span opentracing.Span) error {
+	h.log.Errorf("Failed validating email %s for tenant %s: %s", emailId, tenant, errorMessage)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := h.grpcClients.EmailClient.FailEmailValidation(ctx, &emailpb.FailEmailValidationGrpcRequest{
+		Tenant:       tenant,
+		EmailId:      emailId,
+		AppSource:    constants.AppSourceEventProcessingPlatform,
+		ErrorMessage: utils.StringFirstNonEmpty(errorMessage, "Error message not available"),
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed sending failed email validation event for email %s for tenant %s: %s", emailId, tenant, err.Error())
+	}
+	return err
 }
