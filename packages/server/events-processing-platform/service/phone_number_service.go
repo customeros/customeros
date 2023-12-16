@@ -70,7 +70,24 @@ func (s *phoneNumberService) FailPhoneNumberValidation(ctx context.Context, requ
 	cmd := command.NewFailedPhoneNumberValidationCommand(request.PhoneNumberId, request.Tenant, request.LoggedInUserId, request.AppSource, request.PhoneNumber, request.CountryCodeA2, request.ErrorMessage)
 	if err := s.phoneNumberCommands.FailedPhoneNumberValidation.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(FailPhoneNumberValidation) tenant:{%s}, phoneNumber ID: {%s}, err: {%v}", request.Tenant, request.PhoneNumberId, err.Error())
+		s.log.Errorf("(FailPhoneNumberValidation) tenant:{%s}, phoneNumber ID: {%s}, err: %s", request.Tenant, request.PhoneNumberId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &phonenumberpb.PhoneNumberIdGrpcResponse{Id: request.PhoneNumberId}, nil
+}
+
+func (s *phoneNumberService) PassPhoneNumberValidation(ctx context.Context, request *phonenumberpb.PassPhoneNumberValidationGrpcRequest) (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "PhoneNumberService.PassPhoneNumberValidation")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.SetTag(tracing.SpanTagEntityId, request.PhoneNumberId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	cmd := command.NewPhoneNumberValidatedCommand(request.PhoneNumberId, request.Tenant, request.LoggedInUserId, request.AppSource, request.PhoneNumber, request.E164, request.CountryCodeA2)
+	if err := s.phoneNumberCommands.PhoneNumberValidated.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(PhoneNumberValidated) tenant:{%s}, phoneNumber ID: {%s}, err: %s", request.Tenant, request.PhoneNumberId, err.Error())
 		return nil, s.errResponse(err)
 	}
 

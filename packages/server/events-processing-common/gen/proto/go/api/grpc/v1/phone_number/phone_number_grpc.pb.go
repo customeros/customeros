@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type PhoneNumberGrpcServiceClient interface {
 	UpsertPhoneNumber(ctx context.Context, in *UpsertPhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberIdGrpcResponse, error)
 	FailPhoneNumberValidation(ctx context.Context, in *FailPhoneNumberValidationGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberIdGrpcResponse, error)
+	PassPhoneNumberValidation(ctx context.Context, in *PassPhoneNumberValidationGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberIdGrpcResponse, error)
 }
 
 type phoneNumberGrpcServiceClient struct {
@@ -52,12 +53,22 @@ func (c *phoneNumberGrpcServiceClient) FailPhoneNumberValidation(ctx context.Con
 	return out, nil
 }
 
+func (c *phoneNumberGrpcServiceClient) PassPhoneNumberValidation(ctx context.Context, in *PassPhoneNumberValidationGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberIdGrpcResponse, error) {
+	out := new(PhoneNumberIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/phoneNumberGrpcService/PassPhoneNumberValidation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PhoneNumberGrpcServiceServer is the server API for PhoneNumberGrpcService service.
 // All implementations should embed UnimplementedPhoneNumberGrpcServiceServer
 // for forward compatibility
 type PhoneNumberGrpcServiceServer interface {
 	UpsertPhoneNumber(context.Context, *UpsertPhoneNumberGrpcRequest) (*PhoneNumberIdGrpcResponse, error)
 	FailPhoneNumberValidation(context.Context, *FailPhoneNumberValidationGrpcRequest) (*PhoneNumberIdGrpcResponse, error)
+	PassPhoneNumberValidation(context.Context, *PassPhoneNumberValidationGrpcRequest) (*PhoneNumberIdGrpcResponse, error)
 }
 
 // UnimplementedPhoneNumberGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -69,6 +80,9 @@ func (UnimplementedPhoneNumberGrpcServiceServer) UpsertPhoneNumber(context.Conte
 }
 func (UnimplementedPhoneNumberGrpcServiceServer) FailPhoneNumberValidation(context.Context, *FailPhoneNumberValidationGrpcRequest) (*PhoneNumberIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FailPhoneNumberValidation not implemented")
+}
+func (UnimplementedPhoneNumberGrpcServiceServer) PassPhoneNumberValidation(context.Context, *PassPhoneNumberValidationGrpcRequest) (*PhoneNumberIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PassPhoneNumberValidation not implemented")
 }
 
 // UnsafePhoneNumberGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -118,6 +132,24 @@ func _PhoneNumberGrpcService_FailPhoneNumberValidation_Handler(srv interface{}, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PhoneNumberGrpcService_PassPhoneNumberValidation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PassPhoneNumberValidationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PhoneNumberGrpcServiceServer).PassPhoneNumberValidation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/phoneNumberGrpcService/PassPhoneNumberValidation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PhoneNumberGrpcServiceServer).PassPhoneNumberValidation(ctx, req.(*PassPhoneNumberValidationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PhoneNumberGrpcService_ServiceDesc is the grpc.ServiceDesc for PhoneNumberGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -132,6 +164,10 @@ var PhoneNumberGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FailPhoneNumberValidation",
 			Handler:    _PhoneNumberGrpcService_FailPhoneNumberValidation_Handler,
+		},
+		{
+			MethodName: "PassPhoneNumberValidation",
+			Handler:    _PhoneNumberGrpcService_PassPhoneNumberValidation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
