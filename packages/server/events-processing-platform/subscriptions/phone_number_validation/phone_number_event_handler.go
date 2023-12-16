@@ -4,14 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	common_module "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
@@ -27,20 +25,18 @@ import (
 )
 
 type phoneNumberEventHandler struct {
-	repositories        *repository.Repositories
-	phoneNumberCommands *command_handler.CommandHandlers
-	log                 logger.Logger
-	cfg                 *config.Config
-	grpcClients         *grpc_client.Clients
+	repositories *repository.Repositories
+	log          logger.Logger
+	cfg          *config.Config
+	grpcClients  *grpc_client.Clients
 }
 
-func NewPhoneNumberEventHandler(repositories *repository.Repositories, phoneNumberCommands *command_handler.CommandHandlers, log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients) *phoneNumberEventHandler {
+func NewPhoneNumberEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients) *phoneNumberEventHandler {
 	return &phoneNumberEventHandler{
-		repositories:        repositories,
-		phoneNumberCommands: phoneNumberCommands,
-		log:                 log,
-		cfg:                 cfg,
-		grpcClients:         grpcClients,
+		repositories: repositories,
+		log:          log,
+		cfg:          cfg,
+		grpcClients:  grpcClients,
 	}
 }
 
@@ -99,8 +95,8 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error(), span)
 	}
 	// Set the request headers
-	req.Header.Set(common_module.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
-	req.Header.Set(common_module.TenantHeader, tenant)
+	req.Header.Set(commonservice.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
+	req.Header.Set(commonservice.TenantHeader, tenant)
 
 	// Make the HTTP request
 	client := &http.Client{}
@@ -119,7 +115,21 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	if !result.Valid {
 		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, result.Error, span)
 	}
-	return h.phoneNumberCommands.PhoneNumberValidated.Handle(ctx, command.NewPhoneNumberValidatedCommand(phoneNumberId, tenant, rawPhoneNumber, result.E164, result.CountryA2))
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = h.grpcClients.PhoneNumberClient.PassPhoneNumberValidation(ctx, &phonenumberpb.PassPhoneNumberValidationGrpcRequest{
+		Tenant:        tenant,
+		PhoneNumberId: phoneNumberId,
+		PhoneNumber:   rawPhoneNumber,
+		E164:          result.E164,
+		CountryCodeA2: result.CountryA2,
+		AppSource:     constants.AppSourceEventProcessingPlatform,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed sending passed phone number validation event for phone number %s for tenant %s: %s", phoneNumberId, tenant, err.Error())
+	}
+	return err
 }
 
 func (h *phoneNumberEventHandler) sendPhoneNumberFailedValidationEvent(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, errorMessage string, span opentracing.Span) error {
