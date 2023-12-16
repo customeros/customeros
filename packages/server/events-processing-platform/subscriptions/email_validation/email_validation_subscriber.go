@@ -3,7 +3,6 @@ package email_validation
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
@@ -25,12 +24,12 @@ type EmailValidationSubscriber struct {
 	emailEventHandler *emailEventHandler
 }
 
-func NewEmailValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, emailCommands *command_handler.CommandHandlers, grpcClients *grpc_client.Clients) *EmailValidationSubscriber {
+func NewEmailValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, grpcClients *grpc_client.Clients) *EmailValidationSubscriber {
 	return &EmailValidationSubscriber{
 		log:               log,
 		db:                db,
 		cfg:               cfg,
-		emailEventHandler: NewEmailEventHandler(emailCommands, log, cfg, grpcClients),
+		emailEventHandler: NewEmailEventHandler(log, cfg, grpcClients),
 	}
 }
 

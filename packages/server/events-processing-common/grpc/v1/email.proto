@@ -26,6 +26,25 @@ message FailEmailValidationGrpcRequest {
   string loggedInUserId = 5;
 }
 
+message PassEmailValidationGrpcRequest {
+  string tenant = 1;
+  string emailId = 2;
+  string appSource = 3;
+  string loggedInUserId = 4;
+  string rawEmail = 5;
+  string isReachable = 6;
+  string errorMessage = 7;
+  string domain = 8;
+  string username = 9;
+  string email = 10;
+  bool acceptsMail = 11;
+  bool canConnectSmtp = 12;
+  bool hasFullInbox = 13;
+  bool isCatchAll = 14;
+  bool isDisabled = 15;
+  bool isValidSyntax = 16;
+}
+
 message EmailIdGrpcResponse {
   string id = 1;
 }
@@ -33,4 +52,5 @@ message EmailIdGrpcResponse {
 service emailGrpcService {
   rpc UpsertEmail(UpsertEmailGrpcRequest) returns (EmailIdGrpcResponse);
   rpc FailEmailValidation(FailEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
+  rpc PassEmailValidation(PassEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
 }
