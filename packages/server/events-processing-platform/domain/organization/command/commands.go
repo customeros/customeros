@@ -75,19 +75,15 @@ type AddSocialCommand struct {
 	UpdatedAt      *time.Time
 }
 
-func NewAddSocialCommand(objectID, tenant, socialId, socialPlatform, socialUrl, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *AddSocialCommand {
+func NewAddSocialCommand(organizationId, tenant, loggedInUserId, socialId, socialPlatform, socialUrl string, sourceFields cmnmod.Source, createdAt, updatedAt *time.Time) *AddSocialCommand {
 	return &AddSocialCommand{
-		BaseCommand:    eventstore.NewBaseCommand(objectID, tenant, ""),
+		BaseCommand:    eventstore.NewBaseCommand(organizationId, tenant, loggedInUserId).WithAppSource(sourceFields.AppSource),
 		SocialId:       socialId,
 		SocialPlatform: socialPlatform,
 		SocialUrl:      socialUrl,
-		Source: cmnmod.Source{
-			Source:        source,
-			SourceOfTruth: sourceOfTruth,
-			AppSource:     appSource,
-		},
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		Source:         sourceFields,
+		CreatedAt:      createdAt,
+		UpdatedAt:      updatedAt,
 	}
 }
 

@@ -15,32 +15,32 @@ type OrganizationUpdateEvent struct {
 	// Deprecated
 	IgnoreEmptyFields  bool                  `json:"ignoreEmptyFields"`
 	Tenant             string                `json:"tenant" validate:"required"`
-	Source             string                `json:"source"`
-	UpdatedAt          time.Time             `json:"updatedAt"`
-	Name               string                `json:"name"`
-	Hide               bool                  `json:"hide"`
-	Description        string                `json:"description"`
-	Website            string                `json:"website"`
-	Industry           string                `json:"industry"`
-	SubIndustry        string                `json:"subIndustry"`
-	IndustryGroup      string                `json:"industryGroup"`
-	TargetAudience     string                `json:"targetAudience"`
-	ValueProposition   string                `json:"valueProposition"`
-	IsPublic           bool                  `json:"isPublic"`
-	IsCustomer         bool                  `json:"isCustomer"`
-	Employees          int64                 `json:"employees"`
-	Market             string                `json:"market"`
-	LastFundingRound   string                `json:"lastFundingRound"`
-	LastFundingAmount  string                `json:"lastFundingAmount"`
-	ReferenceId        string                `json:"referenceId"`
-	Note               string                `json:"note"`
+	Source             string                `json:"source,omitempty"`
+	UpdatedAt          time.Time             `json:"updatedAt,omitempty"`
+	Name               string                `json:"name,omitempty"`
+	Hide               bool                  `json:"hide,omitempty"`
+	Description        string                `json:"description,omitempty"`
+	Website            string                `json:"website,omitempty"`
+	Industry           string                `json:"industry,omitempty"`
+	SubIndustry        string                `json:"subIndustry,omitempty"`
+	IndustryGroup      string                `json:"industryGroup,omitempty"`
+	TargetAudience     string                `json:"targetAudience,omitempty"`
+	ValueProposition   string                `json:"valueProposition,omitempty"`
+	IsPublic           bool                  `json:"isPublic,omitempty"`
+	IsCustomer         bool                  `json:"isCustomer,omitempty"`
+	Employees          int64                 `json:"employees,omitempty"`
+	Market             string                `json:"market,omitempty"`
+	LastFundingRound   string                `json:"lastFundingRound,omitempty"`
+	LastFundingAmount  string                `json:"lastFundingAmount,omitempty"`
+	ReferenceId        string                `json:"referenceId,omitempty"`
+	Note               string                `json:"note,omitempty"`
 	ExternalSystem     cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 	FieldsMask         []string              `json:"fieldsMask"`
 	WebScrapedUrl      string                `json:"webScrapedUrl,omitempty"`
-	YearFounded        *int64                `json:"yearFounded"`
-	Headquarters       string                `json:"headquarters"`
-	EmployeeGrowthRate string                `json:"employeeGrowthRate"`
-	LogoUrl            string                `json:"logoUrl"`
+	YearFounded        *int64                `json:"yearFounded,omitempty"`
+	Headquarters       string                `json:"headquarters,omitempty"`
+	EmployeeGrowthRate string                `json:"employeeGrowthRate,omitempty"`
+	LogoUrl            string                `json:"logoUrl,omitempty"`
 }
 
 func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFields *model.OrganizationFields, updatedAt time.Time, webScrapedUrl string, fieldsMask []string) (eventstore.Event, error) {

@@ -221,7 +221,7 @@ func NewOrganizationLinkDomainEvent(aggregate eventstore.Aggregate, domain strin
 type OrganizationAddSocialEvent struct {
 	Tenant        string    `json:"tenant" validate:"required"`
 	SocialId      string    `json:"socialId" validate:"required"`
-	PlatformName  string    `json:"platformName" validate:"required"`
+	PlatformName  string    `json:"platformName,omitempty"`
 	Url           string    `json:"url" validate:"required"`
 	Source        string    `json:"source"`
 	SourceOfTruth string    `json:"sourceOfTruth"`
