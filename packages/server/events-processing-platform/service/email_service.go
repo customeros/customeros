@@ -57,9 +57,24 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *emailpb.UpsertE
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("(UpsertEmail): {%s}", request.RawEmail)
-
 	return &emailpb.EmailIdGrpcResponse{Id: emailId}, nil
+}
+
+func (s *emailService) FailEmailValidation(ctx context.Context, request *emailpb.FailEmailValidationGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EmailService.FailEmailValidation")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.SetTag(tracing.SpanTagEntityId, request.EmailId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	cmd := command.NewFailedEmailValidationCommand(request.EmailId, request.Tenant, request.LoggedInUserId, request.AppSource, request.ErrorMessage)
+	if err := s.emailCommandHandlers.FailEmailValidation.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(FailEmailValidation) tenant:{%s}, email ID: {%s}, err: {%v}", request.Tenant, request.EmailId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &emailpb.EmailIdGrpcResponse{Id: request.EmailId}, nil
 }
 
 func (s *emailService) errResponse(err error) error {

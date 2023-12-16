@@ -26,12 +26,22 @@ import (
 	"strings"
 )
 
-type PhoneNumberEventHandler struct {
+type phoneNumberEventHandler struct {
 	repositories        *repository.Repositories
 	phoneNumberCommands *command_handler.CommandHandlers
 	log                 logger.Logger
 	cfg                 *config.Config
 	grpcClients         *grpc_client.Clients
+}
+
+func NewPhoneNumberEventHandler(repositories *repository.Repositories, phoneNumberCommands *command_handler.CommandHandlers, log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients) *phoneNumberEventHandler {
+	return &phoneNumberEventHandler{
+		repositories:        repositories,
+		phoneNumberCommands: phoneNumberCommands,
+		log:                 log,
+		cfg:                 cfg,
+		grpcClients:         grpcClients,
+	}
 }
 
 type PhoneNumberValidateRequest struct {
@@ -46,8 +56,8 @@ type PhoneNumberValidationResponseV1 struct {
 	CountryA2 string `json:"countryA2"`
 }
 
-func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberEventHandler.OnPhoneNumberCreate")
+func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "phoneNumberEventHandler.OnPhoneNumberCreate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -112,7 +122,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	return h.phoneNumberCommands.PhoneNumberValidated.Handle(ctx, command.NewPhoneNumberValidatedCommand(phoneNumberId, tenant, rawPhoneNumber, result.E164, result.CountryA2))
 }
 
-func (h *PhoneNumberEventHandler) sendPhoneNumberFailedValidationEvent(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, errorMessage string, span opentracing.Span) error {
+func (h *phoneNumberEventHandler) sendPhoneNumberFailedValidationEvent(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, errorMessage string, span opentracing.Span) error {
 	h.log.Errorf("Failed validating phone number %s for tenant %s: %s", phoneNumberId, tenant, errorMessage)
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := h.grpcClients.PhoneNumberClient.FailPhoneNumberValidation(ctx, &phonenumberpb.FailPhoneNumberValidationGrpcRequest{

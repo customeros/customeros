@@ -18,10 +18,19 @@ message UpsertEmailGrpcRequest {
   SourceFields sourceFields = 10;
 }
 
+message FailEmailValidationGrpcRequest {
+  string tenant = 1;
+  string emailId = 2;
+  string errorMessage = 3;
+  string appSource = 4;
+  string loggedInUserId = 5;
+}
+
 message EmailIdGrpcResponse {
   string id = 1;
 }
 
 service emailGrpcService {
   rpc UpsertEmail(UpsertEmailGrpcRequest) returns (EmailIdGrpcResponse);
+  rpc FailEmailValidation(FailEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
 }

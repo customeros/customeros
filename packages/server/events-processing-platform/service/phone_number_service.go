@@ -64,10 +64,12 @@ func (s *phoneNumberService) FailPhoneNumberValidation(ctx context.Context, requ
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "PhoneNumberService.FailPhoneNumberValidation")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.SetTag(tracing.SpanTagEntityId, request.PhoneNumberId)
 	tracing.LogObjectAsJson(span, "request", request)
 
 	cmd := command.NewFailedPhoneNumberValidationCommand(request.PhoneNumberId, request.Tenant, request.LoggedInUserId, request.AppSource, request.PhoneNumber, request.CountryCodeA2, request.ErrorMessage)
 	if err := s.phoneNumberCommands.FailedPhoneNumberValidation.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
 		s.log.Errorf("(FailPhoneNumberValidation) tenant:{%s}, phoneNumber ID: {%s}, err: {%v}", request.Tenant, request.PhoneNumberId, err.Error())
 		return nil, s.errResponse(err)
 	}
