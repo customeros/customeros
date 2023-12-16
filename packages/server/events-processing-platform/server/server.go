@@ -171,7 +171,7 @@ func (server *server) Start(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.OrganizationSubscription.Enabled {
-		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.Organization, server.repositories, server.caches)
+		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, esdb, server.cfg, server.repositories, server.caches, grpcClients)
 		go func() {
 			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
 			if err != nil {
@@ -182,7 +182,7 @@ func (server *server) Start(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.OrganizationWebscrapeSubscription.Enabled {
-		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationWebscrapeSubscriber(server.log, esdb, server.cfg, server.commandHandlers.Organization, server.repositories, server.caches)
+		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationWebscrapeSubscriber(server.log, esdb, server.cfg, server.repositories, server.caches, grpcClients)
 		go func() {
 			err := organizationWebscrapeSubscriber.Connect(ctx, organizationWebscrapeSubscriber.ProcessEvents)
 			if err != nil {
@@ -202,18 +202,6 @@ func (server *server) Start(parentCtx context.Context) error {
 			}
 		}()
 	}
-
-	// TODO
-	//if server.cfg.Subscriptions.ContractSubscription.Enabled {
-	//	contractSubscriber := contract_subscription.NewContractSubscriber(server.log, esdb, server.cfg, server.commandHandlers.InteractionEvent, server.repositories)
-	//	go func() {
-	//		err := contractSubscriber.Connect(ctx, contractSubscriber.ProcessEvents)
-	//		if err != nil {
-	//			server.log.Errorf("(interactionEventSubscriber.Connect) err: {%v}", err)
-	//			cancel()
-	//		}
-	//	}()
-	//}
 
 	//server.runMetrics(cancel)
 	//server.runHealthCheck(ctx)

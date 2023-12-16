@@ -80,8 +80,6 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Upserted organization %s", organizationId)
-
 	return &organizationpb.OrganizationIdGrpcResponse{Id: organizationId}, nil
 }
 
@@ -97,8 +95,6 @@ func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context,
 		s.log.Errorf("(LinkPhoneNumberToOrganization.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
 		return nil, s.errResponse(err)
 	}
-
-	s.log.Infof("Linked phone number {%s} to organization {%s}", request.PhoneNumberId, request.OrganizationId)
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
@@ -116,8 +112,6 @@ func (s *organizationService) LinkEmailToOrganization(ctx context.Context, reque
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Linked email {%s} to organization {%s}", request.EmailId, request.OrganizationId)
-
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
@@ -127,14 +121,12 @@ func (s *organizationService) LinkLocationToOrganization(ctx context.Context, re
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	command := command.NewLinkLocationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.LocationId)
-	if err := s.organizationCommands.LinkLocationCommand.Handle(ctx, command); err != nil {
+	cmd := command.NewLinkLocationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.LocationId)
+	if err := s.organizationCommands.LinkLocationCommand.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(LinkLocationCommand.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
 		return nil, s.errResponse(err)
 	}
-
-	s.log.Infof("Linked location {%s} to organization {%s}", request.LocationId, request.OrganizationId)
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
@@ -171,14 +163,12 @@ func (s *organizationService) HideOrganization(ctx context.Context, request *org
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	command := command.NewHideOrganizationCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId)
-	if err := s.organizationCommands.HideOrganizationCommand.Handle(ctx, command); err != nil {
+	cmd := command.NewHideOrganizationCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId)
+	if err := s.organizationCommands.HideOrganizationCommand.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed hide organization with id  %s for tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
 		return nil, s.errResponse(err)
 	}
-
-	s.log.Infof("Hidden organization with id %s for tenant %s", request.OrganizationId, request.Tenant)
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
@@ -194,14 +184,12 @@ func (s *organizationService) ShowOrganization(ctx context.Context, request *org
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	command := command.NewShowOrganizationCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId)
-	if err := s.organizationCommands.ShowOrganizationCommand.Handle(ctx, command); err != nil {
+	cmd := command.NewShowOrganizationCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId)
+	if err := s.organizationCommands.ShowOrganizationCommand.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed show organization with id  %s for tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
 		return nil, s.errResponse(err)
 	}
-
-	s.log.Infof("Show organization with id %s for tenant %s", request.OrganizationId, request.Tenant)
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
@@ -217,14 +205,12 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, request
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	command := command.NewRefreshLastTouchpointCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId, request.AppSource)
-	if err := s.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, command); err != nil {
+	cmd := command.NewRefreshLastTouchpointCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId, request.AppSource)
+	if err := s.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed to refresh the last touchpoint for organization with id  %s in tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
 		return nil, s.errResponse(err)
 	}
-
-	s.log.Infof("Refresh the last touchpoint for organization with id %s in tenant %s", request.OrganizationId, request.Tenant)
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
@@ -327,6 +313,64 @@ func (s *organizationService) UpdateOnboardingStatus(ctx context.Context, reques
 	if err := s.organizationCommands.UpdateOnboardingStatus.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateOnboardingStatus.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
+		return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, s.errResponse(err)
+	}
+
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) UpdateOrganization(ctx context.Context, request *organizationpb.UpdateOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganization")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	dataFields := model.OrganizationDataFields{
+		Name:               request.Name,
+		Description:        request.Description,
+		Website:            request.Website,
+		Industry:           request.Industry,
+		SubIndustry:        request.SubIndustry,
+		IndustryGroup:      request.IndustryGroup,
+		TargetAudience:     request.TargetAudience,
+		ValueProposition:   request.ValueProposition,
+		Employees:          request.Employees,
+		Market:             request.Market,
+		LogoUrl:            request.LogoUrl,
+		Headquarters:       request.Headquarters,
+		YearFounded:        request.YearFounded,
+		EmployeeGrowthRate: request.EmployeeGrowthRate,
+	}
+	sourceFields := commonmodel.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+
+	updateCommand := command.NewUpdateOrganizationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, sourceFields.AppSource, sourceFields.Source, dataFields,
+		utils.TimestampProtoToTimePtr(request.UpdatedAt), request.WebScrapedUrl, extractOrganizationMaskFields(request.FieldsMask))
+	if err := s.organizationCommands.UpdateOrganization.Handle(ctx, updateCommand); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateOrganization.Handle) tenant:%s, organizationID: %s , err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) AddSocial(ctx context.Context, request *organizationpb.AddSocialGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.AddSocial")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
+
+	sourceFields := commonmodel.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+
+	cmd := command.NewAddSocialCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.SocialId,
+		request.Platform, request.Url, sourceFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
+	if err := s.organizationCommands.AddSocialCommand.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(AddSocialCommand.Handle) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
 		return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, s.errResponse(err)
 	}
 

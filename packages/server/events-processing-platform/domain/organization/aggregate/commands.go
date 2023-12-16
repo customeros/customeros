@@ -2,7 +2,6 @@ package aggregate
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
@@ -334,8 +333,8 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, cmd *command.AddS
 
 	if existingSocialId := a.Organization.GetSocialIdForUrl(cmd.SocialUrl); existingSocialId != "" {
 		cmd.SocialId = existingSocialId
-	} else if cmd.SocialId == "" {
-		cmd.SocialId = uuid.New().String()
+	} else {
+		cmd.SocialId = utils.NewUUIDIfEmpty(cmd.SocialId)
 	}
 
 	event, err := events.NewOrganizationAddSocialEvent(a, cmd.SocialId, cmd.SocialPlatform, cmd.SocialUrl, localSource, localSourceOfTruth, localAppSource, createdAtNotNil, updatedAtNotNil)
@@ -343,7 +342,11 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, cmd *command.AddS
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationAddSocialEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.Source.AppSource,
+	})
 
 	return a.Apply(event)
 }

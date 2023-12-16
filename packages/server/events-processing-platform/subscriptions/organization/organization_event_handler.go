@@ -3,6 +3,9 @@ package organization
 import (
 	"context"
 	"fmt"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
@@ -16,8 +19,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -69,13 +70,25 @@ type WebscrapeResponseV1 struct {
 }
 
 type organizationEventHandler struct {
-	repositories         *repository.Repositories
-	organizationCommands *command_handler.CommandHandlers
-	log                  logger.Logger
-	cfg                  *config.Config
-	caches               caches.Cache
-	domainScraper        WebScraper
-	aiModel              ai.AiModel
+	repositories  *repository.Repositories
+	log           logger.Logger
+	cfg           *config.Config
+	caches        caches.Cache
+	domainScraper WebScraper
+	aiModel       ai.AiModel
+	grpcClients   *grpc_client.Clients
+}
+
+func NewOrganizationEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, caches caches.Cache, domainScraper WebScraper, aiModel ai.AiModel, grpcClients *grpc_client.Clients) *organizationEventHandler {
+	return &organizationEventHandler{
+		repositories:  repositories,
+		log:           log,
+		cfg:           cfg,
+		caches:        caches,
+		domainScraper: domainScraper,
+		aiModel:       aiModel,
+		grpcClients:   grpcClients,
+	}
 }
 
 func (h *organizationEventHandler) WebScrapeOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
@@ -110,7 +123,7 @@ func (h *organizationEventHandler) WebScrapeOrganizationByWebsite(ctx context.Co
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	span.LogFields(log.String("organizationId", organizationId))
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.String("website", eventData.Website))
 	if eventData.Website == "" {
 		tracing.TraceErr(span, errors.New("website is empty"))
@@ -166,40 +179,45 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 	}
 
 	fieldsMask := []string{model.FieldMaskMarket, model.FieldMaskIndustry, model.FieldMaskIndustryGroup, model.FieldMaskSubIndustry, model.FieldMaskTargetAudience, model.FieldMaskValueProposition}
-	organizationFields := model.OrganizationDataFields{
+	// name organization name if missing
+	if organization.Name == "" {
+		fieldsMask = append(fieldsMask, model.FieldMaskName)
+	}
+	// set website if missing
+	if organization.Website == "" {
+		fieldsMask = append(fieldsMask, model.FieldMaskWebsite)
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	updateGrpcRequest := organizationpb.UpdateOrganizationGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+		SourceFields: &commonpb.SourceFields{
+			AppSource: constants.AppSourceEventProcessingPlatform,
+			Source:    constants.SourceWebscrape,
+		},
+		FieldsMask:         prepareFieldsMaskForGrpcRequests(fieldsMask),
+		WebScrapedUrl:      url,
 		Market:             result.Market,
 		Industry:           result.Industry,
 		IndustryGroup:      result.IndustryGroup,
 		SubIndustry:        result.SubIndustry,
 		TargetAudience:     result.TargetAudience,
 		ValueProposition:   result.ValueProposition,
-		Employees:          result.CompanySize,
-		YearFounded:        &result.YearFounded,
+		LogoUrl:            result.LogoUrl,
 		Headquarters:       result.HeadquartersLocation,
 		EmployeeGrowthRate: result.EmployeeGrowthRate,
-		LogoUrl:            result.LogoUrl,
+		Employees:          result.CompanySize,
+		YearFounded:        &result.YearFounded,
+		Name:               result.CompanyName,
+		Website:            result.Website,
 	}
-	// name organization name if missing
-	if organization.Name == "" {
-		organizationFields.Name = result.CompanyName
-		fieldsMask = append(fieldsMask, model.FieldMaskName)
-	}
-	// set website if missing
-	if organization.Website == "" {
-		organizationFields.Website = result.Website
-		fieldsMask = append(fieldsMask, model.FieldMaskWebsite)
-	}
-	h.addFieldMasks(&organizationFields, &fieldsMask)
-
-	err = h.organizationCommands.UpdateOrganization.Handle(ctx,
-		cmd.NewUpdateOrganizationCommand(
-			organizationId, tenant, "", constants.AppSourceEventProcessingPlatform, constants.SourceWebscrape,
-			organizationFields, utils.TimePtr(utils.Now()), url, fieldsMask))
+	_, err = h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &updateGrpcRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error updating organization: %v", err)
-		return nil
+		h.log.Errorf("Error updating organization: %s", err.Error())
 	}
+
 	if result.Youtube != "" {
 		h.addSocial(ctx, organizationId, tenant, "youtube", result.Youtube)
 	}
@@ -243,12 +261,17 @@ func (h *organizationEventHandler) addFieldMasks(orgFields *model.OrganizationDa
 
 func (h *organizationEventHandler) updateOrganizationNameIfEmpty(ctx context.Context, tenant, url string, organization *entity.OrganizationEntity, span opentracing.Span) {
 	if organization.Name == "" && strings.Contains(url, ".") {
-		err := h.organizationCommands.UpdateOrganization.Handle(ctx,
-			cmd.NewUpdateOrganizationCommand(organization.ID, tenant, "", constants.AppSourceEventProcessingPlatform, constants.SourceWebscrape,
-				model.OrganizationDataFields{
-					Name: utils.ExtractFirstPart(utils.ExtractDomain(url), "."),
-				},
-				utils.TimePtr(utils.Now()), "", []string{model.FieldMaskName}))
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err := h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{
+			Tenant:         tenant,
+			OrganizationId: organization.ID,
+			SourceFields: &commonpb.SourceFields{
+				AppSource: constants.AppSourceEventProcessingPlatform,
+				Source:    constants.SourceWebscrape,
+			},
+			Name:       utils.ExtractFirstPart(utils.ExtractDomain(url), "."),
+			FieldsMask: []organizationpb.OrganizationMaskField{organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME},
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error updating organization: %v", err)
@@ -260,13 +283,22 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.addSocial")
 	defer span.Finish()
 	span.LogFields(log.String("organizationId", organizationId), log.String("tenant", tenant), log.String("platform", platform), log.String("url", url))
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
-	err := h.organizationCommands.AddSocialCommand.Handle(ctx,
-		cmd.NewAddSocialCommand(organizationId, tenant, "",
-			platform, url, constants.SourceWebscrape, constants.SourceWebscrape, constants.AppSourceEventProcessingPlatform, nil, nil))
+	_, err := h.grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+		SourceFields: &commonpb.SourceFields{
+			AppSource:     constants.AppSourceEventProcessingPlatform,
+			Source:        constants.SourceWebscrape,
+			SourceOfTruth: constants.SourceWebscrape,
+		},
+		Platform: platform,
+		Url:      url,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error adding %s social: %v", platform, err)
+		h.log.Errorf("Error adding %s social: %s", platform, err.Error())
 	}
 }
 
@@ -286,7 +318,7 @@ func (h *organizationEventHandler) AdjustNewOrganizationFields(ctx context.Conte
 	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
 
 	if eventData.Market != market || eventData.Industry != industry {
-		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry)
+		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry, span)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -314,7 +346,7 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
 
 	if eventData.Market != market || eventData.Industry != industry {
-		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.Source, market, industry)
+		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.Source, market, industry, span)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -325,19 +357,24 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 	return nil
 }
 
-func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, source, market, industry string) error {
-	err := h.organizationCommands.UpdateOrganization.Handle(ctx,
-		cmd.NewUpdateOrganizationCommand(organizationId, tenant, "", constants.AppSourceEventProcessingPlatform, source,
-			model.OrganizationDataFields{
-				Market:   market,
-				Industry: industry,
-			},
-			utils.NowPtr(),
-			"",
-			[]string{
-				model.FieldMaskMarket, model.FieldMaskIndustry,
-			}))
+func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, source, market, industry string, span opentracing.Span) error {
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+		SourceFields: &commonpb.SourceFields{
+			AppSource: constants.AppSourceEventProcessingPlatform,
+			Source:    source,
+		},
+		Market:   market,
+		Industry: industry,
+		FieldsMask: []organizationpb.OrganizationMaskField{
+			organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET,
+			organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY,
+		},
+	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		h.log.Errorf("Error updating organization %s: %s", organizationId, err.Error())
 		return err
 	}
@@ -461,4 +498,41 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		}
 	}
 	return secondResult
+}
+
+func prepareFieldsMaskForGrpcRequests(fields []string) []organizationpb.OrganizationMaskField {
+	organizationFieldsMask := make([]organizationpb.OrganizationMaskField, 0)
+	for _, field := range fields {
+		switch field {
+		case model.FieldMaskDescription:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
+		case model.FieldMaskName:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
+		case model.FieldMaskWebsite:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
+		case model.FieldMaskMarket:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
+		case model.FieldMaskIndustry:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
+		case model.FieldMaskIndustryGroup:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP)
+		case model.FieldMaskSubIndustry:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY)
+		case model.FieldMaskTargetAudience:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE)
+		case model.FieldMaskValueProposition:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
+		case model.FieldMaskEmployees:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
+		case model.FieldMaskYearFounded:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
+		case model.FieldMaskHeadquarters:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
+		case model.FieldMaskEmployeeGrowthRate:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
+		case model.FieldMaskLogoUrl:
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
+		}
+	}
+	return organizationFieldsMask
 }
