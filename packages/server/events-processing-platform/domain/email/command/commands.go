@@ -54,9 +54,9 @@ func NewFailedEmailValidationCommand(objectID, tenant, loggedInUserId, appSource
 	}
 }
 
-func NewEmailValidatedCommand(objectID, tenant, rawEmail, isReachable, validationError, domain, username, emailAddress string, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax bool) *EmailValidatedCommand {
+func NewEmailValidatedCommand(emailId, tenant, loggedInUserId, appSource, rawEmail, isReachable, validationError, domain, username, emailAddress string, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax bool) *EmailValidatedCommand {
 	return &EmailValidatedCommand{
-		BaseCommand:     eventstore.NewBaseCommand(objectID, tenant, ""),
+		BaseCommand:     eventstore.NewBaseCommand(emailId, tenant, loggedInUserId).WithAppSource(appSource),
 		IsReachable:     isReachable,
 		RawEmail:        rawEmail,
 		ValidationError: validationError,
