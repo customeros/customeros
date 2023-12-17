@@ -32,6 +32,8 @@ type OrganizationGrpcServiceClient interface {
 	HideOrganization(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	ShowOrganization(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	RefreshRenewalSummary(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	RefreshArr(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	AddParentOrganization(ctx context.Context, in *AddParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RemoveParentOrganization(ctx context.Context, in *RemoveParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus(ctx context.Context, in *UpdateOnboardingStatusGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
@@ -137,6 +139,24 @@ func (c *organizationGrpcServiceClient) RefreshLastTouchpoint(ctx context.Contex
 	return out, nil
 }
 
+func (c *organizationGrpcServiceClient) RefreshRenewalSummary(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
+	out := new(OrganizationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/RefreshRenewalSummary", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *organizationGrpcServiceClient) RefreshArr(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
+	out := new(OrganizationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/RefreshArr", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *organizationGrpcServiceClient) AddParentOrganization(ctx context.Context, in *AddParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
 	out := new(OrganizationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/AddParentOrganization", in, out, opts...)
@@ -196,6 +216,8 @@ type OrganizationGrpcServiceServer interface {
 	HideOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	ShowOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	RefreshRenewalSummary(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	RefreshArr(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	AddParentOrganization(context.Context, *AddParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RemoveParentOrganization(context.Context, *RemoveParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus(context.Context, *UpdateOnboardingStatusGrpcRequest) (*OrganizationIdGrpcResponse, error)
@@ -236,6 +258,12 @@ func (UnimplementedOrganizationGrpcServiceServer) ShowOrganization(context.Conte
 }
 func (UnimplementedOrganizationGrpcServiceServer) RefreshLastTouchpoint(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshLastTouchpoint not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) RefreshRenewalSummary(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RefreshRenewalSummary not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) RefreshArr(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RefreshArr not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) AddParentOrganization(context.Context, *AddParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddParentOrganization not implemented")
@@ -444,6 +472,42 @@ func _OrganizationGrpcService_RefreshLastTouchpoint_Handler(srv interface{}, ctx
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrganizationGrpcService_RefreshRenewalSummary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OrganizationIdGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).RefreshRenewalSummary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/RefreshRenewalSummary",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).RefreshRenewalSummary(ctx, req.(*OrganizationIdGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrganizationGrpcService_RefreshArr_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OrganizationIdGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).RefreshArr(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/RefreshArr",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).RefreshArr(ctx, req.(*OrganizationIdGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _OrganizationGrpcService_AddParentOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddParentOrganizationGrpcRequest)
 	if err := dec(in); err != nil {
@@ -580,6 +644,14 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshLastTouchpoint",
 			Handler:    _OrganizationGrpcService_RefreshLastTouchpoint_Handler,
+		},
+		{
+			MethodName: "RefreshRenewalSummary",
+			Handler:    _OrganizationGrpcService_RefreshRenewalSummary_Handler,
+		},
+		{
+			MethodName: "RefreshArr",
+			Handler:    _OrganizationGrpcService_RefreshArr_Handler,
 		},
 		{
 			MethodName: "AddParentOrganization",

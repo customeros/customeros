@@ -3,6 +3,7 @@ package contract
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
@@ -15,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -36,7 +38,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_CreateRenewalOpportunit
 	})
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
@@ -82,31 +84,40 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract(t *test
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
+	calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate := false
+	opportunityServiceRefreshCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateRenewalOpportunityNextCycleDate: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.OpportunityId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.AppSource)
+			require.Equal(t, startOfNextMonth(utils.Now()), *utils.TimestampProtoToTimePtr(op.RenewedAt))
+			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityServiceRefreshCallbacks)
+
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
-	// Check create renewal opportunity command was generated
+	// Check
+	require.True(t, calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate)
+
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
 	var eventList []eventstore.Event
 	for _, value := range eventsMap {
 		eventList = value
 	}
-	require.Equal(t, 2, len(eventList))
-
-	updateNextCycleDateEvent := eventList[1]
-	require.Equal(t, opportunityevent.OpportunityUpdateNextCycleDateV1, updateNextCycleDateEvent.EventType)
-	var eventData opportunityevent.OpportunityUpdateNextCycleDateEvent
-	err = updateNextCycleDateEvent.GetJsonData(&eventData)
-	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData.Tenant)
-	require.Equal(t, utils.TimePtr(startOfNextMonth(utils.Now())), eventData.RenewedAt)
+	require.Equal(t, 1, len(eventList))
 }
 
 func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *testing.T) {
@@ -128,32 +139,41 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
+	calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate := false
+	opportunityServiceRefreshCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateRenewalOpportunityNextCycleDate: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.OpportunityId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.AppSource)
+			in1Quarter := yesterday.AddDate(0, 3, 0)
+			require.Equal(t, in1Quarter, *utils.TimestampProtoToTimePtr(op.RenewedAt))
+			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityServiceRefreshCallbacks)
+
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
-	// Check create renewal opportunity command was generated
+	// Check
+	require.True(t, calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate)
+
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
 	var eventList []eventstore.Event
 	for _, value := range eventsMap {
 		eventList = value
 	}
-	require.Equal(t, 2, len(eventList))
-
-	updateNextCycleDateEvent := eventList[1]
-	require.Equal(t, opportunityevent.OpportunityUpdateNextCycleDateV1, updateNextCycleDateEvent.EventType)
-	var eventData opportunityevent.OpportunityUpdateNextCycleDateEvent
-	err = updateNextCycleDateEvent.GetJsonData(&eventData)
-	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData.Tenant)
-	in1Quarter := yesterday.AddDate(0, 3, 0)
-	require.Equal(t, utils.TimePtr(in1Quarter), eventData.RenewedAt)
+	require.Equal(t, 1, len(eventList))
 }
 
 func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testing.T) {
@@ -175,31 +195,41 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testi
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
+	// prepare grpc client
+	calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate := false
+	opportunityServiceRefreshCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateRenewalOpportunityNextCycleDate: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.OpportunityId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.AppSource)
+			require.Equal(t, startOfNextYear(utils.Now()), *utils.TimestampProtoToTimePtr(op.RenewedAt))
+			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityServiceRefreshCallbacks)
+
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
-	// Check create renewal opportunity command was generated
+	// Check
+	require.True(t, calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate)
+
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
 	var eventList []eventstore.Event
 	for _, value := range eventsMap {
 		eventList = value
 	}
-	require.Equal(t, 2, len(eventList))
-
-	updateNextCycleDateEvent := eventList[1]
-	require.Equal(t, opportunityevent.OpportunityUpdateNextCycleDateV1, updateNextCycleDateEvent.EventType)
-	var eventData opportunityevent.OpportunityUpdateNextCycleDateEvent
-	err = updateNextCycleDateEvent.GetJsonData(&eventData)
-	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData.Tenant)
-	require.Equal(t, utils.TimePtr(startOfNextYear(utils.Now())), eventData.RenewedAt)
+	require.Equal(t, 1, len(eventList))
 }
 
 func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *testing.T) {
@@ -222,32 +252,42 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
+	// prepare grpc client
+	calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate := false
+	opportunityServiceRefreshCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateRenewalOpportunityNextCycleDate: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.OpportunityId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.AppSource)
+			in10Years := yesterday.AddDate(10, 0, 0)
+			require.Equal(t, in10Years, *utils.TimestampProtoToTimePtr(op.RenewedAt))
+			calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityServiceRefreshCallbacks)
+
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
-	// Check create renewal opportunity command was generated
+	// Check
+	require.True(t, calledEventsPlatformToUpdateRenewalOpportunityNextCycleDate)
+
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
 	var eventList []eventstore.Event
 	for _, value := range eventsMap {
 		eventList = value
 	}
-	require.Equal(t, 2, len(eventList))
-
-	updateNextCycleDateEvent := eventList[1]
-	require.Equal(t, opportunityevent.OpportunityUpdateNextCycleDateV1, updateNextCycleDateEvent.EventType)
-	var eventData opportunityevent.OpportunityUpdateNextCycleDateEvent
-	err = updateNextCycleDateEvent.GetJsonData(&eventData)
-	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData.Tenant)
-	in10Years := yesterday.AddDate(10, 0, 0)
-	require.Equal(t, in10Years, *eventData.RenewedAt)
+	require.Equal(t, 1, len(eventList))
 }
 
 func prepareRenewalOpportunity(t *testing.T, tenant, opportunityId string, aggregateStore *eventstoret.TestAggregateStore) {
@@ -315,7 +355,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_OnlyOnceBilled(t *testing
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
@@ -383,7 +423,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MultipleServices(t *testi
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
@@ -440,7 +480,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MediumLikelihood(t *testi
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
@@ -501,7 +541,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsBeforeNextRen
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
@@ -562,7 +602,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsIn6Months_Pro
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
@@ -623,7 +663,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsInMoreThan12M
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
@@ -673,32 +713,34 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
+	// prepare grpc mock
+	calledEventsPlatformToUpdateRenewalOpportunity := false
+	opportunityServiceRefreshCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateRenewalOpportunity: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.Id)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, opportunitypb.RenewalLikelihood_ZERO_RENEWAL, op.RenewalLikelihood)
+			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD}, op.FieldsMask)
+			calledEventsPlatformToUpdateRenewalOpportunity = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityServiceRefreshCallbacks)
+
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityLikelihood(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
-	// Check create renewal opportunity command was generated
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-	var eventList []eventstore.Event
-	for _, value := range eventsMap {
-		eventList = value
-	}
-	require.Equal(t, 2, len(eventList))
-
-	updateNextCycleDateEvent := eventList[1]
-	require.Equal(t, opportunityevent.OpportunityUpdateRenewalV1, updateNextCycleDateEvent.EventType)
-	var eventData opportunityevent.OpportunityUpdateRenewalEvent
-	err = updateNextCycleDateEvent.GetJsonData(&eventData)
-	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData.Tenant)
-	require.Equal(t, string(opportunitymodel.RenewalLikelihoodStringZero), eventData.RenewalLikelihood)
-	require.Equal(t, []string{opportunitymodel.FieldMaskRenewalLikelihood}, eventData.FieldsMask)
+	// Check
+	require.True(t, calledEventsPlatformToUpdateRenewalOpportunity)
 }
 
 func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedContract_LikelihoodAlreadyZero(t *testing.T) {
@@ -728,7 +770,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityLikelihood(ctx, tenantName, contractId)
@@ -769,32 +811,42 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
+	// prepare grpc mock
+	calledEventsPlatformToUpdateRenewalOpportunity := false
+	opportunityServiceRefreshCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateRenewalOpportunity: func(context context.Context, op *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.Id)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL, op.RenewalLikelihood)
+			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD}, op.FieldsMask)
+			calledEventsPlatformToUpdateRenewalOpportunity = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityServiceRefreshCallbacks)
+
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityLikelihood(ctx, tenantName, contractId)
 	require.Nil(t, err)
 
-	// Check create renewal opportunity command was generated
+	// Check
+	require.True(t, calledEventsPlatformToUpdateRenewalOpportunity)
+
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
 	var eventList []eventstore.Event
 	for _, value := range eventsMap {
 		eventList = value
 	}
-	require.Equal(t, 2, len(eventList))
-
-	updateNextCycleDateEvent := eventList[1]
-	require.Equal(t, opportunityevent.OpportunityUpdateRenewalV1, updateNextCycleDateEvent.EventType)
-	var eventData opportunityevent.OpportunityUpdateRenewalEvent
-	err = updateNextCycleDateEvent.GetJsonData(&eventData)
-	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData.Tenant)
-	require.Equal(t, string(opportunitymodel.RenewalLikelihoodStringMedium), eventData.RenewalLikelihood)
-	require.Equal(t, []string{opportunitymodel.FieldMaskRenewalLikelihood}, eventData.FieldsMask)
+	require.Equal(t, 1, len(eventList))
 }
 
 func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_ReinitiatedContract_LikelihoodNotZero(t *testing.T) {
@@ -822,7 +874,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore), testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityLikelihood(ctx, tenantName, contractId)

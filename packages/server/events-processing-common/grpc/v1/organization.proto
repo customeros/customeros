@@ -238,6 +238,8 @@ service organizationGrpcService {
   rpc HideOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc ShowOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshLastTouchpoint(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc RefreshRenewalSummary(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc RefreshArr(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc AddParentOrganization(AddParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RemoveParentOrganization(RemoveParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOnboardingStatus(UpdateOnboardingStatusGrpcRequest) returns (OrganizationIdGrpcResponse);

@@ -6,11 +6,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
@@ -125,16 +123,14 @@ func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstore.NewTestAggregateStore()
-
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: "test org",
 		Hide: false,
 	})
 	orgEventHandler := &OrganizationEventHandler{
-		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -159,16 +155,14 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstore.NewTestAggregateStore()
-
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: "test org",
 		Hide: true,
 	})
 	orgEventHandler := &OrganizationEventHandler{
-		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -195,8 +189,6 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstore.NewTestAggregateStore()
-
 	socialId := uuid.New().String()
 	socialUrl := "https://www.facebook.com/organization"
 	platformName := "facebook"
@@ -209,8 +201,8 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 		Url: socialUrl,
 	})
 	orgEventHandler := &OrganizationEventHandler{
-		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -241,8 +233,6 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstore.NewTestAggregateStore()
-
 	socialId := uuid.New().String()
 	socialUrl := "https://www.facebook.com/organization"
 	platformName := "facebook"
@@ -258,8 +248,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	neo4jt.LinkSocial(ctx, testDatabase.Driver, existingSocialId, orgId)
 
 	orgEventHandler := &OrganizationEventHandler{
-		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		repositories: testDatabase.Repositories,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -363,8 +352,7 @@ func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
 
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
-		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		repositories: testDatabase.Repositories,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	event, err := events.NewOrganizationRefreshArrEvent(orgAggregate)
@@ -438,8 +426,8 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
-		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	event, err := events.NewOrganizationRefreshRenewalSummaryEvent(orgAggregate)

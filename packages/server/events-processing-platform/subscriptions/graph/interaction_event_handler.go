@@ -23,6 +23,14 @@ type InteractionEventHandler struct {
 	grpcClients  *grpc_client.Clients
 }
 
+func NewInteractionEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *InteractionEventHandler {
+	return &InteractionEventHandler{
+		log:          log,
+		repositories: repositories,
+		grpcClients:  grpcClients,
+	}
+}
+
 func (h *InteractionEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventHandler.OnCreate")
 	defer span.Finish()

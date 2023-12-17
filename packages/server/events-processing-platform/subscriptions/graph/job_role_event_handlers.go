@@ -12,16 +12,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-type GraphJobRoleEventHandler struct {
+type JobRoleEventHandler struct {
 	Repositories *repository.Repositories
 }
 
-func NewGraphJobRoleEventHandler(repositories *repository.Repositories) *GraphJobRoleEventHandler {
-	return &GraphJobRoleEventHandler{Repositories: repositories}
+func NewJobRoleEventHandler(repositories *repository.Repositories) *JobRoleEventHandler {
+	return &JobRoleEventHandler{Repositories: repositories}
 }
 
-func (h *GraphJobRoleEventHandler) OnJobRoleCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphJobRoleEventHandler.OnJobRoleCreate")
+func (h *JobRoleEventHandler) OnJobRoleCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleEventHandler.OnJobRoleCreate")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 

@@ -11,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
@@ -29,10 +28,17 @@ import (
 )
 
 type OrganizationEventHandler struct {
-	repositories         *repository.Repositories
-	organizationCommands *cmdhnd.CommandHandlers
-	log                  logger.Logger
-	grpcClients          *grpc_client.Clients
+	repositories *repository.Repositories
+	log          logger.Logger
+	grpcClients  *grpc_client.Clients
+}
+
+func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *OrganizationEventHandler {
+	return &OrganizationEventHandler{
+		repositories: repositories,
+		log:          log,
+		grpcClients:  grpcClients,
+	}
 }
 
 type eventMetadata struct {

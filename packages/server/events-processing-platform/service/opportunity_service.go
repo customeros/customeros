@@ -55,6 +55,7 @@ func (s *opportunityService) CreateOpportunity(ctx context.Context, request *opp
 	}
 
 	opportunityId := uuid.New().String()
+	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
 	// Convert any protobuf timestamp to time.Time, if necessary
 	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
@@ -106,6 +107,7 @@ func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, reque
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.Id)
 
 	// Check if the opportunity ID is valid
 	if request.Id == "" {
@@ -127,7 +129,7 @@ func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, reque
 		request.Amount,
 		source,
 		updatedAt,
-		extractOpportunityMaskFields(request.MaskFields),
+		extractOpportunityMaskFields(request.FieldsMask),
 		request.OwnerUserId,
 	)
 
@@ -146,6 +148,7 @@ func (s *opportunityService) CloseLooseOpportunity(ctx context.Context, request 
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.Id)
 
 	// Check if the opportunity ID is valid
 	if request.Id == "" {
@@ -171,6 +174,36 @@ func (s *opportunityService) CloseLooseOpportunity(ctx context.Context, request 
 
 	// Return the ID of the newly created opportunity
 	return &opportunitypb.OpportunityIdGrpcResponse{Id: request.Id}, nil
+}
+
+func (s *opportunityService) UpdateRenewalOpportunityNextCycleDate(ctx context.Context, request *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.UpdateRenewalOpportunityNextCycleDate")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.OpportunityId)
+
+	// Check if the opportunity ID is valid
+	if request.OpportunityId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("opportunityId"))
+	}
+
+	cmd := command.NewUpdateRenewalOpportunityNextCycleDateCommand(
+		request.OpportunityId,
+		request.Tenant,
+		request.LoggedInUserId,
+		request.AppSource,
+		nil,
+		utils.TimestampProtoToTimePtr(request.RenewedAt))
+
+	if err := s.opportunityCommandHandlers.UpdateRenewalOpportunityNextCycleDate.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateRenewalOpportunityNextCycleDate.Handle) tenant:{%v}, opportunityId:{%v}, err: %s", request.Tenant, request.OpportunityId, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	// Return the ID of the newly created opportunity
+	return &opportunitypb.OpportunityIdGrpcResponse{Id: request.OpportunityId}, nil
 }
 
 func (s *opportunityService) checkOrganizationExists(ctx context.Context, tenant, organizationId string) (bool, error) {
