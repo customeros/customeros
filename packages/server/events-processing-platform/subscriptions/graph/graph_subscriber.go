@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
@@ -52,7 +51,7 @@ type GraphSubscriber struct {
 	serviceLineItemEventHandler *ServiceLineItemEventHandler
 }
 
-func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commandHandlers *command.CommandHandlers, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphSubscriber {
+func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphSubscriber {
 	return &GraphSubscriber{
 		log:                         log,
 		db:                          db,
@@ -68,9 +67,9 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		logEntryEventHandler:        NewLogEntryEventHandler(log, repositories, grpcClients),
 		issueEventHandler:           NewIssueEventHandler(log, repositories, grpcClients),
 		commentEventHandler:         NewCommentEventHandler(log, repositories),
-		opportunityEventHandler:     NewOpportunityEventHandler(log, repositories, commandHandlers.Opportunity, grpcClients),
-		contractEventHandler:        NewContractEventHandler(log, repositories, commandHandlers.Opportunity, grpcClients),
-		serviceLineItemEventHandler: NewServiceLineItemEventHandler(log, repositories, commandHandlers.Opportunity, grpcClients),
+		opportunityEventHandler:     NewOpportunityEventHandler(log, repositories, grpcClients),
+		contractEventHandler:        NewContractEventHandler(log, repositories, grpcClients),
+		serviceLineItemEventHandler: NewServiceLineItemEventHandler(log, repositories, grpcClients),
 	}
 }
 
