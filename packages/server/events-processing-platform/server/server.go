@@ -127,7 +127,7 @@ func (server *server) Start(parentCtx context.Context) error {
 	grpcClients := grpc_client.InitClients(gRPCconn)
 
 	if server.cfg.Subscriptions.GraphSubscription.Enabled {
-		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, esdb, server.repositories, server.commandHandlers, grpcClients, server.cfg)
+		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, esdb, server.repositories, grpcClients, server.cfg)
 		go func() {
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {

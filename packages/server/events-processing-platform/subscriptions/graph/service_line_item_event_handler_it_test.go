@@ -3,20 +3,17 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	contractmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
-	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
-	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
-	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -25,8 +22,6 @@ import (
 func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// Setup test environment
 	serviceLineItemId := "service-line-item-id-1"
@@ -44,9 +39,9 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -99,7 +94,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.ParentId)
 	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
-	require.Equal(t, float64(100.50), serviceLineItem.Price)
+	require.Equal(t, 100.50, serviceLineItem.Price)
 	require.Equal(t, "Test service line item", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
@@ -110,8 +105,6 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -131,9 +124,9 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -178,15 +171,13 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
 	require.Equal(t, model.AnnuallyBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, int64(20), serviceLineItem.Quantity)
-	require.Equal(t, float64(200.0), serviceLineItem.Price)
+	require.Equal(t, 200.0, serviceLineItem.Price)
 	require.Equal(t, "Updated Service Line Item", serviceLineItem.Name)
 }
 
 func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -213,11 +204,31 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 		"Action": 0, "TimelineEvent": 0,
 	})
 
+	// prepare grpc client
+	calledEventsPlatformToUpdateOpportunity := false
+	opportunityCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.Id)
+			require.Equal(t, float64(0), op.Amount)
+			require.Equal(t, float64(0), op.MaxAmount)
+			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
+			calledEventsPlatformToUpdateOpportunity = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
+
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemDeleteEvent
@@ -241,15 +252,8 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 		"ServiceLineItem": 0, "ServiceLineItem_" + tenantName: 0,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
-	// check event was generated
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-	var eventList []eventstore.Event
-	for _, value := range eventsMap {
-		eventList = value
-	}
-	require.Equal(t, 1, len(eventList))
-	require.Equal(t, opportunityevent.OpportunityUpdateV1, eventList[0].GetEventType())
+	// Verify events platform was called
+	require.True(t, calledEventsPlatformToUpdateOpportunity)
 
 	// verify action
 	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
@@ -267,8 +271,6 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -297,11 +299,31 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 		"Action": 0, "TimelineEvent": 0,
 	})
 
+	// prepare grpc client
+	calledEventsPlatformToUpdateOpportunity := false
+	opportunityCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.Id)
+			require.Equal(t, float64(0), op.Amount)
+			require.Equal(t, float64(0), op.MaxAmount)
+			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
+			calledEventsPlatformToUpdateOpportunity = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
+
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemDeleteEvent
@@ -325,17 +347,10 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 		"ServiceLineItem": 0, "ServiceLineItem_" + tenantName: 0,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
-	// check event was generated
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-	var eventList []eventstore.Event
-	for _, value := range eventsMap {
-		eventList = value
-	}
-	require.Equal(t, 1, len(eventList))
-	require.Equal(t, opportunityevent.OpportunityUpdateV1, eventList[0].GetEventType())
+	// Verify events platform was called
+	require.True(t, calledEventsPlatformToUpdateOpportunity)
 
-	// verify action
+	// Verify action
 	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
@@ -351,8 +366,6 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -374,11 +387,31 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 	})
 
+	// prepare grpc client
+	calledEventsPlatformToUpdateOpportunity := false
+	opportunityCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.Id)
+			require.Equal(t, float64(0), op.Amount)
+			require.Equal(t, float64(0), op.MaxAmount)
+			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
+			calledEventsPlatformToUpdateOpportunity = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
+
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -407,22 +440,13 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 	require.Equal(t, now, *serviceLineItem.EndedAt)
 	require.True(t, serviceLineItem.IsCanceled)
 
-	// check event was generated
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-	var eventList []eventstore.Event
-	for _, value := range eventsMap {
-		eventList = value
-	}
-	require.Equal(t, 1, len(eventList))
-	require.Equal(t, opportunityevent.OpportunityUpdateV1, eventList[0].GetEventType())
+	// verify events platform was called
+	require.True(t, calledEventsPlatformToUpdateOpportunity)
 }
 
 func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_TimelineEvent(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -445,9 +469,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -508,8 +532,6 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
@@ -531,9 +553,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -596,8 +618,6 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
@@ -619,9 +639,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -685,8 +705,6 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
@@ -708,9 +726,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -773,8 +791,6 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
@@ -795,9 +811,9 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -856,8 +872,6 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
@@ -878,9 +892,9 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -939,8 +953,6 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
@@ -962,9 +974,9 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -1025,8 +1037,6 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Setup test environment
 	serviceLineItemId := "service-line-item-id-1"
 	contractId := "contract-id-1"
@@ -1044,9 +1054,9 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1124,8 +1134,6 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Setup test environment
 	serviceLineItemId := "service-line-item-id-1"
 	contractId := "contract-id-1"
@@ -1143,9 +1151,9 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1223,8 +1231,6 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Setup test environment
 	serviceLineItemId := "service-line-item-id-1"
 	contractId := "contract-id-1"
@@ -1242,9 +1248,9 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1322,8 +1328,6 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Setup test environment
 	serviceLineItemId := "service-line-item-id-1"
 	contractId := "contract-id-1"
@@ -1341,9 +1345,9 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1419,8 +1423,6 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Setup test environment
 	serviceLineItemId := "service-line-item-id-1"
 	contractId := "contract-id-1"
@@ -1438,9 +1440,9 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1516,8 +1518,6 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Setup test environment
 	serviceLineItemId := "service-line-item-id-1"
 	contractId := "contract-id-1"
@@ -1539,9 +1539,9 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 	})
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 	// Create a ServiceLineItemCreateEvent
 	timeNow := utils.Now()
@@ -1618,8 +1618,6 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Setup test environment
 	serviceLineItemId := "service-line-item-id-1"
 	contractId := "contract-id-1"
@@ -1642,9 +1640,9 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1720,8 +1718,6 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Setup test environment
 	serviceLineItemId := "service-line-item-id-1"
 	contractId := "contract-id-1"
@@ -1743,9 +1739,9 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1826,8 +1822,6 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Setup test environment
 	serviceLineItemId1 := "service-line-item-id-1"
 	serviceLineItemId2 := "service-line-item-id-2"
@@ -1854,9 +1848,9 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1936,8 +1930,6 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// Setup test environment
 	serviceLineItemId1 := "service-line-item-id-1"
 	serviceLineItemId2 := "service-line-item-id-2"
@@ -1964,9 +1956,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent

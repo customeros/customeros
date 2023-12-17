@@ -3,14 +3,13 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
-	opportunitycmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
-	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -33,17 +32,14 @@ type ActionStatusMetadata struct {
 type ContractEventHandler struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	//Deprecated
-	opportunityCommands *opportunitycmdhandler.CommandHandlers
-	grpcClients         *grpc_client.Clients
+	grpcClients  *grpc_client.Clients
 }
 
-func NewContractEventHandler(log logger.Logger, repositories *repository.Repositories, opportunityCommands *opportunitycmdhandler.CommandHandlers, grpcClients *grpc_client.Clients) *ContractEventHandler {
+func NewContractEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *ContractEventHandler {
 	return &ContractEventHandler{
-		log:                 log,
-		repositories:        repositories,
-		opportunityCommands: opportunityCommands,
-		grpcClients:         grpcClients,
+		log:          log,
+		repositories: repositories,
+		grpcClients:  grpcClients,
 	}
 }
 
@@ -76,10 +72,18 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	}
 
 	if model.IsFrequencyBasedRenewalCycle(eventData.RenewalCycle) {
-		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", eventData.Tenant, "", contractId, "", eventData.Source, nil, nil))
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
+			Tenant:     eventData.Tenant,
+			ContractId: contractId,
+			SourceFields: &commonpb.SourceFields{
+				Source:    eventData.Source.Source,
+				AppSource: constants.AppSourceEventProcessingPlatform,
+			},
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
+			h.log.Errorf("CreateRenewalOpportunity failed: %s", err.Error())
 		}
 	}
 
@@ -169,7 +173,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 				h.log.Errorf("Error while activating renewal opportunity for contract %s: %s", contractId, err.Error())
 			}
 		}
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands, h.grpcClients)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -181,7 +185,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		h.createActionForStatusChange(ctx, eventData.Tenant, contractId, afterUpdateContractEntity.Status, afterUpdateContractEntity.Name, span)
 	}
 
-	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands, h.grpcClients)
+	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
 	err = contractHandler.UpdateActiveRenewalOpportunityLikelihood(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -219,19 +223,28 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 			h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
 		}
 
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		if currentRenewalOpportunityDbNode != nil {
 			currentOpportunity := graph_db.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
-			err := h.opportunityCommands.CloseWinOpportunity.Handle(ctx, opportunitycmd.NewCloseWinOpportunityCommand(currentOpportunity.Id, eventData.Tenant, "", constants.AppSourceEventProcessingPlatform, nil, nil))
+			_, err = h.grpcClients.OpportunityClient.CloseWinOpportunity(ctx, &opportunitypb.CloseWinOpportunityGrpcRequest{
+				Tenant:    eventData.Tenant,
+				Id:        currentOpportunity.Id,
+				AppSource: constants.AppSourceEventProcessingPlatform,
+			})
 			if err != nil {
 				tracing.TraceErr(span, err)
-				h.log.Errorf("CloseWinOpportunity failed: %v", err.Error())
+				h.log.Errorf("CloseWinOpportunity failed: %s", err.Error())
 			}
 		}
 
-		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", eventData.Tenant, "", contractId, "", commonmodel.Source{
-			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
-		}, nil, nil))
+		_, err = h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
+			Tenant:     eventData.Tenant,
+			ContractId: contractId,
+			SourceFields: &commonpb.SourceFields{
+				Source:    constants.SourceOpenline,
+				AppSource: constants.AppSourceEventProcessingPlatform,
+			},
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
@@ -281,7 +294,7 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 	}
 
 	if eventData.Status == string(model.ContractStatusStringEnded) {
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands, h.grpcClients)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
 		err := contractHandler.UpdateActiveRenewalOpportunityNextCycleDate(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)

@@ -3,16 +3,14 @@ package graph
 import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	contractmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
-	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
@@ -28,8 +26,6 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
@@ -41,10 +37,9 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		grpcClients:         testMockedGrpcClient,
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create an OpportunityCreateEvent
@@ -122,8 +117,6 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
@@ -148,10 +141,9 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		grpcClients:         testMockedGrpcClient,
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create an OpportunityCreateEvent
@@ -249,8 +241,6 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
@@ -262,10 +252,9 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		grpcClients:         testMockedGrpcClient,
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -305,8 +294,6 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
@@ -317,10 +304,9 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		grpcClients:         testMockedGrpcClient,
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -357,8 +343,6 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -403,10 +387,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		grpcClients:         testMockedGrpcClient,
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -468,10 +451,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		grpcClients:         testMockedGrpcClient,
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -516,8 +498,6 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
@@ -537,12 +517,31 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 		constants.NodeLabel_Opportunity: 1,
 		constants.NodeLabel_Contract:    1})
 
+	// prepare grpc client
+	calledEventsPlatformToUpdateOpportunity := false
+	opportunityCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.Id)
+			require.Equal(t, float64(0), op.Amount)
+			require.Equal(t, float64(0), op.MaxAmount)
+			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
+			calledEventsPlatformToUpdateOpportunity = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
+
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		grpcClients:         testMockedGrpcClient,
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -578,23 +577,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	require.Equal(t, float64(10000), opportunity.Amount)
 	require.Equal(t, "Updated likelihood", opportunity.Comments)
 
-	// Check no events were generated
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-	var eventList []eventstore.Event
-	for _, value := range eventsMap {
-		eventList = value
-	}
-	require.Equal(t, 1, len(eventList))
-
-	generatedEvent1 := eventList[0]
-	require.Equal(t, event.OpportunityUpdateV1, generatedEvent1.EventType)
-	var eventData1 event.OpportunityUpdateEvent
-	err = generatedEvent1.GetJsonData(&eventData1)
-	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData1.Tenant)
-	require.Equal(t, float64(0), eventData1.Amount)
-	require.Equal(t, float64(0), eventData1.MaxAmount)
+	require.True(t, calledEventsPlatformToUpdateOpportunity)
 }
 
 func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
@@ -675,8 +658,6 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
@@ -704,10 +685,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		grpcClients:         testMockedGrpcClient,
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create an OpportunityCreateEvent

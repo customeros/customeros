@@ -13,6 +13,7 @@ enum OpportunityMaskField {
   OPPORTUNITY_PROPERTY_AMOUNT = 3;
   OPPORTUNITY_PROPERTY_COMMENTS = 4;
   OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD = 5;
+  OPPORTUNITY_PROPERTY_MAX_AMOUNT = 6;
 }
 
 // Define an enum for internalType
@@ -58,6 +59,16 @@ message CreateOpportunityGrpcRequest {
   string organizationId = 19;
 }
 
+message CreateRenewalOpportunityGrpcRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string contractId = 3;
+  RenewalLikelihood renewalLikelihood = 4;
+  SourceFields sourceFields = 5;
+  google.protobuf.Timestamp createdAt = 6;
+  google.protobuf.Timestamp updatedAt = 7;
+}
+
 message UpdateRenewalOpportunityGrpcRequest {
   string id = 1;
   string tenant = 2;
@@ -77,6 +88,7 @@ message UpdateOpportunityGrpcRequest {
   string loggedInUserId = 3;
   string name = 4;
   double amount = 5;
+  double maxAmount = 6;
   string externalType = 7;
   string externalStage = 9;
   google.protobuf.Timestamp estimatedCloseDate = 10;
@@ -87,9 +99,18 @@ message UpdateOpportunityGrpcRequest {
   string nextSteps = 16;
   SourceFields sourceFields = 17;
   ExternalSystemFields externalSystemFields = 18;
+  repeated OpportunityMaskField fieldsMask = 19;
 }
 
 message CloseLooseOpportunityGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+  google.protobuf.Timestamp closedAt = 5;
+}
+
+message CloseWinOpportunityGrpcRequest {
   string id = 1;
   string tenant = 2;
   string loggedInUserId = 3;
@@ -111,8 +132,10 @@ message OpportunityIdGrpcResponse {
 
 service opportunityGrpcService {
   rpc CreateOpportunity(CreateOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
+  rpc CreateRenewalOpportunity(CreateRenewalOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc UpdateRenewalOpportunity(UpdateRenewalOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc UpdateOpportunity(UpdateOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc CloseLooseOpportunity(CloseLooseOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
+  rpc CloseWinOpportunity(CloseWinOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc UpdateRenewalOpportunityNextCycleDate(UpdateRenewalOpportunityNextCycleDateGrpcRequest) returns (OpportunityIdGrpcResponse);
 }
