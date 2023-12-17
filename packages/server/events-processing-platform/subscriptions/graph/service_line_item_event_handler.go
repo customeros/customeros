@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/contract"
@@ -23,10 +24,22 @@ import (
 )
 
 type ServiceLineItemEventHandler struct {
-	log                 logger.Logger
-	repositories        *repository.Repositories
+	log          logger.Logger
+	repositories *repository.Repositories
+	// Deprecated
 	opportunityCommands *opportunitycmdhandler.CommandHandlers
+	grpcClients         *grpc_client.Clients
 }
+
+func NewServiceLineItemEventHandler(log logger.Logger, repositories *repository.Repositories, opportunityCommands *opportunitycmdhandler.CommandHandlers, grpcClients *grpc_client.Clients) *ServiceLineItemEventHandler {
+	return &ServiceLineItemEventHandler{
+		log:                 log,
+		repositories:        repositories,
+		opportunityCommands: opportunityCommands,
+		grpcClients:         grpcClients,
+	}
+}
+
 type userMetadata struct {
 	UserId string `json:"user-id"`
 }
@@ -123,7 +136,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	}
 	serviceLineItemEntity := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
 
-	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands, h.grpcClients)
 	err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -349,7 +362,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	if contractDbNode != nil {
 		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 		contractId = contract.Id
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -559,7 +572,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 	}
 
 	if contractDbNode != nil {
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -610,7 +623,7 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 	}
 	if contractDbNode != nil {
 		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)

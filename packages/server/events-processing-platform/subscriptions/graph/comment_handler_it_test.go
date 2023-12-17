@@ -30,7 +30,7 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "ExternalSystem": 1, "Comment": 0, "TimelineEvent": 1})
 
 	// prepare event handler
-	commentEventHandler := &GraphCommentEventHandler{
+	commentEventHandler := &CommentEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	now := utils.Now()
@@ -93,7 +93,7 @@ func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Comment": 1})
 
 	// prepare event handler
-	commentEventHandler := &GraphCommentEventHandler{
+	commentEventHandler := &CommentEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	now := utils.Now()
@@ -134,7 +134,7 @@ func TestGraphCommentEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNon
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Comment": 1})
 
 	// prepare event handler
-	commentEventHandler := &GraphCommentEventHandler{
+	commentEventHandler := &CommentEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	now := utils.Now()

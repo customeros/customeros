@@ -18,7 +18,7 @@ func TestGraphJobRoleEventHandler_OnJobRoleCreate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	jobRoleEventHandler := &GraphJobRoleEventHandler{
+	jobRoleEventHandler := &JobRoleEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
 	myJobRoleId, _ := uuid.NewUUID()

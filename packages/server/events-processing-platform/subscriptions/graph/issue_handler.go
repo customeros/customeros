@@ -23,6 +23,14 @@ type IssueEventHandler struct {
 	grpcClients  *grpc_client.Clients
 }
 
+func NewIssueEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *IssueEventHandler {
+	return &IssueEventHandler{
+		log:          log,
+		repositories: repositories,
+		grpcClients:  grpcClients,
+	}
+}
+
 func (h *IssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueEventHandler.OnCreate")
 	defer span.Finish()

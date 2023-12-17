@@ -11,12 +11,18 @@ import (
 	"github.com/pkg/errors"
 )
 
-type GraphPhoneNumberEventHandler struct {
+type PhoneNumberEventHandler struct {
 	Repositories *repository.Repositories
 }
 
-func (h *GraphPhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphPhoneNumberEventHandler.OnPhoneNumberCreate")
+func NewPhoneNumberEventHandler(repositories *repository.Repositories) *PhoneNumberEventHandler {
+	return &PhoneNumberEventHandler{
+		Repositories: repositories,
+	}
+}
+
+func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberEventHandler.OnPhoneNumberCreate")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -32,8 +38,8 @@ func (h *GraphPhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, 
 	return err
 }
 
-func (h *GraphPhoneNumberEventHandler) OnPhoneNumberUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphPhoneNumberEventHandler.OnPhoneNumberUpdate")
+func (h *PhoneNumberEventHandler) OnPhoneNumberUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberEventHandler.OnPhoneNumberUpdate")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -49,8 +55,8 @@ func (h *GraphPhoneNumberEventHandler) OnPhoneNumberUpdate(ctx context.Context, 
 	return err
 }
 
-func (e *GraphPhoneNumberEventHandler) OnPhoneNumberValidated(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphPhoneNumberEventHandler.OnPhoneNumberValidated")
+func (e *PhoneNumberEventHandler) OnPhoneNumberValidated(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberEventHandler.OnPhoneNumberValidated")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -66,8 +72,8 @@ func (e *GraphPhoneNumberEventHandler) OnPhoneNumberValidated(ctx context.Contex
 	return err
 }
 
-func (h *GraphPhoneNumberEventHandler) OnPhoneNumberValidationFailed(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphPhoneNumberEventHandler.OnPhoneNumberValidationFailed")
+func (h *PhoneNumberEventHandler) OnPhoneNumberValidationFailed(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberEventHandler.OnPhoneNumberValidationFailed")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 

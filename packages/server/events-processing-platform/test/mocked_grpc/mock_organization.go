@@ -13,6 +13,8 @@ type MockOrganizationServiceCallbacks struct {
 	LinkPhoneNumberToOrganization func(ctx context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint         func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus        func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	RefreshRenewalSummary         func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	RefreshArr                    func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 }
 
 var organizationCallbacks = &MockOrganizationServiceCallbacks{}
@@ -51,6 +53,20 @@ func (MockOrganizationService) RefreshLastTouchpoint(ctx context.Context, proto 
 		panic("organizationCallbacks.RefreshLastTouchpoint is not set")
 	}
 	return organizationCallbacks.RefreshLastTouchpoint(ctx, proto)
+}
+
+func (MockOrganizationService) RefreshRenewalSummary(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	if organizationCallbacks.RefreshRenewalSummary == nil {
+		panic("organizationCallbacks.RefreshRenewalSummary is not set")
+	}
+	return organizationCallbacks.RefreshRenewalSummary(ctx, proto)
+}
+
+func (MockOrganizationService) RefreshArr(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	if organizationCallbacks.RefreshArr == nil {
+		panic("organizationCallbacks.RefreshArr is not set")
+	}
+	return organizationCallbacks.RefreshArr(ctx, proto)
 }
 
 func (MockOrganizationService) AddParentOrganization(ctx context.Context, proto *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {

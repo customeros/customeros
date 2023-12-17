@@ -7,6 +7,7 @@ import (
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
 	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phonenumpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
@@ -23,6 +24,7 @@ type Clients struct {
 	IssueClient            issuepb.IssueGrpcServiceClient
 	InteractionEventClient interactioneventpb.InteractionEventGrpcServiceClient
 	CommentClient          commentpb.CommentGrpcServiceClient
+	OpportunityClient      opportunitypb.OpportunityGrpcServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Clients {
@@ -39,6 +41,7 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		IssueClient:            issuepb.NewIssueGrpcServiceClient(conn),
 		InteractionEventClient: interactioneventpb.NewInteractionEventGrpcServiceClient(conn),
 		CommentClient:          commentpb.NewCommentGrpcServiceClient(conn),
+		OpportunityClient:      opportunitypb.NewOpportunityGrpcServiceClient(conn),
 	}
 	return &clients
 }

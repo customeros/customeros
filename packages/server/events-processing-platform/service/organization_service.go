@@ -199,6 +199,7 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, request
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
@@ -209,6 +210,50 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, request
 	if err := s.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed to refresh the last touchpoint for organization with id  %s in tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) RefreshRenewalSummary(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RefreshRenewalSummary")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
+
+	// handle deadlines
+	if err := ctx.Err(); err != nil {
+		return nil, status.Error(codes.Canceled, "Context canceled")
+	}
+
+	cmd := command.NewRefreshRenewalSummaryCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId, request.AppSource)
+	if err := s.organizationCommands.RefreshRenewalSummary.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed to refresh renewal summary for organization with id  %s in tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) RefreshArr(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RefreshArr")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
+
+	// handle deadlines
+	if err := ctx.Err(); err != nil {
+		return nil, status.Error(codes.Canceled, "Context canceled")
+	}
+
+	cmd := command.NewRefreshArrCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId, request.AppSource)
+	if err := s.organizationCommands.RefreshArr.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed to refresh ARR for organization with id  %s in tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
 		return nil, s.errResponse(err)
 	}
 

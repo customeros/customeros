@@ -2,6 +2,7 @@ package mocked_grpc
 
 import (
 	"context"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 
@@ -31,6 +32,7 @@ func (dfi MockedTestDialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.Cl
 	server := grpc.NewServer()
 
 	organizationpb.RegisterOrganizationGrpcServiceServer(server, &MockOrganizationService{})
+	opportunitypb.RegisterOpportunityGrpcServiceServer(server, &MockOpportunityService{})
 
 	go func() {
 		if err := server.Serve(listener); err != nil {

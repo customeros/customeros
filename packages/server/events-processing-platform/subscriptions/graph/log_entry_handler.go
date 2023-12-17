@@ -21,6 +21,14 @@ type LogEntryEventHandler struct {
 	grpcClients  *grpc_client.Clients
 }
 
+func NewLogEntryEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *LogEntryEventHandler {
+	return &LogEntryEventHandler{
+		log:          log,
+		repositories: repositories,
+		grpcClients:  grpcClients,
+	}
+}
+
 func (h *LogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryEventHandler.OnCreate")
 	defer span.Finish()

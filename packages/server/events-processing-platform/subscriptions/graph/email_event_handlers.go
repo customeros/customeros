@@ -11,12 +11,18 @@ import (
 	"github.com/pkg/errors"
 )
 
-type GraphEmailEventHandler struct {
+type EmailEventHandler struct {
 	Repositories *repository.Repositories
 }
 
-func (h *GraphEmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailCreate")
+func NewEmailEventHandler(repositories *repository.Repositories) *EmailEventHandler {
+	return &EmailEventHandler{
+		Repositories: repositories,
+	}
+}
+
+func (h *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailCreate")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -32,8 +38,8 @@ func (h *GraphEmailEventHandler) OnEmailCreate(ctx context.Context, evt eventsto
 	return err
 }
 
-func (h *GraphEmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailUpdate")
+func (h *EmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailUpdate")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -49,8 +55,8 @@ func (h *GraphEmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventsto
 	return err
 }
 
-func (h *GraphEmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailValidationFailed")
+func (h *EmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailValidationFailed")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -66,8 +72,8 @@ func (h *GraphEmailEventHandler) OnEmailValidationFailed(ctx context.Context, ev
 	return err
 }
 
-func (h *GraphEmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailValidated")
+func (h *EmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailValidated")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 

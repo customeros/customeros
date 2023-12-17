@@ -67,7 +67,7 @@ message UpdateRenewalOpportunityGrpcRequest {
   google.protobuf.Timestamp updatedAt = 6;
   double amount = 7;
   SourceFields sourceFields = 8;
-  repeated OpportunityMaskField maskFields = 9;
+  repeated OpportunityMaskField fieldsMask = 9;
   string ownerUserId = 10;
 }
 
@@ -97,6 +97,14 @@ message CloseLooseOpportunityGrpcRequest {
   google.protobuf.Timestamp closedAt = 5;
 }
 
+message UpdateRenewalOpportunityNextCycleDateGrpcRequest {
+  string opportunityId = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+  google.protobuf.Timestamp renewedAt = 5;
+}
+
 message OpportunityIdGrpcResponse {
   string id = 1;
 }
@@ -106,4 +114,5 @@ service opportunityGrpcService {
   rpc UpdateRenewalOpportunity(UpdateRenewalOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc UpdateOpportunity(UpdateOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc CloseLooseOpportunity(CloseLooseOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
+  rpc UpdateRenewalOpportunityNextCycleDate(UpdateRenewalOpportunityNextCycleDateGrpcRequest) returns (OpportunityIdGrpcResponse);
 }

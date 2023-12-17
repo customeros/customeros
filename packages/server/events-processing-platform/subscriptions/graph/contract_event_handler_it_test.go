@@ -15,8 +15,6 @@ import (
 	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
-	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
-	organizationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -43,11 +41,10 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                  testLogger,
-		repositories:         testDatabase.Repositories,
-		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
-		grpcClients:          testMockedGrpcClient,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		grpcClients:         testMockedGrpcClient,
 	}
 
 	// Create a ContractCreateEvent
@@ -171,11 +168,10 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                  testLogger,
-		repositories:         testDatabase.Repositories,
-		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
-		grpcClients:          testMockedGrpcClient,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		grpcClients:         testMockedGrpcClient,
 	}
 	now := utils.Now()
 	yesterday := now.AddDate(0, 0, -1)
@@ -262,11 +258,10 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                  testLogger,
-		repositories:         testDatabase.Repositories,
-		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
-		grpcClients:          testMockedGrpcClient,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		grpcClients:         testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -316,11 +311,10 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                  testLogger,
-		repositories:         testDatabase.Repositories,
-		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
-		grpcClients:          testMockedGrpcClient,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		grpcClients:         testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -370,13 +364,36 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
+	// prepare grpc mock
+	calledEventsPlatformToRefreshRenewalSummary, calledEventsPlatformToRefreshArr := false, false
+	organizationServiceRefreshCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		RefreshRenewalSummary: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			calledEventsPlatformToRefreshRenewalSummary = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+		RefreshArr: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			calledEventsPlatformToRefreshArr = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceRefreshCallbacks)
+
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                  testLogger,
-		repositories:         testDatabase.Repositories,
-		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
-		grpcClients:          testMockedGrpcClient,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		grpcClients:         testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -407,17 +424,17 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, "", contract.RenewalCycle)
 
+	// verify call to events platform
+	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
+	require.True(t, calledEventsPlatformToRefreshArr)
+
 	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 2, len(eventsMap))
+	require.Equal(t, 1, len(eventsMap))
 	var eventList []eventstore.Event
 	for _, value := range eventsMap {
 		eventList = value
 	}
-	require.Equal(t, 2, len(eventList))
-	generatedEvent1 := eventList[0]
-	require.Equal(t, organizationevents.OrganizationRefreshRenewalSummaryV1, generatedEvent1.EventType)
-	generatedEvent2 := eventList[1]
-	require.Equal(t, organizationevents.OrganizationRefreshArrV1, generatedEvent2.EventType)
+	require.Equal(t, 1, len(eventList))
 }
 
 func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
@@ -445,11 +462,10 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                  testLogger,
-		repositories:         testDatabase.Repositories,
-		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
-		grpcClients:          testMockedGrpcClient,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		grpcClients:         testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -508,11 +524,10 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                  testLogger,
-		repositories:         testDatabase.Repositories,
-		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
-		grpcClients:          testMockedGrpcClient,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		grpcClients:         testMockedGrpcClient,
 	}
 	now := utils.Now()
 	yesterday := now.AddDate(0, 0, -1)
@@ -600,11 +615,10 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                  testLogger,
-		repositories:         testDatabase.Repositories,
-		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
-		grpcClients:          testMockedGrpcClient,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		grpcClients:         testMockedGrpcClient,
 	}
 	yesterday := now.AddDate(0, 0, -1)
 	daysAgo2 := now.AddDate(0, 0, -2)
@@ -685,11 +699,10 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                  testLogger,
-		repositories:         testDatabase.Repositories,
-		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
-		grpcClients:          testMockedGrpcClient,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		grpcClients:         testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	now := utils.Now()
@@ -770,11 +783,10 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:                  testLogger,
-		repositories:         testDatabase.Repositories,
-		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
-		grpcClients:          testMockedGrpcClient,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		grpcClients:         testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	now := utils.Now()

@@ -20,6 +20,13 @@ type ContactEventHandler struct {
 	repositories *repository.Repositories
 }
 
+func NewContactEventHandler(log logger.Logger, repositories *repository.Repositories) *ContactEventHandler {
+	return &ContactEventHandler{
+		log:          log,
+		repositories: repositories,
+	}
+}
+
 func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnContactCreate")
 	defer span.Finish()

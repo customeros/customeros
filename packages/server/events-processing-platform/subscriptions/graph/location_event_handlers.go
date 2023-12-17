@@ -11,12 +11,18 @@ import (
 	"github.com/pkg/errors"
 )
 
-type GraphLocationEventHandler struct {
+type LocationEventHandler struct {
 	Repositories *repository.Repositories
 }
 
-func (h *GraphLocationEventHandler) OnLocationCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLocationEventHandler.OnLocationCreate")
+func NewLocationEventHandler(repositories *repository.Repositories) *LocationEventHandler {
+	return &LocationEventHandler{
+		Repositories: repositories,
+	}
+}
+
+func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationEventHandler.OnLocationCreate")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -32,8 +38,8 @@ func (h *GraphLocationEventHandler) OnLocationCreate(ctx context.Context, evt ev
 	return err
 }
 
-func (h *GraphLocationEventHandler) OnLocationUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLocationEventHandler.OnLocationUpdate")
+func (h *LocationEventHandler) OnLocationUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationEventHandler.OnLocationUpdate")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -49,8 +55,8 @@ func (h *GraphLocationEventHandler) OnLocationUpdate(ctx context.Context, evt ev
 	return err
 }
 
-func (e *GraphLocationEventHandler) OnLocationValidated(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLocationEventHandler.OnLocationValidated")
+func (e *LocationEventHandler) OnLocationValidated(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationEventHandler.OnLocationValidated")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -66,8 +72,8 @@ func (e *GraphLocationEventHandler) OnLocationValidated(ctx context.Context, evt
 	return err
 }
 
-func (h *GraphLocationEventHandler) OnLocationValidationFailed(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLocationEventHandler.OnLocationValidationFailed")
+func (h *LocationEventHandler) OnLocationValidationFailed(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationEventHandler.OnLocationValidationFailed")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 

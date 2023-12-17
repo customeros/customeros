@@ -20,7 +20,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberCreate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	phoneNumberEventHandler := &GraphPhoneNumberEventHandler{
+	phoneNumberEventHandler := &PhoneNumberEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
 	phoneNumberId, _ := uuid.NewUUID()
@@ -79,7 +79,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidated(t *testing.T) {
 	event, err := events.NewPhoneNumberValidatedEvent(phoneNumberAggregate, tenantName, e164, e164, "US")
 	require.Nil(t, err)
 
-	phoneNumberEventHandler := &GraphPhoneNumberEventHandler{
+	phoneNumberEventHandler := &PhoneNumberEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
 	err = phoneNumberEventHandler.OnPhoneNumberValidated(context.Background(), event)
@@ -129,7 +129,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidationFailed(t *testing.T
 	event, err := events.NewPhoneNumberFailedValidationEvent(phoneNumberAggregate, tenantName, e164, "US", validationError)
 	require.Nil(t, err)
 
-	phoneNumberEventHandler := &GraphPhoneNumberEventHandler{
+	phoneNumberEventHandler := &PhoneNumberEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
 	err = phoneNumberEventHandler.OnPhoneNumberValidationFailed(context.Background(), event)
@@ -181,7 +181,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberUpdate(t *testing.T) {
 	event, err := events.NewPhoneNumberUpdateEvent(phoneNumberAggregate, tenantName, constants.SourceWebscrape, updatedAtUpdate)
 	require.Nil(t, err)
 
-	phoneNumberEventHandler := &GraphPhoneNumberEventHandler{
+	phoneNumberEventHandler := &PhoneNumberEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
 	err = phoneNumberEventHandler.OnPhoneNumberUpdate(context.Background(), event)
