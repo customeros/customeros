@@ -6,7 +6,7 @@ import (
 
 type DashboardNewCustomersData struct {
 	ThisMonthCount              int
-	ThisMonthIncreasePercentage float64
+	ThisMonthIncreasePercentage string
 	Months                      []*DashboardNewCustomerMonthData
 }
 type DashboardNewCustomerMonthData struct {

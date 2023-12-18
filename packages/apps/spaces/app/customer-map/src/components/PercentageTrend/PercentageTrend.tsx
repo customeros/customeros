@@ -22,29 +22,36 @@ const quotes = [
   'Dancing to the tune of déjà vu',
 ];
 
-export const PercentageTrend = ({ percentage }: { percentage: number }) => {
+export const PercentageTrend = ({
+  percentage,
+}: {
+  percentage: string | number;
+}) => {
+  percentage = `${percentage}`;
   const icon =
-    percentage === 0 ? (
+    percentage.indexOf('0') == 0 ? (
       <Minus boxSize='5' color='gray.700' />
-    ) : percentage > 0 ? (
-      <TrendUp01 boxSize='5' color='green.500' />
-    ) : (
+    ) : percentage.indexOf('-') == 0 ? (
       <TrendDown01 boxSize='5' color='yellow.500' />
+    ) : (
+      <TrendUp01 boxSize='5' color='green.500' />
     );
 
   const color =
-    percentage === 0 ? 'gray.700' : percentage > 0 ? 'green.600' : 'yellow.600';
+    percentage.indexOf('0') == 0
+      ? 'gray.700'
+      : percentage.indexOf('-') == 0
+      ? 'yellow.600'
+      : 'green.600';
 
-  const quote = percentage === 0 ? sample(quotes) : 'vs last mth';
+  const quote = percentage.indexOf('0') == 0 ? sample(quotes) : 'vs last mth';
 
   return (
     <Flex align='center' gap='1'>
       {icon}
-      {percentage > 0 && (
-        <Text fontSize='sm' color={color}>
-          {Math.abs(percentage)}%
-        </Text>
-      )}
+      <Text fontSize='sm' color={color}>
+        {percentage}
+      </Text>
       <Text fontSize='sm'>{quote}</Text>
     </Flex>
   );

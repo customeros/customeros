@@ -82,7 +82,7 @@ type DashboardRetentionRatePerMonth {
 
 type DashboardNewCustomers {
     thisMonthCount: Int!
-    thisMonthIncreasePercentage: Float!
+    thisMonthIncreasePercentage: String!
     perMonth: [DashboardNewCustomersPerMonth]!
 }
 type DashboardNewCustomersPerMonth {

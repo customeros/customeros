@@ -46,6 +46,7 @@ export enum ActionType {
   ContractRenewed = 'CONTRACT_RENEWED',
   ContractStatusUpdated = 'CONTRACT_STATUS_UPDATED',
   Created = 'CREATED',
+  OnboardingStatusChanged = 'ONBOARDING_STATUS_CHANGED',
   RenewalForecastUpdated = 'RENEWAL_FORECAST_UPDATED',
   RenewalLikelihoodUpdated = 'RENEWAL_LIKELIHOOD_UPDATED',
   ServiceLineItemBilledTypeOnceCreated = 'SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED',
@@ -675,7 +676,7 @@ export type DashboardNewCustomers = {
   __typename?: 'DashboardNewCustomers';
   perMonth: Array<Maybe<DashboardNewCustomersPerMonth>>;
   thisMonthCount: Scalars['Int'];
-  thisMonthIncreasePercentage: Scalars['Float'];
+  thisMonthIncreasePercentage: Scalars['String'];
 };
 
 export type DashboardNewCustomersPerMonth = {
@@ -702,6 +703,7 @@ export type DashboardRetentionRatePerMonth = {
   churnCount: Scalars['Int'];
   month: Scalars['Int'];
   renewCount: Scalars['Int'];
+  year: Scalars['Int'];
 };
 
 export type DashboardRevenueAtRisk = {
