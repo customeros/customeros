@@ -38,6 +38,12 @@ const (
 	RenewalLikelihood_Order_Low    = 20
 	RenewalLikelihood_Order_Zero   = 10
 
+	OnboardingStatus_Order_NotStarted = 10
+	OnboardingStatus_Order_Stuck      = 20
+	OnboardingStatus_Order_Late       = 30
+	OnboardingStatus_Order_OnTrack    = 40
+	OnboardingStatus_Order_Done       = 50
+
 	TenantKeyHeader = "X-OPENLINE-TENANT-KEY"
 	ApiKeyHeader    = "X-Openline-API-KEY"
 

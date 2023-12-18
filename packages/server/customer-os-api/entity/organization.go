@@ -62,9 +62,10 @@ type RenewalSummary struct {
 }
 
 type OnboardingDetails struct {
-	Status    OnboardingStatus
-	UpdatedAt *time.Time
-	Comments  string
+	Status       OnboardingStatus
+	SortingOrder *int64
+	UpdatedAt    *time.Time
+	Comments     string
 }
 
 func (organization OrganizationEntity) ToString() string {

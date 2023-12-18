@@ -35,7 +35,7 @@ type OrganizationRepository interface {
 	GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
 	GetOrganizationByContractId(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error
-	UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, updatedAt time.Time) error
+	UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error
 }
 
 type organizationRepository struct {
@@ -655,7 +655,7 @@ func (r *organizationRepository) WebScrapeRequested(ctx context.Context, tenant,
 	return r.executeQuery(ctx, cypher, params)
 }
 
-func (r *organizationRepository) UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, updatedAt time.Time) error {
+func (r *organizationRepository) UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateOnboardingStatus")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
@@ -663,7 +663,8 @@ func (r *organizationRepository) UpdateOnboardingStatus(ctx context.Context, ten
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 				WHERE org.onboardingStatus IS NULL OR org.onboardingStatus <> $status
-				SET org.onboardingStatus=$status, 
+				SET org.onboardingStatus=$status,
+					org.onboardingStatusOrder=$statusOrder,
 					org.onboardingComments=$comments,
 					org.onboardingUpdatedAt=$updatedAt,
 					org.updatedAt=$now`
@@ -671,6 +672,7 @@ func (r *organizationRepository) UpdateOnboardingStatus(ctx context.Context, ten
 		"tenant":         tenant,
 		"organizationId": organizationId,
 		"status":         status,
+		"statusOrder":    statusOrder,
 		"comments":       comments,
 		"updatedAt":      updatedAt,
 		"now":            utils.Now(),

@@ -72,9 +72,10 @@ type RenewalSummary struct {
 }
 
 type OnboardingDetails struct {
-	Status    string
-	UpdatedAt *time.Time
-	Comments  string
+	Status       string
+	SortingOrder *int64
+	UpdatedAt    *time.Time
+	Comments     string
 }
 
 type WebScrapeDetails struct {
