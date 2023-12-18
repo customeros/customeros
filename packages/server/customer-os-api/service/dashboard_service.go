@@ -168,27 +168,18 @@ func (s *dashboardService) GetDashboardMRRPerCustomerData(ctx context.Context, s
 		response.Months = append(response.Months, newData)
 	}
 
-	if len(response.Months) == 0 {
-		response.IncreasePercentage = 0
-	} else if len(response.Months) == 1 {
-		response.IncreasePercentage = 0
-	} else {
-		//lastMonthMrrPerCustomer := response.Months[len(response.Months)-1].Value
-		//previousMonthMrrPerCustomer := response.Months[len(response.Months)-2].Value
+	currentMonth := 0.0
+	previousMonth := 0.0
 
-		//var percentageDifference float64
-		//if previousMonthMrrPerCustomer != 0 {
-		//	percentageDifference = float64((lastMonthMrrPerCustomer - previousMonthMrrPerCustomer) * 100 / previousMonthMrrPerCustomer)
-		//} else {
-		//	if lastMonthMrrPerCustomer != 0 {
-		//		percentageDifference = float64(100)
-		//	} else {
-		//		percentageDifference = float64(0)
-		//	}
-		//}
-
-		response.IncreasePercentage = 0
+	if len(response.Months) == 1 {
+		currentMonth = response.Months[len(response.Months)-1].Value
+	} else if len(response.Months) > 1 {
+		currentMonth = response.Months[len(response.Months)-1].Value
+		previousMonth = response.Months[len(response.Months)-2].Value
 	}
+
+	response.MrrPerCustomer = currentMonth
+	response.IncreasePercentage = ComputeNumbersDisplay(float64(previousMonth), float64(currentMonth))
 
 	return &response, nil
 }

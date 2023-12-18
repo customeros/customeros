@@ -8653,7 +8653,7 @@ enum CustomFieldTemplateType {
 }`, BuiltIn: false},
 	{Name: "../schemas/dashboard.graphqls", Input: `extend type Query {
     """
-    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE
+    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE, ONBOARDING_STATUS
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
@@ -8681,7 +8681,7 @@ type DashboardCustomerMap {
 
 type DashboardMRRPerCustomer {
     mrrPerCustomer: Float!
-    increasePercentage: Float!
+    increasePercentage: String!
     perMonth: [DashboardMRRPerCustomerPerMonth]!
 }
 type DashboardMRRPerCustomerPerMonth {
@@ -21769,9 +21769,9 @@ func (ec *executionContext) _DashboardMRRPerCustomer_increasePercentage(ctx cont
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardMRRPerCustomer_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21781,7 +21781,7 @@ func (ec *executionContext) fieldContext_DashboardMRRPerCustomer_increasePercent
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil

@@ -29,7 +29,7 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_No_Period_No_Data_In_DB(t *tes
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 12, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -82,7 +82,7 @@ func assert_Dashboard_MRR_Per_Customer_PeriodIntervals(t *testing.T, start, end 
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, months, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 }
 
@@ -120,7 +120,7 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_HiddenOrganization
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -164,7 +164,7 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_ProspectOrganizati
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -209,7 +209,7 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_Hidden_Organizatio
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -254,7 +254,7 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Canceled(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, "-100%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 3, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 7, 2)
@@ -296,8 +296,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_BeforeMonth(t *testing.T) 
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, float64(2), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, "+2", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -341,7 +341,7 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_AfterMonth(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -385,8 +385,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_AtBeginningOfMonth(t *test
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, float64(2), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, "+2", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -429,8 +429,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_AtEndOfMonth(t *testing.T)
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, float64(2), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, "+2", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -475,7 +475,7 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_EndedImmediately(t
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -520,8 +520,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_EndedAtEndOfMonth(
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, float64(2), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, "+2", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -564,8 +564,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Yearly(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, float64(2), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, "+2", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -608,8 +608,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Quarterly(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, float64(1), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -652,8 +652,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_Monthly(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, float64(2), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, "+2", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -701,8 +701,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_SameMonth_SameOrganizati
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, float64(4), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, "+4", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -752,8 +752,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_SameMonth_DifferentOrgan
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, float64(2), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, "+2", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -801,8 +801,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_DifferentMonths_SameOrga
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, float64(2), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, "+2", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -852,8 +852,8 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_DifferentMonths_Differen
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, float64(1), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
@@ -904,7 +904,7 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_SameOrganization_Overlap
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, "-100%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 6, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 5, 0)
@@ -959,7 +959,7 @@ func TestQueryResolver_Dashboard_MRR_Per_Customer_2_SLI_DifferentOrganization_Ov
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
+	require.Equal(t, "-100%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
 	require.Equal(t, 6, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 
 	assertMRRMonthData(t, &dashboardReport.Dashboard_MRRPerCustomer, 2023, 5, 0)

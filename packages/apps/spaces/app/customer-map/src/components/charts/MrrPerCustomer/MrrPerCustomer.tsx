@@ -33,7 +33,7 @@ export const MrrPerCustomer = () => {
   const stat = formatCurrency(
     data?.dashboard_MRRPerCustomer?.mrrPerCustomer ?? 0,
   );
-  const percentage = data?.dashboard_MRRPerCustomer?.increasePercentage ?? 0;
+  const percentage = data?.dashboard_MRRPerCustomer?.increasePercentage ?? '0';
 
   return (
     <ChartCard

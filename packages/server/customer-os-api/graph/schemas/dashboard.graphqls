@@ -28,7 +28,7 @@ type DashboardCustomerMap {
 
 type DashboardMRRPerCustomer {
     mrrPerCustomer: Float!
-    increasePercentage: Float!
+    increasePercentage: String!
     perMonth: [DashboardMRRPerCustomerPerMonth]!
 }
 type DashboardMRRPerCustomerPerMonth {
