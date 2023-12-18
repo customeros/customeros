@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -342,6 +343,22 @@ func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, st
 
 	response := entityDashboard.DashboardRetentionRateData{}
 
+	current := start
+	for current.Before(end) || current.Equal(end) {
+		fmt.Println(current.Month(), current.Year())
+
+		newData := &entityDashboard.DashboardRetentionRatePerMonthData{
+			Year:       current.Year(),
+			Month:      int(current.Month()),
+			RenewCount: 0,
+			ChurnCount: 0,
+		}
+
+		response.Months = append(response.Months, newData)
+
+		current = current.AddDate(0, 1, 0)
+	}
+
 	contractsRenewalsData, err := s.repositories.DashboardRepository.GetDashboardRetentionRateContractsRenewalsData(ctx, common.GetContext(ctx).Tenant, start, end)
 	if err != nil {
 		return nil, err
@@ -350,15 +367,13 @@ func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, st
 	for _, record := range contractsRenewalsData {
 		year, _ := record["year"].(int64)
 		month, _ := record["month"].(int64)
-		renewCount, _ := record["value"].(int64)
+		renewCount, _ := record["value"].(float64)
 
-		newData := &entityDashboard.DashboardRetentionRatePerMonthData{
-			Year:       int(year),
-			Month:      int(month),
-			RenewCount: int(renewCount),
+		for _, monthData := range response.Months {
+			if monthData.Year == int(year) && monthData.Month == int(month) {
+				monthData.RenewCount = int(renewCount)
+			}
 		}
-
-		response.Months = append(response.Months, newData)
 	}
 
 	contractsChurnedData, err := s.repositories.DashboardRepository.GetDashboardRetentionRateContractsChurnedData(ctx, common.GetContext(ctx).Tenant, start, end)
@@ -369,7 +384,7 @@ func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, st
 	for _, record := range contractsChurnedData {
 		year, _ := record["year"].(int64)
 		month, _ := record["month"].(int64)
-		churnCount, _ := record["value"].(int64)
+		churnCount, _ := record["value"].(float64)
 
 		for _, monthData := range response.Months {
 			if monthData.Year == int(year) && monthData.Month == int(month) {
