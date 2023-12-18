@@ -16,8 +16,8 @@ type DashboardNewCustomerMonthData struct {
 }
 
 type DashboardRetentionRateData struct {
-	RetentionRate      int
-	IncreasePercentage float64
+	RetentionRate      float64
+	IncreasePercentage string
 	Months             []*DashboardRetentionRatePerMonthData
 }
 type DashboardRetentionRatePerMonthData struct {

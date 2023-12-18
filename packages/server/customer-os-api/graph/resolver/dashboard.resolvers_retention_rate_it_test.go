@@ -28,8 +28,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_No_Period_No_Data_In_DB(t *testi
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "0", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 12, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -82,8 +82,8 @@ func assert_Dashboard_Retention_Rate_PeriodIntervals(t *testing.T, start, end st
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "0", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, months, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 }
 
@@ -122,8 +122,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Hidden_Organization(t *testing.T
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "0", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -169,8 +169,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Prospect_Organization(t *testing
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "0", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -218,8 +218,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V1(t *testing.T)
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -269,8 +269,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V2(t *testing.T)
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -320,8 +320,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V1(t *testing.T)
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -375,8 +375,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V2(t *testing.T)
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -432,8 +432,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V1(t *testing.T
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -493,8 +493,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V2(t *testing.T
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -542,8 +542,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Monthl
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -594,8 +594,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Quarte
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 6, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -646,8 +646,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Annual
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -705,8 +705,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Mont
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -764,8 +764,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Quar
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -823,8 +823,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Annu
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -882,8 +882,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Month
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -941,8 +941,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Quart
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -1000,8 +1000,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Annua
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 13, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -1060,8 +1060,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_1_Multi_Year_Contract(t
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 25, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -1132,8 +1132,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_2_Multi_Year_Contract(t
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(-100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 25, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 0)
@@ -1202,8 +1202,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_Before_Month(t *testing.
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "0", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -1253,8 +1253,8 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_After_Month(t *testing.T
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, float64(100), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "+100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
@@ -1293,7 +1293,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_In_Month(t *testing.T) {
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
-			"start": "2023-07-01T00:00:00.000Z",
+			"start": "2023-05-01T00:00:00.000Z",
 			"end":   "2023-07-01T00:00:00.000Z",
 		})
 
@@ -1304,16 +1304,67 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_In_Month(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 0, dashboardReport.Dashboard_RetentionRate.RetentionRate)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
-	require.Equal(t, 1, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "-100", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, 3, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
 
-	for _, month := range dashboardReport.Dashboard_RetentionRate.PerMonth {
-		require.Equal(t, 2023, month.Year)
-		require.Equal(t, 7, month.Month)
-		require.Equal(t, 0, month.RenewCount)
-		require.Equal(t, 1, month.ChurnCount)
+	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 5, 0, 0)
+	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 6, 1, 0)
+	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 0, 1)
+}
+
+func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_Churned_In_Month(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	sliStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	sliEndedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &sliStartedAt,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeMonthly, 1, 1, sliStartedAt)
+
+	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &sliStartedAt,
+		EndedAt:          &sliEndedAt,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+	}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 1, sliStartedAt)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
+		map[string]interface{}{
+			"start": "2023-06-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_RetentionRate model.DashboardRetentionRate
 	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(50), dashboardReport.Dashboard_RetentionRate.RetentionRate)
+	require.Equal(t, "+50", dashboardReport.Dashboard_RetentionRate.IncreasePercentage)
+	require.Equal(t, 2, len(dashboardReport.Dashboard_RetentionRate.PerMonth))
+
+	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 6, 0, 0)
+	assertRetentionRateMonthData(t, &dashboardReport.Dashboard_RetentionRate, 2023, 7, 1, 1)
 }
 
 func assertRetentionRateMonthData(t *testing.T, dashboardReport *model.DashboardRetentionRate, year, month, renewExpected, churnExpected int) {

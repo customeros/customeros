@@ -69,8 +69,8 @@ type DashboardRevenueAtRisk {
 }
 
 type DashboardRetentionRate {
-    retentionRate: Int!
-    increasePercentage: Float!
+    retentionRate: Float!
+    increasePercentage: String!
     perMonth: [DashboardRetentionRatePerMonth]!
 }
 type DashboardRetentionRatePerMonth {

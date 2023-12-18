@@ -394,8 +394,42 @@ func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, st
 		}
 	}
 
-	response.RetentionRate = 0
-	response.IncreasePercentage = 0
+	currentRenew := 0
+	previousRenew := 0
+	currentChurn := 0
+	previousChurn := 0
+
+	if len(response.Months) == 1 {
+		currentRenew = response.Months[len(response.Months)-1].RenewCount
+		currentChurn = response.Months[len(response.Months)-1].ChurnCount
+	} else if len(response.Months) > 1 {
+		currentRenew = response.Months[len(response.Months)-1].RenewCount
+		previousRenew = response.Months[len(response.Months)-2].RenewCount
+		currentChurn = response.Months[len(response.Months)-1].ChurnCount
+		previousChurn = response.Months[len(response.Months)-2].ChurnCount
+	}
+
+	currentRetentionRate := float64(currentRenew) / float64(currentRenew+currentChurn) * 100
+	previousRetentionRate := float64(previousRenew) / float64(previousRenew+previousChurn) * 100
+
+	if math.IsNaN(currentRetentionRate) {
+		currentRetentionRate = 0
+	}
+	if math.IsNaN(previousRetentionRate) {
+		previousRetentionRate = 0
+	}
+
+	if currentRenew == 0 && currentChurn == 0 {
+		if previousRenew == 0 && previousChurn == 0 {
+			response.RetentionRate = 0
+		} else {
+			response.RetentionRate = -100
+		}
+	} else {
+		response.RetentionRate = currentRetentionRate
+	}
+
+	response.IncreasePercentage = ComputePercentagesDisplay(previousRetentionRate, response.RetentionRate)
 
 	return &response, nil
 }
@@ -439,13 +473,13 @@ func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, sta
 	}
 
 	response.ThisMonthCount = currentMonthCount
-	response.ThisMonthIncreasePercentage = ComputeNewCustomersDisplay(float64(previousMonthCount), float64(currentMonthCount))
+	response.ThisMonthIncreasePercentage = ComputeNumbersDisplay(float64(previousMonthCount), float64(currentMonthCount))
 
 	return &response, nil
 
 }
 
-func ComputeNewCustomersDisplay(previousMonthCount, currentMonthCount float64) string {
+func ComputeNumbersDisplay(previousMonthCount, currentMonthCount float64) string {
 	var increase, percentage float64
 
 	if previousMonthCount == 0 {
@@ -465,6 +499,26 @@ func ComputeNewCustomersDisplay(previousMonthCount, currentMonthCount float64) s
 	}
 
 	return printFloat(percentage, true) + "%"
+}
+
+func ComputePercentagesDisplay(previous, current float64) string {
+	if math.IsNaN(current) {
+		return "0"
+	}
+	if math.IsNaN(previous) {
+		return printFloat(current, true)
+	}
+
+	diff := current - previous
+
+	if diff > 100 {
+		diff = 100
+	}
+	if diff < -100 {
+		diff = -100
+	}
+
+	return printFloat(diff, true)
 }
 
 func printFloat(number float64, withSign bool) string {

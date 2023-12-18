@@ -580,8 +580,8 @@ type DashboardPeriodInput struct {
 }
 
 type DashboardRetentionRate struct {
-	RetentionRate      int                               `json:"retentionRate"`
-	IncreasePercentage float64                           `json:"increasePercentage"`
+	RetentionRate      float64                           `json:"retentionRate"`
+	IncreasePercentage string                            `json:"increasePercentage"`
 	PerMonth           []*DashboardRetentionRatePerMonth `json:"perMonth"`
 }
 
