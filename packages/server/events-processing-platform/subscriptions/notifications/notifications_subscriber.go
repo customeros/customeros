@@ -48,12 +48,12 @@ func NewNotificationsSubscriber(log logger.Logger, db *esdb.Client, repositories
 
 func (s *NotificationsSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
 	group, ctx := errgroup.WithContext(ctx)
-	for i := 1; i <= s.cfg.Subscriptions.GraphSubscription.PoolSize; i++ {
+	for i := 1; i <= s.cfg.Subscriptions.NotificationsSubscription.PoolSize; i++ {
 		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
 			ctx,
-			s.cfg.Subscriptions.GraphSubscription.GroupName,
+			s.cfg.Subscriptions.NotificationsSubscription.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{
-				BufferSize: s.cfg.Subscriptions.GraphSubscription.BufferSizeClient,
+				BufferSize: s.cfg.Subscriptions.NotificationsSubscription.BufferSizeClient,
 			},
 		)
 		if err != nil {
@@ -88,7 +88,7 @@ func (s *NotificationsSubscriber) ProcessEvents(ctx context.Context, stream *esd
 		}
 
 		if event.EventAppeared != nil {
-			s.log.EventAppeared(s.cfg.Subscriptions.GraphSubscription.GroupName, event.EventAppeared.Event, workerID)
+			s.log.EventAppeared(s.cfg.Subscriptions.NotificationsSubscription.GroupName, event.EventAppeared.Event, workerID)
 
 			if event.EventAppeared.Event.Event == nil {
 				s.log.Errorf("(NotificationsSubscriber) event.EventAppeared.Event.Event is nil")
