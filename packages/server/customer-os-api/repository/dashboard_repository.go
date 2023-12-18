@@ -16,6 +16,28 @@ import (
 	"time"
 )
 
+const (
+	SearchSortParamOrganization       = "ORGANIZATION"
+	SearchSortParamWebsite            = "WEBSITE"
+	SearchSortParamEmail              = "EMAIL"
+	SearchSortParamCountry            = "COUNTRY"
+	SearchSortParamOnboardingStatus   = "ONBOARDING_STATUS"
+	SearchSortParamIsCustomer         = "IS_CUSTOMER"
+	SearchSortParamName               = "NAME"
+	SearchSortParamRenewalLikelihood  = "RENEWAL_LIKELIHOOD"
+	SearchSortParamRenewalCycleNext   = "RENEWAL_CYCLE_NEXT"
+	SearchSortParamRenewalDate        = "RENEWAL_DATE"
+	SearchSortParamLastTouchpoint     = "LAST_TOUCHPOINT"
+	SearchSortParamForecastArr        = "FORECAST_ARR"
+	SearchSortParamRegion             = "REGION"
+	SearchSortParamLocality           = "LOCALITY"
+	SearchSortParamOwnerId            = "OWNER_ID"
+	SearchSortParamLocation           = "LOCATION"
+	SearchSortParamOwner              = "OWNER"
+	SearchSortParamLastTouchpointAt   = "LAST_TOUCHPOINT_AT"
+	SearchSortParamLastTouchpointType = "LAST_TOUCHPOINT_TYPE"
+)
+
 type DashboardRepository interface {
 	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
 	GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
@@ -110,7 +132,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		locationFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		for _, filter := range where.And {
-			if filter.Filter.Property == "ORGANIZATION" {
+			if filter.Filter.Property == SearchSortParamOrganization {
 				orFilter := utils.CypherFilter{}
 				orFilter.LogicalOperator = utils.OR
 				orFilter.Details = new(utils.CypherFilterItem)
@@ -121,40 +143,46 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("referenceId", *filter.Filter.Value.Str, utils.CONTAINS))
 
 				organizationFilter.Filters = append(organizationFilter.Filters, &orFilter)
-			} else if filter.Filter.Property == "NAME" {
+			} else if filter.Filter.Property == SearchSortParamName {
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
-			} else if filter.Filter.Property == "WEBSITE" {
+			} else if filter.Filter.Property == SearchSortParamWebsite {
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
-			} else if filter.Filter.Property == "EMAIL" {
+			} else if filter.Filter.Property == SearchSortParamEmail {
 				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
 				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
-			} else if filter.Filter.Property == "COUNTRY" {
+			} else if filter.Filter.Property == SearchSortParamCountry {
 				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
-			} else if filter.Filter.Property == "REGION" {
+			} else if filter.Filter.Property == SearchSortParamRegion {
 				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
-			} else if filter.Filter.Property == "LOCALITY" {
+			} else if filter.Filter.Property == SearchSortParamLocality {
 				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
-			} else if filter.Filter.Property == "OWNER_ID" {
+			} else if filter.Filter.Property == SearchSortParamOwnerId {
 				ownerId = *filter.Filter.Value.ArrayStr
 				ownerIncludeEmpty = *filter.Filter.IncludeEmpty
-			} else if filter.Filter.Property == "IS_CUSTOMER" && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
+			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("isCustomer", *filter.Filter.Value.ArrayBool, utils.IN, false))
-			} else if filter.Filter.Property == "RENEWAL_LIKELIHOOD" && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
+			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				renewalLikelihoodValues := make([]string, 0)
 				for _, v := range *filter.Filter.Value.ArrayStr {
 					renewalLikelihoodValues = append(renewalLikelihoodValues, mapper.MapOpportunityRenewalLikelihoodFromString(&v))
 				}
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("derivedRenewalLikelihood", renewalLikelihoodValues, utils.IN, false))
-			} else if filter.Filter.Property == "RENEWAL_CYCLE_NEXT" && filter.Filter.Value.Time != nil {
+			} else if filter.Filter.Property == SearchSortParamOnboardingStatus && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
+				onboardingStatusValues := make([]string, 0)
+				for _, v := range *filter.Filter.Value.ArrayStr {
+					onboardingStatusValues = append(onboardingStatusValues, mapper.MapOnboardingStatusFromString(&v))
+				}
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("onboardingStatus", onboardingStatusValues, utils.IN, false))
+			} else if filter.Filter.Property == SearchSortParamRenewalCycleNext && filter.Filter.Value.Time != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("billingDetailsRenewalCycleNext", *filter.Filter.Value.Time, utils.LTE, false))
-			} else if filter.Filter.Property == "RENEWAL_DATE" && filter.Filter.Value.Time != nil {
+			} else if filter.Filter.Property == SearchSortParamRenewalDate && filter.Filter.Value.Time != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("derivedNextRenewalAt", *filter.Filter.Value.Time, utils.LTE, false))
-			} else if filter.Filter.Property == "FORECAST_ARR" && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
+			} else if filter.Filter.Property == SearchSortParamForecastArr && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
-			} else if filter.Filter.Property == "LAST_TOUCHPOINT_AT" && filter.Filter.Value.Time != nil {
+			} else if filter.Filter.Property == SearchSortParamLastTouchpointAt && filter.Filter.Value.Time != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE, false))
-			} else if filter.Filter.Property == "LAST_TOUCHPOINT_TYPE" && filter.Filter.Value.ArrayStr != nil {
+			} else if filter.Filter.Property == SearchSortParamLastTouchpointType && filter.Filter.Value.ArrayStr != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointType", *filter.Filter.Value.ArrayStr, utils.IN, false))
 			}
 		}
@@ -245,7 +273,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
-		if sort != nil && sort.By == "OWNER" {
+		if sort != nil && sort.By == SearchSortParamOwner {
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
 		}
 		query += ` WHERE (o.hide = false) `
@@ -278,7 +306,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		// sort region
 		aliases := " o, d, l"
 		query += " WITH o, d, l "
-		if sort != nil && sort.By == "OWNER" {
+		if sort != nil && sort.By == SearchSortParamOwner {
 			if sort.Direction == model.SortingDirectionAsc {
 				query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_FIRST_NAME_FOR_SORTING "
 				query += ", CASE WHEN owner.lastName <> \"\" and not owner.lastName is null THEN owner.lastName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_LAST_NAME_FOR_SORTING "
@@ -288,7 +316,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			}
 			aliases += ", OWNER_FIRST_NAME_FOR_SORTING, OWNER_LAST_NAME_FOR_SORTING "
 		}
-		if sort != nil && sort.By == "NAME" {
+		if sort != nil && sort.By == SearchSortParamName {
 			if sort.Direction == model.SortingDirectionAsc {
 				query += ", CASE WHEN o.name <> \"\" and not o.name is null THEN o.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
 			} else {
@@ -296,7 +324,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			}
 			aliases += ", NAME_FOR_SORTING "
 		}
-		if sort != nil && sort.By == "RENEWAL_LIKELIHOOD" {
+		if sort != nil && sort.By == SearchSortParamRenewalLikelihood {
 			if sort.Direction == model.SortingDirectionAsc {
 				query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE 9999 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
 			} else {
@@ -304,7 +332,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			}
 			aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
 		}
-		if sort != nil && sort.By == "RENEWAL_CYCLE_NEXT" {
+		if sort != nil && sort.By == SearchSortParamRenewalCycleNext {
 			if sort.Direction == model.SortingDirectionAsc {
 				query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('2100-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
 			} else {
@@ -312,7 +340,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			}
 			aliases += ", RENEWAL_CYCLE_NEXT_FOR_SORTING "
 		}
-		if sort != nil && sort.By == "RENEWAL_DATE" {
+		if sort != nil && sort.By == SearchSortParamRenewalDate {
 			if sort.Direction == model.SortingDirectionAsc {
 				query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('2100-01-01') END as RENEWAL_DATE_FOR_SORTING "
 			} else {
@@ -320,7 +348,19 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			}
 			aliases += ", RENEWAL_DATE_FOR_SORTING "
 		}
-		if sort != nil && sort.By == "FORECAST_ARR" {
+		if sort != nil && sort.By == SearchSortParamOnboardingStatus {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE 9999 END as ONBOARDING_STATUS_FOR_SORTING "
+				query += ", o.onboardingStatus AS ONBOARDING_STATUS_NAME_FOR_SORTING "
+				query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE -1 END as ONBOARDING_STATUS_FOR_SORTING "
+				query += ", o.onboardingStatus AS ONBOARDING_STATUS_NAME_FOR_SORTING "
+				query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
+			}
+			aliases += ", ONBOARDING_STATUS_FOR_SORTING, ONBOARDING_STATUS_NAME_FOR_SORTING, ONBOARDING_UPDATED_AT_FOR_SORTING "
+		}
+		if sort != nil && sort.By == SearchSortParamForecastArr {
 			if sort.Direction == model.SortingDirectionAsc {
 				query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
 			} else {
@@ -328,46 +368,50 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			}
 			aliases += ", FORECAST_ARR_FOR_SORTING "
 		}
-		if sort != nil && sort.By == "ORGANIZATION" {
+		if sort != nil && sort.By == SearchSortParamOrganization {
 			query += " OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(parent:Organization) WITH "
 			query += aliases + ", parent "
 		}
 
 		cypherSort := utils.CypherSort{}
 		if sort != nil {
-			if sort.By == "NAME" {
+			if sort.By == SearchSortParamName {
 				query += " ORDER BY NAME_FOR_SORTING " + string(sort.Direction)
-			} else if sort.By == "ORGANIZATION" {
+			} else if sort.By == SearchSortParamOrganization {
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce()
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(entity.OrganizationEntity{})).WithAlias("parent").WithDescending()
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
-			} else if sort.By == "FORECAST_ARR" {
+			} else if sort.By == SearchSortParamForecastArr {
 				query += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
-			} else if sort.By == "RENEWAL_LIKELIHOOD" {
+			} else if sort.By == SearchSortParamRenewalLikelihood {
 				query += " ORDER BY RENEWAL_LIKELIHOOD_FOR_SORTING " + string(sort.Direction)
-			} else if sort.By == "RENEWAL_CYCLE_NEXT" {
+			} else if sort.By == SearchSortParamOnboardingStatus {
+				query += " ORDER BY ONBOARDING_STATUS_FOR_SORTING " + string(sort.Direction) +
+					", ONBOARDING_STATUS_NAME_FOR_SORTING " + string(sort.Direction) +
+					", ONBOARDING_UPDATED_AT_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == SearchSortParamRenewalCycleNext {
 				query += " ORDER BY RENEWAL_CYCLE_NEXT_FOR_SORTING " + string(sort.Direction)
-			} else if sort.By == "RENEWAL_DATE" {
+			} else if sort.By == SearchSortParamRenewalDate {
 				query += " ORDER BY RENEWAL_DATE_FOR_SORTING " + string(sort.Direction)
-			} else if sort.By == "LAST_TOUCHPOINT" {
+			} else if sort.By == SearchSortParamLastTouchpoint {
 				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == "DOMAIN" {
 				cypherSort.NewSortRule("DOMAIN", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.DomainEntity{}))
 				query += string(cypherSort.SortingCypherFragment("d"))
-			} else if sort.By == "LOCATION" {
+			} else if sort.By == SearchSortParamLocation {
 				cypherSort.NewSortRule("COUNTRY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
 				cypherSort.NewSortRule("REGION", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
 				cypherSort.NewSortRule("LOCALITY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("l"))
 			} else if sort.By == "OWNER" {
 				query += " ORDER BY OWNER_FIRST_NAME_FOR_SORTING " + string(sort.Direction) + ", OWNER_LAST_NAME_FOR_SORTING " + string(sort.Direction)
-			} else if sort.By == "LAST_TOUCHPOINT_AT" {
+			} else if sort.By == SearchSortParamLastTouchpointAt {
 				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
-			} else if sort.By == "LAST_TOUCHPOINT_TYPE" {
+			} else if sort.By == SearchSortParamLastTouchpointType {
 				cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			}

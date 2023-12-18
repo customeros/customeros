@@ -773,9 +773,10 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 			RenewalLikelihoodOrder: utils.GetInt64PropOrNil(props, "derivedRenewalLikelihoodOrder"),
 		},
 		OnboardingDetails: entity.OnboardingDetails{
-			Status:    entity.GetOnboardingStatus(utils.GetStringPropOrEmpty(props, "onboardingStatus")),
-			UpdatedAt: utils.GetTimePropOrNil(props, "onboardingUpdatedAt"),
-			Comments:  utils.GetStringPropOrEmpty(props, "onboardingComments"),
+			Status:       entity.GetOnboardingStatus(utils.GetStringPropOrEmpty(props, "onboardingStatus")),
+			SortingOrder: utils.GetInt64PropOrNil(props, "onboardingStatusOrder"),
+			UpdatedAt:    utils.GetTimePropOrNil(props, "onboardingUpdatedAt"),
+			Comments:     utils.GetStringPropOrEmpty(props, "onboardingComments"),
 		},
 	}
 	return &output

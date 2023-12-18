@@ -787,3 +787,105 @@ func insertServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.
 		EndedAt:          &endedAt,
 	})
 }
+
+func TestQueryResolver_Search_Organization_ByOnboardingStatus(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateTenantOrganization(ctx, driver, tenantName, "org excluded")
+
+	today := utils.Now()
+	yesterday := today.AddDate(0, 0, -1)
+
+	orgNA := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:    entity.OnboardingStatusNotApplicable,
+			UpdatedAt: nil,
+		},
+	})
+	orgSuccess := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:    entity.OnboardingStatusSuccessful,
+			UpdatedAt: &today,
+		},
+	})
+	orgStuckYesterday := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusStuck,
+			UpdatedAt:    &yesterday,
+			SortingOrder: utils.Int64Ptr(20),
+		},
+	})
+	orgDone := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusDone,
+			UpdatedAt:    &today,
+			SortingOrder: utils.Int64Ptr(50),
+		},
+	})
+	orgOnTrack := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusOnTrack,
+			UpdatedAt:    &yesterday,
+			SortingOrder: utils.Int64Ptr(40),
+		},
+	})
+	orgStuckToday := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusStuck,
+			UpdatedAt:    &today,
+			SortingOrder: utils.Int64Ptr(20),
+		},
+	})
+	orgLate := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusLate,
+			UpdatedAt:    &yesterday,
+			SortingOrder: utils.Int64Ptr(30),
+		},
+	})
+	orgNotStarted := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusNotStarted,
+			UpdatedAt:    &yesterday,
+			SortingOrder: utils.Int64Ptr(10),
+		},
+	})
+
+	require.Equal(t, 9, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"DONE"}, []string{orgDone})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"LATE"}, []string{orgLate})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"STUCK"}, []string{orgStuckYesterday, orgStuckToday})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"NOT_STARTED"}, []string{orgNotStarted})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"SUCCESSFUL"}, []string{orgSuccess})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"DONE", "LATE"}, []string{orgLate, orgDone})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"DONE", "LATE", "NOT_APPLICABLE"}, []string{orgLate, orgDone, orgNA})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{}, []string{orgNotStarted, orgStuckYesterday, orgStuckToday, orgLate, orgOnTrack, orgDone, orgNA, orgSuccess})
+}
+
+func assert_Search_Organization_ByOnboardingStatus(t *testing.T, searchStatuses []string, expectedOrgs []string) {
+	query := "/dashboard_view/organization/dashboard_view_organization_filter_by_onboarding_status"
+	options := []client.Option{
+		client.Var("page", 1),
+		client.Var("limit", 10),
+		client.Var("searchTerm", searchStatuses),
+	}
+
+	rawResponse, err := c.RawPost(getQuery(query), options...)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var responseRaw struct {
+		DashboardView_Organizations model.OrganizationPage
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &responseRaw)
+	require.Nil(t, err)
+	require.NotNil(t, responseRaw)
+
+	require.Equal(t, int64(len(expectedOrgs)), responseRaw.DashboardView_Organizations.TotalElements)
+	for i, org := range responseRaw.DashboardView_Organizations.Content {
+		require.Equal(t, expectedOrgs[i], org.ID)
+	}
+}

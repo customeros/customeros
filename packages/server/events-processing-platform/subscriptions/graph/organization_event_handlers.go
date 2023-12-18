@@ -12,6 +12,7 @@ import (
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -647,7 +648,7 @@ func (h *OrganizationEventHandler) OnUpdateOnboardingStatus(ctx context.Context,
 	}
 	organizationEntity := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
 
-	err = h.repositories.OrganizationRepository.UpdateOnboardingStatus(ctx, eventData.Tenant, organizationId, eventData.Status, eventData.Comments, eventData.UpdatedAt)
+	err = h.repositories.OrganizationRepository.UpdateOnboardingStatus(ctx, eventData.Tenant, organizationId, eventData.Status, eventData.Comments, getOrderForOnboardingStatus(eventData.Status), eventData.UpdatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to update onboarding status for organization %s: %s", organizationId, err.Error())
@@ -671,6 +672,23 @@ func (h *OrganizationEventHandler) OnUpdateOnboardingStatus(ctx context.Context,
 	}
 
 	return nil
+}
+
+func getOrderForOnboardingStatus(status string) *int64 {
+	switch status {
+	case string(model.OnboardingStatusNotStarted):
+		return utils.Int64Ptr(constants.OnboardingStatus_Order_NotStarted)
+	case string(model.OnboardingStatusOnTrack):
+		return utils.Int64Ptr(constants.OnboardingStatus_Order_OnTrack)
+	case string(model.OnboardingStatusLate):
+		return utils.Int64Ptr(constants.OnboardingStatus_Order_Late)
+	case string(model.OnboardingStatusStuck):
+		return utils.Int64Ptr(constants.OnboardingStatus_Order_Stuck)
+	case string(model.OnboardingStatusDone):
+		return utils.Int64Ptr(constants.OnboardingStatus_Order_Done)
+	default:
+		return nil
+	}
 }
 
 type ActionOnboardingStatusMetadata struct {

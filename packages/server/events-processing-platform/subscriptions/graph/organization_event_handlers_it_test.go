@@ -100,6 +100,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	require.Equal(t, now, organization.CreatedAt)
 	require.NotNil(t, organization.UpdatedAt)
 	require.Equal(t, string(entity.OnboardingStatusNotApplicable), organization.OnboardingDetails.Status)
+	require.Nil(t, organization.OnboardingDetails.SortingOrder)
 
 	// verify action
 	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
@@ -494,6 +495,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, "DONE", organization.OnboardingDetails.Status)
+	require.Equal(t, int64(constants.OnboardingStatus_Order_Done), *organization.OnboardingDetails.SortingOrder)
 	require.Equal(t, "Some comments", organization.OnboardingDetails.Comments)
 	require.Equal(t, now, *organization.OnboardingDetails.UpdatedAt)
 

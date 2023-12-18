@@ -795,6 +795,7 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 							org.derivedRenewalLikelihood=$derivedRenewalLikelihood,
 							org.derivedRenewalLikelihoodOrder=$derivedRenewalLikelihoodOrder,
 							org.onboardingStatus=$onboardingStatus,
+							org.onboardingStatusOrder=$onboardingStatusOrder,
 							org.onboardingUpdatedAt=$onboardingUpdatedAt,
 							org.onboardingComments=$onboardingComments
 							`, tenant)
@@ -829,6 +830,7 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"derivedRenewalLikelihood":      organization.RenewalSummary.RenewalLikelihood,
 		"derivedRenewalLikelihoodOrder": organization.RenewalSummary.RenewalLikelihoodOrder,
 		"onboardingStatus":              string(organization.OnboardingDetails.Status),
+		"onboardingStatusOrder":         organization.OnboardingDetails.SortingOrder,
 		"onboardingUpdatedAt":           utils.TimePtrFirstNonNilNillableAsAny(organization.OnboardingDetails.UpdatedAt),
 		"onboardingComments":            organization.OnboardingDetails.Comments,
 		"now":                           utils.Now(),
