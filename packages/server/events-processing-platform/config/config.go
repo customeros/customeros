@@ -103,7 +103,7 @@ type ContractSubscription struct {
 type NotificationsSubscription struct {
 	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_ENABLED" envDefault:"false"`
 	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_GROUP_NAME" envDefault:"notifications-v1" validate:"required"`
-	Prefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_PREFIX" envDefault:"notifications-" validate:"required"`
+	Prefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_PREFIX" envDefault:"notifications-" validate:"required"`
 	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
 	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 }
