@@ -1081,18 +1081,17 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 							 SECOND: 0,
 							 NANOSECOND: 0o00000000
 						 }) AS beginOfMonth,
-						 currentDate + duration({MONTHS: 1}) - duration({NANOSECONDS: 1}) AS endOfMonth,
-						 currentDate + duration({MONTHS: 1}) AS startOfNextMonth
+						 currentDate + duration({MONTHS: 1}) - duration({NANOSECONDS: 1}) AS endOfMonth
 					
-					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth, startOfNextMonth
+					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth
 					
 					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
-					WITH year, month, beginOfMonth, endOfMonth, c.serviceStartedAt AS cssa, c.renewalCycle AS crc, c.renewalPeriods as crp, sli ORDER BY sli.startedAt ASC
+					WITH year, month, beginOfMonth, endOfMonth, c.id as cid, c.serviceStartedAt AS cssa, c.renewalCycle AS crc, c.renewalPeriods as crp, sli ORDER BY sli.startedAt ASC
 
-					WHERE c.serviceStartedAt IS NOT NULL AND (c.endedAt IS NULL OR c.endedAt > beginOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < beginOfMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
-					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, sli.parentId AS pp, COLLECT(sli) AS versions
-					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, pp, LAST(versions) AS lastSliVersion
-					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, pp, lastSliVersion
+					WHERE c.serviceStartedAt IS NOT NULL AND (c.endedAt IS NULL OR c.endedAt > endOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < beginOfMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, crc, crp, sli.parentId AS pp, COLLECT(sli) AS versions
+					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, crc, crp, pp, LAST(versions) AS lastSliVersion
+					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, crc, crp, pp, lastSliVersion
 					WHERE
 						CASE WHEN crc = 'ANNUALLY' THEN (CASE WHEN crp IS NULL THEN cssa.MONTH = beginOfMonth.MONTH ELSE cssa.MONTH = beginOfMonth.MONTH AND (beginOfMonth.YEAR - cssa.YEAR) %s = 0 END) ELSE 1 = 1 END AND
 						CASE WHEN crc = 'QUARTERLY' THEN
@@ -1105,8 +1104,8 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 							(lastSliVersion.billed = 'ANNUALLY' AND beginOfMonth.MONTH = cssa.MONTH)
 						ELSE 1 = 1 END
 					
-					WITH year, month, crc, COUNT(lastSliVersion) AS numberOfSliRenewedPerContract
-					RETURN year, month, COUNT(numberOfSliRenewedPerContract) AS numberOfContractsRenewed
+					WITH year, month, cid, lastSliVersion
+					return year, month, COUNT(DISTINCT(cid)) AS contractsWithRenewals
 				`, "% 12 + 1", tenant, tenant, "% crp"),
 			map[string]any{
 				"tenant":    tenant,
@@ -1182,7 +1181,7 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsChurnedData(ctx 
 					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, startOfNextMonth
 					
 					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
-					WITH year, month, beginOfMonth, startOfNextMonth, c.id as id, c.serviceStartedAt as serviceStartedAt, c.endedAt AS contractEndedAt sli ORDER BY sli.startedAt ASC
+					WITH year, month, beginOfMonth, startOfNextMonth, c.id as id, c.serviceStartedAt as serviceStartedAt, c.endedAt AS contractEndedAt, sli ORDER BY sli.startedAt ASC
 
 					WHERE c.serviceStartedAt IS NOT NULL AND contractEndedAt >= beginOfMonth AND contractEndedAt < startOfNextMonth AND sli.startedAt IS NOT NULL AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 					return year, month, COUNT(DISTINCT id) AS value
