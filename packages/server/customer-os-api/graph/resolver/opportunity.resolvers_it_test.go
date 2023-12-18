@@ -140,7 +140,7 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD,
 				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS},
-				renewalOpportunity.MaskFields)
+				renewalOpportunity.FieldsMask)
 			calledUpdateRenewalOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
 				Id: opportunityId,
