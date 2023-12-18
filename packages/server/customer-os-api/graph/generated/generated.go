@@ -8722,8 +8722,8 @@ type DashboardRevenueAtRisk {
 }
 
 type DashboardRetentionRate {
-    retentionRate: Int!
-    increasePercentage: Float!
+    retentionRate: Float!
+    increasePercentage: String!
     perMonth: [DashboardRetentionRatePerMonth]!
 }
 type DashboardRetentionRatePerMonth {
@@ -22269,9 +22269,9 @@ func (ec *executionContext) _DashboardRetentionRate_retentionRate(ctx context.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardRetentionRate_retentionRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22281,7 +22281,7 @@ func (ec *executionContext) fieldContext_DashboardRetentionRate_retentionRate(ct
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22313,9 +22313,9 @@ func (ec *executionContext) _DashboardRetentionRate_increasePercentage(ctx conte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardRetentionRate_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22325,7 +22325,7 @@ func (ec *executionContext) fieldContext_DashboardRetentionRate_increasePercenta
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil

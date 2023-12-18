@@ -12,7 +12,6 @@ import {
 import { useToken } from '@ui/utils';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 import { mockData } from './mock';
 import { Legend } from '../../Legend';
@@ -213,7 +212,7 @@ const TooltipEntry = ({
       </Flex>
       <Flex justify='flex-start'>
         <Text color='white' fontSize='sm'>
-          {formatCurrency(value)}
+          {value}
         </Text>
       </Flex>
     </Flex>

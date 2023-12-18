@@ -34,7 +34,7 @@ export const RetentionRate = () => {
   ) as RetentionRateDatum[];
 
   const stat = `${data?.dashboard_RetentionRate?.retentionRate ?? 0}%`;
-  const percentage = data?.dashboard_RetentionRate?.increasePercentage ?? 0;
+  const percentage = data?.dashboard_RetentionRate?.increasePercentage ?? '0';
 
   return (
     <ChartCard

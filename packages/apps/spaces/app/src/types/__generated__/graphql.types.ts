@@ -693,9 +693,9 @@ export type DashboardPeriodInput = {
 
 export type DashboardRetentionRate = {
   __typename?: 'DashboardRetentionRate';
-  increasePercentage: Scalars['Float'];
+  increasePercentage: Scalars['String'];
   perMonth: Array<Maybe<DashboardRetentionRatePerMonth>>;
-  retentionRate: Scalars['Int'];
+  retentionRate: Scalars['Float'];
 };
 
 export type DashboardRetentionRatePerMonth = {
