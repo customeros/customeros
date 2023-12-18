@@ -57,6 +57,23 @@ export const RenewalDetailsModal = ({
   isOpen,
   onClose,
 }: RenewalDetailsProps) => {
+  return (
+    <Modal
+      isOpen={data?.internalStage !== InternalStage.ClosedLost && isOpen}
+      onClose={onClose}
+    >
+      <ModalOverlay />
+      <RenewalDetailsForm data={data} onClose={onClose} />
+    </Modal>
+  );
+};
+
+interface RenewalDetailsFormProps {
+  data: Opportunity;
+  onClose?: () => void;
+}
+
+const RenewalDetailsForm = ({ data, onClose }: RenewalDetailsFormProps) => {
   const orgId = useParams()?.id as string;
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
@@ -125,7 +142,7 @@ export const RenewalDetailsModal = ({
         );
       },
       onSettled: () => {
-        onClose();
+        onClose?.();
 
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
@@ -145,17 +162,20 @@ export const RenewalDetailsModal = ({
         label: `${o.firstName} ${o.lastName}`.trim(),
       }));
   }, [usersData?.users?.content?.length]);
+  const defaultValues = useMemo(
+    () => ({
+      renewalLikelihood: data?.renewalLikelihood,
+      amount: data?.amount?.toString(),
+      reason: data?.comments,
+      owner: options?.find((o) => o.value === data?.owner?.id),
+    }),
+    [data?.renewalLikelihood, data?.amount, data?.comments, data?.owner?.id],
+  );
 
-  const defaultValues = {
-    renewalLikelihood: data?.renewalLikelihood,
-    amount: data?.amount?.toString(),
-    reason: data?.comments,
-    owner: options?.find((o) => o.value === data?.owner?.id),
-  };
-
-  const { state, handleSubmit } = useForm({
+  const { handleSubmit } = useForm({
     formId,
     defaultValues,
+    debug: true,
     onSubmit: async ({ amount, owner, reason, renewalLikelihood }) => {
       updateOpportunityMutation.mutate({
         input: {
@@ -178,11 +198,7 @@ export const RenewalDetailsModal = ({
   }, []);
 
   return (
-    <Modal
-      isOpen={data?.internalStage !== InternalStage.ClosedLost && isOpen}
-      onClose={onClose}
-    >
-      <ModalOverlay />
+    <>
       <ModalContent
         as='form'
         borderRadius='2xl'
@@ -244,7 +260,7 @@ export const RenewalDetailsModal = ({
             />
           )}
 
-          {!!state.values.renewalLikelihood && (
+          {!!data.renewalLikelihood && (
             <div>
               <Text as='label' htmlFor='reason' fontSize='sm'>
                 <b>Reason for change</b> (optional)
@@ -261,7 +277,12 @@ export const RenewalDetailsModal = ({
           )}
         </ModalBody>
         <ModalFooter p='6'>
-          <Button variant='outline' w='full' onClick={onClose}>
+          <Button
+            variant='outline'
+            w='full'
+            onClick={onClose}
+            isDisabled={updateOpportunityMutation.isLoading}
+          >
             Cancel
           </Button>
           <Button
@@ -270,12 +291,13 @@ export const RenewalDetailsModal = ({
             type='submit'
             variant='outline'
             colorScheme='primary'
+            isLoading={updateOpportunityMutation.isLoading}
           >
             Update
           </Button>
         </ModalFooter>
       </ModalContent>
-    </Modal>
+    </>
   );
 };
 
