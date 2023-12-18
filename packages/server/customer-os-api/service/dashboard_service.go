@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"math"
 	"math/rand"
 	"time"
 )
@@ -427,24 +428,71 @@ func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, sta
 		response.Months = append(response.Months, newData)
 	}
 
-	//currentMonthCount := response.Months[len(response.Months)-1].Count
-	//previousMonthCount := response.Months[len(response.Months)-2].Count
+	currentMonthCount := 0
+	previousMonthCount := 0
 
-	//var percentageDifference float64
-	//if previousMonthCount != 0 {
-	//	percentageDifference = float64((currentMonthCount - previousMonthCount) * 100 / previousMonthCount)
-	//} else {
-	//	if currentMonthCount != 0 {
-	//		percentageDifference = float64(100)
-	//	} else {
-	//		percentageDifference = float64(0)
-	//	}
-	//}
+	if len(response.Months) == 1 {
+		currentMonthCount = response.Months[len(response.Months)-1].Count
+	} else if len(response.Months) > 1 {
+		currentMonthCount = response.Months[len(response.Months)-1].Count
+		previousMonthCount = response.Months[len(response.Months)-2].Count
+	}
 
-	//TODO fix this when we know what we want to show
-	response.ThisMonthIncreasePercentage = 0
-	response.ThisMonthCount = response.Months[len(response.Months)-1].Count
+	response.ThisMonthCount = currentMonthCount
+	response.ThisMonthIncreasePercentage = ComputeNewCustomersDisplay(float64(previousMonthCount), float64(currentMonthCount))
 
 	return &response, nil
 
+}
+
+func ComputeNewCustomersDisplay(previousMonthCount, currentMonthCount float64) string {
+	var increase, percentage float64
+
+	if previousMonthCount == 0 {
+		increase = float64(currentMonthCount)
+		percentage = increase * 100
+	} else {
+		increase = float64(currentMonthCount - previousMonthCount)
+		percentage = math.Round((increase / float64(previousMonthCount)) * 100)
+	}
+
+	if math.Abs(percentage) > 100 {
+		if previousMonthCount == 0 {
+			return fmt.Sprintf("+%.0f", increase)
+		}
+		a := math.Abs(percentage) / 100
+		return printFloat(a, false) + "×"
+	}
+
+	return printFloat(percentage, true) + "%"
+}
+
+func printFloat(number float64, withSign bool) string {
+	if number == 0 {
+		return fmt.Sprintf("%.0f", number)
+	} else {
+		sign := ""
+		if withSign && number > 0 {
+			sign = "+"
+		}
+		if hasSingleDecimal(number) {
+			return fmt.Sprintf(sign+"%.1f", number)
+		} else if hasDecimals(number) {
+			return fmt.Sprintf(sign+"%.2f", number)
+		} else {
+			return fmt.Sprintf(sign+"%.0f", number)
+		}
+	}
+}
+
+func hasSingleDecimal(number float64) bool {
+	if number != math.Floor(number) {
+		decimalPart := number - math.Floor(number)
+		return decimalPart >= 0.1 && decimalPart < 1.0
+	}
+	return false
+}
+
+func hasDecimals(number float64) bool {
+	return number != float64(int(number))
 }

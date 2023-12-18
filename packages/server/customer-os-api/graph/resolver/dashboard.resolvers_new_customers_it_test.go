@@ -29,7 +29,7 @@ func TestQueryResolver_Dashboard_New_Customers_No_Period_No_Data_In_DB(t *testin
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 12, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -117,7 +117,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonthForHiddenOrg
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -157,7 +157,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedBeforeMonth(t *test
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -197,7 +197,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAfterMonth(t *testi
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -237,7 +237,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtBeginningOfMonth(
 	require.Nil(t, err)
 
 	require.Equal(t, 1, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -277,7 +277,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtEndOfMonth(t *tes
 	require.Nil(t, err)
 
 	require.Equal(t, 1, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -319,7 +319,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedImmedi
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -361,7 +361,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedAtEndO
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -403,7 +403,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedNextMo
 	require.Nil(t, err)
 
 	require.Equal(t, 1, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -452,7 +452,7 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_Sa
 	require.Nil(t, err)
 
 	require.Equal(t, 1, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -501,7 +501,7 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInDifferen
 	require.Nil(t, err)
 
 	require.Equal(t, 1, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -551,7 +551,7 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_Di
 	require.Nil(t, err)
 
 	require.Equal(t, 2, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+2", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -632,7 +632,7 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 12, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.PerMonth[0].Count)
@@ -685,7 +685,7 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount2(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, 12, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+9%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 12, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	require.Equal(t, 1, dashboardReport.Dashboard_NewCustomers.PerMonth[0].Count)

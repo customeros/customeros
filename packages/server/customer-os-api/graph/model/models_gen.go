@@ -564,7 +564,7 @@ type DashboardMRRPerCustomerPerMonth struct {
 
 type DashboardNewCustomers struct {
 	ThisMonthCount              int                              `json:"thisMonthCount"`
-	ThisMonthIncreasePercentage float64                          `json:"thisMonthIncreasePercentage"`
+	ThisMonthIncreasePercentage string                           `json:"thisMonthIncreasePercentage"`
 	PerMonth                    []*DashboardNewCustomersPerMonth `json:"perMonth"`
 }
 

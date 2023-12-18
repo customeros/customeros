@@ -31,7 +31,7 @@ export const NewCustomers = () => {
   const stat = `${data?.dashboard_NewCustomers?.thisMonthCount ?? 0}`;
 
   const percentage =
-    data?.dashboard_NewCustomers?.thisMonthIncreasePercentage ?? 0;
+    data?.dashboard_NewCustomers?.thisMonthIncreasePercentage ?? '0';
 
   return (
     <ChartCard

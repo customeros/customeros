@@ -85,14 +85,14 @@ func (r *queryResolver) DashboardCustomerMap(ctx context.Context) ([]*model.Dash
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	newCustomersData, err := r.Services.QueryService.GetDashboardCustomerMapData(ctx)
+	data, err := r.Services.QueryService.GetDashboardCustomerMapData(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the customer map")
 		return nil, nil
 	}
 
-	return mapper.MapDashboardCustomerMapDataList(newCustomersData), nil
+	return mapper.MapDashboardCustomerMapDataList(data), nil
 }
 
 // DashboardMRRPerCustomer is the resolver for the dashboard_MRRPerCustomer field.
@@ -109,14 +109,14 @@ func (r *queryResolver) DashboardMRRPerCustomer(ctx context.Context, period *mod
 		return nil, nil
 	}
 
-	newCustomersData, err := r.Services.QueryService.GetDashboardMRRPerCustomerData(ctx, startTime, endTime)
+	data, err := r.Services.QueryService.GetDashboardMRRPerCustomerData(ctx, startTime, endTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the MRR per customer data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
-	return mapper.MapDashboardMRRPerCustomerData(newCustomersData), nil
+	return mapper.MapDashboardMRRPerCustomerData(data), nil
 }
 
 // DashboardGrossRevenueRetention is the resolver for the dashboard_GrossRevenueRetention field.
@@ -133,14 +133,14 @@ func (r *queryResolver) DashboardGrossRevenueRetention(ctx context.Context, peri
 		return nil, nil
 	}
 
-	newCustomersData, err := r.Services.QueryService.GetDashboardGrossRevenueRetentionData(ctx, startTime, endTime)
+	data, err := r.Services.QueryService.GetDashboardGrossRevenueRetentionData(ctx, startTime, endTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the revenue at risk data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
-	return mapper.MapDashboardGrossRevenueRetentionData(newCustomersData), nil
+	return mapper.MapDashboardGrossRevenueRetentionData(data), nil
 }
 
 // DashboardARRBreakdown is the resolver for the dashboard_ARRBreakdown field.
@@ -157,14 +157,14 @@ func (r *queryResolver) DashboardARRBreakdown(ctx context.Context, period *model
 		return nil, nil
 	}
 
-	newCustomersData, err := r.Services.QueryService.GetDashboardARRBreakdownData(ctx, startTime, endTime)
+	data, err := r.Services.QueryService.GetDashboardARRBreakdownData(ctx, startTime, endTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the arr breakdown data for period %s - %s", startTime, endTime)
 		return nil, nil
 	}
 
-	return mapper.MapDashboardARRBreakdownData(newCustomersData), nil
+	return mapper.MapDashboardARRBreakdownData(data), nil
 }
 
 // DashboardRevenueAtRisk is the resolver for the dashboard_RevenueAtRisk field.
@@ -181,14 +181,14 @@ func (r *queryResolver) DashboardRevenueAtRisk(ctx context.Context, period *mode
 		return nil, nil
 	}
 
-	newCustomersData, err := r.Services.QueryService.GetDashboardRevenueAtRiskData(ctx, startTime, endTime)
+	data, err := r.Services.QueryService.GetDashboardRevenueAtRiskData(ctx, startTime, endTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the revenue at risk data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
-	return mapper.MapDashboardRevenueAtRiskData(newCustomersData), nil
+	return mapper.MapDashboardRevenueAtRiskData(data), nil
 }
 
 // DashboardRetentionRate is the resolver for the dashboard_RetentionRate field.
@@ -205,14 +205,14 @@ func (r *queryResolver) DashboardRetentionRate(ctx context.Context, period *mode
 		return nil, nil
 	}
 
-	newCustomersData, err := r.Services.QueryService.GetDashboardRetentionRateData(ctx, startTime, endTime)
+	data, err := r.Services.QueryService.GetDashboardRetentionRateData(ctx, startTime, endTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the retention rate data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
-	return mapper.MapDashboardRetentionRateData(newCustomersData), nil
+	return mapper.MapDashboardRetentionRateData(data), nil
 }
 
 // DashboardNewCustomers is the resolver for the dashboard_NewCustomers field.
@@ -229,14 +229,14 @@ func (r *queryResolver) DashboardNewCustomers(ctx context.Context, period *model
 		return nil, nil
 	}
 
-	newCustomersData, err := r.Services.QueryService.GetDashboardNewCustomersData(ctx, startTime, endTime)
+	data, err := r.Services.QueryService.GetDashboardNewCustomersData(ctx, startTime, endTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get new customers data for period %s - %s", period.Start.String(), period.End.String())
 		return nil, nil
 	}
 
-	return mapper.MapDashboardNewCustomersData(newCustomersData), nil
+	return mapper.MapDashboardNewCustomersData(data), nil
 }
 
 // DashboardCustomerMap returns generated.DashboardCustomerMapResolver implementation.
