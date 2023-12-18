@@ -189,15 +189,15 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 			AppSource: appSource,
 		},
 	}
-	maskFields := make([]opportunitypb.OpportunityMaskField, 0)
+	fieldsMask := make([]opportunitypb.OpportunityMaskField, 0)
 	if amount != nil {
-		maskFields = append(maskFields, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT)
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT)
 	}
 	if comments != nil {
-		maskFields = append(maskFields, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS)
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS)
 	}
-	maskFields = append(maskFields, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD)
-	opportunityRenewalUpdateRequest.MaskFields = maskFields
+	fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD)
+	opportunityRenewalUpdateRequest.FieldsMask = fieldsMask
 
 	switch renewalLikelihood {
 	case entity.OpportunityRenewalLikelihoodHigh:
