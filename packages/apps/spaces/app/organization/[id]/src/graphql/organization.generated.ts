@@ -70,6 +70,7 @@ export type OrganizationQuery = {
         __typename?: 'OnboardingDetails';
         status: Types.OnboardingStatus;
         comments?: string | null;
+        updatedAt?: any | null;
       } | null;
     } | null;
   } | null;
@@ -121,6 +122,7 @@ export const OrganizationDocument = `
       onboarding {
         status
         comments
+        updatedAt
       }
     }
   }
