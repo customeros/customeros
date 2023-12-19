@@ -46,6 +46,7 @@ export enum ActionType {
   ContractRenewed = 'CONTRACT_RENEWED',
   ContractStatusUpdated = 'CONTRACT_STATUS_UPDATED',
   Created = 'CREATED',
+  OnboardingStatusChanged = 'ONBOARDING_STATUS_CHANGED',
   RenewalForecastUpdated = 'RENEWAL_FORECAST_UPDATED',
   RenewalLikelihoodUpdated = 'RENEWAL_LIKELIHOOD_UPDATED',
   ServiceLineItemBilledTypeOnceCreated = 'SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED',
@@ -659,7 +660,7 @@ export type DashboardGrossRevenueRetentionPerMonth = {
 
 export type DashboardMrrPerCustomer = {
   __typename?: 'DashboardMRRPerCustomer';
-  increasePercentage: Scalars['Float'];
+  increasePercentage: Scalars['String'];
   mrrPerCustomer: Scalars['Float'];
   perMonth: Array<Maybe<DashboardMrrPerCustomerPerMonth>>;
 };
@@ -675,7 +676,7 @@ export type DashboardNewCustomers = {
   __typename?: 'DashboardNewCustomers';
   perMonth: Array<Maybe<DashboardNewCustomersPerMonth>>;
   thisMonthCount: Scalars['Int'];
-  thisMonthIncreasePercentage: Scalars['Float'];
+  thisMonthIncreasePercentage: Scalars['String'];
 };
 
 export type DashboardNewCustomersPerMonth = {
@@ -692,9 +693,9 @@ export type DashboardPeriodInput = {
 
 export type DashboardRetentionRate = {
   __typename?: 'DashboardRetentionRate';
-  increasePercentage: Scalars['Float'];
+  increasePercentage: Scalars['String'];
   perMonth: Array<Maybe<DashboardRetentionRatePerMonth>>;
-  retentionRate: Scalars['Int'];
+  retentionRate: Scalars['Float'];
 };
 
 export type DashboardRetentionRatePerMonth = {
@@ -702,6 +703,7 @@ export type DashboardRetentionRatePerMonth = {
   churnCount: Scalars['Int'];
   month: Scalars['Int'];
   renewCount: Scalars['Int'];
+  year: Scalars['Int'];
 };
 
 export type DashboardRevenueAtRisk = {
@@ -2643,7 +2645,7 @@ export type Query = {
    */
   contacts: ContactsPage;
   contract: Contract;
-  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE */
+  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE, ONBOARDING_STATUS */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   dashboard_ARRBreakdown?: Maybe<DashboardArrBreakdown>;
   dashboard_CustomerMap?: Maybe<Array<DashboardCustomerMap>>;
