@@ -49,6 +49,7 @@ type DashboardRepository interface {
 	GetDashboardARRBreakdownRenewalsData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardRetentionRateContractsRenewalsData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardRetentionRateContractsChurnedData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
+	GetDashboardAverageTimeToOnboardPerMonth(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 }
 
 type dashboardRepository struct {
@@ -1257,6 +1258,90 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsChurnedData(ctx 
 				"value": value,
 			}
 
+			results = append(results, record)
+		}
+	}
+
+	return results, nil
+}
+
+func (r *dashboardRepository) GetDashboardAverageTimeToOnboardPerMonth(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardAverageTimeToOnboardPerMonth")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	cypher := fmt.Sprintf(`
+					WITH $startDate AS startDate, $endDate AS endDate
+					WITH startDate.YEAR AS startYear, startDate.MONTH AS startMonth, endDate.YEAR AS endYear, endDate.MONTH AS endMonth
+					WITH RANGE(startYear * 12 + startMonth - 1, endYear * 12 + endMonth - 1) AS monthsRange
+					UNWIND monthsRange AS monthsSinceEpoch
+					WITH datetime({
+						YEAR: monthsSinceEpoch / 12,
+						MONTH: monthsSinceEpoch %s,
+						DAY: 1
+					}) AS currentDate
+					WITH currentDate,
+						 datetime({
+							 YEAR: currentDate.YEAR,
+							 MONTH: currentDate.MONTH,
+							 DAY: 1,
+							 HOUR: 0,
+							 MINUTE: 0,
+							 SECOND: 0,
+							 NANOSECOND: 0o00000000
+						 }) AS beginOfMonth,
+						 currentDate + duration({MONTHS: 1}) - duration({NANOSECONDS: 1}) AS endOfMonth
+					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth
+						MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+						OPTIONAL MATCH (o)<-[:ACTION_ON]-(action:Action {type:"ONBOARDING_STATUS_CHANGED"})
+							WHERE action.status = 'DONE' 
+							AND action.createdAt >= beginOfMonth
+  							AND action.createdAt <= endOfMonth 
+					WITH year, month, o, action
+						OPTIONAL MATCH (o)<-[:ACTION_ON]-(previousDone:Action {type:"ONBOARDING_STATUS_CHANGED"})
+							WHERE previousDone.createdAt < action.createdAt
+  							AND previousDone.status = 'DONE'
+					WITH year, month, o, action, max(previousDone.createdAt) as previousDoneCreatedAt
+						OPTIONAL MATCH (o)<-[:ACTION_ON]-(startAction:Action {type:"ONBOARDING_STATUS_CHANGED"})
+							WHERE startAction.createdAt < action.createdAt
+							AND startAction.status <> 'DONE'
+							AND (previousDoneCreatedAt IS NULL OR startAction.createdAt>previousDoneCreatedAt)
+					WITH year, month, action.createdAt as endDate, coalesce(min(startAction.createdAt), action.createdAt) as startDate
+					RETURN year, month, avg(duration.inSeconds(startDate, endDate)) AS durationInSeconds
+				`, "% 12 + 1")
+	params := map[string]any{
+		"tenant":    tenant,
+		"startDate": startDate,
+		"endDate":   endDate,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	if dbRecords != nil {
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			record := map[string]interface{}{
+				"year":  v.Values[0].(int64),
+				"month": v.Values[1].(int64),
+			}
+			if v.Values[2] != nil {
+				record["duration"] = v.Values[2].(neo4j.Duration)
+			}
 			results = append(results, record)
 		}
 	}

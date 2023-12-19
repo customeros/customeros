@@ -335,6 +335,18 @@ type ComplexityRoot struct {
 		HighConfidence func(childComplexity int) int
 	}
 
+	DashboardTimeToOnboard struct {
+		IncreasePercentage func(childComplexity int) int
+		PerMonth           func(childComplexity int) int
+		TimeToOnboard      func(childComplexity int) int
+	}
+
+	DashboardTimeToOnboardPerMonth struct {
+		Month func(childComplexity int) int
+		Value func(childComplexity int) int
+		Year  func(childComplexity int) int
+	}
+
 	DeleteResponse struct {
 		Accepted  func(childComplexity int) int
 		Completed func(childComplexity int) int
@@ -938,6 +950,7 @@ type ComplexityRoot struct {
 		DashboardNewCustomers                 func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardRetentionRate                func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardRevenueAtRisk                func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardTimeToOnboard                func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardViewOrganizations            func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		Email                                 func(childComplexity int, id string) int
 		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
@@ -1383,6 +1396,7 @@ type QueryResolver interface {
 	DashboardRevenueAtRisk(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRevenueAtRisk, error)
 	DashboardRetentionRate(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRetentionRate, error)
 	DashboardNewCustomers(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardNewCustomers, error)
+	DashboardTimeToOnboard(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardTimeToOnboard, error)
 	Email(ctx context.Context, id string) (*model.Email, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
@@ -2693,6 +2707,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DashboardRevenueAtRisk.HighConfidence(childComplexity), true
+
+	case "DashboardTimeToOnboard.increasePercentage":
+		if e.complexity.DashboardTimeToOnboard.IncreasePercentage == nil {
+			break
+		}
+
+		return e.complexity.DashboardTimeToOnboard.IncreasePercentage(childComplexity), true
+
+	case "DashboardTimeToOnboard.perMonth":
+		if e.complexity.DashboardTimeToOnboard.PerMonth == nil {
+			break
+		}
+
+		return e.complexity.DashboardTimeToOnboard.PerMonth(childComplexity), true
+
+	case "DashboardTimeToOnboard.timeToOnboard":
+		if e.complexity.DashboardTimeToOnboard.TimeToOnboard == nil {
+			break
+		}
+
+		return e.complexity.DashboardTimeToOnboard.TimeToOnboard(childComplexity), true
+
+	case "DashboardTimeToOnboardPerMonth.month":
+		if e.complexity.DashboardTimeToOnboardPerMonth.Month == nil {
+			break
+		}
+
+		return e.complexity.DashboardTimeToOnboardPerMonth.Month(childComplexity), true
+
+	case "DashboardTimeToOnboardPerMonth.value":
+		if e.complexity.DashboardTimeToOnboardPerMonth.Value == nil {
+			break
+		}
+
+		return e.complexity.DashboardTimeToOnboardPerMonth.Value(childComplexity), true
+
+	case "DashboardTimeToOnboardPerMonth.year":
+		if e.complexity.DashboardTimeToOnboardPerMonth.Year == nil {
+			break
+		}
+
+		return e.complexity.DashboardTimeToOnboardPerMonth.Year(childComplexity), true
 
 	case "DeleteResponse.accepted":
 		if e.complexity.DeleteResponse.Accepted == nil {
@@ -6872,6 +6928,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.DashboardRevenueAtRisk(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
+	case "Query.dashboard_TimeToOnboard":
+		if e.complexity.Query.DashboardTimeToOnboard == nil {
+			break
+		}
+
+		args, err := ec.field_Query_dashboard_TimeToOnboard_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DashboardTimeToOnboard(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
+
 	case "Query.dashboardView_Organizations":
 		if e.complexity.Query.DashboardViewOrganizations == nil {
 			break
@@ -8664,6 +8732,7 @@ enum CustomFieldTemplateType {
     dashboard_RevenueAtRisk(period: DashboardPeriodInput): DashboardRevenueAtRisk
     dashboard_RetentionRate(period: DashboardPeriodInput): DashboardRetentionRate
     dashboard_NewCustomers(period: DashboardPeriodInput): DashboardNewCustomers
+    dashboard_TimeToOnboard(period: DashboardPeriodInput): DashboardTimeToOnboard
 }
 
 input DashboardPeriodInput {
@@ -8684,6 +8753,7 @@ type DashboardMRRPerCustomer {
     increasePercentage: String!
     perMonth: [DashboardMRRPerCustomerPerMonth]!
 }
+
 type DashboardMRRPerCustomerPerMonth {
     year: Int!
     month: Int!
@@ -8748,6 +8818,18 @@ enum DashboardCustomerMapState {
     OK
     AT_RISK
     CHURNED
+}
+
+type DashboardTimeToOnboard {
+    timeToOnboard: Float
+    increasePercentage: Float
+    perMonth: [DashboardTimeToOnboardPerMonth!]!
+}
+
+type DashboardTimeToOnboardPerMonth {
+    year: Int!
+    month: Int!
+    value: Float!
 }`, BuiltIn: false},
 	{Name: "../schemas/directive.graphqls", Input: `directive @goField(
     forceResolver: Boolean
@@ -13628,6 +13710,21 @@ func (ec *executionContext) field_Query_dashboard_RetentionRate_args(ctx context
 }
 
 func (ec *executionContext) field_Query_dashboard_RevenueAtRisk_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["period"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_dashboard_TimeToOnboard_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *model.DashboardPeriodInput
@@ -22639,6 +22736,272 @@ func (ec *executionContext) _DashboardRevenueAtRisk_atRisk(ctx context.Context, 
 func (ec *executionContext) fieldContext_DashboardRevenueAtRisk_atRisk(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DashboardRevenueAtRisk",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardTimeToOnboard_timeToOnboard(ctx context.Context, field graphql.CollectedField, obj *model.DashboardTimeToOnboard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardTimeToOnboard_timeToOnboard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TimeToOnboard, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardTimeToOnboard_timeToOnboard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardTimeToOnboard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardTimeToOnboard_increasePercentage(ctx context.Context, field graphql.CollectedField, obj *model.DashboardTimeToOnboard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardTimeToOnboard_increasePercentage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IncreasePercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardTimeToOnboard_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardTimeToOnboard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardTimeToOnboard_perMonth(ctx context.Context, field graphql.CollectedField, obj *model.DashboardTimeToOnboard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardTimeToOnboard_perMonth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerMonth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DashboardTimeToOnboardPerMonth)
+	fc.Result = res
+	return ec.marshalNDashboardTimeToOnboardPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardTimeToOnboardPerMonthᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardTimeToOnboard_perMonth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardTimeToOnboard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "year":
+				return ec.fieldContext_DashboardTimeToOnboardPerMonth_year(ctx, field)
+			case "month":
+				return ec.fieldContext_DashboardTimeToOnboardPerMonth_month(ctx, field)
+			case "value":
+				return ec.fieldContext_DashboardTimeToOnboardPerMonth_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardTimeToOnboardPerMonth", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardTimeToOnboardPerMonth_year(ctx context.Context, field graphql.CollectedField, obj *model.DashboardTimeToOnboardPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardTimeToOnboardPerMonth_year(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Year, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardTimeToOnboardPerMonth_year(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardTimeToOnboardPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardTimeToOnboardPerMonth_month(ctx context.Context, field graphql.CollectedField, obj *model.DashboardTimeToOnboardPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardTimeToOnboardPerMonth_month(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Month, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardTimeToOnboardPerMonth_month(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardTimeToOnboardPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardTimeToOnboardPerMonth_value(ctx context.Context, field graphql.CollectedField, obj *model.DashboardTimeToOnboardPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardTimeToOnboardPerMonth_value(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardTimeToOnboardPerMonth_value(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardTimeToOnboardPerMonth",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -54470,6 +54833,66 @@ func (ec *executionContext) fieldContext_Query_dashboard_NewCustomers(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_dashboard_TimeToOnboard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboard_TimeToOnboard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardTimeToOnboard(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DashboardTimeToOnboard)
+	fc.Result = res
+	return ec.marshalODashboardTimeToOnboard2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardTimeToOnboard(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboard_TimeToOnboard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "timeToOnboard":
+				return ec.fieldContext_DashboardTimeToOnboard_timeToOnboard(ctx, field)
+			case "increasePercentage":
+				return ec.fieldContext_DashboardTimeToOnboard_increasePercentage(ctx, field)
+			case "perMonth":
+				return ec.fieldContext_DashboardTimeToOnboard_perMonth(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardTimeToOnboard", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboard_TimeToOnboard_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_email(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_email(ctx, field)
 	if err != nil {
@@ -69633,6 +70056,98 @@ func (ec *executionContext) _DashboardRevenueAtRisk(ctx context.Context, sel ast
 	return out
 }
 
+var dashboardTimeToOnboardImplementors = []string{"DashboardTimeToOnboard"}
+
+func (ec *executionContext) _DashboardTimeToOnboard(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardTimeToOnboard) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardTimeToOnboardImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardTimeToOnboard")
+		case "timeToOnboard":
+			out.Values[i] = ec._DashboardTimeToOnboard_timeToOnboard(ctx, field, obj)
+		case "increasePercentage":
+			out.Values[i] = ec._DashboardTimeToOnboard_increasePercentage(ctx, field, obj)
+		case "perMonth":
+			out.Values[i] = ec._DashboardTimeToOnboard_perMonth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var dashboardTimeToOnboardPerMonthImplementors = []string{"DashboardTimeToOnboardPerMonth"}
+
+func (ec *executionContext) _DashboardTimeToOnboardPerMonth(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardTimeToOnboardPerMonth) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardTimeToOnboardPerMonthImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardTimeToOnboardPerMonth")
+		case "year":
+			out.Values[i] = ec._DashboardTimeToOnboardPerMonth_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "month":
+			out.Values[i] = ec._DashboardTimeToOnboardPerMonth_month(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "value":
+			out.Values[i] = ec._DashboardTimeToOnboardPerMonth_value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var deleteResponseImplementors = []string{"DeleteResponse"}
 
 func (ec *executionContext) _DeleteResponse(ctx context.Context, sel ast.SelectionSet, obj *model.DeleteResponse) graphql.Marshaler {
@@ -75816,6 +76331,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "dashboard_TimeToOnboard":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboard_TimeToOnboard(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "email":
 			field := field
 
@@ -78643,6 +79177,60 @@ func (ec *executionContext) marshalNDashboardRetentionRatePerMonth2ᚕᚖgithub�
 	wg.Wait()
 
 	return ret
+}
+
+func (ec *executionContext) marshalNDashboardTimeToOnboardPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardTimeToOnboardPerMonthᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardTimeToOnboardPerMonth) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDashboardTimeToOnboardPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardTimeToOnboardPerMonth(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDashboardTimeToOnboardPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardTimeToOnboardPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardTimeToOnboardPerMonth) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DashboardTimeToOnboardPerMonth(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx context.Context, v interface{}) (model.DataSource, error) {
@@ -81595,6 +82183,13 @@ func (ec *executionContext) marshalODashboardRevenueAtRisk2ᚖgithubᚗcomᚋope
 		return graphql.Null
 	}
 	return ec._DashboardRevenueAtRisk(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODashboardTimeToOnboard2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardTimeToOnboard(ctx context.Context, sel ast.SelectionSet, v *model.DashboardTimeToOnboard) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardTimeToOnboard(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Email) graphql.Marshaler {

@@ -36,6 +36,7 @@ type DashboardService interface {
 	GetDashboardRevenueAtRiskData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardRevenueAtRiskData, error)
 	GetDashboardRetentionRateData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardRetentionRateData, error)
 	GetDashboardNewCustomersData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardNewCustomersData, error)
+	GetDashboardAverageTimeToOnboardPerMonth(ctx context.Context, start, end time.Time) (*model.DashboardTimeToOnboard, error)
 }
 
 type dashboardService struct {
@@ -470,6 +471,68 @@ func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, sta
 
 }
 
+func (s *dashboardService) GetDashboardAverageTimeToOnboardPerMonth(ctx context.Context, start, end time.Time) (*model.DashboardTimeToOnboard, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardAverageTimeToOnboardPerMonth")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("start", start), log.Object("end", end))
+
+	data, err := s.repositories.DashboardRepository.GetDashboardAverageTimeToOnboardPerMonth(ctx, common.GetContext(ctx).Tenant, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	response := model.DashboardTimeToOnboard{}
+
+	for _, record := range data {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+
+		newData := &model.DashboardTimeToOnboardPerMonth{
+			Year:  int(year),
+			Month: int(month),
+		}
+		_, ok := record["duration"]
+		if ok {
+			duration := record["duration"].(neo4j.Duration)
+			totalSeconds := duration.Seconds + duration.Days*86400 + duration.Months*30*86400
+			days := float64(float64(totalSeconds) / 86400.0) // 86400 seconds in a day
+			roundedDays := float64(int64(days*10+0.5)) / 10  // Round to one decimal place
+			if roundedDays == 0.0 && totalSeconds > 0 {
+				roundedDays = 0.1
+			}
+			newData.Value = roundedDays
+		} else {
+			newData.Value = 0.0
+		}
+
+		response.PerMonth = append(response.PerMonth, newData)
+	}
+
+	currentMonth := 0.0
+	previousMonth := 0.0
+
+	if len(response.PerMonth) == 1 {
+		currentMonth = response.PerMonth[len(response.PerMonth)-1].Value
+	} else if len(response.PerMonth) > 1 {
+		currentMonth = response.PerMonth[len(response.PerMonth)-1].Value
+		previousMonth = response.PerMonth[len(response.PerMonth)-2].Value
+	}
+	if currentMonth == 0.0 {
+		response.TimeToOnboard = nil
+	} else {
+		response.TimeToOnboard = &currentMonth
+	}
+	if currentMonth == 0.0 || previousMonth == 0.0 {
+		response.IncreasePercentage = nil
+	} else {
+		percentageChange := calculatePercentageChange(previousMonth, currentMonth)
+		response.IncreasePercentage = &percentageChange
+	}
+
+	return &response, nil
+}
+
 func ComputeNumbersDisplay(previousMonthCount, currentMonthCount float64) string {
 	var increase, percentage float64
 
@@ -540,4 +603,14 @@ func hasSingleDecimal(number float64) bool {
 
 func hasDecimals(number float64) bool {
 	return number != float64(int(number))
+}
+
+func calculatePercentageChange(a, b float64) float64 {
+	if a == 0 {
+		if b == 0 {
+			return 0.0
+		}
+		return math.Round((b-a)/b*1000) / 10 // Keep only one decimal place
+	}
+	return math.Round((b-a)/a*1000) / 10 // Keep only one decimal place
 }
