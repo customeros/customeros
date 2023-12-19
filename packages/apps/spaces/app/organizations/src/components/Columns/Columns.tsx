@@ -24,6 +24,7 @@ import { AvatarCell } from './Cells/avatar/AvatarCell';
 import { WebsiteCell } from './Cells/website/WebsiteCell';
 import { OwnerFilter, filterOwnerFn } from './Filters/Owner';
 import { WebsiteFilter, filterWebsiteFn } from './Filters/Website';
+import { OnboardingCell } from './Cells/onboarding/OnboardingCell';
 import { OrganizationCell } from './Cells/organization/OrganizationCell';
 import { RenewalForecastCell } from './Cells/renewal/RenewalForecastCell';
 import { LastTouchpointCell } from './Cells/touchpoint/LastTouchpointCell';
@@ -170,6 +171,34 @@ export const columns = [
         startColor='gray.300'
         endColor='gray.300'
       />
+    ),
+  }),
+  columnHelper.accessor('accountDetails', {
+    id: 'ONBOARDING_STATUS',
+    minSize: 200,
+    cell: (props) => {
+      const status = props.getValue()?.onboarding?.status;
+      const updatedAt = props.getValue()?.onboarding?.updatedAt;
+
+      return <OnboardingCell status={status} updatedAt={updatedAt} />;
+    },
+    header: (props) => (
+      <THead
+        id='onboardingStatus'
+        title='Onboarding'
+        // renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
+        {...getTHeadProps<Organization>(props)}
+      />
+    ),
+    skeleton: () => (
+      <Flex flexDir='column' gap='1'>
+        <Skeleton
+          width='25%'
+          height='18px'
+          startColor='gray.300'
+          endColor='gray.300'
+        />
+      </Flex>
     ),
   }),
   columnHelper.accessor('accountDetails', {

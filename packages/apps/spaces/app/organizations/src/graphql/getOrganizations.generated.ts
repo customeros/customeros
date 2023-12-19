@@ -67,6 +67,12 @@ export type GetOrganizationsQuery = {
           renewalLikelihood?: Types.OpportunityRenewalLikelihood | null;
           nextRenewalDate?: any | null;
         } | null;
+        onboarding?: {
+          __typename?: 'OnboardingDetails';
+          status: Types.OnboardingStatus;
+          comments?: string | null;
+          updatedAt?: any | null;
+        } | null;
       } | null;
       locations: Array<{
         __typename?: 'Location';
@@ -218,6 +224,11 @@ export const GetOrganizationsDocument = `
           maxArrForecast
           renewalLikelihood
           nextRenewalDate
+        }
+        onboarding {
+          status
+          comments
+          updatedAt
         }
       }
       locations {

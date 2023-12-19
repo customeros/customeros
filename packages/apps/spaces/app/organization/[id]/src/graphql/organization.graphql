@@ -43,6 +43,7 @@ query Organization($id: ID!) {
       onboarding {
         status
         comments
+        updatedAt
       }
     }
   }

@@ -3,7 +3,10 @@
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
+import set from 'lodash/set';
+import { produce } from 'immer';
 import { match } from 'ts-pattern';
+import { useQueryClient } from '@tanstack/react-query';
 import { OptionProps, chakraComponents } from 'chakra-react-select';
 
 import { Flex } from '@ui/layout/Flex';
@@ -17,8 +20,13 @@ import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { OnboardingStatus, OnboardingDetails } from '@graphql/types';
 import { useUpdateOnboardingStatusMutation } from '@organization/src/graphql/updateOnboardingStatus.generated';
+import {
+  OrganizationQuery,
+  useOrganizationQuery,
+} from '@organization/src/graphql/organization.generated';
 import {
   Modal,
   ModalBody,
@@ -26,6 +34,7 @@ import {
   ModalHeader,
   ModalContent,
   ModalOverlay,
+  ModalCloseButton,
 } from '@ui/overlay/Modal';
 
 import { options } from './util';
@@ -65,11 +74,52 @@ export const OnboardingStatusModal = ({
   onClose,
 }: OnboardingStatusModalProps) => {
   const client = getGraphQLClient();
+  const queryClient = useQueryClient();
   const id = useParams()?.id as string;
-  const updateOnboardingStatus = useUpdateOnboardingStatusMutation(client);
+  const queryKey = useOrganizationQuery.getKey({ id });
+  const updateOnboardingStatus = useUpdateOnboardingStatusMutation(client, {
+    onMutate: ({ input }) => {
+      queryClient.cancelQueries({ queryKey });
+
+      const previousEntries =
+        queryClient.getQueryData<OrganizationQuery>(queryKey);
+      queryClient.setQueryData<OrganizationQuery>(queryKey, (currentCache) => {
+        return produce(currentCache, (draft) => {
+          if (!draft) return;
+          set<OrganizationQuery>(
+            draft,
+            'organization.accountDetails.onboarding',
+            { ...input, updatedAt: new Date().toISOString() },
+          );
+        });
+      });
+
+      return { previousEntries };
+    },
+    onSuccess: () => {
+      toastSuccess(
+        'Onboarding status updated',
+        `${id}-onboarding-status-update`,
+      );
+    },
+    onError: (_, __, context) => {
+      queryClient.setQueryData<OrganizationQuery>(
+        queryKey,
+        context?.previousEntries,
+      );
+      toastError(
+        'Failed to update onboarding status',
+        `${id}-onboarding-status-update-error`,
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
+      onClose();
+    },
+  });
 
   const defaultValues = OnboardingStatusDto.toForm(data);
-  const { state, handleSubmit } = useForm<OnboardingStatusForm>({
+  const { handleSubmit } = useForm<OnboardingStatusForm>({
     formId,
     defaultValues,
     onSubmit: async (values) => {
@@ -77,12 +127,17 @@ export const OnboardingStatusModal = ({
         input: OnboardingStatusDto.toPayload({ id, ...values }),
       });
     },
+    stateReducer: (_, action, next) => {
+      if (action.type === 'HAS_SUBMITTED') {
+        return { ...next, values: { ...next.values, comments: '' } };
+      }
+
+      return next;
+    },
   });
 
-  const icon = getIcon(state?.values?.status?.value);
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} closeOnEsc>
       <ModalOverlay />
       <ModalContent
         as='form'
@@ -95,6 +150,7 @@ export const OnboardingStatusModal = ({
           backgroundPositionY: '-7px',
         }}
       >
+        <ModalCloseButton />
         <ModalHeader>
           <FeaturedIcon size='lg' colorScheme='success'>
             <Flag04 />
@@ -110,18 +166,18 @@ export const OnboardingStatusModal = ({
             isLabelVisible
             formId={formId}
             options={options}
-            leftElement={icon}
+            leftElement={<Flag04 color='gray.500' mr='3' />}
             isDisabled={updateOnboardingStatus.isLoading}
             components={{
               Option: ({
                 data,
                 children,
-                ...props
+                ...rest
               }: OptionProps<SelectOption<OnboardingStatus>>) => {
                 const icon = getIcon(data.value);
 
                 return (
-                  <chakraComponents.Option data={data} {...props}>
+                  <chakraComponents.Option data={data} {...rest}>
                     {icon}
                     {children}
                   </chakraComponents.Option>

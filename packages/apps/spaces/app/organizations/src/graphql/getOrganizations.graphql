@@ -35,6 +35,11 @@ query getOrganizations(
           renewalLikelihood
           nextRenewalDate
         }
+        onboarding {
+          status
+          comments
+          updatedAt
+        }
       }
 
       locations {

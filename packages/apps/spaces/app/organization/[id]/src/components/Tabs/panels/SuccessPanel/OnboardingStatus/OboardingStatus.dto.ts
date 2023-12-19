@@ -17,7 +17,7 @@ export class OnboardingStatusDto {
   public status: SelectOption<OnboardingStatus>;
 
   constructor(data?: OnboardingDetails | null) {
-    this.comments = data?.comments ?? '';
+    this.comments = '';
     this.status =
       options.find((option) => option.value === data?.status) ?? options[0];
   }
