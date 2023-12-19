@@ -16,6 +16,7 @@ import (
 
 type ActionRepository interface {
 	Create(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time) (*dbtype.Node, error)
+	CreateWithProperties(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time, extraProperties map[string]any) (*dbtype.Node, error)
 	GetSingleAction(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType) (*dbtype.Node, error)
 	MergeByActionType(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time) (*dbtype.Node, error)
 }
@@ -31,23 +32,30 @@ func NewActionRepository(driver *neo4j.DriverWithContext) ActionRepository {
 }
 
 func (r *actionRepository) Create(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.Create")
+	return r.CreateWithProperties(ctx, tenant, entityId, entityType, actionType, content, metadata, createdAt, nil)
+}
+
+func (r *actionRepository) CreateWithProperties(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time, extraProperties map[string]any) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.CreateWithProperties")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("entityId", entityId),
 		log.String("entityType", entityType.String()),
 		log.String("actionType", string(actionType)),
-		log.String("content", content))
+		log.String("content", content),
+		log.String("metadata", metadata),
+		log.Object("createdAt", createdAt),
+		log.Object("extraProperties", extraProperties))
 
-	query := ""
+	cypher := ""
 	switch entityType {
 	case entity.ORGANIZATION:
-		query = fmt.Sprintf(`MATCH (n:Organization_%s {id:$entityId}) `, tenant)
+		cypher = fmt.Sprintf(`MATCH (n:Organization_%s {id:$entityId}) `, tenant)
 	case entity.CONTRACT:
-		query = fmt.Sprintf(`MATCH (n:Contract_%s {id:$entityId}) `, tenant)
+		cypher = fmt.Sprintf(`MATCH (n:Contract_%s {id:$entityId}) `, tenant)
 	}
 
-	query += fmt.Sprintf(` MERGE (n)<-[:ACTION_ON]-(a:Action {id:randomUUID()}) 
+	cypher += fmt.Sprintf(` MERGE (n)<-[:ACTION_ON]-(a:Action {id:randomUUID()}) 
 				ON CREATE SET 	a.type=$type, 
 								a.content=$content,
 								a.metadata=$metadata,
@@ -58,25 +66,33 @@ func (r *actionRepository) Create(ctx context.Context, tenant, entityId string, 
 								a:Action_%s, 
 								a:TimelineEvent, 
 								a:TimelineEvent_%s`, tenant, tenant)
-	query += ` return a `
-	span.LogFields(log.String("query", query))
+	if extraProperties != nil && len(extraProperties) > 0 {
+		cypher += ` SET a += $extraProperties `
+	}
+	cypher += ` return a `
+
+	params := map[string]any{
+		"tenant":        tenant,
+		"entityId":      entityId,
+		"type":          actionType,
+		"content":       content,
+		"metadata":      metadata,
+		"source":        constants.SourceOpenline,
+		"sourceOfTruth": constants.SourceOpenline,
+		"appSource":     constants.AppSourceEventProcessingPlatform,
+		"createdAt":     createdAt,
+	}
+	if extraProperties != nil && len(extraProperties) > 0 {
+		params["extraProperties"] = extraProperties
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":        tenant,
-				"entityId":      entityId,
-				"type":          actionType,
-				"content":       content,
-				"metadata":      metadata,
-				"source":        constants.SourceOpenline,
-				"sourceOfTruth": constants.SourceOpenline,
-				"appSource":     constants.AppSourceEventProcessingPlatform,
-				"createdAt":     createdAt,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)

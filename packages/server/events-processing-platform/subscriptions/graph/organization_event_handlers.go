@@ -664,7 +664,7 @@ func (h *OrganizationEventHandler) OnUpdateOnboardingStatus(ctx context.Context,
 	}
 
 	if organizationEntity.OnboardingDetails.Status != eventData.Status {
-		err = h.saveOnboardingStatusChangeAction(ctx, organizationId, eventData)
+		err = h.saveOnboardingStatusChangeAction(ctx, organizationId, eventData, span)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to save onboarding status change action for organization %s: %s", organizationId, err.Error())
@@ -698,7 +698,7 @@ type ActionOnboardingStatusMetadata struct {
 	ContractId string `json:"contractId"`
 }
 
-func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.Context, organizationId string, eventData events.UpdateOnboardingStatusEvent) error {
+func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.Context, organizationId string, eventData events.UpdateOnboardingStatusEvent, span opentracing.Span) error {
 
 	metadata, err := utils.ToJson(ActionOnboardingStatusMetadata{
 		Status:     eventData.Status,
@@ -711,7 +711,7 @@ func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.
 	if eventData.UpdatedByUserId != "" {
 		userDbNode, err := h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, eventData.UpdatedByUserId)
 		if err != nil {
-			tracing.TraceErr(nil, err)
+			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to get user %s: %s", eventData.UpdatedByUserId, err.Error())
 		}
 		if userDbNode != nil {
@@ -725,7 +725,10 @@ func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.
 		message = fmt.Sprintf("The onboarding status was automatically set to %s", onboardingStatusReadableStringForActionMessage(eventData.Status))
 	}
 
-	_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt)
+	extraActionProperties := map[string]interface{}{
+		"status": eventData.Status,
+	}
+	_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, extraActionProperties)
 	return err
 }
 
