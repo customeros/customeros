@@ -32,7 +32,7 @@ export type NewCustomersQuery = {
   dashboard_NewCustomers?: {
     __typename?: 'DashboardNewCustomers';
     thisMonthCount: number;
-    thisMonthIncreasePercentage: string;
+    thisMonthIncreasePercentage: number;
     perMonth: Array<{
       __typename?: 'DashboardNewCustomersPerMonth';
       year: number;

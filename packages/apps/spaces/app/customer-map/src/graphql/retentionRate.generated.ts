@@ -32,7 +32,7 @@ export type RetentionRateQuery = {
   dashboard_RetentionRate?: {
     __typename?: 'DashboardRetentionRate';
     retentionRate: number;
-    increasePercentage: string;
+    increasePercentage: number;
     perMonth: Array<{
       __typename?: 'DashboardRetentionRatePerMonth';
       month: number;

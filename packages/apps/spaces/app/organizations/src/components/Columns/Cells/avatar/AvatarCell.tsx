@@ -9,9 +9,10 @@ import { Tooltip } from '@ui/overlay/Tooltip';
 interface AvatarCellProps {
   id: string;
   name: string;
+  src?: string | null;
 }
 
-export const AvatarCell = ({ name, id }: AvatarCellProps) => {
+export const AvatarCell = ({ name, id, src }: AvatarCellProps) => {
   const router = useRouter();
   const [tabs] = useLocalStorage<{
     [key: string]: string;
@@ -27,6 +28,7 @@ export const AvatarCell = ({ name, id }: AvatarCellProps) => {
         <Avatar
           variant='outline'
           size='md'
+          src={src || undefined}
           borderRadius='lg'
           name={fullName}
           cursor='pointer'

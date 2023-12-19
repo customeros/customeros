@@ -28,6 +28,7 @@ import { OnboardingCell } from './Cells/onboarding/OnboardingCell';
 import { OrganizationCell } from './Cells/organization/OrganizationCell';
 import { RenewalForecastCell } from './Cells/renewal/RenewalForecastCell';
 import { LastTouchpointCell } from './Cells/touchpoint/LastTouchpointCell';
+import { OnboardingFilter, filterOnboardingFn } from './Filters/Onboarding';
 import {
   OrganizationFilter,
   filterOrganizationFn,
@@ -54,7 +55,11 @@ export const columns = [
     enableColumnFilter: false,
     cell: (props) => {
       return (
-        <AvatarCell id={props.getValue()?.id} name={props.getValue()?.name} />
+        <AvatarCell
+          id={props.getValue()?.id}
+          name={props.getValue()?.name}
+          src={props.getValue()?.logoUrl}
+        />
       );
     },
     header: AvatarHeader,
@@ -176,6 +181,7 @@ export const columns = [
   columnHelper.accessor('accountDetails', {
     id: 'ONBOARDING_STATUS',
     minSize: 200,
+    filterFn: filterOnboardingFn,
     cell: (props) => {
       const status = props.getValue()?.onboarding?.status;
       const updatedAt = props.getValue()?.onboarding?.updatedAt;
@@ -186,14 +192,14 @@ export const columns = [
       <THead
         id='onboardingStatus'
         title='Onboarding'
-        // renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
+        renderFilter={() => <OnboardingFilter column={props.column} />}
         {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => (
       <Flex flexDir='column' gap='1'>
         <Skeleton
-          width='25%'
+          width='33%'
           height='18px'
           startColor='gray.300'
           endColor='gray.300'

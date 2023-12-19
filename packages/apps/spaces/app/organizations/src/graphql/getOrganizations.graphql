@@ -28,6 +28,7 @@ query getOrganizations(
       website
       domains
       isCustomer
+      logoUrl
       accountDetails {
         renewalSummary {
           arrForecast
