@@ -4,8 +4,7 @@ import (
 	"context"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -16,77 +15,48 @@ import (
 	"github.com/pkg/errors"
 )
 
-type UserEventHandler struct {
-	log                  logger.Logger
+type OrganizationEventHandler struct {
 	repositories         *repository.Repositories
+	log                  logger.Logger
 	notificationProvider NotificationProvider
 	cfg                  *config.Config
 }
 
-func NewUserEventHandler(log logger.Logger, repositories *repository.Repositories, cfg *config.Config) *UserEventHandler {
-	return &UserEventHandler{
-		log:                  log,
+func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Repositories, cfg *config.Config) *OrganizationEventHandler {
+	return &OrganizationEventHandler{
 		repositories:         repositories,
-		cfg:                  cfg,
+		log:                  log,
 		notificationProvider: NewNotificationProvider(log, cfg.Services.Novu.ApiKey),
 	}
 }
 
-func (h *UserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnUserUpdate")
+type eventMetadata struct {
+	UserId string `json:"user-id"`
+}
+
+func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Notifications.OrganizationEventHandler.OnOrganizationUpdateOwner")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.UserUpdateEvent
+	var eventData events.OrganizationUpdateOwnerEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
+	userId := eventData.UserId
 
 	err := h.notificationProviderSendEmail(ctx, span, EventIdUserUpdate, userId, eventData.Tenant)
 
-	return err
-}
-
-func (h *UserEventHandler) OnJobRoleLinkedToUser(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnJobRoleLinkedToUser")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.UserLinkJobRoleEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
+	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-
-	err := h.notificationProviderSendEmail(ctx, span, EventIdUserUpdate, userId, eventData.Tenant)
-
 	return err
 }
 
-func (h *UserEventHandler) OnAddRole(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnAddRole")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.UserAddRoleEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-
-	err := h.notificationProviderSendEmail(ctx, span, EventIdUserUpdate, userId, eventData.Tenant)
-
-	return err
-}
-
-func (h *UserEventHandler) notificationProviderSendEmail(ctx context.Context, span opentracing.Span, eventId, userId, tenant string) error {
+func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Context, span opentracing.Span, eventId, userId, tenant string) error {
 
 	userDbNode, err := h.repositories.UserRepository.GetUser(ctx, tenant, userId)
 

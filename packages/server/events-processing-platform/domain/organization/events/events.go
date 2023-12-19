@@ -1,13 +1,14 @@
 package events
 
 import (
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/pkg/errors"
-	"time"
 )
 
 const (
@@ -38,6 +39,7 @@ const (
 	OrganizationRefreshArrV1             = "V1_ORGANIZATION_REFRESH_ARR"
 	OrganizationRefreshRenewalSummaryV1  = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
 	OrganizationUpdateOnboardingStatusV1 = "V1_ORGANIZATION_UPDATE_ONBOARDING_STATUS"
+	OrganizationUpdateOwnerV1            = "V1_ORGANIZATION_UPDATE_OWNER"
 )
 
 type OrganizationCreateEvent struct {
@@ -462,6 +464,32 @@ func NewOrganizationRemoveParentEvent(aggregate eventstore.Aggregate, parentOrga
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRemoveParentV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRemoveParentEvent")
+	}
+	return event, nil
+}
+
+type OrganizationUpdateOwnerEvent struct {
+	Tenant         string    `json:"tenant" validate:"required"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+	UserId         string    `json:"userId" validate:"required"`
+	OrganizationId string    `json:"organizationId" validate:"required"`
+}
+
+func NewOrganizationUpdateOwnerEvent(aggregate eventstore.Aggregate, userId, organizationId string, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationUpdateOwnerEvent{
+		Tenant:         aggregate.GetTenant(),
+		UpdatedAt:      updatedAt,
+		UserId:         userId,
+		OrganizationId: organizationId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationUpdateOwnerEvent")
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateOwnerV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpdateOwnerEvent")
 	}
 	return event, nil
 }
