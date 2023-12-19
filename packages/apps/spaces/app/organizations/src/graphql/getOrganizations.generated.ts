@@ -44,6 +44,7 @@ export type GetOrganizationsQuery = {
       website?: string | null;
       domains: Array<string>;
       isCustomer?: boolean | null;
+      logoUrl?: string | null;
       lastTouchPointTimelineEventId?: string | null;
       lastTouchPointAt?: any | null;
       lastTouchPointType?: Types.LastTouchpointType | null;
@@ -218,6 +219,7 @@ export const GetOrganizationsDocument = `
       website
       domains
       isCustomer
+      logoUrl
       accountDetails {
         renewalSummary {
           arrForecast

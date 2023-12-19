@@ -42,6 +42,7 @@ export const useOrganizationsPageData = ({
     owner,
     website,
     forecast,
+    onboarding,
     organization,
     relationship,
     timeToRenewal,
@@ -185,6 +186,15 @@ export const useOrganizationsPageData = ({
           });
         }
       }
+      if (onboarding.isActive && onboarding.value.length) {
+        draft.AND.push({
+          filter: {
+            property: 'ONBOARDING_STATUS',
+            value: onboarding.value,
+            operation: ComparisonOperator.In,
+          },
+        });
+      }
     });
   }, [
     searchParams?.toString(),
@@ -210,6 +220,8 @@ export const useOrganizationsPageData = ({
     lastTouchpoint?.isActive,
     lastTouchpoint?.value,
     lastTouchpoint?.after,
+    onboarding?.isActive,
+    onboarding?.value.length,
   ]);
 
   const sortBy: SortBy | undefined = useMemo(() => {
@@ -272,6 +284,8 @@ export const useOrganizationsPageData = ({
       lastTouchpoint?.isActive,
       lastTouchpoint?.value.length,
       lastTouchpoint?.after,
+      onboarding?.isActive,
+      onboarding?.value.length,
     ],
   );
 
