@@ -186,7 +186,7 @@ export const columns = [
       <THead
         id='onboardingStatus'
         title='Onboarding'
-        renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
+        // renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
         {...getTHeadProps<Organization>(props)}
       />
     ),
