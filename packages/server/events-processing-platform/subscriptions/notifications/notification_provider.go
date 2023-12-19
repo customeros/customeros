@@ -12,7 +12,7 @@ const (
 )
 
 type NotificationProvider interface {
-	SendEmail(ctx context.Context, u *EmailableUser, eventId string) error
+	SendEmail(ctx context.Context, u *EmailableUser, payload map[string]interface{}, eventId string) error
 	// TODO: SendInAppNotification(u *InAppNotifiableUser)
 }
 

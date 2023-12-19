@@ -2,6 +2,7 @@ package notifications
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -45,9 +46,10 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	userId := eventData.UserId
+	userId := eventData.OwnerUserId
+	actorUserId := eventData.ActorUserId
 
-	err := h.notificationProviderSendEmail(ctx, span, EventIdUserUpdate, userId, eventData.Tenant)
+	err := h.notificationProviderSendEmail(ctx, span, EventIdUserUpdate, userId, actorUserId, eventData.Tenant)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -56,8 +58,8 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 	return err
 }
 
-func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Context, span opentracing.Span, eventId, userId, tenant string) error {
-
+func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Context, span opentracing.Span, eventId, userId, actorUserId, tenant string) error {
+	// target user
 	userDbNode, err := h.repositories.UserRepository.GetUser(ctx, tenant, userId)
 
 	if err != nil {
@@ -69,6 +71,18 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		user = graph_db.MapDbNodeToUserEntity(*userDbNode)
 	}
 
+	// actor user
+	actorDbNode, err := h.repositories.UserRepository.GetUser(ctx, tenant, actorUserId)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
+	}
+	var actor *entity.UserEntity
+	if userDbNode != nil {
+		actor = graph_db.MapDbNodeToUserEntity(*actorDbNode)
+	}
+
 	emailDbNode, err := h.repositories.EmailRepository.GetEmailForUser(ctx, tenant, userId)
 
 	var email *entity.EmailEntity
@@ -76,14 +90,19 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		email = graph_db.MapDbNodeToEmailEntity(*emailDbNode)
 	}
 
+	payload := map[string]interface{}{
+		"actorFirstName": actor.FirstName,
+		"actorLastName":  actor.LastName,
+		"subject":        fmt.Sprintf("%s %s added you as an owner", actor.FirstName, actor.LastName),
+	}
+
 	// call notification service
 	err = h.notificationProvider.SendEmail(ctx, &EmailableUser{
 		FirstName:    user.FirstName,
 		LastName:     user.LastName,
 		Email:        email.Email,
-		Message:      "Welcome to CustomerOS!",
 		SubscriberID: userId,
-	}, EventIdUserUpdate)
+	}, payload, EventIdUserUpdate)
 
 	return err
 }

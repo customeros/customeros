@@ -14,7 +14,6 @@ type EmailableUser struct {
 	FirstName    string `json:"firstName"`
 	LastName     string `json:"lastName"`
 	Email        string `json:"email"`
-	Message      string `json:"message"`
 	SubscriberID string `json:"subscriberId"` // must be unique uuid for user
 }
 
@@ -30,7 +29,7 @@ func NewNovuProvider(log logger.Logger, apiKey string) *NovuProvider {
 	}
 }
 
-func (np *NovuProvider) SendEmail(ctx context.Context, u *EmailableUser, eventId string) error {
+func (np *NovuProvider) SendEmail(ctx context.Context, u *EmailableUser, payload map[string]interface{}, eventId string) error {
 	to := map[string]interface{}{
 		"lastName":     u.LastName,
 		"firstName":    u.FirstName,
@@ -38,46 +37,34 @@ func (np *NovuProvider) SendEmail(ctx context.Context, u *EmailableUser, eventId
 		"email":        u.Email,
 	}
 
-	msg := u.Message
 	var html string
-	var button map[string]string
 	switch eventId {
 	case "test_flow":
 		rawHtml, _ := os.ReadFile("./email_templates/email2.html") // FIXME: replace this html with an actual template
-		msg = "Welcome to CustomerOS!"
 		html = strings.Replace(string(rawHtml[:]), "{{fName}}", u.FirstName, -1)
 		html = strings.Replace(html, "{{lName}}", u.LastName, -1)
-		html = strings.Replace(html, "{{message}}", msg, -1)
-		button = map[string]string{
-			"text": "Click me",
-			"url":  "https://customeros.ai",
-		}
 	case "user_update":
 		// TODO: do something
 		html = ""
-		msg = ""
-		button = map[string]string{
-			"text": "Click me",
-			"url":  "https://customeros.ai",
-		}
 	default:
 		html = ""
-		msg = ""
 	}
 
-	payload := map[string]interface{}{
-		"message": msg,
-		"organization": map[string]interface{}{
-			"logo": "https://happycorp.com/logo.png", // able to add tenant logo here
-		},
-		"subscriber": map[string]interface{}{
-			"firstName": u.FirstName,
-			"lastName":  u.LastName,
-			"email":     u.Email,
-		},
-		"button": button,
-		"html":   string(html[:]),
-	}
+	// payload := map[string]interface{}{
+	// 	"message": msg,
+	// 	"organization": map[string]interface{}{
+	// 		"logo": "https://happycorp.com/logo.png", // able to add tenant logo here
+	// 	},
+	// 	"subscriber": map[string]interface{}{
+	// 		"firstName": u.FirstName,
+	// 		"lastName":  u.LastName,
+	// 		"email":     u.Email,
+	// 	},
+	// 	"button": button,
+	// 	"html":   string(html[:]),
+	// }
+
+	payload["html"] = html
 
 	data := novu.ITriggerPayloadOptions{To: to, Payload: payload}
 
