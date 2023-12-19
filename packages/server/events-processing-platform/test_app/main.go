@@ -69,7 +69,7 @@ func main() {
 	//testRequestGenerateActionItemsRequest()
 	//testCreateOrganization()
 	//testUpdateWithUpsertOrganization()
-	testUpdateOrganization()
+	//testUpdateOrganization()
 	//testHideOrganization()
 	//testShowOrganization()
 	//testCreateLogEntry()
@@ -96,6 +96,7 @@ func main() {
 	//testUpdateContract()
 	//testAddContractService()
 	//testCloseLooseOpportunity()
+	testUpdateOnboardingStatus()
 }
 
 func testRequestGenerateSummaryRequest() {
@@ -637,6 +638,25 @@ func testCloseLooseOpportunity() {
 		Id:             opportunityId,
 		LoggedInUserId: userId,
 		AppSource:      appSource,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testUpdateOnboardingStatus() {
+	tenant := "openline"
+	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
+
+	result, err := clients.OrganizationClient.UpdateOnboardingStatus(context.Background(), &organizationpb.UpdateOnboardingStatusGrpcRequest{
+		Tenant:           tenant,
+		OrganizationId:   orgId,
+		LoggedInUserId:   userId,
+		Comments:         "test comments",
+		AppSource:        appSource,
+		OnboardingStatus: organizationpb.OnboardingStatus_ONBOARDING_STATUS_DONE,
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
