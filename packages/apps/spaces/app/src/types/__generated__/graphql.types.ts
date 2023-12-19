@@ -660,7 +660,7 @@ export type DashboardGrossRevenueRetentionPerMonth = {
 
 export type DashboardMrrPerCustomer = {
   __typename?: 'DashboardMRRPerCustomer';
-  increasePercentage: Scalars['Float'];
+  increasePercentage: Scalars['String'];
   mrrPerCustomer: Scalars['Float'];
   perMonth: Array<Maybe<DashboardMrrPerCustomerPerMonth>>;
 };
@@ -2645,7 +2645,7 @@ export type Query = {
    */
   contacts: ContactsPage;
   contract: Contract;
-  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE */
+  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE, ONBOARDING_STATUS */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   dashboard_ARRBreakdown?: Maybe<DashboardArrBreakdown>;
   dashboard_CustomerMap?: Maybe<Array<DashboardCustomerMap>>;

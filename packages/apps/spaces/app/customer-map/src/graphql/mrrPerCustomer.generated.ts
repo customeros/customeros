@@ -32,7 +32,7 @@ export type MrrPerCustomerQuery = {
   dashboard_MRRPerCustomer?: {
     __typename?: 'DashboardMRRPerCustomer';
     mrrPerCustomer: number;
-    increasePercentage: number;
+    increasePercentage: string;
     perMonth: Array<{
       __typename?: 'DashboardMRRPerCustomerPerMonth';
       month: number;

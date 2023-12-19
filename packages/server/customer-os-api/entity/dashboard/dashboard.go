@@ -61,7 +61,7 @@ type DashboardGrossRevenueRetentionPerMonthData struct {
 
 type DashboardDashboardMRRPerCustomerData struct {
 	MrrPerCustomer     float64 `json:"mrrPerCustomer"`
-	IncreasePercentage float64
+	IncreasePercentage string
 	Months             []*DashboardDashboardMRRPerCustomerPerMonthData
 }
 type DashboardDashboardMRRPerCustomerPerMonthData struct {
