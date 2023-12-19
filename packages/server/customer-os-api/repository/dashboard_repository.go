@@ -680,25 +680,21 @@ func (r *dashboardRepository) GetDashboardMRRPerCustomerData(ctx context.Context
 					
 					WITH datetime({year: monthsSinceEpoch / 12, 
 									month: monthsSinceEpoch %s, 
-									day: 1}) AS currentDate
+									day: 1, hour: 0, minute: 0, second: 0, nanosecond: 0o00000000}) AS currentDate
 					
-					WITH currentDate,
-						 datetime({year: currentDate.year, 
-									month: currentDate.month, 
-									day: 1, hour: 0, minute: 0, second: 0, nanosecond: 0o00000000}) as beginOfMonth,
-						 currentDate + duration({months: 1}) - duration({nanoseconds: 1}) as endOfMonth,
+					WITH currentDate as beginOfMonth,
 						 currentDate + duration({months: 1}) as startOfNextMonth
 					
-					WITH DISTINCT currentDate.year AS year, currentDate.month AS month, beginOfMonth, endOfMonth, startOfNextMonth
+					WITH DISTINCT beginOfMonth.year AS year, beginOfMonth.month AS month, beginOfMonth, startOfNextMonth
 					
 					OPTIONAL MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
 					WHERE 
-						o.hide = false AND o.isCustomer = true AND sli.startedAt is NOT null AND (sli.billed = 'MONTHLY' or sli.billed = 'QUARTERLY' or sli.billed = 'ANNUALLY') AND
-						sli.startedAt < startOfNextMonth AND (sli.endedAt IS NULL OR sli.endedAt > endOfMonth)
+						o.hide = false AND o.isCustomer = true AND (sli.billed = 'MONTHLY' or sli.billed = 'QUARTERLY' or sli.billed = 'ANNUALLY') AND
+						sli.startedAt < startOfNextMonth AND (sli.endedAt IS NULL OR sli.endedAt >= startOfNextMonth)
 					
-					WITH year, month, COLLECT(DISTINCT { id: sli.id, startedAt: sli.startedAt, endedAt: sli.endedAt, amountPerMonth: CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity ELSE CASE WHEN sli.billed = 'QUARTERLY' THEN  sli.price * sli.quantity / 3 ELSE CASE WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity / 12 ELSE 0 END END END }) AS contractDetails
+					WITH year, month, startOfNextMonth, COLLECT(DISTINCT { id: sli.id, startedAt: sli.startedAt, endedAt: sli.endedAt, amountPerMonth: CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity ELSE CASE WHEN sli.billed = 'QUARTERLY' THEN  sli.price * sli.quantity / 3 ELSE CASE WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity / 12 ELSE 0 END END END }) AS contractDetails
 					
-					WITH year, month,  REDUCE(sumHigh = 0, cd IN contractDetails | sumHigh + cd.amountPerMonth ) AS mrr
+					WITH year, month,  startOfNextMonth, contractDetails, REDUCE(sumHigh = 0, cd IN contractDetails | sumHigh + cd.amountPerMonth ) AS mrr
 					
 					return year, month, mrr
 				`, "% 12 + 1", tenant, tenant, tenant),
