@@ -33,16 +33,18 @@ import (
 )
 
 type NotificationsSubscriber struct {
-	log logger.Logger
-	db  *esdb.Client
-	cfg *config.Config
+	log              logger.Logger
+	db               *esdb.Client
+	cfg              *config.Config
+	userEventHandler *UserEventHandler
 }
 
 func NewNotificationsSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *NotificationsSubscriber {
 	return &NotificationsSubscriber{
-		log: log,
-		db:  db,
-		cfg: cfg,
+		log:              log,
+		db:               db,
+		cfg:              cfg,
+		userEventHandler: NewUserEventHandler(log, repositories, cfg),
 	}
 }
 
@@ -148,7 +150,7 @@ func (s *NotificationsSubscriber) When(ctx context.Context, evt eventstore.Event
 
 	case orgevents.OrganizationCreateV1:
 		return nil
-	case orgevents.OrganizationUpdateV1: // TODO: implement on update send email
+	case orgevents.OrganizationUpdateV1:
 		return nil
 	case orgevents.OrganizationPhoneNumberLinkV1,
 		orgevents.OrganizationEmailLinkV1,
@@ -172,13 +174,16 @@ func (s *NotificationsSubscriber) When(ctx context.Context, evt eventstore.Event
 		orgevents.OrganizationRequestScrapeByWebsiteV1:
 		return nil
 
+	case userevents.UserUpdateV1:
+		return s.userEventHandler.OnUserUpdate(ctx, evt)
+	case userevents.UserJobRoleLinkV1:
+		return s.userEventHandler.OnJobRoleLinkedToUser(ctx, evt)
+	case userevents.UserAddRoleV1:
+		return s.userEventHandler.OnAddRole(ctx, evt)
 	case userevents.UserCreateV1,
-		userevents.UserUpdateV1,
 		userevents.UserPhoneNumberLinkV1,
 		userevents.UserEmailLinkV1,
-		userevents.UserJobRoleLinkV1,
 		userevents.UserAddPlayerV1,
-		userevents.UserAddRoleV1,
 		userevents.UserRemoveRoleV1:
 		return nil
 

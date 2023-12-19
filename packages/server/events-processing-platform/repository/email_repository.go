@@ -3,8 +3,12 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
@@ -12,8 +16,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"strings"
-	"time"
 )
 
 type EmailRepository interface {
@@ -25,6 +27,7 @@ type EmailRepository interface {
 	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error
 	LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool, updatedAt time.Time) error
+	GetEmailForUser(ctx context.Context, tenant string, userId string) (*dbtype.Node, error)
 }
 
 type emailRepository struct {
@@ -292,6 +295,40 @@ func (r *emailRepository) LinkWithUser(ctx context.Context, tenant, userId, emai
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 	return r.executeQuery(ctx, query, params)
+}
+
+func (r *emailRepository) GetEmailForUser(ctx context.Context, tenant string, userId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetEmailForUser")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("userId", userId), log.String("tenant", tenant))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	q := "match (e:Email)<-[:HAS]-(u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) return e"
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, q,
+			map[string]any{
+				"userId": userId,
+				"tenant": tenant,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect(ctx)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(result.([]*db.Record)) == 0 {
+		return nil, nil
+	}
+	if len(result.([]*db.Record)) > 1 { // FIXME: this is a hack to get the first email, query for primary email instead
+		return result.([]*db.Record)[0].Values[0].(*dbtype.Node), nil
+	}
+	return result.(*dbtype.Node), err
 }
 
 func (r *emailRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {

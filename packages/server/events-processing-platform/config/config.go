@@ -182,6 +182,10 @@ type Services struct {
 		EmailSummaryPrompt      string `env:"ANTHROPIC_EMAIL_SUMMARY_PROMPT,required" envDefault:"Make a 120 characters summary for this html email: %v"`
 		EmailActionsItemsPrompt string `env:"ANTHROPIC_EMAIL_ACTIONS_ITEMS_PROMPT,required" envDefault:"Give me the action points to be taken for the email. The criticality for the action points should be at least medium severity. return response in jSON format, key - \"items\", value - array of strings. The email is: %v"`
 	}
+	Novu struct {
+		ApiPath string `env:"NOVU_API_PATH,required" envDefault:"N/A"`
+		ApiKey  string `env:"NOVU_API_KEY,required" envDefault:"N/A"`
+	}
 }
 
 type Utils struct {
