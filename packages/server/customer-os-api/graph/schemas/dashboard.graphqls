@@ -11,6 +11,7 @@ extend type Query {
     dashboard_RevenueAtRisk(period: DashboardPeriodInput): DashboardRevenueAtRisk
     dashboard_RetentionRate(period: DashboardPeriodInput): DashboardRetentionRate
     dashboard_NewCustomers(period: DashboardPeriodInput): DashboardNewCustomers
+    dashboard_TimeToOnboard(period: DashboardPeriodInput): DashboardTimeToOnboard
 }
 
 input DashboardPeriodInput {
@@ -31,6 +32,7 @@ type DashboardMRRPerCustomer {
     increasePercentage: String!
     perMonth: [DashboardMRRPerCustomerPerMonth]!
 }
+
 type DashboardMRRPerCustomerPerMonth {
     year: Int!
     month: Int!
@@ -95,4 +97,16 @@ enum DashboardCustomerMapState {
     OK
     AT_RISK
     CHURNED
+}
+
+type DashboardTimeToOnboard {
+    timeToOnboard: Float
+    increasePercentage: Float
+    perMonth: [DashboardTimeToOnboardPerMonth!]!
+}
+
+type DashboardTimeToOnboardPerMonth {
+    year: Int!
+    month: Int!
+    value: Float!
 }

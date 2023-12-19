@@ -239,6 +239,30 @@ func (r *queryResolver) DashboardNewCustomers(ctx context.Context, period *model
 	return mapper.MapDashboardNewCustomersData(data), nil
 }
 
+// DashboardTimeToOnboard is the resolver for the dashboard_TimeToOnboard field.
+func (r *queryResolver) DashboardTimeToOnboard(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardTimeToOnboard, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardTimeToOnboard", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("period", period))
+
+	startTime, endTime, err := getPeriod(period)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
+		return nil, nil
+	}
+
+	data, err := r.Services.QueryService.GetDashboardAverageTimeToOnboardPerMonth(ctx, startTime, endTime)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get time to onboard data for period %s - %s", startTime.String(), endTime.String())
+		return nil, nil
+	}
+
+	return data, nil
+}
+
 // DashboardCustomerMap returns generated.DashboardCustomerMapResolver implementation.
 func (r *Resolver) DashboardCustomerMap() generated.DashboardCustomerMapResolver {
 	return &dashboardCustomerMapResolver{r}

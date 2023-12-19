@@ -597,6 +597,18 @@ type DashboardRevenueAtRisk struct {
 	AtRisk         float64 `json:"atRisk"`
 }
 
+type DashboardTimeToOnboard struct {
+	TimeToOnboard      *float64                          `json:"timeToOnboard,omitempty"`
+	IncreasePercentage *float64                          `json:"increasePercentage,omitempty"`
+	PerMonth           []*DashboardTimeToOnboardPerMonth `json:"perMonth"`
+}
+
+type DashboardTimeToOnboardPerMonth struct {
+	Year  int     `json:"year"`
+	Month int     `json:"month"`
+	Value float64 `json:"value"`
+}
+
 type DeleteResponse struct {
 	Accepted  bool `json:"accepted"`
 	Completed bool `json:"completed"`

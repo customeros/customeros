@@ -1561,6 +1561,31 @@ func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	return actionId.String()
 }
 
+func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType entity.ActionType, createdAt time.Time, extraProperties map[string]string) string {
+	var actionId, _ = uuid.NewRandom()
+
+	query := `MATCH (o:Organization {id:$organizationId}) 
+				MERGE (o)<-[:ACTION_ON]-(a:Action {id:$id}) 
+				ON CREATE SET 	a.type=$type, 
+								a.createdAt=$createdAt, 
+								a.source=$source, 
+								a.appSource=$appSource, 
+								a:Action_%s, 
+								a:TimelineEvent, 
+								a:TimelineEvent_%s,
+								a += $extraProperties`
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
+		"id":              actionId.String(),
+		"organizationId":  organizationId,
+		"type":            actionType,
+		"createdAt":       createdAt,
+		"source":          "openline",
+		"appSource":       "test",
+		"extraProperties": extraProperties,
+	})
+	return actionId.String()
+}
+
 func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, contract entity.ContractEntity) string {
 	contractId := utils.NewUUIDIfEmpty(contract.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (o:Organization {id:$orgId})
