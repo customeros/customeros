@@ -85,10 +85,18 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 
 	emailDbNode, err := h.repositories.EmailRepository.GetEmailForUser(ctx, tenant, userId)
 
-	var email *entity.EmailEntity
-	if emailDbNode != nil {
-		email = graph_db.MapDbNodeToEmailEntity(*emailDbNode)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
 	}
+
+	var email *entity.EmailEntity
+	if emailDbNode == nil {
+		tracing.TraceErr(span, err)
+		err = errors.New("email db node not found")
+		return errors.Wrap(err, "h.notificationProviderSendEmail")
+	}
+	email = graph_db.MapDbNodeToEmailEntity(*emailDbNode)
 
 	payload := map[string]interface{}{
 		"actorFirstName": actor.FirstName,

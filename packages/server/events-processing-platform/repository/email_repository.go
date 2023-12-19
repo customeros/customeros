@@ -306,7 +306,7 @@ func (r *emailRepository) GetEmailForUser(ctx context.Context, tenant string, us
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	q := "match (e:Email)<-[:HAS]-(u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) return e"
+	q := fmt.Sprintf("match (e:Email_%s)<-[:HAS]-(u:User_%s {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) return e", tenant, tenant)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, q,
