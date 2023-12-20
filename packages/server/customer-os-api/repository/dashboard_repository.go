@@ -51,6 +51,7 @@ type DashboardRepository interface {
 	GetDashboardRetentionRateContractsRenewalsData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardRetentionRateContractsChurnedData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardAverageTimeToOnboardPerMonth(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
+	GetDashboardOnboardingCompletionPerMonth(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 }
 
 type dashboardRepository struct {
@@ -125,7 +126,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 
 		emailFilter := new(utils.CypherFilter)
 		emailFilter.Negate = false
-		emailFilter.LogicalOperator = utils.AND
+		emailFilter.LogicalOperator = utils.OR
 		emailFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		locationFilter := new(utils.CypherFilter)
@@ -1375,7 +1376,7 @@ func (r *dashboardRepository) GetDashboardAverageTimeToOnboardPerMonth(ctx conte
 							AND startAction.status <> 'DONE'
 							AND (previousDoneCreatedAt IS NULL OR startAction.createdAt>previousDoneCreatedAt)
 					WITH year, month, action.createdAt as endDate, coalesce(min(startAction.createdAt), action.createdAt) as startDate
-					RETURN year, month, avg(duration.inSeconds(startDate, endDate)) AS durationInSeconds
+					RETURN year, month, avg(duration.inSeconds(startDate, endDate)) AS durationInSeconds ORDER BY year, month
 				`, "% 12 + 1")
 	params := map[string]any{
 		"tenant":    tenant,
@@ -1405,6 +1406,93 @@ func (r *dashboardRepository) GetDashboardAverageTimeToOnboardPerMonth(ctx conte
 			}
 			if v.Values[2] != nil {
 				record["duration"] = v.Values[2].(neo4j.Duration)
+			}
+			results = append(results, record)
+		}
+	}
+
+	return results, nil
+}
+
+func (r *dashboardRepository) GetDashboardOnboardingCompletionPerMonth(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardOnboardingCompletionPerMonth")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	cypher := fmt.Sprintf(`
+					WITH $startDate AS startDate, $endDate AS endDate
+					WITH startDate.YEAR AS startYear, startDate.MONTH AS startMonth, endDate.YEAR AS endYear, endDate.MONTH AS endMonth
+WITH RANGE(startYear * 12 + startMonth - 1, endYear * 12 + endMonth - 1) AS monthsRange
+					UNWIND monthsRange AS monthsSinceEpoch
+					WITH datetime({
+						YEAR: monthsSinceEpoch / 12,
+						MONTH: monthsSinceEpoch %s,
+						DAY: 1
+					}) AS currentDate
+					WITH currentDate,
+						 datetime({
+							 YEAR: currentDate.YEAR,
+							 MONTH: currentDate.MONTH,
+							 DAY: 1,
+							 HOUR: 0,
+							 MINUTE: 0,
+							 SECOND: 0,
+							 NANOSECOND: 0o00000000
+						 }) AS beginOfMonth,
+						 currentDate + duration({MONTHS: 1}) - duration({NANOSECONDS: 1}) AS endOfMonth
+					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth
+						MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:"openline"})
+						OPTIONAL MATCH (o)<-[:ACTION_ON]-(action:Action {type:"ONBOARDING_STATUS_CHANGED"})
+							WHERE action.status IN ['DONE','SUCCESSFUL'] 
+  							AND action.createdAt >= beginOfMonth
+  							AND action.createdAt <= endOfMonth 
+					WITH year, month, endOfMonth, o, action
+						OPTIONAL MATCH (o)<-[:ACTION_ON]-(previousAction:Action {type:"ONBOARDING_STATUS_CHANGED"})
+							WHERE previousAction.createdAt < action.createdAt 
+					WITH year, month, endOfMonth, o, action, previousAction
+						ORDER BY previousAction.createdAt DESC
+					WITH year, month, endOfMonth, o, action, head(collect(previousAction)) AS previousAction  
+						OPTIONAL MATCH (o)<-[:ACTION_ON]-(lastActionInPeriod:Action {type:"ONBOARDING_STATUS_CHANGED"})
+							WHERE lastActionInPeriod.createdAt < endOfMonth
+					WITH year, month, o, action, previousAction, lastActionInPeriod
+						ORDER BY lastActionInPeriod.createdAt DESC
+					WITH year, month, action, previousAction, head(collect(lastActionInPeriod)) AS lastAction
+					WITH year, month, 
+     					CASE WHEN action IS NOT NULL AND (previousAction IS NULL OR NOT previousAction.status IN ['DONE', 'SUCCESSFUL']) THEN action.id ELSE null END AS actionId,
+     					CASE WHEN lastAction IS NOT NULL AND NOT lastAction.status IN ['DONE', 'SUCCESSFUL'] THEN lastAction.id ELSE null END AS lastActionId
+					RETURN year, month, count(distinct(actionId)) AS completedOnboardings, count(distinct(lastActionId)) AS notCompletedOnboardings  ORDER BY year, month
+				`, "% 12 + 1")
+	params := map[string]any{
+		"tenant":    tenant,
+		"startDate": startDate,
+		"endDate":   endDate,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	if dbRecords != nil {
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			record := map[string]interface{}{
+				"year":                    v.Values[0].(int64),
+				"month":                   v.Values[1].(int64),
+				"completedOnboardings":    v.Values[2].(int64),
+				"notCompletedOnboardings": v.Values[3].(int64),
 			}
 			results = append(results, record)
 		}

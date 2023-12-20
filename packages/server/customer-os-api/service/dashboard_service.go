@@ -37,6 +37,7 @@ type DashboardService interface {
 	GetDashboardRetentionRateData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardRetentionRateData, error)
 	GetDashboardNewCustomersData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardNewCustomersData, error)
 	GetDashboardAverageTimeToOnboardPerMonth(ctx context.Context, start, end time.Time) (*model.DashboardTimeToOnboard, error)
+	GetDashboardOnboardingCompletionPerMonth(ctx context.Context, start, end time.Time) (*model.DashboardOnboardingCompletion, error)
 }
 
 type dashboardService struct {
@@ -538,6 +539,60 @@ func (s *dashboardService) GetDashboardAverageTimeToOnboardPerMonth(ctx context.
 	} else {
 		percentageChange := calculatePercentageChange(previousMonth, currentMonth)
 		response.IncreasePercentage = &percentageChange
+	}
+
+	return &response, nil
+}
+
+func (s *dashboardService) GetDashboardOnboardingCompletionPerMonth(ctx context.Context, start, end time.Time) (*model.DashboardOnboardingCompletion, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardOnboardingCompletionPerMonth")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("start", start), log.Object("end", end))
+
+	data, err := s.repositories.DashboardRepository.GetDashboardOnboardingCompletionPerMonth(ctx, common.GetContext(ctx).Tenant, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	response := model.DashboardOnboardingCompletion{}
+
+	for _, record := range data {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+
+		newData := &model.DashboardOnboardingCompletionPerMonth{
+			Year:  int(year),
+			Month: int(month),
+		}
+
+		completed, _ := record["completedOnboardings"].(int64)
+		notCompleted, _ := record["notCompletedOnboardings"].(int64)
+		total := completed + notCompleted
+		if total == 0 {
+			newData.Value = float64(0)
+		} else {
+			newData.Value = math.Round(float64(completed) / float64(total) * 100)
+		}
+
+		response.PerMonth = append(response.PerMonth, newData)
+	}
+
+	currentMonth := 0.0
+	previousMonth := 0.0
+
+	if len(response.PerMonth) == 1 {
+		currentMonth = response.PerMonth[len(response.PerMonth)-1].Value
+	} else if len(response.PerMonth) > 1 {
+		currentMonth = response.PerMonth[len(response.PerMonth)-1].Value
+		previousMonth = response.PerMonth[len(response.PerMonth)-2].Value
+	}
+	response.CompletionPercentage = currentMonth
+	if currentMonth == 0.0 || previousMonth == 0.0 {
+		response.IncreasePercentage = 0.0
+	} else {
+		percentageChange := calculatePercentageChange(previousMonth, currentMonth)
+		response.IncreasePercentage = percentageChange
 	}
 
 	return &response, nil

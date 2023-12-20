@@ -14,9 +14,9 @@ const (
 )
 
 const (
-	expire5Min  = 5 * 60  // 5 minutes
-	expire15Min = 15 * 60 // 15 minutes
-	expire1Hour = 1 * 60 * 60
+	expire15Min   = 15 * 60 // 15 minutes
+	expire1Hour   = 1 * 60 * 60
+	expire24Hours = 24 * 60 * 60 // 24 hours
 )
 
 type UserDetail struct {
@@ -48,7 +48,7 @@ func (c *Cache) SetApiKey(app, apiKey string) {
 	keyBytes := []byte(string(app)) // Use app as the key
 	valueBytes := []byte(apiKey)    // Store apiKey as the value
 
-	_ = c.apiKeyCache.Set(keyBytes, valueBytes, expire5Min)
+	_ = c.apiKeyCache.Set(keyBytes, valueBytes, expire24Hours)
 }
 
 // CheckApiKey Method to check if an API key is in the cache
@@ -56,7 +56,7 @@ func (c *Cache) CheckApiKey(app, apiKey string) bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	keyBytes := []byte(string(app))
+	keyBytes := []byte(app)
 	valueBytes, err := c.apiKeyCache.Get(keyBytes)
 	if err != nil {
 		return false // Key not found in cache

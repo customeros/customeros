@@ -32,11 +32,12 @@ func (r *commonRepository) ExistsById(ctx context.Context, tenant, id, label str
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("id", id), log.String("label", label))
 
-	cypher := fmt.Sprintf(`MATCH (n:%s:%s_%s {id:$id}) RETURN n.id LIMIT 1`, label, label, tenant)
+	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id}) WHERE n:%s_%s RETURN n.id LIMIT 1`, label, label, tenant)
 	params := map[string]any{
 		"id": id,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -49,7 +50,9 @@ func (r *commonRepository) ExistsById(ctx context.Context, tenant, id, label str
 		}
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return false, err
 	}
+	span.LogFields(log.Bool("result", result.(bool)))
 	return result.(bool), err
 }

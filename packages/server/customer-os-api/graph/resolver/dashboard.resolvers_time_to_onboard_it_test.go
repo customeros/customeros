@@ -6,7 +6,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -55,10 +54,7 @@ func TestQueryResolver_Dashboard_TimeToOnboard_AllActionsWithinSameMonth(t *test
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	now := utils.Now()
-	if now.Day() == 1 {
-		now = now.Add(24 * time.Hour)
-	}
+	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo2 := now.Add(-2 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
@@ -90,10 +86,7 @@ func TestQueryResolver_Dashboard_TimeToOnboard_PreviousMonthNoData(t *testing.T)
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	now := utils.Now()
-	if now.Day() == 1 {
-		now = now.Add(24 * time.Hour)
-	}
+	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo4 := now.Add(-4 * time.Hour)
 	monthAgo := now.Add(-30 * 24 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
@@ -127,10 +120,7 @@ func TestQueryResolver_Dashboard_TimeToOnboard_PreviousMonthHasDataCurrentMonthN
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	now := utils.Now()
-	if now.Day() == 1 {
-		now = now.Add(24 * time.Hour)
-	}
+	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo12 := now.Add(-12 * time.Hour)
 	inAMonth := now.Add(30 * 24 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
@@ -164,10 +154,7 @@ func TestQueryResolver_Dashboard_TimeToOnboard_PercentageIncrease(t *testing.T) 
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	now := utils.Now()
-	if now.Day() == 1 {
-		now = now.Add(24 * time.Hour)
-	}
+	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo4 := now.Add(-4 * time.Hour)
 	monthAgo := now.Add(-30 * 24 * time.Hour)
 	monthAgoMinus2Hours := now.Add(-30 * 24 * time.Hour).Add(-2 * time.Hour)
@@ -204,10 +191,7 @@ func TestQueryResolver_Dashboard_TimeToOnboard_PercentageDecrease(t *testing.T) 
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	now := utils.Now()
-	if now.Day() == 1 {
-		now = now.Add(24 * time.Hour)
-	}
+	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo2 := now.Add(-2 * time.Hour)
 	monthAgo := now.Add(-30 * 24 * time.Hour)
 	monthAgoMinus4Hours := now.Add(-30 * 24 * time.Hour).Add(-4 * time.Hour)
@@ -244,10 +228,7 @@ func TestQueryResolver_Dashboard_TimeToOnboard_DoneIsFirstStatus(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	now := utils.Now()
-	if now.Day() == 1 {
-		now = now.Add(24 * time.Hour)
-	}
+	now := inCurrentMonthExceptFirstAndLastDays()
 	monthAgo := now.Add(-30 * 24 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
@@ -280,10 +261,7 @@ func TestQueryResolver_Dashboard_TimeToOnboard_MultipleOrgs(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	now := utils.Now()
-	if now.Day() == 1 {
-		now = now.Add(24 * time.Hour)
-	}
+	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo4 := now.Add(-4 * time.Hour)
 	hoursAgo8 := now.Add(-8 * time.Hour)
 	orgId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
@@ -317,10 +295,7 @@ func TestQueryResolver_Dashboard_TimeToOnboard_NoDoneOnboardings(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	now := utils.Now()
-	if now.Day() == 1 {
-		now = now.Add(24 * time.Hour)
-	}
+	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo1 := now.Add(-1 * time.Hour)
 	hoursAgo2 := now.Add(-2 * time.Hour)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
@@ -354,7 +329,7 @@ func TestQueryResolver_Dashboard_TimeToOnboard_StartedLongAgoWithMultipleActions
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	now := utils.Now()
+	now := inCurrentMonthExceptFirstAndLastDays()
 	daysAgo100 := now.Add(-100 * 24 * time.Hour)
 	daysAgo90 := now.Add(-90 * 24 * time.Hour)
 	daysAgo80 := now.Add(-80 * 24 * time.Hour)
@@ -392,10 +367,7 @@ func TestQueryResolver_Dashboard_TimeToOnboard_MultipleDonesInAMonth(t *testing.
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	now := utils.Now()
-	if now.Day() == 1 {
-		now = now.Add(24 * time.Hour)
-	}
+	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo1 := now.Add(-1 * time.Hour)
 	hoursAgo2 := now.Add(-2 * time.Hour)
 	hoursAgo3 := now.Add(-3 * time.Hour)
