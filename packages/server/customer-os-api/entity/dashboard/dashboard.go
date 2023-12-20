@@ -55,6 +55,7 @@ type DashboardGrossRevenueRetentionData struct {
 	Months                []*DashboardGrossRevenueRetentionPerMonthData
 }
 type DashboardGrossRevenueRetentionPerMonthData struct {
+	Year       int
 	Month      int
 	Percentage float64
 }

@@ -15,7 +15,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"math"
-	"math/rand"
 	"time"
 )
 
@@ -194,16 +193,38 @@ func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Con
 
 	response := entityDashboard.DashboardGrossRevenueRetentionData{}
 
-	response.GrossRevenueRetention = 85
-	response.IncreasePercentage = 5.4
+	//response.GrossRevenueRetention = 85
+	//response.IncreasePercentage = 5.4
 
-	min := float64(0)
-	max := float64(1)
-	for i := 1; i <= 12; i++ {
-		response.Months = append(response.Months, &entityDashboard.DashboardGrossRevenueRetentionPerMonthData{
-			Month:      i,
-			Percentage: rand.Float64()*(max-min) + min,
-		})
+	current := start
+	for current.Before(end) || current.Equal(end) {
+		fmt.Println(current.Month(), current.Year())
+
+		newData := &entityDashboard.DashboardGrossRevenueRetentionPerMonthData{
+			Month:      int(current.Month()),
+			Percentage: 0,
+		}
+
+		response.Months = append(response.Months, newData)
+
+		current = current.AddDate(0, 1, 0)
+	}
+
+	contractsRenewalsData, err := s.repositories.DashboardRepository.GetDashboardRetentionRateContractsRenewalsData(ctx, common.GetContext(ctx).Tenant, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range contractsRenewalsData {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+		value, _ := record["value"].(float64)
+
+		for _, monthData := range response.Months {
+			if monthData.Year == int(year) && monthData.Month == int(month) {
+				monthData.Percentage = value
+			}
+		}
 	}
 
 	return &response, nil
