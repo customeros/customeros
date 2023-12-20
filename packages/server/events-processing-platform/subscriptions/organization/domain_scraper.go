@@ -1,6 +1,7 @@
 package organization
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -362,8 +363,10 @@ func (ds *DomainScraperV1) getLinkedinData(apiKey, companyLinkedinId string, htt
 	}
 	defer r.Body.Close()
 
+	data, err := io.ReadAll(r.Body) // copy body so we don't get sticky problems reading it multiple times
+
 	// do raw decode first and check for success plus api limit messages
-	if err := json.NewDecoder(r.Body).Decode(&apiLimitResponse); err != nil {
+	if err := json.NewDecoder(bytes.NewReader(data)).Decode(&apiLimitResponse); err != nil {
 		return nil, errors.Wrap(err, "failed to decode linkedin scrape response")
 	}
 
@@ -372,7 +375,7 @@ func (ds *DomainScraperV1) getLinkedinData(apiKey, companyLinkedinId string, htt
 		return nil, errors.Wrap(err, "Received error from linkedin scrape api")
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&linkedinScrape); err != nil {
+	if err := json.NewDecoder(bytes.NewReader(data)).Decode(&linkedinScrape); err != nil {
 		return nil, errors.Wrap(err, "failed to decode linkedin scrape response")
 	}
 
