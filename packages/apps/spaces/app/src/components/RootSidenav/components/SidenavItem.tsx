@@ -37,6 +37,9 @@ export const SidenavItem = ({
       color={isActive ? 'gray.700' : 'gray.500'}
       onClick={handleClick}
       leftIcon={typeof icon === 'function' ? icon(!!isActive) : icon}
+      _focus={{
+        boxShadow: 'sidenavItemFocus',
+      }}
     >
       {label}
     </Button>

@@ -11,6 +11,6 @@ export const shadows = {
   avatarRing: '0px 0px 0px 6px #F9F5FF',
   avatarRingGray: '0px 0px 0px 6px var(--chakra-colors-gray-100)',
   menuOptionsFocus: '0px 0px 0px 2px #F2F4F7',
-  sidenavItemFocus: '0px 0px 0px 1px #F4EBFF',
+  sidenavItemFocus: '0px 0px 0px 2px ##F2F4F7',
   sidenavItemActive: '0px 0px 0px 3px #EAECF0',
 };

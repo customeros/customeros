@@ -121,7 +121,7 @@ export const RootSidenav = () => {
             isActive={checkIsActive('customer-map')}
             onClick={() => handleItemClick('customer-map')}
             icon={(isActive) => (
-              <Bubbles boxSize='6' color={isActive ? 'gray.700' : 'gray.500'} />
+              <Bubbles boxSize='5' color={isActive ? 'gray.700' : 'gray.500'} />
             )}
           />
         )}
@@ -131,7 +131,7 @@ export const RootSidenav = () => {
           onClick={() => handleItemClick('organizations')}
           icon={(isActive) => (
             <Icons.Building7
-              boxSize='6'
+              boxSize='5'
               color={isActive ? 'gray.700' : 'gray.500'}
             />
           )}
@@ -142,7 +142,7 @@ export const RootSidenav = () => {
           onClick={() => handleItemClick('organizations?preset=customer')}
           icon={(isActive) => (
             <Icons.CheckHeart
-              boxSize='6'
+              boxSize='5'
               color={isActive ? 'gray.700' : 'gray.500'}
             />
           )}
@@ -154,7 +154,7 @@ export const RootSidenav = () => {
             onClick={() => handleItemClick('organizations?preset=portfolio')}
             icon={(isActive) => (
               <Icons.Briefcase1
-                boxSize='6'
+                boxSize='5'
                 color={isActive ? 'gray.700' : 'gray.500'}
               />
             )}
@@ -177,7 +177,7 @@ export const RootSidenav = () => {
           onClick={() => router.push('/settings')}
           icon={(isActive) => (
             <Icons.Settings
-              boxSize='6'
+              boxSize='5'
               color={isActive ? 'gray.700' : 'gray.500'}
             />
           )}
@@ -186,7 +186,7 @@ export const RootSidenav = () => {
           label='Sign out'
           isActive={false}
           onClick={handleSignOutClick}
-          icon={() => <LogOut01 boxSize='6' color='gray.500' />}
+          icon={() => <LogOut01 boxSize='5' color='gray.500' />}
         />
       </VStack>
 
