@@ -4,6 +4,7 @@ import { ActionType } from '@graphql/types';
 
 import { ServiceUpdatedActionPreview } from './service/ServiceUpdatedActionPreview';
 import { ContractStatusUpdatedActionPreview } from './contract/ContractStatusUpdatedActionPreview';
+import { OnboardingStatusChangedActionPreview } from './onboarding/OnboardingStatusChangedActionPreview';
 
 interface ActionPreviewModalProps {
   type: ActionType;
@@ -24,6 +25,8 @@ export const ActionPreviewModal: React.FC<ActionPreviewModalProps> = ({
     case ActionType.ServiceLineItemBilledTypeUsageCreated:
     case ActionType.ServiceLineItemBilledTypeRecurringCreated:
       return <ServiceUpdatedActionPreview mode='created' />;
+    case ActionType.OnboardingStatusChanged:
+      return <OnboardingStatusChangedActionPreview />;
     default:
       return null;
   }
