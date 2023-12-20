@@ -4,6 +4,7 @@ import { Action, ActionType } from '@graphql/types';
 
 import { ServiceUpdatedAction } from './service/ServiceUpdatedAction';
 import { ContractStatusUpdatedAction } from './contract/ContractStatusUpdatedAction';
+import { OnboardingStatusChangedAction } from './onboarding/OnboardingStatusChangedAction';
 
 interface ActionStubProps {
   data: Action;
@@ -29,6 +30,8 @@ export const UserActionStub: FC<ActionStubProps> = ({ data }) => {
       return <ServiceUpdatedAction data={data} mode='created' />;
     case ActionType.ServiceLineItemRemoved:
       return <ServiceUpdatedAction data={data} mode='removed' />;
+    case ActionType.OnboardingStatusChanged:
+      return <OnboardingStatusChangedAction data={data} />;
   }
 
   return null;

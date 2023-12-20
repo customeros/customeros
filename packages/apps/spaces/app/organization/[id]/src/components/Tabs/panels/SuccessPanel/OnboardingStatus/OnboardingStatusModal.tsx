@@ -22,6 +22,8 @@ import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { OnboardingStatus, OnboardingDetails } from '@graphql/types';
+import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { useUpdateOnboardingStatusMutation } from '@organization/src/graphql/updateOnboardingStatus.generated';
 import {
   OrganizationQuery,
@@ -77,6 +79,12 @@ export const OnboardingStatusModal = ({
   const queryClient = useQueryClient();
   const id = useParams()?.id as string;
   const queryKey = useOrganizationQuery.getKey({ id });
+
+  const [timelineMeta] = useTimelineMeta();
+  const timelineQueryKey = useInfiniteGetTimelineQuery.getKey(
+    timelineMeta.getTimelineVariables,
+  );
+
   const updateOnboardingStatus = useUpdateOnboardingStatusMutation(client, {
     onMutate: ({ input }) => {
       queryClient.cancelQueries({ queryKey });
@@ -114,6 +122,7 @@ export const OnboardingStatusModal = ({
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: timelineQueryKey });
       onClose();
     },
   });
