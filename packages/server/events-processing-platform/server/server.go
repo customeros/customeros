@@ -2,6 +2,11 @@ package server
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/labstack/echo/v4"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -19,16 +24,13 @@ import (
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph"
 	interaction_event_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/interaction_event"
 	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/location_validation"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/notifications"
 	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/organization"
 	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/phone_number_validation"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
 const (
@@ -198,6 +200,17 @@ func (server *server) Start(parentCtx context.Context) error {
 			err := interactionEventSubscriber.Connect(ctx, interactionEventSubscriber.ProcessEvents)
 			if err != nil {
 				server.log.Errorf("(interactionEventSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.cfg.Subscriptions.NotificationsSubscription.Enabled {
+		notificationsSubscriber := notifications.NewNotificationsSubscriber(server.log, esdb, server.repositories, grpcClients, server.cfg)
+		go func() {
+			err := notificationsSubscriber.Connect(ctx, notificationsSubscriber.ProcessEvents)
+			if err != nil {
+				server.log.Errorf("(notificationsSubscriber.Connect) err: {%v}", err)
 				cancel()
 			}
 		}()

@@ -1,11 +1,12 @@
 package graph_db
 
 import (
+	"time"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"golang.org/x/exp/slices"
-	"time"
 )
 
 func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
@@ -393,4 +394,30 @@ func MapDbNodeToServiceLineItemEntity(node dbtype.Node) *entity.ServiceLineItemE
 		IsCanceled:    utils.GetBoolPropOrFalse(props, "isCanceled"),
 	}
 	return &serviceLineItem
+}
+
+func MapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
+	props := utils.GetPropsFromNode(node)
+	return &entity.EmailEntity{
+		Id:             utils.GetStringPropOrEmpty(props, "id"),
+		Email:          utils.GetStringPropOrEmpty(props, "email"),
+		RawEmail:       utils.GetStringPropOrEmpty(props, "rawEmail"),
+		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Primary:        utils.GetBoolPropOrFalse(props, "primary"),
+		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
+		Label:          utils.GetStringPropOrEmpty(props, "label"),
+		Validated:      utils.GetBoolPropOrNil(props, "validated"),
+		IsReachable:    utils.GetStringPropOrNil(props, "isReachable"),
+		IsValidSyntax:  utils.GetBoolPropOrNil(props, "isValidSyntax"),
+		CanConnectSMTP: utils.GetBoolPropOrNil(props, "canConnectSMTP"),
+		AcceptsMail:    utils.GetBoolPropOrNil(props, "acceptsMail"),
+		HasFullInbox:   utils.GetBoolPropOrNil(props, "hasFullInbox"),
+		IsCatchAll:     utils.GetBoolPropOrNil(props, "isCatchAll"),
+		IsDeliverable:  utils.GetBoolPropOrNil(props, "isDeliverable"),
+		IsDisabled:     utils.GetBoolPropOrNil(props, "isDisabled"),
+		Error:          utils.GetStringPropOrNil(props, "error"),
+	}
 }
