@@ -5,9 +5,8 @@ import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { File02 } from '@ui/media/icons/File02';
 import { Flag04 } from '@ui/media/icons/Flag04';
+import { Action, OnboardingStatus } from '@graphql/types';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
-import { Action, BilledType, OnboardingStatus } from '@graphql/types';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { getMetadata } from '@organization/src/components/Timeline/events/action/utils';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import {
@@ -27,27 +26,11 @@ export const OnboardingStatusChangedActionPreview = () => {
   const status = metadata?.status as OnboardingStatus;
   const colorScheme = getColorScheme(status);
 
-  const formattedContent = (event?.content ?? '')
-    .replace(
-      metadata?.price,
-      formatCurrency(
-        Number(metadata?.price),
-        metadata?.billedType === BilledType.Usage ? 4 : 2,
-      ),
-    )
-    .replace(
-      metadata?.previousPrice,
-      formatCurrency(
-        Number(metadata?.previousPrice),
-        metadata?.billedType === BilledType.Usage ? 4 : 2,
-      ),
-    );
-
   return (
     <>
       <TimelineEventPreviewHeader
         date={event?.createdAt}
-        name='Service updated'
+        name='Onboarding status changed'
         onClose={closeModal}
         copyLabel='Copy link to this event'
       />
@@ -63,7 +46,7 @@ export const OnboardingStatusChangedActionPreview = () => {
             fontSize='sm'
             color='gray.700'
           >
-            {formattedContent}
+            {event?.content}
           </Text>
         </CardBody>
 
