@@ -350,13 +350,27 @@ func (ds *DomainScraperV1) addLinkedinData(apiKey, companyLinkedinId string, scr
 
 func (ds *DomainScraperV1) getLinkedinData(apiKey, companyLinkedinId string, httpClient *http.Client) (*LinkedinScrapeResponse, error) {
 	url := fmt.Sprintf("https://api.scrapingdog.com/linkedin/?api_key=%s&type=company&linkId=%s", apiKey, companyLinkedinId)
-
+	var apiLimitResponse struct {
+		Success *bool   `json:"success"`
+		Message *string `json:"message"`
+	}
 	linkedinScrape := &LinkedinScrapeResponse{}
+
 	r, err := httpClient.Get(url)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch linkedin scrape request")
 	}
 	defer r.Body.Close()
+
+	// do raw decode first and check for success plus api limit messages
+	if err := json.NewDecoder(r.Body).Decode(&apiLimitResponse); err != nil {
+		return nil, errors.Wrap(err, "failed to decode linkedin scrape response")
+	}
+
+	if apiLimitResponse.Success != nil && !*apiLimitResponse.Success {
+		err := errors.New(string(*apiLimitResponse.Message))
+		return nil, errors.Wrap(err, "Received error from linkedin scrape api")
+	}
 
 	if err := json.NewDecoder(r.Body).Decode(&linkedinScrape); err != nil {
 		return nil, errors.Wrap(err, "failed to decode linkedin scrape response")
