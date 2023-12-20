@@ -35,7 +35,7 @@ type DashboardRevenueAtRiskData struct {
 
 type DashboardARRBreakdownData struct {
 	ArrBreakdown       float64
-	IncreasePercentage float64
+	IncreasePercentage string
 	Months             []*DashboardARRBreakdownPerMonthData
 }
 type DashboardARRBreakdownPerMonthData struct {
@@ -51,7 +51,7 @@ type DashboardARRBreakdownPerMonthData struct {
 
 type DashboardGrossRevenueRetentionData struct {
 	GrossRevenueRetention float64
-	IncreasePercentage    float64
+	IncreasePercentage    string
 	Months                []*DashboardGrossRevenueRetentionPerMonthData
 }
 type DashboardGrossRevenueRetentionPerMonthData struct {

@@ -516,7 +516,7 @@ type CustomerUser struct {
 
 type DashboardARRBreakdown struct {
 	ArrBreakdown       float64                          `json:"arrBreakdown"`
-	IncreasePercentage float64                          `json:"increasePercentage"`
+	IncreasePercentage string                           `json:"increasePercentage"`
 	PerMonth           []*DashboardARRBreakdownPerMonth `json:"perMonth"`
 }
 
@@ -541,7 +541,7 @@ type DashboardCustomerMap struct {
 
 type DashboardGrossRevenueRetention struct {
 	GrossRevenueRetention float64                                   `json:"grossRevenueRetention"`
-	IncreasePercentage    float64                                   `json:"increasePercentage"`
+	IncreasePercentage    string                                    `json:"increasePercentage"`
 	PerMonth              []*DashboardGrossRevenueRetentionPerMonth `json:"perMonth"`
 }
 

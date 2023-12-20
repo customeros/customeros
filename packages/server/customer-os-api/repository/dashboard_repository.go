@@ -47,6 +47,7 @@ type DashboardRepository interface {
 	GetDashboardARRBreakdownData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardARRBreakdownUpsellsAndDowngradesData(ctx context.Context, tenant, queryType string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardARRBreakdownRenewalsData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
+	GetDashboardARRBreakdownValueData(ctx context.Context, tenant string, date time.Time) (float64, error)
 	GetDashboardRetentionRateContractsRenewalsData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardRetentionRateContractsChurnedData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardAverageTimeToOnboardPerMonth(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
@@ -1086,6 +1087,72 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 	}
 
 	return results, nil
+}
+
+func (r *dashboardRepository) GetDashboardARRBreakdownValueData(ctx context.Context, tenant string, date time.Time) (float64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardARRBreakdownValueData")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("date", date))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			`
+					WITH $date AS date
+
+					WITH datetime({
+						YEAR: date.YEAR,
+						MONTH: date.MONTH,
+						 DAY: 1,
+							 HOUR: 0,
+							 MINUTE: 0,
+							 SECOND: 0,
+							 NANOSECOND: 0o00000000
+					}) AS beginOfMonth
+					
+					WITH beginOfMonth,
+						 beginOfMonth + duration({MONTHS: 1}) - duration({NANOSECONDS: 1}) AS endOfMonth,
+						 beginOfMonth + duration({MONTHS: 1}) AS startOfNextMonth
+					
+					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
+					WITH beginOfMonth, endOfMonth, c.id AS cid, sli ORDER BY sli.startedAt ASC
+
+					WHERE 
+					o.hide = false and o.isCustomer = true
+					AND c.serviceStartedAt IS NOT NULL 
+					AND sli.startedAt < startOfNextMonth 
+					AND (sli.endedAt IS NULL OR sli.endedAt >= startOfNextMonth) 
+					AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+				
+					WITH CASE WHEN sli.billed = 'MONTHLY' THEN 12 ELSE (CASE WHEN sli.billed = 'QUARTERLY' THEN 4 ELSE (CASE WHEN sli.billed = 'ANNUALLY' THEN 1 ELSE 0 END) END) END * sli.price * sli.quantity AS amount
+						
+					RETURN SUM(amount)
+				`, tenant, tenant, tenant),
+			map[string]any{
+				"tenant": tenant,
+				"date":   date,
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return 0.0, err
+	}
+
+	if dbRecords != nil {
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			return getCorrectValueType(v.Values[0]), nil
+		}
+	}
+
+	return 0.0, nil
 }
 
 func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {

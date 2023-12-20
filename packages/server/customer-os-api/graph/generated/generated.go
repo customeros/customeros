@@ -8762,7 +8762,7 @@ type DashboardMRRPerCustomerPerMonth {
 
 type DashboardGrossRevenueRetention {
     grossRevenueRetention: Float!
-    increasePercentage: Float!
+    increasePercentage: String!
     perMonth: [DashboardGrossRevenueRetentionPerMonth]!
 }
 type DashboardGrossRevenueRetentionPerMonth {
@@ -8772,7 +8772,7 @@ type DashboardGrossRevenueRetentionPerMonth {
 
 type DashboardARRBreakdown {
     arrBreakdown: Float!
-    increasePercentage: Float!
+    increasePercentage: String!
     perMonth: [DashboardARRBreakdownPerMonth]!
 }
 type DashboardARRBreakdownPerMonth {
@@ -20810,9 +20810,9 @@ func (ec *executionContext) _DashboardARRBreakdown_increasePercentage(ctx contex
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdown_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20822,7 +20822,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdown_increasePercentag
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21640,9 +21640,9 @@ func (ec *executionContext) _DashboardGrossRevenueRetention_increasePercentage(c
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardGrossRevenueRetention_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21652,7 +21652,7 @@ func (ec *executionContext) fieldContext_DashboardGrossRevenueRetention_increase
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil

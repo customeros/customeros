@@ -30,7 +30,7 @@ func Test_Dashboard_ARR_Breakdown_No_Period_No_Data_In_DB(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -88,7 +88,7 @@ func assert_Dashboard_ARR_Breakdown_PeriodIntervals(t *testing.T, start, end str
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, months, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -129,7 +129,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Not_Canceled(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -168,7 +168,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Before_Month(t *tes
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -207,7 +207,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_Before_Canceled_End_
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -246,7 +246,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_In_Month_Canceled_En
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -285,7 +285,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Annually(t *testing
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -324,7 +324,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Quarterly(t *testin
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -363,7 +363,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Canceled_Monthly(t *testing.
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -402,7 +402,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_Not_Customer(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -448,7 +448,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_No_Recurring_SLI(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -487,7 +487,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_Started_In_Month_Canceled_Ne
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -528,7 +528,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_Before_No
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -570,7 +570,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_Before_Ca
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -612,7 +612,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_Before_Ca
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -654,7 +654,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_In_Cancel
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -678,12 +678,16 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_2_Contracts_1_Active_SLI_1_Cance
 	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
 
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+		ServiceStartedAt: &sli1StartedAt,
+	}, entity.OpportunityEntity{})
 
 	sli1Id := insertServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
 	insertServiceLineItemCanceledWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1EndedAt, sli1Id)
 
-	contract2Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	contract2Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+		ServiceStartedAt: &sli1StartedAt,
+	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -699,8 +703,8 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_2_Contracts_1_Active_SLI_1_Cance
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -743,7 +747,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_2_Contracts_With_1_Canceled_SLI(
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -785,7 +789,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_SLI_2_Versions_Started_In_Cancel
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -825,7 +829,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Draft_Contract_In_Month(t *te
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -873,7 +877,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Live_Contract_In_Month_No_Rec
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -922,14 +926,15 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Ended_Contract_In_Month(t *te
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
 		require.Equal(t, float64(0), month.NewlyContracted)
+		require.Equal(t, float64(24), month.Churned)
 	}
 }
 
@@ -945,7 +950,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Before_Month(t *test
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusEnded,
+		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
@@ -963,8 +968,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Before_Month(t *test
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1004,8 +1009,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Beginning_Of_Month(t
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1045,8 +1050,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_End_Of_Month(t *test
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1087,7 +1092,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Not_Customer(t *test
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1132,7 +1137,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_No_Recurring_SLI(t *
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1173,7 +1178,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Next_Month(t *testin
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1216,8 +1221,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_SLI_2_Versions(t
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(48), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+48", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1257,8 +1262,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Annually(t *testing.
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1298,8 +1303,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Quarterly(t *testing
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(32), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+32", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1339,8 +1344,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_Monthly(t *testing.T
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1386,8 +1391,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_SLI_3_Versions(t
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(288), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+288", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1434,8 +1439,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_2_Contracts_1_SLI_1_Version(t
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(72), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+72", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1487,8 +1492,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_2_Contracts_1_SLI_2_Versions(
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(1056), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+1056", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1531,8 +1536,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_2_SLI(t *testing.T
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(264), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+264", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1579,8 +1584,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_2_SLI_2_Versions(t
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(1056), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+1056", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1633,8 +1638,8 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_1_Contract_1_Active_SLI_1_Con
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(96), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+96", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1674,7 +1679,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Draft_Contract_In_Month(t *testing.T) 
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1714,13 +1719,14 @@ func Test_Dashboard_ARR_Breakdown_Churned_Live_Contract_In_Month(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
+		require.Equal(t, float64(24), month.NewlyContracted)
 		require.Equal(t, float64(0), month.Churned)
 	}
 }
@@ -1756,8 +1762,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1803,7 +1809,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month_No_Recurring_SLI(t *
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1845,7 +1851,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month_Not_Customer(t *test
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1871,7 +1877,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Before_Month(t *testing.T) {
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	insertServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -1887,7 +1893,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Before_Month(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1928,8 +1934,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Beginning_Month(t *testing.T)
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -1970,8 +1976,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_End_Month(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2013,7 +2019,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Next_Month(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2054,8 +2060,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Annually(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2096,8 +2102,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Quarterly(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(32), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+32", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2138,8 +2144,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Monthly(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2182,8 +2188,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_1_SLI_2_Versions(t *testing
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(96), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+96", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2232,8 +2238,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_1_Version(t *testing
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(72), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+72", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2253,7 +2259,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_2_Versions(t *testin
 		IsCustomer: true,
 	})
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusEnded,
@@ -2261,9 +2267,9 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_2_Versions(t *testin
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
 	sli1Id := insertServiceLineItemEnded(ctx, driver, contract1Id, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
-	insertServiceLineItemWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1Id)
+	insertServiceLineItemEndedWithParent(ctx, driver, contract1Id, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1MiddleAt, sli1Id)
 
-	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli2MiddleAt := neo4jt.MiddleTimeOfMonth(2023, 7)
 	contract2Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusEnded,
@@ -2271,7 +2277,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_2_Versions(t *testin
 		EndedAt:          &sli2StartedAt,
 	}, entity.OpportunityEntity{})
 	sli2Id := insertServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 120, 2, sli2StartedAt, sli2MiddleAt)
-	insertServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 240, 4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli2Id)
+	insertServiceLineItemEndedWithParent(ctx, driver, contract2Id, entity.BilledTypeAnnually, 240, 4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt, sli2Id)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2287,13 +2293,13 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Contracts_1_SLI_2_Versions(t *testin
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "-100%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
 		require.Equal(t, 2023, month.Year)
 		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(1056), month.Churned)
+		require.Equal(t, float64(0), month.Churned)
 	}
 }
 
@@ -2334,8 +2340,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(72), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+72", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2386,8 +2392,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI_2_Versions(t *testing
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(1056), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+1056", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2444,8 +2450,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_2_Organizations_1_Contract_Each(t *tes
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(72), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+72", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2497,8 +2503,8 @@ func Test_Dashboard_ARR_Breakdown_Churned_1_Contract_2_SLI_1_Canceled(t *testing
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(96), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+96", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2538,7 +2544,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Draft_Contract_No_Upsell_In_Month(t *t
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2580,7 +2586,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Draft_Contract_With_Upsell_In_Month(t 
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2620,8 +2626,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Live_Contract_No_Upsell_In_Month(t *te
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2666,8 +2672,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Live_Contract_With_Upsell_In_Month_Sho
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(96), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+96", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2714,7 +2720,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Live_Contract_With_Upsell_And_SLI_Canc
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2759,8 +2765,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Live_Contract_With_Downgrade_In_Month(
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(12), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+12", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2787,7 +2793,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Ended_Contract_No_Upsell_In_Month(t *t
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1EndedAt,
 	}, entity.OpportunityEntity{})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	insertServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2803,7 +2809,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Ended_Contract_No_Upsell_In_Month(t *t
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2832,7 +2838,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Ended_Contract_With_Upsell_In_Month(t 
 		EndedAt:          &sli1EndedAt,
 	}, entity.OpportunityEntity{})
 	sliId := insertServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
-	insertServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sliId)
+	insertServiceLineItemEndedWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1EndedAt, sliId)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -2848,7 +2854,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Ended_Contract_With_Upsell_In_Month(t 
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2894,7 +2900,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Contract_No_Upsell_No_Recurring_SLI(t 
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2948,7 +2954,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Contract_With_Upsell_No_Recurring_SLI(
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -2992,7 +2998,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Not_Customer(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3034,8 +3040,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Before_Month(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(96), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3080,8 +3086,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Beginning_Month(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(96), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "3×", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3126,8 +3132,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_End_Month(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(96), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "3×", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3169,8 +3175,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Next_Month(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3215,8 +3221,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_2_SLI_Versions_Both_Annually(t *testin
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(96), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "3×", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3261,8 +3267,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_2_SLI_Versions_1_Annually_1_Quarterly(
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(96), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "3×", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3307,8 +3313,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_2_SLI_Versions_1_Annually_1_Monthly(t 
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(576), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "23×", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3353,8 +3359,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_2_SLI_Versions_Both_Quarterly(t *testi
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(384), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "3×", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3399,8 +3405,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_2_SLI_Versions_1_Quarterly_1_Monthly(t
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(288), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "5×", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3445,8 +3451,8 @@ func Test_Dashboard_ARR_Breakdown_Upsells_2_SLI_Versions_Both_Monthly(t *testing
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(1152), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "3×", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3488,7 +3494,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Draft_Contract_With_Downgrade_In_Mo
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3528,8 +3534,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Live_Contract_No_Downgrade_In_Month
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3574,8 +3580,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Live_Contract_With_Downgrade_In_Mon
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(12), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-50%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3622,7 +3628,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Live_Contract_With_Downgrade_And_SL
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3667,8 +3673,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Live_Contract_With_Upsell_In_Month(
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(48), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+48", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3710,8 +3716,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Ended_Contract_No_Downgrade_In_Mont
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3755,8 +3761,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Ended_Contract_With_Downgrade_In_Mo
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(12), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+12", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3802,7 +3808,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Contract_No_Downgrade_No_Recurring_
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3856,7 +3862,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Contract_With_Downgrade_No_Recurrin
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3900,7 +3906,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Not_Customer(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3942,8 +3948,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Before_Month(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(12), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -3988,8 +3994,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Beginning_Month(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(12), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-50%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4034,8 +4040,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_End_Month(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(12), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-50%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4077,8 +4083,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Next_Month(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+24", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4123,8 +4129,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_2_SLI_Versions_Both_Annually(t *tes
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(12), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-50%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4169,8 +4175,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_2_SLI_Versions_1_Annually_1_Quarter
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(16), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-33%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4215,8 +4221,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_2_SLI_Versions_1_Annually_1_Monthly
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-25%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4261,8 +4267,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_2_SLI_Versions_Both_Quarterly(t *te
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(48), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-50%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4307,8 +4313,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_2_SLI_Versions_1_Quarterly_1_Monthl
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-40%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4353,8 +4359,8 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_2_SLI_Versions_Both_Monthly(t *test
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(144), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-50%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4407,8 +4413,8 @@ func Test_Dashboard_ARR_Breakdown_1_Contract_With_Upsell_1_Contract_Without_Upse
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(48), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+33%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4461,8 +4467,8 @@ func Test_Dashboard_ARR_Breakdown_1_Contract_With_Downgrade_1_Contract_Without_D
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(12), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-67%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4517,8 +4523,8 @@ func Test_Dashboard_ARR_Breakdown_2_Contracts_With_Upsells(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(72), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4583,8 +4589,8 @@ func Test_Dashboard_ARR_Breakdown_2_Contracts_With_2_Upsells(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(792), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4639,8 +4645,8 @@ func Test_Dashboard_ARR_Breakdown_2_Contracts_With_Downgrades(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(18), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-50%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4705,8 +4711,8 @@ func Test_Dashboard_ARR_Breakdown_2_Contracts_With_2_Downgrades(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(198), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-50%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4763,8 +4769,8 @@ func Test_Dashboard_ARR_Breakdown_2_Organizations_1_Contract_With_Upsell_Each(t 
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(72), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4821,8 +4827,8 @@ func Test_Dashboard_ARR_Breakdown_2_Organizations_1_Contract_With_Downgrade_Each
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(18), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-50%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4879,8 +4885,8 @@ func Test_Dashboard_ARR_Breakdown_2_Contracts_With_Downgrade_Each(t *testing.T) 
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(18), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-50%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4934,8 +4940,8 @@ func Test_Dashboard_ARR_Breakdown_1_Organization_With_1_Contract_With_Downgrade_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(36), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "0%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4995,8 +5001,8 @@ func Test_Dashboard_ARR_Breakdown_1_Organization_With_1_Contract_With_Downgrade_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(42), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+17%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -5061,8 +5067,8 @@ func Test_Dashboard_ARR_Breakdown_1_Organization_With_1_Contract_With_Downgrade_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(42), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+17%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {

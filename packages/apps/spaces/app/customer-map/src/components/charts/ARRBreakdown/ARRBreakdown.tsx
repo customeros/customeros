@@ -38,7 +38,7 @@ export const ARRBreakdown = () => {
   })) as ARRBreakdownDatum[];
 
   const stat = formatCurrency(data?.dashboard_ARRBreakdown?.arrBreakdown ?? 0);
-  const percentage = data?.dashboard_ARRBreakdown?.increasePercentage ?? 0;
+  const percentage = data?.dashboard_ARRBreakdown?.increasePercentage ?? '0';
 
   return (
     <ChartCard
