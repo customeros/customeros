@@ -12,6 +12,7 @@ extend type Query {
     dashboard_RetentionRate(period: DashboardPeriodInput): DashboardRetentionRate
     dashboard_NewCustomers(period: DashboardPeriodInput): DashboardNewCustomers
     dashboard_TimeToOnboard(period: DashboardPeriodInput): DashboardTimeToOnboard
+    dashboard_OnboardingCompletion(period: DashboardPeriodInput): DashboardOnboardingCompletion
 }
 
 input DashboardPeriodInput {
@@ -106,6 +107,18 @@ type DashboardTimeToOnboard {
 }
 
 type DashboardTimeToOnboardPerMonth {
+    year: Int!
+    month: Int!
+    value: Float!
+}
+
+type DashboardOnboardingCompletion {
+    completionPercentage: Float!
+    increasePercentage: Float!
+    perMonth: [DashboardOnboardingCompletionPerMonth!]!
+}
+
+type DashboardOnboardingCompletionPerMonth {
     year: Int!
     month: Int!
     value: Float!

@@ -1,0 +1,11 @@
+query GetDashboard_OnboardingCompletion {
+  dashboard_OnboardingCompletion {
+    completionPercentage
+    increasePercentage
+    perMonth {
+      year
+      month
+      value
+    }
+  }
+}

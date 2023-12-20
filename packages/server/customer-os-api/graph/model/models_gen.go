@@ -574,6 +574,18 @@ type DashboardNewCustomersPerMonth struct {
 	Count int `json:"count"`
 }
 
+type DashboardOnboardingCompletion struct {
+	CompletionPercentage float64                                  `json:"completionPercentage"`
+	IncreasePercentage   float64                                  `json:"increasePercentage"`
+	PerMonth             []*DashboardOnboardingCompletionPerMonth `json:"perMonth"`
+}
+
+type DashboardOnboardingCompletionPerMonth struct {
+	Year  int     `json:"year"`
+	Month int     `json:"month"`
+	Value float64 `json:"value"`
+}
+
 type DashboardPeriodInput struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
