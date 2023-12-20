@@ -41,7 +41,7 @@ type DashboardMRRPerCustomerPerMonth {
 
 type DashboardGrossRevenueRetention {
     grossRevenueRetention: Float!
-    increasePercentage: Float!
+    increasePercentage: String!
     perMonth: [DashboardGrossRevenueRetentionPerMonth]!
 }
 type DashboardGrossRevenueRetentionPerMonth {
@@ -51,7 +51,7 @@ type DashboardGrossRevenueRetentionPerMonth {
 
 type DashboardARRBreakdown {
     arrBreakdown: Float!
-    increasePercentage: Float!
+    increasePercentage: String!
     perMonth: [DashboardARRBreakdownPerMonth]!
 }
 type DashboardARRBreakdownPerMonth {

@@ -22,11 +22,7 @@ const quotes = [
   'Dancing to the tune of déjà vu',
 ];
 
-export const PercentageTrend = ({
-  percentage,
-}: {
-  percentage: string | number;
-}) => {
+export const PercentageTrend = ({ percentage }: { percentage: string }) => {
   percentage = `${percentage}`;
   const icon =
     percentage.indexOf('0') == 0 ? (

@@ -38,7 +38,7 @@ export const GrossRevenueRetention = () => {
   }%`;
 
   const percentage =
-    data?.dashboard_GrossRevenueRetention?.increasePercentage ?? 0;
+    data?.dashboard_GrossRevenueRetention?.increasePercentage ?? '0';
 
   return (
     <ChartCard

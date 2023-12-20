@@ -614,7 +614,7 @@ export type CustomerUser = {
 export type DashboardArrBreakdown = {
   __typename?: 'DashboardARRBreakdown';
   arrBreakdown: Scalars['Float'];
-  increasePercentage: Scalars['Float'];
+  increasePercentage: Scalars['String'];
   perMonth: Array<Maybe<DashboardArrBreakdownPerMonth>>;
 };
 
@@ -648,7 +648,7 @@ export enum DashboardCustomerMapState {
 export type DashboardGrossRevenueRetention = {
   __typename?: 'DashboardGrossRevenueRetention';
   grossRevenueRetention: Scalars['Float'];
-  increasePercentage: Scalars['Float'];
+  increasePercentage: Scalars['String'];
   perMonth: Array<Maybe<DashboardGrossRevenueRetentionPerMonth>>;
 };
 
@@ -710,6 +710,20 @@ export type DashboardRevenueAtRisk = {
   __typename?: 'DashboardRevenueAtRisk';
   atRisk: Scalars['Float'];
   highConfidence: Scalars['Float'];
+};
+
+export type DashboardTimeToOnboard = {
+  __typename?: 'DashboardTimeToOnboard';
+  increasePercentage?: Maybe<Scalars['Float']>;
+  perMonth: Array<DashboardTimeToOnboardPerMonth>;
+  timeToOnboard?: Maybe<Scalars['Float']>;
+};
+
+export type DashboardTimeToOnboardPerMonth = {
+  __typename?: 'DashboardTimeToOnboardPerMonth';
+  month: Scalars['Int'];
+  value: Scalars['Float'];
+  year: Scalars['Int'];
 };
 
 export enum DataSource {
@@ -2654,6 +2668,7 @@ export type Query = {
   dashboard_NewCustomers?: Maybe<DashboardNewCustomers>;
   dashboard_RetentionRate?: Maybe<DashboardRetentionRate>;
   dashboard_RevenueAtRisk?: Maybe<DashboardRevenueAtRisk>;
+  dashboard_TimeToOnboard?: Maybe<DashboardTimeToOnboard>;
   email: Email;
   entityTemplates: Array<EntityTemplate>;
   externalMeetings: MeetingsPage;
@@ -2740,6 +2755,10 @@ export type QueryDashboard_RetentionRateArgs = {
 };
 
 export type QueryDashboard_RevenueAtRiskArgs = {
+  period?: InputMaybe<DashboardPeriodInput>;
+};
+
+export type QueryDashboard_TimeToOnboardArgs = {
   period?: InputMaybe<DashboardPeriodInput>;
 };
 

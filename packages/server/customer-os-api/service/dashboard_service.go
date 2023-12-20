@@ -195,7 +195,7 @@ func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Con
 	response := entityDashboard.DashboardGrossRevenueRetentionData{}
 
 	response.GrossRevenueRetention = 85
-	response.IncreasePercentage = 5.4
+	response.IncreasePercentage = "+5%"
 
 	min := float64(0)
 	max := float64(1)
@@ -217,9 +217,6 @@ func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, sta
 	span.LogFields(log.Object("end", end))
 
 	response := entityDashboard.DashboardARRBreakdownData{}
-
-	response.ArrBreakdown = 0
-	response.IncreasePercentage = 0
 
 	data, err := s.repositories.DashboardRepository.GetDashboardARRBreakdownData(ctx, common.GetContext(ctx).Tenant, start, end)
 	if err != nil {
@@ -300,6 +297,19 @@ func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, sta
 			}
 		}
 	}
+
+	arrValueCurrentMonth, err := s.repositories.DashboardRepository.GetDashboardARRBreakdownValueData(ctx, common.GetContext(ctx).Tenant, end)
+	if err != nil {
+		return nil, err
+	}
+
+	arrValuePreviousMonth, err := s.repositories.DashboardRepository.GetDashboardARRBreakdownValueData(ctx, common.GetContext(ctx).Tenant, end.AddDate(0, -1, 0))
+	if err != nil {
+		return nil, err
+	}
+
+	response.ArrBreakdown = arrValueCurrentMonth
+	response.IncreasePercentage = ComputeNumbersDisplay(arrValuePreviousMonth, arrValueCurrentMonth)
 
 	return &response, nil
 }
