@@ -59,8 +59,7 @@ export const OrganizationSidenav = () => {
       flexDir='column'
       gridArea='sidebar'
       position='relative'
-      border='1px solid'
-      borderRadius='2xl'
+      borderRight='1px solid'
       borderColor='gray.200'
     >
       <Flex gap='2' align='center' mb='4'>
@@ -99,7 +98,7 @@ export const OrganizationSidenav = () => {
         </Flex>
       </Flex>
 
-      <VStack spacing='2' w='full'>
+      <VStack spacing='1' w='full'>
         <SidenavItem
           label='About'
           isActive={checkIsActive('about') || !searchParams?.get('tab')}
@@ -107,7 +106,7 @@ export const OrganizationSidenav = () => {
           icon={
             <Icons.InfoSquare
               color={checkIsActive('about') ? 'gray.700' : 'gray.500'}
-              boxSize='6'
+              boxSize='5'
             />
           }
         />
@@ -118,7 +117,7 @@ export const OrganizationSidenav = () => {
           icon={
             <Icons.Users2
               color={checkIsActive('people') ? 'gray.700' : 'gray.500'}
-              boxSize='6'
+              boxSize='5'
             />
           }
         />
@@ -129,7 +128,7 @@ export const OrganizationSidenav = () => {
           icon={
             <Icons.ActivityHeart
               color={checkIsActive('account') ? 'gray.700' : 'gray.500'}
-              boxSize='6'
+              boxSize='5'
             />
           }
         />
@@ -140,7 +139,7 @@ export const OrganizationSidenav = () => {
           icon={
             <Ticket02
               color={checkIsActive('issues') ? 'gray.700' : 'gray.500'}
-              boxSize='6'
+              boxSize='5'
             />
           }
         />
@@ -152,7 +151,7 @@ export const OrganizationSidenav = () => {
             icon={
               <Trophy01
                 color={checkIsActive('success') ? 'gray.700' : 'gray.500'}
-                boxSize='6'
+                boxSize='5'
               />
             }
           />

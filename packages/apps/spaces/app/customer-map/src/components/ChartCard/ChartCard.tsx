@@ -33,7 +33,7 @@ export const ChartCard = ({
     <>
       <Card
         borderRadius='lg'
-        boxShadow='xs'
+        boxShadow='none'
         border='1px solid'
         borderColor='gray.200'
         _hover={{

@@ -72,11 +72,13 @@ export const useOrganizationsPageMethods = () => {
         queryKey,
         context?.previousEntries,
       );
-      toastError('Failed to create organization', 'create-organization-error');
+      toastError(
+        `We couldn't create this organization`,
+        'create-organization-error',
+      );
     },
     onSuccess: ({ organization_Create: { id } }) => {
       push(`/organization/${id}`);
-      toastSuccess('Organization created', 'create-organization-success');
     },
     onSettled: () => {
       queryClient.invalidateQueries(queryKey);

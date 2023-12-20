@@ -8,5 +8,5 @@ export const options: SelectOption<OnboardingStatus>[] = [
   { label: 'Stuck', value: OnboardingStatus.Stuck },
   { label: 'On track', value: OnboardingStatus.OnTrack },
   { label: 'Done', value: OnboardingStatus.Done },
-  { label: 'Success', value: OnboardingStatus.Successful },
+  { label: 'Successful', value: OnboardingStatus.Successful },
 ];

@@ -80,7 +80,8 @@ export const RootSidenav = () => {
   return (
     <GridItem
       px='2'
-      py='4'
+      pt='2.5'
+      pb='4'
       h='full'
       w='200px'
       bg='white'
@@ -88,16 +89,16 @@ export const RootSidenav = () => {
       flexDir='column'
       gridArea='sidebar'
       position='relative'
-      border='1px solid'
-      borderRadius='2xl'
+      borderRight='1px solid'
       borderColor='gray.200'
     >
       <Flex
         mb='4'
+        ml='3'
         tabIndex={0}
         role='button'
         cursor='pointer'
-        justify='center'
+        justify='flex-start'
         overflow='hidden'
         position='relative'
       >

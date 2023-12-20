@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
@@ -14,13 +15,13 @@ import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { SelectOption } from '@ui/utils/types';
 import { Flag04 } from '@ui/media/icons/Flag04';
-import { FormSelect } from '@ui/form/SyncSelect';
 import { Heading } from '@ui/typography/Heading';
+import { toastError } from '@ui/presentation/Toast';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { FormSelect, SelectInstance } from '@ui/form/SyncSelect';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { OnboardingStatus, OnboardingDetails } from '@graphql/types';
 import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
@@ -53,17 +54,20 @@ interface OnboardingStatusModalProps {
 
 const formId = 'onboarding-status-update-form';
 
-const getIcon = (status: OnboardingStatus) => {
-  const color = match(status)
+const getIconcolorScheme = (status: OnboardingStatus) =>
+  match(status)
     .returnType<string>()
     .with(
       OnboardingStatus.Successful,
       OnboardingStatus.OnTrack,
       OnboardingStatus.Done,
-      () => 'success.500',
+      () => 'success',
     )
-    .with(OnboardingStatus.Late, OnboardingStatus.Stuck, () => 'warning.500')
-    .otherwise(() => 'gray.500');
+    .with(OnboardingStatus.Late, OnboardingStatus.Stuck, () => 'warning')
+    .otherwise(() => 'gray');
+
+const getIcon = (status: OnboardingStatus) => {
+  const color = `${getIconcolorScheme(status)}.500`;
 
   return match(status)
     .with(OnboardingStatus.Successful, () => <Trophy01 color={color} mr='3' />)
@@ -79,6 +83,7 @@ export const OnboardingStatusModal = ({
   const queryClient = useQueryClient();
   const id = useParams()?.id as string;
   const queryKey = useOrganizationQuery.getKey({ id });
+  const initialFocusRef = useRef<SelectInstance>(null);
 
   const [timelineMeta] = useTimelineMeta();
   const timelineQueryKey = useInfiniteGetTimelineQuery.getKey(
@@ -104,19 +109,13 @@ export const OnboardingStatusModal = ({
 
       return { previousEntries };
     },
-    onSuccess: () => {
-      toastSuccess(
-        'Onboarding status updated',
-        `${id}-onboarding-status-update`,
-      );
-    },
     onError: (_, __, context) => {
       queryClient.setQueryData<OrganizationQuery>(
         queryKey,
         context?.previousEntries,
       );
       toastError(
-        'Failed to update onboarding status',
+        `We couldn't update the onboarding status`,
         `${id}-onboarding-status-update-error`,
       );
     },
@@ -128,25 +127,37 @@ export const OnboardingStatusModal = ({
   });
 
   const defaultValues = OnboardingStatusDto.toForm(data);
-  const { handleSubmit } = useForm<OnboardingStatusForm>({
-    formId,
-    defaultValues,
-    onSubmit: async (values) => {
-      updateOnboardingStatus.mutate({
-        input: OnboardingStatusDto.toPayload({ id, ...values }),
-      });
-    },
-    stateReducer: (_, action, next) => {
-      if (action.type === 'HAS_SUBMITTED') {
-        return { ...next, values: { ...next.values, comments: '' } };
-      }
+  const { state, handleSubmit, setDefaultValues } =
+    useForm<OnboardingStatusForm>({
+      formId,
+      defaultValues,
+      onSubmit: async (values) => {
+        updateOnboardingStatus.mutate({
+          input: OnboardingStatusDto.toPayload({ id, ...values }),
+        });
+      },
+      stateReducer: (_, action, next) => {
+        if (action.type === 'HAS_SUBMITTED') {
+          return { ...next, values: { ...next.values, comments: '' } };
+        }
 
-      return next;
-    },
-  });
+        return next;
+      },
+    });
+
+  useEffect(() => {
+    if (!isOpen) {
+      setDefaultValues(defaultValues);
+    }
+  }, [isOpen]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} closeOnEsc>
+    <Modal
+      closeOnEsc
+      isOpen={isOpen}
+      onClose={onClose}
+      initialFocusRef={initialFocusRef}
+    >
       <ModalOverlay />
       <ModalContent
         as='form'
@@ -161,8 +172,17 @@ export const OnboardingStatusModal = ({
       >
         <ModalCloseButton />
         <ModalHeader>
-          <FeaturedIcon size='lg' colorScheme='success'>
-            <Flag04 />
+          <FeaturedIcon
+            size='lg'
+            colorScheme={getIconcolorScheme(
+              state?.values?.status?.value ?? OnboardingStatus.NotApplicable,
+            )}
+          >
+            {state?.values?.status?.value === OnboardingStatus.Successful ? (
+              <Trophy01 />
+            ) : (
+              <Flag04 />
+            )}
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>
             Update onboarding status
@@ -175,7 +195,8 @@ export const OnboardingStatusModal = ({
             isLabelVisible
             formId={formId}
             options={options}
-            leftElement={<Flag04 color='gray.500' mr='3' />}
+            openMenuOnFocus
+            ref={initialFocusRef}
             isDisabled={updateOnboardingStatus.isLoading}
             components={{
               Option: ({

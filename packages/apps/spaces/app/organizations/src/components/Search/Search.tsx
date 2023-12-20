@@ -35,18 +35,15 @@ export const Search = () => {
   return (
     <InputGroup
       w='full'
-      mb='2'
       size='lg'
       bg='gray.25'
-      borderRadius='1rem'
-      border='1px solid'
-      borderColor='gray.200'
       onChange={debounce(handleChange, 300)}
     >
-      <InputLeftElement>
-        <SearchSm boxSize='6' />
+      <InputLeftElement w='9'>
+        <SearchSm boxSize='5' />
       </InputLeftElement>
       <Input
+        pl='9'
         autoCorrect='off'
         spellCheck={false}
         placeholder={placeholder}
