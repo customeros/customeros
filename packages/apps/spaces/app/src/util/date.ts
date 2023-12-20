@@ -1,6 +1,8 @@
 import differenceInDays from 'date-fns/differenceInDays';
 import differenceInWeeks from 'date-fns/differenceInWeeks';
+import differenceInHours from 'date-fns/differenceInHours';
 import differenceInMonths from 'date-fns/differenceInMonths';
+import differenceInMinutes from 'date-fns/differenceInMinutes';
 
 export function getDifferenceFromNow(targetDate: string) {
   const now = new Date();
@@ -24,4 +26,21 @@ export function getDifferenceFromNow(targetDate: string) {
   const roundedMonths = weeks % 4 > 2 ? months + 1 : months;
 
   return [roundedMonths, 'months'];
+}
+
+export function getDifferenceInMinutesOrHours(targetDate: string) {
+  const now = new Date();
+  const next = new Date(targetDate);
+
+  const minutes = Math.abs(differenceInMinutes(next, now));
+  const hours = Math.abs(differenceInHours(next, now));
+
+  if (minutes === 0) return ['1', 'minute'];
+  if (minutes === 1) return [minutes, 'minute'];
+  if (minutes < 60 && minutes > 1) return [minutes, 'minutes'];
+
+  if (hours === 1) return [hours, 'hour'];
+  if (hours <= 24 && hours > 1) return [hours, 'hours'];
+
+  return [hours, 'hours'];
 }

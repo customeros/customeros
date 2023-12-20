@@ -30,7 +30,7 @@ export default async function OrganizationLayout({
           columnGap={2}
           gap={0}
         >
-          <Flex flexDir='row' columnGap={2} h='100%'>
+          <Flex flexDir='row' h='100%'>
             {children}
           </Flex>
         </GridItem>

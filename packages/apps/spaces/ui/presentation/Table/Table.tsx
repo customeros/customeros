@@ -324,9 +324,8 @@ const TContent = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
       bg='gray.25'
       overflow='auto'
       flexDir='column'
-      borderRadius='2xl'
       borderStyle='hidden'
-      border='1px solid'
+      borderTop='1px solid'
       borderColor='gray.200'
       height='calc(100vh - 74px)'
       sx={{

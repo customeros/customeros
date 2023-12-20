@@ -40,8 +40,7 @@ export const SettingsSidenav = () => {
       flexDir='column'
       gridArea='sidebar'
       position='relative'
-      border='1px solid'
-      borderRadius='2xl'
+      borderRight='1px solid'
       borderColor='gray.200'
     >
       <Flex gap='2' align='center' mb='4'>
