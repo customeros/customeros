@@ -1276,7 +1276,7 @@ func (r *dashboardRepository) GetDashboardGRRBreakdownData(ctx context.Context, 
 
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
-					WITH datetime({year: 2023, month: 1, day: 1}) as startDate, datetime({year: 2023, month: 12, day: 1}) as endDate
+					WITH $startDate AS startDate, $endDate AS endDate
 WITH startDate.YEAR AS startYear, startDate.MONTH AS startMonth, endDate.YEAR AS endYear, endDate.MONTH AS endMonth
 WITH RANGE(startYear * 12 + startMonth - 1, endYear * 12 + endMonth - 1) AS monthsRange
 UNWIND monthsRange AS monthsSinceEpoch
