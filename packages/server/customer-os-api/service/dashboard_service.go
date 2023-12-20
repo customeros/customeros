@@ -15,7 +15,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"math"
-	"math/rand"
 	"time"
 )
 
@@ -195,19 +194,66 @@ func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Con
 
 	response := entityDashboard.DashboardGrossRevenueRetentionData{}
 
-	response.GrossRevenueRetention = 85
-	response.IncreasePercentage = "+5%"
+	current := start
+	for current.Before(end) || current.Equal(end) {
+		fmt.Println(current.Month(), current.Year())
 
-	min := float64(0)
-	max := float64(1)
-	for i := 1; i <= 12; i++ {
-		response.Months = append(response.Months, &entityDashboard.DashboardGrossRevenueRetentionPerMonthData{
-			Month:      i,
-			Percentage: rand.Float64()*(max-min) + min,
-		})
+		newData := &entityDashboard.DashboardGrossRevenueRetentionPerMonthData{
+			Year:       current.Year(),
+			Month:      int(current.Month()),
+			Percentage: 0,
+		}
+
+		response.Months = append(response.Months, newData)
+
+		current = current.AddDate(0, 1, 0)
 	}
 
+	data, err := s.repositories.DashboardRepository.GetDashboardGRRData(ctx, common.GetContext(ctx).Tenant, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range data {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+		value, _ := record["value"].(float64)
+
+		for _, monthData := range response.Months {
+			if monthData.Year == int(year) && monthData.Month == int(month) {
+				if monthData.Percentage > 100 {
+					monthData.Percentage = 100
+				} else {
+					monthData.Percentage = roundToTwoDecimalPlaces(value)
+				}
+			}
+		}
+	}
+
+	currentValue := 0.0
+	previousValue := 0.0
+
+	if len(response.Months) == 1 {
+		currentValue = response.Months[len(response.Months)-1].Percentage
+	} else if len(response.Months) > 1 {
+		currentValue = response.Months[len(response.Months)-1].Percentage
+		previousValue = response.Months[len(response.Months)-2].Percentage
+	}
+
+	if currentValue == 0 {
+		if previousValue == 0 {
+			response.GrossRevenueRetention = 0
+		} else {
+			response.GrossRevenueRetention = -100
+		}
+	} else {
+		response.GrossRevenueRetention = roundToTwoDecimalPlaces(currentValue)
+	}
+
+	response.IncreasePercentage = ComputeNumbersDisplay(previousValue, currentValue)
+
 	return &response, nil
+
 }
 
 func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardARRBreakdownData, error) {

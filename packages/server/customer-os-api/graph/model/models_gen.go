@@ -546,6 +546,7 @@ type DashboardGrossRevenueRetention struct {
 }
 
 type DashboardGrossRevenueRetentionPerMonth struct {
+	Year       int     `json:"year"`
 	Month      int     `json:"month"`
 	Percentage float64 `json:"percentage"`
 }

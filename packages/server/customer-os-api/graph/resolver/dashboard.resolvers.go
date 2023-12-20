@@ -138,7 +138,7 @@ func (r *queryResolver) DashboardGrossRevenueRetention(ctx context.Context, peri
 	data, err := r.Services.QueryService.GetDashboardGrossRevenueRetentionData(ctx, startTime, endTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get the revenue at risk data for period %s - %s", startTime.String(), endTime.String())
+		graphql.AddErrorf(ctx, "Failed to get the gross revenue retention data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 

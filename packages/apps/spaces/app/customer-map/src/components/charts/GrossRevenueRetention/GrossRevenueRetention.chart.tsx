@@ -16,7 +16,6 @@ import { useTooltip, TooltipWithBounds } from '@visx/tooltip';
 
 import { useToken } from '@ui/utils';
 import { Flex } from '@ui/layout/Flex';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 import { mockData } from './mock';
 import { getMonthLabel } from '../util';
@@ -245,7 +244,7 @@ const GrossRevenueRetention = ({
             }}
           >
             {`${getMonthLabel(tooltipData.month)}: ${
-              hasContracts ? formatCurrency(tooltipData.value) : 'No data yet'
+              hasContracts ? '% ' + tooltipData.value : 'No data yet'
             }`}
           </TooltipWithBounds>
         )}

@@ -46,6 +46,7 @@ type DashboardGrossRevenueRetention {
     perMonth: [DashboardGrossRevenueRetentionPerMonth]!
 }
 type DashboardGrossRevenueRetentionPerMonth {
+    year: Int!
     month: Int!
     percentage: Float!
 }
