@@ -662,8 +662,8 @@ func (r *organizationRepository) UpdateOnboardingStatus(ctx context.Context, ten
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-				WHERE org.onboardingStatus IS NULL OR org.onboardingStatus <> $status
-				SET org.onboardingStatus=$status,
+				SET org.onboardingUpdatedAt = CASE WHEN org.onboardingStatus IS NULL OR org.onboardingStatus <> $status THEN $updatedAt ELSE org.onboardingUpdatedAt END,
+					org.onboardingStatus=$status,
 					org.onboardingStatusOrder=$statusOrder,
 					org.onboardingComments=$comments,
 					org.onboardingUpdatedAt=$updatedAt,
