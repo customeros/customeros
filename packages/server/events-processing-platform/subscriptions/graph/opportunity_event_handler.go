@@ -2,12 +2,15 @@ package graph
 
 import (
 	"context"
+	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -15,6 +18,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type OpportunityEventHandler struct {
@@ -29,6 +34,11 @@ func NewOpportunityEventHandler(log logger.Logger, repositories *repository.Repo
 		repositories: repositories,
 		grpcClients:  grpcClients,
 	}
+}
+
+type ActionLikelihoodMetadata struct {
+	Likelihood string `json:"likelihood"`
+	Reason     string `json:"reason"`
 }
 
 func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
@@ -316,6 +326,26 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		}
 	}
 
+	// prepare action for likelihood change
+	if likelihoodChanged {
+		contractDbNode, err := h.repositories.ContractRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while getting contract for opportunity %s: %s", opportunityId, err.Error())
+			return nil
+		}
+		if contractDbNode == nil {
+			return nil
+		}
+		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+
+		err = h.saveLikelihoodChangeAction(ctx, contract.Id, eventData, span)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("saveLikelihoodChangeAction failed: %v", err.Error())
+		}
+	}
+
 	return nil
 }
 
@@ -363,4 +393,33 @@ func (h *OpportunityEventHandler) OnCloseLoose(ctx context.Context, evt eventsto
 	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
 
 	return nil
+}
+
+func (h *OpportunityEventHandler) saveLikelihoodChangeAction(ctx context.Context, contractId string, eventData event.OpportunityUpdateRenewalEvent, span opentracing.Span) error {
+	metadata, err := utils.ToJson(ActionLikelihoodMetadata{
+		Reason:     eventData.Comments,
+		Likelihood: eventData.RenewalLikelihood,
+	})
+	userName := ""
+	if eventData.UpdatedByUserId != "" {
+		userDbNode, err := h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, eventData.UpdatedByUserId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to get user %s: %s", eventData.UpdatedByUserId, err.Error())
+		}
+		if userDbNode != nil {
+			user := graph_db.MapDbNodeToUserEntity(*userDbNode)
+			userName = user.GetFullName()
+		}
+	}
+	message := fmt.Sprintf("Renewal likelihood set to %s", cases.Title(language.English).String(eventData.RenewalLikelihood))
+	if userName != "" {
+		message += fmt.Sprintf(" by %s", userName)
+	}
+
+	extraActionProperties := map[string]interface{}{
+		"comments": eventData.Comments,
+	}
+	_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt, extraActionProperties)
+	return err
 }
