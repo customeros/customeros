@@ -50,6 +50,7 @@ interface OnboardingStatusModalProps {
   isOpen: boolean;
   onClose: () => void;
   data?: OnboardingDetails | null;
+  onFetching?: (status: boolean) => void;
 }
 
 const formId = 'onboarding-status-update-form';
@@ -78,10 +79,12 @@ export const OnboardingStatusModal = ({
   data,
   isOpen,
   onClose,
+  onFetching,
 }: OnboardingStatusModalProps) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const id = useParams()?.id as string;
+  const timeout = useRef<NodeJS.Timeout>();
   const queryKey = useOrganizationQuery.getKey({ id });
   const initialFocusRef = useRef<SelectInstance>(null);
 
@@ -92,6 +95,7 @@ export const OnboardingStatusModal = ({
 
   const updateOnboardingStatus = useUpdateOnboardingStatusMutation(client, {
     onMutate: ({ input }) => {
+      onFetching?.(true);
       queryClient.cancelQueries({ queryKey });
 
       const previousEntries =
@@ -118,11 +122,17 @@ export const OnboardingStatusModal = ({
         `We couldn't update the onboarding status`,
         `${id}-onboarding-status-update-error`,
       );
+      onFetching?.(false);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: timelineQueryKey });
       onClose();
+      if (timeout.current) clearTimeout(timeout.current);
+
+      timeout.current = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({ queryKey: timelineQueryKey });
+        onFetching?.(false);
+      }, 500);
     },
   });
 
@@ -149,7 +159,7 @@ export const OnboardingStatusModal = ({
     if (!isOpen) {
       setDefaultValues(defaultValues);
     }
-  }, [isOpen]);
+  }, [defaultValues]);
 
   return (
     <Modal
