@@ -327,16 +327,16 @@ const TContent = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
       borderStyle='hidden'
       borderTop='1px solid'
       borderColor='gray.200'
-      height='calc(100vh - 74px)'
+      height='calc(100vh - 48px)'
       sx={{
         '&::-webkit-scrollbar': {
-          width: '4px',
-          height: '4px',
+          width: '8px',
+          height: '8px',
           background: 'transparent',
         },
         '&::-webkit-scrollbar-track': {
-          width: '4px',
-          height: '4px',
+          width: '8px',
+          height: '8px',
           background: 'transparent',
         },
         '&::-webkit-scrollbar-thumb': {
