@@ -9136,6 +9136,8 @@ enum ExternalSystemType {
     SLACK
     INTERCOM
     SALESFORCE
+    STRIPE
+    MIXPANEL
 }
 
 type ExternalSystem {
@@ -10395,13 +10397,15 @@ input SocialUpdateInput {
 	{Name: "../schemas/source.graphqls", Input: `enum DataSource {
     NA,
     OPENLINE
+    WEBSCRAPE
     HUBSPOT
     ZENDESK_SUPPORT
     PIPEDRIVE
     SLACK
-    WEBSCRAPE
     INTERCOM
     SALESFORCE
+    STRIPE
+    MIXPANEL
 }`, BuiltIn: false},
 	{Name: "../schemas/state.graphqls", Input: `type State {
     id: ID!

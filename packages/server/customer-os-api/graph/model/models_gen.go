@@ -2315,30 +2315,34 @@ type DataSource string
 const (
 	DataSourceNa             DataSource = "NA"
 	DataSourceOpenline       DataSource = "OPENLINE"
+	DataSourceWebscrape      DataSource = "WEBSCRAPE"
 	DataSourceHubspot        DataSource = "HUBSPOT"
 	DataSourceZendeskSupport DataSource = "ZENDESK_SUPPORT"
 	DataSourcePipedrive      DataSource = "PIPEDRIVE"
 	DataSourceSLACk          DataSource = "SLACK"
-	DataSourceWebscrape      DataSource = "WEBSCRAPE"
 	DataSourceIntercom       DataSource = "INTERCOM"
 	DataSourceSalesforce     DataSource = "SALESFORCE"
+	DataSourceStripe         DataSource = "STRIPE"
+	DataSourceMixpanel       DataSource = "MIXPANEL"
 )
 
 var AllDataSource = []DataSource{
 	DataSourceNa,
 	DataSourceOpenline,
+	DataSourceWebscrape,
 	DataSourceHubspot,
 	DataSourceZendeskSupport,
 	DataSourcePipedrive,
 	DataSourceSLACk,
-	DataSourceWebscrape,
 	DataSourceIntercom,
 	DataSourceSalesforce,
+	DataSourceStripe,
+	DataSourceMixpanel,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceWebscrape, DataSourceIntercom, DataSourceSalesforce:
+	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel:
 		return true
 	}
 	return false
@@ -2504,6 +2508,8 @@ const (
 	ExternalSystemTypeSLACk          ExternalSystemType = "SLACK"
 	ExternalSystemTypeIntercom       ExternalSystemType = "INTERCOM"
 	ExternalSystemTypeSalesforce     ExternalSystemType = "SALESFORCE"
+	ExternalSystemTypeStripe         ExternalSystemType = "STRIPE"
+	ExternalSystemTypeMixpanel       ExternalSystemType = "MIXPANEL"
 )
 
 var AllExternalSystemType = []ExternalSystemType{
@@ -2514,11 +2520,13 @@ var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeSLACk,
 	ExternalSystemTypeIntercom,
 	ExternalSystemTypeSalesforce,
+	ExternalSystemTypeStripe,
+	ExternalSystemTypeMixpanel,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce, ExternalSystemTypeStripe, ExternalSystemTypeMixpanel:
 		return true
 	}
 	return false
