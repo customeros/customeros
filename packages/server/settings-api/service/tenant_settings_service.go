@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
@@ -101,6 +102,7 @@ const SERVICE_ZENDESK_TALK = "zendesktalk"
 const SERVICE_ZENDESK_SELL = "zendesksell"
 const SERVICE_ZENDESK_SUNSHINE = "zendesksunshine"
 const SERVICE_ZENEFITS = "zenefits"
+const SERVICE_MIXPANEL = "mixpanel"
 
 type TenantSettingsService interface {
 	GetForTenant(tenantName string) (*entity.TenantSettings, map[string]bool, error)
@@ -1300,8 +1302,39 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.ZenefitsToken = &token
 
-		}
+		case SERVICE_MIXPANEL:
+			username, ok := data["username"].(string)
+			if !ok {
+				return nil, nil, fmt.Errorf("missing username for Mixpanel integration")
+			}
+			secret, ok := data["secret"].(string)
+			if !ok {
+				return nil, nil, fmt.Errorf("missing secret for Mixpanel integration")
+			}
+			projectId, ok := data["projectId"].(string)
+			if !ok {
+				return nil, nil, fmt.Errorf("missing project id for Mixpanel integration")
+			}
+			projectSecret, ok := data["projectSecret"].(string)
+			if !ok {
+				return nil, nil, fmt.Errorf("missing project secret for Mixpanel integration")
+			}
+			projectTimezone, ok := data["projectTimezone"].(string)
+			if !ok {
+				return nil, nil, fmt.Errorf("missing project timezone for Mixpanel integration")
+			}
+			region, ok := data["region"].(string)
+			if !ok {
+				return nil, nil, fmt.Errorf("missing region for Mixpanel integration")
+			}
 
+			tenantSettings.MixpanelUsername = &username
+			tenantSettings.MixpanelSecret = &secret
+			tenantSettings.MixpanelProjectId = &projectId
+			tenantSettings.MixpanelProjectSecret = &projectSecret
+			tenantSettings.MixpanelProjectTimezone = &projectTimezone
+			tenantSettings.MixpanelRegion = &region
+		}
 	}
 
 	if legacyUpdate {
@@ -1598,7 +1631,13 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 				tenantSettings.ZendeskSunshineEmail = nil
 			case SERVICE_ZENEFITS:
 				tenantSettings.ZenefitsToken = nil
-
+			case SERVICE_MIXPANEL:
+				tenantSettings.MixpanelUsername = nil
+				tenantSettings.MixpanelSecret = nil
+				tenantSettings.MixpanelProjectSecret = nil
+				tenantSettings.MixpanelProjectId = nil
+				tenantSettings.MixpanelProjectTimezone = nil
+				tenantSettings.MixpanelRegion = nil
 			}
 		}
 

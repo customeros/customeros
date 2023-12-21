@@ -470,5 +470,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings, activeS
 		responseMap[service.SERVICE_ZENEFITS].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.MixpanelUsername != nil && tenantSettings.MixpanelSecret != nil && tenantSettings.MixpanelProjectId != nil && tenantSettings.MixpanelProjectSecret != nil && tenantSettings.MixpanelProjectTimezone != nil && tenantSettings.MixpanelRegion != nil {
+		responseMap[service.SERVICE_MIXPANEL] = make(map[string]interface{})
+		responseMap[service.SERVICE_MIXPANEL].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
