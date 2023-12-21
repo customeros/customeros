@@ -1,10 +1,11 @@
 package command
 
 import (
+	"time"
+
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"time"
 )
 
 type LinkPhoneNumberCommand struct {
@@ -169,5 +170,23 @@ func NewRemoveParentCommand(organizationId, tenant, userId, parentOrganizationId
 		BaseCommand:          eventstore.NewBaseCommand(organizationId, tenant, userId),
 		ParentOrganizationId: parentOrganizationId,
 		AppSource:            appSource,
+	}
+}
+
+type OrganizationOwnerUpdateCommand struct {
+	eventstore.BaseCommand
+	UpdatedAt      time.Time `json:"updatedAt"`
+	OwnerUserId    string    `json:"userId" validate:"required"` // who became owner
+	OrganizationId string    `json:"organizationId" validate:"required"`
+	ActorUserId    string    `json:"actorUserId"` // who set the owner
+}
+
+func NewOrganizationOwnerUpdateEvent(organizationId, tenant, userId, actorUserId, appSource string, updatedAt time.Time) *OrganizationOwnerUpdateCommand {
+	return &OrganizationOwnerUpdateCommand{
+		BaseCommand:    eventstore.NewBaseCommand(organizationId, tenant, userId),
+		UpdatedAt:      updatedAt,
+		OwnerUserId:    userId,
+		OrganizationId: organizationId,
+		ActorUserId:    actorUserId,
 	}
 }

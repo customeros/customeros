@@ -468,7 +468,7 @@ func NewOrganizationRemoveParentEvent(aggregate eventstore.Aggregate, parentOrga
 	return event, nil
 }
 
-type OrganizationUpdateOwnerEvent struct {
+type OrganizationOwnerUpdateEvent struct {
 	Tenant         string    `json:"tenant" validate:"required"`
 	UpdatedAt      time.Time `json:"updatedAt"`
 	OwnerUserId    string    `json:"userId" validate:"required"` // who became owner
@@ -476,8 +476,8 @@ type OrganizationUpdateOwnerEvent struct {
 	ActorUserId    string    `json:"actorUserId"` // who set the owner
 }
 
-func NewOrganizationUpdateOwnerEvent(aggregate eventstore.Aggregate, ownerUserId, actorUserId, organizationId string, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := OrganizationUpdateOwnerEvent{
+func NewOrganizationOwnerUpdateEvent(aggregate eventstore.Aggregate, ownerUserId, actorUserId, organizationId string, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationOwnerUpdateEvent{
 		Tenant:         aggregate.GetTenant(),
 		UpdatedAt:      updatedAt,
 		OwnerUserId:    ownerUserId,
