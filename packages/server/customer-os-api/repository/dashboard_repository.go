@@ -541,39 +541,54 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:ACTIVE_RENEWAL]->(op:Opportunity_%s)
-					WHERE o.hide = false AND c.serviceStartedAt IS NOT NULL and op.maxAmount IS NOT NULL
-					WITH o,  
-						 COLLECT(DISTINCT CASE
-						   WHEN c.status = 'ENDED' THEN 'CHURNED'
-						   WHEN c.status = 'LIVE' AND op.internalType = 'RENEWAL' AND op.renewalLikelihood = 'HIGH' THEN 'OK'
-						   ELSE 'AT_RISK' END) AS statuses,
-						 COLLECT(DISTINCT { id: c.id, serviceStartedAt: c.serviceStartedAt, status: c.status, maxAmount: op.maxAmount }) AS contractDetails
-					WITH *, CASE
-								WHEN ALL(x IN statuses WHERE x = 'CHURNED') THEN 'CHURNED'
-								WHEN ALL(x IN statuses WHERE x IN ['OK', 'CHURNED']) THEN 'OK'
-								ELSE 'AT_RISK'
-							END AS status
-
-					WITH *, REDUCE(s = null, cd IN contractDetails | 
-							 CASE WHEN s IS NULL OR cd.serviceStartedAt < s THEN cd.serviceStartedAt ELSE s END
-						 ) AS oldestServiceStartedAt
-
-					WITH *, REDUCE(s = null, cd IN contractDetails | 
-							 CASE WHEN s IS NULL OR cd.serviceStartedAt > s THEN cd.serviceStartedAt ELSE s END
-						 ) AS latestServiceStartedAt
-
-					WITH *, REDUCE(s = 0, cd IN contractDetails | 
-							 CASE WHEN cd.serviceStartedAt = latestServiceStartedAt THEN s + cd.maxAmount ELSE s END 
-						 ) AS latestContractLiveArr
+					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL
 					
-					WITH *, REDUCE(sum = 0, cd IN contractDetails | CASE WHEN cd.status <> 'ENDED' THEN sum + cd.maxAmount ELSE sum END ) AS arr
+					WITH o.id AS oid,
+						COLLECT(DISTINCT CASE
+							WHEN c.status = 'ENDED' THEN 'CHURNED'
+							WHEN c.status = 'LIVE' AND op.internalType = 'RENEWAL' AND op.renewalLikelihood = 'HIGH' THEN 'OK'
+							ELSE 'AT_RISK'
+						END) AS statuses,
+						COLLECT(DISTINCT { serviceStartedAt: c.serviceStartedAt }) AS contractsStartedAt
 					
-					RETURN o.id,
-						 oldestServiceStartedAt,
-						 status,
-						 CASE WHEN status = 'CHURNED' THEN latestContractLiveArr ELSE arr END as arr
+					WITH oid, CASE
+						WHEN ALL(x IN statuses WHERE x = 'CHURNED') THEN 'CHURNED'
+						WHEN ALL(x IN statuses WHERE x IN ['OK', 'CHURNED']) THEN 'OK'
+						ELSE 'AT_RISK'
+					END AS status,
+					REDUCE(s = null, cs IN contractsStartedAt | 
+						CASE WHEN s IS NULL OR cs.serviceStartedAt < s THEN cs.serviceStartedAt ELSE s END
+					) AS oldestServiceStartedAt
+					
+					MATCH (o:Organization_%s{id:oid})-[:HAS_CONTRACT]->(c:Contract_%s)-[r4:HAS_SERVICE]->(sli:ServiceLineItem_%s)
+					WHERE sli.endedAt IS NULL AND (sli.isCanceled IS NULL OR sli.isCanceled = false)
+						AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					
+					WITH oid, oldestServiceStartedAt, status, c, sli
+					ORDER BY c.serviceStartedAt DESC
+					
+					WITH oid, oldestServiceStartedAt, status, c, COLLECT(sli) AS sliListPerContract
+					ORDER BY CASE WHEN status = 'CHURNED' THEN c.endedAt ELSE c.serviceStartedAt END DESC
+					
+					WITH oid, oldestServiceStartedAt, status, COLLECT({cId: c.id, cStatus: c.status, sliList: sliListPerContract}) AS contractsDetails
+					
+					WITH oid, oldestServiceStartedAt, status, CASE WHEN status = 'CHURNED' THEN [contractsDetails[0]]
+						ELSE REDUCE(a = [], c IN contractsDetails | 
+							CASE WHEN c.cStatus = 'LIVE' THEN a + c ELSE a END
+						) END AS contracts
+					
+					WITH oid, oldestServiceStartedAt, status, REDUCE(s = [], c IN contracts | 
+						s + REDUCE(a = 0, sli IN c.sliList | 
+							a + CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity * 12
+							ELSE CASE WHEN sli.billed = 'QUARTERLY' THEN sli.price * sli.quantity * 4
+							ELSE CASE WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity
+							ELSE 0 END END END
+						)
+					) AS arrList
+					
+					RETURN oid, oldestServiceStartedAt, status, REDUCE(a = TOFLOAT(0), arr IN arrList | a + arr) AS arr
 					ORDER BY oldestServiceStartedAt ASC
-				`, tenant, tenant, tenant),
+				`, tenant, tenant, tenant, tenant, tenant, tenant),
 			map[string]any{
 				"tenant": tenant,
 			})
