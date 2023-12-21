@@ -43,6 +43,7 @@ const (
 	OnboardingStatus_Order_Late       = 30
 	OnboardingStatus_Order_OnTrack    = 40
 	OnboardingStatus_Order_Done       = 50
+	OnboardingStatus_Order_Successful = 60
 
 	TenantKeyHeader = "X-OPENLINE-TENANT-KEY"
 	ApiKeyHeader    = "X-Openline-API-KEY"

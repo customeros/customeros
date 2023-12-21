@@ -613,6 +613,7 @@ func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Contex
 		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_APPLICABLE
 	}
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := r.Clients.OrganizationClient.UpdateOnboardingStatus(ctx, &grpcRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)

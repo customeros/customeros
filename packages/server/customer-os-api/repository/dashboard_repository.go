@@ -354,14 +354,12 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		if sort != nil && sort.By == SearchSortParamOnboardingStatus {
 			if sort.Direction == model.SortingDirectionAsc {
 				query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE 9999 END as ONBOARDING_STATUS_FOR_SORTING "
-				query += ", o.onboardingStatus AS ONBOARDING_STATUS_NAME_FOR_SORTING "
 				query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
 			} else {
 				query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE -1 END as ONBOARDING_STATUS_FOR_SORTING "
-				query += ", o.onboardingStatus AS ONBOARDING_STATUS_NAME_FOR_SORTING "
 				query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
 			}
-			aliases += ", ONBOARDING_STATUS_FOR_SORTING, ONBOARDING_STATUS_NAME_FOR_SORTING, ONBOARDING_UPDATED_AT_FOR_SORTING "
+			aliases += ", ONBOARDING_STATUS_FOR_SORTING, ONBOARDING_UPDATED_AT_FOR_SORTING "
 		}
 		if sort != nil && sort.By == SearchSortParamForecastArr {
 			if sort.Direction == model.SortingDirectionAsc {
@@ -392,7 +390,6 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				query += " ORDER BY RENEWAL_LIKELIHOOD_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == SearchSortParamOnboardingStatus {
 				query += " ORDER BY ONBOARDING_STATUS_FOR_SORTING " + string(sort.Direction) +
-					", ONBOARDING_STATUS_NAME_FOR_SORTING " + string(sort.Direction) +
 					", ONBOARDING_UPDATED_AT_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == SearchSortParamRenewalCycleNext {
 				query += " ORDER BY RENEWAL_CYCLE_NEXT_FOR_SORTING " + string(sort.Direction)
