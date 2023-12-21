@@ -4,7 +4,6 @@
 }
 
 .openline_webchat_button {
-
   display: none;
 }
 .support_window {
@@ -12,9 +11,8 @@
 }
 /*endregion*/
 
-
 .scrollbar *::-webkit-scrollbar {
-  width: 4px;
+  width: 8px;
 }
 
 .scrollbar *::-webkit-scrollbar-track {
@@ -22,11 +20,10 @@
 }
 
 .scrollbar *::-webkit-scrollbar-thumb {
-  background: var(--gray-400, #98A2B3);;
-  width: 4px;
+  background: var(--gray-400, #98a2b3);
+  width: 8px;
   border-radius: 8px;
 }
-
 
 // toast style overwrite
 .Toastify__toast {
@@ -42,27 +39,26 @@
   padding-bottom: 0 !important;
 }
 
-
 .Toastify__toast-theme--colored.Toastify__toast--success {
-  background: #F6FEF9 !important;
+  background: #f6fef9 !important;
   color: #067647 !important;
-  border: 1px solid #75E0A7 !important;
-
+  border: 1px solid #75e0a7 !important;
 
   & .Toastify__toast-icon {
     width: 36px !important;
   }
 
-  & .Toastify__close-button{
+  & .Toastify__close-button {
     display: flex !important;
-    color: #17B26A !important;
+    color: #17b26a !important;
     align-self: center !important;
     height: 100% !important;
     & > svg {
       height: 20px !important;
       width: 20px !important;
-    border-color: #17B26A !important;
-  }}
+      border-color: #17b26a !important;
+    }
+  }
 
   & .Toastify__toast-body {
     padding: 0 !important;
@@ -71,24 +67,24 @@
 }
 
 .Toastify__toast-theme--colored.Toastify__toast--error {
-  background: #FFFBFA !important;
-  color: #B42318 !important;
-  border: 1px solid #FDA29B !important;
-
+  background: #fffbfa !important;
+  color: #b42318 !important;
+  border: 1px solid #fda29b !important;
 
   & .Toastify__toast-icon {
     width: 36px !important;
   }
 
-  & .Toastify__close-button{
+  & .Toastify__close-button {
     display: flex !important;
-    color: #F04438 !important;
+    color: #f04438 !important;
     align-self: center !important;
     height: 100% !important;
     & > svg {
       height: 20px !important;
       width: 20px !important;
-  }}
+    }
+  }
 
   & .Toastify__toast-body {
     padding: 0 !important;
@@ -96,8 +92,6 @@
   }
 }
 
-
-
-.lp_pass{
+.lp_pass {
   display: none !important;
 }
