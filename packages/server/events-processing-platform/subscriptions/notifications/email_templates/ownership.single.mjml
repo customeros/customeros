@@ -1,0 +1,23 @@
+<mjml>
+  <mj-body>
+    <mj-section>
+      <mj-column>
+        <mj-text>
+          <p>Hello {{userFirstName}},</p>
+          <p>{{actorFirstName}} {{actorLastName}} made you the owner of the <a href="#">{{orgName}}</a> account on CustomerOS.</p>
+          <p>You’ll now see <a href="#">{{orgName}}</a> in your Portfolio, and you can:
+          <ul>
+            <li>Find out everything about the company and their timeline</li>
+            <li>Get familiar with the people at {{orgName}}</li>
+            <li>Manage their contract and service line items</li>
+            <li>Get their onboarding started and plan their success</li>
+          </ul>
+          </p>
+          <p>If you have questions about this assignment of ownership, you can ask {{actorFirstName}} {{actorLastName}} about it by simply replying to this email.</p>
+          <p>Have a great day!</p>
+          <p>The CustomerOS Team</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
