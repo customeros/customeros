@@ -726,7 +726,8 @@ func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.
 	}
 
 	extraActionProperties := map[string]interface{}{
-		"status": eventData.Status,
+		"status":   eventData.Status,
+		"comments": eventData.Comments,
 	}
 	_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, extraActionProperties)
 	return err
