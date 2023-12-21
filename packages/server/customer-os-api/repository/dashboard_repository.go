@@ -1378,17 +1378,17 @@ func (r *dashboardRepository) GetDashboardAverageTimeToOnboardPerMonth(ctx conte
 					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth
 						MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 						OPTIONAL MATCH (o)<-[:ACTION_ON]-(action:Action {type:"ONBOARDING_STATUS_CHANGED"})
-							WHERE action.status = 'DONE' 
+							WHERE action.status IN ['DONE','SUCCESSFUL'] 
 							AND action.createdAt >= beginOfMonth
   							AND action.createdAt <= endOfMonth 
 					WITH year, month, o, action
 						OPTIONAL MATCH (o)<-[:ACTION_ON]-(previousDone:Action {type:"ONBOARDING_STATUS_CHANGED"})
 							WHERE previousDone.createdAt < action.createdAt
-  							AND previousDone.status = 'DONE'
+  							AND previousDone.status IN ['DONE','SUCCESSFUL']
 					WITH year, month, o, action, max(previousDone.createdAt) as previousDoneCreatedAt
 						OPTIONAL MATCH (o)<-[:ACTION_ON]-(startAction:Action {type:"ONBOARDING_STATUS_CHANGED"})
 							WHERE startAction.createdAt < action.createdAt
-							AND startAction.status <> 'DONE'
+							AND NOT startAction.status IN ['DONE','SUCCESSFUL']
 							AND (previousDoneCreatedAt IS NULL OR startAction.createdAt>previousDoneCreatedAt)
 					WITH year, month, action.createdAt as endDate, coalesce(min(startAction.createdAt), action.createdAt) as startDate
 					RETURN year, month, avg(duration.inSeconds(startDate, endDate)) AS durationInSeconds ORDER BY year, month
