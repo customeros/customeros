@@ -20,7 +20,7 @@ type OrganizationEventHandler struct {
 	repositories         *repository.Repositories
 	log                  logger.Logger
 	notificationProvider NotificationProvider
-	cfg                  *config.Config
+	// cfg                  *config.Config
 }
 
 func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Repositories, cfg *config.Config) *OrganizationEventHandler {
@@ -29,10 +29,6 @@ func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Rep
 		log:                  log,
 		notificationProvider: NewNotificationProvider(log, cfg.Services.Novu.ApiKey),
 	}
-}
-
-type eventMetadata struct {
-	UserId string `json:"user-id"`
 }
 
 func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context, evt eventstore.Event) error {
@@ -46,7 +42,15 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	err := h.notificationProviderSendEmail(ctx, span, EventIdOrgOwnerUpdateEmail, eventData.OwnerUserId, eventData.ActorUserId, eventData.OrganizationId, eventData.Tenant)
+	err := h.notificationProviderSendEmail(
+		ctx,
+		span,
+		EventIdOrgOwnerUpdateEmail,
+		eventData.OwnerUserId,
+		eventData.ActorUserId,
+		eventData.OrganizationId,
+		eventData.Tenant,
+	)
 
 	if err != nil {
 		tracing.TraceErr(span, err)

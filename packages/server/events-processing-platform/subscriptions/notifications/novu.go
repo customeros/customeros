@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
-// album represents data about a record album.
 type EmailableUser struct {
 	FirstName    string `json:"firstName"`
 	LastName     string `json:"lastName"`
@@ -40,14 +39,6 @@ func (np *NovuProvider) SendEmail(ctx context.Context, u *EmailableUser, payload
 
 	from := payload["actor"].(*entity.UserEntity)
 
-	// payload := map[string]interface{}{
-	// 	"actorFirstName": actor["firstName"],
-	// 	"actorLastName":  actor["lastName"],
-	// 	"orgName":        orgName,
-	// 	"html":           string(html[:]),
-	// 	"email":          u.Email,
-	// }
-
 	var html string
 	switch eventId {
 	case EventIdTestFlow:
@@ -55,13 +46,12 @@ func (np *NovuProvider) SendEmail(ctx context.Context, u *EmailableUser, payload
 		html = strings.Replace(string(rawHtml[:]), "{{fName}}", u.FirstName, -1)
 		html = strings.Replace(html, "{{lName}}", u.LastName, -1)
 	case EventIdOrgOwnerUpdateEmail:
-		// TODO: do something
 		rawMjml, _ := os.ReadFile("./email_templates/ownership.single.mjml")
 		mjmlf := strings.Replace(string(rawMjml[:]), "{{userFirstName}}", u.FirstName, -1)
 		mjmlf = strings.Replace(mjmlf, "{{actorFirstName}}", from.FirstName, -1)
 		mjmlf = strings.Replace(mjmlf, "{{actorLastName}}", from.LastName, -1)
 		mjmlf = strings.Replace(mjmlf, "{{orgName}}", payload["orgName"].(string), -1)
-		html = "" // TODO: convert mjml to html
+		html = mjmlf // TODO: convert mjml to html
 	default:
 		html = ""
 	}
