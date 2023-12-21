@@ -2,11 +2,8 @@ package notifications
 
 import (
 	"context"
-	"os"
-	"strings"
 
 	novu "github.com/novuhq/go-novu/lib"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
@@ -37,36 +34,7 @@ func (np *NovuProvider) SendEmail(ctx context.Context, u *EmailableUser, payload
 		"email":        u.Email,
 	}
 
-	from := payload["actor"].(*entity.UserEntity)
-
-	var html string
-	switch eventId {
-	case EventIdTestFlow:
-		rawMjml, _ := os.ReadFile("./email_templates/ownership.single.mjml")
-		mjmlf := strings.Replace(string(rawMjml[:]), "{{userFirstName}}", u.FirstName, -1)
-		mjmlf = strings.Replace(mjmlf, "{{actorFirstName}}", from.FirstName, -1)
-		mjmlf = strings.Replace(mjmlf, "{{actorLastName}}", from.LastName, -1)
-		mjmlf = strings.Replace(mjmlf, "{{orgName}}", payload["orgName"].(string), -1)
-		html = mjmlf // TODO: convert mjml to html
-	case EventIdOrgOwnerUpdateEmail:
-		rawMjml, _ := os.ReadFile("./email_templates/ownership.single.mjml")
-		mjmlf := strings.Replace(string(rawMjml[:]), "{{userFirstName}}", u.FirstName, -1)
-		mjmlf = strings.Replace(mjmlf, "{{actorFirstName}}", from.FirstName, -1)
-		mjmlf = strings.Replace(mjmlf, "{{actorLastName}}", from.LastName, -1)
-		mjmlf = strings.Replace(mjmlf, "{{orgName}}", payload["orgName"].(string), -1)
-		html = mjmlf // TODO: convert mjml to html
-	default:
-		html = ""
-	}
-
-	novuPayload := map[string]interface{}{
-		"html":    html,
-		"subject": payload["subject"],
-		"email":   u.Email,
-		"orgName": payload["orgName"],
-	}
-
-	data := novu.ITriggerPayloadOptions{To: to, Payload: novuPayload}
+	data := novu.ITriggerPayloadOptions{To: to, Payload: payload}
 
 	_, err := np.NovuClient.EventApi.Trigger(ctx, eventId, data)
 

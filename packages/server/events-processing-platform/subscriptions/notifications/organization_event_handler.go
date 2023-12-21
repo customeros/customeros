@@ -3,7 +3,10 @@ package notifications
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
+	"github.com/Boostport/mjml-go"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -60,7 +63,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 }
 
 func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Context, span opentracing.Span, eventId, userId, actorUserId, orgId, tenant string) error {
-	///////////////////////////////////       Get Email Content       ///////////////////////////////////
+	///////////////////////////////////       Get User, Actor, Org Content       ///////////////////////////////////
 	// target user email
 	emailDbNode, err := h.repositories.EmailRepository.GetEmailForUser(ctx, tenant, userId)
 
@@ -112,11 +115,18 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	if orgDbNode != nil {
 		org = graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
 	}
-
+	///////////////////////////////////       Get Email Content       ///////////////////////////////////
+	html, err := parseOrgOwnerUpdateEmail(actor, user, org.Name)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "notifications.parseOrgOwnerUpdateEmail")
+	}
 	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
+
 	payload := map[string]interface{}{
-		"actor":   actor,
+		"html":    html,
 		"subject": fmt.Sprintf("%s %s added you as an owner", actor.FirstName, actor.LastName),
+		"email":   email.Email,
 		"orgName": org.Name,
 	}
 
@@ -129,4 +139,21 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}, payload, EventIdOrgOwnerUpdateEmail)
 
 	return err
+}
+
+func parseOrgOwnerUpdateEmail(actor, target *entity.UserEntity, orgName string) (string, error) {
+	var html string
+	var err error
+	rawMjml, _ := os.ReadFile("./email_templates/ownership.single.mjml")
+	mjmlf := strings.Replace(string(rawMjml[:]), "{{userFirstName}}", target.FirstName, -1)
+	mjmlf = strings.Replace(mjmlf, "{{actorFirstName}}", actor.FirstName, -1)
+	mjmlf = strings.Replace(mjmlf, "{{actorLastName}}", actor.LastName, -1)
+	mjmlf = strings.Replace(mjmlf, "{{orgName}}", orgName, -1)
+	html, err = mjml.ToHTML(context.Background(), mjmlf) // mjml.WithMinify(true)
+
+	var mjmlError mjml.Error
+	if errors.As(err, &mjmlError) {
+		return "", fmt.Errorf("(NotificationsSubscriber.NovuProvider.SendEmail) error: %s", mjmlError.Message)
+	}
+	return html, err
 }
