@@ -686,6 +686,8 @@ func getOrderForOnboardingStatus(status string) *int64 {
 		return utils.Int64Ptr(constants.OnboardingStatus_Order_Stuck)
 	case string(model.OnboardingStatusDone):
 		return utils.Int64Ptr(constants.OnboardingStatus_Order_Done)
+	case string(model.OnboardingStatusSuccessful):
+		return utils.Int64Ptr(constants.OnboardingStatus_Order_Successful)
 	default:
 		return nil
 	}
