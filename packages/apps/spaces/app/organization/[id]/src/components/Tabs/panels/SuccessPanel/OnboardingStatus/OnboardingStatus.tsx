@@ -1,11 +1,14 @@
 'use client';
 
+import { useState } from 'react';
+
 import { match } from 'ts-pattern';
 
 import { Flex } from '@ui/layout/Flex';
 import { useDisclosure } from '@ui/utils';
 import { Text } from '@ui/typography/Text';
 import { Flag04 } from '@ui/media/icons/Flag04';
+import { pulseOpacity } from '@ui/utils/keyframes';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import {
@@ -35,6 +38,9 @@ interface OnboardingStatusProps {
 
 export const OnboardingStatus = ({ data }: OnboardingStatusProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isFetching, setIsFetching] = useState(false);
+
+  const handleIsFetching = (status: boolean) => setIsFetching(status);
 
   const timeElapsed = match(data?.status)
     .returnType<string>()
@@ -84,7 +90,13 @@ export const OnboardingStatus = ({ data }: OnboardingStatusProps) => {
         cursor='pointer'
         overflow='visible'
         justify='flex-start'
+        opacity={isFetching ? 0.5 : 1}
         align={reason ? 'flex-start' : 'center'}
+        animation={
+          isFetching
+            ? `${pulseOpacity} 0.7s infinite alternate ease-in-out`
+            : 'unset'
+        }
       >
         <FeaturedIcon colorScheme={colorScheme}>
           {data?.status === OnboardingStatusEnum.Successful ? (
@@ -111,7 +123,12 @@ export const OnboardingStatus = ({ data }: OnboardingStatusProps) => {
         </Flex>
       </Flex>
 
-      <OnboardingStatusModal data={data} isOpen={isOpen} onClose={onClose} />
+      <OnboardingStatusModal
+        data={data}
+        isOpen={isOpen}
+        onClose={onClose}
+        onFetching={handleIsFetching}
+      />
     </>
   );
 };
