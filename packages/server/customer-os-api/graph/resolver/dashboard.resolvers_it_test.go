@@ -806,8 +806,9 @@ func TestQueryResolver_Search_Organization_ByOnboardingStatus(t *testing.T) {
 	})
 	orgSuccess := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		OnboardingDetails: entity.OnboardingDetails{
-			Status:    entity.OnboardingStatusSuccessful,
-			UpdatedAt: &today,
+			Status:       entity.OnboardingStatusSuccessful,
+			UpdatedAt:    &today,
+			SortingOrder: utils.Int64Ptr(60),
 		},
 	})
 	orgStuckYesterday := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
