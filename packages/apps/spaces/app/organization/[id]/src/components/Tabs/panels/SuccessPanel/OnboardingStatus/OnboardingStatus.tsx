@@ -51,7 +51,7 @@ export const OnboardingStatus = ({ data }: OnboardingStatusProps) => {
         return `for ${value} ${unit}`;
       }
 
-      return `for ${value} ${unit}`;
+      return `for ${Math.abs(value as number)} ${unit}`;
     });
 
   const label =
