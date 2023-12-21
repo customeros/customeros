@@ -42,9 +42,12 @@ func (np *NovuProvider) SendEmail(ctx context.Context, u *EmailableUser, payload
 	var html string
 	switch eventId {
 	case EventIdTestFlow:
-		rawHtml, _ := os.ReadFile("./email_templates/ownership.single.mjml")
-		html = strings.Replace(string(rawHtml[:]), "{{fName}}", u.FirstName, -1)
-		html = strings.Replace(html, "{{lName}}", u.LastName, -1)
+		rawMjml, _ := os.ReadFile("./email_templates/ownership.single.mjml")
+		mjmlf := strings.Replace(string(rawMjml[:]), "{{userFirstName}}", u.FirstName, -1)
+		mjmlf = strings.Replace(mjmlf, "{{actorFirstName}}", from.FirstName, -1)
+		mjmlf = strings.Replace(mjmlf, "{{actorLastName}}", from.LastName, -1)
+		mjmlf = strings.Replace(mjmlf, "{{orgName}}", payload["orgName"].(string), -1)
+		html = mjmlf // TODO: convert mjml to html
 	case EventIdOrgOwnerUpdateEmail:
 		rawMjml, _ := os.ReadFile("./email_templates/ownership.single.mjml")
 		mjmlf := strings.Replace(string(rawMjml[:]), "{{userFirstName}}", u.FirstName, -1)
@@ -60,6 +63,7 @@ func (np *NovuProvider) SendEmail(ctx context.Context, u *EmailableUser, payload
 		"html":    html,
 		"subject": payload["subject"],
 		"email":   u.Email,
+		"orgName": payload["orgName"],
 	}
 
 	data := novu.ITriggerPayloadOptions{To: to, Payload: novuPayload}

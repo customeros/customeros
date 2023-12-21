@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	EventIdTestFlow            = "test_flow"
-	EventIdOrgOwnerUpdateEmail = "org_owner_update_email"
+	EventIdTestFlow            = "test-workflow"
+	EventIdOrgOwnerUpdateEmail = "org-owner-update-email"
 )
 
 type NotificationProvider interface {
