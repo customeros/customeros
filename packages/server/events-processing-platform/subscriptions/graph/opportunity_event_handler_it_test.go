@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
@@ -577,6 +578,22 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	require.Equal(t, float64(10000), opportunity.Amount)
 	require.Equal(t, "Updated likelihood", opportunity.Comments)
 
+	// Verify Action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionRenewalLikelihoodUpdated, action.Type)
+	require.Equal(t, "Renewal likelihood set to Medium", action.Content)
+	require.Equal(t, fmt.Sprintf(`{"likelihood":"%s","reason":"%s"}`, "MEDIUM", "Updated likelihood"), action.Metadata)
+	// Check extra properties
+	props := utils.GetPropsFromNode(*actionDbNode)
+	require.Equal(t, "Updated likelihood", utils.GetStringPropOrEmpty(props, "comments"))
+
+	// check that event was invoked
 	require.True(t, calledEventsPlatformToUpdateOpportunity)
 }
 

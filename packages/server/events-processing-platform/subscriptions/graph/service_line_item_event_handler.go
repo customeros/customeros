@@ -216,7 +216,9 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		h.log.Errorf("Failed to serialize billed type metadata: %s", err.Error())
 		return errors.Wrap(err, "Failed to serialize billed type metadata")
 	}
-
+	extraActionProperties := map[string]interface{}{
+		"comments": reasonForChange,
+	}
 	cycle := getBillingCycleNamingConvention(eventData.Billed)
 	previousCycle := getBillingCycleNamingConvention(previousBilled)
 	if previousCycle == "" {
@@ -226,7 +228,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	if !isNewVersionForExistingSLI {
 		if serviceLineItemEntity.Billed == model.AnnuallyBilled.String() || serviceLineItemEntity.Billed == model.QuarterlyBilled.String() || serviceLineItemEntity.Billed == model.MonthlyBilled.String() {
 			message = userEntity.FirstName + " " + userEntity.LastName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " x " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
-			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, eventData.ContractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now())
+			_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now(), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating recurring billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
@@ -234,7 +236,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		}
 		if serviceLineItemEntity.Billed == model.OnceBilled.String() {
 			message = userEntity.FirstName + " " + userEntity.LastName + " added an one time service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price)
-			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, eventData.ContractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now())
+			_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now(), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating once billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
@@ -242,7 +244,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		}
 		if serviceLineItemEntity.Billed == model.UsageBilled.String() {
 			message = userEntity.FirstName + " " + userEntity.LastName + " added a per use service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price)
-			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, eventData.ContractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now())
+			_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now(), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating per use billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
@@ -257,7 +259,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			if eventData.Price < previousPrice {
 				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 			}
-			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now())
+			_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
@@ -271,7 +273,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			if eventData.Price < serviceLineItemEntity.Price {
 				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + " to " + fmt.Sprintf("%.2f", eventData.Price)
 			}
-			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now())
+			_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
@@ -284,7 +286,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			if eventData.Price < serviceLineItemEntity.Price {
 				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the price for " + name + " from " + fmt.Sprintf("%.4f", previousPrice) + " to " + fmt.Sprintf("%.4f", eventData.Price)
 			}
-			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now())
+			_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
@@ -297,7 +299,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			if eventData.Quantity < previousQuantity {
 				message = userEntity.FirstName + " " + userEntity.LastName + " decreased the quantity of " + name + " from " + strconv.FormatInt(previousQuantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10)
 			}
-			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now())
+			_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractEntity.Id, err.Error())
@@ -305,7 +307,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		}
 		if billedTypeChanged && previousBilled != "" {
 			message = userEntity.FirstName + " " + userEntity.LastName + " changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
-			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeUpdated, message, metadataBilledType, utils.Now())
+			_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeUpdated, message, metadataBilledType, utils.Now(), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating billed type update action for contract service line item %s: %s", contractEntity.Id, err.Error())
@@ -438,6 +440,9 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	}
 	oldCycle := getBillingCycleNamingConvention(serviceLineItemEntity.Billed)
 	cycle := getBillingCycleNamingConvention(eventData.Billed)
+	extraActionProperties := map[string]interface{}{
+		"comments": eventData.Comments,
+	}
 
 	if priceChanged && (eventData.Billed == model.AnnuallyBilled.String() || eventData.Billed == model.QuarterlyBilled.String() || eventData.Billed == model.MonthlyBilled.String()) {
 		if eventData.Price > serviceLineItemEntity.Price {
@@ -446,7 +451,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		if eventData.Price < serviceLineItemEntity.Price {
 			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 		}
-		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now())
+		_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), extraActionProperties)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractId, err.Error())
@@ -460,7 +465,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		if eventData.Price < serviceLineItemEntity.Price {
 			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", eventData.Price)
 		}
-		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now())
+		_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), extraActionProperties)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractId, err.Error())
@@ -473,7 +478,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		if eventData.Price < serviceLineItemEntity.Price {
 			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", eventData.Price)
 		}
-		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now())
+		_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), extraActionProperties)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractId, err.Error())
@@ -487,7 +492,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		if eventData.Quantity < serviceLineItemEntity.Quantity {
 			message = userEntity.FirstName + " " + userEntity.LastName + " retroactively decreased the quantity of " + name + " from " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10)
 		}
-		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now())
+		_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), extraActionProperties)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractId, err.Error())
@@ -495,7 +500,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	}
 	if billedTypeChanged && serviceLineItemEntity.Billed != "" {
 		message = userEntity.FirstName + " " + userEntity.LastName + " changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
-		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeUpdated, message, metadataBilledType, utils.Now())
+		_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemBilledTypeUpdated, message, metadataBilledType, utils.Now(), extraActionProperties)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed creating billed type update action for contract service line item %s: %s", contractId, err.Error())
