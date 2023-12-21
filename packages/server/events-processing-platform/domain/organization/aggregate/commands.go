@@ -619,7 +619,7 @@ func (a *OrganizationAggregate) UpdateOrganizationOwner(ctx context.Context, cmd
 	event, err := events.NewOrganizationOwnerUpdateEvent(a, cmd.OwnerUserId, cmd.ActorUserId, cmd.OrganizationId, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewUpdateOnboardingStatusEvent")
+		return errors.Wrap(err, "NewOrganizationOwnerUpdateEvent")
 	}
 
 	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
