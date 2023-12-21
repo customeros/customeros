@@ -571,4 +571,8 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	require.Equal(t, entity.ActionOnboardingStatusChanged, action.Type)
 	require.Equal(t, "The onboarding status was automatically set to Not started", action.Content)
 	require.Equal(t, fmt.Sprintf(`{"status":"%s","comments":"%s","userId":"%s","contractId":"%s"}`, "NOT_STARTED", "Some comments", "", contractId), action.Metadata)
+	// Check extra properties
+	props := utils.GetPropsFromNode(*actionDbNode)
+	require.Equal(t, "Some comments", utils.GetStringPropOrEmpty(props, "comments"))
+	require.Equal(t, "NOT_STARTED", utils.GetStringPropOrEmpty(props, "status"))
 }
