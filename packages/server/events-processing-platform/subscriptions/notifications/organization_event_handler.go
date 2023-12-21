@@ -46,10 +46,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	userId := eventData.OwnerUserId
-	actorUserId := eventData.ActorUserId
-
-	err := h.notificationProviderSendEmail(ctx, span, EventIdUserUpdate, userId, actorUserId, eventData.Tenant)
+	err := h.notificationProviderSendEmail(ctx, span, EventIdOrgOwnerUpdateEmail, eventData.OwnerUserId, eventData.ActorUserId, eventData.OrganizationId, eventData.Tenant)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -58,7 +55,24 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 	return err
 }
 
-func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Context, span opentracing.Span, eventId, userId, actorUserId, tenant string) error {
+func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Context, span opentracing.Span, eventId, userId, actorUserId, orgId, tenant string) error {
+	///////////////////////////////////       Get Email Content       ///////////////////////////////////
+	// target user email
+	emailDbNode, err := h.repositories.EmailRepository.GetEmailForUser(ctx, tenant, userId)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
+	}
+
+	var email *entity.EmailEntity
+	if emailDbNode == nil {
+		tracing.TraceErr(span, err)
+		err = errors.New("email db node not found")
+		return errors.Wrap(err, "h.notificationProviderSendEmail")
+	}
+	email = graph_db.MapDbNodeToEmailEntity(*emailDbNode)
+
 	// target user
 	userDbNode, err := h.repositories.UserRepository.GetUser(ctx, tenant, userId)
 
@@ -83,25 +97,23 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		actor = graph_db.MapDbNodeToUserEntity(*actorDbNode)
 	}
 
-	emailDbNode, err := h.repositories.EmailRepository.GetEmailForUser(ctx, tenant, userId)
+	// Organization
+	orgDbNode, err := h.repositories.OrganizationRepository.GetOrganization(ctx, tenant, orgId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
+		return errors.Wrap(err, "h.repositories.OrganizationRepository.GetOrganization")
+	}
+	var org *entity.OrganizationEntity
+	if orgDbNode != nil {
+		org = graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
 	}
 
-	var email *entity.EmailEntity
-	if emailDbNode == nil {
-		tracing.TraceErr(span, err)
-		err = errors.New("email db node not found")
-		return errors.Wrap(err, "h.notificationProviderSendEmail")
-	}
-	email = graph_db.MapDbNodeToEmailEntity(*emailDbNode)
-
+	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
 	payload := map[string]interface{}{
-		"actorFirstName": actor.FirstName,
-		"actorLastName":  actor.LastName,
-		"subject":        fmt.Sprintf("%s %s added you as an owner", actor.FirstName, actor.LastName),
+		"actor":   actor,
+		"subject": fmt.Sprintf("%s %s added you as an owner", actor.FirstName, actor.LastName),
+		"orgName": org.Name,
 	}
 
 	// call notification service
@@ -110,7 +122,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		LastName:     user.LastName,
 		Email:        email.Email,
 		SubscriberID: userId,
-	}, payload, EventIdUserUpdate)
+	}, payload, EventIdOrgOwnerUpdateEmail)
 
 	return err
 }
