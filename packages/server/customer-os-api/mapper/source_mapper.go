@@ -16,6 +16,8 @@ var sourceByModel = map[model.DataSource]entity.DataSource{
 	model.DataSourceWebscrape:      entity.DataSourceWebscrape,
 	model.DataSourceIntercom:       entity.DataSourceIntercom,
 	model.DataSourceSalesforce:     entity.DataSourceSalesforce,
+	model.DataSourceStripe:         entity.DataSourceStripe,
+	model.DataSourceMixpanel:       entity.DataSourceMixpanel,
 }
 
 var sourceByValue = utils.ReverseMap(sourceByModel)

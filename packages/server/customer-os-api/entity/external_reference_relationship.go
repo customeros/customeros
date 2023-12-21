@@ -12,6 +12,8 @@ const (
 	Slack          ExternalSystemId = "slack"
 	Intercom       ExternalSystemId = "intercom"
 	Salesforce     ExternalSystemId = "salesforce"
+	Stripe         ExternalSystemId = "stripe"
+	Mixpanel       ExternalSystemId = "mixpanel"
 )
 
 const (
@@ -34,7 +36,7 @@ type ExternalSystemEntities []ExternalSystemEntity
 
 func ExternalSystemTypeFromString(input string) ExternalSystemId {
 	for _, v := range []ExternalSystemId{
-		Hubspot, ZendeskSupport, CalCom, Pipedrive, Slack, Intercom, Salesforce,
+		Hubspot, ZendeskSupport, CalCom, Pipedrive, Slack, Intercom, Salesforce, Stripe, Mixpanel,
 	} {
 		if string(v) == input {
 			return v
