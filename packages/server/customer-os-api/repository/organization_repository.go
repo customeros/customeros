@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -34,7 +35,6 @@ type OrganizationRepository interface {
 	GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error)
 	GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
-	ReplaceOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error)
 	RemoveOwner(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 	GetSuggestedMergePrimaryOrganizations(ctx context.Context, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error)
@@ -717,41 +717,6 @@ func (r *organizationRepository) GetLinkedParentOrganizations(ctx context.Contex
 		return nil, err
 	}
 	return result.([]*utils.DbNodeWithRelationAndId), err
-}
-
-func (r *organizationRepository) ReplaceOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.ReplaceOwner")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-			OPTIONAL MATCH (:User)-[rel:OWNS]->(org)
-			DELETE rel
-			WITH org, t
-			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
-			WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null)
-			MERGE (u)-[:OWNS]->(org)
-			SET org.updatedAt=$now, org.sourceOfTruth=$source			
-			RETURN org`
-
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationID,
-				"userId":         userID,
-				"source":         entity.DataSourceOpenline,
-				"now":            utils.Now(),
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
 }
 
 func (r *organizationRepository) RemoveOwner(ctx context.Context, tenant, organizationID string) (*dbtype.Node, error) {

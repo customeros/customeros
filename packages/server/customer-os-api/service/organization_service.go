@@ -471,7 +471,6 @@ func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationID", organizationID), log.String("userID", userID))
 
-	// dbNode, err := s.repositories.OrganizationRepository.ReplaceOwner(ctx, common.GetTenantFromContext(ctx), organizationID, userID)
 	orgGrpcRes, err := s.grpcClients.OrganizationClient.UpdateOrganizationOwner(ctx, &organizationpb.UpdateOrganizationOwnerGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: organizationID,
