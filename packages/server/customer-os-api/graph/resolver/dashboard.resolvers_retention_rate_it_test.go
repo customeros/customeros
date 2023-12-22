@@ -94,14 +94,13 @@ func TestQueryResolver_Dashboard_Retention_Rate_Hidden_Organization(t *testing.T
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
-		Hide: true,
+		Hide:       true,
+		IsCustomer: true,
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
-
-	//todo add churn contract
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -147,8 +146,6 @@ func TestQueryResolver_Dashboard_Retention_Rate_Prospect_Organization(t *testing
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
-
-	//todo add churn contract
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
