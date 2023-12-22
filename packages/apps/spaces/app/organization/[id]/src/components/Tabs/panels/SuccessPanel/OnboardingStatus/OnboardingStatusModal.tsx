@@ -10,6 +10,7 @@ import { match } from 'ts-pattern';
 import { useQueryClient } from '@tanstack/react-query';
 import { OptionProps, chakraComponents } from 'chakra-react-select';
 
+import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
@@ -215,19 +216,21 @@ export const OnboardingStatusModal = ({
               },
             }}
           />
-          <div>
-            <Text as='label' htmlFor='reason' fontSize='sm'>
-              <b>Reason for change</b> (optional)
-            </Text>
-            <FormAutoresizeTextarea
-              pt='0'
-              formId={formId}
-              name='comments'
-              spellCheck='false'
-              isDisabled={updateOnboardingStatus.isLoading}
-              placeholder={`What is the reason for changing the onboarding status?`}
-            />
-          </div>
+          {defaultValues.status.value !== state?.values?.status?.value && (
+            <Box>
+              <Text as='label' htmlFor='reason' fontSize='sm'>
+                <b>Reason for change</b> (optional)
+              </Text>
+              <FormAutoresizeTextarea
+                pt='0'
+                formId={formId}
+                name='comments'
+                spellCheck='false'
+                isDisabled={updateOnboardingStatus.isLoading}
+                placeholder={`What is the reason for changing the onboarding status?`}
+              />
+            </Box>
+          )}
         </ModalBody>
         <ModalFooter p='6'>
           <Button
