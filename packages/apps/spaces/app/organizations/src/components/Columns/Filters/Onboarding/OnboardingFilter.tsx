@@ -17,19 +17,14 @@ import {
   OnboardingFilterSelector,
 } from './OnboardingFilter.atom';
 
-type ComputedOnboardingStatus = OnboardingStatus | 'NOT_ONBOARDING';
-
-const options: SelectOption<ComputedOnboardingStatus>[] = [
+const options: SelectOption<OnboardingStatus>[] = [
   { label: 'Not started', value: OnboardingStatus.NotStarted },
   { label: 'Late', value: OnboardingStatus.Late },
   { label: 'Stuck', value: OnboardingStatus.Stuck },
   { label: 'On track', value: OnboardingStatus.OnTrack },
   { label: 'Done', value: OnboardingStatus.Done },
-  { label: 'Not onboarding', value: 'NOT_ONBOARDING' },
-];
-const notOnboardingOptions = [
-  OnboardingStatus.NotApplicable,
-  OnboardingStatus.Successful,
+  { label: 'Not applicable', value: OnboardingStatus.NotApplicable },
+  { label: 'Successful', value: OnboardingStatus.Successful },
 ];
 
 interface RelationshipFilterProps<T> {
@@ -57,26 +52,15 @@ export const OnboardingFilter = <T,>({
     },
   });
 
-  const handleSelect = (value: ComputedOnboardingStatus) => () => {
+  const handleSelect = (value: OnboardingStatus) => () => {
     setFilter((prev) => {
       const next = produce(prev, (draft) => {
-        const isComputed = value === 'NOT_ONBOARDING';
         draft.isActive = true;
 
-        if (
-          isComputed
-            ? draft.value.some((v) => notOnboardingOptions.includes(v))
-            : draft.value.includes(value)
-        ) {
-          draft.value = draft.value.filter((item) =>
-            isComputed ? !notOnboardingOptions.includes(item) : item !== value,
-          );
+        if (draft.value.includes(value)) {
+          draft.value = draft.value.filter((item) => item !== value);
         } else {
-          if (isComputed) {
-            draft.value.push(...notOnboardingOptions);
-          } else {
-            draft.value.push(value);
-          }
+          draft.value.push(value);
         }
       });
 
@@ -91,13 +75,10 @@ export const OnboardingFilter = <T,>({
       const next = produce(prev, (draft) => {
         draft.isActive = true;
 
-        if (draft.value.length === options.length + 1) {
+        if (draft.value.length === options.length) {
           draft.value = [];
         } else {
-          draft.value = options
-            .map((option) => option.value)
-            .filter((v) => v !== 'NOT_ONBOARDING')
-            .concat(...notOnboardingOptions) as OnboardingStatus[];
+          draft.value = options.map((option) => option.value);
         }
       });
 
@@ -113,11 +94,10 @@ export const OnboardingFilter = <T,>({
     );
   }, [filterValue.value.length, filterValue.isActive]);
 
-  const computedValues = computeFilterValues(filterValue.value);
-  const isAllChecked = filterValue.value.length === options.length + 1;
+  const isAllChecked = filterValue.value.length === options.length;
 
   return (
-    <CheckboxGroup size='md' value={computedValues}>
+    <CheckboxGroup size='md' value={filterValue.value}>
       <FilterHeader
         isChecked={toggle.isActive}
         onToggle={toggle.handleChange}
@@ -142,13 +122,3 @@ export const OnboardingFilter = <T,>({
     </CheckboxGroup>
   );
 };
-
-function computeFilterValues(values: OnboardingStatus[]) {
-  const outputSet = new Set(
-    values.map((v) =>
-      notOnboardingOptions.includes(v) ? 'NOT_ONBOARDING' : v,
-    ),
-  );
-
-  return Array.from(outputSet);
-}
