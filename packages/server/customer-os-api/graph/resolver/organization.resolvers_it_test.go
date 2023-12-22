@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -1308,7 +1307,6 @@ func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 
 	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
 	require.Nil(t, err)
-	fmt.Printf("organizationStruct: %+v\n", organizationStruct)
 	require.NotNil(t, organizationStruct)
 
 	organization := organizationStruct.Organization_SetOwner
