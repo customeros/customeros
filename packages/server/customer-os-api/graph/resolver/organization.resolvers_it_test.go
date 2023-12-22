@@ -2,6 +2,9 @@ package resolver
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -14,8 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestQueryResolver_Organizations_FilterByNameLike(t *testing.T) {
@@ -1282,6 +1283,21 @@ func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+		UpdateOrganizationOwner: func(context context.Context, org *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, organizationId, org.OrganizationId)
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
+			require.Equal(t, userId, org.OwnerUserId)
+			require.Equal(t, testUserId, org.ActorUserId)
+			neo4jt.UserOwnsOrganization(ctx, driver, userId, organizationId)
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: organizationId,
+			}, nil
+		},
+	}
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
 	rawResponse := callGraphQL(t, "organization/set_owner",
 		map[string]interface{}{"organizationId": organizationId, "userId": userId})
 
@@ -1313,6 +1329,22 @@ func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
 	newOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 	neo4jt.UserOwnsOrganization(ctx, driver, previousOwnerId, organizationId)
+
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+		UpdateOrganizationOwner: func(context context.Context, org *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, organizationId, org.OrganizationId)
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
+			require.Equal(t, newOwnerId, org.OwnerUserId)
+			require.Equal(t, testUserId, org.ActorUserId)
+			neo4jt.UserOwnsOrganization(ctx, driver, newOwnerId, organizationId)
+			neo4jt.DeleteUserOwnsOrganization(ctx, driver, previousOwnerId, organizationId)
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: organizationId,
+			}, nil
+		},
+	}
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	rawResponse := callGraphQL(t, "organization/set_owner",
 		map[string]interface{}{"organizationId": organizationId, "userId": newOwnerId})

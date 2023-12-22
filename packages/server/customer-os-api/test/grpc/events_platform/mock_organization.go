@@ -2,6 +2,7 @@ package events_platform
 
 import (
 	"context"
+
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 )
 
@@ -13,6 +14,7 @@ type MockOrganizationServiceCallbacks struct {
 	LinkPhoneNumberToOrganization func(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint         func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus        func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	UpdateOrganizationOwner       func(ctx context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 }
 
 var organizationCallbacks = &MockOrganizationServiceCallbacks{}
@@ -72,4 +74,11 @@ func (MockOrganizationService) UpdateOnboardingStatus(context context.Context, p
 		panic("organizationCallbacks.UpdateOnboardingStatus is not set")
 	}
 	return organizationCallbacks.UpdateOnboardingStatus(context, proto)
+}
+
+func (MockOrganizationService) UpdateOrganizationOwner(context context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	if organizationCallbacks.UpdateOrganizationOwner == nil {
+		panic("organizationCallbacks.UpdateOrganizationOwner is not set")
+	}
+	return organizationCallbacks.UpdateOrganizationOwner(context, proto)
 }
