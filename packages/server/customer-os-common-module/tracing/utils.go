@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	SpanTagTenant    = "tenant"
-	SpanTagUserId    = "user-id"
-	SpanTagEntityId  = "entity-id"
-	SpanTagComponent = "component"
+	SpanTagTenant         = "tenant"
+	SpanTagUserId         = "user-id"
+	SpanTagEntityId       = "entity-id"
+	SpanTagComponent      = "component"
+	SpanTagExternalSystem = "external-system"
 )
 
 func TraceErr(span opentracing.Span, err error, fields ...log.Field) {

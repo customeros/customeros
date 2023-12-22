@@ -119,8 +119,9 @@ func (s *commentService) syncComment(ctx context.Context, syncMutex *sync.Mutex,
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentService.syncComment")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag("externalSystem", commentInput.ExternalSystem)
-	span.LogFields(log.Object("commentInput", commentInput), log.Object("syncDate", syncDate))
+	span.SetTag(tracing.SpanTagExternalSystem, commentInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate))
+	tracing.LogObjectAsJson(span, "commentInput", commentInput)
 
 	var tenant = common.GetTenantFromContext(ctx)
 	var failedSync = false

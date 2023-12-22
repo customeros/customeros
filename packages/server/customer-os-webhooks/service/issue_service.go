@@ -119,8 +119,9 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.syncIssue")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag("externalSystem", issueInput.ExternalSystem)
-	span.LogFields(log.Object("syncDate", syncDate), log.Object("issueInput", issueInput))
+	span.SetTag(tracing.SpanTagExternalSystem, issueInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate))
+	tracing.LogObjectAsJson(span, "issueInput", issueInput)
 
 	tenant := common.GetTenantFromContext(ctx)
 	var failedSync = false

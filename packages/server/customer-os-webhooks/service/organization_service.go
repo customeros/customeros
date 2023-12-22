@@ -151,8 +151,9 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.syncOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag("externalSystem", orgInput.ExternalSystem)
-	span.LogFields(log.Object("syncDate", syncDate), log.Object("orgInput", orgInput))
+	span.SetTag(tracing.SpanTagExternalSystem, orgInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate))
+	tracing.LogObjectAsJson(span, "orgInput", orgInput)
 
 	tenant := common.GetTenantFromContext(ctx)
 	appSource := utils.StringFirstNonEmpty(orgInput.AppSource, constants.AppSourceCustomerOsWebhooks)
@@ -160,7 +161,13 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	var reason = ""
 	orgInput.Normalize()
 
-	// clear domains for sub organizations
+	// Check if organization sync should be skipped
+	if orgInput.Skip {
+		span.LogFields(log.String("output", "skipped"))
+		return NewSkippedSyncStatus(orgInput.SkipReason)
+	}
+
+	// remove any domain for sub organizations, as they are not supported
 	if orgInput.IsSubOrg() {
 		orgInput.Domains = []string{}
 	} else {
@@ -174,6 +181,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		orgInput.NormalizeDomains()
 	}
 
+	// Merge external system neo4j node
 	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, orgInput.ExternalSystem)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -183,12 +191,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		return NewFailedSyncStatus(reason)
 	}
 
-	// Check if organization sync should be skipped
-	if orgInput.Skip {
-		span.LogFields(log.String("output", "skipped"))
-		return NewSkippedSyncStatus(orgInput.SkipReason)
-	}
-
+	// Remove personal email provider domains from organization domains
 	nonPersonalEmailProviderDomains := make([]string, 0)
 	for _, domain := range orgInput.Domains {
 		if !controlDomains.isPersonalEmailProvider(domain) {
@@ -196,15 +199,24 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		}
 	}
 	orgInput.Domains = nonPersonalEmailProviderDomains
+
+	// Check if organization should be skipped due to missing domain
 	if orgInput.DomainRequired && !orgInput.IsSubOrg() && !orgInput.HasDomains() {
 		span.LogFields(log.String("output", "skipped"))
 		return NewSkippedSyncStatus("Missing domain while required")
 	}
+
+	// Check if organization should be whitelisted
 	orgHasWhitelistedDomain := false
 	for _, domain := range orgInput.Domains {
 		if controlDomains.isWhitelistedDomain(domain) {
 			orgHasWhitelistedDomain = true
 		}
+	}
+
+	// Use fallback name if applicable
+	if orgInput.Name == "" && orgInput.FallbackName != "" && orgInput.HasDomains() {
+		orgInput.Name = orgInput.FallbackName
 	}
 
 	// Lock organization creation
@@ -242,28 +254,32 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		// Create or update organization
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = s.grpcClients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
-			Tenant:            tenant,
-			Id:                organizationId,
-			LoggedInUserId:    "",
-			Name:              orgInput.Name,
-			Description:       orgInput.Description,
-			Website:           orgInput.Website,
-			Industry:          orgInput.Industry,
-			IsPublic:          orgInput.IsPublic,
-			IsCustomer:        orgInput.IsCustomer,
-			Employees:         orgInput.Employees,
-			Market:            orgInput.Market,
-			CreatedAt:         utils.ConvertTimeToTimestampPtr(orgInput.CreatedAt),
-			UpdatedAt:         utils.ConvertTimeToTimestampPtr(orgInput.UpdatedAt),
-			SubIndustry:       orgInput.SubIndustry,
-			IndustryGroup:     orgInput.IndustryGroup,
-			TargetAudience:    orgInput.TargetAudience,
-			ValueProposition:  orgInput.ValueProposition,
-			LastFundingRound:  orgInput.LastFundingRound,
-			LastFundingAmount: orgInput.LastFundingAmount,
-			Hide:              !(orgHasWhitelistedDomain || orgInput.Whitelisted),
-			Note:              orgInput.Note,
-			ReferenceId:       orgInput.ReferenceId,
+			Tenant:             tenant,
+			Id:                 organizationId,
+			LoggedInUserId:     "",
+			Name:               orgInput.Name,
+			Description:        orgInput.Description,
+			Website:            orgInput.Website,
+			Industry:           orgInput.Industry,
+			IsPublic:           orgInput.IsPublic,
+			IsCustomer:         orgInput.IsCustomer,
+			Employees:          orgInput.Employees,
+			Market:             orgInput.Market,
+			CreatedAt:          utils.ConvertTimeToTimestampPtr(orgInput.CreatedAt),
+			UpdatedAt:          utils.ConvertTimeToTimestampPtr(orgInput.UpdatedAt),
+			SubIndustry:        orgInput.SubIndustry,
+			IndustryGroup:      orgInput.IndustryGroup,
+			TargetAudience:     orgInput.TargetAudience,
+			ValueProposition:   orgInput.ValueProposition,
+			LastFundingRound:   orgInput.LastFundingRound,
+			LastFundingAmount:  orgInput.LastFundingAmount,
+			Hide:               !(orgHasWhitelistedDomain || orgInput.Whitelisted),
+			Note:               orgInput.Note,
+			ReferenceId:        orgInput.ReferenceId,
+			LogoUrl:            orgInput.LogoUrl,
+			YearFounded:        orgInput.YearFounded,
+			Headquarters:       orgInput.Headquarters,
+			EmployeeGrowthRate: orgInput.EmployeeGrowthRate,
 			SourceFields: &commonpb.SourceFields{
 				Source:    orgInput.ExternalSystem,
 				AppSource: appSource,
@@ -297,7 +313,6 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 	if !failedSync && orgInput.HasDomains() {
 		for _, domain := range orgInput.Domains {
-
 			//check if the domain is already linked to an organization. If the domain is already linked, skip the link operation
 			domainInUse, err := s.repositories.OrganizationRepository.IsDomainUsedByOrganization(ctx, tenant, domain, organizationId)
 			if err != nil {

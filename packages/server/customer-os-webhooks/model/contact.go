@@ -130,7 +130,7 @@ func (c *ContactData) Normalize() {
 	c.SetTimes()
 	c.BaseData.Normalize()
 
-	c.AdditionalEmails = utils.FilterEmpty(c.AdditionalEmails)
+	c.AdditionalEmails = utils.FilterOutEmpty(c.AdditionalEmails)
 	c.AdditionalEmails = utils.RemoveDuplicates(c.AdditionalEmails)
 	utils.LowercaseStrings(c.AdditionalEmails)
 	c.Email = strings.ToLower(c.Email)

@@ -12,21 +12,11 @@ import (
 	"net/http"
 )
 
-type spanCtxKey struct{}
-
-var activeSpanCtxKey = spanCtxKey{}
-
 const (
-	SpanTagTenant    = "tenant"
-	SpanTagComponent = "component"
+	SpanTagTenant         = tracing.SpanTagTenant
+	SpanTagComponent      = tracing.SpanTagComponent
+	SpanTagExternalSystem = tracing.SpanTagExternalSystem
 )
-
-func ExtractSpanCtx(ctx context.Context) opentracing.SpanContext {
-	if ctx.Value(activeSpanCtxKey) != nil {
-		return ctx.Value(activeSpanCtxKey).(opentracing.SpanContext)
-	}
-	return nil
-}
 
 func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName string, headers http.Header) (context.Context, opentracing.Span) {
 	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(headers))
@@ -60,6 +50,10 @@ func SetDefaultServiceSpanTags(ctx context.Context, span opentracing.Span) {
 func SetDefaultNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
 	span.SetTag(SpanTagComponent, constants.ComponentNeo4jRepository)
+}
+
+func LogObjectAsJson(span opentracing.Span, name string, object any) {
+	tracing.LogObjectAsJson(span, name, object)
 }
 
 func InjectSpanContextIntoGrpcMetadata(ctx context.Context, span opentracing.Span) context.Context {

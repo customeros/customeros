@@ -118,8 +118,9 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.syncInteractionEvent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag("externalSystem", interactionEventInput.ExternalSystem)
-	span.LogFields(log.Object("syncDate", syncDate), log.Object("interactionEventInput", interactionEventInput))
+	span.SetTag(tracing.SpanTagExternalSystem, interactionEventInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate))
+	tracing.LogObjectAsJson(span, "interactionEventInput", interactionEventInput)
 
 	tenant := common.GetTenantFromContext(ctx)
 	var failedSync = false

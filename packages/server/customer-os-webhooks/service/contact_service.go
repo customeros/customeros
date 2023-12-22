@@ -119,8 +119,9 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.syncContact")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag("externalSystem", contactInput.ExternalSystem)
-	span.LogFields(log.Object("syncDate", syncDate), log.Object("contactInput", contactInput))
+	span.SetTag(tracing.SpanTagExternalSystem, contactInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate))
+	tracing.LogObjectAsJson(span, "contactInput", contactInput)
 
 	tenant := common.GetTenantFromContext(ctx)
 	var appSource = utils.StringFirstNonEmpty(contactInput.AppSource, constants.AppSourceCustomerOsWebhooks)

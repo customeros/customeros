@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func FilterEmpty(vals []string) []string {
+func FilterOutEmpty(vals []string) []string {
 	var result []string
 	for _, val := range vals {
 		if val != "" {
@@ -44,10 +44,19 @@ func RemoveDuplicates(arr []string) []string {
 	return result
 }
 
+// Deprecated: use LowercaseSliceOfStrings instead
 func LowercaseStrings(arr []string) {
 	for i, s := range arr {
 		arr[i] = strings.ToLower(s)
 	}
+}
+
+func LowercaseSliceOfStrings(arr []string) []string {
+	var result []string
+	for _, s := range arr {
+		result = append(result, strings.ToLower(s))
+	}
+	return result
 }
 
 func Contains(slice []string, value string) bool {

@@ -118,8 +118,9 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryService.syncLogEntry")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag("externalSystem", logEntryInput.ExternalSystem)
-	span.LogFields(log.Object("syncDate", syncDate), log.Object("logEntryInput", logEntryInput))
+	span.SetTag(tracing.SpanTagExternalSystem, logEntryInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate))
+	tracing.LogObjectAsJson(span, "logEntryInput", logEntryInput)
 
 	var failedSync = false
 	var reason = ""

@@ -19,6 +19,8 @@ type OrganizationData struct {
 	BaseData
 	CustomerOsId string `json:"customerOsId"`
 	Name         string `json:"name,omitempty"`
+	// Fallback name is used when name is empty and domain is missing
+	FallbackName string `json:"fallbackName,omitempty"`
 	Description  string `json:"description,omitempty"`
 	// For sub-orgs this property is ignored
 	Domains      []string           `json:"domains,omitempty"`
@@ -49,6 +51,10 @@ type OrganizationData struct {
 	Market             string              `json:"market,omitempty"`
 	LastFundingRound   string              `json:"lastFundingRound,omitempty"`
 	LastFundingAmount  string              `json:"lastFundingAmount,omitempty"`
+	LogoUrl            string              `json:"logoUrl,omitempty"`
+	YearFounded        *int64              `json:"yearFounded,omitempty"`
+	Headquarters       string              `json:"headquarters,omitempty"`
+	EmployeeGrowthRate string              `json:"employeeGrowthRate,omitempty"`
 	// If true, the organization will be created by domain,
 	// Missing domains, or blacklisted domains will result in no organization being created
 	// Note: for sub-orgs this property is ignored
@@ -100,7 +106,7 @@ func (o *OrganizationData) Normalize() {
 }
 
 func (o *OrganizationData) NormalizeDomains() {
-	o.Domains = utils.FilterEmpty(o.Domains)
-	utils.LowercaseStrings(o.Domains)
+	o.Domains = utils.FilterOutEmpty(o.Domains)
+	o.Domains = utils.LowercaseSliceOfStrings(o.Domains)
 	o.Domains = utils.RemoveDuplicates(o.Domains)
 }
