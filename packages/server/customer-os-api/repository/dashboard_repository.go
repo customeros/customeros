@@ -481,7 +481,7 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 					WITH DISTINCT currentDate.year AS year, currentDate.month AS month, currentDate, datetime({year: endOfMonth.year, month: endOfMonth.month, day: endOfMonth.day, hour: 23, minute: 59, second: 59, nanosecond:999999999}) as endOfMonth
 					OPTIONAL MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(i:Contract_%s)
 					WHERE 
-					  o.hide = false AND
+					  o.hide = false AND o.isCustomer = true AND
 					  i.serviceStartedAt.year = year AND 
 					  i.serviceStartedAt.month = month AND 
 					  (i.endedAt IS NULL OR i.endedAt > endOfMonth)
@@ -635,7 +635,7 @@ func (r *dashboardRepository) GetDashboardRevenueAtRiskData(ctx context.Context,
 			`
 					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:ACTIVE_RENEWAL]->(op:Opportunity_%s)
 					WHERE 
-						o.hide = false AND c.status = 'LIVE' AND op.internalType = 'RENEWAL'
+						o.hide = false AND o.isCustomer = true AND c.status = 'LIVE' AND op.internalType = 'RENEWAL'
 					
 					WITH COLLECT(DISTINCT { renewalLikelihood: op.renewalLikelihood, maxAmount: op.maxAmount }) AS contractDetails
 					
@@ -938,8 +938,8 @@ func (r *dashboardRepository) GetDashboardARRBreakdownUpsellsAndDowngradesData(c
 					
 					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth, startOfNextMonth
 					
-					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
-					WHERE (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < startOfNextMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
+					WHERE o.hide = false AND o.isCustomer = true AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < startOfNextMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 					
 					WITH year, month, beginOfMonth, endOfMonth, startOfNextMonth, sli ORDER BY sli.startedAt ASC
 					
@@ -963,7 +963,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownUpsellsAndDowngradesData(c
 					WITH year, month, totalHigh - totalLow AS total
 					
 					RETURN year, month, CASE WHEN total < 0 THEN -total ELSE total END AS total
-				`, "% 12 + 1", tenant, tenant, q),
+				`, "% 12 + 1", tenant, tenant, tenant, q),
 			map[string]any{
 				"tenant":    tenant,
 				"startDate": startDate,
@@ -1038,10 +1038,10 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 					
 					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth, startOfNextMonth
 					
-					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
+					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
 					WITH year, month, beginOfMonth, endOfMonth, c.serviceStartedAt AS cssa, c.renewalCycle AS crc, c.renewalPeriods as crp, sli ORDER BY sli.startedAt ASC
 
-					WHERE c.serviceStartedAt IS NOT NULL AND (c.endedAt IS NULL OR c.endedAt > beginOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < beginOfMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL AND (c.endedAt IS NULL OR c.endedAt > beginOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < beginOfMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, sli.parentId AS pp, COLLECT(sli) AS versions
 					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, pp, LAST(versions) AS lastSliVersion
 					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, pp, lastSliVersion
@@ -1067,7 +1067,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 							CASE WHEN crc = 'MONTHLY' THEN 1 ELSE 0 END END END END * a.price * a.quantity)) AS amount
 
 					RETURN year, month, SUM(amount)
-				`, "% 12 + 1", tenant, tenant, "% crp"),
+				`, "% 12 + 1", tenant, tenant, tenant, "% crp"),
 			map[string]any{
 				"tenant":    tenant,
 				"startDate": startDate,
@@ -1207,10 +1207,10 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 					
 					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth
 					
-					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
+					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
 					WITH year, month, beginOfMonth, endOfMonth, c.id as cid, c.serviceStartedAt AS cssa, c.renewalCycle AS crc, c.renewalPeriods as crp, sli ORDER BY sli.startedAt ASC
 
-					WHERE c.serviceStartedAt IS NOT NULL AND (c.endedAt IS NULL OR c.endedAt > endOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < beginOfMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL AND (c.endedAt IS NULL OR c.endedAt > endOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < beginOfMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, crc, crp, sli.parentId AS pp, COLLECT(sli) AS versions
 					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, crc, crp, pp, LAST(versions) AS lastSliVersion
 					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, crc, crp, pp, lastSliVersion
@@ -1228,7 +1228,7 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 					
 					WITH year, month, cid, lastSliVersion
 					return year, month, COUNT(DISTINCT(cid)) AS contractsWithRenewals
-				`, "% 12 + 1", tenant, tenant, "% crp"),
+				`, "% 12 + 1", tenant, tenant, tenant, "% crp"),
 			map[string]any{
 				"tenant":    tenant,
 				"startDate": startDate,
@@ -1302,12 +1302,12 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsChurnedData(ctx 
 					
 					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, startOfNextMonth
 					
-					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
+					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
 					WITH year, month, beginOfMonth, startOfNextMonth, c.id as id, c.serviceStartedAt as serviceStartedAt, c.endedAt AS contractEndedAt, sli ORDER BY sli.startedAt ASC
 
-					WHERE c.serviceStartedAt IS NOT NULL AND contractEndedAt >= beginOfMonth AND contractEndedAt < startOfNextMonth AND sli.startedAt IS NOT NULL AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL AND contractEndedAt >= beginOfMonth AND contractEndedAt < startOfNextMonth AND sli.startedAt IS NOT NULL AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 					return year, month, COUNT(DISTINCT id) AS value
-				`, "% 12 + 1", tenant, tenant),
+				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
 				"tenant":    tenant,
 				"startDate": startDate,

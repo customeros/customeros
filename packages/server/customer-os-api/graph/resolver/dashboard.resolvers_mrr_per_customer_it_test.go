@@ -86,51 +86,7 @@ func assert_Dashboard_MRR_Per_Customer_PeriodIntervals(t *testing.T, start, end 
 	require.Equal(t, months, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
 }
 
-func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_HiddenOrganization(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
-		Hide: true,
-	})
-
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2024, 7)
-	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
-
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
-
-	rawResponse := callGraphQL(t, "dashboard_view/dashboard_mrr_per_customer",
-		map[string]interface{}{
-			"start": "2023-07-01T00:00:00.000Z",
-			"end":   "2023-07-01T00:00:00.000Z",
-		})
-
-	var dashboardReport struct {
-		Dashboard_MRRPerCustomer model.DashboardMRRPerCustomer
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
-	require.Nil(t, err)
-
-	require.Equal(t, float64(0), dashboardReport.Dashboard_MRRPerCustomer.MrrPerCustomer)
-	require.Equal(t, "0%", dashboardReport.Dashboard_MRRPerCustomer.IncreasePercentage)
-	require.Equal(t, 1, len(dashboardReport.Dashboard_MRRPerCustomer.PerMonth))
-
-	for _, month := range dashboardReport.Dashboard_MRRPerCustomer.PerMonth {
-		require.Equal(t, 2023, month.Year)
-		require.Equal(t, 7, month.Month)
-		require.Equal(t, float64(0), month.Value)
-	}
-}
-
-func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_ProspectOrganization(t *testing.T) {
+func TestQueryResolver_Dashboard_MRR_Per_Customer_SLI_InMonth_Prospect(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
