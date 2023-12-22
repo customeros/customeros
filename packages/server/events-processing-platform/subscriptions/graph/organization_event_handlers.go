@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -24,8 +27,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
-	"time"
 )
 
 type OrganizationEventHandler struct {
@@ -701,8 +702,7 @@ type ActionOnboardingStatusMetadata struct {
 }
 
 func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.Context, organizationId string, eventData events.UpdateOnboardingStatusEvent, span opentracing.Span) error {
-
-	metadata, err := utils.ToJson(ActionOnboardingStatusMetadata{
+	metadata, _ := utils.ToJson(ActionOnboardingStatusMetadata{
 		Status:     eventData.Status,
 		Comments:   eventData.Comments,
 		UserId:     eventData.UpdatedByUserId,
@@ -731,7 +731,7 @@ func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.
 		"status":   eventData.Status,
 		"comments": eventData.Comments,
 	}
-	_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, extraActionProperties)
+	_, err := h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, extraActionProperties)
 	return err
 }
 
@@ -754,4 +754,18 @@ func onboardingStatusReadableStringForActionMessage(status string) string {
 	default:
 		return status
 	}
+}
+
+func (h *OrganizationEventHandler) OnUpdateOwner(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUpdateOrganizationOwner")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData events.OrganizationOwnerUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	return h.repositories.OrganizationRepository.ReplaceOwner(ctx, eventData.Tenant, eventData.OrganizationId, eventData.OwnerUserId)
 }

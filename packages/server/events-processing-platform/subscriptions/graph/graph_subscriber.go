@@ -218,13 +218,14 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnUnlinkFromParentOrganization(ctx, evt)
 	case orgevents.OrganizationUpdateOnboardingStatusV1:
 		return s.organizationEventHandler.OnUpdateOnboardingStatus(ctx, evt)
+	case orgevents.OrganizationUpdateOwnerV1:
+		return s.organizationEventHandler.OnUpdateOwner(ctx, evt)
 	case orgevents.OrganizationRequestRenewalForecastV1,
 		orgevents.OrganizationRequestNextCycleDateV1,
 		orgevents.OrganizationUpdateRenewalLikelihoodV1,
 		orgevents.OrganizationUpdateRenewalForecastV1,
 		orgevents.OrganizationUpdateBillingDetailsV1,
-		orgevents.OrganizationRequestScrapeByWebsiteV1,
-		orgevents.OrganizationUpdateOwnerV1:
+		orgevents.OrganizationRequestScrapeByWebsiteV1:
 		return nil
 
 	case userevents.UserCreateV1:

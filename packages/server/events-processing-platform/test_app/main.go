@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"log"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/comment"
@@ -19,7 +21,6 @@ import (
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"log"
 )
 
 const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
@@ -97,6 +98,7 @@ func main() {
 	//testAddContractService()
 	//testCloseLooseOpportunity()
 	testUpdateOnboardingStatus()
+	testUpdateOrgOwner()
 }
 
 func testRequestGenerateSummaryRequest() {
@@ -657,6 +659,26 @@ func testUpdateOnboardingStatus() {
 		Comments:         "test comments",
 		AppSource:        appSource,
 		OnboardingStatus: organizationpb.OnboardingStatus_ONBOARDING_STATUS_DONE,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testUpdateOrgOwner() {
+	tenant := "openline"
+	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	actorId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
+
+	result, err := clients.OrganizationClient.UpdateOrganizationOwner(context.Background(), &organizationpb.UpdateOrganizationOwnerGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: orgId,
+		LoggedInUserId: actorId,
+		ActorUserId:    actorId,
+		OwnerUserId:    userId,
+		AppSource:      appSource,
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
