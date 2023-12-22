@@ -3,6 +3,9 @@ package neo4j
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
@@ -10,8 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"log"
-	"time"
 )
 
 func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
@@ -905,6 +906,15 @@ func UserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, 
 	query := `MATCH (o:Organization {id:$organizationId}),
 			        (u:User {id:$userId})
 			MERGE (u)-[:OWNS]->(o)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"organizationId": organizationId,
+		"userId":         userId,
+	})
+}
+
+func DeleteUserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, userId, organizationId string) {
+	query := `MATCH (u:User {id:$userId})-[r:OWNS]->(o:Organization {id:$organizationId})     
+			DELETE r`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"organizationId": organizationId,
 		"userId":         userId,

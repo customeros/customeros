@@ -471,20 +471,22 @@ func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationID", organizationID), log.String("userID", userID))
 
-	orgGrpcRes, err := s.grpcClients.OrganizationClient.UpdateOrganizationOwner(ctx, &organizationpb.UpdateOrganizationOwnerGrpcRequest{
+	ownerUpdateReq := &organizationpb.UpdateOrganizationOwnerGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: organizationID,
 		OwnerUserId:    userID,
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		ActorUserId:    common.GetUserIdFromContext(ctx),
 		AppSource:      constants.AppSourceCustomerOsApi,
-	})
+	}
+
+	_, err := s.grpcClients.OrganizationClient.UpdateOrganizationOwner(ctx, ownerUpdateReq)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	// get org node back from db to keep function signature the same
-	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(ctx, common.GetTenantFromContext(ctx), orgGrpcRes.Id)
+	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(ctx, common.GetTenantFromContext(ctx), organizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
