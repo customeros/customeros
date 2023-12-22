@@ -614,10 +614,10 @@ func ComputeNumbersDisplay(previousMonthCount, currentMonthCount float64) string
 			return fmt.Sprintf("+%.0f", increase)
 		}
 		a := math.Abs(percentage) / 100
-		return printFloat(a, false) + "×"
+		return PrintFloatValue(a, false) + "×"
 	}
 
-	return printFloat(percentage, true) + "%"
+	return PrintFloatValue(percentage, true) + "%"
 }
 
 func ComputePercentagesDisplay(previous, current float64) string {
@@ -625,7 +625,7 @@ func ComputePercentagesDisplay(previous, current float64) string {
 		return "0"
 	}
 	if math.IsNaN(previous) {
-		return printFloat(current, true)
+		return PrintFloatValue(current, true)
 	}
 
 	diff := current - previous
@@ -637,16 +637,22 @@ func ComputePercentagesDisplay(previous, current float64) string {
 		diff = -100
 	}
 
-	return printFloat(diff, true)
+	return PrintFloatValue(diff, true)
 }
 
-func printFloat(number float64, withSign bool) string {
+func PrintFloatValue(number float64, withSign bool) string {
 	if number == 0 {
 		return fmt.Sprintf("%.0f", number)
 	} else {
 		sign := ""
 		if withSign && number > 0 {
 			sign = "+"
+		}
+		if number < 100 {
+			number = roundToTwoDecimalPlaces(number)
+		} else {
+			number = math.Round(number)
+			number = math.Trunc(number)
 		}
 		if hasSingleDecimal(number) {
 			return fmt.Sprintf(sign+"%.1f", number)
@@ -659,15 +665,24 @@ func printFloat(number float64, withSign bool) string {
 }
 
 func hasSingleDecimal(number float64) bool {
-	if number != math.Floor(number) {
-		decimalPart := number - math.Floor(number)
-		return decimalPart >= 0.1 && decimalPart < 1.0
+	// Get the decimal part of the number
+	decimalPart := number - math.Trunc(number)
+
+	if decimalPart == 0 {
+		return false
 	}
-	return false
+
+	// Multiply the decimal part by 10 and check if it's an integer
+	multiplied := decimalPart * 10
+	return math.Abs(multiplied-math.Round(multiplied)) < 1e-9
 }
 
 func hasDecimals(number float64) bool {
 	return number != float64(int(number))
+}
+
+func roundToTwoDecimalPlaces(num float64) float64 {
+	return math.Round(num*100) / 100
 }
 
 func calculatePercentageChange(a, b float64) float64 {
