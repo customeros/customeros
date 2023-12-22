@@ -1268,6 +1268,7 @@ export const integrationsData: IntegrationItem[] = [
         label: 'Secret Key',
       },
     ],
+    isFromIntegrationApp: true,
   },
   {
     key: 'surveymonkey',
