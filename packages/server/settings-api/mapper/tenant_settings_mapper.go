@@ -5,6 +5,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 )
 
+func hasMixpanelKeys(tenantSettings *entity.TenantSettings) bool {
+	return tenantSettings.MixpanelUsername != nil || tenantSettings.MixpanelSecret != nil || tenantSettings.MixpanelProjectId != nil || tenantSettings.MixpanelProjectSecret != nil || tenantSettings.MixpanelProjectTimezone != nil || tenantSettings.MixpanelRegion != nil
+}
+
 // TODO the state should come from the actual running service
 func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings, activeServices map[string]bool) *map[string]interface{} {
 	responseMap := make(map[string]interface{})
@@ -470,7 +474,7 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings, activeS
 		responseMap[service.SERVICE_ZENEFITS].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
-	if tenantSettings != nil && tenantSettings.MixpanelUsername != nil && tenantSettings.MixpanelSecret != nil && tenantSettings.MixpanelProjectId != nil && tenantSettings.MixpanelProjectSecret != nil && tenantSettings.MixpanelProjectTimezone != nil && tenantSettings.MixpanelRegion != nil {
+	if tenantSettings != nil && hasMixpanelKeys(tenantSettings) {
 		responseMap[service.SERVICE_MIXPANEL] = make(map[string]interface{})
 		responseMap[service.SERVICE_MIXPANEL].(map[string]interface{})["state"] = "ACTIVE"
 	}

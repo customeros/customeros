@@ -1303,30 +1303,12 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.ZenefitsToken = &token
 
 		case SERVICE_MIXPANEL:
-			username, ok := data["username"].(string)
-			if !ok {
-				return nil, nil, fmt.Errorf("missing username for Mixpanel integration")
-			}
-			secret, ok := data["secret"].(string)
-			if !ok {
-				return nil, nil, fmt.Errorf("missing secret for Mixpanel integration")
-			}
-			projectId, ok := data["projectId"].(string)
-			if !ok {
-				return nil, nil, fmt.Errorf("missing project id for Mixpanel integration")
-			}
-			projectSecret, ok := data["projectSecret"].(string)
-			if !ok {
-				return nil, nil, fmt.Errorf("missing project secret for Mixpanel integration")
-			}
-			projectTimezone, ok := data["projectTimezone"].(string)
-			if !ok {
-				return nil, nil, fmt.Errorf("missing project timezone for Mixpanel integration")
-			}
-			region, ok := data["region"].(string)
-			if !ok {
-				return nil, nil, fmt.Errorf("missing region for Mixpanel integration")
-			}
+			username, _ := data["username"].(string)
+			secret, _ := data["secret"].(string)
+			projectId, _ := data["projectId"].(string)
+			projectSecret, _ := data["projectSecret"].(string)
+			projectTimezone, _ := data["projectTimezone"].(string)
+			region, _ := data["region"].(string)
 
 			tenantSettings.MixpanelUsername = &username
 			tenantSettings.MixpanelSecret = &secret
