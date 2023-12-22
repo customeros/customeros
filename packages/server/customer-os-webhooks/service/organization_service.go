@@ -215,7 +215,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 
 	// Use fallback name if applicable
-	if orgInput.Name == "" && orgInput.FallbackName != "" && orgInput.HasDomains() {
+	if orgInput.Name == "" && orgInput.FallbackName != "" && !orgInput.HasDomains() {
 		orgInput.Name = orgInput.FallbackName
 	}
 
