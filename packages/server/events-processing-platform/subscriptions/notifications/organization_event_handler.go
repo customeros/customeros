@@ -39,7 +39,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.OrganizationUpdateOwnerEvent
+	var eventData events.OrganizationOwnerUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

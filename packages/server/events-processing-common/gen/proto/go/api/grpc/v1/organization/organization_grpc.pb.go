@@ -39,6 +39,7 @@ type OrganizationGrpcServiceClient interface {
 	UpdateOnboardingStatus(ctx context.Context, in *UpdateOnboardingStatusGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganization(ctx context.Context, in *UpdateOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	AddSocial(ctx context.Context, in *AddSocialGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	UpdateOrganizationOwner(ctx context.Context, in *UpdateOrganizationOwnerGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 }
 
 type organizationGrpcServiceClient struct {
@@ -202,6 +203,15 @@ func (c *organizationGrpcServiceClient) AddSocial(ctx context.Context, in *AddSo
 	return out, nil
 }
 
+func (c *organizationGrpcServiceClient) UpdateOrganizationOwner(ctx context.Context, in *UpdateOrganizationOwnerGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
+	out := new(OrganizationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/UpdateOrganizationOwner", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrganizationGrpcServiceServer is the server API for OrganizationGrpcService service.
 // All implementations should embed UnimplementedOrganizationGrpcServiceServer
 // for forward compatibility
@@ -223,6 +233,7 @@ type OrganizationGrpcServiceServer interface {
 	UpdateOnboardingStatus(context.Context, *UpdateOnboardingStatusGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganization(context.Context, *UpdateOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	AddSocial(context.Context, *AddSocialGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	UpdateOrganizationOwner(context.Context, *UpdateOrganizationOwnerGrpcRequest) (*OrganizationIdGrpcResponse, error)
 }
 
 // UnimplementedOrganizationGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -279,6 +290,9 @@ func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganization(context.Con
 }
 func (UnimplementedOrganizationGrpcServiceServer) AddSocial(context.Context, *AddSocialGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddSocial not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganizationOwner(context.Context, *UpdateOrganizationOwnerGrpcRequest) (*OrganizationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationOwner not implemented")
 }
 
 // UnsafeOrganizationGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -598,6 +612,24 @@ func _OrganizationGrpcService_AddSocial_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrganizationGrpcService_UpdateOrganizationOwner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateOrganizationOwnerGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).UpdateOrganizationOwner(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/UpdateOrganizationOwner",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).UpdateOrganizationOwner(ctx, req.(*UpdateOrganizationOwnerGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrganizationGrpcService_ServiceDesc is the grpc.ServiceDesc for OrganizationGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -672,6 +704,10 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddSocial",
 			Handler:    _OrganizationGrpcService_AddSocial_Handler,
+		},
+		{
+			MethodName: "UpdateOrganizationOwner",
+			Handler:    _OrganizationGrpcService_UpdateOrganizationOwner_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

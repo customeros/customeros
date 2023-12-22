@@ -1,6 +1,8 @@
 package aggregate
 
 import (
+	"strings"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
@@ -9,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 const (
@@ -64,6 +65,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onRemoveParent(event)
 	case events.OrganizationUpdateOnboardingStatusV1:
 		return a.onOnboardingStatusUpdate(event)
+	case events.OrganizationUpdateOwnerV1:
+		return a.onOrganizationOwnerUpdate(event)
 	case events.OrganizationRequestRenewalForecastV1,
 		events.OrganizationRequestNextCycleDateV1,
 		events.OrganizationRefreshLastTouchpointV1,
@@ -490,6 +493,18 @@ func (a *OrganizationAggregate) onOnboardingStatusUpdate(event eventstore.Event)
 		Comments:  eventData.Comments,
 		UpdatedAt: eventData.UpdatedAt,
 	}
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onOrganizationOwnerUpdate(event eventstore.Event) error {
+	var eventData events.OrganizationOwnerUpdateEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	// FIXME: Organization object should have a field for owner user id? it does not currently
+	// a.Organization.OwnerUserId = eventData.OwnerUserId
+	a.Organization.UpdatedAt = eventData.UpdatedAt
 
 	return nil
 }
