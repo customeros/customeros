@@ -118,8 +118,9 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.syncUser")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag("externalSystem", userInput.ExternalSystem)
-	span.LogFields(log.Object("syncDate", syncDate), log.Object("userInput", userInput))
+	span.SetTag(tracing.SpanTagExternalSystem, userInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate))
+	tracing.LogObjectAsJson(span, "userInput", userInput)
 
 	var tenant = common.GetTenantFromContext(ctx)
 	var appSource = utils.StringFirstNonEmpty(userInput.AppSource, constants.AppSourceCustomerOsWebhooks)
