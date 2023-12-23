@@ -2,7 +2,7 @@ package event_store
 
 import (
 	"context"
-	emailProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	emailProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 )
 
 type MockEmailServiceCallbacks struct {

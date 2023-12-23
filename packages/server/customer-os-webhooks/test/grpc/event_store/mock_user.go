@@ -2,7 +2,7 @@ package event_store
 
 import (
 	"context"
-	userProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+	userProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 )
 
 type MockUserServiceCallbacks struct {

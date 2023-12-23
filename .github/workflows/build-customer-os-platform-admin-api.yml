@@ -6,14 +6,14 @@ on:
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-common-auth/**
-      - packages/server/events-processing-common/**
+      - packages/server/events-processing-proto/**
       - packages/server/customer-os-platform-admin-api/**
       - .github/workflows/build-customer-os-platform-admin-api.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-common-auth/**
-      - packages/server/events-processing-common/**
+      - packages/server/events-processing-proto/**
       - packages/server/customer-os-platform-admin-api/**
       - .github/workflows/build-customer-os-platform-admin-api.yml
   release:
@@ -104,14 +104,14 @@ jobs:
           mkdir tmp-sources
           mkdir tmp-sources/customer-os-common-module
           mkdir tmp-sources/customer-os-common-auth
-          mkdir tmp-sources/events-processing-common
+          mkdir tmp-sources/events-processing-proto
           mkdir tmp-sources/customer-os-platform-admin-api
           
           rsync -av --progress --exclude="tmp-sources" * tmp-sources/customer-os-platform-admin-api
           cp .env tmp-sources/customer-os-platform-admin-api/.env
           cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
           cp -r ../customer-os-common-auth/* tmp-sources/customer-os-common-auth
-          cp -r ../events-processing-common/* tmp-sources/events-processing-common
+          cp -r ../events-processing-proto/* tmp-sources/events-processing-proto
           
           cp Dockerfile tmp-sources/Dockerfile
 

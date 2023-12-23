@@ -3,7 +3,7 @@ package events_platform
 import (
 	"context"
 
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 )
 
 type MockOrganizationServiceCallbacks struct {

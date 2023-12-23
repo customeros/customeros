@@ -18,7 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	usergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -151,7 +151,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = r.Clients.UserClient.LinkEmailToUser(ctx, &usergrpc.LinkEmailToUserGrpcRequest{
+	_, err = r.Clients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		UserId:         userID,
 		EmailId:        emailId,

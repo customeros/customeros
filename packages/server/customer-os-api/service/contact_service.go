@@ -14,9 +14,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -124,7 +124,7 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	upsertContactRequest := contactgrpc.UpsertContactGrpcRequest{
+	upsertContactRequest := contactpb.UpsertContactGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(contactDetails.Source),
@@ -177,7 +177,7 @@ func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSo
 	}
 	if emailId != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactgrpc.LinkEmailToContactGrpcRequest{
+		_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			ContactId:      contactId,
@@ -204,7 +204,7 @@ func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId,
 	}
 	if phoneNumberId != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactgrpc.LinkPhoneNumberToContactGrpcRequest{
+		_, err = s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			ContactId:      contactId,
@@ -247,7 +247,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 
 	contactDetails := *contactUpdateData.ContactEntity
 
-	upsertContactRequest := contactgrpc.UpsertContactGrpcRequest{
+	upsertContactRequest := contactpb.UpsertContactGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(entity.DataSourceOpenline),
@@ -584,7 +584,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 
 	result := &model.CustomerContact{}
 
-	contactCreateRequest := &contactgrpc.UpsertContactGrpcRequest{
+	contactCreateRequest := &contactpb.UpsertContactGrpcRequest{
 		Tenant:      common.GetTenantFromContext(ctx),
 		FirstName:   data.ContactEntity.FirstName,
 		LastName:    data.ContactEntity.LastName,
@@ -632,7 +632,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		result.Email = &model.CustomerEmail{
 			ID: emailId.Id,
 		}
-		_, err = s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contactgrpc.LinkEmailToContactGrpcRequest{
+		_, err = s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contactpb.LinkEmailToContactGrpcRequest{
 			Primary:   data.EmailEntity.Primary,
 			Label:     data.EmailEntity.Label,
 			ContactId: contactId.Id,
