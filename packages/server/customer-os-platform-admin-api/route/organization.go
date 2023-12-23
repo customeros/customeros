@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/tracing"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"net/http"
 	"sync"
 )

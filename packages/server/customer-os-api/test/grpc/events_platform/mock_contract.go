@@ -2,7 +2,7 @@ package events_platform
 
 import (
 	"context"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
+	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 )
 
 type MockContractServiceCallbacks struct {

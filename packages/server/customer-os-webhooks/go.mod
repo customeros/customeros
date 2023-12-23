@@ -6,7 +6,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth => ../customer-os-common-auth
 
-replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ../events-processing-common
+replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../events-processing-proto
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
@@ -21,7 +21,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.15.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230919071321-b1ec8acfb667
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230919164955-88b6fbff0199
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230919164955-88b6fbff0199
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-00010101000000-000000000000
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.17.0

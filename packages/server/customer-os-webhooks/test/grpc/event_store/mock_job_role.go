@@ -2,7 +2,7 @@ package event_store
 
 import (
 	"context"
-	jobRoleProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
+	jobRoleProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 )
 
 type MockJobRoleServiceCallbacks struct {

@@ -23,11 +23,11 @@ RUN cd /workspace/build/customer-os-common-auth && go mod download && go mod ver
 COPY customer-os-common-auth/. /workspace/build/customer-os-common-auth/
 RUN cd /workspace/build/customer-os-common-auth && go build
 
-#copy events-processing-common
-RUN mkdir /workspace/build/events-processing-common
-COPY events-processing-common/go.mod /workspace/build/events-processing-common/go.mod
-COPY events-processing-common/go.sum /workspace/build/events-processing-common/go.sum
-COPY events-processing-common/. /workspace/build/events-processing-common/
+#copy events-processing-proto
+RUN mkdir /workspace/build/events-processing-proto
+COPY events-processing-proto/go.mod /workspace/build/events-processing-proto/go.mod
+COPY events-processing-proto/go.sum /workspace/build/events-processing-proto/go.sum
+COPY events-processing-proto/. /workspace/build/events-processing-proto/
 
 #copy and build customer-os-platform-admin-api
 COPY customer-os-platform-admin-api/go.mod /workspace/build/customer-os-platform-admin-api/go.mod

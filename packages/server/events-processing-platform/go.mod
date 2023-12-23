@@ -2,7 +2,7 @@ module github.com/openline-ai/openline-customer-os/packages/server/events-proces
 
 go 1.21
 
-replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ../events-processing-common
+replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../events-processing-proto
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai => ../customer-os-common-ai
 
@@ -22,7 +22,7 @@ require (
 	github.com/labstack/echo/v4 v4.11.3
 	github.com/neo4j/neo4j-go-driver/v5 v5.15.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803091938-3a18e5cda4bc
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230802094927-1ab01f79288e
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-00010101000000-000000000000
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
@@ -125,7 +125,7 @@ require (
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.14.0
 	golang.org/x/tools v0.10.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

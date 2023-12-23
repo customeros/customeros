@@ -15,9 +15,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	jobrolegrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
-	usergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -95,11 +95,11 @@ func (s *userService) Update(ctx context.Context, userId, firstName, lastName st
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.UserClient.UpsertUser(ctx, &usergrpc.UpsertUserGrpcRequest{
+	_, err := s.grpcClients.UserClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		Id:             userId,
-		SourceFields: &commongrpc.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			Source:    string(entity.DataSourceOpenline),
 			AppSource: constants.AppSourceCustomerOsApi,
 		},
@@ -163,7 +163,7 @@ func (s *userService) AddRole(parentCtx context.Context, userId string, role mod
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.UserClient.AddRole(ctx, &usergrpc.AddRoleGrpcRequest{
+	_, err := s.grpcClients.UserClient.AddRole(ctx, &userpb.AddRoleGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		UserId:         userId,
@@ -180,7 +180,7 @@ func (s *userService) AddRole(parentCtx context.Context, userId string, role mod
 func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAddJobRoleData) (*model.CustomerUser, error) {
 	result := &model.CustomerUser{}
 
-	jobRoleCreate := &jobrolegrpc.CreateJobRoleGrpcRequest{
+	jobRoleCreate := &jobrolepb.CreateJobRoleGrpcRequest{
 		Tenant:        common.GetTenantFromContext(ctx),
 		JobTitle:      entity.JobRoleEntity.JobTitle,
 		Description:   entity.JobRoleEntity.Description,
@@ -205,7 +205,7 @@ func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAd
 	result.JobRole = &model.CustomerJobRole{
 		ID: jobRole.Id,
 	}
-	user, err := s.grpcClients.UserClient.LinkJobRoleToUser(contextWithTimeout, &usergrpc.LinkJobRoleToUserGrpcRequest{
+	user, err := s.grpcClients.UserClient.LinkJobRoleToUser(contextWithTimeout, &userpb.LinkJobRoleToUserGrpcRequest{
 		UserId:    entity.UserId,
 		JobRoleId: jobRole.Id,
 		Tenant:    common.GetTenantFromContext(ctx),
@@ -230,7 +230,7 @@ func (s *userService) AddRoleInTenant(parentCtx context.Context, userId, tenant 
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.UserClient.AddRole(ctx, &usergrpc.AddRoleGrpcRequest{
+	_, err := s.grpcClients.UserClient.AddRole(ctx, &userpb.AddRoleGrpcRequest{
 		Tenant:         tenant,
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		UserId:         userId,
@@ -255,7 +255,7 @@ func (s *userService) RemoveRole(parentCtx context.Context, userId string, role 
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.UserClient.RemoveRole(ctx, &usergrpc.RemoveRoleGrpcRequest{
+	_, err := s.grpcClients.UserClient.RemoveRole(ctx, &userpb.RemoveRoleGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		UserId:         userId,
@@ -280,7 +280,7 @@ func (s *userService) RemoveRoleInTenant(parentCtx context.Context, userId strin
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.UserClient.RemoveRole(ctx, &usergrpc.RemoveRoleGrpcRequest{
+	_, err := s.grpcClients.UserClient.RemoveRole(ctx, &userpb.RemoveRoleGrpcRequest{
 		Tenant:         tenant,
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		UserId:         userId,
@@ -648,9 +648,9 @@ func (s *userService) Create(ctx context.Context, userEntity entity.UserEntity) 
 	span.LogFields(log.Object("userEntity", userEntity))
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.UserClient.UpsertUser(ctx, &usergrpc.UpsertUserGrpcRequest{
+	response, err := s.grpcClients.UserClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
-		SourceFields: &commongrpc.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			Source:    string(userEntity.Source),
 			AppSource: userEntity.AppSource,
 		},

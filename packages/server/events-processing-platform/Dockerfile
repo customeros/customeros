@@ -6,7 +6,7 @@ RUN mkdir /workspace/build
 RUN mkdir /workspace/build/customer-os-api
 RUN mkdir /workspace/build/customer-os-common-ai
 RUN mkdir /workspace/build/customer-os-common-module
-RUN mkdir /workspace/build/events-processing-common
+RUN mkdir /workspace/build/events-processing-proto
 
 #copy and build AI module
 COPY customer-os-common-ai/go.mod /workspace/build/customer-os-common-ai/go.mod
@@ -24,10 +24,10 @@ RUN cd /workspace/build/customer-os-common-module && go mod download && go mod v
 COPY customer-os-common-module/. /workspace/build/customer-os-common-module/
 RUN cd /workspace/build/customer-os-common-module && go build
 
-#copy and events-processing-common
-COPY events-processing-common/go.mod /workspace/build/events-processing-common/go.mod
-COPY events-processing-common/go.sum /workspace/build/events-processing-common/go.sum
-COPY events-processing-common/. /workspace/build/events-processing-common/
+#copy and events-processing-proto
+COPY events-processing-proto/go.mod /workspace/build/events-processing-proto/go.mod
+COPY events-processing-proto/go.sum /workspace/build/events-processing-proto/go.sum
+COPY events-processing-proto/. /workspace/build/events-processing-proto/
 
 #copy and build events-processing-platform
 COPY events-processing-platform/go.mod /workspace/build/events-processing-platform/go.mod
