@@ -1,6 +1,6 @@
 module github.com/openline-ai/openline-customer-os/packages/server/user-admin-api
 
-go 1.20
+go 1.21
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
@@ -13,7 +13,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.15.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231120145804-10b6738ad211
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231120145804-10b6738ad211
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231120151307-3cff2d3076b6
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20231223141039-1ccda1d986b4
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/oauth2 v0.15.0
 	golang.org/x/text v0.14.0

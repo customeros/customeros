@@ -1,8 +1,8 @@
 module github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data
 
-go 1.20
+go 1.21
 
-//replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ../../server/events-processing-common
+//replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../../server/events-processing-proto
 //replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../../server/customer-os-common-module
 
 require (
@@ -10,8 +10,8 @@ require (
 	github.com/google/uuid v1.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.15.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231103203436-3b7ff256833d
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231103203436-3b7ff256833d
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231223141039-1ccda1d986b4
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20231223141039-1ccda1d986b4
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
