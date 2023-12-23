@@ -48,7 +48,7 @@ func main() {
 	cntnr := &container.Container{
 		Cfg:                     cfg,
 		Log:                     appLogger,
-		Repositories:            repository.InitRepositories(&neo4jDriver, postgresDb.GormDB),
+		Repositories:            repository.InitRepositories(&neo4jDriver, postgresDb.GormDB, cfg.Neo4j.Database),
 		CustomerOsGraphQLClient: graphql.NewClient(cfg.Service.CustomerOsAdminAPI),
 	}
 

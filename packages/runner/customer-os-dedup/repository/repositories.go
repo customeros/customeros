@@ -19,14 +19,14 @@ type Repositories struct {
 	OrganizationRepository OrganizationRepository
 }
 
-func InitRepositories(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
+func InitRepositories(driver *neo4j.DriverWithContext, gormDb *gorm.DB, neo4jDatabase string) *Repositories {
 	repositories := Repositories{
 		Dbs: Dbs{
 			Neo4jDriver: driver,
 		},
 		CommonRepositories:     commonRepository.InitRepositories(gormDb, driver),
-		TenantRepository:       NewTenantRepository(driver),
-		OrganizationRepository: NewOrganizationRepository(driver),
+		TenantRepository:       NewTenantRepository(driver, neo4jDatabase),
+		OrganizationRepository: NewOrganizationRepository(driver, neo4jDatabase),
 	}
 	return &repositories
 }

@@ -18,12 +18,14 @@ type TenantRepository interface {
 }
 
 type tenantRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewTenantRepository(driver *neo4j.DriverWithContext) TenantRepository {
+func NewTenantRepository(driver *neo4j.DriverWithContext, database string) TenantRepository {
 	return &tenantRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 
@@ -93,8 +95,9 @@ func (r *tenantRepository) UpdateTenantMetadataOrgDedupAt(ctx context.Context, t
 				SET tm.orgDedupAt = $orgDedupAt`
 	span.LogFields(log.String("query", query))
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+	_, err := utils.ExecuteQuery(ctx, *r.driver, r.database, query, map[string]any{
 		"tenantName": tenantName,
 		"orgDedupAt": time,
 	})
+	return err
 }
