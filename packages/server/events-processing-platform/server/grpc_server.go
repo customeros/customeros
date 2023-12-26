@@ -9,6 +9,7 @@ import (
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
+	ispb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_session"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
@@ -92,6 +93,9 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 
 	interactionEventService := service.NewInteractionEventService(server.log, server.commandHandlers.InteractionEvent)
 	iepb.RegisterInteractionEventGrpcServiceServer(grpcServer, interactionEventService)
+
+	interactionSessionService := service.NewInteractionSessionService(server.log, server.commandHandlers.InteractionSession)
+	ispb.RegisterInteractionSessionGrpcServiceServer(grpcServer, interactionSessionService)
 
 	logEntryService := service.NewLogEntryService(server.log, server.commandHandlers.LogEntry)
 	logentrypb.RegisterLogEntryGrpcServiceServer(grpcServer, logEntryService)

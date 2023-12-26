@@ -11,6 +11,7 @@ import (
 	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	ieevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
+	isevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
@@ -33,44 +34,46 @@ import (
 )
 
 type GraphSubscriber struct {
-	log                         logger.Logger
-	db                          *esdb.Client
-	cfg                         *config.Config
-	phoneNumberEventHandler     *PhoneNumberEventHandler
-	contactEventHandler         *ContactEventHandler
-	organizationEventHandler    *OrganizationEventHandler
-	emailEventHandler           *EmailEventHandler
-	userEventHandler            *UserEventHandler
-	locationEventHandler        *LocationEventHandler
-	jobRoleEventHandler         *JobRoleEventHandler
-	interactionEventHandler     *InteractionEventHandler
-	logEntryEventHandler        *LogEntryEventHandler
-	issueEventHandler           *IssueEventHandler
-	commentEventHandler         *CommentEventHandler
-	opportunityEventHandler     *OpportunityEventHandler
-	contractEventHandler        *ContractEventHandler
-	serviceLineItemEventHandler *ServiceLineItemEventHandler
+	log                            logger.Logger
+	db                             *esdb.Client
+	cfg                            *config.Config
+	phoneNumberEventHandler        *PhoneNumberEventHandler
+	contactEventHandler            *ContactEventHandler
+	organizationEventHandler       *OrganizationEventHandler
+	emailEventHandler              *EmailEventHandler
+	userEventHandler               *UserEventHandler
+	locationEventHandler           *LocationEventHandler
+	jobRoleEventHandler            *JobRoleEventHandler
+	interactionEventHandler        *InteractionEventHandler
+	interactionSessionEventHandler *InteractionSessionEventHandler
+	logEntryEventHandler           *LogEntryEventHandler
+	issueEventHandler              *IssueEventHandler
+	commentEventHandler            *CommentEventHandler
+	opportunityEventHandler        *OpportunityEventHandler
+	contractEventHandler           *ContractEventHandler
+	serviceLineItemEventHandler    *ServiceLineItemEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphSubscriber {
 	return &GraphSubscriber{
-		log:                         log,
-		db:                          db,
-		cfg:                         cfg,
-		contactEventHandler:         NewContactEventHandler(log, repositories),
-		organizationEventHandler:    NewOrganizationEventHandler(log, repositories, grpcClients),
-		phoneNumberEventHandler:     NewPhoneNumberEventHandler(repositories),
-		emailEventHandler:           NewEmailEventHandler(repositories),
-		userEventHandler:            NewUserEventHandler(log, repositories),
-		locationEventHandler:        NewLocationEventHandler(repositories),
-		jobRoleEventHandler:         NewJobRoleEventHandler(repositories),
-		interactionEventHandler:     NewInteractionEventHandler(log, repositories, grpcClients),
-		logEntryEventHandler:        NewLogEntryEventHandler(log, repositories, grpcClients),
-		issueEventHandler:           NewIssueEventHandler(log, repositories, grpcClients),
-		commentEventHandler:         NewCommentEventHandler(log, repositories),
-		opportunityEventHandler:     NewOpportunityEventHandler(log, repositories, grpcClients),
-		contractEventHandler:        NewContractEventHandler(log, repositories, grpcClients),
-		serviceLineItemEventHandler: NewServiceLineItemEventHandler(log, repositories, grpcClients),
+		log:                            log,
+		db:                             db,
+		cfg:                            cfg,
+		contactEventHandler:            NewContactEventHandler(log, repositories),
+		organizationEventHandler:       NewOrganizationEventHandler(log, repositories, grpcClients),
+		phoneNumberEventHandler:        NewPhoneNumberEventHandler(repositories),
+		emailEventHandler:              NewEmailEventHandler(repositories),
+		userEventHandler:               NewUserEventHandler(log, repositories),
+		locationEventHandler:           NewLocationEventHandler(repositories),
+		jobRoleEventHandler:            NewJobRoleEventHandler(repositories),
+		interactionEventHandler:        NewInteractionEventHandler(log, repositories, grpcClients),
+		interactionSessionEventHandler: NewInteractionSessionEventHandler(log, repositories, grpcClients),
+		logEntryEventHandler:           NewLogEntryEventHandler(log, repositories, grpcClients),
+		issueEventHandler:              NewIssueEventHandler(log, repositories, grpcClients),
+		commentEventHandler:            NewCommentEventHandler(log, repositories),
+		opportunityEventHandler:        NewOpportunityEventHandler(log, repositories, grpcClients),
+		contractEventHandler:           NewContractEventHandler(log, repositories, grpcClients),
+		serviceLineItemEventHandler:    NewServiceLineItemEventHandler(log, repositories, grpcClients),
 	}
 }
 
@@ -269,6 +272,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.interactionEventHandler.OnCreate(ctx, evt)
 	case ieevent.InteractionEventUpdateV1:
 		return s.interactionEventHandler.OnUpdate(ctx, evt)
+
+	case isevent.InteractionSessionCreateV1:
+		return s.interactionSessionEventHandler.OnCreate(ctx, evt)
 
 	case logentryevents.LogEntryCreateV1:
 		return s.logEntryEventHandler.OnCreate(ctx, evt)

@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "common/source.proto";
+import "common/external_system.proto";
+
+option go_package = "api/grpc/v1/interaction_session;interaction_session_grpc_service";
+
+message UpsertInteractionSessionGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  SourceFields sourceFields = 4;
+  ExternalSystemFields externalSystemFields = 5;
+  google.protobuf.Timestamp createdAt = 6;
+  google.protobuf.Timestamp updatedAt = 7;
+  string identifier = 8;
+  string status = 9;
+  string type = 10;
+  string channel = 11;
+  string name = 12;
+  string channelData = 13;
+}
+
+message InteractionSessionIdGrpcResponse {
+  string id = 1;
+}
+
+service interactionSessionGrpcService {
+  rpc UpsertInteractionSession(UpsertInteractionSessionGrpcRequest) returns (InteractionSessionIdGrpcResponse);
+}
