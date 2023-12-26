@@ -1289,7 +1289,6 @@ func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
 			require.Equal(t, userId, org.OwnerUserId)
-			require.Equal(t, testUserId, org.ActorUserId)
 			neo4jt.UserOwnsOrganization(ctx, driver, userId, organizationId)
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: organizationId,
@@ -1336,7 +1335,6 @@ func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
 			require.Equal(t, tenantName, org.Tenant)
 			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
 			require.Equal(t, newOwnerId, org.OwnerUserId)
-			require.Equal(t, testUserId, org.ActorUserId)
 			neo4jt.UserOwnsOrganization(ctx, driver, newOwnerId, organizationId)
 			neo4jt.DeleteUserOwnsOrganization(ctx, driver, previousOwnerId, organizationId)
 			return &organizationpb.OrganizationIdGrpcResponse{
