@@ -148,6 +148,37 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 		return NewSkippedSyncStatus(reason)
 	}
 
+	senderId, senderLabel := s.getSenderIdAndLabel(ctx, interactionEventInput, span)
+	receiversIdAndRelationType := make(map[string]string)
+	receiversIdAndLabel := make(map[string]string)
+	s.getReceiversIdAndLabel(ctx, interactionEventInput, span, receiversIdAndLabel, receiversIdAndRelationType)
+	syncStatus, done := s.checkRequiredContact(interactionEventInput, senderLabel, receiversIdAndLabel, tenant, span)
+	if done {
+		return syncStatus
+	}
+
+	// Lock interaction event creation
+	syncMutex.Lock()
+	defer syncMutex.Unlock()
+
+	if interactionEventInput.HasSessionDetails() {
+		interactionSessionId, err := s.services.InteractionSessionService.MergeInteractionSession(ctx, tenant, interactionEventInput.ExternalSystem, interactionEventInput.SessionDetails, syncDate)
+		if err != nil {
+			failedSync = true
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("Failed merging interaction session with external reference %s for tenant %s :%s", interactionEventInput.SessionDetails.ExternalId, tenant, err.Error())
+			s.log.Error(reason)
+			return NewFailedSyncStatus(reason)
+		}
+		if interactionSessionId != "" && !interactionEventInput.BelongsTo.Available() {
+			interactionEventInput.BelongsTo = model.BelongsTo{
+				Session: model.ReferencedInteractionSession{
+					ExternalId: interactionEventInput.SessionDetails.ExternalId,
+				},
+			}
+		}
+	}
+
 	parentId, parentLabel, syncStatus, done := s.getParentIdAndLabel(ctx, interactionEventInput, span)
 	if done {
 		return syncStatus
@@ -157,18 +188,6 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 		return syncStatus
 	}
 
-	senderId, senderLabel := s.getSenderIdAndLabel(ctx, interactionEventInput, span)
-	receiversIdAndRelationType := make(map[string]string)
-	receiversIdAndLabel := make(map[string]string)
-	s.getReceiversIdAndLabel(ctx, interactionEventInput, span, receiversIdAndLabel, receiversIdAndRelationType)
-	syncStatus, done = s.checkRequiredContact(interactionEventInput, senderLabel, receiversIdAndLabel, tenant, span)
-	if done {
-		return syncStatus
-	}
-
-	// Lock interaction event creation
-	syncMutex.Lock()
-	defer syncMutex.Unlock()
 	// Check if interaction event already exists
 	interactionEventId, err := s.repositories.InteractionEventRepository.GetMatchedInteractionEventId(ctx, tenant, interactionEventInput.ExternalId, interactionEventInput.ExternalSystem)
 	if err != nil {
@@ -185,8 +204,6 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 		interactionEventId = utils.NewUUIDIfEmpty(interactionEventId)
 		interactionEventInput.Id = interactionEventId
 		span.LogFields(log.String("interactionEventId", interactionEventId))
-
-		// TODO if session details provided merge session using events in interaction session service
 
 		// Create or update interaction event
 		interactionEventGrpcRequest := interactioneventpb.UpsertInteractionEventGrpcRequest{
