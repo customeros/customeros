@@ -422,6 +422,24 @@ func (s *organizationService) AddSocial(ctx context.Context, request *organizati
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
+func (s *organizationService) UpdateOrganizationOwner(ctx context.Context, request *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationOwner")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
+
+	cmd := command.NewUpdateOrganizationOwnerCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.OwnerUserId, request.AppSource)
+
+	if err := s.organizationCommands.UpdateOrganizationOwner.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateOrganizationOwner.Handle) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, s.errResponse(err)
+	}
+
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
 func (s *organizationService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
 }

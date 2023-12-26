@@ -476,10 +476,10 @@ func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, 
 		OrganizationId: organizationID,
 		OwnerUserId:    userID,
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		ActorUserId:    common.GetUserIdFromContext(ctx),
 		AppSource:      constants.AppSourceCustomerOsApi,
 	}
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.OrganizationClient.UpdateOrganizationOwner(ctx, ownerUpdateReq)
 	if err != nil {
 		tracing.TraceErr(span, err)

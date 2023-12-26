@@ -49,10 +49,6 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onDomainLink(event)
 	case events.OrganizationAddSocialV1:
 		return a.onAddSocial(event)
-	case events.OrganizationUpdateRenewalLikelihoodV1,
-		events.OrganizationUpdateRenewalForecastV1,
-		events.OrganizationUpdateBillingDetailsV1:
-		return nil
 	case events.OrganizationHideV1:
 		return a.onHide(event)
 	case events.OrganizationShowV1:
@@ -67,7 +63,10 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onOnboardingStatusUpdate(event)
 	case events.OrganizationUpdateOwnerV1:
 		return a.onOrganizationOwnerUpdate(event)
-	case events.OrganizationRequestRenewalForecastV1,
+	case events.OrganizationUpdateRenewalLikelihoodV1,
+		events.OrganizationUpdateRenewalForecastV1,
+		events.OrganizationUpdateBillingDetailsV1,
+		events.OrganizationRequestRenewalForecastV1,
 		events.OrganizationRequestNextCycleDateV1,
 		events.OrganizationRefreshLastTouchpointV1,
 		events.OrganizationRefreshArrV1,
@@ -502,9 +501,7 @@ func (a *OrganizationAggregate) onOrganizationOwnerUpdate(event eventstore.Event
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	// FIXME: Organization object should have a field for owner user id? it does not currently
-	// a.Organization.OwnerUserId = eventData.OwnerUserId
-	a.Organization.UpdatedAt = eventData.UpdatedAt
 
+	// do nothing
 	return nil
 }

@@ -224,8 +224,7 @@ message UpdateOrganizationOwnerGrpcRequest {
   string organizationId = 2;
   string ownerUserId = 3;
   string loggedInUserId = 4; // The user who is performing the action
-  string actorUserId = 5; // The user who is performing the action, same as loggedInUserId
-  string appSource = 6;
+  string appSource = 5;
 }
 
 message OrganizationIdGrpcResponse {
