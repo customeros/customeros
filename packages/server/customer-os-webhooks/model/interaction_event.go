@@ -1,5 +1,7 @@
 package model
 
+import "strings"
+
 type InteractionEventParticipant struct {
 	ReferencedUser         ReferencedUser         `json:"referencedUser,omitempty"`
 	ReferencedContact      ReferencedContact      `json:"referencedContact,omitempty"`
@@ -17,6 +19,7 @@ func (iep InteractionEventParticipant) Available() bool {
 		iep.ReferencedJobRole.Available()
 }
 
+// This entity should already exist in the system
 type BelongsTo struct {
 	Issue   ReferencedIssue              `json:"issue,omitempty"`
 	Session ReferencedInteractionSession `json:"session,omitempty"`
@@ -39,9 +42,9 @@ type InteractionEventData struct {
 	SentBy      InteractionEventParticipant   `json:"sentBy,omitempty"`
 	SentTo      []InteractionEventParticipant `json:"sentTo,omitempty"`
 	// in sent to or sent by at least 1 contact should be available in the system
-	ContactRequired bool `json:"contactRequired,omitempty"`
-	ParentRequired  bool `json:"parentRequired,omitempty"`
-	//SessionDetails InteractionSession            `json:"sessionDetails,omitempty"` // TODO not yet supported
+	ContactRequired bool                   `json:"contactRequired,omitempty"`
+	ParentRequired  bool                   `json:"parentRequired,omitempty"`
+	SessionDetails  InteractionSessionData `json:"sessionDetails,omitempty"`
 }
 
 func (i *InteractionEventData) HasParent() bool {
@@ -56,17 +59,17 @@ func (i *InteractionEventData) HasSender() bool {
 		i.SentBy.ReferencedJobRole.Available()
 }
 
+func (i *InteractionEventData) HasSessionDetails() bool {
+	return strings.TrimSpace(i.SessionDetails.ExternalId) != ""
+}
+
 func (i *InteractionEventData) Normalize() {
 	i.SetTimes()
 	i.BaseData.Normalize()
-	//if i.HasSession() {
-	//	if i.SessionDetails.CreatedAtStr != "" && i.SessionDetails.CreatedAt == nil {
-	//		i.SessionDetails.CreatedAt, _ = utils.UnmarshalDateTime(i.SessionDetails.CreatedAtStr)
-	//	}
-	//	if i.SessionDetails.CreatedAt != nil {
-	//		i.SessionDetails.CreatedAt = common_utils.TimePtr((*i.SessionDetails.CreatedAt).UTC())
-	//	} else {
-	//		i.SessionDetails.CreatedAt = common_utils.TimePtr(common_utils.Now())
-	//	}
-	//}
+	if i.HasSessionDetails() {
+		i.SessionDetails.Normalize()
+		if i.SessionDetails.AppSource == "" {
+			i.SessionDetails.AppSource = i.AppSource
+		}
+	}
 }
