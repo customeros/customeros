@@ -7,6 +7,7 @@ import (
 	contractcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/command_handler"
 	emailcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
 	iecmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command_handler"
+	iscmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/command_handler"
 	issuecmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/command_handler"
 	jobrolecmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
 	locationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
@@ -22,20 +23,21 @@ import (
 )
 
 type CommandHandlers struct {
-	Contact          *contactcmdhandler.CommandHandlers
-	Organization     *organizationcmdhandler.CommandHandlers
-	PhoneNumber      *phonenumbercmdhandler.CommandHandlers
-	Email            *emailcmdhandler.CommandHandlers
-	User             *usercmdhandler.CommandHandlers
-	Location         *locationcmdhandler.CommandHandlers
-	JobRole          *jobrolecmdhandler.CommandHandlers
-	InteractionEvent *iecmdhandler.CommandHandlers
-	LogEntry         *logentrycmdhandler.CommandHandlers
-	Issue            *issuecmdhandler.CommandHandlers
-	Comment          *commentcmdhandler.CommandHandlers
-	Opportunity      *opportunitycmdhandler.CommandHandlers
-	Contract         *contractcmdhandler.CommandHandlers
-	ServiceLineItem  *servicelineitemcmdhandler.CommandHandlers
+	Contact            *contactcmdhandler.CommandHandlers
+	Organization       *organizationcmdhandler.CommandHandlers
+	PhoneNumber        *phonenumbercmdhandler.CommandHandlers
+	Email              *emailcmdhandler.CommandHandlers
+	User               *usercmdhandler.CommandHandlers
+	Location           *locationcmdhandler.CommandHandlers
+	JobRole            *jobrolecmdhandler.CommandHandlers
+	InteractionEvent   *iecmdhandler.CommandHandlers
+	InteractionSession *iscmdhandler.CommandHandlers
+	LogEntry           *logentrycmdhandler.CommandHandlers
+	Issue              *issuecmdhandler.CommandHandlers
+	Comment            *commentcmdhandler.CommandHandlers
+	Opportunity        *opportunitycmdhandler.CommandHandlers
+	Contract           *contractcmdhandler.CommandHandlers
+	ServiceLineItem    *servicelineitemcmdhandler.CommandHandlers
 }
 
 func NewCommandHandlers(log logger.Logger,
@@ -44,19 +46,20 @@ func NewCommandHandlers(log logger.Logger,
 	repositories *repository.Repositories) *CommandHandlers {
 
 	return &CommandHandlers{
-		Contact:          contactcmdhandler.NewCommandHandlers(log, aggregateStore),
-		Organization:     organizationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore, repositories),
-		InteractionEvent: iecmdhandler.NewCommandHandlers(log, aggregateStore),
-		PhoneNumber:      phonenumbercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		Location:         locationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		Email:            emailcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		User:             usercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		JobRole:          jobrolecmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		LogEntry:         logentrycmdhandler.NewCommandHandlers(log, aggregateStore),
-		Issue:            issuecmdhandler.NewCommandHandlers(log, aggregateStore),
-		Comment:          commentcmdhandler.NewCommandHandlers(log, aggregateStore),
-		Opportunity:      opportunitycmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		Contract:         contractcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		ServiceLineItem:  servicelineitemcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		Contact:            contactcmdhandler.NewCommandHandlers(log, aggregateStore),
+		Organization:       organizationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore, repositories),
+		InteractionEvent:   iecmdhandler.NewCommandHandlers(log, aggregateStore),
+		InteractionSession: iscmdhandler.NewCommandHandlers(log, aggregateStore),
+		PhoneNumber:        phonenumbercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		Location:           locationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		Email:              emailcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		User:               usercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		JobRole:            jobrolecmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		LogEntry:           logentrycmdhandler.NewCommandHandlers(log, aggregateStore),
+		Issue:              issuecmdhandler.NewCommandHandlers(log, aggregateStore),
+		Comment:            commentcmdhandler.NewCommandHandlers(log, aggregateStore),
+		Opportunity:        opportunitycmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		Contract:           contractcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		ServiceLineItem:    servicelineitemcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 	}
 }

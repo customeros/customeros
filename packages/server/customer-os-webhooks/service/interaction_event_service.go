@@ -251,7 +251,7 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 			reason = fmt.Sprintf("failed sending event to upsert interaction event with external reference %s for tenant %s :%s", interactionEventInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
-		// Wait for issue to be created in neo4j
+		// Wait for interaction event to be created in neo4j
 		if !failedSync && !matchingInteractionEventExists {
 			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
 				issue, findErr := s.repositories.InteractionEventRepository.GetById(ctx, tenant, interactionEventId)

@@ -155,6 +155,25 @@ func MapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEven
 	return &issue
 }
 
+func MapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity {
+	props := utils.GetPropsFromNode(node)
+	issue := entity.InteractionSessionEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
+		ChannelData:   utils.GetStringPropOrEmpty(props, "channelData"),
+		Identifier:    utils.GetStringPropOrEmpty(props, "identifier"),
+		Type:          utils.GetStringPropOrEmpty(props, "type"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		Status:        utils.GetStringPropOrEmpty(props, "status"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &issue
+}
+
 func MapDbNodeToIssueEntity(node dbtype.Node) *entity.IssueEntity {
 	props := utils.GetPropsFromNode(node)
 	issue := entity.IssueEntity{
@@ -265,25 +284,6 @@ func MapDbNodeToPageView(node dbtype.Node) *entity.PageViewEntity {
 		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &pageViewAction
-}
-
-func MapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity {
-	props := utils.GetPropsFromNode(node)
-	interactionSessionEntity := entity.InteractionSessionEntity{
-		Id:                utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:         MigrateStartedAt(props),
-		UpdatedAt:         utils.GetTimePropOrNow(props, "updatedAt"),
-		SessionIdentifier: utils.GetStringPropOrNil(props, "identifier"),
-		Name:              utils.GetStringPropOrEmpty(props, "name"),
-		Status:            utils.GetStringPropOrEmpty(props, "status"),
-		Type:              utils.GetStringPropOrNil(props, "type"),
-		Channel:           utils.GetStringPropOrNil(props, "channel"),
-		ChannelData:       utils.GetStringPropOrNil(props, "channelData"),
-		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-	}
-	return &interactionSessionEntity
 }
 
 func MapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity {

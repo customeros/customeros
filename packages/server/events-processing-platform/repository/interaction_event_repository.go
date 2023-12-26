@@ -39,7 +39,7 @@ func NewInteractionEventRepository(driver *neo4j.DriverWithContext, database str
 }
 
 func (r *interactionEventRepository) Create(ctx context.Context, tenant, interactionEventId string, evt event.InteractionEventCreateEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.Create")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.Create")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("interactionEventId", interactionEventId), log.String("createEvent", fmt.Sprintf("%+v", evt)))
