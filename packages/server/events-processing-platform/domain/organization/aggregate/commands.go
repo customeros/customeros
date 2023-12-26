@@ -53,7 +53,7 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 		return a.webScrapeOrganization(ctx, c)
 	case *command.UpdateOnboardingStatusCommand:
 		return a.updateOnboardingStatus(ctx, c)
-	case *command.OrganizationOwnerUpdateCommand:
+	case *command.UpdateOrganizationOwnerCommand:
 		return a.UpdateOrganizationOwner(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
@@ -605,7 +605,7 @@ func (a *OrganizationAggregate) updateOnboardingStatus(ctx context.Context, cmd 
 	return a.Apply(event)
 }
 
-func (a *OrganizationAggregate) UpdateOrganizationOwner(ctx context.Context, cmd *command.OrganizationOwnerUpdateCommand) error {
+func (a *OrganizationAggregate) UpdateOrganizationOwner(ctx context.Context, cmd *command.UpdateOrganizationOwnerCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.UpdateOrganizationOwner")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
@@ -614,9 +614,9 @@ func (a *OrganizationAggregate) UpdateOrganizationOwner(ctx context.Context, cmd
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
+	updatedAt := utils.Now()
 
-	event, err := events.NewOrganizationOwnerUpdateEvent(a, cmd.OwnerUserId, cmd.ActorUserId, cmd.OrganizationId, updatedAtNotNil)
+	event, err := events.NewOrganizationOwnerUpdateEvent(a, cmd.OwnerUserId, cmd.ActorUserId, cmd.OrganizationId, updatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationOwnerUpdateEvent")

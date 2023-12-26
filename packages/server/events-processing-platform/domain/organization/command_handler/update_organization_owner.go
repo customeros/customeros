@@ -18,7 +18,7 @@ import (
 )
 
 type UpdateOrganizationOwnerCommandHandler interface {
-	Handle(ctx context.Context, command *command.UpdateOrganizationCommand) error
+	Handle(ctx context.Context, command *command.UpdateOrganizationOwnerCommand) error
 }
 
 type updateOrganizationOwnerCommandHandler struct {
@@ -28,11 +28,11 @@ type updateOrganizationOwnerCommandHandler struct {
 }
 
 func NewUpdateOrganizationOwnerCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) UpdateOrganizationOwnerCommandHandler {
-	return &updateOrganizationCommandHandler{log: log, es: es, cfg: cfg}
+	return &updateOrganizationOwnerCommandHandler{log: log, es: es, cfg: cfg}
 }
 
-func (h *updateOrganizationOwnerCommandHandler) Handle(ctx context.Context, cmd *command.OrganizationOwnerUpdateCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationOwnerUpdateCommand.Handle")
+func (h *updateOrganizationOwnerCommandHandler) Handle(ctx context.Context, cmd *command.UpdateOrganizationOwnerCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateOrganizationOwnerCommand.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "command", cmd)

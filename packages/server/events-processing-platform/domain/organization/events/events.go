@@ -486,12 +486,12 @@ func NewOrganizationOwnerUpdateEvent(aggregate eventstore.Aggregate, ownerUserId
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationUpdateOwnerEvent")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationOwnerUpdateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateOwnerV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpdateOwnerEvent")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationOwnerUpdateEvent")
 	}
 	return event, nil
 }

@@ -97,7 +97,7 @@ func main() {
 	//testUpdateContract()
 	//testAddContractService()
 	//testCloseLooseOpportunity()
-	testUpdateOnboardingStatus()
+	//testUpdateOnboardingStatus()
 	testUpdateOrgOwner()
 }
 
@@ -668,7 +668,7 @@ func testUpdateOnboardingStatus() {
 
 func testUpdateOrgOwner() {
 	tenant := "openline"
-	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	userId := "f7634527-ccda-4cbb-80d8-cc4af9124ef5"
 	actorId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 
@@ -676,7 +676,6 @@ func testUpdateOrgOwner() {
 		Tenant:         tenant,
 		OrganizationId: orgId,
 		LoggedInUserId: actorId,
-		ActorUserId:    actorId,
 		OwnerUserId:    userId,
 		AppSource:      appSource,
 	})
