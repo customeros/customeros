@@ -10,7 +10,7 @@ export const TimeToRenewalCell = ({
 }: TimeToRenewalCellProps) => {
   if (!nextRenewalDate)
     return (
-      <Text fontSize='sm' color='gray.500'>
+      <Text fontSize='sm' color='gray.400'>
         Unknown
       </Text>
     );
