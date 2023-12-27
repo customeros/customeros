@@ -1,6 +1,5 @@
 import React, { useMemo, forwardRef, useCallback, ComponentType } from 'react';
 
-import { Flex } from '@chakra-ui/react';
 import {
   OptionProps,
   MenuListProps,
@@ -74,23 +73,10 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
     const Option = useCallback((rest: OptionProps<SelectOption>) => {
       return (
         <chakraComponents.Option {...rest}>
-          <Flex
-            flex={1}
-            justifyContent='space-between'
-            sx={{
-              '& button': {
-                display: 'none',
-              },
-            }}
-            _hover={{
-              '& button': {
-                display: 'block',
-              },
-            }}
-          >
-            {rest.data.label || rest.data.value}
-            {props?.optionAction && props.optionAction(rest.data.value)}
-          </Flex>
+          {rest.data.label || rest.data.value}
+          {props?.optionAction &&
+            rest?.isFocused &&
+            props.optionAction(rest.data.value)}
         </chakraComponents.Option>
       );
     }, []);
