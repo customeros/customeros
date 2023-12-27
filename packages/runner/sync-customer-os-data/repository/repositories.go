@@ -32,7 +32,6 @@ type Repositories struct {
 	UserRepository             UserRepository
 	LogEntryRepository         LogEntryRepository
 	InteractionEventRepository InteractionEventRepository
-	IssueRepository            IssueRepository
 	MeetingRepository          MeetingRepository
 }
 
@@ -55,7 +54,6 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDB *gorm.DB, airbyteStoreDb 
 		OrganizationRepository:       NewOrganizationRepository(driver, log),
 		UserRepository:               NewUserRepository(driver),
 		InteractionEventRepository:   NewInteractionEventRepository(driver),
-		IssueRepository:              NewIssueRepository(driver),
 		MeetingRepository:            NewMeetingRepository(driver),
 		LogEntryRepository:           NewLogEntryRepository(driver),
 	}

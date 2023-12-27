@@ -189,7 +189,7 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 	}
 
 	// Check if interaction event already exists
-	interactionEventId, err := s.repositories.InteractionEventRepository.GetMatchedInteractionEventId(ctx, tenant, interactionEventInput.ExternalId, interactionEventInput.ExternalSystem)
+	interactionEventId, err := s.repositories.InteractionEventRepository.GetMatchedInteractionEventId(ctx, tenant, interactionEventInput.ExternalId, interactionEventInput.ExternalSystem, interactionEventInput.ExternalSourceEntity)
 	if err != nil {
 		failedSync = true
 		tracing.TraceErr(span, err)

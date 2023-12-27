@@ -257,9 +257,9 @@ func mapInteractionEventFromConversation(inputJson string) (string, error) {
 		ContactRequired: true,
 	}
 	if input.Source.Type == "email" {
-		output.Type = "EMAIL"
+		output.EventType = "EMAIL"
 	} else {
-		output.Type = "MESSAGE"
+		output.EventType = "MESSAGE"
 	}
 
 	output.SessionDetails.Name = input.Title
@@ -352,16 +352,18 @@ func mapInteractionEventFromConversationPart(inputJson string) (string, error) {
 			UpdatedAtStr:         tsStrToRFC3339(input.UpdatedAt),
 		},
 		Channel:         "CHAT",
-		Type:            "MESSAGE",
+		EventType:       "MESSAGE",
 		ContentType:     "text/html",
 		Content:         input.Body,
 		Hide:            true,
 		ContactRequired: false,
-		SessionRequired: true,
+		ParentRequired:  true,
 	}
 
-	output.PartOfSession = entity.ReferencedInteractionSession{
-		"session/" + input.ConversationId,
+	output.BelongsTo = entity.BelongsTo{
+		Session: entity.ReferencedInteractionSession{
+			"session/" + input.ConversationId,
+		},
 	}
 
 	if input.Author.Type == "admin" || input.Author.Type == "team" || input.Author.Type == "bot" {

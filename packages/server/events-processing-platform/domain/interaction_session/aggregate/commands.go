@@ -35,6 +35,7 @@ func (a *InteractionSessionAggregate) createInteractionSession(ctx context.Conte
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
