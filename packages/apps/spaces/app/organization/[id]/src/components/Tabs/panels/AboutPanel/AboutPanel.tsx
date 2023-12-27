@@ -104,8 +104,6 @@ export const AboutPanel = () => {
             const trimmedValue = (action.payload?.value || '')?.trim();
             if (
               //@ts-expect-error fixme
-              state.fields?.[action.payload.name].meta.pristine ||
-              //@ts-expect-error fixme
               trimmedValue === defaultValues?.[action.payload.name]
             ) {
               return next;
