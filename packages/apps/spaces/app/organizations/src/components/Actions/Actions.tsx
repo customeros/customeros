@@ -121,6 +121,7 @@ export const TableActions = ({
         confirmButtonLabel={'Archive'}
         onConfirm={handleHideOrganizations}
         isLoading={hideOrganizations.isLoading}
+        loadingButtonLabel='Archiving'
         label={`Archive selected ${
           selectCount === 1 ? 'organization' : 'organizations'
         }?`}
