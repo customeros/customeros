@@ -44,12 +44,16 @@ export const TimelinePreviewBackdrop = ({
       background={isMounted ? 'rgba(16, 24, 40, 0.45)' : 'rgba(16, 24, 40, 0)'}
       align='center'
       transition='all 0.1s linear'
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        mouseTarget.current = e.currentTarget.id;
+      }}
       onMouseUp={() => {
-        if (mouseTarget.current === 'timeline-preview-card') {
-          mouseTarget.current = null;
-        } else {
+        if (mouseTarget?.current === 'timeline-preview-backdrop') {
           closeModal();
           onCloseModal?.();
+        } else {
+          mouseTarget.current = null;
         }
       }}
     >
@@ -74,7 +78,6 @@ export const TimelinePreviewBackdrop = ({
           id='timeline-preview-card'
           onMouseDown={(e) => {
             e.stopPropagation();
-            mouseTarget.current = e.currentTarget.id;
           }}
           onClick={(e) => e.stopPropagation()}
         >
