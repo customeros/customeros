@@ -685,10 +685,16 @@ func TestQueryResolver_Sort_Organizations_ByOrganizationName_WithOrganizationHie
 	require.Equal(t, sub2_2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[6].ID)
 }
 
-func insertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
+func insertContractWithActiveRenewalOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, contract)
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, opportunity)
 	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opportunityId)
+	return contractId
+}
+
+func insertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, contract)
+	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, opportunity)
 	return contractId
 }
 

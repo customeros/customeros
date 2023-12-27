@@ -99,7 +99,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Hidden_Organization(t *testing.T
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
@@ -144,7 +144,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Prospect_Organization(t *testing
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
+	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
@@ -189,7 +189,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V1(t *testing.T)
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
@@ -239,7 +239,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V2(t *testing.T)
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndedAt := neo4jt.MiddleTimeOfMonth(2023, 6)
-	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
@@ -289,7 +289,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V1(t *testing.T)
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
@@ -341,7 +341,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V2(t *testing.T)
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndedAt := neo4jt.MiddleTimeOfMonth(2023, 6)
-	contractId := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
@@ -395,7 +395,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V1(t *testing.T
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
@@ -403,7 +403,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V1(t *testing.T
 	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
 	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 5)
-	contract2Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract2Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
@@ -453,7 +453,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V2(t *testing.T
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sli1EndedAt := neo4jt.MiddleTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
@@ -463,7 +463,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V2(t *testing.T
 
 	sli2StartedAt := neo4jt.FirstTimeOfMonth(2023, 5)
 	sli2EndedAt := neo4jt.MiddleTimeOfMonth(2023, 5)
-	contract2Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract2Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
@@ -513,7 +513,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Monthl
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
@@ -562,7 +562,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Quarte
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
@@ -614,7 +614,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Annual
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
@@ -673,7 +673,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Mont
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleQuarterlyRenewal,
@@ -732,7 +732,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Quar
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleQuarterlyRenewal,
@@ -791,7 +791,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Annu
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleQuarterlyRenewal,
@@ -850,7 +850,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Month
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
@@ -909,7 +909,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Quart
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
@@ -968,7 +968,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Annua
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
@@ -1027,7 +1027,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_1_Multi_Year_Contract(t
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
@@ -1099,7 +1099,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_2_Multi_Year_Contract(t
 	})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
@@ -1322,7 +1322,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_Churned_In_Month(t *
 
 	sliStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
 	sliEndedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	contract1Id := insertContractWithOpportunity(ctx, driver, orgId, entity.ContractEntity{
+	contract1Id := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &sliStartedAt,
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,

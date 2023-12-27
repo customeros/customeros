@@ -341,6 +341,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedImmedi
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
@@ -383,6 +384,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedAtEndO
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2023, 7, 31, 23, 59, 59, 999, time.UTC)
 	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
@@ -425,6 +427,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedNextMo
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
