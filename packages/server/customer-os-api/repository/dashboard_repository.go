@@ -537,13 +537,15 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
-					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:ACTIVE_RENEWAL]->(op:Opportunity_%s)
+					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[r]->(op:Opportunity_%s)
 					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL
 					
+					WITH o, c, op, COLLECT(type(r)) AS relTypes
+
 					WITH o.id AS oid,
 						COLLECT(DISTINCT CASE
-							WHEN c.status = 'ENDED' THEN 'CHURNED'
-							WHEN c.status = 'LIVE' AND op.internalType = 'RENEWAL' AND op.renewalLikelihood = 'HIGH' THEN 'OK'
+							WHEN c.status = 'ENDED' AND NOT 'ACTIVE_RENEWAL' IN relTypes THEN 'CHURNED'
+							WHEN c.status = 'LIVE' AND 'ACTIVE_RENEWAL' in relTypes AND op.internalType = 'RENEWAL' AND op.renewalLikelihood = 'HIGH' THEN 'OK'
 							ELSE 'AT_RISK'
 						END) AS statuses,
 						COLLECT(DISTINCT { serviceStartedAt: c.serviceStartedAt }) AS contractsStartedAt
@@ -557,7 +559,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 						CASE WHEN s IS NULL OR cs.serviceStartedAt < s THEN cs.serviceStartedAt ELSE s END
 					) AS oldestServiceStartedAt
 					
-					MATCH (o:Organization_%s{id:oid})-[:HAS_CONTRACT]->(c:Contract_%s)-[r4:HAS_SERVICE]->(sli:ServiceLineItem_%s)
+					MATCH (o:Organization_%s{id:oid})-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
 					WHERE sli.endedAt IS NULL AND (sli.isCanceled IS NULL OR sli.isCanceled = false)
 						AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 					
@@ -704,7 +706,7 @@ func (r *dashboardRepository) GetDashboardMRRPerCustomerData(ctx context.Context
 					
 					OPTIONAL MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
 					WHERE 
-						o.hide = false AND o.isCustomer = true AND (sli.billed = 'MONTHLY' or sli.billed = 'QUARTERLY' or sli.billed = 'ANNUALLY') AND
+						o.hide = false AND o.isCustomer = true AND (c.endedAt IS NULL or c.endedAt >= startOfNextMonth) AND (sli.billed = 'MONTHLY' or sli.billed = 'QUARTERLY' or sli.billed = 'ANNUALLY') AND
 						sli.startedAt < startOfNextMonth AND (sli.endedAt IS NULL OR sli.endedAt >= startOfNextMonth)
 					
 					WITH year, month, startOfNextMonth, COLLECT(DISTINCT { id: sli.id, startedAt: sli.startedAt, endedAt: sli.endedAt, amountPerMonth: CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity ELSE CASE WHEN sli.billed = 'QUARTERLY' THEN  sli.price * sli.quantity / 3 ELSE CASE WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity / 12 ELSE 0 END END END }) AS contractDetails
@@ -1138,6 +1140,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownValueData(ctx context.Cont
 					o.hide = false and o.isCustomer = true
 					AND c.serviceStartedAt IS NOT NULL 
 					AND sli.startedAt < startOfNextMonth 
+					AND (c.endedAt IS NULL OR c.endedAt >= startOfNextMonth) 
 					AND (sli.endedAt IS NULL OR sli.endedAt >= startOfNextMonth) 
 					AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 				
