@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -21,6 +22,7 @@ func (r *commentResolver) CreatedBy(ctx context.Context, obj *model.Comment) (*m
 
 	userEntityNillable, err := dataloader.For(ctx).GetUserAuthorForComment(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("error fetching user author for comment %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "error fetching user author for comment %s", obj.ID)
 		return nil, nil
@@ -34,6 +36,7 @@ func (r *commentResolver) ExternalLinks(ctx context.Context, obj *model.Comment)
 
 	entities, err := dataloader.For(ctx).GetExternalSystemsForComment(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("failed to get external system for comment %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "failed to get external system for comment %s", obj.ID)
 		return nil, nil

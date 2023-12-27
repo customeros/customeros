@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -70,6 +71,7 @@ func (r *opportunityResolver) CreatedBy(ctx context.Context, obj *model.Opportun
 
 	userEntityNillable, err := dataloader.For(ctx).GetUserCreatorForOpportunity(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("error fetching user creator for opportunity %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "error fetching user creator for opportunity %s", obj.ID)
 		return nil, nil
@@ -83,6 +85,7 @@ func (r *opportunityResolver) Owner(ctx context.Context, obj *model.Opportunity)
 
 	userEntityNillable, err := dataloader.For(ctx).GetUserOwnerForOpportunity(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("error fetching user owner for opportunity %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "error fetching user owner for opportunity %s", obj.ID)
 		return nil, nil
@@ -96,6 +99,7 @@ func (r *opportunityResolver) ExternalLinks(ctx context.Context, obj *model.Oppo
 
 	entities, err := dataloader.For(ctx).GetExternalSystemsForOpportunity(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get external system for opportunity %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external system for opportunity %s", obj.ID)
 		return nil, nil

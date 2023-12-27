@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -285,6 +286,7 @@ func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*mo
 
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForUser(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get phone numbers for user %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get phone numbers for user %s", obj.ID)
 		return nil, nil
@@ -298,6 +300,7 @@ func (r *userResolver) JobRoles(ctx context.Context, obj *model.User) ([]*model.
 
 	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForUser(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get job roles for user %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get job roles for user %s", obj.ID)
 		return nil, nil
@@ -311,6 +314,7 @@ func (r *userResolver) Calendars(ctx context.Context, obj *model.User) ([]*model
 
 	calendarsForUser, err := dataloader.For(ctx).GetCalendarsForUser(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get calendars for user %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get job roles for user %s", obj.ID)
 		return nil, nil

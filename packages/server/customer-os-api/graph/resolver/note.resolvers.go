@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -136,6 +137,7 @@ func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.Note
 
 	entities, err := dataloader.For(ctx).GetNotedEntitiesForNote(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get noted entities for note %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get noted entities for note %s", obj.ID)
 		return nil, err

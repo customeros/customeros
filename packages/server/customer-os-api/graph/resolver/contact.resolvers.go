@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -26,6 +28,7 @@ func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*mode
 
 	tagEntities, err := dataloader.For(ctx).GetTagsForContact(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get tags for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get tags for contact %s", obj.ID)
 		return nil, nil
@@ -39,6 +42,7 @@ func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*
 
 	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForContact(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get job roles for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get job roles for contact %s", obj.ID)
 		return nil, nil
@@ -76,6 +80,7 @@ func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) 
 
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForContact(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get phone numbers for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get phone numbers for contact %s", obj.ID)
 		return nil, nil
@@ -89,6 +94,7 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 
 	emailEntities, err := dataloader.For(ctx).GetEmailsForContact(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get emails for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get emails for contact %s", obj.ID)
 		return nil, nil
@@ -102,6 +108,7 @@ func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]
 
 	locationEntities, err := dataloader.For(ctx).GetLocationsForContact(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get locations for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get locations for contact %s", obj.ID)
 		return nil, err
@@ -115,6 +122,7 @@ func (r *contactResolver) Socials(ctx context.Context, obj *model.Contact) ([]*m
 
 	socialEntities, err := dataloader.For(ctx).GetSocialsForContact(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get socials for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get socials for contact %s", obj.ID)
 		return nil, nil
@@ -545,6 +553,7 @@ func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact,
 	span.LogFields(log.String("request.contactID", id))
 
 	if id == "" {
+		tracing.TraceErr(span, errors.New("Missing contact input id"))
 		graphql.AddErrorf(ctx, "Missing contact input id")
 		return nil, nil
 	}

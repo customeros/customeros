@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -26,6 +27,7 @@ func (r *meetingResolver) AttendedBy(ctx context.Context, obj *model.Meeting) ([
 
 	participantEntities, err := dataloader.For(ctx).GetAttendedByParticipantsForMeeting(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get participants for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for meeting %s", obj.ID)
 		return nil, nil
@@ -39,6 +41,7 @@ func (r *meetingResolver) CreatedBy(ctx context.Context, obj *model.Meeting) ([]
 
 	participantEntities, err := dataloader.For(ctx).GetCreatedByParticipantsForMeeting(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get participants for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for meeting %s", obj.ID)
 		return nil, nil
@@ -52,6 +55,7 @@ func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*
 
 	entities, err := dataloader.For(ctx).GetAttachmentsForMeeting(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get attachment entities for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for meeting %s", obj.ID)
 		return nil, nil
@@ -65,6 +69,7 @@ func (r *meetingResolver) DescribedBy(ctx context.Context, obj *model.Meeting) (
 
 	analysisEntities, err := dataloader.For(ctx).GetDescribedByFor(ctx, repository.LINKED_WITH_MEETING, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get analysis for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get analysis for meeting %s", obj.ID)
 		return nil, nil
@@ -78,6 +83,7 @@ func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) ([]*mode
 
 	notesForMeeting, err := dataloader.For(ctx).GetNotesForMeeting(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get notes for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get notes for meeting %s", obj.ID)
 		return nil, nil
@@ -91,6 +97,7 @@ func (r *meetingResolver) Events(ctx context.Context, obj *model.Meeting) ([]*mo
 
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForMeeting(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get interaction events for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get interaction events for meeting %s", obj.ID)
 		return nil, nil
@@ -108,6 +115,7 @@ func (r *meetingResolver) Recording(ctx context.Context, obj *model.Meeting) (*m
 	recording := repository.LINKED_NATURE_RECORDING
 	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_MEETING, &recording, []string{obj.ID})
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for meeting %s", obj.ID)
 		return nil, err
@@ -127,6 +135,7 @@ func (r *meetingResolver) ExternalSystem(ctx context.Context, obj *model.Meeting
 
 	externalSystemForMeeting, err := dataloader.For(ctx).GetExternalSystemsForMeeting(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get external systems for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get notes for meeting %s", obj.ID)
 		return nil, nil

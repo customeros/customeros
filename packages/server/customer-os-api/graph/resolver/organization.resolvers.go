@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -34,10 +36,12 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	// Check and prepare custom fields
 	for _, field := range input.CustomFields {
 		if utils.IsEmptyString(field.TemplateID) && utils.IsEmptyString(field.Name) {
+			tracing.TraceErr(span, errors.New("Custom field template id or name is required"))
 			graphql.AddErrorf(ctx, "Custom field template id or name is required")
 			return nil, nil
 		}
 		if utils.IsEmptyString(field.TemplateID) && field.Datatype == nil {
+			tracing.TraceErr(span, errors.New("Custom field template id or data type is required"))
 			graphql.AddErrorf(ctx, "Custom field template id or data type is required")
 			return nil, nil
 		}
@@ -634,6 +638,7 @@ func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organizat
 
 	domainEntities, err := dataloader.For(ctx).GetDomainsForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get domains for organization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get domains for organization %s", obj.ID)
 		return nil, nil
@@ -647,6 +652,7 @@ func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organiz
 
 	locationEntities, err := dataloader.For(ctx).GetLocationsForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get locations for organization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get locations for organization %s", obj.ID)
 		return nil, nil
@@ -660,6 +666,7 @@ func (r *organizationResolver) Socials(ctx context.Context, obj *model.Organizat
 
 	socialEntities, err := dataloader.For(ctx).GetSocialsForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get socials for organization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get socials for organization %s", obj.ID)
 		return nil, nil
@@ -696,6 +703,7 @@ func (r *organizationResolver) JobRoles(ctx context.Context, obj *model.Organiza
 
 	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get job roles for organization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get job roles for organization %s", obj.ID)
 		return nil, nil
@@ -732,6 +740,7 @@ func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization
 
 	tagEntities, err := dataloader.For(ctx).GetTagsForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get tags for organization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get tags for organization %s", obj.ID)
 		return nil, nil
@@ -745,6 +754,7 @@ func (r *organizationResolver) Contracts(ctx context.Context, obj *model.Organiz
 
 	contractEntities, err := dataloader.For(ctx).GetContractsForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get contracts for organization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get contracts for organization %s", obj.ID)
 		return nil, nil
@@ -758,6 +768,7 @@ func (r *organizationResolver) Emails(ctx context.Context, obj *model.Organizati
 
 	emailEntities, err := dataloader.For(ctx).GetEmailsForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get emails for organization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get emails for organization %s", obj.ID)
 		return nil, nil
@@ -771,6 +782,7 @@ func (r *organizationResolver) PhoneNumbers(ctx context.Context, obj *model.Orga
 
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get phone numbers for organization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get phone numbers for organization %s", obj.ID)
 		return nil, nil
@@ -784,6 +796,7 @@ func (r *organizationResolver) Subsidiaries(ctx context.Context, obj *model.Orga
 
 	organizationEntities, err := dataloader.For(ctx).GetSubsidiariesForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to fetch subsidiary organizations for orgnization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to fetch subsidiary organizations for orgnization %s", obj.ID)
 		return nil, nil
@@ -797,6 +810,7 @@ func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Orga
 
 	organizationEntities, err := dataloader.For(ctx).GetSubsidiariesOfForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to fetch parent organizations for organization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to fetch parent organizations for organization %s", obj.ID)
 		return nil, nil
@@ -810,6 +824,7 @@ func (r *organizationResolver) SuggestedMergeTo(ctx context.Context, obj *model.
 
 	organizationEntities, err := dataloader.For(ctx).GetSuggestedMergeToForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to fetch suggested merge to organizations for input org id %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to fetch suggested merge to organizations for input org id %s", obj.ID)
 		return nil, nil
@@ -909,6 +924,7 @@ func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organizatio
 
 	userEntityNillable, err := dataloader.For(ctx).GetUserOwnerForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Error fetching user owner for organization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Error fetching user owner for organization %s", obj.ID)
 		return nil, nil
@@ -922,6 +938,7 @@ func (r *organizationResolver) ExternalLinks(ctx context.Context, obj *model.Org
 
 	entities, err := dataloader.For(ctx).GetExternalSystemsForOrganization(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get external system for organization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external system for organization %s", obj.ID)
 		return nil, nil
@@ -939,6 +956,7 @@ func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, 
 
 	timelineEventNillable, err := dataloader.For(ctx).GetTimelineEventForTimelineEventId(ctx, *obj.LastTouchPointTimelineEventID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Error fetching last touchpoint timeline event for organization %s: %s", *obj.LastTouchPointTimelineEventID, err.Error())
 		graphql.AddErrorf(ctx, "Error fetching last touchpoint timeline event for organization %s", *obj.LastTouchPointTimelineEventID)
 		return nil, err
@@ -1001,6 +1019,7 @@ func (r *queryResolver) Organization(ctx context.Context, id string) (*model.Org
 	span.LogFields(log.String("request.organizationID", id))
 
 	if id == "" {
+		tracing.TraceErr(span, errors.New("missing organization input id"))
 		graphql.AddErrorf(ctx, "Missing organization input id")
 		return nil, nil
 	}
