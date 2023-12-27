@@ -1,6 +1,11 @@
 import React, { useMemo, forwardRef, useCallback, ComponentType } from 'react';
 
-import { OptionProps, ChakraStylesConfig } from 'chakra-react-select';
+import { Flex } from '@chakra-ui/react';
+import {
+  OptionProps,
+  MenuListProps,
+  ChakraStylesConfig,
+} from 'chakra-react-select';
 
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { SelectOption, chakraStyles } from '@ui/utils';
@@ -29,6 +34,7 @@ export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   withTooltip?: boolean;
   // TODO: discard customStyles in favour of existing chakraStyles
   customStyles?: CustomStylesFn;
+  optionAction?: (data: string) => JSX.Element;
   Option?: ComponentType<OptionProps<SelectOption>>;
 }
 
@@ -68,8 +74,32 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
     const Option = useCallback((rest: OptionProps<SelectOption>) => {
       return (
         <chakraComponents.Option {...rest}>
-          {rest.data.label || rest.data.value}
+          <Flex
+            flex={1}
+            justifyContent='space-between'
+            sx={{
+              '& button': {
+                display: 'none',
+              },
+            }}
+            _hover={{
+              '& button': {
+                display: 'block',
+              },
+            }}
+          >
+            {rest.data.label || rest.data.value}
+            {props?.optionAction && props.optionAction(rest.data.value)}
+          </Flex>
         </chakraComponents.Option>
+      );
+    }, []);
+
+    const MenuList = useCallback((rest: MenuListProps) => {
+      return (
+        <chakraComponents.MenuList {...rest}>
+          {rest.children}
+        </chakraComponents.MenuList>
       );
     }, []);
 
@@ -77,6 +107,7 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
       () => ({
         Control,
         MultiValueLabel,
+        MenuList,
         ClearIndicator: () => null,
         DropdownIndicator: () => null,
         Option: (props?.Option || Option) as ComponentType<OptionProps>,
@@ -94,6 +125,7 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         tabSelectsValue={false}
         isMulti
         tagVariant='ghost'
+        closeMenuOnSelect={false}
         chakraStyles={
           props?.customStyles?.(chakraStyles) ||
           multiCreatableSelectStyles(chakraStyles)

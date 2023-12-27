@@ -6,8 +6,11 @@ import { GroupBase } from 'chakra-react-select';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
+import { Copy01 } from '@ui/media/icons/Copy01';
+import { IconButton } from '@ui/form/IconButton';
 import { Contact, ComparisonOperator } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { emailRegex } from '@organization/src/components/Timeline/events/email/utils';
 import { GetContactsEmailListDocument } from '@organization/src/graphql/getContactsEmailList.generated';
 import { EmailFormMultiCreatableSelect } from '@organization/src/components/Timeline/events/email/compose-email/EmailFormMultiCreatableSelect';
@@ -26,6 +29,7 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
   autofocus = false,
 }) => {
   const client = getGraphQLClient();
+  const [_, copyToClipboard] = useCopyToClipboard();
 
   const getFilteredSuggestions = async (
     filterString: string,
@@ -96,6 +100,20 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
         {entryType}:
       </Text>
       <EmailFormMultiCreatableSelect
+        optionAction={(data: string) => (
+          <IconButton
+            aria-label='Copy'
+            size='xs'
+            p={0}
+            height={5}
+            variant='ghost'
+            icon={<Copy01 boxSize={3} color='gray.500' />}
+            onClick={(e) => {
+              e.stopPropagation();
+              copyToClipboard(data, 'Email copied!');
+            }}
+          />
+        )}
         autoFocus={autofocus}
         name={fieldName}
         formId={formId}
