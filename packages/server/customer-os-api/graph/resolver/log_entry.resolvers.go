@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -30,6 +31,7 @@ func (r *logEntryResolver) CreatedBy(ctx context.Context, obj *model.LogEntry) (
 
 	userEntityNillable, err := dataloader.For(ctx).GetUserAuthorForLogEntry(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Error fetching user author for log entry %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Error fetching user author for log entry %s", obj.ID)
 		return nil, nil
@@ -43,6 +45,7 @@ func (r *logEntryResolver) Tags(ctx context.Context, obj *model.LogEntry) ([]*mo
 
 	tagEntities, err := dataloader.For(ctx).GetTagsForLogEntry(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get tags for log entry %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get tags for log entry %s", obj.ID)
 		return nil, nil
@@ -56,6 +59,7 @@ func (r *logEntryResolver) ExternalLinks(ctx context.Context, obj *model.LogEntr
 
 	entities, err := dataloader.For(ctx).GetExternalSystemsForLogEntry(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get external systems for log entry %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external systems for log entry %s", obj.ID)
 		return nil, err

@@ -17,6 +17,9 @@ const (
 
 func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
 	// Log the error with the fields
+	if span == nil {
+		return
+	}
 	ext.LogError(span, err, fields...)
 }
 

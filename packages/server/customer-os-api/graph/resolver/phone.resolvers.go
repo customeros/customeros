@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -227,6 +228,7 @@ func (r *phoneNumberResolver) Country(ctx context.Context, obj *model.PhoneNumbe
 
 	countryEntityNillable, err := dataloader.For(ctx).GetCountryForPhoneNumber(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get country for phone number %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get country for phone number with id %s", obj.ID)
 		return nil, nil
@@ -240,6 +242,7 @@ func (r *phoneNumberResolver) Users(ctx context.Context, obj *model.PhoneNumber)
 
 	userEntities, err := dataloader.For(ctx).GetUsersForPhoneNumber(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get users for phone number %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get users for phone number %s", obj.ID)
 		return nil, nil
@@ -253,6 +256,7 @@ func (r *phoneNumberResolver) Contacts(ctx context.Context, obj *model.PhoneNumb
 
 	contactEntities, err := dataloader.For(ctx).GetContactsForPhoneNumber(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get contacts for phone number %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get contacts for phone number %s", obj.ID)
 		return nil, nil
@@ -266,6 +270,7 @@ func (r *phoneNumberResolver) Organizations(ctx context.Context, obj *model.Phon
 
 	organizationEntities, err := dataloader.For(ctx).GetOrganizationsForPhoneNumber(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get organizations for phone number %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get organizations for phone number %s", obj.ID)
 		return nil, nil

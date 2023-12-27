@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -25,6 +26,7 @@ func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *
 
 	interactionSessionEntityNillable, err := dataloader.For(ctx).GetInteractionSessionForInteractionEvent(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get interaction session for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get interaction session for interaction event %s", obj.ID)
 		return nil, nil
@@ -38,6 +40,7 @@ func (r *interactionEventResolver) Issue(ctx context.Context, obj *model.Interac
 
 	issueEntityNillable, err := dataloader.For(ctx).GetIssueForInteractionEvent(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get issue for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get issue for interaction event %s", obj.ID)
 		return nil, nil
@@ -51,6 +54,7 @@ func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.Inter
 
 	meetingEntityNillable, err := dataloader.For(ctx).GetMeetingForInteractionEvent(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get meeting for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get meeting for interaction event %s", obj.ID)
 		return nil, nil
@@ -64,6 +68,7 @@ func (r *interactionEventResolver) SentBy(ctx context.Context, obj *model.Intera
 
 	participantEntities, err := dataloader.For(ctx).GetSentByParticipantsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get SentBy for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
 		return nil, nil
@@ -77,6 +82,7 @@ func (r *interactionEventResolver) SentTo(ctx context.Context, obj *model.Intera
 
 	participantEntities, err := dataloader.For(ctx).GetSentToParticipantsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get SentTo for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
 		return nil, nil
@@ -90,6 +96,7 @@ func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.Int
 
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get ReplyTo for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get ReplyTo for interaction event %s", obj.ID)
 		return nil, nil
@@ -106,6 +113,7 @@ func (r *interactionEventResolver) Includes(ctx context.Context, obj *model.Inte
 
 	entities, err := dataloader.For(ctx).GetAttachmentsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get attachment entities for Interaction Event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for Interaction Event %s", obj.ID)
 		return nil, nil
@@ -119,6 +127,7 @@ func (r *interactionEventResolver) Summary(ctx context.Context, obj *model.Inter
 
 	analysisEntities, err := dataloader.For(ctx).GetDescribedByFor(ctx, repository.LINKED_WITH_INTERACTION_EVENT, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get analysis for InteractionEvent %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get analysis for InteractionEvent %s", obj.ID)
 		return nil, nil
@@ -135,6 +144,7 @@ func (r *interactionEventResolver) ActionItems(ctx context.Context, obj *model.I
 
 	entities, err := dataloader.For(ctx).GetActionItemsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get action items entities for Interaction Event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get action items entities for Interaction Event %s", obj.ID)
 		return nil, nil
@@ -148,6 +158,7 @@ func (r *interactionEventResolver) ExternalLinks(ctx context.Context, obj *model
 
 	entities, err := dataloader.For(ctx).GetExternalSystemsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get external system for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external systems for interaction event %s", obj.ID)
 		return nil, nil
@@ -161,6 +172,7 @@ func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.Inte
 
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForInteractionSession(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get interaction events for interaction session %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get interaction events for interaction session %s", obj.ID)
 		return nil, nil
@@ -174,6 +186,7 @@ func (r *interactionSessionResolver) AttendedBy(ctx context.Context, obj *model.
 
 	participantEntities, err := dataloader.For(ctx).GetAttendedByParticipantsForInteractionSession(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get AttendedBy for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
 		return nil, nil
@@ -187,6 +200,7 @@ func (r *interactionSessionResolver) Includes(ctx context.Context, obj *model.In
 
 	entities, err := dataloader.For(ctx).GetAttachmentsForInteractionSession(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get attachment entities for Interaction Session %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for Interaction Session %s", obj.ID)
 		return nil, nil
@@ -200,6 +214,7 @@ func (r *interactionSessionResolver) DescribedBy(ctx context.Context, obj *model
 
 	analysisEntities, err := dataloader.For(ctx).GetDescribedByFor(ctx, repository.LINKED_WITH_INTERACTION_SESSION, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get analysis for InteractionSession %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get analysis for InteractionSession %s", obj.ID)
 		return nil, nil

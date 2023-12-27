@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -22,6 +23,7 @@ func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) 
 
 	organizationEntityNillable, err := dataloader.For(ctx).GetOrganizationForJobRole(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get organization for job role %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get organization for job role %s", obj.ID)
 		return nil, nil
@@ -35,6 +37,7 @@ func (r *jobRoleResolver) Contact(ctx context.Context, obj *model.JobRole) (*mod
 
 	contactEntity, err := dataloader.For(ctx).GetContactForJobRole(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get contact for job role %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get contact for job role %s", obj.ID)
 		return nil, nil

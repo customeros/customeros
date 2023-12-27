@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -28,6 +30,7 @@ func (r *emailResolver) Users(ctx context.Context, obj *model.Email) ([]*model.U
 
 	userEntities, err := dataloader.For(ctx).GetUsersForEmail(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get users for email %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get users for email %s", obj.ID)
 		return nil, nil
@@ -41,6 +44,7 @@ func (r *emailResolver) Contacts(ctx context.Context, obj *model.Email) ([]*mode
 
 	contactEntities, err := dataloader.For(ctx).GetContactsForEmail(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get contacts for email %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get contacts for email %s", obj.ID)
 		return nil, nil
@@ -54,6 +58,7 @@ func (r *emailResolver) Organizations(ctx context.Context, obj *model.Email) ([]
 
 	organizationEntities, err := dataloader.For(ctx).GetOrganizationsForEmail(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get organizations for email %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get organizations for email %s", obj.ID)
 		return nil, nil
@@ -139,6 +144,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 	inputEmail := strings.TrimSpace(input.Email)
 
 	if inputEmail == "" {
+		tracing.TraceErr(span, errors.New("Email address is required"))
 		graphql.AddErrorf(ctx, "Email address is required")
 		return nil, nil
 	}

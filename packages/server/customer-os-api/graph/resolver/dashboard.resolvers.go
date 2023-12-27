@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/pkg/errors"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -27,6 +28,7 @@ func (r *dashboardCustomerMapResolver) Organization(ctx context.Context, obj *mo
 	span.LogFields(log.String("request.organizationID", obj.OrganizationID))
 
 	if obj.OrganizationID == "" {
+		tracing.TraceErr(span, errors.New("missing organization input id"))
 		graphql.AddErrorf(ctx, "Missing organization input id")
 		return nil, nil
 	}

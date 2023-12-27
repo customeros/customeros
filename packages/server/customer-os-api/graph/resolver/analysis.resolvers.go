@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -24,6 +25,7 @@ func (r *analysisResolver) Describes(ctx context.Context, obj *model.Analysis) (
 
 	participantEntities, err := dataloader.For(ctx).GetDescribesForAnalysis(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get participants for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
 		return nil, nil
