@@ -7,6 +7,7 @@ import (
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -61,6 +62,8 @@ func (s *syncStatusService) SaveSyncResults(ctx context.Context, tenant, externa
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncStatusService.SaveSyncResults")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "statuses", statuses)
+	span.LogFields(log.String("externalSystem", externalSystem), log.String("appSource", appSource), log.String("entityType", entityType))
 
 	completed, failed, skipped := 0, 0, 0
 	reason := ""

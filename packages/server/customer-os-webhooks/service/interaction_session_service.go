@@ -17,7 +17,7 @@ import (
 )
 
 type InteractionSessionService interface {
-	GetIdForReferencedInteractionSession(ctx context.Context, tenant, externalSystemId string, user model.ReferencedInteractionSession) (string, error)
+	GetIdForReferencedInteractionSession(ctx context.Context, tenant, externalSystem string, user model.ReferencedInteractionSession) (string, error)
 	MergeInteractionSession(ctx context.Context, tenant, externalSystemId string, interactionSessionInput model.InteractionSessionData, syncDate time.Time) (string, error)
 }
 
@@ -46,14 +46,14 @@ func (s *interactionSessionService) GetIdForReferencedInteractionSession(ctx con
 	return "", nil
 }
 
-func (s *interactionSessionService) MergeInteractionSession(ctx context.Context, tenant, externalSystemId string, interactionSessionInput model.InteractionSessionData, syncDate time.Time) (string, error) {
+func (s *interactionSessionService) MergeInteractionSession(ctx context.Context, tenant, externalSystem string, interactionSessionInput model.InteractionSessionData, syncDate time.Time) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionService.MergeInteractionSession")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	interactionSessionInput.Normalize()
 
-	interactionSessionId, err := s.repositories.InteractionSessionRepository.GetInteractionSessionIdByExternalId(ctx, tenant, interactionSessionInput.ExternalId, externalSystemId)
+	interactionSessionId, err := s.repositories.InteractionSessionRepository.GetInteractionSessionIdByExternalId(ctx, tenant, interactionSessionInput.ExternalId, externalSystem)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
@@ -64,11 +64,11 @@ func (s *interactionSessionService) MergeInteractionSession(ctx context.Context,
 		Tenant: tenant,
 		Id:     interactionSessionId,
 		SourceFields: &commonpb.SourceFields{
-			Source:    externalSystemId,
+			Source:    externalSystem,
 			AppSource: utils.StringFirstNonEmpty(interactionSessionInput.AppSource, constants.AppSourceCustomerOsWebhooks),
 		},
 		ExternalSystemFields: &commonpb.ExternalSystemFields{
-			ExternalSystemId: interactionSessionInput.ExternalSystem,
+			ExternalSystemId: externalSystem,
 			ExternalId:       interactionSessionInput.ExternalId,
 			ExternalUrl:      interactionSessionInput.ExternalUrl,
 			ExternalIdSecond: interactionSessionInput.ExternalIdSecond,

@@ -199,7 +199,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 			ExternalUrl:  input.OpenlineFields.Permalink,
 		},
 		ContentType: "plain/text",
-		Type:        "MESSAGE",
+		EventType:   "MESSAGE",
 		Channel:     "CHAT",
 	}
 

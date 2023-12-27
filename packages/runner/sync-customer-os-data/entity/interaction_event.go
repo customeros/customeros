@@ -14,27 +14,35 @@ type InteractionEventParticipant struct {
 	RelationType           string                 `json:"relationType,omitempty"`
 }
 
+type BelongsTo struct {
+	Issue   ReferencedIssue              `json:"issue,omitempty"`
+	Session ReferencedInteractionSession `json:"session,omitempty"`
+}
+
+func (b BelongsTo) Available() bool {
+	return b.Issue.Available() || b.Session.Available()
+}
+
 type InteractionEventData struct {
 	BaseData
 	Content        string                        `json:"content,omitempty"`
 	ContentType    string                        `json:"contentType,omitempty"`
-	Type           string                        `json:"type,omitempty"`
+	EventType      string                        `json:"eventType,omitempty"`
 	Channel        string                        `json:"channel,omitempty"`
 	Identifier     string                        `json:"identifier,omitempty"`
 	Hide           bool                          `json:"hide,omitempty"`
-	PartOfIssue    ReferencedIssue               `json:"partOfIssue,omitempty"`
-	PartOfSession  ReferencedInteractionSession  `json:"partOfSession,omitempty"`
+	BelongsTo      BelongsTo                     `json:"belongsTo,omitempty"`
 	SessionDetails InteractionSession            `json:"sessionDetails,omitempty"`
 	SentBy         InteractionEventParticipant   `json:"sentBy,omitempty"`
 	SentTo         []InteractionEventParticipant `json:"sentTo,omitempty"`
 	// in sent to or sent by at least 1 contact should be available in the system
 	ContactRequired bool `json:"contactRequired,omitempty"`
 	// interaction session should already exist in the system
-	SessionRequired bool `json:"sessionRequired,omitempty"`
+	ParentRequired bool `json:"parentRequired,omitempty"`
 }
 
 func (i *InteractionEventData) IsPartOf() bool {
-	return i.PartOfIssue.Available() || i.PartOfSession.Available()
+	return i.BelongsTo.Available()
 }
 
 func (i *InteractionEventData) HasSender() bool {
