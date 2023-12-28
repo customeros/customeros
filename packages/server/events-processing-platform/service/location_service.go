@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 )
@@ -17,14 +16,12 @@ import (
 type locationService struct {
 	locationpb.UnimplementedLocationGrpcServiceServer
 	log              logger.Logger
-	repositories     *repository.Repositories
 	locationCommands *command_handler.CommandHandlers
 }
 
-func NewLocationService(log logger.Logger, repositories *repository.Repositories, locationCommands *command_handler.CommandHandlers) *locationService {
+func NewLocationService(log logger.Logger, locationCommands *command_handler.CommandHandlers) *locationService {
 	return &locationService{
 		log:              log,
-		repositories:     repositories,
 		locationCommands: locationCommands,
 	}
 }

@@ -17,14 +17,14 @@ import (
 type emailService struct {
 	emailpb.UnimplementedEmailGrpcServiceServer
 	log                  logger.Logger
-	repositories         *neo4jrepository.Repositories
+	neo4jRepositories    *neo4jrepository.Repositories
 	emailCommandHandlers *command_handler.CommandHandlers
 }
 
-func NewEmailService(log logger.Logger, repositories *neo4jrepository.Repositories, emailCommandHandlers *command_handler.CommandHandlers) *emailService {
+func NewEmailService(log logger.Logger, neo4jRepositories *neo4jrepository.Repositories, emailCommandHandlers *command_handler.CommandHandlers) *emailService {
 	return &emailService{
 		log:                  log,
-		repositories:         repositories,
+		neo4jRepositories:    neo4jRepositories,
 		emailCommandHandlers: emailCommandHandlers,
 	}
 }
@@ -38,7 +38,7 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *emailpb.UpsertE
 	emailId := strings.TrimSpace(request.Id)
 	var err error
 	if emailId == "" {
-		emailId, err = s.repositories.EmailReadRepository.GetEmailIdIfExists(ctx, request.Tenant, request.RawEmail)
+		emailId, err = s.neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, request.Tenant, request.RawEmail)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("(UpsertEmail) tenant:{%s}, email: {%s}, err: {%v}", request.Tenant, request.RawEmail, err)

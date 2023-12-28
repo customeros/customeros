@@ -16,7 +16,6 @@ import (
 )
 
 type PhoneNumberRepository interface {
-	GetIdIfExists(ctx context.Context, tenant, phoneNumber string) (string, error)
 	CreatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberCreateEvent) error
 	UpdatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberUpdatedEvent) error
 	FailPhoneNumberValidation(ctx context.Context, phoneNumberId string, event events.PhoneNumberFailedValidationEvent) error
