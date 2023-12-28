@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 
 	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
@@ -93,7 +94,7 @@ func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, e
 		PromptType:     constants.PromptType_EmailSummary,
 		Tenant:         &eventData.Tenant,
 		NodeId:         &interactionEventId,
-		NodeLabel:      utils.StringPtr(constants.NodeLabel_InteractionEvent),
+		NodeLabel:      utils.StringPtr(neo4jentity.NodeLabel_InteractionEvent),
 		PromptTemplate: &h.cfg.Services.Anthropic.EmailSummaryPrompt,
 		Prompt:         summaryPrompt,
 	}
@@ -178,7 +179,7 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 		PromptType:     constants.PromptType_EmailActionItems,
 		Tenant:         &eventData.Tenant,
 		NodeId:         &interactionEventId,
-		NodeLabel:      utils.StringPtr(constants.NodeLabel_InteractionEvent),
+		NodeLabel:      utils.StringPtr(neo4jentity.NodeLabel_InteractionEvent),
 		PromptTemplate: &h.cfg.Services.Anthropic.EmailActionsItemsPrompt,
 		Prompt:         actionItemsPrompt,
 	}

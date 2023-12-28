@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 )
 
 type ParticipantType string
@@ -20,11 +20,11 @@ type Participant struct {
 func (p Participant) NodeLabel() string {
 	switch p.ParticipantType {
 	case UserType:
-		return constants.NodeLabel_User
+		return neo4jentity.NodeLabel_User
 	case ContactType:
-		return constants.NodeLabel_Contact
+		return neo4jentity.NodeLabel_Contact
 	case OrganizationType:
-		return constants.NodeLabel_Organization
+		return neo4jentity.NodeLabel_Organization
 	default:
 		return ""
 	}

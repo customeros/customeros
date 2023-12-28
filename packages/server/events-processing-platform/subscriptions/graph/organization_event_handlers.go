@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"strings"
 	"time"
 
@@ -70,7 +74,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 			return nil, err
 		}
 		if eventData.ExternalSystem.Available() {
-			err = h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, constants.NodeLabel_Organization, eventData.ExternalSystem)
+			err = h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jentity.NodeLabel_Organization, eventData.ExternalSystem)
 			if err != nil {
 				h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, err
@@ -194,7 +198,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 			//var err error
 			if eventData.ExternalSystem.Available() {
-				innerErr := h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, constants.NodeLabel_Organization, eventData.ExternalSystem)
+				innerErr := h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jentity.NodeLabel_Organization, eventData.ExternalSystem)
 				if innerErr != nil {
 					h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 					return nil, innerErr
@@ -304,7 +308,19 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.SocialRepository.MergeSocialFor(ctx, eventData.Tenant, organizationId, "Organization", eventData)
+	data := neo4jrepository.SocialFields{
+		SocialId:     eventData.SocialId,
+		Url:          eventData.Url,
+		PlatformName: eventData.PlatformName,
+		CreatedAt:    eventData.CreatedAt,
+		UpdatedAt:    eventData.UpdatedAt,
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSource(eventData.Source),
+			SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
+			AppSource:     helper.GetSource(eventData.AppSource),
+		},
+	}
+	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialFor(ctx, eventData.Tenant, organizationId, neo4jentity.NodeLabel_Organization, data)
 
 	return err
 }

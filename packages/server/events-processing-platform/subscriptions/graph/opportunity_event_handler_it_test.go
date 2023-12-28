@@ -3,6 +3,7 @@ package graph
 import (
 	"fmt"
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -227,7 +228,7 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 	require.Nil(t, err)
 
 	// Assert Neo4j Node
-	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabel_Opportunity, opportunityId)
 	require.Nil(t, err)
 	require.NotNil(t, opportunityDbNode)
 
@@ -249,7 +250,7 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 		Amount:    10000,
 		MaxAmount: 20000,
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jentity.NodeLabel_Opportunity: 1})
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
@@ -276,9 +277,9 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 	err = opportunityEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1, constants.NodeLabel_Opportunity + "_" + tenantName: 1})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jentity.NodeLabel_Opportunity: 1, neo4jentity.NodeLabel_Opportunity + "_" + tenantName: 1})
 
-	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabel_Opportunity, opportunityId)
 	require.Nil(t, err)
 	require.NotNil(t, opportunityDbNode)
 
@@ -301,7 +302,7 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 		Name:   "test opportunity",
 		Amount: 10000,
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jentity.NodeLabel_Opportunity: 1})
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
@@ -327,7 +328,7 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 	err = opportunityEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1, constants.NodeLabel_Opportunity + "_" + tenantName: 1})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jentity.NodeLabel_Opportunity: 1, neo4jentity.NodeLabel_Opportunity + "_" + tenantName: 1})
 
 	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Opportunity_"+tenantName, opportunityId)
 	require.Nil(t, err)
@@ -360,7 +361,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 		RenewalCycle: string(contractmodel.MonthlyRenewalCycleString),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jentity.NodeLabel_Opportunity: 1})
 
 	// prepare grpc mock
 	calledEventsPlatformToRefreshRenewalSummary, calledEventsPlatformToRefreshArr := false, false
@@ -410,9 +411,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1, constants.NodeLabel_Opportunity + "_" + tenantName: 1})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jentity.NodeLabel_Opportunity: 1, neo4jentity.NodeLabel_Opportunity + "_" + tenantName: 1})
 
-	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabel_Opportunity, opportunityId)
 	require.Nil(t, err)
 	require.NotNil(t, opportunityDbNode)
 
@@ -448,7 +449,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 			RenewalUpdatedByUserId: "orig-user",
 		},
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jentity.NodeLabel_Opportunity: 1})
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
@@ -474,9 +475,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1, constants.NodeLabel_Opportunity + "_" + tenantName: 1})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jentity.NodeLabel_Opportunity: 1, neo4jentity.NodeLabel_Opportunity + "_" + tenantName: 1})
 
-	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabel_Opportunity, opportunityId)
 	require.Nil(t, err)
 	require.NotNil(t, opportunityDbNode)
 
@@ -515,8 +516,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		constants.NodeLabel_Opportunity: 1,
-		constants.NodeLabel_Contract:    1})
+		neo4jentity.NodeLabel_Opportunity: 1,
+		neo4jentity.NodeLabel_Contract:    1})
 
 	// prepare grpc client
 	calledEventsPlatformToUpdateOpportunity := false
@@ -562,9 +563,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1, constants.NodeLabel_Opportunity + "_" + tenantName: 1})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jentity.NodeLabel_Opportunity: 1, neo4jentity.NodeLabel_Opportunity + "_" + tenantName: 1})
 
-	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabel_Opportunity, opportunityId)
 	require.Nil(t, err)
 	require.NotNil(t, opportunityDbNode)
 
@@ -622,7 +623,7 @@ func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 	require.Nil(t, err)
 
 	// Assert Neo4j Node
-	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabel_Opportunity, opportunityId)
 	require.Nil(t, err)
 	require.NotNil(t, opportunityDbNode)
 
@@ -659,7 +660,7 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 	require.Nil(t, err)
 
 	// Assert Neo4j Node
-	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabel_Opportunity, opportunityId)
 	require.Nil(t, err)
 	require.NotNil(t, opportunityDbNode)
 
@@ -794,11 +795,11 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1, constants.NodeLabel_Opportunity + "_" + tenantName: 1})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jentity.NodeLabel_Opportunity: 1, neo4jentity.NodeLabel_Opportunity + "_" + tenantName: 1})
 	//checking if the owner changed
 	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, userIdOwnerNew, "OWNS", opportunityId)
 
-	opportunityDbNode1, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	opportunityDbNode1, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabel_Opportunity, opportunityId)
 	require.Nil(t, err)
 	require.NotNil(t, opportunityDbNode1)
 

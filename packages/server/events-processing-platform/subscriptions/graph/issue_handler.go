@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
@@ -53,7 +54,7 @@ func (h *IssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) 
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, constants.NodeLabel_Issue, eventData.ExternalSystem)
+		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, neo4jentity.NodeLabel_Issue, eventData.ExternalSystem)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link issue %s with external system %s: %s", issueId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -99,7 +100,7 @@ func (h *IssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) 
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, constants.NodeLabel_Issue, eventData.ExternalSystem)
+		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, neo4jentity.NodeLabel_Issue, eventData.ExternalSystem)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link issue %s with external system %s: %s", issueId, eventData.ExternalSystem.ExternalSystemId, err.Error())
