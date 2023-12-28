@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 )
@@ -16,14 +15,12 @@ import (
 type jobRoleService struct {
 	jobrolepb.UnimplementedJobRoleGrpcServiceServer
 	log             logger.Logger
-	repositories    *repository.Repositories
 	jobRoleCommands *commands.CommandHandlers
 }
 
-func NewJobRoleService(log logger.Logger, repositories *repository.Repositories, jobRoleCommands *commands.CommandHandlers) *jobRoleService {
+func NewJobRoleService(log logger.Logger, jobRoleCommands *commands.CommandHandlers) *jobRoleService {
 	return &jobRoleService{
 		log:             log,
-		repositories:    repositories,
 		jobRoleCommands: jobRoleCommands,
 	}
 }

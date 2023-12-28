@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
+	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	"strings"
@@ -17,14 +17,14 @@ import (
 type phoneNumberService struct {
 	phonenumberpb.UnimplementedPhoneNumberGrpcServiceServer
 	log                 logger.Logger
-	repositories        *repository.Repositories
+	neo4jRepositories   *neo4jrepository.Repositories
 	phoneNumberCommands *command_handler.CommandHandlers
 }
 
-func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositories, phoneNumberCommands *command_handler.CommandHandlers) *phoneNumberService {
+func NewPhoneNumberService(log logger.Logger, neo4jRepositories *neo4jrepository.Repositories, phoneNumberCommands *command_handler.CommandHandlers) *phoneNumberService {
 	return &phoneNumberService{
 		log:                 log,
-		repositories:        repositories,
+		neo4jRepositories:   neo4jRepositories,
 		phoneNumberCommands: phoneNumberCommands,
 	}
 }
@@ -38,7 +38,7 @@ func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *pho
 	objectID := strings.TrimSpace(request.Id)
 	var err error
 	if objectID == "" {
-		objectID, err = s.repositories.PhoneNumberRepository.GetIdIfExists(ctx, request.Tenant, request.PhoneNumber)
+		objectID, err = s.neo4jRepositories.PhoneNumberReadRepository.GetPhoneNumberIdIfExists(ctx, request.Tenant, request.PhoneNumber)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("(UpsertPhoneNumber) tenant:{%s}, email: {%s}, err: {%v}", request.Tenant, request.PhoneNumber, err.Error())

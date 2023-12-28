@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"google.golang.org/grpc/codes"
@@ -22,14 +21,12 @@ import (
 type organizationService struct {
 	organizationpb.UnimplementedOrganizationGrpcServiceServer
 	log                  logger.Logger
-	repositories         *repository.Repositories
 	organizationCommands *command_handler.CommandHandlers
 }
 
-func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, organizationCommands *command_handler.CommandHandlers) *organizationService {
+func NewOrganizationService(log logger.Logger, organizationCommands *command_handler.CommandHandlers) *organizationService {
 	return &organizationService{
 		log:                  log,
-		repositories:         repositories,
 		organizationCommands: organizationCommands,
 	}
 }

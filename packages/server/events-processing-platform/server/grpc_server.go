@@ -73,10 +73,10 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 	contactService := service.NewContactService(server.log, server.commandHandlers.Contact)
 	contactpb.RegisterContactGrpcServiceServer(grpcServer, contactService)
 
-	organizationService := service.NewOrganizationService(server.log, server.repositories, server.commandHandlers.Organization)
+	organizationService := service.NewOrganizationService(server.log, server.commandHandlers.Organization)
 	organizationpb.RegisterOrganizationGrpcServiceServer(grpcServer, organizationService)
 
-	phoneNumberService := service.NewPhoneNumberService(server.log, server.repositories, server.commandHandlers.PhoneNumber)
+	phoneNumberService := service.NewPhoneNumberService(server.log, server.repositories.Neo4jRepositories, server.commandHandlers.PhoneNumber)
 	phonenumpb.RegisterPhoneNumberGrpcServiceServer(grpcServer, phoneNumberService)
 
 	emailService := service.NewEmailService(server.log, server.repositories.Neo4jRepositories, server.commandHandlers.Email)
@@ -85,10 +85,10 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 	userService := service.NewUserService(server.log, server.commandHandlers.User)
 	userpb.RegisterUserGrpcServiceServer(grpcServer, userService)
 
-	locationService := service.NewLocationService(server.log, server.repositories, server.commandHandlers.Location)
+	locationService := service.NewLocationService(server.log, server.commandHandlers.Location)
 	locationpb.RegisterLocationGrpcServiceServer(grpcServer, locationService)
 
-	jobRoleService := service.NewJobRoleService(server.log, server.repositories, server.commandHandlers.JobRole)
+	jobRoleService := service.NewJobRoleService(server.log, server.commandHandlers.JobRole)
 	jobrolepb.RegisterJobRoleGrpcServiceServer(grpcServer, jobRoleService)
 
 	interactionEventService := service.NewInteractionEventService(server.log, server.commandHandlers.InteractionEvent)
