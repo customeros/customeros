@@ -19,7 +19,6 @@ import (
 )
 
 type EmailRepository interface {
-	GetIdIfExists(ctx context.Context, tenant, email string) (string, error)
 	CreateEmail(ctx context.Context, emailId string, event events.EmailCreateEvent) error
 	UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdateEvent) error
 	FailEmailValidation(ctx context.Context, emailId string, event events.EmailFailedValidationEvent) error
@@ -38,36 +37,6 @@ func NewEmailRepository(driver *neo4j.DriverWithContext) EmailRepository {
 	return &emailRepository{
 		driver: driver,
 	}
-}
-
-func (r *emailRepository) GetIdIfExists(ctx context.Context, tenant string, email string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetIdIfExists")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("email", email))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := "MATCH (e:Email_%s) WHERE e.email = $email OR e.rawEmail = $email RETURN e.id LIMIT 1"
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]any{
-				"email": email,
-			}); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Collect(ctx)
-		}
-	})
-	if err != nil {
-		return "", err
-	}
-	if len(result.([]*db.Record)) == 0 {
-		return "", nil
-	}
-	return result.([]*db.Record)[0].Values[0].(string), err
 }
 
 func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event events.EmailCreateEvent) error {
