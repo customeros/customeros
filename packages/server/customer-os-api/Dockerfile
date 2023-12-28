@@ -5,6 +5,7 @@ WORKDIR /workspace
 RUN mkdir /workspace/build
 RUN mkdir /workspace/build/customer-os-api
 RUN mkdir /workspace/build/customer-os-common-module
+RUN mkdir /workspace/build/customer-os-neo4j-repository
 RUN mkdir /workspace/build/customer-os-common-auth
 
 #copy and build common module
@@ -30,7 +31,6 @@ COPY events-processing-proto/go.sum /workspace/build/events-processing-proto/go.
 COPY events-processing-proto/. /workspace/build/events-processing-proto/
 
 #copy and build customer-os-neo4j-repository
-RUN mkdir /workspace/build/customer-os-neo4j-repository
 COPY customer-os-neo4j-repository/go.mod /workspace/build/customer-os-neo4j-repository/go.mod
 COPY customer-os-neo4j-repository/go.sum /workspace/build/customer-os-neo4j-repository/go.sum
 RUN cd /workspace/build/customer-os-neo4j-repository && go mod download && go mod verify
