@@ -211,7 +211,7 @@ func (s *contractService) GetContractsForOrganizations(ctx context.Context, orga
 	defer span.Finish()
 	span.LogFields(log.Object("organizationIDs", organizationIDs))
 
-	contracts, err := s.repositories.ContractRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
+	contracts, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
 	if err != nil {
 		return nil, err
 	}
