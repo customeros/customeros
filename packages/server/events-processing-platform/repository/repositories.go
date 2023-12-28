@@ -33,7 +33,6 @@ type Repositories struct {
 	InteractionEventRepository   InteractionEventRepository
 	InteractionSessionRepository InteractionSessionRepository
 	JobRoleRepository            JobRoleRepository
-	LogEntryRepository           LogEntryRepository
 	LocationRepository           LocationRepository
 	OpportunityRepository        OpportunityRepository
 	OrganizationRepository       OrganizationRepository
@@ -64,7 +63,6 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		InteractionEventRepository:   NewInteractionEventRepository(driver, neo4jDatabase),
 		InteractionSessionRepository: NewInteractionSessionRepository(driver, neo4jDatabase),
 		ActionRepository:             NewActionRepository(driver),
-		LogEntryRepository:           NewLogEntryRepository(driver),
 		IssueRepository:              NewIssueRepository(driver, neo4jDatabase),
 		TagRepository:                NewTagRepository(driver),
 		PlayerRepository:             NewPlayerRepository(driver),

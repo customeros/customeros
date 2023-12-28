@@ -2,11 +2,14 @@ package graph
 
 import (
 	"context"
+	neo4jmodel "github.com/openline-ai/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -41,7 +44,21 @@ func (h *LogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	}
 
 	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.LogEntryRepository.Create(ctx, eventData.Tenant, logEntryId, eventData)
+	data := neo4jrepository.LogEntryCreateFields{
+		Content:              eventData.Content,
+		ContentType:          eventData.ContentType,
+		StartedAt:            eventData.StartedAt,
+		AuthorUserId:         eventData.AuthorUserId,
+		LoggedOrganizationId: eventData.LoggedOrganizationId,
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSource(eventData.Source),
+			SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceOfTruth),
+			AppSource:     helper.GetAppSource(eventData.AppSource),
+		},
+		CreatedAt: eventData.CreatedAt,
+		UpdatedAt: eventData.UpdatedAt,
+	}
+	err := h.repositories.Neo4jRepositories.LogEntryWriteRepository.Create(ctx, eventData.Tenant, logEntryId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving log entry %s: %s", logEntryId, err.Error())
@@ -83,7 +100,15 @@ func (h *LogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	}
 
 	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.LogEntryRepository.Update(ctx, eventData.Tenant, logEntryId, eventData)
+	data := neo4jrepository.LogEntryUpdateFields{
+		Content:              eventData.Content,
+		ContentType:          eventData.ContentType,
+		StartedAt:            eventData.StartedAt,
+		LoggedOrganizationId: eventData.LoggedOrganizationId,
+		UpdatedAt:            eventData.UpdatedAt,
+		Source:               helper.GetSource(eventData.SourceOfTruth),
+	}
+	err := h.repositories.Neo4jRepositories.LogEntryWriteRepository.Update(ctx, eventData.Tenant, logEntryId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving log entry %s: %s", logEntryId, err.Error())
