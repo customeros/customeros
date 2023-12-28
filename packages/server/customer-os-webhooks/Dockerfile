@@ -29,6 +29,14 @@ COPY events-processing-proto/go.mod /workspace/build/events-processing-proto/go.
 COPY events-processing-proto/go.sum /workspace/build/events-processing-proto/go.sum
 COPY events-processing-proto/. /workspace/build/events-processing-proto/
 
+#copy and build customer-os-neo4j-repository
+RUN mkdir /workspace/build/customer-os-neo4j-repository
+COPY customer-os-neo4j-repository/go.mod /workspace/build/customer-os-neo4j-repository/go.mod
+COPY customer-os-neo4j-repository/go.sum /workspace/build/customer-os-neo4j-repository/go.sum
+RUN cd /workspace/build/customer-os-neo4j-repository && go mod download && go mod verify
+COPY customer-os-neo4j-repository/. /workspace/build/customer-os-neo4j-repository/
+RUN cd /workspace/build/customer-os-neo4j-repository && go build -v ./...
+
 #copy and build customer-os-webhooks
 COPY customer-os-webhooks/go.mod /workspace/build/customer-os-webhooks/go.mod
 COPY customer-os-webhooks/go.sum /workspace/build/customer-os-webhooks/go.sum
