@@ -4,16 +4,40 @@ import React, {
   useRef,
   useEffect,
   forwardRef,
+  useCallback,
   PropsWithChildren,
   useImperativeHandle,
 } from 'react';
 
 import { prosemirrorNodeToHtml } from 'remirror';
-import { Toolbar, Remirror, ThemeProvider } from '@remirror/react';
+import { ClickHandlerState } from '@remirror/extension-events';
+import {
+  Toolbar,
+  Remirror,
+  useCommands,
+  ThemeProvider,
+  useEditorEvent,
+} from '@remirror/react';
 
 import { RemirrorProps } from '@ui/form/RichTextEditor/types';
 import { FloatingLinkToolbar } from '@ui/form/RichTextEditor/floatingMenu/FloatingLinkMenu';
 
+const hooks = [
+  () => {
+    const { selectText } = useCommands();
+
+    const clickHandler = useCallback(
+      (e: MouseEvent, clickHandlerState: ClickHandlerState) => {
+        // @ts-expect-error nodeName exists but type is not compatible
+        if (e?.target?.nodeName === 'A') {
+          selectText(clickHandlerState.markRanges[0]);
+        }
+      },
+      [selectText],
+    );
+    useEditorEvent('click', clickHandler);
+  },
+];
 export const RichTextEditor: FC<
   {
     name: string;
@@ -68,6 +92,7 @@ export const RichTextEditor: FC<
           }}
           initialContent={state}
           autoRender='end'
+          hooks={hooks}
         >
           <FloatingLinkToolbar />
           {showToolbar ? (
