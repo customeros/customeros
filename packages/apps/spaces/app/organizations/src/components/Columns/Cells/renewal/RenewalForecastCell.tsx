@@ -20,6 +20,9 @@ export const RenewalForecastCell = ({
     potentialAmount !== null &&
     formattedAmount !== formattedPotentialAmount;
 
+  if (formattedAmount === 'Unknown')
+    return <Text color='gray.400'>Unknown</Text>;
+
   return (
     <Flex flexDir='column' justify='center'>
       <Text fontSize='sm' color={amount ? 'gray.700' : 'gray.500'}>

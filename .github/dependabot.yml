@@ -67,7 +67,7 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
-    directory: "/packages/server/events-processing-common"
+    directory: "/packages/server/events-processing-proto"
     schedule:
       interval: "daily"
       time: "04:00"
@@ -75,7 +75,7 @@ updates:
     labels:
       - "gomod"
       - "dependencies"
-      - "module/events-processing-common"
+      - "module/events-processing-proto"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"

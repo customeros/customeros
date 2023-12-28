@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type UpsertOrganizationCommandHandler interface {
@@ -29,7 +28,7 @@ func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, cmd *comm
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertOrganizationCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
-	span.LogFields(log.Object("command", cmd))
+	tracing.LogObjectAsJson(span, "command", cmd)
 
 	validationError, done := validator.Validate(cmd, span)
 	if done {
@@ -50,7 +49,7 @@ func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, cmd *comm
 			return err
 		}
 	} else {
-		if err = organizationAggregate.UpdateOrganization(ctx, orgFields, cmd.LoggedInUserId); err != nil {
+		if err = organizationAggregate.UpdateOrganization(ctx, orgFields, cmd.LoggedInUserId, "", cmd.FieldsMask); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}

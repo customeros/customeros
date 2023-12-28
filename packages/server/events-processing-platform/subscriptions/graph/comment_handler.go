@@ -14,15 +14,22 @@ import (
 	"github.com/pkg/errors"
 )
 
-type GraphCommentEventHandler struct {
+type CommentEventHandler struct {
 	log          logger.Logger
 	repositories *repository.Repositories
 }
 
-func (h *GraphCommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphCommentEventHandler.OnCreate")
+func NewCommentEventHandler(log logger.Logger, repositories *repository.Repositories) *CommentEventHandler {
+	return &CommentEventHandler{
+		log:          log,
+		repositories: repositories,
+	}
+}
+
+func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentEventHandler.OnCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.CommentCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -65,10 +72,10 @@ func (h *GraphCommentEventHandler) OnCreate(ctx context.Context, evt eventstore.
 	return nil
 }
 
-func (h *GraphCommentEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphCommentEventHandler.OnCreate")
+func (h *CommentEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentEventHandler.OnCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.CommentUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

@@ -34,6 +34,7 @@ export type GlobalCacheQuery = {
     isOwner: boolean;
     minARRForecastValue: number;
     maxARRForecastValue: number;
+    contractsExist: boolean;
     user: {
       __typename?: 'User';
       id: string;
@@ -89,6 +90,7 @@ export const GlobalCacheDocument = `
     }
     minARRForecastValue
     maxARRForecastValue
+    contractsExist
   }
 }
     `;

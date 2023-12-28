@@ -18,6 +18,7 @@ import { useToken } from '@ui/utils';
 import { Flex } from '@ui/layout/Flex';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
+import { mockData } from './mock';
 import { getMonthLabel } from '../util';
 
 export type GrossRevenueRetentionDatum = {
@@ -28,6 +29,7 @@ export type GrossRevenueRetentionDatum = {
 interface GrossRevenueRetentionProps {
   width: number;
   height?: number;
+  hasContracts?: boolean;
   data: GrossRevenueRetentionDatum[];
 }
 
@@ -48,9 +50,14 @@ const bisectDate = bisector<GrossRevenueRetentionDatum, Date>((d) =>
 ).left;
 const getY = (d: GrossRevenueRetentionDatum) => d.value;
 
-const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
+const GrossRevenueRetention = ({
+  width,
+  hasContracts,
+  data: _data = [],
+}: GrossRevenueRetentionProps) => {
+  const data = hasContracts ? _data : mockData;
   const [primary600, gray300, gray700] = useToken('colors', [
-    'primary.600',
+    hasContracts ? 'primary.600' : 'gray.300',
     'gray.300',
     'gray.700',
   ]);
@@ -119,13 +126,13 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
       <svg width={width || 500} height={height} style={{ overflow: 'visible' }}>
         <LinearGradient
           fromOpacity={0}
-          toOpacity={0.3}
+          toOpacity={hasContracts ? 0.3 : 0.8}
           to={'white'}
           from={primary600}
-          id='visx-area-gradient'
+          id='revenue-retention-gradient'
         />
         <MarkerCircle
-          id='marker-circle'
+          id='revenue-retention-marker-circle'
           fill={primary600}
           size={2}
           refX={2}
@@ -133,7 +140,7 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
           stroke='white'
         />
         <MarkerCircle
-          id='marker-circle-end'
+          id='revenue-retention-marker-circle-end'
           stroke={primary600}
           size={2}
           refX={2}
@@ -147,7 +154,7 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
           yScale={scaleY}
           strokeWidth={0}
           stroke={primary600}
-          fill='url(#visx-area-gradient)'
+          fill='url(#revenue-retention-gradient)'
           pointerEvents='none'
         />
 
@@ -159,9 +166,9 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
           strokeWidth={2}
           stroke={primary600}
           shapeRendering='geometricPrecision'
-          markerMid='url(#marker-circle)'
-          markerStart='url(#marker-circle)'
-          markerEnd='url(#marker-circle-end)'
+          markerMid='url(#revenue-retention-marker-circle)'
+          markerStart='url(#revenue-retention-marker-circle)'
+          markerEnd='url(#revenue-retention-marker-circle-end)'
         />
         <Bar
           x={0}
@@ -236,9 +243,9 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
                   : 'translateX(-50%)',
             }}
           >
-            {`${getMonthLabel(tooltipData.month)}: ${formatCurrency(
-              tooltipData.value,
-            )}`}
+            {`${getMonthLabel(tooltipData.month)}: ${
+              hasContracts ? formatCurrency(tooltipData.value) : 'No data yet'
+            }`}
           </TooltipWithBounds>
         )}
       </Flex>

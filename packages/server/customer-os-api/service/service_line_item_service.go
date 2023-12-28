@@ -12,8 +12,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/service_line_item"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -112,6 +112,7 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
 	}
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.ServiceLineItemClient.CreateServiceLineItem(ctx, &createServiceLineItemRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -199,6 +200,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 		serviceLineItemUpdateRequest.ContractId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*contractDbNode), "id")
 	}
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -235,6 +237,7 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 		AppSource:      constants.AppSourceCustomerOsApi,
 	}
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = s.grpcClients.ServiceLineItemClient.DeleteServiceLineItem(ctx, &deleteRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -285,6 +288,7 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 		EndedAt:        utils.ConvertTimeToTimestampPtr(endedAt),
 	}
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = s.grpcClients.ServiceLineItemClient.CloseServiceLineItem(ctx, &closeRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)

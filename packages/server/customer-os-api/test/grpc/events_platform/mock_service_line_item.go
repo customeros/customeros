@@ -2,7 +2,7 @@ package events_platform
 
 import (
 	"context"
-	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/service_line_item"
+	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 )
 
 type MockServiceLineItemServiceCallbacks struct {

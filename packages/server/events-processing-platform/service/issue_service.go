@@ -2,9 +2,7 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/command"
 	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/command_handler"
@@ -12,7 +10,7 @@ import (
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/opentracing/opentracing-go/log"
+	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	"strings"
 )
 
@@ -33,7 +31,7 @@ func (s *issueService) UpsertIssue(ctx context.Context, request *issuepb.UpsertI
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "IssueService.UpsertIssue")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	issueId := strings.TrimSpace(utils.NewUUIDIfEmpty(request.Id))
 
@@ -67,7 +65,7 @@ func (s *issueService) AddUserAssignee(ctx context.Context, request *issuepb.Add
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "IssueService.AddUserAssignee")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	cmd := command.NewAddUserAssigneeCommand(request.IssueId, request.Tenant, request.LoggedInUserId, request.UserId, request.AppSource, nil)
 	if err := s.issueCommandHandlers.AddUserAssignee.Handle(ctx, cmd); err != nil {
@@ -83,7 +81,7 @@ func (s *issueService) RemoveUserAssignee(ctx context.Context, request *issuepb.
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "IssueService.RemoveUserAssignee")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	cmd := command.NewRemoveUserAssigneeCommand(request.IssueId, request.Tenant, request.LoggedInUserId, request.UserId, request.AppSource, nil)
 	if err := s.issueCommandHandlers.RemoveUserAssignee.Handle(ctx, cmd); err != nil {
@@ -99,7 +97,7 @@ func (s *issueService) AddUserFollower(ctx context.Context, request *issuepb.Add
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "IssueService.AddUserFollower")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	cmd := command.NewAddUserFollowerCommand(request.IssueId, request.Tenant, request.LoggedInUserId, request.UserId, request.AppSource, nil)
 	if err := s.issueCommandHandlers.AddUserFollower.Handle(ctx, cmd); err != nil {
@@ -115,7 +113,7 @@ func (s *issueService) RemoveUserFollower(ctx context.Context, request *issuepb.
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "IssueService.RemoveUserFollower")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	cmd := command.NewRemoveUserFollowerCommand(request.IssueId, request.Tenant, request.LoggedInUserId, request.UserId, request.AppSource, nil)
 	if err := s.issueCommandHandlers.RemoveUserFollower.Handle(ctx, cmd); err != nil {

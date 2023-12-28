@@ -4,19 +4,16 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/model"
-	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
-	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -24,8 +21,6 @@ import (
 func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstore.NewTestAggregateStore()
 
 	// prepare neo4j data
 	externalSystemId := "sf"
@@ -40,12 +35,26 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "Contact": 1, "Organization": 1, "ExternalSystem": 1, "Issue": 1, "TimelineEvent": 1, "InteractionEvent": 0})
 
-	// prepare event handler
-	interactionEventHandler := &GraphInteractionEventHandler{
-		repositories:         testDatabase.Repositories,
-		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+	// prepare grpc mock
+	lastTouchpointInvoked := false
+	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			lastTouchpointInvoked = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
 	}
-	orgAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
+	// prepare event handler
+	interactionEventHandler := &InteractionEventHandler{
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
 	now := utils.Now()
 	interactionEventId := uuid.New().String()
 	interactionEventAggregate := aggregate.NewInteractionEventAggregateWithTenantAndID(tenantName, interactionEventId)
@@ -89,11 +98,11 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 		ExternalSystemId: "sf",
 		ExternalId:       "123",
 	}, now, now)
-	require.Nil(t, err, "failed to create event")
+	require.Nil(t, err)
 
 	// EXECUTE
 	err = interactionEventHandler.OnCreate(context.Background(), createEvent)
-	require.Nil(t, err, "failed to execute event handler")
+	require.Nil(t, err)
 
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "User_" + tenantName: 1,
@@ -134,17 +143,8 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, now, interactionEvent.CreatedAt)
 	require.Equal(t, now, interactionEvent.UpdatedAt)
 
-	// Check refresh last touchpoint event was generated
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-	eventList := eventsMap[orgAggregate.GetID()]
-	require.Equal(t, 1, len(eventList))
-	generatedEvent := eventList[0]
-	require.Equal(t, orgevents.OrganizationRefreshLastTouchpointV1, generatedEvent.EventType)
-	var eventData orgevents.OrganizationRefreshLastTouchpointEvent
-	err = generatedEvent.GetJsonData(&eventData)
-	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData.Tenant)
+	// Check refresh last touchpoint
+	require.Truef(t, lastTouchpointInvoked, "RefreshLastTouchpoint was not invoked")
 }
 
 func TestGraphInteractionEventEventHandler_OnUpdate(t *testing.T) {
@@ -165,7 +165,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate(t *testing.T) {
 		"InteractionEvent": 1, "TimelineEvent": 1})
 
 	// prepare event handler
-	interactionEventHandler := &GraphInteractionEventHandler{
+	interactionEventHandler := &InteractionEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	now := utils.Now()
@@ -225,7 +225,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 		"InteractionEvent": 1, "TimelineEvent": 1})
 
 	// prepare event handler
-	interactionEventHandler := &GraphInteractionEventHandler{
+	interactionEventHandler := &InteractionEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	now := utils.Now()
@@ -293,7 +293,7 @@ func TestGraphInteractionEventEventHandler_OnSummaryReplace_Create(t *testing.T)
 	require.NotNil(t, interactionEventId)
 
 	// prepare event handler
-	interactionEventHandler := &GraphInteractionEventHandler{
+	interactionEventHandler := &InteractionEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	interactionEventAggregate := aggregate.NewInteractionEventAggregateWithTenantAndID(tenantName, interactionEventId)
@@ -349,7 +349,7 @@ func TestGraphInteractionEventEventHandler_OnActionItemsReplace(t *testing.T) {
 	require.NotNil(t, interactionEventId)
 
 	// prepare event handler
-	interactionEventHandler := &GraphInteractionEventHandler{
+	interactionEventHandler := &InteractionEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	interactionEventAggregate := aggregate.NewInteractionEventAggregateWithTenantAndID(tenantName, interactionEventId)

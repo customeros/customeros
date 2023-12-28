@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type LinkPhoneNumberCommandHandler interface {
@@ -29,7 +28,7 @@ func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, cmd *command
 	span, ctx := opentracing.StartSpanFromContext(ctx, "linkPhoneNumberCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
-	span.LogFields(log.Object("command", cmd))
+	tracing.LogObjectAsJson(span, "command", cmd)
 
 	validationError, done := validator.Validate(cmd, span)
 	if done {

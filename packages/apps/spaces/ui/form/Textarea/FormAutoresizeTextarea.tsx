@@ -18,8 +18,8 @@ interface FormAutoresizeTextareaProps extends AutoresizeTextareaProps {
 export const FormAutoresizeTextarea = forwardRef<
   HTMLTextAreaElement,
   FormAutoresizeTextareaProps
->(({ isLabelVisible, label, ...props }, ref) => {
-  const { getInputProps } = useField(props.name, props.formId);
+>(({ isLabelVisible, label, formId, ...props }, ref) => {
+  const { getInputProps } = useField(props.name, formId);
 
   return (
     <FormControl>

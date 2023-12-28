@@ -9,12 +9,14 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
+	"google.golang.org/grpc/metadata"
 	"net/http"
 )
 
 const (
 	SpanTagTenant    = tracing.SpanTagTenant
 	SpanTagComponent = tracing.SpanTagComponent
+	SpanTagEntityId  = tracing.SpanTagEntityId
 )
 
 type spanCtxKey struct{}
@@ -93,4 +95,29 @@ func SetDefaultServiceSpanTags(ctx context.Context, span opentracing.Span) {
 func SetDefaultNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+}
+
+func LogObjectAsJson(span opentracing.Span, name string, object any) {
+	tracing.LogObjectAsJson(span, name, object)
+}
+
+func InjectSpanContextIntoGrpcMetadata(ctx context.Context, span opentracing.Span) context.Context {
+	if span != nil {
+		// Inject the span context into the gRPC request metadata.
+		textMapCarrier := make(opentracing.TextMapCarrier)
+		err := span.Tracer().Inject(span.Context(), opentracing.TextMap, textMapCarrier)
+		if err == nil {
+			// Add the injected metadata to the gRPC context.
+			md, ok := metadata.FromOutgoingContext(ctx)
+			if !ok {
+				md = metadata.New(nil)
+			}
+			for key, val := range textMapCarrier {
+				md.Set(key, val)
+			}
+			ctx = metadata.NewOutgoingContext(ctx, md)
+			return ctx
+		}
+	}
+	return ctx
 }

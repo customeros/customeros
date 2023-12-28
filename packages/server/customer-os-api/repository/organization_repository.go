@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -21,6 +22,7 @@ const (
 
 type OrganizationRepository interface {
 	CountOrganizations(ctx context.Context, tenant string) (int64, error)
+	CountCustomers(ctx context.Context, tenant string) (int64, error)
 	GetOrganizationById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 	GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedOrganizationsForContact(ctx context.Context, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -33,25 +35,21 @@ type OrganizationRepository interface {
 	GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error)
 	GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
-	ReplaceOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error)
 	RemoveOwner(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
-
-	GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
-	GetAllOrganizationEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetSuggestedMergePrimaryOrganizations(ctx context.Context, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error)
-
-	// TODO deprecated, remove when decomission organization renewal forecast
-	GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error)
 	GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error)
+	GetOrganizations(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 }
 
 type organizationRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepository {
+func NewOrganizationRepository(driver *neo4j.DriverWithContext, database string) OrganizationRepository {
 	return &organizationRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 
@@ -81,12 +79,43 @@ func (r *organizationRepository) CountOrganizations(ctx context.Context, tenant 
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false
+			RETURN count(org)`
+	params := map[string]any{
+		"tenant": tenant,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Single(ctx)
+		}
+	})
+	if err != nil {
+		return 0, err
+	}
+	organizationsCount := dbRecord.(*db.Record).Values[0].(int64)
+	span.LogFields(log.Int64("result - organizationsCount", organizationsCount))
+	return organizationsCount, nil
+}
+
+func (r *organizationRepository) CountCustomers(ctx context.Context, tenant string) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.CountCustomers")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
-			MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false
+			MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false AND org.isCustomer = true
 			RETURN count(org)`,
 			map[string]any{
 				"tenant": tenant,
@@ -106,18 +135,20 @@ func (r *organizationRepository) GetOrganizationById(ctx context.Context, tenant
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationById")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId))
+
+	cypher := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) RETURN org`
+	params := map[string]any{
+		"organizationId": organizationId,
+		"tenant":         tenant,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
-
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			RETURN org`,
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationId,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return queryResult.Single(ctx)
@@ -261,6 +292,10 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 				primary.lastFundingRound = CASE WHEN primary.lastFundingRound is null OR primary.lastFundingRound = '' THEN merged.lastFundingRound ELSE primary.lastFundingRound END, 
 				primary.lastFundingAmount = CASE WHEN primary.lastFundingAmount is null OR primary.lastFundingAmount = '' THEN merged.lastFundingAmount ELSE primary.lastFundingAmount END, 
 				primary.note = CASE WHEN primary.note is null OR primary.note = '' THEN merged.note ELSE primary.note END, 
+				primary.headquarters = CASE WHEN primary.headquarters is null OR primary.headquarters = '' THEN merged.headquarters ELSE primary.headquarters END, 
+				primary.logoUrl = CASE WHEN primary.logoUrl is null OR primary.logoUrl = '' THEN merged.logoUrl ELSE primary.logoUrl END, 
+				primary.employeeGrowthRate = CASE WHEN primary.employeeGrowthRate is null OR primary.employeeGrowthRate = '' THEN merged.employeeGrowthRate ELSE primary.employeeGrowthRate END,
+				primary.yearFounded = CASE WHEN primary.yearFounded is null OR primary.yearFounded = 0 THEN merged.yearFounded ELSE primary.yearFounded END,
 				primary.sourceOfTruth=$sourceOfTruth,
 				primary.updatedAt = $now
 			`,
@@ -684,95 +719,6 @@ func (r *organizationRepository) GetLinkedParentOrganizations(ctx context.Contex
 	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
-func (r *organizationRepository) GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetAllOrganizationPhoneNumberRelationships")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[rel:HAS]->(p:PhoneNumber)
- 			WHERE (rel.syncedWithEventStore is null or rel.syncedWithEventStore=false)
-			RETURN rel, org.id, p.id, t.name limit $size`,
-			map[string]any{
-				"size": size,
-			}); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Collect(ctx)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return dbRecords.([]*neo4j.Record), err
-}
-
-func (r *organizationRepository) GetAllOrganizationEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetAllOrganizationEmailRelationships")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[rel:HAS]->(e:Email)
- 			WHERE (rel.syncedWithEventStore is null or rel.syncedWithEventStore=false)
-			RETURN rel, org.id, e.id, t.name limit $size`,
-			map[string]any{
-				"size": size,
-			}); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Collect(ctx)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return dbRecords.([]*neo4j.Record), err
-}
-
-func (r *organizationRepository) ReplaceOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.ReplaceOwner")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-			OPTIONAL MATCH (:User)-[rel:OWNS]->(org)
-			DELETE rel
-			WITH org, t
-			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
-			WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null)
-			MERGE (u)-[:OWNS]->(org)
-			SET org.updatedAt=$now, org.sourceOfTruth=$source			
-			RETURN org`
-
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationID,
-				"userId":         userID,
-				"source":         entity.DataSourceOpenline,
-				"now":            utils.Now(),
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
-}
-
 func (r *organizationRepository) RemoveOwner(ctx context.Context, tenant, organizationID string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.RemoveOwner")
 	defer span.Finish()
@@ -833,52 +779,6 @@ func (r *organizationRepository) GetSuggestedMergePrimaryOrganizations(ctx conte
 	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
-func (r *organizationRepository) GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMinMaxRenewalForecastAmount")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := `CALL { MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
-              return min(o.renewalForecastAmount) as min, max(o.renewalForecastAmount) as max }
-		      RETURN min, max`
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant": common.GetTenantFromContext(ctx),
-			}); err != nil {
-			return nil, err
-		} else {
-			record, err := queryResult.Single(ctx)
-			if err != nil {
-				return nil, err
-			}
-
-			return record, nil
-		}
-	})
-	if err != nil {
-		return 0, 0, err
-	}
-	if result != nil {
-		record := result.(*db.Record)
-		if record.Values[0] == nil || record.Values[1] == nil {
-			return 0, 0, nil
-		}
-		minValue, minOk := record.Values[0].(float64)
-		maxValue, maxOk := record.Values[1].(float64)
-		if !minOk || !maxOk {
-			return 0, 0, errors.New("unexpected type for min or max value")
-		}
-		return minValue, maxValue, nil
-	} else {
-		return 0, 0, nil
-	}
-}
-
 func (r *organizationRepository) GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMinMaxRenewalForecastArr")
 	defer span.Finish()
@@ -923,4 +823,36 @@ func (r *organizationRepository) GetMinMaxRenewalForecastArr(ctx context.Context
 	} else {
 		return 0, 0, nil
 	}
+}
+
+func (r *organizationRepository) GetOrganizations(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
+			WHERE org.id IN $ids
+			RETURN org`
+	params := map[string]any{
+		"tenant": tenant,
+		"ids":    ids,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dbRecords.([]*dbtype.Node), err
 }

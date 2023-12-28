@@ -5,42 +5,49 @@ import (
 	"time"
 )
 
-type RenewalLikelihoodProbability string
+type OnboardingStatus string
 
 const (
-	RenewalLikelihoodHigh   RenewalLikelihoodProbability = "0-HIGH"
-	RenewalLikelihoodMedium RenewalLikelihoodProbability = "1-MEDIUM"
-	RenewalLikelihoodLow    RenewalLikelihoodProbability = "2-LOW"
-	RenewalLikelihoodZero   RenewalLikelihoodProbability = "3-ZERO"
+	OnboardingStatusNotApplicable OnboardingStatus = "NOT_APPLICABLE"
+	OnboardingStatusNotStarted    OnboardingStatus = "NOT_STARTED"
+	OnboardingStatusOnTrack       OnboardingStatus = "ON_TRACK"
+	OnboardingStatusLate          OnboardingStatus = "LATE"
+	OnboardingStatusStuck         OnboardingStatus = "STUCK"
+	OnboardingStatusDone          OnboardingStatus = "DONE"
+	OnboardingStatusSuccessful    OnboardingStatus = "SUCCESSFUL"
 )
 
 type OrganizationEntity struct {
-	ID                string
-	CustomerOsId      string
-	Name              string
-	Description       string
-	Website           string
-	Industry          string
-	SubIndustry       string
-	IndustryGroup     string
-	TargetAudience    string
-	ValueProposition  string
-	IsPublic          bool
-	IsCustomer        bool
-	Hide              bool
-	Market            string
-	LastFundingRound  string
-	LastFundingAmount string
-	ReferenceId       string
-	Note              string
-	Employees         int64
-	CreatedAt         time.Time
-	LastTouchpointAt  *time.Time
-	UpdatedAt         time.Time
-	LastTouchpointId  *string
-	Source            DataSource
-	SourceOfTruth     DataSource
-	AppSource         string
+	ID                 string
+	CustomerOsId       string
+	Name               string
+	Description        string
+	Website            string
+	Industry           string
+	SubIndustry        string
+	IndustryGroup      string
+	TargetAudience     string
+	ValueProposition   string
+	IsPublic           bool
+	IsCustomer         bool
+	Hide               bool
+	Market             string
+	LastFundingRound   string
+	LastFundingAmount  string
+	ReferenceId        string
+	Note               string
+	Employees          int64
+	CreatedAt          time.Time
+	LastTouchpointAt   *time.Time
+	UpdatedAt          time.Time
+	LastTouchpointId   *string
+	Source             DataSource
+	SourceOfTruth      DataSource
+	AppSource          string
+	YearFounded        *int64
+	Headquarters       string
+	EmployeeGrowthRate string
+	LogoUrl            string
 
 	LinkedOrganizationType *string
 
@@ -49,54 +56,11 @@ type OrganizationEntity struct {
 		SuggestedBy *string
 		Confidence  *float64
 	}
-	RenewalLikelihood RenewalLikelihood
-	RenewalForecast   RenewalForecast
-	BillingDetails    BillingDetails
 	RenewalSummary    RenewalSummary
+	OnboardingDetails OnboardingDetails
+	WebScrapeDetails  WebScrapeDetails
 
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
-
-	DataloaderKey string
-}
-
-// Deprecated
-type RenewalLikelihood struct {
-	RenewalLikelihood         string
-	PreviousRenewalLikelihood string
-	Comment                   *string
-	UpdatedAt                 *time.Time
-	UpdatedBy                 string
-}
-
-func (r RenewalLikelihood) String() string {
-	output := ""
-	output += fmt.Sprintf("RenewalLikelihood: %v, Previous: %v", r.RenewalLikelihood, r.PreviousRenewalLikelihood)
-	if r.Comment != nil {
-		output += fmt.Sprintf(", Comment: %v", *r.Comment)
-	} else {
-		output += ", Comment: nil"
-	}
-	if r.UpdatedAt != nil {
-		output += fmt.Sprintf(", UpdatedAt: %v", *r.UpdatedAt)
-	} else {
-		output += ", UpdatedAt: nil"
-	}
-	output += fmt.Sprintf(", UpdatedBy: %v", r.UpdatedBy)
-	return output
-}
-
-// Deprecated
-type RenewalForecast struct {
-	//deprecated
-	Amount *float64
-	//deprecated
-	PotentialAmount *float64
-	//deprecated
-	Comment *string
-	//deprecated
-	UpdatedAt *time.Time
-	//deprecated
-	UpdatedBy string
 }
 
 type RenewalSummary struct {
@@ -107,61 +71,19 @@ type RenewalSummary struct {
 	RenewalLikelihoodOrder *int64
 }
 
-func (r RenewalForecast) String() string {
-	output := ""
-	if r.Amount != nil {
-		output += fmt.Sprintf("Amount: %v", *r.Amount)
-	} else {
-		output += "Amount: nil"
-	}
-	if r.PotentialAmount != nil {
-		output += fmt.Sprintf(", Potential: %v", *r.PotentialAmount)
-	} else {
-		output += ", Potential: nil"
-	}
-	if r.Comment != nil {
-		output += fmt.Sprintf(", Comment: %v", *r.Comment)
-	} else {
-		output += ", Comment: nil"
-	}
-	if r.UpdatedAt != nil {
-		output += fmt.Sprintf(", UpdatedAt: %v", *r.UpdatedAt)
-	} else {
-		output += ", UpdatedAt: nil"
-	}
-	output += fmt.Sprintf(", UpdatedBy: %v", r.UpdatedBy)
-	return output
+type OnboardingDetails struct {
+	Status       string
+	SortingOrder *int64
+	UpdatedAt    *time.Time
+	Comments     string
 }
 
-// Deprecated
-type BillingDetails struct {
-	Amount            *float64
-	Frequency         string
-	RenewalCycle      string
-	RenewalCycleStart *time.Time
-	RenewalCycleNext  *time.Time
-}
-
-func (b BillingDetails) String() string {
-	output := ""
-	if b.Amount != nil {
-		output += fmt.Sprintf("Amount: %v", *b.Amount)
-	} else {
-		output += "Amount: nil"
-	}
-	output += fmt.Sprintf(", Frequency: %v", b.Frequency)
-	output += fmt.Sprintf(", RenewalCycle: %v", b.RenewalCycle)
-	if b.RenewalCycleStart != nil {
-		output += fmt.Sprintf(", RenewalCycleStart: %v", *b.RenewalCycleStart)
-	} else {
-		output += ", RenewalCycleStart: nil"
-	}
-	if b.RenewalCycleNext != nil {
-		output += fmt.Sprintf(", RenewalCycleNext: %v", *b.RenewalCycleNext)
-	} else {
-		output += ", RenewalCycleNext: nil"
-	}
-	return output
+type WebScrapeDetails struct {
+	WebScrapedUrl             string
+	WebScrapedAt              *time.Time
+	WebScrapeLastRequestedAt  *time.Time
+	WebScrapeLastRequestedUrl string
+	WebScrapeAttempts         int64
 }
 
 func (organization OrganizationEntity) ToString() string {
@@ -178,10 +100,6 @@ func (OrganizationEntity) IsInteractionEventParticipant() {}
 
 func (OrganizationEntity) ParticipantLabel() string {
 	return NodeLabel_Organization
-}
-
-func (organization OrganizationEntity) GetDataloaderKey() string {
-	return organization.DataloaderKey
 }
 
 type OrganizationEntities []OrganizationEntity

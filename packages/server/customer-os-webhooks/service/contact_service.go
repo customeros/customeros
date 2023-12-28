@@ -14,8 +14,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -119,8 +119,9 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.syncContact")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag("externalSystem", contactInput.ExternalSystem)
-	span.LogFields(log.Object("syncDate", syncDate), log.Object("contactInput", contactInput))
+	span.SetTag(tracing.SpanTagExternalSystem, contactInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate))
+	tracing.LogObjectAsJson(span, "contactInput", contactInput)
 
 	tenant := common.GetTenantFromContext(ctx)
 	var appSource = utils.StringFirstNonEmpty(contactInput.AppSource, constants.AppSourceCustomerOsWebhooks)
@@ -185,6 +186,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		span.LogFields(log.String("contactId", contactId))
 
 		// Create or update contact
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = s.grpcClients.ContactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
 			Tenant:          tenant,
 			Id:              contactId,

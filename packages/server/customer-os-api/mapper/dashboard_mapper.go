@@ -41,6 +41,7 @@ func MapDashboardRetentionRatePerMonthData(months []*entityDashboard.DashboardRe
 	var result []*model.DashboardRetentionRatePerMonth
 	for _, month := range months {
 		result = append(result, &model.DashboardRetentionRatePerMonth{
+			Year:       month.Year,
 			Month:      month.Month,
 			RenewCount: month.RenewCount,
 			ChurnCount: month.ChurnCount,
@@ -73,6 +74,7 @@ func MapDashboardARRBreakdownPerMonthData(months []*entityDashboard.DashboardARR
 	var result []*model.DashboardARRBreakdownPerMonth
 	for _, month := range months {
 		result = append(result, &model.DashboardARRBreakdownPerMonth{
+			Year:            month.Year,
 			Month:           month.Month,
 			NewlyContracted: month.NewlyContracted,
 			Renewals:        month.Renewals,
@@ -120,6 +122,7 @@ func MapDashboardMRRPerCustomerPerMonthData(months []*entityDashboard.DashboardD
 	var result []*model.DashboardMRRPerCustomerPerMonth
 	for _, month := range months {
 		result = append(result, &model.DashboardMRRPerCustomerPerMonth{
+			Year:  month.Year,
 			Month: month.Month,
 			Value: month.Value,
 		})

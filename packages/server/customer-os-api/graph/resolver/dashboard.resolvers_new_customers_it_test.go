@@ -12,7 +12,7 @@ import (
 )
 
 func TestQueryResolver_Dashboard_New_Customers_No_Period_No_Data_In_DB(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -29,7 +29,7 @@ func TestQueryResolver_Dashboard_New_Customers_No_Period_No_Data_In_DB(t *testin
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 12, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -38,7 +38,7 @@ func TestQueryResolver_Dashboard_New_Customers_No_Period_No_Data_In_DB(t *testin
 }
 
 func TestQueryResolver_Dashboard_New_Customers_InvalidPeriod(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -54,7 +54,7 @@ func TestQueryResolver_Dashboard_New_Customers_InvalidPeriod(t *testing.T) {
 }
 
 func TestQueryResolver_Dashboard_New_Customers_PeriodIntervals(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -85,8 +85,8 @@ func assert_Dashboard_New_Customers_PeriodIntervals(t *testing.T, start, end str
 	require.Equal(t, months, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 }
 
-func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonthForHiddenOrganiation(t *testing.T) {
-	ctx := context.TODO()
+func TestQueryResolver_Dashboard_New_Customers_Hidden_Organization(t *testing.T) {
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -117,7 +117,49 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonthForHiddenOrg
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
+
+	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
+		require.Equal(t, 2023, month.Year)
+		require.Equal(t, 7, month.Month)
+		require.Equal(t, 0, month.Count)
+	}
+}
+
+func TestQueryResolver_Dashboard_New_Customers_Prospect(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: false,
+	})
+
+	contract1ServiceStartedAt := time.Date(2023, 7, 15, 23, 59, 59, 999, time.UTC)
+	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ServiceStartedAt: &contract1ServiceStartedAt,
+	})
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
+		map[string]interface{}{
+			"start": "2023-07-01T00:00:00.000Z",
+			"end":   "2023-07-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_NewCustomers model.DashboardNewCustomers
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -128,13 +170,13 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonthForHiddenOrg
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedBeforeMonth(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 6, 30, 23, 59, 59, 999, time.UTC)
 	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
@@ -157,7 +199,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedBeforeMonth(t *test
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -168,13 +210,13 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedBeforeMonth(t *test
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedAfterMonth(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
@@ -197,7 +239,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAfterMonth(t *testi
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -208,13 +250,13 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAfterMonth(t *testi
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtBeginningOfMonth(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 1, 0, 0, 0, 0, time.UTC)
 	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
@@ -237,7 +279,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtBeginningOfMonth(
 	require.Nil(t, err)
 
 	require.Equal(t, 1, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -248,13 +290,13 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtBeginningOfMonth(
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtEndOfMonth(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 31, 20, 59, 59, 999, time.UTC)
 	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
@@ -277,7 +319,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtEndOfMonth(t *tes
 	require.Nil(t, err)
 
 	require.Equal(t, 1, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -288,17 +330,18 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedAtEndOfMonth(t *tes
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedImmediately(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
@@ -319,7 +362,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedImmedi
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -330,17 +373,18 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedImmedi
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedAtEndOfMonth(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2023, 7, 31, 23, 59, 59, 999, time.UTC)
 	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
@@ -361,7 +405,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedAtEndO
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -372,17 +416,18 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedAtEndO
 }
 
 func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedNextMonth(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	})
@@ -403,7 +448,7 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedNextMo
 	require.Nil(t, err)
 
 	require.Equal(t, 1, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -414,13 +459,13 @@ func TestQueryResolver_Dashboard_New_Customers_ContractSignedInMonth_EndedNextMo
 }
 
 func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_SameOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
@@ -452,7 +497,7 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_Sa
 	require.Nil(t, err)
 
 	require.Equal(t, 1, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -463,13 +508,13 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_Sa
 }
 
 func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInDifferentMonths_SameOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
@@ -501,7 +546,7 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInDifferen
 	require.Nil(t, err)
 
 	require.Equal(t, 1, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+100%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -512,14 +557,14 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInDifferen
 }
 
 func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_DifferentOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
+	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	contract1ServiceStartedAt := time.Date(2023, 7, 15, 0, 0, 0, 0, time.UTC)
 	contract1EndedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
@@ -551,7 +596,7 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_Di
 	require.Nil(t, err)
 
 	require.Equal(t, 2, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+2", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_NewCustomers.PerMonth {
@@ -562,13 +607,13 @@ func TestQueryResolver_Dashboard_New_Customers_MultipleContractsSignedInMonth_Di
 }
 
 func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	// Contract 1: Signed on 01.04.2023 with a termination date in 2024
 	contract1ServiceStartedAt := time.Date(2023, 3, 1, 0, 0, 0, 0, time.UTC)
@@ -632,7 +677,7 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "0%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 12, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	require.Equal(t, 0, dashboardReport.Dashboard_NewCustomers.PerMonth[0].Count)
@@ -650,13 +695,13 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
 }
 
 func TestQueryResolver_Dashboard_New_Customers_GeneralCount2(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{IsCustomer: true})
 
 	for i := 1; i <= 12; i++ {
 		for j := 1; j <= i*1; j++ {
@@ -685,7 +730,7 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount2(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, 12, dashboardReport.Dashboard_NewCustomers.ThisMonthCount)
-	require.Equal(t, float64(0), dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
+	require.Equal(t, "+9%", dashboardReport.Dashboard_NewCustomers.ThisMonthIncreasePercentage)
 	require.Equal(t, 12, len(dashboardReport.Dashboard_NewCustomers.PerMonth))
 
 	require.Equal(t, 1, dashboardReport.Dashboard_NewCustomers.PerMonth[0].Count)

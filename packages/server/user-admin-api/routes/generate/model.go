@@ -16,9 +16,29 @@ type SourceData struct {
 		ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 	} `json:"contacts"`
 	Organizations []struct {
-		Id     string `json:"id"`
-		Name   string `json:"name"`
-		Domain string `json:"domain"`
+		Id                    string `json:"id"`
+		Name                  string `json:"name"`
+		Domain                string `json:"domain"`
+		OnboardingStatusInput struct {
+			Status   string `json:"status"`
+			Comments string `json:"comments"`
+		} `json:"onboardingStatusInput"`
+		Contracts []struct {
+			Name             string    `json:"name"`
+			RenewalCycle     string    `json:"renewalCycle"`
+			RenewalPeriods   int64     `json:"renewalPeriods"`
+			ContractUrl      string    `json:"contractUrl"`
+			ServiceStartedAt time.Time `json:"serviceStartedAt"`
+			SignedAt         time.Time `json:"signedAt"`
+			ServiceLines     []struct {
+				Name      string    `json:"name"`
+				Billed    string    `json:"billed"`
+				Price     int       `json:"price"`
+				Quantity  int       `json:"quantity"`
+				StartedAt time.Time `json:"startedAt"`
+				EndedAt   time.Time `json:"endedAt,omitempty"`
+			} `json:"serviceLines"`
+		} `json:"contracts,omitempty"`
 		People []struct {
 			Email       string `json:"email"`
 			JobRole     string `json:"jobRole"`

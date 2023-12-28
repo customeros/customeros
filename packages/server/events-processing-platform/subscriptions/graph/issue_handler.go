@@ -6,27 +6,35 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
-	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
-	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
-type GraphIssueEventHandler struct {
-	log                  logger.Logger
-	organizationCommands *orgcmdhnd.CommandHandlers
-	Repositories         *repository.Repositories
+type IssueEventHandler struct {
+	log          logger.Logger
+	repositories *repository.Repositories
+	grpcClients  *grpc_client.Clients
 }
 
-func (h *GraphIssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnCreate")
+func NewIssueEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *IssueEventHandler {
+	return &IssueEventHandler{
+		log:          log,
+		repositories: repositories,
+		grpcClients:  grpcClients,
+	}
+}
+
+func (h *IssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueEventHandler.OnCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.IssueCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -37,7 +45,7 @@ func (h *GraphIssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Ev
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.IssueRepository.Create(ctx, eventData.Tenant, issueId, eventData)
+	err := h.repositories.IssueRepository.Create(ctx, eventData.Tenant, issueId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving issue %s: %s", issueId, err.Error())
@@ -45,7 +53,7 @@ func (h *GraphIssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Ev
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.Repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, constants.NodeLabel_Issue, eventData.ExternalSystem)
+		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, constants.NodeLabel_Issue, eventData.ExternalSystem)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link issue %s with external system %s: %s", issueId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -53,21 +61,27 @@ func (h *GraphIssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Ev
 		}
 	}
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	if eventData.ReportedByOrganizationId != "" {
-		err = h.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd.NewRefreshLastTouchpointCommand(eventData.Tenant, eventData.ReportedByOrganizationId, "", constants.AppSourceEventProcessingPlatform))
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = h.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         eventData.Tenant,
+			OrganizationId: eventData.ReportedByOrganizationId,
+			AppSource:      constants.AppSourceEventProcessingPlatform,
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.log.Errorf("RefreshLastTouchpointCommand failed: %v", err.Error())
+			h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", eventData.ReportedByOrganizationId, err.Error())
 		}
 	}
 
 	return nil
 }
 
-func (h *GraphIssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnUpdate")
+func (h *IssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueEventHandler.OnUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.IssueUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -78,14 +92,14 @@ func (h *GraphIssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Ev
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.IssueRepository.Update(ctx, eventData.Tenant, issueId, eventData)
+	err := h.repositories.IssueRepository.Update(ctx, eventData.Tenant, issueId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving issue %s: %s", issueId, err.Error())
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.Repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, constants.NodeLabel_Issue, eventData.ExternalSystem)
+		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, constants.NodeLabel_Issue, eventData.ExternalSystem)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link issue %s with external system %s: %s", issueId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -96,10 +110,10 @@ func (h *GraphIssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Ev
 	return err
 }
 
-func (h *GraphIssueEventHandler) OnAddUserAssignee(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnAddUserAssignee")
+func (h *IssueEventHandler) OnAddUserAssignee(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueEventHandler.OnAddUserAssignee")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.IssueAddUserAssigneeEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -110,7 +124,7 @@ func (h *GraphIssueEventHandler) OnAddUserAssignee(ctx context.Context, evt even
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.IssueRepository.AddUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
+	err := h.repositories.IssueRepository.AddUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding assignee to issue %s: %s", issueId, err.Error())
@@ -119,10 +133,10 @@ func (h *GraphIssueEventHandler) OnAddUserAssignee(ctx context.Context, evt even
 	return err
 }
 
-func (h *GraphIssueEventHandler) OnAddUserFollower(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnAddUserFollower")
+func (h *IssueEventHandler) OnAddUserFollower(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueEventHandler.OnAddUserFollower")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.IssueAddUserFollowerEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -133,7 +147,7 @@ func (h *GraphIssueEventHandler) OnAddUserFollower(ctx context.Context, evt even
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.IssueRepository.AddUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
+	err := h.repositories.IssueRepository.AddUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding follower to issue %s: %s", issueId, err.Error())
@@ -142,10 +156,10 @@ func (h *GraphIssueEventHandler) OnAddUserFollower(ctx context.Context, evt even
 	return err
 }
 
-func (h *GraphIssueEventHandler) OnRemoveUserAssignee(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnRemoveUserAssignee")
+func (h *IssueEventHandler) OnRemoveUserAssignee(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueEventHandler.OnRemoveUserAssignee")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.IssueRemoveUserAssigneeEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -156,7 +170,7 @@ func (h *GraphIssueEventHandler) OnRemoveUserAssignee(ctx context.Context, evt e
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.IssueRepository.RemoveUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
+	err := h.repositories.IssueRepository.RemoveUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while removing assignee from issue %s: %s", issueId, err.Error())
@@ -166,10 +180,10 @@ func (h *GraphIssueEventHandler) OnRemoveUserAssignee(ctx context.Context, evt e
 
 }
 
-func (h *GraphIssueEventHandler) OnRemoveUserFollower(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnRemoveUserFollower")
+func (h *IssueEventHandler) OnRemoveUserFollower(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueEventHandler.OnRemoveUserFollower")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.IssueRemoveUserFollowerEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -180,7 +194,7 @@ func (h *GraphIssueEventHandler) OnRemoveUserFollower(ctx context.Context, evt e
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.IssueRepository.RemoveUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
+	err := h.repositories.IssueRepository.RemoveUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while removing follower from issue %s: %s", issueId, err.Error())

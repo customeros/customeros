@@ -25,7 +25,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userEventHandler := &GraphUserEventHandler{
+	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	myUserId, _ := uuid.NewUUID()
@@ -87,7 +87,7 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 		"IS_LINKED_WITH": 0,
 	})
 
-	userEventHandler := &GraphUserEventHandler{
+	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	myUserId, _ := uuid.NewUUID()
@@ -148,10 +148,10 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userEventHandler := &GraphUserEventHandler{
+	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	jobRoleEventHandler := &GraphJobRoleEventHandler{
+	jobRoleEventHandler := &JobRoleEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
 	myUserId, _ := uuid.NewUUID()
@@ -239,10 +239,10 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userEventHandler := &GraphUserEventHandler{
+	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	jobRoleEventHandler := &GraphJobRoleEventHandler{
+	jobRoleEventHandler := &JobRoleEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
 	myUserId, _ := uuid.NewUUID()
@@ -347,7 +347,7 @@ func TestGraphUserEventHandler_OnUserUpdate(t *testing.T) {
 	propsAfterUserCreate := utils.GetPropsFromNode(*dbNodeAfterUserCreate)
 	require.Equal(t, userId, utils.GetStringPropOrEmpty(propsAfterUserCreate, "id"))
 
-	userEventHandler := &GraphUserEventHandler{
+	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
@@ -439,7 +439,7 @@ func TestGraphUserEventHandler_OnPhoneNumberLinkedToUser(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterPhoneNumberCreate)
 
-	userEventHandler := &GraphUserEventHandler{
+	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
@@ -514,7 +514,7 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 	creationTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
 	require.Equal(t, &creationTime, utils.GetTimePropOrNil(propsAfterEmailCreate, "updatedAt"))
 
-	userEventHandler := &GraphUserEventHandler{
+	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
@@ -579,7 +579,7 @@ func TestGraphUserEventHandler_OnJobRoleLinkedToUser(t *testing.T) {
 	propsAfterJobRoleCreate := utils.GetPropsFromNode(*dbNodeAfterjobRoleCreate)
 	require.NotNil(t, utils.GetStringPropOrEmpty(propsAfterJobRoleCreate, "id"))
 
-	userEventHandler := &GraphUserEventHandler{
+	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
@@ -629,7 +629,7 @@ func TestGraphUserEventHandler_OnAddPlayer(t *testing.T) {
 	propsAfterUserCreate := utils.GetPropsFromNode(*dbNodeAfterUserCreate)
 	require.Equal(t, userId, utils.GetStringPropOrEmpty(propsAfterUserCreate, "id"))
 
-	userEventHandler := &GraphUserEventHandler{
+	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
@@ -702,7 +702,7 @@ func TestGraphUserEventHandler_OnAddRole(t *testing.T) {
 	require.Equal(t, userId, utils.GetStringPropOrEmpty(propsAfterUserCreate, "id"))
 	require.Equal(t, 2, len(utils.GetListStringPropOrEmpty(propsAfterUserCreate, "roles")))
 
-	userEventHandler := &GraphUserEventHandler{
+	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
@@ -753,7 +753,7 @@ func TestGraphUserEventHandler_OnRemoveRole(t *testing.T) {
 	require.Equal(t, userId, utils.GetStringPropOrEmpty(propsAfterUserCreate, "id"))
 	require.Equal(t, 2, len(utils.GetListStringPropOrEmpty(propsAfterUserCreate, "roles")))
 
-	userEventHandler := &GraphUserEventHandler{
+	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)

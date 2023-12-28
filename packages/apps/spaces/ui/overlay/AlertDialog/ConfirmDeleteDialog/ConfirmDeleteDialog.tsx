@@ -25,6 +25,7 @@ interface ConfirmDeleteDialogProps {
   body?: React.ReactNode;
   confirmButtonLabel: string;
   cancelButtonLabel?: string;
+  loadingButtonLabel?: string;
   onConfirm: MouseEventHandler<HTMLButtonElement>;
 }
 
@@ -38,6 +39,7 @@ export const ConfirmDeleteDialog = ({
   body,
   confirmButtonLabel,
   cancelButtonLabel = 'Cancel',
+  loadingButtonLabel = 'Deleting',
   icon,
   colorScheme = 'red',
 }: ConfirmDeleteDialogProps) => {
@@ -89,7 +91,7 @@ export const ConfirmDeleteDialog = ({
               colorScheme={colorScheme}
               onClick={onConfirm}
               isLoading={isLoading}
-              loadingText='Deleting'
+              loadingText={loadingButtonLabel}
             >
               {confirmButtonLabel}
             </Button>

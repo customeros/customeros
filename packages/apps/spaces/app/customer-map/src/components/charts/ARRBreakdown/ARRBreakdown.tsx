@@ -1,13 +1,14 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-import { useArrBreakdownQuery } from '@customerMap/graphql/arrBreakdown.generated';
 
 import { Skeleton } from '@ui/presentation/Skeleton';
+import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { useArrBreakdownQuery } from '@customerMap/graphql/arrBreakdown.generated';
 
 import { HelpContent } from './HelpContent';
 import { PercentageTrend } from '../../PercentageTrend';
@@ -22,8 +23,10 @@ const RevenueRetentionRateChart = dynamic(
 
 export const ARRBreakdown = () => {
   const client = getGraphQLClient();
+  const { data: globalCacheData } = useGlobalCacheQuery(client);
   const { data, isLoading } = useArrBreakdownQuery(client);
 
+  const hasContracts = globalCacheData?.global_Cache?.contractsExist;
   const chartData = (data?.dashboard_ARRBreakdown?.perMonth ?? []).map((d) => ({
     month: d?.month,
     upsells: d?.upsells,
@@ -35,13 +38,14 @@ export const ARRBreakdown = () => {
   })) as ARRBreakdownDatum[];
 
   const stat = formatCurrency(data?.dashboard_ARRBreakdown?.arrBreakdown ?? 0);
-  const percentage = data?.dashboard_ARRBreakdown?.increasePercentage ?? 0;
+  const percentage = data?.dashboard_ARRBreakdown?.increasePercentage ?? '0';
 
   return (
     <ChartCard
       flex='3'
       stat={stat}
       title='ARR breakdown'
+      hasData={hasContracts}
       renderHelpContent={HelpContent}
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
@@ -54,7 +58,11 @@ export const ARRBreakdown = () => {
             startColor='gray.300'
             isLoaded={!isLoading}
           >
-            <RevenueRetentionRateChart width={width} data={chartData} />
+            <RevenueRetentionRateChart
+              width={width}
+              data={chartData}
+              hasContracts={hasContracts}
+            />
           </Skeleton>
         )}
       </ParentSize>

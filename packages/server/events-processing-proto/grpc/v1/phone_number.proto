@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "common/source.proto";
+
+option go_package = "api/grpc/v1/phone_number;phone_number_grpc_service";
+
+message UpsertPhoneNumberGrpcRequest {
+  string tenant = 1;
+  string phoneNumber = 2;
+  string appSource = 3 [deprecated = true];
+  string source = 4 [deprecated = true];
+  string sourceOfTruth = 5 [deprecated = true];
+  google.protobuf.Timestamp  createdAt = 6;
+  google.protobuf.Timestamp  updatedAt = 7;
+  string id = 8;
+  string loggedInUserId = 9;
+  SourceFields sourceFields = 10;
+}
+
+message FailPhoneNumberValidationGrpcRequest {
+  string tenant = 1;
+  string phoneNumberId = 2;
+  string phoneNumber = 3;
+  string countryCodeA2 = 4;
+  string errorMessage = 5;
+  string appSource = 6;
+  string loggedInUserId = 7;
+}
+
+message PassPhoneNumberValidationGrpcRequest {
+  string tenant = 1;
+  string phoneNumberId = 2;
+  string phoneNumber = 3;
+  string e164 = 4;
+  string countryCodeA2 = 5;
+  string appSource = 6;
+  string loggedInUserId = 7;
+}
+
+message PhoneNumberIdGrpcResponse {
+  string id = 1;
+}
+
+service phoneNumberGrpcService {
+  rpc UpsertPhoneNumber(UpsertPhoneNumberGrpcRequest) returns (PhoneNumberIdGrpcResponse);
+  rpc FailPhoneNumberValidation(FailPhoneNumberValidationGrpcRequest) returns (PhoneNumberIdGrpcResponse);
+  rpc PassPhoneNumberValidation(PassPhoneNumberValidationGrpcRequest) returns (PhoneNumberIdGrpcResponse);
+}

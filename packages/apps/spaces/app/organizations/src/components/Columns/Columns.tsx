@@ -3,10 +3,20 @@ import { Organization } from '@graphql/types';
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import { ForecastFilter } from '@organizations/components/Columns/Filters/Forecast';
-import { TimeToRenewalFilter } from '@organizations/components/Columns/Filters/TimeToRenewal';
 import { TimeToRenewalCell } from '@organizations/components/Columns/Cells/renewal/TimeToRenewalCell';
+import {
+  ForecastFilter,
+  filterForecastFn,
+} from '@organizations/components/Columns/Filters/Forecast';
 import { RenewalLikelihoodCell } from '@organizations/components/Columns/Cells/renewal/RenewalLikelihoodCell';
+import {
+  TimeToRenewalFilter,
+  filterTimeToRenewalFn,
+} from '@organizations/components/Columns/Filters/TimeToRenewal';
+import {
+  RenewalLikelihoodFilter,
+  filterRenewalLikelihoodFn,
+} from '@organizations/components/Columns/Filters/RenewalLikelihood';
 
 import { AvatarHeader } from './Headers/Avatar';
 import { OwnerCell } from './Cells/owner/OwnerCell';
@@ -14,9 +24,11 @@ import { AvatarCell } from './Cells/avatar/AvatarCell';
 import { WebsiteCell } from './Cells/website/WebsiteCell';
 import { OwnerFilter, filterOwnerFn } from './Filters/Owner';
 import { WebsiteFilter, filterWebsiteFn } from './Filters/Website';
+import { OnboardingCell } from './Cells/onboarding/OnboardingCell';
 import { OrganizationCell } from './Cells/organization/OrganizationCell';
 import { RenewalForecastCell } from './Cells/renewal/RenewalForecastCell';
 import { LastTouchpointCell } from './Cells/touchpoint/LastTouchpointCell';
+import { OnboardingFilter, filterOnboardingFn } from './Filters/Onboarding';
 import {
   OrganizationFilter,
   filterOrganizationFn,
@@ -43,7 +55,11 @@ export const columns = [
     enableColumnFilter: false,
     cell: (props) => {
       return (
-        <AvatarCell id={props.getValue()?.id} name={props.getValue()?.name} />
+        <AvatarCell
+          id={props.getValue()?.id}
+          name={props.getValue()?.name}
+          src={props.getValue()?.logoUrl}
+        />
       );
     },
     header: AvatarHeader,
@@ -163,10 +179,38 @@ export const columns = [
     ),
   }),
   columnHelper.accessor('accountDetails', {
+    id: 'ONBOARDING_STATUS',
+    minSize: 200,
+    filterFn: filterOnboardingFn,
+    cell: (props) => {
+      const status = props.getValue()?.onboarding?.status;
+      const updatedAt = props.getValue()?.onboarding?.updatedAt;
+
+      return <OnboardingCell status={status} updatedAt={updatedAt} />;
+    },
+    header: (props) => (
+      <THead
+        id='onboardingStatus'
+        title='Onboarding'
+        renderFilter={() => <OnboardingFilter column={props.column} />}
+        {...getTHeadProps<Organization>(props)}
+      />
+    ),
+    skeleton: () => (
+      <Flex flexDir='column' gap='1'>
+        <Skeleton
+          width='33%'
+          height='18px'
+          startColor='gray.300'
+          endColor='gray.300'
+        />
+      </Flex>
+    ),
+  }),
+  columnHelper.accessor('accountDetails', {
     id: 'RENEWAL_LIKELIHOOD',
     minSize: 200,
-    enableColumnFilter: false,
-    // filterFn: filterRenewalLikelihoodFn,
+    filterFn: filterRenewalLikelihoodFn,
     cell: (props) => {
       const value = props.getValue()?.renewalSummary?.renewalLikelihood;
 
@@ -176,7 +220,7 @@ export const columns = [
       <THead
         id='renewalLikelihood'
         title='Health'
-        // renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
+        renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
         {...getTHeadProps<Organization>(props)}
       />
     ),
@@ -194,8 +238,7 @@ export const columns = [
   columnHelper.accessor('accountDetails', {
     id: 'RENEWAL_DATE',
     minSize: 200,
-    enableColumnFilter: false,
-    // filterFn: filterTimeToRenewalFn,
+    filterFn: filterTimeToRenewalFn,
     cell: (props) => {
       const nextRenewalDate = props.getValue()?.renewalSummary?.nextRenewalDate;
 
@@ -226,8 +269,7 @@ export const columns = [
   columnHelper.accessor('accountDetails', {
     id: 'FORECAST_ARR',
     minSize: 200,
-    enableColumnFilter: false,
-    // filterFn: filterForecastFn,
+    filterFn: filterForecastFn,
     cell: (props) => {
       const value = props.getValue()?.renewalSummary;
       const amount = value?.arrForecast;
@@ -305,7 +347,6 @@ export const columns = [
     id: 'LAST_TOUCHPOINT',
     minSize: 250,
     filterFn: filterLastTouchpointFn,
-    // enableColumnFilter: false,
     cell: (props) => (
       <LastTouchpointCell
         lastTouchPointAt={props.row.original.lastTouchPointAt}

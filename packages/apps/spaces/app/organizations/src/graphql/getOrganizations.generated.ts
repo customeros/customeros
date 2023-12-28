@@ -44,6 +44,7 @@ export type GetOrganizationsQuery = {
       website?: string | null;
       domains: Array<string>;
       isCustomer?: boolean | null;
+      logoUrl?: string | null;
       lastTouchPointTimelineEventId?: string | null;
       lastTouchPointAt?: any | null;
       lastTouchPointType?: Types.LastTouchpointType | null;
@@ -66,6 +67,12 @@ export type GetOrganizationsQuery = {
           maxArrForecast?: number | null;
           renewalLikelihood?: Types.OpportunityRenewalLikelihood | null;
           nextRenewalDate?: any | null;
+        } | null;
+        onboarding?: {
+          __typename?: 'OnboardingDetails';
+          status: Types.OnboardingStatus;
+          comments?: string | null;
+          updatedAt?: any | null;
         } | null;
       } | null;
       locations: Array<{
@@ -212,12 +219,18 @@ export const GetOrganizationsDocument = `
       website
       domains
       isCustomer
+      logoUrl
       accountDetails {
         renewalSummary {
           arrForecast
           maxArrForecast
           renewalLikelihood
           nextRenewalDate
+        }
+        onboarding {
+          status
+          comments
+          updatedAt
         }
       }
       locations {

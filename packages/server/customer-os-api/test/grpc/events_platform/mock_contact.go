@@ -2,7 +2,7 @@ package events_platform
 
 import (
 	"context"
-	contactproto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	contactproto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 )
 
 type MockContactServiceCallbacks struct {

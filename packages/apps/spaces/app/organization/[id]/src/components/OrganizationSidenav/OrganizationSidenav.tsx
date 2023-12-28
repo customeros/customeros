@@ -2,6 +2,7 @@
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 
 import { useLocalStorage } from 'usehooks-ts';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -12,6 +13,7 @@ import { Text } from '@ui/typography/Text';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
 import { Ticket02 } from '@ui/media/icons/Ticket02';
+import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
@@ -20,6 +22,7 @@ export const OrganizationSidenav = () => {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
+  const isOnboardingFeatureOn = useFeatureIsOn('onboarding-status');
 
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
@@ -51,13 +54,12 @@ export const OrganizationSidenav = () => {
       py='4'
       h='full'
       w='200px'
-      background='gray.25'
       display='flex'
       flexDir='column'
       gridArea='sidebar'
+      background='white'
       position='relative'
-      border='1px solid'
-      borderRadius='2xl'
+      borderRight='1px solid'
       borderColor='gray.200'
     >
       <Flex gap='2' align='center' mb='4'>
@@ -96,7 +98,7 @@ export const OrganizationSidenav = () => {
         </Flex>
       </Flex>
 
-      <VStack spacing='2' w='full'>
+      <VStack spacing='1' w='full'>
         <SidenavItem
           label='About'
           isActive={checkIsActive('about') || !searchParams?.get('tab')}
@@ -104,7 +106,7 @@ export const OrganizationSidenav = () => {
           icon={
             <Icons.InfoSquare
               color={checkIsActive('about') ? 'gray.700' : 'gray.500'}
-              boxSize='6'
+              boxSize='5'
             />
           }
         />
@@ -115,7 +117,7 @@ export const OrganizationSidenav = () => {
           icon={
             <Icons.Users2
               color={checkIsActive('people') ? 'gray.700' : 'gray.500'}
-              boxSize='6'
+              boxSize='5'
             />
           }
         />
@@ -126,7 +128,7 @@ export const OrganizationSidenav = () => {
           icon={
             <Icons.ActivityHeart
               color={checkIsActive('account') ? 'gray.700' : 'gray.500'}
-              boxSize='6'
+              boxSize='5'
             />
           }
         />
@@ -137,10 +139,23 @@ export const OrganizationSidenav = () => {
           icon={
             <Ticket02
               color={checkIsActive('issues') ? 'gray.700' : 'gray.500'}
-              boxSize='6'
+              boxSize='5'
             />
           }
         />
+        {isOnboardingFeatureOn && (
+          <SidenavItem
+            label='Success'
+            isActive={checkIsActive('success')}
+            onClick={handleItemClick('success')}
+            icon={
+              <Trophy01
+                color={checkIsActive('success') ? 'gray.700' : 'gray.500'}
+                boxSize='5'
+              />
+            }
+          />
+        )}
       </VStack>
     </GridItem>
   );

@@ -32,7 +32,7 @@ export type ArrBreakdownQuery = {
   dashboard_ARRBreakdown?: {
     __typename?: 'DashboardARRBreakdown';
     arrBreakdown: number;
-    increasePercentage: number;
+    increasePercentage: string;
     perMonth: Array<{
       __typename?: 'DashboardARRBreakdownPerMonth';
       month: number;

@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -41,15 +42,15 @@ func (r *phoneNumberRepository) MergePhoneNumberToInTx(ctx context.Context, tx n
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.MergePhoneNumberToInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	query := ""
+	cypher := ""
 
 	switch entityType {
 	case entity.CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	case entity.USER:
-		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	case entity.ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	}
 
 	var operation, onCreate = "MERGE", ""
@@ -58,7 +59,7 @@ func (r *phoneNumberRepository) MergePhoneNumberToInTx(ctx context.Context, tx n
 		onCreate = ""
 	}
 
-	query = query +
+	cypher = cypher +
 		" %s (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {rawPhoneNumber: $rawPhoneNumber}) " +
 		" %s SET p.id=randomUUID(), " +
 		"				p.source=$source, " +
@@ -74,19 +75,21 @@ func (r *phoneNumberRepository) MergePhoneNumberToInTx(ctx context.Context, tx n
 		"		p.sourceOfTruth=$sourceOfTruth," +
 		"		p.updatedAt=$now " +
 		" RETURN p, rel"
+	params := map[string]interface{}{
+		"tenant":         tenant,
+		"entityId":       entityId,
+		"rawPhoneNumber": phoneNumberEntity.RawPhoneNumber,
+		"label":          phoneNumberEntity.Label,
+		"primary":        phoneNumberEntity.Primary,
+		"source":         phoneNumberEntity.Source,
+		"sourceOfTruth":  phoneNumberEntity.SourceOfTruth,
+		"appSource":      utils.StringFirstNonEmpty(phoneNumberEntity.AppSource, constants.AppSourceCustomerOsApi),
+		"now":            utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, operation, onCreate, "PhoneNumber_"+tenant),
-		map[string]interface{}{
-			"tenant":         tenant,
-			"entityId":       entityId,
-			"rawPhoneNumber": phoneNumberEntity.RawPhoneNumber,
-			"label":          phoneNumberEntity.Label,
-			"primary":        phoneNumberEntity.Primary,
-			"source":         phoneNumberEntity.Source,
-			"sourceOfTruth":  phoneNumberEntity.SourceOfTruth,
-			"appSource":      phoneNumberEntity.AppSource,
-			"now":            utils.Now(),
-		})
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(cypher, operation, onCreate, "PhoneNumber_"+tenant), params)
 	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
 }
 
@@ -95,15 +98,15 @@ func (r *phoneNumberRepository) UpdatePhoneNumberForInTx(ctx context.Context, tx
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := ""
+	cypher := ""
 
 	switch entityType {
 	case entity.CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	case entity.USER:
-		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	case entity.ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	}
 
 	updateRawPhoneNumberQuery := ""
@@ -111,25 +114,27 @@ func (r *phoneNumberRepository) UpdatePhoneNumberForInTx(ctx context.Context, tx
 		updateRawPhoneNumberQuery = ", p.rawPhoneNumber=$rawPhoneNumber"
 	}
 
-	query = query + `, (entity)-[rel:HAS]->(p:PhoneNumber {id: $phoneNumberId})
+	cypher = cypher + `, (entity)-[rel:HAS]->(p:PhoneNumber {id: $phoneNumberId})
             SET rel.label=$label,
 				rel.primary=$primary,
 				p.sourceOfTruth=$sourceOfTruth,
 				p.updatedAt=$now 
 				%s
 			RETURN p, rel`
+	params := map[string]interface{}{
+		"tenant":         tenant,
+		"entityId":       entityId,
+		"phoneNumberId":  phoneNumberEntity.Id,
+		"label":          phoneNumberEntity.Label,
+		"primary":        phoneNumberEntity.Primary,
+		"sourceOfTruth":  phoneNumberEntity.SourceOfTruth,
+		"now":            utils.Now(),
+		"rawPhoneNumber": phoneNumberEntity.RawPhoneNumber,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, updateRawPhoneNumberQuery),
-		map[string]interface{}{
-			"tenant":         tenant,
-			"entityId":       entityId,
-			"phoneNumberId":  phoneNumberEntity.Id,
-			"label":          phoneNumberEntity.Label,
-			"primary":        phoneNumberEntity.Primary,
-			"sourceOfTruth":  phoneNumberEntity.SourceOfTruth,
-			"now":            utils.Now(),
-			"rawPhoneNumber": phoneNumberEntity.RawPhoneNumber,
-		})
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(cypher, updateRawPhoneNumberQuery), params)
 	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
 }
 
@@ -141,25 +146,27 @@ func (r *phoneNumberRepository) GetAllForIds(ctx context.Context, tenant string,
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := ""
+	cypher := ""
 	switch entityType {
 	case entity.CONTACT:
-		query = `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(entity:Contact)`
+		cypher = `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(entity:Contact)`
 	case entity.USER:
-		query = `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(entity:User)`
+		cypher = `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(entity:User)`
 	case entity.ORGANIZATION:
-		query = `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(entity:Organization)`
+		cypher = `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(entity:Organization)`
 	}
-	query = query + `, (entity)-[rel:HAS]->(p:PhoneNumber)-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t)
+	cypher = cypher + `, (entity)-[rel:HAS]->(p:PhoneNumber)-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t)
 					WHERE entity.id IN $entityIds
 					RETURN p, rel, entity.id ORDER BY p.createdAt`
+	params := map[string]any{
+		"tenant":    tenant,
+		"entityIds": entityIds,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":    tenant,
-				"entityIds": entityIds,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
@@ -176,27 +183,30 @@ func (r *phoneNumberRepository) SetOtherPhoneNumbersNonPrimaryInTx(ctx context.C
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := ""
+	cypher := ""
 
 	switch entityType {
 	case entity.CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	case entity.USER:
-		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	case entity.ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	}
-
-	_, err := tx.Run(ctx, query+`, (entity)-[rel:HAS]->(p:PhoneNumber)
+	cypher += `, (entity)-[rel:HAS]->(p:PhoneNumber)
 			WHERE p.id <> $phoneNumberId
             SET rel.primary=false, 
-				p.updatedAt=$now`,
-		map[string]interface{}{
-			"tenant":        tenant,
-			"entityId":      entityId,
-			"phoneNumberId": phoneNumberId,
-			"now":           utils.Now(),
-		})
+				p.updatedAt=$now`
+	params := map[string]interface{}{
+		"tenant":        tenant,
+		"entityId":      entityId,
+		"phoneNumberId": phoneNumberId,
+		"now":           utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := tx.Run(ctx, cypher, params)
 	return err
 }
 
@@ -206,29 +216,30 @@ func (r *phoneNumberRepository) GetByIdAndRelatedEntity(ctx context.Context, ent
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("entityId", entityId))
 
+	cypher := ""
+	switch entityType {
+	case entity.CONTACT:
+		cypher = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+	case entity.USER:
+		cypher = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+	case entity.ORGANIZATION:
+		cypher = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+	}
+	cypher += ` MATCH (entity)-[rel:HAS]->(p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t)
+			RETURN p`
+	params := map[string]any{
+		"tenant":        tenant,
+		"phoneNumberId": phoneNumberId,
+		"entityId":      entityId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := ""
-	switch entityType {
-	case entity.CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
-	case entity.USER:
-		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
-	case entity.ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
-	}
-	query += ` MATCH (entity)-[rel:HAS]->(p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t)
-			RETURN p`
-	span.LogFields(log.String("query", query))
-
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":        tenant,
-				"phoneNumberId": phoneNumberId,
-				"entityId":      entityId,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
@@ -248,25 +259,28 @@ func (r *phoneNumberRepository) RemoveRelationship(ctx context.Context, entityTy
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := ""
+	cypher := ""
 	switch entityType {
 	case entity.CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	case entity.USER:
-		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	case entity.ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	}
+	cypher += `MATCH (entity)-[rel:HAS]->(p:PhoneNumber)
+			WHERE p.e164 = $phoneNumber OR p.rawPhoneNumber = $phoneNumber
+            DELETE rel`
+	params := map[string]any{
+		"entityId":    entityId,
+		"phoneNumber": phoneNumber,
+		"tenant":      tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query+`MATCH (entity)-[rel:HAS]->(p:PhoneNumber)
-			WHERE p.e164 = $phoneNumber OR p.rawPhoneNumber = $phoneNumber
-            DELETE rel`,
-			map[string]any{
-				"entityId":    entityId,
-				"phoneNumber": phoneNumber,
-				"tenant":      tenant,
-			})
+		_, err := tx.Run(ctx, cypher, params)
 		return nil, err
 	}); err != nil {
 		return err
@@ -283,24 +297,27 @@ func (r *phoneNumberRepository) RemoveRelationshipById(ctx context.Context, enti
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := ""
+	cypher := ""
 	switch entityType {
 	case entity.CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	case entity.USER:
-		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	case entity.ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		cypher = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	}
+	cypher += `MATCH (entity)-[rel:HAS]->(p:PhoneNumber {id:$phoneNumberId})
+            DELETE rel`
+	params := map[string]any{
+		"entityId":      entityId,
+		"phoneNumberId": phoneNumberId,
+		"tenant":        tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query+`MATCH (entity)-[rel:HAS]->(p:PhoneNumber {id:$phoneNumberId})
-            DELETE rel`,
-			map[string]any{
-				"entityId":      entityId,
-				"phoneNumberId": phoneNumberId,
-				"tenant":        tenant,
-			})
+		_, err := tx.Run(ctx, cypher, params)
 		return nil, err
 	}); err != nil {
 		return err
@@ -314,16 +331,18 @@ func (r *phoneNumberRepository) Exists(ctx context.Context, tenant string, e164 
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := fmt.Sprintf("MATCH (p:PhoneNumber_%s) WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 RETURN p LIMIT 1", tenant)
+	params := map[string]any{
+		"e164": e164,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (p:PhoneNumber_%s) WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 RETURN p LIMIT 1"
-
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]any{
-				"e164": e164,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return false, err
 		} else {
 			return queryResult.Next(ctx), nil
@@ -341,17 +360,18 @@ func (r *phoneNumberRepository) GetByPhoneNumber(ctx context.Context, tenant, e1
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := fmt.Sprintf("MATCH (p:PhoneNumber_%s) WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 RETURN p LIMIT 1", tenant)
+	params := map[string]any{
+		"e164": e164,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := fmt.Sprintf("MATCH (p:PhoneNumber_%s) WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 RETURN p LIMIT 1", tenant)
-	span.LogFields(log.String("query", query))
-
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"e164": e164,
-			})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
@@ -366,17 +386,19 @@ func (r *phoneNumberRepository) GetById(ctx context.Context, phoneNumberId strin
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId))
 
-	query := "MATCH (:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$phoneNumberId}) RETURN p"
-	span.LogFields(log.String("query", query))
+	cypher := "MATCH (:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$phoneNumberId}) RETURN p"
+	params := map[string]any{
+		"phoneNumberId": phoneNumberId,
+		"tenant":        common.GetTenantFromContext(ctx),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
+
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"phoneNumberId": phoneNumberId,
-				"tenant":        common.GetTenantFromContext(ctx),
-			})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
@@ -391,21 +413,22 @@ func (r *phoneNumberRepository) LinkWithCountryInTx(ctx context.Context, tx neo4
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("countryCodeA2", countryCodeA2))
 
-	query := `MATCH (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+	cypher := `MATCH (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 				OPTIONAL MATCH (:Country)<-[rel:LINKED_TO]-(p)
 				DELETE rel
 				WITH p
 				MATCH (c:Country {codeA2:$countryCodeA2})
 				MERGE (c)<-[:LINKED_TO]-(p)
 				RETURN c`
-	span.LogFields(log.String("query", query))
+	params := map[string]any{
+		"phoneNumberId": phoneNumberId,
+		"countryCodeA2": countryCodeA2,
+		"tenant":        common.GetTenantFromContext(ctx),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
-	result, err := tx.Run(ctx, query,
-		map[string]any{
-			"phoneNumberId": phoneNumberId,
-			"countryCodeA2": countryCodeA2,
-			"tenant":        common.GetTenantFromContext(ctx),
-		})
+	result, err := tx.Run(ctx, cypher, params)
 	if err != nil {
 		return err
 	}

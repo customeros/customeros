@@ -1,6 +1,8 @@
 import { useField } from 'react-inverted-form';
 import React, {
   FC,
+  useRef,
+  useEffect,
   forwardRef,
   PropsWithChildren,
   useImperativeHandle,
@@ -37,9 +39,18 @@ export const RichTextEditor: FC<
     },
     ref,
   ) => {
+    const didMountRef = useRef(false);
     const { getInputProps } = useField(name, formId);
     const { onChange, value } = getInputProps();
     useImperativeHandle(ref, () => getContext(), [getContext]);
+
+    // TODO: remove this when react-inverted-form will prevent handler calls before form is initialized completely
+    useEffect(() => {
+      if (didMountRef.current) {
+        return;
+      }
+      didMountRef.current = true;
+    }, []);
 
     return (
       <ThemeProvider>
@@ -50,8 +61,8 @@ export const RichTextEditor: FC<
             const nextState = parameter.state;
             const htmlValue = prosemirrorNodeToHtml(nextState?.doc);
             // first update is happening before form store is initialized this change prevents error
-            if (value !== undefined) {
-              onChange(htmlValue);
+            if (value !== undefined && didMountRef.current) {
+              onChange?.(htmlValue);
             }
             setState(nextState);
           }}

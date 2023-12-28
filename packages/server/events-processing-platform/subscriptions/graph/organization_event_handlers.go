@@ -4,39 +4,43 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
-	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
-	"time"
 )
 
-type ActionForecastMetadata struct {
-	Likelihood string `json:"likelihood"`
-	Reason     string `json:"reason"`
+type OrganizationEventHandler struct {
+	repositories *repository.Repositories
+	log          logger.Logger
+	grpcClients  *grpc_client.Clients
 }
 
-type OrganizationEventHandler struct {
-	repositories         *repository.Repositories
-	organizationCommands *cmdhnd.CommandHandlers
-	log                  logger.Logger
+func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *OrganizationEventHandler {
+	return &OrganizationEventHandler{
+		repositories: repositories,
+		log:          log,
+		grpcClients:  grpcClients,
+	}
 }
 
 type eventMetadata struct {
@@ -46,7 +50,7 @@ type eventMetadata struct {
 func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -109,13 +113,18 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	}
 
 	// Request last touch point update
-	err = h.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd.NewRefreshLastTouchpointCommand(eventData.Tenant, organizationId, "", constants.AppSourceEventProcessingPlatform))
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = h.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+		Tenant:         eventData.Tenant,
+		OrganizationId: organizationId,
+		AppSource:      constants.AppSourceEventProcessingPlatform,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("RefreshLastTouchpointCommand failed: %v", err.Error())
+		h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", organizationId, err.Error())
 	}
 
-	return err
+	return nil
 }
 
 func (h *OrganizationEventHandler) setCustomerOsId(ctx context.Context, tenant, organizationId string) error {
@@ -155,7 +164,7 @@ func (h *OrganizationEventHandler) setCustomerOsId(ctx context.Context, tenant, 
 func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -165,17 +174,12 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	var err error
-	if eventData.IgnoreEmptyFields {
-		err = h.repositories.OrganizationRepository.UpdateOrganizationIgnoreEmptyInputParams(ctx, organizationId, eventData)
-	} else {
-		err = h.repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
-		// set customer os id
-		customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
-		if customerOsErr != nil {
-			tracing.TraceErr(span, customerOsErr)
-			h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
-		}
+	err := h.repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
+	// set customer os id
+	customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
+	if customerOsErr != nil {
+		tracing.TraceErr(span, customerOsErr)
+		h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
 	}
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -210,7 +214,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnPhoneNumberLinkedToOrganization")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationLinkPhoneNumberEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -227,7 +231,7 @@ func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context
 func (h *OrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnEmailLinkedToOrganization")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationLinkEmailEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -244,7 +248,7 @@ func (h *OrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Conte
 func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnLocationLinkedToOrganization")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationLinkLocationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -261,7 +265,7 @@ func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Co
 func (h *OrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnDomainLinkedToOrganization")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationLinkDomainEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -291,7 +295,7 @@ func (h *OrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Cont
 func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnSocialAddedToOrganization")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationAddSocialEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -305,172 +309,10 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 	return err
 }
 
-func (h *OrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRenewalLikelihoodUpdate")
-	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationUpdateRenewalLikelihoodEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		err = errors.Wrap(err, "GetJsonData")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-
-	err := h.repositories.OrganizationRepository.UpdateRenewalLikelihood(ctx, organizationId, eventData)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-
-	if eventData.PreviousLikelihood != eventData.RenewalLikelihood {
-		if string(eventData.RenewalLikelihood) != "" {
-			userDbNode, err := h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, eventData.UpdatedBy)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("GetUser failed for id: %s", eventData.UpdatedBy, err.Error())
-			}
-			message := "Renewal likelihood set to " + eventData.RenewalLikelihood.CamelCaseString()
-			if userDbNode != nil {
-				userEntity := graph_db.MapDbNodeToUserEntity(*userDbNode)
-				message += " by " + userEntity.FirstName + " " + userEntity.LastName
-			}
-			metadata, err := utils.ToJson(ActionForecastMetadata{
-				Likelihood: string(eventData.RenewalLikelihood),
-				Reason:     utils.IfNotNilString(eventData.Comment),
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("ToJson failed: %s", err.Error())
-			}
-			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed creating likelihood update action for organization %s: %s", organizationId, err.Error())
-			}
-		}
-
-		err = h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId, ""))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("RequestRenewalForecastCommand failed: %v", err.Error())
-		}
-	}
-
-	return err
-}
-
-func (h *OrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRenewalForecastUpdate")
-	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationUpdateRenewalForecastEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		err = errors.Wrap(err, "GetJsonData")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-
-	err := h.repositories.OrganizationRepository.UpdateRenewalForecast(ctx, organizationId, eventData)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-
-	// If the amount has changed, create an action
-	if eventData.Amount != nil && !utils.Float64PtrEquals(eventData.Amount, eventData.PreviousAmount) {
-		message := ""
-		strAmount := utils.FormatCurrencyAmount(*eventData.Amount)
-		if eventData.UpdatedBy == "" && string(eventData.RenewalLikelihood) != "" {
-			if eventData.RenewalLikelihood == models.RenewalLikelihoodHIGH {
-				message = fmt.Sprintf("Renewal forecast set by default to $%s based on the billing amount", strAmount)
-			} else {
-				message = fmt.Sprintf("Renewal forecast set by default to $%s, by discounting the billing amount using the renewal likelihood", strAmount)
-			}
-		} else if eventData.UpdatedBy != "" {
-			userDbNode, err := h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, eventData.UpdatedBy)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("GetUser failed for id: %s", eventData.UpdatedBy, err.Error())
-			}
-			message = fmt.Sprintf("Renewal forecast set to $%s", strAmount)
-			if userDbNode != nil {
-				userEntity := graph_db.MapDbNodeToUserEntity(*userDbNode)
-				if userEntity.FirstName != "" || userEntity.LastName != "" {
-					message += " by " + userEntity.FirstName + " " + userEntity.LastName
-				}
-			}
-		}
-		metadata, err := utils.ToJson(ActionForecastMetadata{
-			Likelihood: string(eventData.RenewalLikelihood),
-			Reason:     utils.IfNotNilString(eventData.Comment),
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("ToJson failed: %s", err.Error())
-		}
-		if message != "" {
-			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalForecastUpdated, message, metadata, eventData.UpdatedAt)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed creating forecast update action for organization %s: %s", organizationId, err.Error())
-			}
-		}
-	}
-
-	if eventData.UpdatedBy != "" && eventData.Amount == nil {
-		err = h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId, ""))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("RequestRenewalForecastCommand failed: %v", err.Error())
-		}
-	}
-
-	return err
-}
-
-func (h *OrganizationEventHandler) OnBillingDetailsUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRenewalForecastUpdate")
-	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationUpdateBillingDetailsEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		err = errors.Wrap(err, "GetJsonData")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-
-	err := h.repositories.OrganizationRepository.UpdateBillingDetails(ctx, organizationId, eventData)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-
-	if eventData.UpdatedBy != "" {
-		err = h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId, ""))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("RequestRenewalForecastCommand failed: %v", err.Error())
-		}
-		err = h.organizationCommands.RequestNextCycleDateCommand.Handle(ctx, cmd.NewRequestNextCycleDateCommand(eventData.Tenant, organizationId, ""))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("RequestNextCycleDateCommand failed: %v", err.Error())
-		}
-	}
-
-	return err
-}
-
 func (h *OrganizationEventHandler) OnOrganizationHide(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationHide")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.HideOrganizationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -489,7 +331,7 @@ func (h *OrganizationEventHandler) OnOrganizationHide(ctx context.Context, evt e
 func (h *OrganizationEventHandler) OnOrganizationShow(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationShow")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.HideOrganizationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -516,7 +358,7 @@ func (h *OrganizationEventHandler) OnOrganizationShow(ctx context.Context, evt e
 func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshLastTouchpoint")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationRefreshLastTouchpointEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -629,7 +471,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 func (h *OrganizationEventHandler) OnRefreshArr(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshArr")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationRefreshArrEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -650,7 +492,7 @@ func (h *OrganizationEventHandler) OnRefreshArr(ctx context.Context, evt eventst
 func (h *OrganizationEventHandler) OnRefreshRenewalSummary(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshRenewalSummary")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationRefreshArrEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -660,7 +502,7 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummary(ctx context.Context, 
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	opportunityDbNodes, err := h.repositories.OpportunityRepository.GetOpenRenewalOpportunitiesForOrganization(ctx, eventData.Tenant, organizationId)
+	openRenewalOpportunityDbNodes, err := h.repositories.OpportunityRepository.GetOpenRenewalOpportunitiesForOrganization(ctx, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to get open renewal opportunities for organization %s: %s", organizationId, err.Error())
@@ -669,13 +511,13 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummary(ctx context.Context, 
 	var nextRenewalDate *time.Time
 	var lowestRenewalLikelihood *string
 	var renewalLikelihoodOrder int64
-	if len(opportunityDbNodes) > 0 {
-		opportunities := make([]entity.OpportunityEntity, len(opportunityDbNodes))
-		for _, opportunityDbNode := range opportunityDbNodes {
+	if len(openRenewalOpportunityDbNodes) > 0 {
+		opportunities := make([]entity.OpportunityEntity, len(openRenewalOpportunityDbNodes))
+		for _, opportunityDbNode := range openRenewalOpportunityDbNodes {
 			opportunities = append(opportunities, *graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode))
 		}
 		for _, opportunity := range opportunities {
-			if opportunity.RenewalDetails.RenewedAt != nil {
+			if opportunity.RenewalDetails.RenewedAt != nil && opportunity.RenewalDetails.RenewedAt.After(utils.Now()) {
 				if nextRenewalDate == nil || opportunity.RenewalDetails.RenewedAt.Before(*nextRenewalDate) {
 					nextRenewalDate = opportunity.RenewalDetails.RenewedAt
 				}
@@ -721,7 +563,7 @@ func getOrderForRenewalLikelihood(likelihood string) int64 {
 func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUpsertCustomField")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationUpsertCustomField
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -754,7 +596,7 @@ func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt 
 func (h *OrganizationEventHandler) OnLinkWithParentOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnLinkWithParentOrganization")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationAddParentEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -769,7 +611,7 @@ func (h *OrganizationEventHandler) OnLinkWithParentOrganization(ctx context.Cont
 func (h *OrganizationEventHandler) OnUnlinkFromParentOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUnlinkFromParentOrganization")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationRemoveParentEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -779,4 +621,151 @@ func (h *OrganizationEventHandler) OnUnlinkFromParentOrganization(ctx context.Co
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	return h.repositories.OrganizationRepository.UnlinkParentOrganization(ctx, eventData.Tenant, organizationId, eventData.ParentOrganizationId)
+}
+
+func (h *OrganizationEventHandler) OnUpdateOnboardingStatus(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUpdateOnboardingStatus")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData events.UpdateOnboardingStatusEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to get organization %s: %s", organizationId, err.Error())
+		return err
+	}
+	if organizationDbNode == nil {
+		err = errors.New(fmt.Sprintf("Organization %s not found", organizationId))
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	organizationEntity := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+
+	err = h.repositories.OrganizationRepository.UpdateOnboardingStatus(ctx, eventData.Tenant, organizationId, eventData.Status, eventData.Comments, getOrderForOnboardingStatus(eventData.Status), eventData.UpdatedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to update onboarding status for organization %s: %s", organizationId, err.Error())
+		return err
+	}
+
+	if eventData.CausedByContractId != "" {
+		err = h.repositories.ContractRepository.ContractCausedOnboardingStatusChange(ctx, eventData.Tenant, eventData.CausedByContractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to update contract %s caused onboarding status change: %s", eventData.CausedByContractId, err.Error())
+		}
+	}
+
+	if organizationEntity.OnboardingDetails.Status != eventData.Status {
+		err = h.saveOnboardingStatusChangeAction(ctx, organizationId, eventData, span)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to save onboarding status change action for organization %s: %s", organizationId, err.Error())
+		}
+	}
+
+	return nil
+}
+
+func getOrderForOnboardingStatus(status string) *int64 {
+	switch status {
+	case string(model.OnboardingStatusNotStarted):
+		return utils.Int64Ptr(constants.OnboardingStatus_Order_NotStarted)
+	case string(model.OnboardingStatusOnTrack):
+		return utils.Int64Ptr(constants.OnboardingStatus_Order_OnTrack)
+	case string(model.OnboardingStatusLate):
+		return utils.Int64Ptr(constants.OnboardingStatus_Order_Late)
+	case string(model.OnboardingStatusStuck):
+		return utils.Int64Ptr(constants.OnboardingStatus_Order_Stuck)
+	case string(model.OnboardingStatusDone):
+		return utils.Int64Ptr(constants.OnboardingStatus_Order_Done)
+	case string(model.OnboardingStatusSuccessful):
+		return utils.Int64Ptr(constants.OnboardingStatus_Order_Successful)
+	default:
+		return nil
+	}
+}
+
+type ActionOnboardingStatusMetadata struct {
+	Status     string `json:"status"`
+	Comments   string `json:"comments"`
+	UserId     string `json:"userId"`
+	ContractId string `json:"contractId"`
+}
+
+func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.Context, organizationId string, eventData events.UpdateOnboardingStatusEvent, span opentracing.Span) error {
+	metadata, _ := utils.ToJson(ActionOnboardingStatusMetadata{
+		Status:     eventData.Status,
+		Comments:   eventData.Comments,
+		UserId:     eventData.UpdatedByUserId,
+		ContractId: eventData.CausedByContractId,
+	})
+	message := ""
+	userName := ""
+	if eventData.UpdatedByUserId != "" {
+		userDbNode, err := h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, eventData.UpdatedByUserId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to get user %s: %s", eventData.UpdatedByUserId, err.Error())
+		}
+		if userDbNode != nil {
+			user := graph_db.MapDbNodeToUserEntity(*userDbNode)
+			userName = user.GetFullName()
+		}
+	}
+	if eventData.UpdatedByUserId != "" {
+		message = fmt.Sprintf("%s changed the onboarding status to %s", userName, onboardingStatusReadableStringForActionMessage(eventData.Status))
+	} else {
+		message = fmt.Sprintf("The onboarding status was automatically set to %s", onboardingStatusReadableStringForActionMessage(eventData.Status))
+	}
+
+	extraActionProperties := map[string]interface{}{
+		"status":   eventData.Status,
+		"comments": eventData.Comments,
+	}
+	_, err := h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, extraActionProperties)
+	return err
+}
+
+func onboardingStatusReadableStringForActionMessage(status string) string {
+	switch status {
+	case string(entity.OnboardingStatusNotApplicable):
+		return "Not applicable"
+	case string(entity.OnboardingStatusNotStarted):
+		return "Not started"
+	case string(entity.OnboardingStatusOnTrack):
+		return "On track"
+	case string(entity.OnboardingStatusLate):
+		return "Late"
+	case string(entity.OnboardingStatusStuck):
+		return "Stuck"
+	case string(entity.OnboardingStatusDone):
+		return "Done"
+	case string(entity.OnboardingStatusSuccessful):
+		return "Successful"
+	default:
+		return status
+	}
+}
+
+func (h *OrganizationEventHandler) OnUpdateOwner(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUpdateOrganizationOwner")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData events.OrganizationOwnerUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	return h.repositories.OrganizationRepository.ReplaceOwner(ctx, eventData.Tenant, eventData.OrganizationId, eventData.OwnerUserId)
 }

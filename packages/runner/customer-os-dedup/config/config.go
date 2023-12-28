@@ -14,7 +14,7 @@ type Config struct {
 	Postgres      commonConfig.PostgresConfig
 	Neo4j         commonConfig.Neo4jConfig
 	Logger        logger.Config
-	Jaeger        tracing.Config
+	Jaeger        tracing.JaegerConfig
 	Cron          cronConfig.Config
 	Organizations struct {
 		AtLeastPerTenant       int `env:"ORGANIZATIONS_DEDUP_AT_LEAST_PER_TENANT" envDefault:"3"`

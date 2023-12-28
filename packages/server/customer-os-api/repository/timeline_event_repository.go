@@ -30,12 +30,14 @@ type TimelineEventRepository interface {
 }
 
 type timelineEventRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewTimelineEventRepository(driver *neo4j.DriverWithContext) TimelineEventRepository {
+func NewTimelineEventRepository(driver *neo4j.DriverWithContext, database string) TimelineEventRepository {
 	return &timelineEventRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 

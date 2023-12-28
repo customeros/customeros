@@ -63,6 +63,7 @@ func (a *ServiceLineItemAggregate) onServiceLineItemCreate(evt eventstore.Event)
 	a.ServiceLineItem.Source = eventData.Source
 	a.ServiceLineItem.StartedAt = eventData.StartedAt
 	a.ServiceLineItem.EndedAt = eventData.EndedAt
+	a.ServiceLineItem.Comments = eventData.Comments
 
 	return nil
 }
@@ -101,6 +102,7 @@ func (a *ServiceLineItemAggregate) onServiceLineItemClose(evt eventstore.Event) 
 
 	a.ServiceLineItem.EndedAt = &eventData.EndedAt
 	a.ServiceLineItem.UpdatedAt = eventData.UpdatedAt
+	a.ServiceLineItem.IsCanceled = eventData.IsCanceled
 
 	return nil
 }

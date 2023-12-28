@@ -3,6 +3,7 @@ import { selector, useRecoilValue } from 'recoil';
 import { OwnerFilterSelector } from '@organizations/components/Columns/Filters/Owner/OwnerFilter.atom';
 import { WebsiteFilterSelector } from '@organizations/components/Columns/Filters/Website/WebsiteFilter.atom';
 import { ForecastFilterSelector } from '@organizations/components/Columns/Filters/Forecast/ForecastFilter.atom';
+import { OnboardingFilterSelector } from '@organizations/components/Columns/Filters/Onboarding/OnboardingFilter.atom';
 import { OrganizationFilterSelector } from '@organizations/components/Columns/Filters/Organization/OrganizationFilter.atom';
 import { RelationshipFilterSelector } from '@organizations/components/Columns/Filters/Relationship/RelationshipFilter.atom';
 import { LastTouchpointSelector } from '@organizations/components/Columns/Filters/LastTouchpoint/LastTouchpointFilter.atom';
@@ -15,6 +16,7 @@ const tableStateSelector = selector({
     const owner = get(OwnerFilterSelector);
     const website = get(WebsiteFilterSelector);
     const forecast = get(ForecastFilterSelector);
+    const onboarding = get(OnboardingFilterSelector);
     const organization = get(OrganizationFilterSelector);
     const relationship = get(RelationshipFilterSelector);
     const renewalLikelihood = get(RenewalLikelihoodFilterSelector);
@@ -46,6 +48,7 @@ const tableStateSelector = selector({
         owner,
         website,
         forecast,
+        onboarding,
         organization,
         relationship,
         timeToRenewal,

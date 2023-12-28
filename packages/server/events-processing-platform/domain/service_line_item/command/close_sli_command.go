@@ -7,14 +7,16 @@ import (
 
 type CloseServiceLineItemCommand struct {
 	eventstore.BaseCommand
-	UpdatedAt *time.Time
-	EndedAt   *time.Time
+	UpdatedAt     *time.Time
+	EndedAt       *time.Time
+	SliIsCanceled bool
 }
 
-func NewCloseServiceLineItemCommand(serviceLineItemId, tenant, loggedInUserId, appSource string, endedAt, updatedAt *time.Time) *CloseServiceLineItemCommand {
+func NewCloseServiceLineItemCommand(serviceLineItemId, tenant, loggedInUserId, appSource string, sliIsCanceled bool, endedAt, updatedAt *time.Time) *CloseServiceLineItemCommand {
 	return &CloseServiceLineItemCommand{
-		BaseCommand: eventstore.NewBaseCommand(serviceLineItemId, tenant, loggedInUserId).WithAppSource(appSource),
-		UpdatedAt:   updatedAt,
-		EndedAt:     endedAt,
+		BaseCommand:   eventstore.NewBaseCommand(serviceLineItemId, tenant, loggedInUserId).WithAppSource(appSource),
+		UpdatedAt:     updatedAt,
+		EndedAt:       endedAt,
+		SliIsCanceled: sliIsCanceled,
 	}
 }

@@ -251,6 +251,13 @@ type TenantSettings struct {
 	ZendeskSunshineEmail     *string `gorm:"column:zendesk_sunshine_email;type:varchar(255);" binding:"required"`
 
 	ZenefitsToken *string `gorm:"column:zenefits_token;type:varchar(255);" binding:"required"`
+
+	MixpanelUsername        *string `gorm:"column:mixpanel_username;type:varchar(255);" binding:"required"`
+	MixpanelSecret          *string `gorm:"column:mixpanel_secret;type:varchar(255);" binding:"required"`
+	MixpanelProjectId       *string `gorm:"column:mixpanel_project_id;type:varchar(255);" binding:"required"`
+	MixpanelProjectSecret   *string `gorm:"column:mixpanel_project_secret;type:varchar(255);" binding:"required"`
+	MixpanelProjectTimezone *string `gorm:"column:mixpanel_project_timezone;type:varchar(255);" binding:"required"`
+	MixpanelRegion          *string `gorm:"column:mixpanel_region;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

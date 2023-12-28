@@ -2,9 +2,13 @@ package organization
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
+	"strings"
+
+	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
+	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	orgevts "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -12,9 +16,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"golang.org/x/sync/errgroup"
-	"strings"
 
-	esdb "github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
@@ -26,19 +29,25 @@ type OrganizationWebscrapeSubscriber struct {
 	organizationEventHandler *organizationEventHandler
 }
 
-func NewOrganizationWebscrapeSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *command_handler.CommandHandlers, repositories *repository.Repositories, caches caches.Cache) *OrganizationWebscrapeSubscriber {
-	return &OrganizationWebscrapeSubscriber{
-		log: log,
-		db:  db,
-		cfg: cfg,
-		organizationEventHandler: &organizationEventHandler{
-			log:                  log,
-			cfg:                  cfg,
-			organizationCommands: orgCommands,
-			repositories:         repositories,
-			caches:               caches,
-			domainScraper:        NewDomainScraper(log, cfg, repositories),
+func NewOrganizationWebscrapeSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, caches caches.Cache, grpcClients *grpc_client.Clients) *OrganizationWebscrapeSubscriber {
+	aiCfg := aiConfig.Config{
+		OpenAi: aiConfig.AiModelConfigOpenAi{
+			ApiKey:       cfg.Services.OpenAi.ApiKey,
+			Organization: cfg.Services.OpenAi.Organization,
+			Model:        "gpt-3.5-turbo-1106", // 1106 has an extra parameter available that locks response as JSON)
 		},
+		Anthropic: aiConfig.AiModelConfigAnthropic{
+			ApiPath: cfg.Services.Anthropic.ApiPath,
+			ApiKey:  cfg.Services.Anthropic.ApiKey,
+		},
+	}
+	domainScraper := NewDomainScraper(log, cfg, repositories, ai.NewAiModel(ai.OpenAiModelType, aiCfg))
+	aiModel := ai.NewAiModel(ai.AnthropicModelType, aiCfg)
+	return &OrganizationWebscrapeSubscriber{
+		log:                      log,
+		db:                       db,
+		cfg:                      cfg,
+		organizationEventHandler: NewOrganizationEventHandler(repositories, log, cfg, caches, domainScraper, aiModel, grpcClients),
 	}
 }
 
@@ -118,9 +127,9 @@ func (s *OrganizationWebscrapeSubscriber) When(ctx context.Context, evt eventsto
 
 	switch evt.GetEventType() {
 	case orgevts.OrganizationLinkDomainV1:
-		return s.organizationEventHandler.WebscrapeOrganizationByDomain(ctx, evt)
+		return s.organizationEventHandler.WebScrapeOrganizationByDomain(ctx, evt)
 	case orgevts.OrganizationRequestScrapeByWebsiteV1:
-		return s.organizationEventHandler.WebscrapeOrganizationByWebsite(ctx, evt)
+		return s.organizationEventHandler.WebScrapeOrganizationByWebsite(ctx, evt)
 	default:
 		return nil
 	}

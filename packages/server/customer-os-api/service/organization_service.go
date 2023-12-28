@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"reflect"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -14,11 +16,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"reflect"
 )
 
 type OrganizationService interface {
@@ -45,15 +46,10 @@ type OrganizationService interface {
 	UpdateLastTouchpointByEmail(ctx context.Context, email string)
 	UpdateLastTouchpointByPhoneNumber(ctx context.Context, phoneNumber string)
 	GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
-	GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error)
 	GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error)
+	GetOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
-
-	// Deprecated
-	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
-	// Deprecated
-	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
 }
 
 type OrganizationCreateData struct {
@@ -348,6 +344,7 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		return err
 	}
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
 		Tenant:               common.GetTenantFromContext(ctx),
 		OrganizationId:       subOrganizationId,
@@ -395,6 +392,7 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 		return err
 	}
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = s.grpcClients.OrganizationClient.RemoveParentOrganization(ctx, &organizationpb.RemoveParentOrganizationGrpcRequest{
 		Tenant:               common.GetTenantFromContext(ctx),
 		OrganizationId:       subOrganizationId,
@@ -453,20 +451,6 @@ func (s *organizationService) GetSuggestedMergeToForOrganizations(ctx context.Co
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetMinMaxRenewalForecastAmount")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	min, max, err := s.repositories.OrganizationRepository.GetMinMaxRenewalForecastAmount(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error getting min and max renewal forecast amount: %s", err.Error())
-		return 0, 0, err
-	}
-	return min, max, nil
-}
-
 func (s *organizationService) GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetMinMaxRenewalForecastArr")
 	defer span.Finish()
@@ -478,14 +462,6 @@ func (s *organizationService) GetMinMaxRenewalForecastArr(ctx context.Context) (
 		s.log.Errorf("Error getting min and max renewal forecast ARR: %s", err.Error())
 		return 0, 0, err
 	}
-	if min == float64(0) && max == float64(0) {
-		min, max, err = s.repositories.OrganizationRepository.GetMinMaxRenewalForecastAmount(ctx)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting min and max renewal forecast amount: %s", err.Error())
-			return 0, 0, err
-		}
-	}
 	return min, max, nil
 }
 
@@ -495,7 +471,22 @@ func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationID", organizationID), log.String("userID", userID))
 
-	dbNode, err := s.repositories.OrganizationRepository.ReplaceOwner(ctx, common.GetTenantFromContext(ctx), organizationID, userID)
+	ownerUpdateReq := &organizationpb.UpdateOrganizationOwnerGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		OrganizationId: organizationID,
+		OwnerUserId:    userID,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AppSource:      constants.AppSourceCustomerOsApi,
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := s.grpcClients.OrganizationClient.UpdateOrganizationOwner(ctx, ownerUpdateReq)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	// get org node back from db to keep function signature the same
+	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(ctx, common.GetTenantFromContext(ctx), organizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -515,82 +506,6 @@ func (s *organizationService) RemoveOwner(ctx context.Context, organizationID st
 		return nil, err
 	}
 	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
-}
-
-func (s *organizationService) UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error) {
-	processedRecords := 0
-	failedRecords := 0
-	outputErr := error(nil)
-	for size > 0 {
-		batchSize := constants.Neo4jBatchSize
-		if size < constants.Neo4jBatchSize {
-			batchSize = size
-		}
-		records, err := s.repositories.OrganizationRepository.GetAllOrganizationPhoneNumberRelationships(ctx, batchSize)
-		if err != nil {
-			return 0, 0, err
-		}
-		for _, v := range records {
-			_, err := s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(context.Background(), &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
-				Primary:        utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
-				Label:          utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
-				OrganizationId: v.Values[1].(string),
-				PhoneNumberId:  v.Values[2].(string),
-				Tenant:         v.Values[3].(string),
-			})
-			if err != nil {
-				failedRecords++
-				if outputErr != nil {
-					outputErr = err
-				}
-				s.log.Errorf("(organizationService.UpsertPhoneNumberRelationInEventStore) Failed to call method: {%v}", err.Error())
-			} else {
-				processedRecords++
-			}
-		}
-
-		size -= batchSize
-	}
-
-	return processedRecords, failedRecords, outputErr
-}
-
-func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error) {
-	processedRecords := 0
-	failedRecords := 0
-	outputErr := error(nil)
-	for size > 0 {
-		batchSize := constants.Neo4jBatchSize
-		if size < constants.Neo4jBatchSize {
-			batchSize = size
-		}
-		records, err := s.repositories.OrganizationRepository.GetAllOrganizationEmailRelationships(ctx, batchSize)
-		if err != nil {
-			return 0, 0, err
-		}
-		for _, v := range records {
-			_, err := s.grpcClients.OrganizationClient.LinkEmailToOrganization(context.Background(), &organizationpb.LinkEmailToOrganizationGrpcRequest{
-				Primary:        utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
-				Label:          utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
-				OrganizationId: v.Values[1].(string),
-				EmailId:        v.Values[2].(string),
-				Tenant:         v.Values[3].(string),
-			})
-			if err != nil {
-				failedRecords++
-				if outputErr != nil {
-					outputErr = err
-				}
-				s.log.Errorf("(organizationService.UpsertEmailRelationInEventStore) Failed to call method: {%v}", err.Error())
-			} else {
-				processedRecords++
-			}
-		}
-
-		size -= batchSize
-	}
-
-	return processedRecords, failedRecords, outputErr
 }
 
 func (s *organizationService) UpdateLastTouchpoint(ctx context.Context, organizationID string) {
@@ -800,6 +715,7 @@ func (s *organizationService) updateLastTouchpoint(ctx context.Context, organiza
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationID", organizationID))
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: organizationID,
@@ -810,6 +726,24 @@ func (s *organizationService) updateLastTouchpoint(ctx context.Context, organiza
 		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
 		tracing.TraceErr(span, err, log.String("grpcMethod", "RefreshLastTouchpoint"))
 	}
+}
+
+func (s *organizationService) GetOrganizations(parentCtx context.Context, organizationIds []string) (*entity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "OrganizationService.GetOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("organizationIds", organizationIds))
+
+	organizationDbNodes, err := s.repositories.OrganizationRepository.GetOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
+	if err != nil {
+		return nil, err
+	}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(organizationDbNodes))
+	for _, dbNode := range organizationDbNodes {
+		organizationEntity := s.mapDbNodeToOrganizationEntity(*dbNode)
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
 }
 
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
@@ -835,6 +769,10 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 		Hide:               utils.GetBoolPropOrFalse(props, "hide"),
 		Employees:          utils.GetInt64PropOrZero(props, "employees"),
 		Market:             utils.GetStringPropOrEmpty(props, "market"),
+		Headquarters:       utils.GetStringPropOrEmpty(props, "headquarters"),
+		YearFounded:        utils.GetInt64PropOrNil(props, "yearFounded"),
+		LogoUrl:            utils.GetStringPropOrEmpty(props, "logoUrl"),
+		EmployeeGrowthRate: utils.GetStringPropOrEmpty(props, "employeeGrowthRate"),
 		CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
@@ -843,35 +781,18 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 		LastTouchpointId:   utils.GetStringPropOrNil(props, "lastTouchpointId"),
 		LastTouchpointAt:   utils.GetTimePropOrNil(props, "lastTouchpointAt"),
 		LastTouchpointType: utils.GetStringPropOrNil(props, "lastTouchpointType"),
-		RenewalLikelihood: entity.RenewalLikelihood{
-			RenewalLikelihood:         utils.GetStringPropOrEmpty(props, "renewalLikelihood"),
-			PreviousRenewalLikelihood: utils.GetStringPropOrEmpty(props, "renewalLikelihoodPrevious"),
-			Comment:                   utils.GetStringPropOrNil(props, "renewalLikelihoodComment"),
-			UpdatedBy:                 utils.GetStringPropOrNil(props, "renewalLikelihoodUpdatedBy"),
-			UpdatedAt:                 utils.GetTimePropOrNil(props, "renewalLikelihoodUpdatedAt"),
-		},
-		RenewalForecast: entity.RenewalForecast{
-			Amount:          utils.GetFloatPropOrNil(props, "renewalForecastAmount"),
-			PotentialAmount: utils.GetFloatPropOrNil(props, "renewalForecastPotentialAmount"),
-			Comment:         utils.GetStringPropOrNil(props, "renewalForecastComment"),
-			UpdatedById:     utils.GetStringPropOrNil(props, "renewalForecastUpdatedBy"),
-			UpdatedAt:       utils.GetTimePropOrNil(props, "renewalForecastUpdatedAt"),
-			Arr:             utils.GetFloatPropOrNil(props, "renewalForecastArr"),
-			MaxArr:          utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
-		},
-		BillingDetails: entity.BillingDetails{
-			Amount:            utils.GetFloatPropOrNil(props, "billingDetailsAmount"),
-			Frequency:         utils.GetStringPropOrEmpty(props, "billingDetailsFrequency"),
-			RenewalCycle:      utils.GetStringPropOrEmpty(props, "billingDetailsRenewalCycle"),
-			RenewalCycleStart: utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleStart"),
-			RenewalCycleNext:  utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleNext"),
-		},
 		RenewalSummary: entity.RenewalSummary{
 			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
 			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
 			NextRenewalAt:          utils.GetTimePropOrNil(props, "derivedNextRenewalAt"),
 			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, "derivedRenewalLikelihood"),
 			RenewalLikelihoodOrder: utils.GetInt64PropOrNil(props, "derivedRenewalLikelihoodOrder"),
+		},
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.GetOnboardingStatus(utils.GetStringPropOrEmpty(props, "onboardingStatus")),
+			SortingOrder: utils.GetInt64PropOrNil(props, "onboardingStatusOrder"),
+			UpdatedAt:    utils.GetTimePropOrNil(props, "onboardingUpdatedAt"),
+			Comments:     utils.GetStringPropOrEmpty(props, "onboardingComments"),
 		},
 	}
 	return &output

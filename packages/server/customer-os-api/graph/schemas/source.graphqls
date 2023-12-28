@@ -1,11 +1,13 @@
 enum DataSource {
     NA,
     OPENLINE
+    WEBSCRAPE
     HUBSPOT
     ZENDESK_SUPPORT
     PIPEDRIVE
     SLACK
-    WEBSCRAPE
     INTERCOM
     SALESFORCE
+    STRIPE
+    MIXPANEL
 }

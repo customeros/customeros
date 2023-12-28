@@ -2900,6 +2900,20 @@
   resolved "https://registry.yarnpkg.com/@graphql-typed-document-node/core/-/core-3.2.0.tgz#5f3d96ec6b2354ad6d8a28bf216a1d97b5426861"
   integrity sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==
 
+"@growthbook/growthbook-react@^0.21.0":
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/@growthbook/growthbook-react/-/growthbook-react-0.21.0.tgz#e3aee1bda7faf3ea036badfbca09e2230884b7f7"
+  integrity sha512-LM4jG9xThSYCMfRQECeLtTr8sYyiAxC5NLmT4U3uxKyvVUCB+s0k/vdKrvHcv3YXNJ37mW3VtK9XkNSuW16mcw==
+  dependencies:
+    "@growthbook/growthbook" "^0.31.0"
+
+"@growthbook/growthbook@^0.31.0":
+  version "0.31.0"
+  resolved "https://registry.yarnpkg.com/@growthbook/growthbook/-/growthbook-0.31.0.tgz#66273344805c45dc406940ab719856385afa4750"
+  integrity sha512-VtI5IibZHhvtrlZhfopGYhVXZ++FewgY0BtQQyEqFSrhCYFvEEtq+GkuSm4GcC0JxNuHiYJr9/R3GpffJV/T4Q==
+  dependencies:
+    dom-mutator "^0.6.0"
+
 "@grpc/grpc-js@^1.7.1":
   version "1.9.7"
   resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.9.7.tgz#7d0e29bc162287bee2523901c9bc9320d8402397"
@@ -5702,17 +5716,17 @@
   resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-4.36.1.tgz#79f8c1a539d47c83104210be2388813a7af2e524"
   integrity sha512-DJSilV5+ytBP1FbFcEJovv4rnnm/CokuVvrBEtW/Va9DvuJ3HksbXUJEpI0aV1KtuL4ZoO9AVE6PyNLzF7tLeA==
 
-"@tanstack/query-core@5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.0.0.tgz#b37a50bb3a4f54336b6131db00b72cd29e79b480"
-  integrity sha512-Y1BpiA6BblJd/UlVqxEVeAG7IACn568YJuTTItAiecBI7En+33g780kg+/8lhgl+BzcUPN7o+NjBrSRGJoemyQ==
+"@tanstack/query-core@5.12.1":
+  version "5.12.1"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.12.1.tgz#2e04b8ab7a04b2f2cfe77c2b0c9b982477373e06"
+  integrity sha512-WbZztNmKq0t6QjdNmHzezbi/uifYo9j6e2GLJkodsYaYUlzMbAp91RDyeHkIZrm7EfO4wa6Sm5sxJZm5SPlh6w==
 
-"@tanstack/query-persist-client-core@5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@tanstack/query-persist-client-core/-/query-persist-client-core-5.0.0.tgz#4409e18ae713db81cbb3ed75a9e1f5ed6363a480"
-  integrity sha512-WXzvS37iriXMb4o1ES+SJvMou0Jw+Iko7f6/VmeFgSatKQfeidfIAUBYoBqRQ/sDwVRzLVWuf9e57SQPtqankQ==
+"@tanstack/query-persist-client-core@5.12.1":
+  version "5.12.1"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-persist-client-core/-/query-persist-client-core-5.12.1.tgz#d827602a49e6be62c2cd9c3cc439eeac69473635"
+  integrity sha512-ymXGe7xxEvnHpoPUOElLkrbwQt+sC3ONsBWfFzA1Ss2Av6e9HCADWgk9frE0T6kAtXP0hVksLRafbCpG6kpIHQ==
   dependencies:
-    "@tanstack/query-core" "5.0.0"
+    "@tanstack/query-core" "5.12.1"
 
 "@tanstack/react-query-devtools@^4.29.19":
   version "4.32.6"
@@ -5723,12 +5737,12 @@
     superjson "^1.10.0"
     use-sync-external-store "^1.2.0"
 
-"@tanstack/react-query-persist-client@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-query-persist-client/-/react-query-persist-client-5.0.0.tgz#3b8b1e3d4d2a78bbdba4349304f4b07a97a3cae2"
-  integrity sha512-1d0fc6bPWFchiG+K8Wb9xAPVu962GuF6QhVt/MlexV15DY/TkbwH/PqrV+8SQGCYsg3CDCZ7Dn7fU5sCtcQelw==
+"@tanstack/react-query-persist-client@^5.8.1":
+  version "5.12.2"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query-persist-client/-/react-query-persist-client-5.12.2.tgz#9a79778ef0558c33377bb62dfc2eef59e83dcf2f"
+  integrity sha512-kSJRHdfLCclvVtSTNAqOKeeWH2U5TnImz+lVt8ADjcxSNKAoK6qrKmCJ+JOh0IsJ8OYTEoqPBQcD9CMuEI80WQ==
   dependencies:
-    "@tanstack/query-persist-client-core" "5.0.0"
+    "@tanstack/query-persist-client-core" "5.12.1"
 
 "@tanstack/react-query@^4.36.1":
   version "4.36.1"
@@ -8391,12 +8405,12 @@ case-anything@^2.1.13:
   resolved "https://registry.yarnpkg.com/case-anything/-/case-anything-2.1.13.tgz#0cdc16278cb29a7fcdeb072400da3f342ba329e9"
   integrity sha512-zlOQ80VrQ2Ue+ymH5OuM/DlDq64mEm+B9UTdHULv5osUMD6HalNTblf2b1u/m6QecjsnOkBpqVZ+XPwIVsy7Ng==
 
-chakra-react-select@^4.6.0:
-  version "4.7.0"
-  resolved "https://registry.yarnpkg.com/chakra-react-select/-/chakra-react-select-4.7.0.tgz#a0b5206416a858e77e7a4f38345a12bfe8425d7a"
-  integrity sha512-BHo4OnLhsfmxMr7ntIL7Sp55zhZKgeU2XOQK/9a0bnnRH6qyd0GMxwII+XnF3TsRHdtrI/2HxdQuX3KKQPFuDg==
+chakra-react-select@^4.7.6:
+  version "4.7.6"
+  resolved "https://registry.yarnpkg.com/chakra-react-select/-/chakra-react-select-4.7.6.tgz#3be8ffb314b8e75ef02663fd3e2fdf872b79683b"
+  integrity sha512-ZL43hyXPnWf1g/HjsZDecbeJ4F2Q6tTPYJozlKWkrQ7lIX7ORP0aZYwmc5/Wly4UNzMimj2Vuosl6MmIXH+G2g==
   dependencies:
-    react-select "5.7.4"
+    react-select "5.7.7"
 
 chalk@4.1.1:
   version "4.1.1"
@@ -9499,6 +9513,11 @@ dom-helpers@^5.0.1:
   dependencies:
     "@babel/runtime" "^7.8.7"
     csstype "^3.0.2"
+
+dom-mutator@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/dom-mutator/-/dom-mutator-0.6.0.tgz#079d7a4b3e8981a562cd777548b99baab51d65c5"
+  integrity sha512-iCt9o0aYfXMUkz/43ZOAUFQYotjGB+GNbYJiJdz4TgXkyToXbbRy5S6FbTp72lRBtfpUMwEc1KmpFEU4CZeoNg==
 
 dom-serializer@^2.0.0:
   version "2.0.0"
@@ -14444,10 +14463,10 @@ react-hook-form@7.47.0:
   resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-7.47.0.tgz#a42f07266bd297ddf1f914f08f4b5f9783262f31"
   integrity sha512-F/TroLjTICipmHeFlMrLtNLceO2xr1jU3CyiNla5zdwsGUGu2UOxxR4UyJgLlhMwLW/Wzp4cpJ7CPfgJIeKdSg==
 
-react-inverted-form@^1.2.11:
-  version "1.2.11"
-  resolved "https://registry.yarnpkg.com/react-inverted-form/-/react-inverted-form-1.2.11.tgz#51962e1f27149d11d332c16c419c1b2a82dc8a5d"
-  integrity sha512-Z1jRSmyIOil6qUm6BMsNFzEwjXVfcFG+KWcNvAzfsbcDXMTDIRRdfYPie4xPRtwxvoVxr2Ykzkbm4Ih3p9fSAA==
+react-inverted-form@^1.2.13:
+  version "1.2.13"
+  resolved "https://registry.yarnpkg.com/react-inverted-form/-/react-inverted-form-1.2.13.tgz#72604607dae1b85699dde1c243ab4aa0709d4d64"
+  integrity sha512-REwuZUeQlYThl1OtbBH+OSQ2mXeE12sfm8g9zcYoBw0Gt2tZKdpBvdBShJBDGst04D70SChrrH+KcarWbVPA1A==
 
 react-is@^16.13.1, react-is@^16.7.0:
   version "16.13.1"
@@ -14510,10 +14529,10 @@ react-scrollbar-size@^5.0.0:
   resolved "https://registry.yarnpkg.com/react-scrollbar-size/-/react-scrollbar-size-5.0.0.tgz#29892779dfcb9077ce18e2483d1dba6400c58fb0"
   integrity sha512-Ly3OuRMz4yDFViTh+ANH6TrG8EqrgjC1uxxm2a/95+2Ijy3XT+bWtzm4QmgZUcUVg+8BCKzmPMM7z39ZtucDIQ==
 
-react-select@5.7.4:
-  version "5.7.4"
-  resolved "https://registry.yarnpkg.com/react-select/-/react-select-5.7.4.tgz#d8cad96e7bc9d6c8e2709bdda8f4363c5dd7ea7d"
-  integrity sha512-NhuE56X+p9QDFh4BgeygHFIvJJszO1i1KSkg/JPcIJrbovyRtI+GuOEa4XzFCEpZRAEoEI8u/cAHK+jG/PgUzQ==
+react-select@5.7.7:
+  version "5.7.7"
+  resolved "https://registry.yarnpkg.com/react-select/-/react-select-5.7.7.tgz#dbade9dbf711ef2a181970c10f8ab319ac37fbd0"
+  integrity sha512-HhashZZJDRlfF/AKj0a0Lnfs3sRdw/46VJIRd8IbB9/Ovr74+ZIwkAdSBjSPXsFMG+u72c5xShqwLSKIJllzqw==
   dependencies:
     "@babel/runtime" "^7.12.0"
     "@emotion/cache" "^11.4.0"
@@ -14567,10 +14586,10 @@ react-use-measure@^2.0.4:
   dependencies:
     debounce "^1.2.1"
 
-react-virtuoso@4.4.2:
-  version "4.4.2"
-  resolved "https://registry.yarnpkg.com/react-virtuoso/-/react-virtuoso-4.4.2.tgz#752438e5031a9f72722371a52ae5ac7265f3e1c0"
-  integrity sha512-9uChSRSK5bTbKTxzuta4RqhfrlZSVHI/v8fHwmv3jmImS8FjdZ4Mzgqz9JKUp/yQo3dIHkR2QwidQeqxgYzPhQ==
+react-virtuoso@4.6.2:
+  version "4.6.2"
+  resolved "https://registry.yarnpkg.com/react-virtuoso/-/react-virtuoso-4.6.2.tgz#74b59ebe3260e1f73e92340ffec84a6853285a12"
+  integrity sha512-vvlqvzPif+MvBrJ09+hJJrVY0xJK9yran+A+/1iwY78k0YCVKsyoNPqoLxOxzYPggspNBNXqUXEcvckN29OxyQ==
 
 react@^18.2.0:
   version "18.2.0"
@@ -15112,10 +15131,10 @@ sanitize-html@^2.9.0:
     parse-srcset "^1.0.2"
     postcss "^8.3.11"
 
-sass@^1.58.0:
-  version "1.65.1"
-  resolved "https://registry.yarnpkg.com/sass/-/sass-1.65.1.tgz#8f283b0c26335a88246a448d22e1342ba2ea1432"
-  integrity sha512-9DINwtHmA41SEd36eVPQ9BJKpn7eKDQmUHmpI0y5Zv2Rcorrh0zS+cFrt050hdNbmmCNKTW3hV5mWfuegNRsEA==
+sass@^1.69.5:
+  version "1.69.5"
+  resolved "https://registry.yarnpkg.com/sass/-/sass-1.69.5.tgz#23e18d1c757a35f2e52cc81871060b9ad653dfde"
+  integrity sha512-qg2+UCJibLr2LCVOt3OlPhr/dqVHWOa9XtZf2OjbLs/T4VPSJ00udtgJxH3neXZm+QqX8B+3cU7RaLqp1iVfcQ==
   dependencies:
     chokidar ">=3.0.0 <4.0.0"
     immutable "^4.0.0"

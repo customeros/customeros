@@ -8,7 +8,15 @@ import type {
   Table as TableInstance,
 } from '@tanstack/react-table';
 
-import { memo, useRef, useMemo, useState, useEffect, forwardRef } from 'react';
+import {
+  memo,
+  useRef,
+  useMemo,
+  useState,
+  useEffect,
+  forwardRef,
+  MutableRefObject,
+} from 'react';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
@@ -37,7 +45,6 @@ declare module '@tanstack/table-core' {
 
 interface TableProps<T extends object> {
   data: T[];
-  // REASON: Typing TValue is too exhaustive and has no benefit
   isLoading?: boolean;
   totalItems?: number;
   sorting?: SortingState;
@@ -48,12 +55,15 @@ interface TableProps<T extends object> {
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
   onSortingChange?: OnChangeFn<SortingState>;
+  tableRef: MutableRefObject<TableInstance<T> | null>;
+  // REASON: Typing TValue is too exhaustive and has no benefit
   renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
 }
 
 export const Table = <T extends object>({
   data,
   columns,
+  tableRef,
   isLoading,
   onFetchMore,
   canFetchMore,
@@ -113,6 +123,12 @@ export const Table = <T extends object>({
     canFetchMore,
   ]);
 
+  useEffect(() => {
+    if (tableRef) {
+      tableRef.current = table;
+    }
+  }, [table]);
+
   const skeletonRow = useMemo(
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
     [table, totalItems],
@@ -128,7 +144,11 @@ export const Table = <T extends object>({
         >
           {table.getHeaderGroups().map((headerGroup) => (
             <THeaderGroup key={headerGroup.id}>
-              {enableRowSelection && <THeaderCell w='28px' p='0' />}
+              <THeaderCell
+                p='0'
+                w='28px'
+                visibility={enableRowSelection ? 'visible' : 'hidden'}
+              />
               {headerGroup.headers.map((header, index) => (
                 <THeaderCell
                   key={header.id}
@@ -187,18 +207,21 @@ export const Table = <T extends object>({
                   },
                 }}
               >
-                {enableRowSelection && (
-                  <TCell maxW='fit-content' pl='2' pr='0'>
-                    <Flex align='center' flexDir='row' h='full'>
-                      <MemoizedCheckbox
-                        key={`checkbox-${virtualRow.index}`}
-                        isSelected={row?.getIsSelected()}
-                        isDisabled={!row || !row?.getCanSelect()}
-                        onChange={row?.getToggleSelectedHandler()}
-                      />
-                    </Flex>
-                  </TCell>
-                )}
+                <TCell
+                  pl='2'
+                  pr='0'
+                  maxW='fit-content'
+                  visibility={enableRowSelection ? 'visible' : 'hidden'}
+                >
+                  <Flex align='center' flexDir='row' h='full'>
+                    <MemoizedCheckbox
+                      key={`checkbox-${virtualRow.index}`}
+                      isSelected={row?.getIsSelected()}
+                      isDisabled={!row || !row?.getCanSelect()}
+                      onChange={row?.getToggleSelectedHandler()}
+                    />
+                  </Flex>
+                </TCell>
                 {(row ?? skeletonRow).getAllCells()?.map((cell, index) => {
                   return (
                     <TCell
@@ -301,20 +324,19 @@ const TContent = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
       bg='gray.25'
       overflow='auto'
       flexDir='column'
-      borderRadius='2xl'
       borderStyle='hidden'
-      border='1px solid'
+      borderTop='1px solid'
       borderColor='gray.200'
-      height='calc(100vh - 74px)'
+      height='calc(100vh - 48px)'
       sx={{
         '&::-webkit-scrollbar': {
-          width: '4px',
-          height: '4px',
+          width: '8px',
+          height: '8px',
           background: 'transparent',
         },
         '&::-webkit-scrollbar-track': {
-          width: '4px',
-          height: '4px',
+          width: '8px',
+          height: '8px',
           background: 'transparent',
         },
         '&::-webkit-scrollbar-thumb': {
@@ -392,4 +414,5 @@ export type {
   TableInstance,
   ColumnFiltersState,
 };
+
 export { createColumnHelper } from '@tanstack/react-table';

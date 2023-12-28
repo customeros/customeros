@@ -37,23 +37,23 @@ export default async function RootLayout({
 }) {
   const session = await getServerSession();
 
+  const isProduction = process.env.NEXT_PUBLIC_PRODUCTION === 'true';
+
   return (
     <>
-      <HighlightInit
-        environment={
-          process.env.NEXT_PUBLIC_PRODUCTION === 'true'
-            ? 'production'
-            : 'development'
-        }
-        projectId={'ldwno7wd'}
-        serviceName='customer-os'
-        tracingOrigins
-        networkRecording={{
-          enabled: true,
-          recordHeadersAndBody: true,
-          urlBlocklist: [],
-        }}
-      />
+      {isProduction && (
+        <HighlightInit
+          environment={isProduction ? 'production' : 'development'}
+          projectId={'ldwno7wd'}
+          serviceName='customer-os'
+          tracingOrigins
+          networkRecording={{
+            enabled: isProduction,
+            recordHeadersAndBody: isProduction,
+            urlBlocklist: [],
+          }}
+        />
+      )}
 
       <html lang='en' className={barlow.variable} data-theme='light'>
         <Script
@@ -68,7 +68,7 @@ export default async function RootLayout({
                     })(window, document, "clarity", "script", "fryzkewrjw");`,
           }}
         />
-        {`${process.env.NEXT_PUBLIC_PRODUCTION}` === 'true' && (
+        {isProduction && (
           <Script
             async
             strategy='afterInteractive'
@@ -82,7 +82,7 @@ export default async function RootLayout({
           />
         )}
 
-        {`${process.env.NEXT_PUBLIC_PRODUCTION}` !== 'true' && (
+        {!isProduction && (
           <Script
             async
             strategy='afterInteractive'
@@ -129,7 +129,7 @@ export default async function RootLayout({
 
         <body className='scrollbar'>
           <ThemeProvider>
-            <Providers>
+            <Providers isProduction={isProduction}>
               {children}
               <ToastContainer
                 position='bottom-right'

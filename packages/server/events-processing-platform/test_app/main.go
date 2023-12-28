@@ -2,24 +2,25 @@ package main
 
 import (
 	"context"
+	"log"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/comment"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
-	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
-	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
-	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
-	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
-	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/service_line_item"
-	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
+	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
+	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
+	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"log"
 )
 
 const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
@@ -68,6 +69,7 @@ func main() {
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
 	//testCreateOrganization()
+	//testUpdateWithUpsertOrganization()
 	//testUpdateOrganization()
 	//testHideOrganization()
 	//testShowOrganization()
@@ -93,7 +95,10 @@ func main() {
 	//testUserLinkWithEmail()
 	//testCreateContract()
 	//testUpdateContract()
-	testAddContractService()
+	//testAddContractService()
+	//testCloseLooseOpportunity()
+	//testUpdateOnboardingStatus()
+	testUpdateOrgOwner()
 }
 
 func testRequestGenerateSummaryRequest() {
@@ -134,19 +139,31 @@ func testCreateOrganization() {
 	log.Printf("Result: %v", result)
 }
 
-func testUpdateOrganization() {
+func testUpdateWithUpsertOrganization() {
 	tenant := "openline"
 	organizationId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	website := "xtz.com"
 	lastFoundingAmont := "1Million"
-	partial := true
 
 	result, _ := clients.OrganizationClient.UpsertOrganization(context.Background(), &organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:            tenant,
 		Id:                organizationId,
 		Website:           website,
 		LastFundingAmount: lastFoundingAmont,
-		IgnoreEmptyFields: partial,
+	})
+	print(result)
+}
+
+func testUpdateOrganization() {
+	tenant := "openline"
+	organizationId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
+	name := "xtz.com"
+
+	result, _ := clients.OrganizationClient.UpdateOrganization(context.Background(), &organizationpb.UpdateOrganizationGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+		Name:           name,
+		FieldsMask:     []organizationpb.OrganizationMaskField{organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME},
 	})
 	print(result)
 }
@@ -175,7 +192,7 @@ func testShowOrganization() {
 
 func testCreateLogEntry() {
 	tenant := "openline"
-	organizationId := "5e72b6fb-5f20-4973-9b96-52f4543a0df3"
+	organizationId := "2829263d-b489-4e92-b0ba-b1bca9ff4d04"
 	userId := "development@openline.ai"
 	authorId := "c61f8af2-0e46-4464-a5db-ded8e4fe242f"
 
@@ -246,7 +263,7 @@ func testCreateEmail() {
 func testCreatePhoneNumber() {
 	tenant := "openline"
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
-	rawPhoneNumber := "+1234"
+	rawPhoneNumber := "+12345"
 
 	result, _ := clients.PhoneNumberClient.UpsertPhoneNumber(context.Background(), &phonenumberpb.UpsertPhoneNumberGrpcRequest{
 		Tenant:         tenant,
@@ -543,13 +560,16 @@ func testUserLinkWithEmail() {
 func testCreateContract() {
 	tenant := "openline"
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	organizationId := "a00dc1f8-aec9-4107-bb77-48ef39f897bc"
+	organizationId := "d03ea434-51cb-43ed-b97d-63f46db6ff51"
+	yesterday := utils.Now().AddDate(0, 0, -1)
 
 	result, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organizationId,
-		LoggedInUserId: userId,
-		Name:           "Saturday contract 2",
+		Tenant:           tenant,
+		OrganizationId:   organizationId,
+		LoggedInUserId:   userId,
+		RenewalCycle:     contractpb.RenewalCycle_MONTHLY_RENEWAL,
+		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(&yesterday),
+		Name:             "test contract 1",
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
@@ -603,6 +623,61 @@ func testAddContractService() {
 		SourceFields: &commonpb.SourceFields{
 			AppSource: "test_app",
 		},
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testCloseLooseOpportunity() {
+	tenant := "openline"
+	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	opportunityId := "d8305351-8568-4d97-9fe9-c6cf701636d0"
+
+	result, err := clients.OpportunityClient.CloseLooseOpportunity(context.Background(), &opportunitypb.CloseLooseOpportunityGrpcRequest{
+		Tenant:         tenant,
+		Id:             opportunityId,
+		LoggedInUserId: userId,
+		AppSource:      appSource,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testUpdateOnboardingStatus() {
+	tenant := "openline"
+	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
+
+	result, err := clients.OrganizationClient.UpdateOnboardingStatus(context.Background(), &organizationpb.UpdateOnboardingStatusGrpcRequest{
+		Tenant:           tenant,
+		OrganizationId:   orgId,
+		LoggedInUserId:   userId,
+		Comments:         "test comments",
+		AppSource:        appSource,
+		OnboardingStatus: organizationpb.OnboardingStatus_ONBOARDING_STATUS_DONE,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testUpdateOrgOwner() {
+	tenant := "openline"
+	userId := "f7634527-ccda-4cbb-80d8-cc4af9124ef5"
+	actorId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
+
+	result, err := clients.OrganizationClient.UpdateOrganizationOwner(context.Background(), &organizationpb.UpdateOrganizationOwnerGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: orgId,
+		LoggedInUserId: actorId,
+		OwnerUserId:    userId,
+		AppSource:      appSource,
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())

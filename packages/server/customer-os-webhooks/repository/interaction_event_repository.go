@@ -13,7 +13,7 @@ import (
 )
 
 type InteractionEventRepository interface {
-	GetMatchedInteractionEventId(ctx context.Context, tenant, externalId, externalSystem string) (string, error)
+	GetMatchedInteractionEventId(ctx context.Context, tenant, externalId, externalSystem, externalSourceEntity string) (string, error)
 	GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalId, externalSystem string) (string, error)
 	GetById(ctx context.Context, tenant, interactionEventId string) (*dbtype.Node, error)
 }
@@ -30,21 +30,28 @@ func NewInteractionEventRepository(driver *neo4j.DriverWithContext, database str
 	}
 }
 
-func (r *interactionEventRepository) GetMatchedInteractionEventId(ctx context.Context, tenant, externalId, externalSystem string) (string, error) {
+func (r *interactionEventRepository) GetMatchedInteractionEventId(ctx context.Context, tenant, externalId, externalSystem, externalSourceEntity string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetMatchedInteractionEventId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId))
+	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId), log.String("externalSourceEntity", externalSourceEntity))
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
-				MATCH (i:InteractionEvent_%s)-[:IS_LINKED_WITH {externalId:$issueExternalId}]->(e)
-				RETURN i.id LIMIT 1`, tenant)
+	filter := ""
 	params := map[string]interface{}{
-		"tenant":          tenant,
-		"externalSystem":  externalSystem,
-		"issueExternalId": externalId,
+		"tenant":         tenant,
+		"externalSystem": externalSystem,
+		"externalId":     externalId,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	if externalSourceEntity != "" {
+		params["externalSource"] = externalSourceEntity
+		filter = " WHERE i.externalSource = $externalSource "
+	}
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
+				MATCH (i:InteractionEvent_%s)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
+				%s
+				RETURN i.id LIMIT 1`, tenant, filter)
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)

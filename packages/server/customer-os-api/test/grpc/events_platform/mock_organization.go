@@ -2,7 +2,8 @@ package events_platform
 
 import (
 	"context"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 )
 
 type MockOrganizationServiceCallbacks struct {
@@ -12,6 +13,8 @@ type MockOrganizationServiceCallbacks struct {
 	LinkEmailToOrganization       func(context context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization func(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint         func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	UpdateOnboardingStatus        func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	UpdateOrganizationOwner       func(ctx context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 }
 
 var organizationCallbacks = &MockOrganizationServiceCallbacks{}
@@ -64,4 +67,18 @@ func (MockOrganizationService) RemoveParentOrganization(context context.Context,
 		panic("organizationCallbacks.RemoveParent is not set")
 	}
 	return organizationCallbacks.RemoveParent(context, proto)
+}
+
+func (MockOrganizationService) UpdateOnboardingStatus(context context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	if organizationCallbacks.UpdateOnboardingStatus == nil {
+		panic("organizationCallbacks.UpdateOnboardingStatus is not set")
+	}
+	return organizationCallbacks.UpdateOnboardingStatus(context, proto)
+}
+
+func (MockOrganizationService) UpdateOrganizationOwner(context context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	if organizationCallbacks.UpdateOrganizationOwner == nil {
+		panic("organizationCallbacks.UpdateOrganizationOwner is not set")
+	}
+	return organizationCallbacks.UpdateOrganizationOwner(context, proto)
 }

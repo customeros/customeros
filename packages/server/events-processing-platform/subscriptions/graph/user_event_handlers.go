@@ -15,15 +15,22 @@ import (
 	"github.com/pkg/errors"
 )
 
-type GraphUserEventHandler struct {
+type UserEventHandler struct {
 	log          logger.Logger
 	repositories *repository.Repositories
 }
 
-func (h *GraphUserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphUserEventHandler.OnUserCreate")
+func NewUserEventHandler(log logger.Logger, repositories *repository.Repositories) *UserEventHandler {
+	return &UserEventHandler{
+		log:          log,
+		repositories: repositories,
+	}
+}
+
+func (h *UserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnUserCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.UserCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -60,10 +67,10 @@ func (h *GraphUserEventHandler) OnUserCreate(ctx context.Context, evt eventstore
 	return nil
 }
 
-func (h *GraphUserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphUserEventHandler.OnUserUpdate")
+func (h *UserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnUserUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.UserUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -103,10 +110,10 @@ func (h *GraphUserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore
 	return nil
 }
 
-func (h *GraphUserEventHandler) OnJobRoleLinkedToUser(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphUserEventHandler.OnJobRoleLinkedToUser")
+func (h *UserEventHandler) OnJobRoleLinkedToUser(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnJobRoleLinkedToUser")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.UserLinkJobRoleEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -120,10 +127,10 @@ func (h *GraphUserEventHandler) OnJobRoleLinkedToUser(ctx context.Context, evt e
 	return err
 }
 
-func (h *GraphUserEventHandler) OnPhoneNumberLinkedToUser(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphUserEventHandler.OnPhoneNumberLinkedToUser")
+func (h *UserEventHandler) OnPhoneNumberLinkedToUser(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnPhoneNumberLinkedToUser")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.UserLinkPhoneNumberEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -137,10 +144,10 @@ func (h *GraphUserEventHandler) OnPhoneNumberLinkedToUser(ctx context.Context, e
 	return err
 }
 
-func (h *GraphUserEventHandler) OnEmailLinkedToUser(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphUserEventHandler.OnEmailLinkedToUser")
+func (h *UserEventHandler) OnEmailLinkedToUser(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnEmailLinkedToUser")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.UserLinkEmailEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -154,10 +161,10 @@ func (h *GraphUserEventHandler) OnEmailLinkedToUser(ctx context.Context, evt eve
 	return err
 }
 
-func (h *GraphUserEventHandler) OnAddPlayer(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphUserEventHandler.OnAddPlayer")
+func (h *UserEventHandler) OnAddPlayer(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnAddPlayer")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.UserAddPlayerInfoEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -175,10 +182,10 @@ func (h *GraphUserEventHandler) OnAddPlayer(ctx context.Context, evt eventstore.
 	return err
 }
 
-func (h *GraphUserEventHandler) OnAddRole(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphUserEventHandler.OnAddRole")
+func (h *UserEventHandler) OnAddRole(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnAddRole")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.UserAddRoleEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -196,10 +203,10 @@ func (h *GraphUserEventHandler) OnAddRole(ctx context.Context, evt eventstore.Ev
 	return err
 }
 
-func (h *GraphUserEventHandler) OnRemoveRole(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphUserEventHandler.OnRemoveRole")
+func (h *UserEventHandler) OnRemoveRole(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnRemoveRole")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData events.UserRemoveRoleEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

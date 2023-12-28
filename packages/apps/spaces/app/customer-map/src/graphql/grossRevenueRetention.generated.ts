@@ -32,7 +32,7 @@ export type GrossRevenueRetentionQuery = {
   dashboard_GrossRevenueRetention?: {
     __typename?: 'DashboardGrossRevenueRetention';
     grossRevenueRetention: number;
-    increasePercentage: number;
+    increasePercentage: string;
     perMonth: Array<{
       __typename?: 'DashboardGrossRevenueRetentionPerMonth';
       month: number;

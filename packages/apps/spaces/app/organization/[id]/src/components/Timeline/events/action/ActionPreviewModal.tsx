@@ -1,20 +1,32 @@
 import React from 'react';
 
-import { RenewalForecastUpdatedActionPreview } from './renewal-forecast/RenewalForecastUpdatedActionPreview';
-import { RenewalLikelihoodUpdatedActionPreview } from './renewal-likelihood/RenewalLikelihoodUpdatedActionPreview';
+import { ActionType } from '@graphql/types';
+
+import { ServiceUpdatedActionPreview } from './service/ServiceUpdatedActionPreview';
+import { ContractStatusUpdatedActionPreview } from './contract/ContractStatusUpdatedActionPreview';
+import { OnboardingStatusChangedActionPreview } from './onboarding/OnboardingStatusChangedActionPreview';
 
 interface ActionPreviewModalProps {
-  type: string;
+  type: ActionType;
 }
 
 export const ActionPreviewModal: React.FC<ActionPreviewModalProps> = ({
   type,
 }) => {
   switch (type) {
-    case 'RENEWAL_FORECAST_UPDATED':
-      return <RenewalForecastUpdatedActionPreview />;
-    case 'RENEWAL_LIKELIHOOD_UPDATED':
-      return <RenewalLikelihoodUpdatedActionPreview />;
+    case ActionType.ContractStatusUpdated:
+    case ActionType.ContractRenewed:
+      return <ContractStatusUpdatedActionPreview />;
+    case ActionType.ServiceLineItemQuantityUpdated:
+    case ActionType.ServiceLineItemPriceUpdated:
+    case ActionType.ServiceLineItemBilledTypeUpdated:
+      return <ServiceUpdatedActionPreview />;
+    case ActionType.ServiceLineItemBilledTypeOnceCreated:
+    case ActionType.ServiceLineItemBilledTypeUsageCreated:
+    case ActionType.ServiceLineItemBilledTypeRecurringCreated:
+      return <ServiceUpdatedActionPreview mode='created' />;
+    case ActionType.OnboardingStatusChanged:
+      return <OnboardingStatusChangedActionPreview />;
     default:
       return null;
   }

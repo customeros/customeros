@@ -14,8 +14,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -119,8 +119,9 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.syncIssue")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag("externalSystem", issueInput.ExternalSystem)
-	span.LogFields(log.Object("syncDate", syncDate), log.Object("issueInput", issueInput))
+	span.SetTag(tracing.SpanTagExternalSystem, issueInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate))
+	tracing.LogObjectAsJson(span, "issueInput", issueInput)
 
 	tenant := common.GetTenantFromContext(ctx)
 	var failedSync = false
@@ -228,6 +229,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				issueGrpcRequest.SubmittedByUserId = &submitterId
 			}
 		}
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = s.grpcClients.IssueClient.UpsertIssue(ctx, &issueGrpcRequest)
 		if err != nil {
 			failedSync = true

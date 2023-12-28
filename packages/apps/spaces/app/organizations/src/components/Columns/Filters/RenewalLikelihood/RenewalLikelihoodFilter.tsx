@@ -8,7 +8,7 @@ import { Column } from '@tanstack/react-table';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
-import { RenewalLikelihoodProbability } from '@graphql/types';
+import { OpportunityRenewalLikelihood } from '@graphql/types';
 
 import { FilterHeader, useFilterToggle } from '../shared';
 import {
@@ -41,7 +41,7 @@ export const RenewalLikelihoodFilter = <T,>({
     },
   });
 
-  const handleSelect = (value: RenewalLikelihoodProbability) => () => {
+  const handleSelect = (value: OpportunityRenewalLikelihood) => () => {
     setFilter((prev) => {
       const next = produce(prev, (draft) => {
         draft.isActive = true;
@@ -72,26 +72,26 @@ export const RenewalLikelihoodFilter = <T,>({
       />
       <VStack spacing={2} align='flex-start'>
         <Checkbox
-          value={RenewalLikelihoodProbability.High}
-          onChange={handleSelect(RenewalLikelihoodProbability.High)}
+          value={OpportunityRenewalLikelihood.HighRenewal}
+          onChange={handleSelect(OpportunityRenewalLikelihood.HighRenewal)}
         >
           <Text fontSize='sm'>High</Text>
         </Checkbox>
         <Checkbox
-          value={RenewalLikelihoodProbability.Medium}
-          onChange={handleSelect(RenewalLikelihoodProbability.Medium)}
+          value={OpportunityRenewalLikelihood.MediumRenewal}
+          onChange={handleSelect(OpportunityRenewalLikelihood.MediumRenewal)}
         >
           <Text fontSize='sm'>Medium</Text>
         </Checkbox>
         <Checkbox
-          value={RenewalLikelihoodProbability.Low}
-          onChange={handleSelect(RenewalLikelihoodProbability.Low)}
+          value={OpportunityRenewalLikelihood.LowRenewal}
+          onChange={handleSelect(OpportunityRenewalLikelihood.LowRenewal)}
         >
           <Text fontSize='sm'>Low</Text>
         </Checkbox>
         <Checkbox
-          value={RenewalLikelihoodProbability.Zero}
-          onChange={handleSelect(RenewalLikelihoodProbability.Zero)}
+          value={OpportunityRenewalLikelihood.ZeroRenewal}
+          onChange={handleSelect(OpportunityRenewalLikelihood.ZeroRenewal)}
         >
           <Text fontSize='sm'>Zero</Text>
         </Checkbox>

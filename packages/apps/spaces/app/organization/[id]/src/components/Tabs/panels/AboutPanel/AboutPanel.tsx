@@ -1,9 +1,10 @@
 'use client';
-import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
+import { useEffect, useCallback } from 'react';
 
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
@@ -20,7 +21,6 @@ import { FormNumberInputGroup } from '@ui/form/InputGroup';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/branches/Branches';
 import { OwnerInput } from '@organization/src/components/Tabs/panels/AboutPanel/owner/OwnerInput';
@@ -50,39 +50,37 @@ export const AboutPanel = () => {
   const id = useParams()?.id as string;
   const [_, copyToClipboard] = useCopyToClipboard();
   const { data } = useOrganizationQuery(client, { id });
+  const showParentRelationshipSelector = useFeatureIsOn(
+    'show-parent-relationship-selector',
+  );
+  const parentRelationshipReadOnly = useFeatureIsOn(
+    'parent-relationship-selector-read-only',
+  );
   const { updateOrganization, addSocial, invalidateQuery } =
     useAboutPanelMethods({ id });
-  const { data: tenantNameQueryData } = useTenantNameQuery(client);
-  const saveOrganization = debounce(
-    (variables?: Partial<OrganizationAboutForm>) => {
-      updateOrganization.mutate({
-        input: OrganizationAboutFormDto.toPayload({
-          ...state.values,
-          ...(variables ?? {}),
-        }),
-      });
-    },
-    300,
-  );
-
-  const showSubOrgData = (() =>
-    tenantNameQueryData?.tenant
-      ? ['gasposco', 'openlineai'].includes(tenantNameQueryData.tenant)
-      : false)();
 
   const defaultValues: OrganizationAboutForm = new OrganizationAboutFormDto(
     data?.organization,
   );
 
-  const mutateOrganization = (variables?: Partial<OrganizationAboutForm>) => {
+  const mutateOrganization = (
+    previousValues: OrganizationAboutForm,
+    variables?: Partial<OrganizationAboutForm>,
+  ) => {
     updateOrganization.mutate({
       input: OrganizationAboutFormDto.toPayload({
-        ...state.values,
+        ...previousValues,
         ...(variables ?? {}),
       }),
     });
   };
-  const { state } = useForm<OrganizationAboutForm>({
+
+  const debouncedMutatOrganization = useCallback(
+    debounce(mutateOrganization, 300),
+    [updateOrganization.mutate],
+  );
+
+  useForm<OrganizationAboutForm>({
     formId: 'organization-about',
     defaultValues,
     stateReducer: (state, action, next) => {
@@ -93,7 +91,7 @@ export const AboutPanel = () => {
           case 'employees':
           case 'businessType':
           case 'lastFundingRound': {
-            mutateOrganization({
+            mutateOrganization(state.values, {
               [action.payload.name]: action.payload?.value,
             });
             break;
@@ -106,13 +104,11 @@ export const AboutPanel = () => {
             const trimmedValue = (action.payload?.value || '')?.trim();
             if (
               //@ts-expect-error fixme
-              state.fields?.[action.payload.name].meta.pristine ||
-              //@ts-expect-error fixme
               trimmedValue === defaultValues?.[action.payload.name]
             ) {
               return next;
             }
-            saveOrganization({
+            debouncedMutatOrganization(state.values, {
               [action.payload.name]: trimmedValue,
             });
             break;
@@ -128,7 +124,7 @@ export const AboutPanel = () => {
 
   useEffect(() => {
     return () => {
-      saveOrganization.flush();
+      debouncedMutatOrganization.flush();
     };
   }, []); // empty array so it runs just once
 
@@ -220,21 +216,24 @@ export const AboutPanel = () => {
           placeholder={placeholders.valueProposition}
         />
 
-        {!data?.organization?.subsidiaries?.length && showSubOrgData && (
-          <ParentOrgInput
-            id={id}
-            parentOrg={
-              data?.organization?.subsidiaryOf?.[0]?.organization?.id
-                ? {
-                    label:
-                      data?.organization?.subsidiaryOf?.[0]?.organization?.name,
-                    value:
-                      data?.organization?.subsidiaryOf?.[0]?.organization?.id,
-                  }
-                : null
-            }
-          />
-        )}
+        {!data?.organization?.subsidiaries?.length &&
+          showParentRelationshipSelector && (
+            <ParentOrgInput
+              id={id}
+              isReadOnly={parentRelationshipReadOnly}
+              parentOrg={
+                data?.organization?.subsidiaryOf?.[0]?.organization?.id
+                  ? {
+                      label:
+                        data?.organization?.subsidiaryOf?.[0]?.organization
+                          ?.name,
+                      value:
+                        data?.organization?.subsidiaryOf?.[0]?.organization?.id,
+                    }
+                  : null
+              }
+            />
+          )}
 
         <VStack
           flex='1'
@@ -332,15 +331,17 @@ export const AboutPanel = () => {
             leftElement={<Icons.Share7 color='gray.500' />}
           />
 
-          {!!data?.organization?.subsidiaries?.length && showSubOrgData && (
-            <Branches
-              id={id}
-              branches={
-                (data?.organization
-                  ?.subsidiaries as Organization['subsidiaries']) ?? []
-              }
-            />
-          )}
+          {!!data?.organization?.subsidiaries?.length &&
+            showParentRelationshipSelector && (
+              <Branches
+                id={id}
+                isReadOnly={parentRelationshipReadOnly}
+                branches={
+                  (data?.organization
+                    ?.subsidiaries as Organization['subsidiaries']) ?? []
+                }
+              />
+            )}
         </VStack>
 
         {data?.organization?.customerOsId && (

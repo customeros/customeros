@@ -3,8 +3,7 @@ import { Virtuoso } from 'react-virtuoso';
 import { useParams } from 'next/navigation';
 import React, { FC, useMemo, useEffect, useCallback } from 'react';
 
-import { useIsRestoring } from '@tanstack/react-query';
-import { useQueryClient } from '@tanstack/react-query';
+import { useIsRestoring, useQueryClient } from '@tanstack/react-query';
 import { setHours, setSeconds, setMinutes, setMilliseconds } from 'date-fns';
 
 import { Flex } from '@ui/layout/Flex';
@@ -90,7 +89,7 @@ export const OrganizationTimeline: FC = () => {
       client,
       {
         organizationId: id,
-        from: NEW_DATE,
+        from: NEW_DATE.toISOString(),
         size: 50,
       },
       {
@@ -149,9 +148,10 @@ export const OrganizationTimeline: FC = () => {
           );
         case 'Meeting':
         case 'LogEntry':
-        case 'Action':
         case 'Issue':
           return !!d.id;
+        case 'Action':
+          return !!d.id && d.actionType !== 'CREATED';
         default:
           return false;
       }

@@ -1,24 +1,23 @@
 package graph
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	contractmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
-	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
-	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
-	organizationEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
@@ -27,8 +26,6 @@ import (
 func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -41,9 +38,9 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create an OpportunityCreateEvent
@@ -121,19 +118,33 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"Contract": 1, "Opportunity": 0})
+		"Organization": 1, "Contract": 1, "Opportunity": 0})
+
+	// prepare grpc mock
+	calledEventsPlatformToRefreshRenewalSummary := false
+	organizationServiceRefreshCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		RefreshRenewalSummary: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			calledEventsPlatformToRefreshRenewalSummary = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceRefreshCallbacks)
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	// Create an OpportunityCreateEvent
@@ -181,6 +192,8 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	require.Equal(t, string(model.OpportunityInternalTypeStringRenewal), opportunity.InternalType)
 	require.Equal(t, string(model.OpportunityInternalStageStringOpen), opportunity.InternalStage)
 	require.Equal(t, string(model.RenewalLikelihoodStringLow), opportunity.RenewalDetails.RenewalLikelihood)
+
+	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
 }
 
 func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
@@ -229,8 +242,6 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
@@ -242,9 +253,9 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -284,8 +295,6 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
@@ -296,9 +305,9 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -336,8 +345,6 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
@@ -355,12 +362,35 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1})
 
+	// prepare grpc mock
+	calledEventsPlatformToRefreshRenewalSummary, calledEventsPlatformToRefreshArr := false, false
+	organizationServiceRefreshCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		RefreshRenewalSummary: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			calledEventsPlatformToRefreshRenewalSummary = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+		RefreshArr: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			calledEventsPlatformToRefreshArr = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceRefreshCallbacks)
+
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                  testLogger,
-		repositories:         testDatabase.Repositories,
-		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
-		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -372,7 +402,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 		"openline",
 		float64(10),
 		now,
-		[]string{})
+		[]string{},
+		"user-123")
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -395,28 +426,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	require.Equal(t, float64(10), opportunity.Amount)
 	require.Equal(t, "some comments", opportunity.Comments)
 
-	// Check event to refresh organization arr is generated
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-	var eventList []eventstore.Event
-	for _, value := range eventsMap {
-		eventList = value
-	}
-	require.Equal(t, 2, len(eventList))
-
-	generatedEvent1 := eventList[0]
-	require.Equal(t, organizationEvents.OrganizationRefreshRenewalSummaryV1, generatedEvent1.EventType)
-	var eventData1 organizationEvents.OrganizationRefreshRenewalSummaryEvent
-	err = generatedEvent1.GetJsonData(&eventData1)
-	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData1.Tenant)
-
-	generatedEvent2 := eventList[1]
-	require.Equal(t, organizationEvents.OrganizationRefreshArrV1, generatedEvent2.EventType)
-	var eventData2 organizationEvents.OrganizationRefreshArrEvent
-	err = generatedEvent1.GetJsonData(&eventData2)
-	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData2.Tenant)
+	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
+	require.True(t, calledEventsPlatformToRefreshArr)
 }
 
 func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNotUpdatePreviousUpdatedByUser(t *testing.T) {
@@ -441,9 +452,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -455,7 +466,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 		"openline",
 		float64(10000),
 		now,
-		[]string{})
+		[]string{},
+		"user-123")
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -487,8 +499,6 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
@@ -508,11 +518,31 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 		constants.NodeLabel_Opportunity: 1,
 		constants.NodeLabel_Contract:    1})
 
+	// prepare grpc client
+	calledEventsPlatformToUpdateOpportunity := false
+	opportunityCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
+		UpdateOpportunity: func(context context.Context, op *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, opportunityId, op.Id)
+			require.Equal(t, float64(0), op.Amount)
+			require.Equal(t, float64(0), op.MaxAmount)
+			require.Equal(t, []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT}, op.FieldsMask)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, op.SourceFields.AppSource)
+			require.Equal(t, constants.SourceOpenline, op.SourceFields.Source)
+			calledEventsPlatformToUpdateOpportunity = true
+			return &opportunitypb.OpportunityIdGrpcResponse{
+				Id: opportunityId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
+
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -524,7 +554,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 		"openline",
 		float64(10000),
 		now,
-		[]string{})
+		[]string{},
+		"user-123")
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -547,23 +578,23 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	require.Equal(t, float64(10000), opportunity.Amount)
 	require.Equal(t, "Updated likelihood", opportunity.Comments)
 
-	// Check no events were generated
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-	var eventList []eventstore.Event
-	for _, value := range eventsMap {
-		eventList = value
-	}
-	require.Equal(t, 1, len(eventList))
-
-	generatedEvent1 := eventList[0]
-	require.Equal(t, event.OpportunityUpdateV1, generatedEvent1.EventType)
-	var eventData1 event.OpportunityUpdateEvent
-	err = generatedEvent1.GetJsonData(&eventData1)
+	// Verify Action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
-	require.Equal(t, tenantName, eventData1.Tenant)
-	require.Equal(t, float64(0), eventData1.Amount)
-	require.Equal(t, float64(0), eventData1.MaxAmount)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionRenewalLikelihoodUpdated, action.Type)
+	require.Equal(t, "Renewal likelihood set to Medium", action.Content)
+	require.Equal(t, fmt.Sprintf(`{"likelihood":"%s","reason":"%s"}`, "MEDIUM", "Updated likelihood"), action.Metadata)
+	// Check extra properties
+	props := utils.GetPropsFromNode(*actionDbNode)
+	require.Equal(t, "Updated likelihood", utils.GetStringPropOrEmpty(props, "comments"))
+
+	// check that event was invoked
+	require.True(t, calledEventsPlatformToUpdateOpportunity)
 }
 
 func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
@@ -638,4 +669,143 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, now, *opportunity.ClosedAt)
 	require.Equal(t, string(model.OpportunityInternalStageStringClosedLost), opportunity.InternalStage)
+}
+
+func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	userIdOwner := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	userIdCreator := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	userIdOwnerNew := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, "sf")
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Organization": 1, "User": 3, "ExternalSystem": 1, "Opportunity": 0})
+
+	// prepare grpc mock
+	calledEventsPlatformToRefreshRenewalSummary := false
+	organizationServiceRefreshCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		RefreshRenewalSummary: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			calledEventsPlatformToRefreshRenewalSummary = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceRefreshCallbacks)
+
+	// Prepare the event handler
+	opportunityEventHandler := &OpportunityEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	// Create an OpportunityCreateEvent
+	opportunityId := uuid.New().String()
+	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
+	timeNow := utils.Now()
+	opportunityData := model.OpportunityDataFields{
+		Name:              "New Opportunity",
+		Amount:            10000,
+		InternalType:      model.NBO,
+		ExternalType:      "TypeA",
+		InternalStage:     model.OPEN,
+		ExternalStage:     "Stage1",
+		EstimatedClosedAt: &timeNow,
+		OwnerUserId:       userIdOwner,
+		CreatedByUserId:   userIdCreator,
+		GeneralNotes:      "Some general notes about the opportunity",
+		NextSteps:         "Next steps to proceed with the opportunity",
+		OrganizationId:    orgId,
+	}
+	createEvent, err := event.NewOpportunityCreateEvent(
+		opportunityAggregate,
+		opportunityData,
+		commonmodel.Source{
+			Source:    constants.SourceOpenline,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+		commonmodel.ExternalSystem{
+			ExternalSystemId: "sf",
+			ExternalId:       "ext-id-1",
+		},
+		timeNow,
+		timeNow,
+	)
+	require.Nil(t, err, "failed to create opportunity create event")
+
+	// EXECUTE
+	err = opportunityEventHandler.OnCreate(context.Background(), createEvent)
+	require.Nil(t, err, "failed to execute opportunity create event handler")
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Organization":   1,
+		"User":           3,
+		"ExternalSystem": 1,
+		"Opportunity":    1, "Opportunity_" + tenantName: 1})
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, userIdOwner, "OWNS", opportunityId)
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, opportunityId, "CREATED_BY", userIdCreator)
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "HAS_OPPORTUNITY", opportunityId)
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, opportunityId, "IS_LINKED_WITH", "sf")
+
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Opportunity_"+tenantName, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+
+	// verify opportunity
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	require.Equal(t, opportunityId, opportunity.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), opportunity.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, opportunity.AppSource)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), opportunity.SourceOfTruth)
+	require.Equal(t, timeNow, opportunity.CreatedAt)
+	test.AssertRecentTime(t, opportunity.UpdatedAt)
+	require.Equal(t, timeNow, *opportunity.EstimatedClosedAt)
+	require.Equal(t, opportunityData.Name, opportunity.Name)
+	require.Equal(t, opportunityData.Amount, opportunity.Amount)
+	require.Equal(t, string(opportunityData.InternalType.StringValue()), opportunity.InternalType)
+	require.Equal(t, opportunityData.ExternalType, opportunity.ExternalType)
+	require.Equal(t, string(opportunityData.InternalStage.StringValue()), opportunity.InternalStage)
+	require.Equal(t, opportunityData.ExternalStage, opportunity.ExternalStage)
+	require.Equal(t, opportunityData.GeneralNotes, opportunity.GeneralNotes)
+	require.Equal(t, opportunityData.NextSteps, opportunity.NextSteps)
+
+	now := utils.Now()
+	opportunityAggregate1 := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
+	updateEvent, err := event.NewOpportunityUpdateRenewalEvent(opportunityAggregate1,
+		"MEDIUM",
+		"Updated likelihood",
+		"user-123",
+		"openline",
+		float64(10000),
+		now,
+		[]string{},
+		userIdOwnerNew) //Changing the owner here
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = opportunityEventHandler.OnUpdateRenewal(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1, constants.NodeLabel_Opportunity + "_" + tenantName: 1})
+	//checking if the owner changed
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, userIdOwnerNew, "OWNS", opportunityId)
+
+	opportunityDbNode1, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode1)
+
+	// verify opportunity
+	opportunity1 := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode1)
+	require.Equal(t, opportunityId, opportunity1.Id)
+
+	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
+
 }

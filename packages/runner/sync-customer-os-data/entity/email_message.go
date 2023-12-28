@@ -24,7 +24,7 @@ type EmailMessageData struct {
 
 func (m *EmailMessageData) Normalize() {
 	m.SetTimes()
-	m.ToEmail = utils.FilterEmpty(m.ToEmail)
-	m.CcEmail = utils.FilterEmpty(m.CcEmail)
-	m.BccEmail = utils.FilterEmpty(m.BccEmail)
+	m.ToEmail = utils.FilterOutEmpty(m.ToEmail)
+	m.CcEmail = utils.FilterOutEmpty(m.CcEmail)
+	m.BccEmail = utils.FilterOutEmpty(m.BccEmail)
 }

@@ -1,91 +1,23 @@
 package mapper
 
 import (
-	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 )
 
-func MapRenewalLikelihoodToModels(likelihood organization_grpc_service.Likelihood) models.RenewalLikelihoodProbability {
-	switch likelihood {
-	case organization_grpc_service.Likelihood_HIGH:
-		return models.RenewalLikelihoodHIGH
-	case organization_grpc_service.Likelihood_MEDIUM:
-		return models.RenewalLikelihoodMEDIUM
-	case organization_grpc_service.Likelihood_LOW:
-		return models.RenewalLikelihoodLOW
-	case organization_grpc_service.Likelihood_ZERO:
-		return models.RenewalLikelihoodZERO
-	}
-
-	return ""
-}
-
-func MapRenewalLikelihoodToGraphDb(likelihood models.RenewalLikelihoodProbability) entity.RenewalLikelihoodProbability {
-	switch likelihood {
-	case models.RenewalLikelihoodHIGH:
-		return entity.RenewalLikelihoodHigh
-	case models.RenewalLikelihoodMEDIUM:
-		return entity.RenewalLikelihoodMedium
-	case models.RenewalLikelihoodLOW:
-		return entity.RenewalLikelihoodLow
-	case models.RenewalLikelihoodZERO:
-		return entity.RenewalLikelihoodZero
-	}
-
-	return ""
-}
-
-func MapRenewalLikelihoodFromGraphDb(likelihood entity.RenewalLikelihoodProbability) models.RenewalLikelihoodProbability {
-	switch likelihood {
-	case entity.RenewalLikelihoodHigh:
-		return models.RenewalLikelihoodHIGH
-	case entity.RenewalLikelihoodMedium:
-		return models.RenewalLikelihoodMEDIUM
-	case entity.RenewalLikelihoodLow:
-		return models.RenewalLikelihoodLOW
-	case entity.RenewalLikelihoodZero:
-		return models.RenewalLikelihoodZERO
-	}
-
-	return ""
-}
-
-func MapFrequencyToString(frequency *organization_grpc_service.Frequency) string {
-	if frequency == nil {
-		return ""
-	}
-	switch *frequency {
-	case organization_grpc_service.Frequency_WEEKLY:
-		return "WEEKLY"
-	case organization_grpc_service.Frequency_BIWEEKLY:
-		return "BIWEEKLY"
-	case organization_grpc_service.Frequency_MONTHLY:
-		return "MONTHLY"
-	case organization_grpc_service.Frequency_QUARTERLY:
-		return "QUARTERLY"
-	case organization_grpc_service.Frequency_BIANNUALLY:
-		return "BIANNUALLY"
-	case organization_grpc_service.Frequency_ANNUALLY:
-		return "ANNUALLY"
-	}
-
-	return ""
-}
-
-func MapCustomFieldDataType(input organization_grpc_service.CustomFieldDataType) models.CustomFieldDataType {
+func MapCustomFieldDataType(input organizationpb.CustomFieldDataType) model.CustomFieldDataType {
 	switch input {
-	case organization_grpc_service.CustomFieldDataType_TEXT:
-		return models.CustomFieldDataTypeText
-	case organization_grpc_service.CustomFieldDataType_BOOL:
-		return models.CustomFieldDataTypeBool
-	case organization_grpc_service.CustomFieldDataType_DATETIME:
-		return models.CustomFieldDataTypeDatetime
-	case organization_grpc_service.CustomFieldDataType_INTEGER:
-		return models.CustomFieldDataTypeInteger
-	case organization_grpc_service.CustomFieldDataType_DECIMAL:
-		return models.CustomFieldDataTypeDecimal
+	case organizationpb.CustomFieldDataType_TEXT:
+		return model.CustomFieldDataTypeText
+	case organizationpb.CustomFieldDataType_BOOL:
+		return model.CustomFieldDataTypeBool
+	case organizationpb.CustomFieldDataType_DATETIME:
+		return model.CustomFieldDataTypeDatetime
+	case organizationpb.CustomFieldDataType_INTEGER:
+		return model.CustomFieldDataTypeInteger
+	case organizationpb.CustomFieldDataType_DECIMAL:
+		return model.CustomFieldDataTypeDecimal
 	default:
-		return models.CustomFieldDataTypeText
+		return model.CustomFieldDataTypeText
 	}
 }

@@ -14,6 +14,8 @@ var externalSystemTypeByModel = map[model.ExternalSystemType]entity.ExternalSyst
 	model.ExternalSystemTypeSLACk:          entity.Slack,
 	model.ExternalSystemTypeIntercom:       entity.Intercom,
 	model.ExternalSystemTypeSalesforce:     entity.Salesforce,
+	model.ExternalSystemTypeStripe:         entity.Stripe,
+	model.ExternalSystemTypeMixpanel:       entity.Mixpanel,
 }
 
 var externalSystemTypeByValue = utils.ReverseMap(externalSystemTypeByModel)

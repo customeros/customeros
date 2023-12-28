@@ -28,3 +28,7 @@ func SetDefaultNeo4jRepositorySpanTags(span opentracing.Span) {
 func SetDefaultServiceSpanTags(span opentracing.Span) {
 	span.SetTag(SpanTagComponent, ComponentNeo4jRepository)
 }
+
+func LogObjectAsJson(span opentracing.Span, name string, object any) {
+	tracing.LogObjectAsJson(span, name, object)
+}

@@ -14,9 +14,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -124,7 +124,7 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	upsertContactRequest := contactgrpc.UpsertContactGrpcRequest{
+	upsertContactRequest := contactpb.UpsertContactGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(contactDetails.Source),
@@ -153,6 +153,7 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 			upsertContactRequest.ExternalSystemFields.SyncDate = timestamppb.New(*contactDetails.ExternalReference.Relationship.SyncDate)
 		}
 	}
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
 	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
 		user, findErr := s.GetById(ctx, response.Id)
@@ -175,7 +176,8 @@ func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSo
 		s.log.Errorf("Failed to create email address for contact %s: %s", contactId, err.Error())
 	}
 	if emailId != "" {
-		_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactgrpc.LinkEmailToContactGrpcRequest{
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			ContactId:      contactId,
@@ -201,7 +203,8 @@ func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId,
 		s.log.Errorf("Failed to create phone number for contact %s: %s", contactId, err.Error())
 	}
 	if phoneNumberId != "" {
-		_, err = s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactgrpc.LinkPhoneNumberToContactGrpcRequest{
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			ContactId:      contactId,
@@ -244,7 +247,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 
 	contactDetails := *contactUpdateData.ContactEntity
 
-	upsertContactRequest := contactgrpc.UpsertContactGrpcRequest{
+	upsertContactRequest := contactpb.UpsertContactGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(entity.DataSourceOpenline),
@@ -260,6 +263,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 		Timezone:        contactDetails.Timezone,
 		ProfilePhotoUrl: utils.StringFirstNonEmpty(contactDetails.ProfilePhotoUrl, currentContactEntity.ProfilePhotoUrl),
 	}
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -580,7 +584,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 
 	result := &model.CustomerContact{}
 
-	contactCreateRequest := &contactgrpc.UpsertContactGrpcRequest{
+	contactCreateRequest := &contactpb.UpsertContactGrpcRequest{
 		Tenant:      common.GetTenantFromContext(ctx),
 		FirstName:   data.ContactEntity.FirstName,
 		LastName:    data.ContactEntity.LastName,
@@ -598,6 +602,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 
 	contextWithTimeout, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	contactId, err := s.grpcClients.ContactClient.UpsertContact(contextWithTimeout, contactCreateRequest)
 	if err != nil {
 		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
@@ -627,7 +632,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		result.Email = &model.CustomerEmail{
 			ID: emailId.Id,
 		}
-		_, err = s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contactgrpc.LinkEmailToContactGrpcRequest{
+		_, err = s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contactpb.LinkEmailToContactGrpcRequest{
 			Primary:   data.EmailEntity.Primary,
 			Label:     data.EmailEntity.Label,
 			ContactId: contactId.Id,

@@ -33,14 +33,17 @@ files.forEach((name) => {
       .slice(1, lines.length - 2)
       .join('\n')
       .replaceAll('stroke="black"', 'stroke="currentColor"')
+      .replaceAll('stroke="#0C111D"', 'stroke="currentColor"')
       .replaceAll('fill="black"', 'fill="currentColor"')
+      .replaceAll('fill="#0C111D"', 'fill="currentColor"')
       .replaceAll('stroke-width', 'strokeWidth')
       .replaceAll('stroke-linecap', 'strokeLinecap')
       .replaceAll('stroke-linejoin', 'strokeLinejoin')
       .replaceAll('fill-rule', 'fillRule')
       .replaceAll('stop-color', 'stopColor')
       .replaceAll('clip-path', 'clipPath')
-      .replaceAll('clip-rule', 'clipRule');
+      .replaceAll('clip-rule', 'clipRule')
+      .replaceAll('stop-opacity', 'stopOpacity');
 
     const componentName = camelize(name.split('.')[0]);
     const outFileName = `${componentName}.tsx`;

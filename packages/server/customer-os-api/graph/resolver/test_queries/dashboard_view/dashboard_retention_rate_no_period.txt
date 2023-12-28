@@ -1,0 +1,12 @@
+query GetDashboard_RetentionRate {
+  dashboard_RetentionRate {
+    retentionRate
+    increasePercentage
+    perMonth {
+      year
+      month
+      renewCount
+      churnCount
+    }
+  }
+}

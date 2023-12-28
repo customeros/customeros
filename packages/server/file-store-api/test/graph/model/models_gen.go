@@ -145,22 +145,6 @@ type AttachmentInput struct {
 	AppSource string `json:"appSource"`
 }
 
-type BillingDetails struct {
-	Amount            *float64      `json:"amount,omitempty"`
-	Frequency         *RenewalCycle `json:"frequency,omitempty"`
-	RenewalCycle      *RenewalCycle `json:"renewalCycle,omitempty"`
-	RenewalCycleStart *time.Time    `json:"renewalCycleStart,omitempty"`
-	RenewalCycleNext  *time.Time    `json:"renewalCycleNext,omitempty"`
-}
-
-type BillingDetailsInput struct {
-	ID                string        `json:"id"`
-	Amount            *float64      `json:"amount,omitempty"`
-	Frequency         *RenewalCycle `json:"frequency,omitempty"`
-	RenewalCycle      *RenewalCycle `json:"renewalCycle,omitempty"`
-	RenewalCycleStart *time.Time    `json:"renewalCycleStart,omitempty"`
-}
-
 // Describes the relationship a Contact has with a Organization.
 // **A `return` object**
 type Calendar struct {
@@ -360,6 +344,7 @@ type Contract struct {
 	EndedAt          *time.Time           `json:"endedAt,omitempty"`
 	Name             string               `json:"name"`
 	RenewalCycle     ContractRenewalCycle `json:"renewalCycle"`
+	RenewalPeriods   *int64               `json:"renewalPeriods,omitempty"`
 	Status           ContractStatus       `json:"status"`
 	ServiceLineItems []*ServiceLineItem   `json:"serviceLineItems,omitempty"`
 	Opportunities    []*Opportunity       `json:"opportunities,omitempty"`
@@ -379,6 +364,7 @@ type ContractInput struct {
 	OrganizationID    string                        `json:"organizationId"`
 	Name              *string                       `json:"name,omitempty"`
 	RenewalCycle      *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
+	RenewalPeriods    *int64                        `json:"renewalPeriods,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
 	ContractURL       *string                       `json:"contractUrl,omitempty"`
 	ServiceStartedAt  *time.Time                    `json:"serviceStartedAt,omitempty"`
@@ -391,6 +377,7 @@ type ContractUpdateInput struct {
 	Name             *string               `json:"name,omitempty"`
 	ContractURL      *string               `json:"contractUrl,omitempty"`
 	RenewalCycle     *ContractRenewalCycle `json:"renewalCycle,omitempty"`
+	RenewalPeriods   *int64                `json:"renewalPeriods,omitempty"`
 	ServiceStartedAt *time.Time            `json:"serviceStartedAt,omitempty"`
 	SignedAt         *time.Time            `json:"signedAt,omitempty"`
 	EndedAt          *time.Time            `json:"endedAt,omitempty"`
@@ -547,7 +534,7 @@ type DashboardCustomerMap struct {
 	OrganizationID     string                    `json:"organizationId"`
 	Organization       *Organization             `json:"organization"`
 	State              DashboardCustomerMapState `json:"state"`
-	Arr                int                       `json:"arr"`
+	Arr                float64                   `json:"arr"`
 	ContractSignedDate time.Time                 `json:"contractSignedDate"`
 }
 
@@ -802,6 +789,7 @@ type GlobalCache struct {
 	GCliCache            []*GCliItem `json:"gCliCache"`
 	MinARRForecastValue  float64     `json:"minARRForecastValue"`
 	MaxARRForecastValue  float64     `json:"maxARRForecastValue"`
+	ContractsExist       bool        `json:"contractsExist"`
 }
 
 type InteractionEvent struct {
@@ -1250,7 +1238,7 @@ type Opportunity struct {
 	ExternalType           string                       `json:"externalType"`
 	InternalStage          InternalStage                `json:"internalStage"`
 	ExternalStage          string                       `json:"externalStage"`
-	EstimatedClosedAt      time.Time                    `json:"estimatedClosedAt"`
+	EstimatedClosedAt      *time.Time                   `json:"estimatedClosedAt,omitempty"`
 	GeneralNotes           string                       `json:"generalNotes"`
 	NextSteps              string                       `json:"nextSteps"`
 	RenewedAt              time.Time                    `json:"renewedAt"`
@@ -1292,9 +1280,7 @@ type OpportunityUpdateInput struct {
 }
 
 type OrgAccountDetails struct {
-	RenewalLikelihood *RenewalLikelihood `json:"renewalLikelihood,omitempty"`
-	RenewalForecast   *RenewalForecast   `json:"renewalForecast,omitempty"`
-	BillingDetails    *BillingDetails    `json:"billingDetails,omitempty"`
+	RenewalSummary *RenewalSummary `json:"renewalSummary,omitempty"`
 }
 
 type Organization struct {
@@ -1557,36 +1543,11 @@ type PlayerUser struct {
 	Tenant  string `json:"tenant"`
 }
 
-type RenewalForecast struct {
-	Amount          *float64   `json:"amount,omitempty"`
-	PotentialAmount *float64   `json:"potentialAmount,omitempty"`
-	Comment         *string    `json:"comment,omitempty"`
-	UpdatedAt       *time.Time `json:"updatedAt,omitempty"`
-	UpdatedByID     *string    `json:"updatedById,omitempty"`
-	UpdatedBy       *User      `json:"updatedBy,omitempty"`
-	Arr             *float64   `json:"arr,omitempty"`
-	MaxArr          *float64   `json:"maxArr,omitempty"`
-}
-
-type RenewalForecastInput struct {
-	ID      string   `json:"id"`
-	Amount  *float64 `json:"amount,omitempty"`
-	Comment *string  `json:"comment,omitempty"`
-}
-
-type RenewalLikelihood struct {
-	Probability         *RenewalLikelihoodProbability `json:"probability,omitempty"`
-	PreviousProbability *RenewalLikelihoodProbability `json:"previousProbability,omitempty"`
-	Comment             *string                       `json:"comment,omitempty"`
-	UpdatedAt           *time.Time                    `json:"updatedAt,omitempty"`
-	UpdatedByID         *string                       `json:"updatedById,omitempty"`
-	UpdatedBy           *User                         `json:"updatedBy,omitempty"`
-}
-
-type RenewalLikelihoodInput struct {
-	ID          string                        `json:"id"`
-	Probability *RenewalLikelihoodProbability `json:"probability,omitempty"`
-	Comment     *string                       `json:"comment,omitempty"`
+type RenewalSummary struct {
+	ArrForecast       *float64                      `json:"arrForecast,omitempty"`
+	MaxArrForecast    *float64                      `json:"maxArrForecast,omitempty"`
+	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
+	NextRenewalDate   *time.Time                    `json:"nextRenewalDate,omitempty"`
 }
 
 // Describes the success or failure of the GraphQL call.
@@ -1874,20 +1835,28 @@ type WorkspaceInput struct {
 type ActionType string
 
 const (
-	ActionTypeCreated                  ActionType = "CREATED"
-	ActionTypeRenewalLikelihoodUpdated ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
-	ActionTypeRenewalForecastUpdated   ActionType = "RENEWAL_FORECAST_UPDATED"
+	ActionTypeCreated                          ActionType = "CREATED"
+	ActionTypeRenewalLikelihoodUpdated         ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
+	ActionTypeRenewalForecastUpdated           ActionType = "RENEWAL_FORECAST_UPDATED"
+	ActionTypeContractStatusUpdated            ActionType = "CONTRACT_STATUS_UPDATED"
+	ActionTypeServiceLineItemPriceUpdated      ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
+	ActionTypeServiceLineItemQuantityUpdated   ActionType = "SERVICE_LINE_ITEM_QUANTITY_UPDATED"
+	ActionTypeServiceLineItemBilledTypeUpdated ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_UPDATED"
 )
 
 var AllActionType = []ActionType{
 	ActionTypeCreated,
 	ActionTypeRenewalLikelihoodUpdated,
 	ActionTypeRenewalForecastUpdated,
+	ActionTypeContractStatusUpdated,
+	ActionTypeServiceLineItemPriceUpdated,
+	ActionTypeServiceLineItemQuantityUpdated,
+	ActionTypeServiceLineItemBilledTypeUpdated,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated:
+	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeServiceLineItemBilledTypeUpdated:
 		return true
 	}
 	return false
@@ -1917,16 +1886,18 @@ func (e ActionType) MarshalGQL(w io.Writer) {
 type BilledType string
 
 const (
-	BilledTypeNone     BilledType = "NONE"
-	BilledTypeMonthly  BilledType = "MONTHLY"
-	BilledTypeAnnually BilledType = "ANNUALLY"
-	BilledTypeOnce     BilledType = "ONCE"
-	BilledTypeUsage    BilledType = "USAGE"
+	BilledTypeNone      BilledType = "NONE"
+	BilledTypeMonthly   BilledType = "MONTHLY"
+	BilledTypeQuarterly BilledType = "QUARTERLY"
+	BilledTypeAnnually  BilledType = "ANNUALLY"
+	BilledTypeOnce      BilledType = "ONCE"
+	BilledTypeUsage     BilledType = "USAGE"
 )
 
 var AllBilledType = []BilledType{
 	BilledTypeNone,
 	BilledTypeMonthly,
+	BilledTypeQuarterly,
 	BilledTypeAnnually,
 	BilledTypeOnce,
 	BilledTypeUsage,
@@ -1934,7 +1905,7 @@ var AllBilledType = []BilledType{
 
 func (e BilledType) IsValid() bool {
 	switch e {
-	case BilledTypeNone, BilledTypeMonthly, BilledTypeAnnually, BilledTypeOnce, BilledTypeUsage:
+	case BilledTypeNone, BilledTypeMonthly, BilledTypeQuarterly, BilledTypeAnnually, BilledTypeOnce, BilledTypeUsage:
 		return true
 	}
 	return false
@@ -2056,20 +2027,22 @@ func (e ComparisonOperator) MarshalGQL(w io.Writer) {
 type ContractRenewalCycle string
 
 const (
-	ContractRenewalCycleNone           ContractRenewalCycle = "NONE"
-	ContractRenewalCycleMonthlyRenewal ContractRenewalCycle = "MONTHLY_RENEWAL"
-	ContractRenewalCycleAnnualRenewal  ContractRenewalCycle = "ANNUAL_RENEWAL"
+	ContractRenewalCycleNone             ContractRenewalCycle = "NONE"
+	ContractRenewalCycleMonthlyRenewal   ContractRenewalCycle = "MONTHLY_RENEWAL"
+	ContractRenewalCycleQuarterlyRenewal ContractRenewalCycle = "QUARTERLY_RENEWAL"
+	ContractRenewalCycleAnnualRenewal    ContractRenewalCycle = "ANNUAL_RENEWAL"
 )
 
 var AllContractRenewalCycle = []ContractRenewalCycle{
 	ContractRenewalCycleNone,
 	ContractRenewalCycleMonthlyRenewal,
+	ContractRenewalCycleQuarterlyRenewal,
 	ContractRenewalCycleAnnualRenewal,
 }
 
 func (e ContractRenewalCycle) IsValid() bool {
 	switch e {
-	case ContractRenewalCycleNone, ContractRenewalCycleMonthlyRenewal, ContractRenewalCycleAnnualRenewal:
+	case ContractRenewalCycleNone, ContractRenewalCycleMonthlyRenewal, ContractRenewalCycleQuarterlyRenewal, ContractRenewalCycleAnnualRenewal:
 		return true
 	}
 	return false
@@ -3042,100 +3015,6 @@ func (e *PhoneNumberLabel) UnmarshalGQL(v interface{}) error {
 }
 
 func (e PhoneNumberLabel) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type RenewalCycle string
-
-const (
-	RenewalCycleWeekly     RenewalCycle = "WEEKLY"
-	RenewalCycleBiweekly   RenewalCycle = "BIWEEKLY"
-	RenewalCycleMonthly    RenewalCycle = "MONTHLY"
-	RenewalCycleQuarterly  RenewalCycle = "QUARTERLY"
-	RenewalCycleBiannually RenewalCycle = "BIANNUALLY"
-	RenewalCycleAnnually   RenewalCycle = "ANNUALLY"
-)
-
-var AllRenewalCycle = []RenewalCycle{
-	RenewalCycleWeekly,
-	RenewalCycleBiweekly,
-	RenewalCycleMonthly,
-	RenewalCycleQuarterly,
-	RenewalCycleBiannually,
-	RenewalCycleAnnually,
-}
-
-func (e RenewalCycle) IsValid() bool {
-	switch e {
-	case RenewalCycleWeekly, RenewalCycleBiweekly, RenewalCycleMonthly, RenewalCycleQuarterly, RenewalCycleBiannually, RenewalCycleAnnually:
-		return true
-	}
-	return false
-}
-
-func (e RenewalCycle) String() string {
-	return string(e)
-}
-
-func (e *RenewalCycle) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = RenewalCycle(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid RenewalCycle", str)
-	}
-	return nil
-}
-
-func (e RenewalCycle) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type RenewalLikelihoodProbability string
-
-const (
-	RenewalLikelihoodProbabilityHigh   RenewalLikelihoodProbability = "HIGH"
-	RenewalLikelihoodProbabilityMedium RenewalLikelihoodProbability = "MEDIUM"
-	RenewalLikelihoodProbabilityLow    RenewalLikelihoodProbability = "LOW"
-	RenewalLikelihoodProbabilityZero   RenewalLikelihoodProbability = "ZERO"
-)
-
-var AllRenewalLikelihoodProbability = []RenewalLikelihoodProbability{
-	RenewalLikelihoodProbabilityHigh,
-	RenewalLikelihoodProbabilityMedium,
-	RenewalLikelihoodProbabilityLow,
-	RenewalLikelihoodProbabilityZero,
-}
-
-func (e RenewalLikelihoodProbability) IsValid() bool {
-	switch e {
-	case RenewalLikelihoodProbabilityHigh, RenewalLikelihoodProbabilityMedium, RenewalLikelihoodProbabilityLow, RenewalLikelihoodProbabilityZero:
-		return true
-	}
-	return false
-}
-
-func (e RenewalLikelihoodProbability) String() string {
-	return string(e)
-}
-
-func (e *RenewalLikelihoodProbability) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = RenewalLikelihoodProbability(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid RenewalLikelihoodProbability", str)
-	}
-	return nil
-}
-
-func (e RenewalLikelihoodProbability) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

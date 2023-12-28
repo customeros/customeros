@@ -1,0 +1,6 @@
+mutation deleteServiceLineItem($id: ID!) {
+  serviceLineItem_Delete(id: $id) {
+    accepted
+    completed
+  }
+}

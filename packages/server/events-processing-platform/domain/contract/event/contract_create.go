@@ -18,6 +18,7 @@ type ContractCreateEvent struct {
 	ServiceStartedAt *time.Time                 `json:"serviceStartedAt,omitempty"`
 	SignedAt         *time.Time                 `json:"signedAt,omitempty"`
 	RenewalCycle     string                     `json:"renewalCycle"`
+	RenewalPeriods   *int64                     `json:"renewalPeriods,omitempty"`
 	Status           string                     `json:"status"`
 	CreatedAt        time.Time                  `json:"createdAt"`
 	UpdatedAt        time.Time                  `json:"updatedAt"`
@@ -35,6 +36,7 @@ func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.Con
 		ServiceStartedAt: dataFields.ServiceStartedAt,
 		SignedAt:         dataFields.SignedAt,
 		RenewalCycle:     dataFields.RenewalCycle.String(),
+		RenewalPeriods:   dataFields.RenewalPeriods,
 		Status:           dataFields.Status.String(),
 		CreatedAt:        createdAt,
 		UpdatedAt:        updatedAt,

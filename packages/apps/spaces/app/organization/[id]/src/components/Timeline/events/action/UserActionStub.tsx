@@ -1,25 +1,38 @@
 import { FC } from 'react';
 
-import { Action } from '@graphql/types';
+import { Action, ActionType } from '@graphql/types';
 
-import { RenewalForecastUpdatedAction } from './renewal-forecast/RenewalForecastUpdatedAction';
-import { RenewalLikelihoodUpdatedAction } from './renewal-likelihood/RenewalLikelihoodUpdatedAction';
+import { ServiceUpdatedAction } from './service/ServiceUpdatedAction';
+import { ContractStatusUpdatedAction } from './contract/ContractStatusUpdatedAction';
+import { OnboardingStatusChangedAction } from './onboarding/OnboardingStatusChangedAction';
 
 interface ActionStubProps {
   data: Action;
 }
 
 export const UserActionStub: FC<ActionStubProps> = ({ data }) => {
-  if (data.actionType === 'RENEWAL_FORECAST_UPDATED') {
-    return <RenewalForecastUpdatedAction data={data} />;
-  }
-  if (data.actionType === 'RENEWAL_LIKELIHOOD_UPDATED') {
-    return <RenewalLikelihoodUpdatedAction data={data} />;
-  }
   // This should be handled too as it currently appears in the timeline
   // if (data.actionType === 'CREATED') {
   //   return <p>CREATED</p>;
   // }
+
+  switch (data.actionType) {
+    case ActionType.ContractStatusUpdated:
+    case ActionType.ContractRenewed:
+      return <ContractStatusUpdatedAction data={data} />;
+    case ActionType.ServiceLineItemQuantityUpdated:
+    case ActionType.ServiceLineItemPriceUpdated:
+    case ActionType.ServiceLineItemBilledTypeUpdated:
+      return <ServiceUpdatedAction data={data} />;
+    case ActionType.ServiceLineItemBilledTypeOnceCreated:
+    case ActionType.ServiceLineItemBilledTypeUsageCreated:
+    case ActionType.ServiceLineItemBilledTypeRecurringCreated:
+      return <ServiceUpdatedAction data={data} mode='created' />;
+    case ActionType.ServiceLineItemRemoved:
+      return <ServiceUpdatedAction data={data} mode='removed' />;
+    case ActionType.OnboardingStatusChanged:
+      return <OnboardingStatusChangedAction data={data} />;
+  }
 
   return null;
 };

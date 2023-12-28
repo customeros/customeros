@@ -1,0 +1,27 @@
+query dashboardView_Organizations($page: Int!, $limit: Int!, $searchTerm: Any!) {
+  dashboardView_Organizations(
+  pagination: { page: $page, limit: $limit },
+  where: {
+     AND: [
+         {
+             filter: {
+                 property: "ONBOARDING_STATUS",
+                 operation: IN,
+                 value: $searchTerm
+             }
+         }
+     ]
+    },
+    sort: {by: "ONBOARDING_STATUS"}) {
+    content {
+      id
+      accountDetails {
+        onboarding {
+          status
+          updatedAt
+        }
+      }
+    }
+    totalElements
+  }
+}

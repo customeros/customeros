@@ -15,8 +15,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/comment"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -119,8 +119,9 @@ func (s *commentService) syncComment(ctx context.Context, syncMutex *sync.Mutex,
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentService.syncComment")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag("externalSystem", commentInput.ExternalSystem)
-	span.LogFields(log.Object("commentInput", commentInput), log.Object("syncDate", syncDate))
+	span.SetTag(tracing.SpanTagExternalSystem, commentInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate))
+	tracing.LogObjectAsJson(span, "commentInput", commentInput)
 
 	var tenant = common.GetTenantFromContext(ctx)
 	var failedSync = false
@@ -198,6 +199,7 @@ func (s *commentService) syncComment(ctx context.Context, syncMutex *sync.Mutex,
 		if commentedIssueId != "" {
 			request.CommentedIssueId = utils.StringPtr(commentedIssueId)
 		}
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		response, err := s.grpcClients.CommentClient.UpsertComment(ctx, &request)
 		if err != nil {
 			failedSync = true

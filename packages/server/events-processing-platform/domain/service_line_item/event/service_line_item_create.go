@@ -22,6 +22,7 @@ type ServiceLineItemCreateEvent struct {
 	StartedAt  time.Time          `json:"startedAt"`
 	EndedAt    *time.Time         `json:"endedAt,omitempty"`
 	Source     commonmodel.Source `json:"source"`
+	Comments   string             `json:"comments"`
 }
 
 func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source commonmodel.Source, createdAt, updatedAt, startedAt time.Time, endedAt *time.Time) (eventstore.Event, error) {
@@ -38,6 +39,7 @@ func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields mo
 		StartedAt:  startedAt,
 		EndedAt:    endedAt,
 		Source:     source,
+		Comments:   dataFields.Comments,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

@@ -145,22 +145,6 @@ type AttachmentInput struct {
 	AppSource string `json:"appSource"`
 }
 
-type BillingDetails struct {
-	Amount            *float64      `json:"amount,omitempty"`
-	Frequency         *RenewalCycle `json:"frequency,omitempty"`
-	RenewalCycle      *RenewalCycle `json:"renewalCycle,omitempty"`
-	RenewalCycleStart *time.Time    `json:"renewalCycleStart,omitempty"`
-	RenewalCycleNext  *time.Time    `json:"renewalCycleNext,omitempty"`
-}
-
-type BillingDetailsInput struct {
-	ID                string        `json:"id"`
-	Amount            *float64      `json:"amount,omitempty"`
-	Frequency         *RenewalCycle `json:"frequency,omitempty"`
-	RenewalCycle      *RenewalCycle `json:"renewalCycle,omitempty"`
-	RenewalCycleStart *time.Time    `json:"renewalCycleStart,omitempty"`
-}
-
 // Describes the relationship a Contact has with a Organization.
 // **A `return` object**
 type Calendar struct {
@@ -360,6 +344,7 @@ type Contract struct {
 	EndedAt          *time.Time           `json:"endedAt,omitempty"`
 	Name             string               `json:"name"`
 	RenewalCycle     ContractRenewalCycle `json:"renewalCycle"`
+	RenewalPeriods   *int64               `json:"renewalPeriods,omitempty"`
 	Status           ContractStatus       `json:"status"`
 	ServiceLineItems []*ServiceLineItem   `json:"serviceLineItems,omitempty"`
 	Opportunities    []*Opportunity       `json:"opportunities,omitempty"`
@@ -379,6 +364,7 @@ type ContractInput struct {
 	OrganizationID    string                        `json:"organizationId"`
 	Name              *string                       `json:"name,omitempty"`
 	RenewalCycle      *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
+	RenewalPeriods    *int64                        `json:"renewalPeriods,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
 	ContractURL       *string                       `json:"contractUrl,omitempty"`
 	ServiceStartedAt  *time.Time                    `json:"serviceStartedAt,omitempty"`
@@ -391,6 +377,7 @@ type ContractUpdateInput struct {
 	Name             *string               `json:"name,omitempty"`
 	ContractURL      *string               `json:"contractUrl,omitempty"`
 	RenewalCycle     *ContractRenewalCycle `json:"renewalCycle,omitempty"`
+	RenewalPeriods   *int64                `json:"renewalPeriods,omitempty"`
 	ServiceStartedAt *time.Time            `json:"serviceStartedAt,omitempty"`
 	SignedAt         *time.Time            `json:"signedAt,omitempty"`
 	EndedAt          *time.Time            `json:"endedAt,omitempty"`
@@ -529,18 +516,19 @@ type CustomerUser struct {
 
 type DashboardARRBreakdown struct {
 	ArrBreakdown       float64                          `json:"arrBreakdown"`
-	IncreasePercentage float64                          `json:"increasePercentage"`
+	IncreasePercentage string                           `json:"increasePercentage"`
 	PerMonth           []*DashboardARRBreakdownPerMonth `json:"perMonth"`
 }
 
 type DashboardARRBreakdownPerMonth struct {
-	Month           int `json:"month"`
-	NewlyContracted int `json:"newlyContracted"`
-	Renewals        int `json:"renewals"`
-	Upsells         int `json:"upsells"`
-	Downgrades      int `json:"downgrades"`
-	Cancellations   int `json:"cancellations"`
-	Churned         int `json:"churned"`
+	Year            int     `json:"year"`
+	Month           int     `json:"month"`
+	NewlyContracted float64 `json:"newlyContracted"`
+	Renewals        float64 `json:"renewals"`
+	Upsells         float64 `json:"upsells"`
+	Downgrades      float64 `json:"downgrades"`
+	Cancellations   float64 `json:"cancellations"`
+	Churned         float64 `json:"churned"`
 }
 
 type DashboardCustomerMap struct {
@@ -553,7 +541,7 @@ type DashboardCustomerMap struct {
 
 type DashboardGrossRevenueRetention struct {
 	GrossRevenueRetention float64                                   `json:"grossRevenueRetention"`
-	IncreasePercentage    float64                                   `json:"increasePercentage"`
+	IncreasePercentage    string                                    `json:"increasePercentage"`
 	PerMonth              []*DashboardGrossRevenueRetentionPerMonth `json:"perMonth"`
 }
 
@@ -564,18 +552,19 @@ type DashboardGrossRevenueRetentionPerMonth struct {
 
 type DashboardMRRPerCustomer struct {
 	MrrPerCustomer     float64                            `json:"mrrPerCustomer"`
-	IncreasePercentage float64                            `json:"increasePercentage"`
+	IncreasePercentage string                             `json:"increasePercentage"`
 	PerMonth           []*DashboardMRRPerCustomerPerMonth `json:"perMonth"`
 }
 
 type DashboardMRRPerCustomerPerMonth struct {
-	Month int `json:"month"`
-	Value int `json:"value"`
+	Year  int     `json:"year"`
+	Month int     `json:"month"`
+	Value float64 `json:"value"`
 }
 
 type DashboardNewCustomers struct {
 	ThisMonthCount              int                              `json:"thisMonthCount"`
-	ThisMonthIncreasePercentage float64                          `json:"thisMonthIncreasePercentage"`
+	ThisMonthIncreasePercentage string                           `json:"thisMonthIncreasePercentage"`
 	PerMonth                    []*DashboardNewCustomersPerMonth `json:"perMonth"`
 }
 
@@ -585,18 +574,31 @@ type DashboardNewCustomersPerMonth struct {
 	Count int `json:"count"`
 }
 
+type DashboardOnboardingCompletion struct {
+	CompletionPercentage float64                                  `json:"completionPercentage"`
+	IncreasePercentage   float64                                  `json:"increasePercentage"`
+	PerMonth             []*DashboardOnboardingCompletionPerMonth `json:"perMonth"`
+}
+
+type DashboardOnboardingCompletionPerMonth struct {
+	Year  int     `json:"year"`
+	Month int     `json:"month"`
+	Value float64 `json:"value"`
+}
+
 type DashboardPeriodInput struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
 }
 
 type DashboardRetentionRate struct {
-	RetentionRate      int                               `json:"retentionRate"`
-	IncreasePercentage float64                           `json:"increasePercentage"`
+	RetentionRate      float64                           `json:"retentionRate"`
+	IncreasePercentage string                            `json:"increasePercentage"`
 	PerMonth           []*DashboardRetentionRatePerMonth `json:"perMonth"`
 }
 
 type DashboardRetentionRatePerMonth struct {
+	Year       int `json:"year"`
 	Month      int `json:"month"`
 	RenewCount int `json:"renewCount"`
 	ChurnCount int `json:"churnCount"`
@@ -605,6 +607,18 @@ type DashboardRetentionRatePerMonth struct {
 type DashboardRevenueAtRisk struct {
 	HighConfidence float64 `json:"highConfidence"`
 	AtRisk         float64 `json:"atRisk"`
+}
+
+type DashboardTimeToOnboard struct {
+	TimeToOnboard      *float64                          `json:"timeToOnboard,omitempty"`
+	IncreasePercentage *float64                          `json:"increasePercentage,omitempty"`
+	PerMonth           []*DashboardTimeToOnboardPerMonth `json:"perMonth"`
+}
+
+type DashboardTimeToOnboardPerMonth struct {
+	Year  int     `json:"year"`
+	Month int     `json:"month"`
+	Value float64 `json:"value"`
 }
 
 type DeleteResponse struct {
@@ -1240,6 +1254,18 @@ type NoteUpdateInput struct {
 	ContentType *string `json:"contentType,omitempty"`
 }
 
+type OnboardingDetails struct {
+	Status    OnboardingStatus `json:"status"`
+	Comments  *string          `json:"comments,omitempty"`
+	UpdatedAt *time.Time       `json:"updatedAt,omitempty"`
+}
+
+type OnboardingStatusInput struct {
+	OrganizationID string           `json:"organizationId"`
+	Status         OnboardingStatus `json:"status"`
+	Comments       *string          `json:"comments,omitempty"`
+}
+
 type Opportunity struct {
 	ID                     string                       `json:"id"`
 	CreatedAt              time.Time                    `json:"createdAt"`
@@ -1277,6 +1303,7 @@ type OpportunityRenewalUpdateInput struct {
 	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
 	Comments          *string                       `json:"comments,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
+	OwnerUserID       *string                       `json:"ownerUserId,omitempty"`
 }
 
 type OpportunityUpdateInput struct {
@@ -1293,10 +1320,8 @@ type OpportunityUpdateInput struct {
 }
 
 type OrgAccountDetails struct {
-	RenewalLikelihood *RenewalLikelihood `json:"renewalLikelihood,omitempty"`
-	RenewalForecast   *RenewalForecast   `json:"renewalForecast,omitempty"`
-	BillingDetails    *BillingDetails    `json:"billingDetails,omitempty"`
-	RenewalSummary    *RenewalSummary    `json:"renewalSummary,omitempty"`
+	RenewalSummary *RenewalSummary    `json:"renewalSummary,omitempty"`
+	Onboarding     *OnboardingDetails `json:"onboarding,omitempty"`
 }
 
 type Organization struct {
@@ -1319,6 +1344,10 @@ type Organization struct {
 	IsCustomer                    *bool                         `json:"isCustomer,omitempty"`
 	Market                        *Market                       `json:"market,omitempty"`
 	Employees                     *int64                        `json:"employees,omitempty"`
+	YearFounded                   *int64                        `json:"yearFounded,omitempty"`
+	Headquarters                  *string                       `json:"headquarters,omitempty"`
+	EmployeeGrowthRate            *string                       `json:"employeeGrowthRate,omitempty"`
+	LogoURL                       *string                       `json:"logoUrl,omitempty"`
 	LastFundingRound              *FundingRound                 `json:"lastFundingRound,omitempty"`
 	LastFundingAmount             *string                       `json:"lastFundingAmount,omitempty"`
 	Source                        DataSource                    `json:"source"`
@@ -1359,23 +1388,27 @@ func (this Organization) GetID() string { return this.ID }
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
-	ReferenceID   *string             `json:"referenceId,omitempty"`
-	Name          string              `json:"name"`
-	Description   *string             `json:"description,omitempty"`
-	Note          *string             `json:"note,omitempty"`
-	Domains       []string            `json:"domains,omitempty"`
-	Website       *string             `json:"website,omitempty"`
-	Industry      *string             `json:"industry,omitempty"`
-	SubIndustry   *string             `json:"subIndustry,omitempty"`
-	IndustryGroup *string             `json:"industryGroup,omitempty"`
-	IsPublic      *bool               `json:"isPublic,omitempty"`
-	IsCustomer    *bool               `json:"isCustomer,omitempty"`
-	CustomFields  []*CustomFieldInput `json:"customFields,omitempty"`
-	FieldSets     []*FieldSetInput    `json:"fieldSets,omitempty"`
-	TemplateID    *string             `json:"templateId,omitempty"`
-	Market        *Market             `json:"market,omitempty"`
-	Employees     *int64              `json:"employees,omitempty"`
-	AppSource     *string             `json:"appSource,omitempty"`
+	ReferenceID        *string             `json:"referenceId,omitempty"`
+	Name               *string             `json:"name,omitempty"`
+	Description        *string             `json:"description,omitempty"`
+	Note               *string             `json:"note,omitempty"`
+	Domains            []string            `json:"domains,omitempty"`
+	Website            *string             `json:"website,omitempty"`
+	Industry           *string             `json:"industry,omitempty"`
+	SubIndustry        *string             `json:"subIndustry,omitempty"`
+	IndustryGroup      *string             `json:"industryGroup,omitempty"`
+	IsPublic           *bool               `json:"isPublic,omitempty"`
+	IsCustomer         *bool               `json:"isCustomer,omitempty"`
+	CustomFields       []*CustomFieldInput `json:"customFields,omitempty"`
+	FieldSets          []*FieldSetInput    `json:"fieldSets,omitempty"`
+	TemplateID         *string             `json:"templateId,omitempty"`
+	Market             *Market             `json:"market,omitempty"`
+	LogoURL            *string             `json:"logoUrl,omitempty"`
+	EmployeeGrowthRate *string             `json:"employeeGrowthRate,omitempty"`
+	Headquarters       *string             `json:"headquarters,omitempty"`
+	YearFounded        *int64              `json:"yearFounded,omitempty"`
+	Employees          *int64              `json:"employees,omitempty"`
+	AppSource          *string             `json:"appSource,omitempty"`
 }
 
 type OrganizationPage struct {
@@ -1410,23 +1443,27 @@ type OrganizationUpdateInput struct {
 	ID          string  `json:"id"`
 	ReferenceID *string `json:"referenceId,omitempty"`
 	// Set to true when partial update is needed. Empty or missing fields will not be ignored.
-	Patch             *bool         `json:"patch,omitempty"`
-	Name              string        `json:"name"`
-	Description       *string       `json:"description,omitempty"`
-	Note              *string       `json:"note,omitempty"`
-	Domains           []string      `json:"domains,omitempty"`
-	Website           *string       `json:"website,omitempty"`
-	Industry          *string       `json:"industry,omitempty"`
-	SubIndustry       *string       `json:"subIndustry,omitempty"`
-	IndustryGroup     *string       `json:"industryGroup,omitempty"`
-	IsPublic          *bool         `json:"isPublic,omitempty"`
-	IsCustomer        *bool         `json:"isCustomer,omitempty"`
-	Market            *Market       `json:"market,omitempty"`
-	Employees         *int64        `json:"employees,omitempty"`
-	TargetAudience    *string       `json:"targetAudience,omitempty"`
-	ValueProposition  *string       `json:"valueProposition,omitempty"`
-	LastFundingRound  *FundingRound `json:"lastFundingRound,omitempty"`
-	LastFundingAmount *string       `json:"lastFundingAmount,omitempty"`
+	Patch              *bool         `json:"patch,omitempty"`
+	Name               *string       `json:"name,omitempty"`
+	Description        *string       `json:"description,omitempty"`
+	Note               *string       `json:"note,omitempty"`
+	Domains            []string      `json:"domains,omitempty"`
+	Website            *string       `json:"website,omitempty"`
+	Industry           *string       `json:"industry,omitempty"`
+	SubIndustry        *string       `json:"subIndustry,omitempty"`
+	IndustryGroup      *string       `json:"industryGroup,omitempty"`
+	IsPublic           *bool         `json:"isPublic,omitempty"`
+	IsCustomer         *bool         `json:"isCustomer,omitempty"`
+	Market             *Market       `json:"market,omitempty"`
+	Employees          *int64        `json:"employees,omitempty"`
+	TargetAudience     *string       `json:"targetAudience,omitempty"`
+	ValueProposition   *string       `json:"valueProposition,omitempty"`
+	LastFundingRound   *FundingRound `json:"lastFundingRound,omitempty"`
+	LastFundingAmount  *string       `json:"lastFundingAmount,omitempty"`
+	LogoURL            *string       `json:"logoUrl,omitempty"`
+	EmployeeGrowthRate *string       `json:"employeeGrowthRate,omitempty"`
+	Headquarters       *string       `json:"headquarters,omitempty"`
+	YearFounded        *int64        `json:"yearFounded,omitempty"`
 }
 
 type PageView struct {
@@ -1557,38 +1594,6 @@ type PlayerUser struct {
 	User    *User  `json:"user"`
 	Default bool   `json:"default"`
 	Tenant  string `json:"tenant"`
-}
-
-type RenewalForecast struct {
-	Amount          *float64   `json:"amount,omitempty"`
-	PotentialAmount *float64   `json:"potentialAmount,omitempty"`
-	Comment         *string    `json:"comment,omitempty"`
-	UpdatedAt       *time.Time `json:"updatedAt,omitempty"`
-	UpdatedByID     *string    `json:"updatedById,omitempty"`
-	UpdatedBy       *User      `json:"updatedBy,omitempty"`
-	Arr             *float64   `json:"arr,omitempty"`
-	MaxArr          *float64   `json:"maxArr,omitempty"`
-}
-
-type RenewalForecastInput struct {
-	ID      string   `json:"id"`
-	Amount  *float64 `json:"amount,omitempty"`
-	Comment *string  `json:"comment,omitempty"`
-}
-
-type RenewalLikelihood struct {
-	Probability         *RenewalLikelihoodProbability `json:"probability,omitempty"`
-	PreviousProbability *RenewalLikelihoodProbability `json:"previousProbability,omitempty"`
-	Comment             *string                       `json:"comment,omitempty"`
-	UpdatedAt           *time.Time                    `json:"updatedAt,omitempty"`
-	UpdatedByID         *string                       `json:"updatedById,omitempty"`
-	UpdatedBy           *User                         `json:"updatedBy,omitempty"`
-}
-
-type RenewalLikelihoodInput struct {
-	ID          string                        `json:"id"`
-	Probability *RenewalLikelihoodProbability `json:"probability,omitempty"`
-	Comment     *string                       `json:"comment,omitempty"`
 }
 
 type RenewalSummary struct {
@@ -1883,10 +1888,19 @@ type WorkspaceInput struct {
 type ActionType string
 
 const (
-	ActionTypeCreated                  ActionType = "CREATED"
-	ActionTypeRenewalLikelihoodUpdated ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
-	ActionTypeRenewalForecastUpdated   ActionType = "RENEWAL_FORECAST_UPDATED"
-	ActionTypeContractStatusUpdated    ActionType = "CONTRACT_STATUS_UPDATED"
+	ActionTypeCreated                                   ActionType = "CREATED"
+	ActionTypeRenewalLikelihoodUpdated                  ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
+	ActionTypeRenewalForecastUpdated                    ActionType = "RENEWAL_FORECAST_UPDATED"
+	ActionTypeContractStatusUpdated                     ActionType = "CONTRACT_STATUS_UPDATED"
+	ActionTypeServiceLineItemPriceUpdated               ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
+	ActionTypeServiceLineItemQuantityUpdated            ActionType = "SERVICE_LINE_ITEM_QUANTITY_UPDATED"
+	ActionTypeServiceLineItemBilledTypeUpdated          ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_UPDATED"
+	ActionTypeServiceLineItemBilledTypeRecurringCreated ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED"
+	ActionTypeServiceLineItemBilledTypeOnceCreated      ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED"
+	ActionTypeServiceLineItemBilledTypeUsageCreated     ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_USAGE_CREATED"
+	ActionTypeContractRenewed                           ActionType = "CONTRACT_RENEWED"
+	ActionTypeServiceLineItemRemoved                    ActionType = "SERVICE_LINE_ITEM_REMOVED"
+	ActionTypeOnboardingStatusChanged                   ActionType = "ONBOARDING_STATUS_CHANGED"
 )
 
 var AllActionType = []ActionType{
@@ -1894,11 +1908,20 @@ var AllActionType = []ActionType{
 	ActionTypeRenewalLikelihoodUpdated,
 	ActionTypeRenewalForecastUpdated,
 	ActionTypeContractStatusUpdated,
+	ActionTypeServiceLineItemPriceUpdated,
+	ActionTypeServiceLineItemQuantityUpdated,
+	ActionTypeServiceLineItemBilledTypeUpdated,
+	ActionTypeServiceLineItemBilledTypeRecurringCreated,
+	ActionTypeServiceLineItemBilledTypeOnceCreated,
+	ActionTypeServiceLineItemBilledTypeUsageCreated,
+	ActionTypeContractRenewed,
+	ActionTypeServiceLineItemRemoved,
+	ActionTypeOnboardingStatusChanged,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated:
+	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeServiceLineItemBilledTypeUpdated, ActionTypeServiceLineItemBilledTypeRecurringCreated, ActionTypeServiceLineItemBilledTypeOnceCreated, ActionTypeServiceLineItemBilledTypeUsageCreated, ActionTypeContractRenewed, ActionTypeServiceLineItemRemoved, ActionTypeOnboardingStatusChanged:
 		return true
 	}
 	return false
@@ -2292,30 +2315,34 @@ type DataSource string
 const (
 	DataSourceNa             DataSource = "NA"
 	DataSourceOpenline       DataSource = "OPENLINE"
+	DataSourceWebscrape      DataSource = "WEBSCRAPE"
 	DataSourceHubspot        DataSource = "HUBSPOT"
 	DataSourceZendeskSupport DataSource = "ZENDESK_SUPPORT"
 	DataSourcePipedrive      DataSource = "PIPEDRIVE"
 	DataSourceSLACk          DataSource = "SLACK"
-	DataSourceWebscrape      DataSource = "WEBSCRAPE"
 	DataSourceIntercom       DataSource = "INTERCOM"
 	DataSourceSalesforce     DataSource = "SALESFORCE"
+	DataSourceStripe         DataSource = "STRIPE"
+	DataSourceMixpanel       DataSource = "MIXPANEL"
 )
 
 var AllDataSource = []DataSource{
 	DataSourceNa,
 	DataSourceOpenline,
+	DataSourceWebscrape,
 	DataSourceHubspot,
 	DataSourceZendeskSupport,
 	DataSourcePipedrive,
 	DataSourceSLACk,
-	DataSourceWebscrape,
 	DataSourceIntercom,
 	DataSourceSalesforce,
+	DataSourceStripe,
+	DataSourceMixpanel,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceWebscrape, DataSourceIntercom, DataSourceSalesforce:
+	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel:
 		return true
 	}
 	return false
@@ -2481,6 +2508,8 @@ const (
 	ExternalSystemTypeSLACk          ExternalSystemType = "SLACK"
 	ExternalSystemTypeIntercom       ExternalSystemType = "INTERCOM"
 	ExternalSystemTypeSalesforce     ExternalSystemType = "SALESFORCE"
+	ExternalSystemTypeStripe         ExternalSystemType = "STRIPE"
+	ExternalSystemTypeMixpanel       ExternalSystemType = "MIXPANEL"
 )
 
 var AllExternalSystemType = []ExternalSystemType{
@@ -2491,11 +2520,13 @@ var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeSLACk,
 	ExternalSystemTypeIntercom,
 	ExternalSystemTypeSalesforce,
+	ExternalSystemTypeStripe,
+	ExternalSystemTypeMixpanel,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce, ExternalSystemTypeStripe, ExternalSystemTypeMixpanel:
 		return true
 	}
 	return false
@@ -2912,6 +2943,57 @@ func (e MeetingStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type OnboardingStatus string
+
+const (
+	OnboardingStatusNotApplicable OnboardingStatus = "NOT_APPLICABLE"
+	OnboardingStatusNotStarted    OnboardingStatus = "NOT_STARTED"
+	OnboardingStatusOnTrack       OnboardingStatus = "ON_TRACK"
+	OnboardingStatusLate          OnboardingStatus = "LATE"
+	OnboardingStatusStuck         OnboardingStatus = "STUCK"
+	OnboardingStatusDone          OnboardingStatus = "DONE"
+	OnboardingStatusSuccessful    OnboardingStatus = "SUCCESSFUL"
+)
+
+var AllOnboardingStatus = []OnboardingStatus{
+	OnboardingStatusNotApplicable,
+	OnboardingStatusNotStarted,
+	OnboardingStatusOnTrack,
+	OnboardingStatusLate,
+	OnboardingStatusStuck,
+	OnboardingStatusDone,
+	OnboardingStatusSuccessful,
+}
+
+func (e OnboardingStatus) IsValid() bool {
+	switch e {
+	case OnboardingStatusNotApplicable, OnboardingStatusNotStarted, OnboardingStatusOnTrack, OnboardingStatusLate, OnboardingStatusStuck, OnboardingStatusDone, OnboardingStatusSuccessful:
+		return true
+	}
+	return false
+}
+
+func (e OnboardingStatus) String() string {
+	return string(e)
+}
+
+func (e *OnboardingStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OnboardingStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OnboardingStatus", str)
+	}
+	return nil
+}
+
+func (e OnboardingStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type OpportunityRenewalLikelihood string
 
 const (
@@ -3057,100 +3139,6 @@ func (e *PhoneNumberLabel) UnmarshalGQL(v interface{}) error {
 }
 
 func (e PhoneNumberLabel) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type RenewalCycle string
-
-const (
-	RenewalCycleWeekly     RenewalCycle = "WEEKLY"
-	RenewalCycleBiweekly   RenewalCycle = "BIWEEKLY"
-	RenewalCycleMonthly    RenewalCycle = "MONTHLY"
-	RenewalCycleQuarterly  RenewalCycle = "QUARTERLY"
-	RenewalCycleBiannually RenewalCycle = "BIANNUALLY"
-	RenewalCycleAnnually   RenewalCycle = "ANNUALLY"
-)
-
-var AllRenewalCycle = []RenewalCycle{
-	RenewalCycleWeekly,
-	RenewalCycleBiweekly,
-	RenewalCycleMonthly,
-	RenewalCycleQuarterly,
-	RenewalCycleBiannually,
-	RenewalCycleAnnually,
-}
-
-func (e RenewalCycle) IsValid() bool {
-	switch e {
-	case RenewalCycleWeekly, RenewalCycleBiweekly, RenewalCycleMonthly, RenewalCycleQuarterly, RenewalCycleBiannually, RenewalCycleAnnually:
-		return true
-	}
-	return false
-}
-
-func (e RenewalCycle) String() string {
-	return string(e)
-}
-
-func (e *RenewalCycle) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = RenewalCycle(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid RenewalCycle", str)
-	}
-	return nil
-}
-
-func (e RenewalCycle) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type RenewalLikelihoodProbability string
-
-const (
-	RenewalLikelihoodProbabilityHigh   RenewalLikelihoodProbability = "HIGH"
-	RenewalLikelihoodProbabilityMedium RenewalLikelihoodProbability = "MEDIUM"
-	RenewalLikelihoodProbabilityLow    RenewalLikelihoodProbability = "LOW"
-	RenewalLikelihoodProbabilityZero   RenewalLikelihoodProbability = "ZERO"
-)
-
-var AllRenewalLikelihoodProbability = []RenewalLikelihoodProbability{
-	RenewalLikelihoodProbabilityHigh,
-	RenewalLikelihoodProbabilityMedium,
-	RenewalLikelihoodProbabilityLow,
-	RenewalLikelihoodProbabilityZero,
-}
-
-func (e RenewalLikelihoodProbability) IsValid() bool {
-	switch e {
-	case RenewalLikelihoodProbabilityHigh, RenewalLikelihoodProbabilityMedium, RenewalLikelihoodProbabilityLow, RenewalLikelihoodProbabilityZero:
-		return true
-	}
-	return false
-}
-
-func (e RenewalLikelihoodProbability) String() string {
-	return string(e)
-}
-
-func (e *RenewalLikelihoodProbability) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = RenewalLikelihoodProbability(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid RenewalLikelihoodProbability", str)
-	}
-	return nil
-}
-
-func (e RenewalLikelihoodProbability) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

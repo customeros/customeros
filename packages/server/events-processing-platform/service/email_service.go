@@ -2,9 +2,7 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
@@ -12,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/opentracing/opentracing-go/log"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"strings"
 )
 
@@ -35,7 +33,7 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *emailpb.UpsertE
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EmailService.UpsertEmail")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	emailId := strings.TrimSpace(request.Id)
 	var err error
@@ -59,9 +57,43 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *emailpb.UpsertE
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("(UpsertEmail): {%s}", request.RawEmail)
-
 	return &emailpb.EmailIdGrpcResponse{Id: emailId}, nil
+}
+
+func (s *emailService) FailEmailValidation(ctx context.Context, request *emailpb.FailEmailValidationGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EmailService.FailEmailValidation")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.SetTag(tracing.SpanTagEntityId, request.EmailId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	cmd := command.NewFailedEmailValidationCommand(request.EmailId, request.Tenant, request.LoggedInUserId, request.AppSource, request.ErrorMessage)
+	if err := s.emailCommandHandlers.FailEmailValidation.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(FailEmailValidation) tenant:{%s}, email ID: {%s}, err: {%v}", request.Tenant, request.EmailId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &emailpb.EmailIdGrpcResponse{Id: request.EmailId}, nil
+}
+
+func (s *emailService) PassEmailValidation(ctx context.Context, request *emailpb.PassEmailValidationGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EmailService.PassEmailValidation")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.SetTag(tracing.SpanTagEntityId, request.EmailId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	cmd := command.NewEmailValidatedCommand(request.EmailId, request.Tenant, request.LoggedInUserId, request.AppSource, request.RawEmail,
+		request.IsReachable, request.ErrorMessage, request.Domain, request.Username, request.Email, request.AcceptsMail, request.CanConnectSmtp,
+		request.HasFullInbox, request.IsCatchAll, request.IsDisabled, request.IsValidSyntax)
+	if err := s.emailCommandHandlers.EmailValidated.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(EmailValidated) tenant:{%s}, email ID: {%s}, err: %s", request.Tenant, request.EmailId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &emailpb.EmailIdGrpcResponse{Id: request.EmailId}, nil
 }
 
 func (s *emailService) errResponse(err error) error {

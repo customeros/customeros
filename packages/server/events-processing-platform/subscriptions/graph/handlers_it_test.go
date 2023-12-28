@@ -12,6 +12,7 @@ const tenantName = "ziggy"
 
 var testDatabase *test.TestDatabase
 var testLogger = test.SetupTestLogger()
+var testMockedGrpcClient = test.SetupMockedTestGrpcClient()
 
 func TestMain(m *testing.M) {
 	myDatabase, shutdown := test.SetupTestDatabase()

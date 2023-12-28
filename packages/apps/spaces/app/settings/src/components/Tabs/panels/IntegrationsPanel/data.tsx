@@ -812,7 +812,39 @@ export const integrationsData: IntegrationItem[] = [
       },
     ],
   },
-
+  {
+    key: 'mixpanel',
+    state: 'INACTIVE',
+    icon: '/integrationOptionLogos/mixpanel.svg',
+    identifier: 'mixpanel',
+    name: 'Mixpanel',
+    fields: [
+      {
+        name: 'username',
+        label: 'Username',
+      },
+      {
+        name: 'secret',
+        label: 'Secret',
+      },
+      {
+        name: 'projectId',
+        label: 'Project ID',
+      },
+      {
+        name: 'projectSecret',
+        label: 'Project Secret',
+      },
+      {
+        name: 'projectTimezone',
+        label: 'Project Timezone',
+      },
+      {
+        name: 'region',
+        label: 'Region',
+      },
+    ],
+  },
   {
     key: 'monday',
     state: 'INACTIVE',
@@ -1236,6 +1268,7 @@ export const integrationsData: IntegrationItem[] = [
         label: 'Secret Key',
       },
     ],
+    isFromIntegrationApp: true,
   },
   {
     key: 'surveymonkey',

@@ -19,12 +19,14 @@ type OrganizationRepository interface {
 }
 
 type organizationRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepository {
+func NewOrganizationRepository(driver *neo4j.DriverWithContext, database string) OrganizationRepository {
 	return &organizationRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 
@@ -44,7 +46,7 @@ func (r *organizationRepository) SuggestOrganizationsMerge(ctx context.Context, 
 					rel.suggestedAt = $now`
 	span.LogFields(log.String("query", query))
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+	_, err := utils.ExecuteQuery(ctx, *r.driver, r.database, query, map[string]any{
 		"tenant":          tenant,
 		"now":             utils.Now(),
 		"primaryOrgId":    primaryOrgId,
@@ -53,6 +55,7 @@ func (r *organizationRepository) SuggestOrganizationsMerge(ctx context.Context, 
 		"suggestedByDtls": suggestedByDtls,
 		"confidence":      confidence,
 	})
+	return err
 }
 
 func (r *organizationRepository) OrgsAlreadyComparedForDuplicates(ctx context.Context, tenant, org1Id, org2Id string) (bool, error) {

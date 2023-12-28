@@ -2,6 +2,8 @@ package interactionEvent
 
 import (
 	"context"
+	"strings"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
@@ -11,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"golang.org/x/sync/errgroup"
-	"strings"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/opentracing/opentracing-go/log"
@@ -27,15 +28,10 @@ type InteractionEventSubscriber struct {
 
 func NewInteractionEventSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, commands *command_handler.CommandHandlers, repositories *repository.Repositories) *InteractionEventSubscriber {
 	return &InteractionEventSubscriber{
-		log: log,
-		db:  db,
-		cfg: cfg,
-		interactionEventHandler: &interactionEventHandler{
-			log:                      log,
-			cfg:                      cfg,
-			interactionEventCommands: commands,
-			repositories:             repositories,
-		},
+		log:                     log,
+		db:                      db,
+		cfg:                     cfg,
+		interactionEventHandler: NewInteractionEventHandler(repositories, commands, log, cfg),
 	}
 }
 

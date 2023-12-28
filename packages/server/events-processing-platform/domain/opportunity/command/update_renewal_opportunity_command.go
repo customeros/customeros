@@ -15,9 +15,10 @@ type UpdateRenewalOpportunityCommand struct {
 	Comments          string
 	Amount            float64
 	MaskFields        []string
+	OwnerUserId       string
 }
 
-func NewUpdateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, comments string, renewalLikelihood model.RenewalLikelihoodString, amount float64, source commonmodel.Source, updatedAt *time.Time, maskFields []string) *UpdateRenewalOpportunityCommand {
+func NewUpdateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, comments string, renewalLikelihood model.RenewalLikelihoodString, amount float64, source commonmodel.Source, updatedAt *time.Time, maskFields []string, ownerUserId string) *UpdateRenewalOpportunityCommand {
 	return &UpdateRenewalOpportunityCommand{
 		BaseCommand:       eventstore.NewBaseCommand(opportunityId, tenant, loggedInUserId),
 		Source:            source,
@@ -26,5 +27,6 @@ func NewUpdateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, c
 		Comments:          comments,
 		Amount:            amount,
 		MaskFields:        maskFields,
+		OwnerUserId:       ownerUserId,
 	}
 }

@@ -104,7 +104,7 @@ export const IntegrationsPanel = () => {
       return;
     }
     try {
-      await iApp.integration(option.key).open();
+      await iApp.integration(option.key).open({ showPoweredBy: false });
       await refresh();
     } catch (err) {
       toastError('Integration failed', 'get-intergration-data');

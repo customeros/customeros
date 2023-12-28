@@ -62,8 +62,6 @@ type ResolverRoot interface {
 	PhoneNumber() PhoneNumberResolver
 	Player() PlayerResolver
 	Query() QueryResolver
-	RenewalForecast() RenewalForecastResolver
-	RenewalLikelihood() RenewalLikelihoodResolver
 	ServiceLineItem() ServiceLineItemResolver
 	User() UserResolver
 }
@@ -116,14 +114,6 @@ type ComplexityRoot struct {
 		Size          func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
-	}
-
-	BillingDetails struct {
-		Amount            func(childComplexity int) int
-		Frequency         func(childComplexity int) int
-		RenewalCycle      func(childComplexity int) int
-		RenewalCycleNext  func(childComplexity int) int
-		RenewalCycleStart func(childComplexity int) int
 	}
 
 	Calendar struct {
@@ -207,6 +197,7 @@ type ComplexityRoot struct {
 		Opportunities    func(childComplexity int) int
 		Owner            func(childComplexity int) int
 		RenewalCycle     func(childComplexity int) int
+		RenewalPeriods   func(childComplexity int) int
 		ServiceLineItems func(childComplexity int) int
 		ServiceStartedAt func(childComplexity int) int
 		SignedAt         func(childComplexity int) int
@@ -280,6 +271,7 @@ type ComplexityRoot struct {
 		NewlyContracted func(childComplexity int) int
 		Renewals        func(childComplexity int) int
 		Upsells         func(childComplexity int) int
+		Year            func(childComplexity int) int
 	}
 
 	DashboardCustomerMap struct {
@@ -310,6 +302,7 @@ type ComplexityRoot struct {
 	DashboardMRRPerCustomerPerMonth struct {
 		Month func(childComplexity int) int
 		Value func(childComplexity int) int
+		Year  func(childComplexity int) int
 	}
 
 	DashboardNewCustomers struct {
@@ -324,6 +317,18 @@ type ComplexityRoot struct {
 		Year  func(childComplexity int) int
 	}
 
+	DashboardOnboardingCompletion struct {
+		CompletionPercentage func(childComplexity int) int
+		IncreasePercentage   func(childComplexity int) int
+		PerMonth             func(childComplexity int) int
+	}
+
+	DashboardOnboardingCompletionPerMonth struct {
+		Month func(childComplexity int) int
+		Value func(childComplexity int) int
+		Year  func(childComplexity int) int
+	}
+
 	DashboardRetentionRate struct {
 		IncreasePercentage func(childComplexity int) int
 		PerMonth           func(childComplexity int) int
@@ -334,11 +339,24 @@ type ComplexityRoot struct {
 		ChurnCount func(childComplexity int) int
 		Month      func(childComplexity int) int
 		RenewCount func(childComplexity int) int
+		Year       func(childComplexity int) int
 	}
 
 	DashboardRevenueAtRisk struct {
 		AtRisk         func(childComplexity int) int
 		HighConfidence func(childComplexity int) int
+	}
+
+	DashboardTimeToOnboard struct {
+		IncreasePercentage func(childComplexity int) int
+		PerMonth           func(childComplexity int) int
+		TimeToOnboard      func(childComplexity int) int
+	}
+
+	DashboardTimeToOnboardPerMonth struct {
+		Month func(childComplexity int) int
+		Value func(childComplexity int) int
+		Year  func(childComplexity int) int
 	}
 
 	DeleteResponse struct {
@@ -617,138 +635,133 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AnalysisCreate                           func(childComplexity int, analysis model.AnalysisInput) int
-		AttachmentCreate                         func(childComplexity int, input model.AttachmentInput) int
-		ContactAddNewLocation                    func(childComplexity int, contactID string) int
-		ContactAddOrganizationByID               func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactAddSocial                         func(childComplexity int, contactID string, input model.SocialInput) int
-		ContactAddTagByID                        func(childComplexity int, input model.ContactTagInput) int
-		ContactArchive                           func(childComplexity int, contactID string) int
-		ContactCreate                            func(childComplexity int, input model.ContactInput) int
-		ContactHardDelete                        func(childComplexity int, contactID string) int
-		ContactMerge                             func(childComplexity int, primaryContactID string, mergedContactIds []string) int
-		ContactRemoveLocation                    func(childComplexity int, contactID string, locationID string) int
-		ContactRemoveOrganizationByID            func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactRemoveTagByID                     func(childComplexity int, input model.ContactTagInput) int
-		ContactRestoreFromArchive                func(childComplexity int, contactID string) int
-		ContactUpdate                            func(childComplexity int, input model.ContactUpdateInput) int
-		ContractCreate                           func(childComplexity int, input model.ContractInput) int
-		ContractUpdate                           func(childComplexity int, input model.ContractUpdateInput) int
-		CustomFieldDeleteFromContactByID         func(childComplexity int, contactID string, id string) int
-		CustomFieldDeleteFromContactByName       func(childComplexity int, contactID string, fieldName string) int
-		CustomFieldDeleteFromFieldSetByID        func(childComplexity int, contactID string, fieldSetID string, id string) int
-		CustomFieldMergeToContact                func(childComplexity int, contactID string, input model.CustomFieldInput) int
-		CustomFieldMergeToFieldSet               func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
-		CustomFieldTemplateCreate                func(childComplexity int, input model.CustomFieldTemplateInput) int
-		CustomFieldUpdateInContact               func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
-		CustomFieldUpdateInFieldSet              func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
-		CustomFieldsMergeAndUpdateInContact      func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
-		CustomerContactCreate                    func(childComplexity int, input model.CustomerContactInput) int
-		CustomerUserAddJobRole                   func(childComplexity int, id string, jobRoleInput model.JobRoleInput) int
-		EmailDelete                              func(childComplexity int, id string) int
-		EmailMergeToContact                      func(childComplexity int, contactID string, input model.EmailInput) int
-		EmailMergeToOrganization                 func(childComplexity int, organizationID string, input model.EmailInput) int
-		EmailMergeToUser                         func(childComplexity int, userID string, input model.EmailInput) int
-		EmailRemoveFromContact                   func(childComplexity int, contactID string, email string) int
-		EmailRemoveFromContactByID               func(childComplexity int, contactID string, id string) int
-		EmailRemoveFromOrganization              func(childComplexity int, organizationID string, email string) int
-		EmailRemoveFromOrganizationByID          func(childComplexity int, organizationID string, id string) int
-		EmailRemoveFromUser                      func(childComplexity int, userID string, email string) int
-		EmailRemoveFromUserByID                  func(childComplexity int, userID string, id string) int
-		EmailUpdateInContact                     func(childComplexity int, contactID string, input model.EmailUpdateInput) int
-		EmailUpdateInOrganization                func(childComplexity int, organizationID string, input model.EmailUpdateInput) int
-		EmailUpdateInUser                        func(childComplexity int, userID string, input model.EmailUpdateInput) int
-		EntityTemplateCreate                     func(childComplexity int, input model.EntityTemplateInput) int
-		FieldSetDeleteFromContact                func(childComplexity int, contactID string, id string) int
-		FieldSetMergeToContact                   func(childComplexity int, contactID string, input model.FieldSetInput) int
-		FieldSetUpdateInContact                  func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
-		InteractionEventCreate                   func(childComplexity int, event model.InteractionEventInput) int
-		InteractionEventLinkAttachment           func(childComplexity int, eventID string, attachmentID string) int
-		InteractionSessionCreate                 func(childComplexity int, session model.InteractionSessionInput) int
-		InteractionSessionLinkAttachment         func(childComplexity int, sessionID string, attachmentID string) int
-		JobRoleCreate                            func(childComplexity int, contactID string, input model.JobRoleInput) int
-		JobRoleDelete                            func(childComplexity int, contactID string, roleID string) int
-		JobRoleUpdate                            func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
-		LocationRemoveFromContact                func(childComplexity int, contactID string, locationID string) int
-		LocationRemoveFromOrganization           func(childComplexity int, organizationID string, locationID string) int
-		LocationUpdate                           func(childComplexity int, input model.LocationUpdateInput) int
-		LogEntryAddTag                           func(childComplexity int, id string, input model.TagIDOrNameInput) int
-		LogEntryCreateForOrganization            func(childComplexity int, organizationID string, input model.LogEntryInput) int
-		LogEntryRemoveTag                        func(childComplexity int, id string, input model.TagIDOrNameInput) int
-		LogEntryResetTags                        func(childComplexity int, id string, input []*model.TagIDOrNameInput) int
-		LogEntryUpdate                           func(childComplexity int, id string, input model.LogEntryUpdateInput) int
-		MeetingAddNewLocation                    func(childComplexity int, meetingID string) int
-		MeetingAddNote                           func(childComplexity int, meetingID string, note *model.NoteInput) int
-		MeetingCreate                            func(childComplexity int, meeting model.MeetingInput) int
-		MeetingLinkAttachment                    func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingLinkAttendedBy                    func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
-		MeetingLinkRecording                     func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUnlinkAttachment                  func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUnlinkAttendedBy                  func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
-		MeetingUnlinkRecording                   func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUpdate                            func(childComplexity int, meetingID string, meeting model.MeetingUpdateInput) int
-		NoteCreateForContact                     func(childComplexity int, contactID string, input model.NoteInput) int
-		NoteCreateForOrganization                func(childComplexity int, organizationID string, input model.NoteInput) int
-		NoteDelete                               func(childComplexity int, id string) int
-		NoteLinkAttachment                       func(childComplexity int, noteID string, attachmentID string) int
-		NoteUnlinkAttachment                     func(childComplexity int, noteID string, attachmentID string) int
-		NoteUpdate                               func(childComplexity int, input model.NoteUpdateInput) int
-		OpportunityRenewalUpdate                 func(childComplexity int, input model.OpportunityRenewalUpdateInput) int
-		OpportunityUpdate                        func(childComplexity int, input model.OpportunityUpdateInput) int
-		OrganizationAddNewLocation               func(childComplexity int, organizationID string) int
-		OrganizationAddSocial                    func(childComplexity int, organizationID string, input model.SocialInput) int
-		OrganizationAddSubsidiary                func(childComplexity int, input model.LinkOrganizationsInput) int
-		OrganizationArchive                      func(childComplexity int, id string) int
-		OrganizationArchiveAll                   func(childComplexity int, ids []string) int
-		OrganizationCreate                       func(childComplexity int, input model.OrganizationInput) int
-		OrganizationHide                         func(childComplexity int, id string) int
-		OrganizationHideAll                      func(childComplexity int, ids []string) int
-		OrganizationMerge                        func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
-		OrganizationRemoveSubsidiary             func(childComplexity int, organizationID string, subsidiaryID string) int
-		OrganizationSetOwner                     func(childComplexity int, organizationID string, userID string) int
-		OrganizationShow                         func(childComplexity int, id string) int
-		OrganizationShowAll                      func(childComplexity int, ids []string) int
-		OrganizationUnsetOwner                   func(childComplexity int, organizationID string) int
-		OrganizationUpdate                       func(childComplexity int, input model.OrganizationUpdateInput) int
-		OrganizationUpdateBillingDetails         func(childComplexity int, input model.BillingDetailsInput) int
-		OrganizationUpdateBillingDetailsAsync    func(childComplexity int, input model.BillingDetailsInput) int
-		OrganizationUpdateRenewalForecast        func(childComplexity int, input model.RenewalForecastInput) int
-		OrganizationUpdateRenewalForecastAsync   func(childComplexity int, input model.RenewalForecastInput) int
-		OrganizationUpdateRenewalLikelihood      func(childComplexity int, input model.RenewalLikelihoodInput) int
-		OrganizationUpdateRenewalLikelihoodAsync func(childComplexity int, input model.RenewalLikelihoodInput) int
-		PhoneNumberMergeToContact                func(childComplexity int, contactID string, input model.PhoneNumberInput) int
-		PhoneNumberMergeToOrganization           func(childComplexity int, organizationID string, input model.PhoneNumberInput) int
-		PhoneNumberMergeToUser                   func(childComplexity int, userID string, input model.PhoneNumberInput) int
-		PhoneNumberRemoveFromContactByE164       func(childComplexity int, contactID string, e164 string) int
-		PhoneNumberRemoveFromContactByID         func(childComplexity int, contactID string, id string) int
-		PhoneNumberRemoveFromOrganizationByE164  func(childComplexity int, organizationID string, e164 string) int
-		PhoneNumberRemoveFromOrganizationByID    func(childComplexity int, organizationID string, id string) int
-		PhoneNumberRemoveFromUserByE164          func(childComplexity int, userID string, e164 string) int
-		PhoneNumberRemoveFromUserByID            func(childComplexity int, userID string, id string) int
-		PhoneNumberUpdateInContact               func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
-		PhoneNumberUpdateInOrganization          func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
-		PhoneNumberUpdateInUser                  func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
-		PlayerMerge                              func(childComplexity int, userID string, input model.PlayerInput) int
-		ServiceLineItemClose                     func(childComplexity int, input model.ServiceLineItemCloseInput) int
-		ServiceLineItemCreate                    func(childComplexity int, input model.ServiceLineItemInput) int
-		ServiceLineItemDelete                    func(childComplexity int, id string) int
-		ServiceLineItemUpdate                    func(childComplexity int, input model.ServiceLineItemUpdateInput) int
-		SocialRemove                             func(childComplexity int, socialID string) int
-		SocialUpdate                             func(childComplexity int, input model.SocialUpdateInput) int
-		TagCreate                                func(childComplexity int, input model.TagInput) int
-		TagDelete                                func(childComplexity int, id string) int
-		TagUpdate                                func(childComplexity int, input model.TagUpdateInput) int
-		TenantMerge                              func(childComplexity int, tenant model.TenantInput) int
-		UserAddRole                              func(childComplexity int, id string, role model.Role) int
-		UserAddRoleInTenant                      func(childComplexity int, id string, tenant string, role model.Role) int
-		UserCreate                               func(childComplexity int, input model.UserInput) int
-		UserDelete                               func(childComplexity int, id string) int
-		UserDeleteInTenant                       func(childComplexity int, id string, tenant string) int
-		UserRemoveRole                           func(childComplexity int, id string, role model.Role) int
-		UserRemoveRoleInTenant                   func(childComplexity int, id string, tenant string, role model.Role) int
-		UserUpdate                               func(childComplexity int, input model.UserUpdateInput) int
-		WorkspaceMerge                           func(childComplexity int, workspace model.WorkspaceInput) int
-		WorkspaceMergeToTenant                   func(childComplexity int, workspace model.WorkspaceInput, tenant string) int
+		AnalysisCreate                          func(childComplexity int, analysis model.AnalysisInput) int
+		AttachmentCreate                        func(childComplexity int, input model.AttachmentInput) int
+		ContactAddNewLocation                   func(childComplexity int, contactID string) int
+		ContactAddOrganizationByID              func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactAddSocial                        func(childComplexity int, contactID string, input model.SocialInput) int
+		ContactAddTagByID                       func(childComplexity int, input model.ContactTagInput) int
+		ContactArchive                          func(childComplexity int, contactID string) int
+		ContactCreate                           func(childComplexity int, input model.ContactInput) int
+		ContactHardDelete                       func(childComplexity int, contactID string) int
+		ContactMerge                            func(childComplexity int, primaryContactID string, mergedContactIds []string) int
+		ContactRemoveLocation                   func(childComplexity int, contactID string, locationID string) int
+		ContactRemoveOrganizationByID           func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactRemoveTagByID                    func(childComplexity int, input model.ContactTagInput) int
+		ContactRestoreFromArchive               func(childComplexity int, contactID string) int
+		ContactUpdate                           func(childComplexity int, input model.ContactUpdateInput) int
+		ContractCreate                          func(childComplexity int, input model.ContractInput) int
+		ContractUpdate                          func(childComplexity int, input model.ContractUpdateInput) int
+		CustomFieldDeleteFromContactByID        func(childComplexity int, contactID string, id string) int
+		CustomFieldDeleteFromContactByName      func(childComplexity int, contactID string, fieldName string) int
+		CustomFieldDeleteFromFieldSetByID       func(childComplexity int, contactID string, fieldSetID string, id string) int
+		CustomFieldMergeToContact               func(childComplexity int, contactID string, input model.CustomFieldInput) int
+		CustomFieldMergeToFieldSet              func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
+		CustomFieldTemplateCreate               func(childComplexity int, input model.CustomFieldTemplateInput) int
+		CustomFieldUpdateInContact              func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
+		CustomFieldUpdateInFieldSet             func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
+		CustomFieldsMergeAndUpdateInContact     func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
+		CustomerContactCreate                   func(childComplexity int, input model.CustomerContactInput) int
+		CustomerUserAddJobRole                  func(childComplexity int, id string, jobRoleInput model.JobRoleInput) int
+		EmailDelete                             func(childComplexity int, id string) int
+		EmailMergeToContact                     func(childComplexity int, contactID string, input model.EmailInput) int
+		EmailMergeToOrganization                func(childComplexity int, organizationID string, input model.EmailInput) int
+		EmailMergeToUser                        func(childComplexity int, userID string, input model.EmailInput) int
+		EmailRemoveFromContact                  func(childComplexity int, contactID string, email string) int
+		EmailRemoveFromContactByID              func(childComplexity int, contactID string, id string) int
+		EmailRemoveFromOrganization             func(childComplexity int, organizationID string, email string) int
+		EmailRemoveFromOrganizationByID         func(childComplexity int, organizationID string, id string) int
+		EmailRemoveFromUser                     func(childComplexity int, userID string, email string) int
+		EmailRemoveFromUserByID                 func(childComplexity int, userID string, id string) int
+		EmailUpdateInContact                    func(childComplexity int, contactID string, input model.EmailUpdateInput) int
+		EmailUpdateInOrganization               func(childComplexity int, organizationID string, input model.EmailUpdateInput) int
+		EmailUpdateInUser                       func(childComplexity int, userID string, input model.EmailUpdateInput) int
+		EntityTemplateCreate                    func(childComplexity int, input model.EntityTemplateInput) int
+		FieldSetDeleteFromContact               func(childComplexity int, contactID string, id string) int
+		FieldSetMergeToContact                  func(childComplexity int, contactID string, input model.FieldSetInput) int
+		FieldSetUpdateInContact                 func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
+		InteractionEventCreate                  func(childComplexity int, event model.InteractionEventInput) int
+		InteractionEventLinkAttachment          func(childComplexity int, eventID string, attachmentID string) int
+		InteractionSessionCreate                func(childComplexity int, session model.InteractionSessionInput) int
+		InteractionSessionLinkAttachment        func(childComplexity int, sessionID string, attachmentID string) int
+		JobRoleCreate                           func(childComplexity int, contactID string, input model.JobRoleInput) int
+		JobRoleDelete                           func(childComplexity int, contactID string, roleID string) int
+		JobRoleUpdate                           func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
+		LocationRemoveFromContact               func(childComplexity int, contactID string, locationID string) int
+		LocationRemoveFromOrganization          func(childComplexity int, organizationID string, locationID string) int
+		LocationUpdate                          func(childComplexity int, input model.LocationUpdateInput) int
+		LogEntryAddTag                          func(childComplexity int, id string, input model.TagIDOrNameInput) int
+		LogEntryCreateForOrganization           func(childComplexity int, organizationID string, input model.LogEntryInput) int
+		LogEntryRemoveTag                       func(childComplexity int, id string, input model.TagIDOrNameInput) int
+		LogEntryResetTags                       func(childComplexity int, id string, input []*model.TagIDOrNameInput) int
+		LogEntryUpdate                          func(childComplexity int, id string, input model.LogEntryUpdateInput) int
+		MeetingAddNewLocation                   func(childComplexity int, meetingID string) int
+		MeetingAddNote                          func(childComplexity int, meetingID string, note *model.NoteInput) int
+		MeetingCreate                           func(childComplexity int, meeting model.MeetingInput) int
+		MeetingLinkAttachment                   func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingLinkAttendedBy                   func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
+		MeetingLinkRecording                    func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUnlinkAttachment                 func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUnlinkAttendedBy                 func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
+		MeetingUnlinkRecording                  func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUpdate                           func(childComplexity int, meetingID string, meeting model.MeetingUpdateInput) int
+		NoteCreateForContact                    func(childComplexity int, contactID string, input model.NoteInput) int
+		NoteCreateForOrganization               func(childComplexity int, organizationID string, input model.NoteInput) int
+		NoteDelete                              func(childComplexity int, id string) int
+		NoteLinkAttachment                      func(childComplexity int, noteID string, attachmentID string) int
+		NoteUnlinkAttachment                    func(childComplexity int, noteID string, attachmentID string) int
+		NoteUpdate                              func(childComplexity int, input model.NoteUpdateInput) int
+		OpportunityRenewalUpdate                func(childComplexity int, input model.OpportunityRenewalUpdateInput, ownerUserID *string) int
+		OpportunityUpdate                       func(childComplexity int, input model.OpportunityUpdateInput) int
+		OrganizationAddNewLocation              func(childComplexity int, organizationID string) int
+		OrganizationAddSocial                   func(childComplexity int, organizationID string, input model.SocialInput) int
+		OrganizationAddSubsidiary               func(childComplexity int, input model.LinkOrganizationsInput) int
+		OrganizationArchive                     func(childComplexity int, id string) int
+		OrganizationArchiveAll                  func(childComplexity int, ids []string) int
+		OrganizationCreate                      func(childComplexity int, input model.OrganizationInput) int
+		OrganizationHide                        func(childComplexity int, id string) int
+		OrganizationHideAll                     func(childComplexity int, ids []string) int
+		OrganizationMerge                       func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
+		OrganizationRemoveSubsidiary            func(childComplexity int, organizationID string, subsidiaryID string) int
+		OrganizationSetOwner                    func(childComplexity int, organizationID string, userID string) int
+		OrganizationShow                        func(childComplexity int, id string) int
+		OrganizationShowAll                     func(childComplexity int, ids []string) int
+		OrganizationUnsetOwner                  func(childComplexity int, organizationID string) int
+		OrganizationUpdate                      func(childComplexity int, input model.OrganizationUpdateInput) int
+		OrganizationUpdateOnboardingStatus      func(childComplexity int, input model.OnboardingStatusInput) int
+		PhoneNumberMergeToContact               func(childComplexity int, contactID string, input model.PhoneNumberInput) int
+		PhoneNumberMergeToOrganization          func(childComplexity int, organizationID string, input model.PhoneNumberInput) int
+		PhoneNumberMergeToUser                  func(childComplexity int, userID string, input model.PhoneNumberInput) int
+		PhoneNumberRemoveFromContactByE164      func(childComplexity int, contactID string, e164 string) int
+		PhoneNumberRemoveFromContactByID        func(childComplexity int, contactID string, id string) int
+		PhoneNumberRemoveFromOrganizationByE164 func(childComplexity int, organizationID string, e164 string) int
+		PhoneNumberRemoveFromOrganizationByID   func(childComplexity int, organizationID string, id string) int
+		PhoneNumberRemoveFromUserByE164         func(childComplexity int, userID string, e164 string) int
+		PhoneNumberRemoveFromUserByID           func(childComplexity int, userID string, id string) int
+		PhoneNumberUpdateInContact              func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
+		PhoneNumberUpdateInOrganization         func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
+		PhoneNumberUpdateInUser                 func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
+		PlayerMerge                             func(childComplexity int, userID string, input model.PlayerInput) int
+		ServiceLineItemClose                    func(childComplexity int, input model.ServiceLineItemCloseInput) int
+		ServiceLineItemCreate                   func(childComplexity int, input model.ServiceLineItemInput) int
+		ServiceLineItemDelete                   func(childComplexity int, id string) int
+		ServiceLineItemUpdate                   func(childComplexity int, input model.ServiceLineItemUpdateInput) int
+		SocialRemove                            func(childComplexity int, socialID string) int
+		SocialUpdate                            func(childComplexity int, input model.SocialUpdateInput) int
+		TagCreate                               func(childComplexity int, input model.TagInput) int
+		TagDelete                               func(childComplexity int, id string) int
+		TagUpdate                               func(childComplexity int, input model.TagUpdateInput) int
+		TenantMerge                             func(childComplexity int, tenant model.TenantInput) int
+		UserAddRole                             func(childComplexity int, id string, role model.Role) int
+		UserAddRoleInTenant                     func(childComplexity int, id string, tenant string, role model.Role) int
+		UserCreate                              func(childComplexity int, input model.UserInput) int
+		UserDelete                              func(childComplexity int, id string) int
+		UserDeleteInTenant                      func(childComplexity int, id string, tenant string) int
+		UserRemoveRole                          func(childComplexity int, id string, role model.Role) int
+		UserRemoveRoleInTenant                  func(childComplexity int, id string, tenant string, role model.Role) int
+		UserUpdate                              func(childComplexity int, input model.UserUpdateInput) int
+		WorkspaceMerge                          func(childComplexity int, workspace model.WorkspaceInput) int
+		WorkspaceMergeToTenant                  func(childComplexity int, workspace model.WorkspaceInput, tenant string) int
 	}
 
 	Note struct {
@@ -769,6 +782,12 @@ type ComplexityRoot struct {
 		Content       func(childComplexity int) int
 		TotalElements func(childComplexity int) int
 		TotalPages    func(childComplexity int) int
+	}
+
+	OnboardingDetails struct {
+		Comments  func(childComplexity int) int
+		Status    func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
 	}
 
 	Opportunity struct {
@@ -799,10 +818,8 @@ type ComplexityRoot struct {
 	}
 
 	OrgAccountDetails struct {
-		BillingDetails    func(childComplexity int) int
-		RenewalForecast   func(childComplexity int) int
-		RenewalLikelihood func(childComplexity int) int
-		RenewalSummary    func(childComplexity int) int
+		Onboarding     func(childComplexity int) int
+		RenewalSummary func(childComplexity int) int
 	}
 
 	Organization struct {
@@ -816,10 +833,12 @@ type ComplexityRoot struct {
 		Description                   func(childComplexity int) int
 		Domains                       func(childComplexity int) int
 		Emails                        func(childComplexity int) int
+		EmployeeGrowthRate            func(childComplexity int) int
 		Employees                     func(childComplexity int) int
 		EntityTemplate                func(childComplexity int) int
 		ExternalLinks                 func(childComplexity int) int
 		FieldSets                     func(childComplexity int) int
+		Headquarters                  func(childComplexity int) int
 		ID                            func(childComplexity int) int
 		Industry                      func(childComplexity int) int
 		IndustryGroup                 func(childComplexity int) int
@@ -834,6 +853,7 @@ type ComplexityRoot struct {
 		LastTouchPointTimelineEventID func(childComplexity int) int
 		LastTouchPointType            func(childComplexity int) int
 		Locations                     func(childComplexity int) int
+		LogoURL                       func(childComplexity int) int
 		Market                        func(childComplexity int) int
 		Name                          func(childComplexity int) int
 		Note                          func(childComplexity int) int
@@ -855,6 +875,7 @@ type ComplexityRoot struct {
 		UpdatedAt                     func(childComplexity int) int
 		ValueProposition              func(childComplexity int) int
 		Website                       func(childComplexity int) int
+		YearFounded                   func(childComplexity int) int
 	}
 
 	OrganizationPage struct {
@@ -939,8 +960,10 @@ type ComplexityRoot struct {
 		DashboardGrossRevenueRetention        func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardMRRPerCustomer               func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardNewCustomers                 func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardOnboardingCompletion         func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardRetentionRate                func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardRevenueAtRisk                func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardTimeToOnboard                func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardViewOrganizations            func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		Email                                 func(childComplexity int, id string) int
 		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
@@ -969,26 +992,6 @@ type ComplexityRoot struct {
 		User                                  func(childComplexity int, id string) int
 		UserByEmail                           func(childComplexity int, email string) int
 		Users                                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-	}
-
-	RenewalForecast struct {
-		Amount          func(childComplexity int) int
-		Arr             func(childComplexity int) int
-		Comment         func(childComplexity int) int
-		MaxArr          func(childComplexity int) int
-		PotentialAmount func(childComplexity int) int
-		UpdatedAt       func(childComplexity int) int
-		UpdatedBy       func(childComplexity int) int
-		UpdatedByID     func(childComplexity int) int
-	}
-
-	RenewalLikelihood struct {
-		Comment             func(childComplexity int) int
-		PreviousProbability func(childComplexity int) int
-		Probability         func(childComplexity int) int
-		UpdatedAt           func(childComplexity int) int
-		UpdatedBy           func(childComplexity int) int
-		UpdatedByID         func(childComplexity int) int
 	}
 
 	RenewalSummary struct {
@@ -1289,15 +1292,9 @@ type MutationResolver interface {
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error)
-	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput) (*model.Opportunity, error)
+	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
-	OrganizationUpdateRenewalLikelihood(ctx context.Context, input model.RenewalLikelihoodInput) (string, error)
-	OrganizationUpdateRenewalForecast(ctx context.Context, input model.RenewalForecastInput) (string, error)
-	OrganizationUpdateBillingDetails(ctx context.Context, input model.BillingDetailsInput) (string, error)
-	OrganizationUpdateRenewalLikelihoodAsync(ctx context.Context, input model.RenewalLikelihoodInput) (string, error)
-	OrganizationUpdateRenewalForecastAsync(ctx context.Context, input model.RenewalForecastInput) (string, error)
-	OrganizationUpdateBillingDetailsAsync(ctx context.Context, input model.BillingDetailsInput) (string, error)
 	OrganizationArchive(ctx context.Context, id string) (*model.Result, error)
 	OrganizationArchiveAll(ctx context.Context, ids []string) (*model.Result, error)
 	OrganizationHide(ctx context.Context, id string) (string, error)
@@ -1311,6 +1308,7 @@ type MutationResolver interface {
 	OrganizationAddSocial(ctx context.Context, organizationID string, input model.SocialInput) (*model.Social, error)
 	OrganizationSetOwner(ctx context.Context, organizationID string, userID string) (*model.Organization, error)
 	OrganizationUnsetOwner(ctx context.Context, organizationID string) (*model.Organization, error)
+	OrganizationUpdateOnboardingStatus(ctx context.Context, input model.OnboardingStatusInput) (*model.Organization, error)
 	PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error)
 	PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error)
 	PhoneNumberRemoveFromContactByE164(ctx context.Context, contactID string, e164 string) (*model.Result, error)
@@ -1411,6 +1409,8 @@ type QueryResolver interface {
 	DashboardRevenueAtRisk(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRevenueAtRisk, error)
 	DashboardRetentionRate(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRetentionRate, error)
 	DashboardNewCustomers(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardNewCustomers, error)
+	DashboardTimeToOnboard(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardTimeToOnboard, error)
+	DashboardOnboardingCompletion(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardOnboardingCompletion, error)
 	Email(ctx context.Context, id string) (*model.Email, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
@@ -1437,12 +1437,6 @@ type QueryResolver interface {
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
-}
-type RenewalForecastResolver interface {
-	UpdatedBy(ctx context.Context, obj *model.RenewalForecast) (*model.User, error)
-}
-type RenewalLikelihoodResolver interface {
-	UpdatedBy(ctx context.Context, obj *model.RenewalLikelihood) (*model.User, error)
 }
 type ServiceLineItemResolver interface {
 	CreatedBy(ctx context.Context, obj *model.ServiceLineItem) (*model.User, error)
@@ -1694,41 +1688,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Attachment.SourceOfTruth(childComplexity), true
-
-	case "BillingDetails.amount":
-		if e.complexity.BillingDetails.Amount == nil {
-			break
-		}
-
-		return e.complexity.BillingDetails.Amount(childComplexity), true
-
-	case "BillingDetails.frequency":
-		if e.complexity.BillingDetails.Frequency == nil {
-			break
-		}
-
-		return e.complexity.BillingDetails.Frequency(childComplexity), true
-
-	case "BillingDetails.renewalCycle":
-		if e.complexity.BillingDetails.RenewalCycle == nil {
-			break
-		}
-
-		return e.complexity.BillingDetails.RenewalCycle(childComplexity), true
-
-	case "BillingDetails.renewalCycleNext":
-		if e.complexity.BillingDetails.RenewalCycleNext == nil {
-			break
-		}
-
-		return e.complexity.BillingDetails.RenewalCycleNext(childComplexity), true
-
-	case "BillingDetails.renewalCycleStart":
-		if e.complexity.BillingDetails.RenewalCycleStart == nil {
-			break
-		}
-
-		return e.complexity.BillingDetails.RenewalCycleStart(childComplexity), true
 
 	case "Calendar.appSource":
 		if e.complexity.Calendar.AppSource == nil {
@@ -2210,6 +2169,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contract.RenewalCycle(childComplexity), true
 
+	case "Contract.renewalPeriods":
+		if e.complexity.Contract.RenewalPeriods == nil {
+			break
+		}
+
+		return e.complexity.Contract.RenewalPeriods(childComplexity), true
+
 	case "Contract.serviceLineItems":
 		if e.complexity.Contract.ServiceLineItems == nil {
 			break
@@ -2532,6 +2498,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DashboardARRBreakdownPerMonth.Upsells(childComplexity), true
 
+	case "DashboardARRBreakdownPerMonth.year":
+		if e.complexity.DashboardARRBreakdownPerMonth.Year == nil {
+			break
+		}
+
+		return e.complexity.DashboardARRBreakdownPerMonth.Year(childComplexity), true
+
 	case "DashboardCustomerMap.arr":
 		if e.complexity.DashboardCustomerMap.Arr == nil {
 			break
@@ -2637,6 +2610,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DashboardMRRPerCustomerPerMonth.Value(childComplexity), true
 
+	case "DashboardMRRPerCustomerPerMonth.year":
+		if e.complexity.DashboardMRRPerCustomerPerMonth.Year == nil {
+			break
+		}
+
+		return e.complexity.DashboardMRRPerCustomerPerMonth.Year(childComplexity), true
+
 	case "DashboardNewCustomers.perMonth":
 		if e.complexity.DashboardNewCustomers.PerMonth == nil {
 			break
@@ -2678,6 +2658,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DashboardNewCustomersPerMonth.Year(childComplexity), true
+
+	case "DashboardOnboardingCompletion.completionPercentage":
+		if e.complexity.DashboardOnboardingCompletion.CompletionPercentage == nil {
+			break
+		}
+
+		return e.complexity.DashboardOnboardingCompletion.CompletionPercentage(childComplexity), true
+
+	case "DashboardOnboardingCompletion.increasePercentage":
+		if e.complexity.DashboardOnboardingCompletion.IncreasePercentage == nil {
+			break
+		}
+
+		return e.complexity.DashboardOnboardingCompletion.IncreasePercentage(childComplexity), true
+
+	case "DashboardOnboardingCompletion.perMonth":
+		if e.complexity.DashboardOnboardingCompletion.PerMonth == nil {
+			break
+		}
+
+		return e.complexity.DashboardOnboardingCompletion.PerMonth(childComplexity), true
+
+	case "DashboardOnboardingCompletionPerMonth.month":
+		if e.complexity.DashboardOnboardingCompletionPerMonth.Month == nil {
+			break
+		}
+
+		return e.complexity.DashboardOnboardingCompletionPerMonth.Month(childComplexity), true
+
+	case "DashboardOnboardingCompletionPerMonth.value":
+		if e.complexity.DashboardOnboardingCompletionPerMonth.Value == nil {
+			break
+		}
+
+		return e.complexity.DashboardOnboardingCompletionPerMonth.Value(childComplexity), true
+
+	case "DashboardOnboardingCompletionPerMonth.year":
+		if e.complexity.DashboardOnboardingCompletionPerMonth.Year == nil {
+			break
+		}
+
+		return e.complexity.DashboardOnboardingCompletionPerMonth.Year(childComplexity), true
 
 	case "DashboardRetentionRate.increasePercentage":
 		if e.complexity.DashboardRetentionRate.IncreasePercentage == nil {
@@ -2721,6 +2743,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DashboardRetentionRatePerMonth.RenewCount(childComplexity), true
 
+	case "DashboardRetentionRatePerMonth.year":
+		if e.complexity.DashboardRetentionRatePerMonth.Year == nil {
+			break
+		}
+
+		return e.complexity.DashboardRetentionRatePerMonth.Year(childComplexity), true
+
 	case "DashboardRevenueAtRisk.atRisk":
 		if e.complexity.DashboardRevenueAtRisk.AtRisk == nil {
 			break
@@ -2734,6 +2763,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DashboardRevenueAtRisk.HighConfidence(childComplexity), true
+
+	case "DashboardTimeToOnboard.increasePercentage":
+		if e.complexity.DashboardTimeToOnboard.IncreasePercentage == nil {
+			break
+		}
+
+		return e.complexity.DashboardTimeToOnboard.IncreasePercentage(childComplexity), true
+
+	case "DashboardTimeToOnboard.perMonth":
+		if e.complexity.DashboardTimeToOnboard.PerMonth == nil {
+			break
+		}
+
+		return e.complexity.DashboardTimeToOnboard.PerMonth(childComplexity), true
+
+	case "DashboardTimeToOnboard.timeToOnboard":
+		if e.complexity.DashboardTimeToOnboard.TimeToOnboard == nil {
+			break
+		}
+
+		return e.complexity.DashboardTimeToOnboard.TimeToOnboard(childComplexity), true
+
+	case "DashboardTimeToOnboardPerMonth.month":
+		if e.complexity.DashboardTimeToOnboardPerMonth.Month == nil {
+			break
+		}
+
+		return e.complexity.DashboardTimeToOnboardPerMonth.Month(childComplexity), true
+
+	case "DashboardTimeToOnboardPerMonth.value":
+		if e.complexity.DashboardTimeToOnboardPerMonth.Value == nil {
+			break
+		}
+
+		return e.complexity.DashboardTimeToOnboardPerMonth.Value(childComplexity), true
+
+	case "DashboardTimeToOnboardPerMonth.year":
+		if e.complexity.DashboardTimeToOnboardPerMonth.Year == nil {
+			break
+		}
+
+		return e.complexity.DashboardTimeToOnboardPerMonth.Year(childComplexity), true
 
 	case "DeleteResponse.accepted":
 		if e.complexity.DeleteResponse.Accepted == nil {
@@ -5120,7 +5191,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.OpportunityRenewalUpdate(childComplexity, args["input"].(model.OpportunityRenewalUpdateInput)), true
+		return e.complexity.Mutation.OpportunityRenewalUpdate(childComplexity, args["input"].(model.OpportunityRenewalUpdateInput), args["ownerUserId"].(*string)), true
 
 	case "Mutation.opportunityUpdate":
 		if e.complexity.Mutation.OpportunityUpdate == nil {
@@ -5314,77 +5385,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OrganizationUpdate(childComplexity, args["input"].(model.OrganizationUpdateInput)), true
 
-	case "Mutation.organization_UpdateBillingDetails":
-		if e.complexity.Mutation.OrganizationUpdateBillingDetails == nil {
+	case "Mutation.organization_UpdateOnboardingStatus":
+		if e.complexity.Mutation.OrganizationUpdateOnboardingStatus == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_UpdateBillingDetails_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_UpdateOnboardingStatus_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.OrganizationUpdateBillingDetails(childComplexity, args["input"].(model.BillingDetailsInput)), true
-
-	case "Mutation.organization_UpdateBillingDetailsAsync":
-		if e.complexity.Mutation.OrganizationUpdateBillingDetailsAsync == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_UpdateBillingDetailsAsync_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationUpdateBillingDetailsAsync(childComplexity, args["input"].(model.BillingDetailsInput)), true
-
-	case "Mutation.organization_UpdateRenewalForecast":
-		if e.complexity.Mutation.OrganizationUpdateRenewalForecast == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_UpdateRenewalForecast_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationUpdateRenewalForecast(childComplexity, args["input"].(model.RenewalForecastInput)), true
-
-	case "Mutation.organization_UpdateRenewalForecastAsync":
-		if e.complexity.Mutation.OrganizationUpdateRenewalForecastAsync == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_UpdateRenewalForecastAsync_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationUpdateRenewalForecastAsync(childComplexity, args["input"].(model.RenewalForecastInput)), true
-
-	case "Mutation.organization_UpdateRenewalLikelihood":
-		if e.complexity.Mutation.OrganizationUpdateRenewalLikelihood == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_UpdateRenewalLikelihood_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationUpdateRenewalLikelihood(childComplexity, args["input"].(model.RenewalLikelihoodInput)), true
-
-	case "Mutation.organization_UpdateRenewalLikelihoodAsync":
-		if e.complexity.Mutation.OrganizationUpdateRenewalLikelihoodAsync == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_UpdateRenewalLikelihoodAsync_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationUpdateRenewalLikelihoodAsync(childComplexity, args["input"].(model.RenewalLikelihoodInput)), true
+		return e.complexity.Mutation.OrganizationUpdateOnboardingStatus(childComplexity, args["input"].(model.OnboardingStatusInput)), true
 
 	case "Mutation.phoneNumberMergeToContact":
 		if e.complexity.Mutation.PhoneNumberMergeToContact == nil {
@@ -5880,6 +5891,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NotePage.TotalPages(childComplexity), true
 
+	case "OnboardingDetails.comments":
+		if e.complexity.OnboardingDetails.Comments == nil {
+			break
+		}
+
+		return e.complexity.OnboardingDetails.Comments(childComplexity), true
+
+	case "OnboardingDetails.status":
+		if e.complexity.OnboardingDetails.Status == nil {
+			break
+		}
+
+		return e.complexity.OnboardingDetails.Status(childComplexity), true
+
+	case "OnboardingDetails.updatedAt":
+		if e.complexity.OnboardingDetails.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.OnboardingDetails.UpdatedAt(childComplexity), true
+
 	case "Opportunity.amount":
 		if e.complexity.Opportunity.Amount == nil {
 			break
@@ -6048,26 +6080,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Opportunity.UpdatedAt(childComplexity), true
 
-	case "OrgAccountDetails.billingDetails":
-		if e.complexity.OrgAccountDetails.BillingDetails == nil {
+	case "OrgAccountDetails.onboarding":
+		if e.complexity.OrgAccountDetails.Onboarding == nil {
 			break
 		}
 
-		return e.complexity.OrgAccountDetails.BillingDetails(childComplexity), true
-
-	case "OrgAccountDetails.renewalForecast":
-		if e.complexity.OrgAccountDetails.RenewalForecast == nil {
-			break
-		}
-
-		return e.complexity.OrgAccountDetails.RenewalForecast(childComplexity), true
-
-	case "OrgAccountDetails.renewalLikelihood":
-		if e.complexity.OrgAccountDetails.RenewalLikelihood == nil {
-			break
-		}
-
-		return e.complexity.OrgAccountDetails.RenewalLikelihood(childComplexity), true
+		return e.complexity.OrgAccountDetails.Onboarding(childComplexity), true
 
 	case "OrgAccountDetails.renewalSummary":
 		if e.complexity.OrgAccountDetails.RenewalSummary == nil {
@@ -6151,6 +6169,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Emails(childComplexity), true
 
+	case "Organization.employeeGrowthRate":
+		if e.complexity.Organization.EmployeeGrowthRate == nil {
+			break
+		}
+
+		return e.complexity.Organization.EmployeeGrowthRate(childComplexity), true
+
 	case "Organization.employees":
 		if e.complexity.Organization.Employees == nil {
 			break
@@ -6178,6 +6203,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.FieldSets(childComplexity), true
+
+	case "Organization.headquarters":
+		if e.complexity.Organization.Headquarters == nil {
+			break
+		}
+
+		return e.complexity.Organization.Headquarters(childComplexity), true
 
 	case "Organization.id":
 		if e.complexity.Organization.ID == nil {
@@ -6276,6 +6308,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.Locations(childComplexity), true
+
+	case "Organization.logoUrl":
+		if e.complexity.Organization.LogoURL == nil {
+			break
+		}
+
+		return e.complexity.Organization.LogoURL(childComplexity), true
 
 	case "Organization.market":
 		if e.complexity.Organization.Market == nil {
@@ -6438,6 +6477,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.Website(childComplexity), true
+
+	case "Organization.yearFounded":
+		if e.complexity.Organization.YearFounded == nil {
+			break
+		}
+
+		return e.complexity.Organization.YearFounded(childComplexity), true
 
 	case "OrganizationPage.content":
 		if e.complexity.OrganizationPage.Content == nil {
@@ -6914,6 +6960,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.DashboardNewCustomers(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
+	case "Query.dashboard_OnboardingCompletion":
+		if e.complexity.Query.DashboardOnboardingCompletion == nil {
+			break
+		}
+
+		args, err := ec.field_Query_dashboard_OnboardingCompletion_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DashboardOnboardingCompletion(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
+
 	case "Query.dashboard_RetentionRate":
 		if e.complexity.Query.DashboardRetentionRate == nil {
 			break
@@ -6937,6 +6995,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.DashboardRevenueAtRisk(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
+
+	case "Query.dashboard_TimeToOnboard":
+		if e.complexity.Query.DashboardTimeToOnboard == nil {
+			break
+		}
+
+		args, err := ec.field_Query_dashboard_TimeToOnboard_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DashboardTimeToOnboard(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboardView_Organizations":
 		if e.complexity.Query.DashboardViewOrganizations == nil {
@@ -7253,104 +7323,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Users(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
-
-	case "RenewalForecast.amount":
-		if e.complexity.RenewalForecast.Amount == nil {
-			break
-		}
-
-		return e.complexity.RenewalForecast.Amount(childComplexity), true
-
-	case "RenewalForecast.arr":
-		if e.complexity.RenewalForecast.Arr == nil {
-			break
-		}
-
-		return e.complexity.RenewalForecast.Arr(childComplexity), true
-
-	case "RenewalForecast.comment":
-		if e.complexity.RenewalForecast.Comment == nil {
-			break
-		}
-
-		return e.complexity.RenewalForecast.Comment(childComplexity), true
-
-	case "RenewalForecast.maxArr":
-		if e.complexity.RenewalForecast.MaxArr == nil {
-			break
-		}
-
-		return e.complexity.RenewalForecast.MaxArr(childComplexity), true
-
-	case "RenewalForecast.potentialAmount":
-		if e.complexity.RenewalForecast.PotentialAmount == nil {
-			break
-		}
-
-		return e.complexity.RenewalForecast.PotentialAmount(childComplexity), true
-
-	case "RenewalForecast.updatedAt":
-		if e.complexity.RenewalForecast.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.RenewalForecast.UpdatedAt(childComplexity), true
-
-	case "RenewalForecast.updatedBy":
-		if e.complexity.RenewalForecast.UpdatedBy == nil {
-			break
-		}
-
-		return e.complexity.RenewalForecast.UpdatedBy(childComplexity), true
-
-	case "RenewalForecast.updatedById":
-		if e.complexity.RenewalForecast.UpdatedByID == nil {
-			break
-		}
-
-		return e.complexity.RenewalForecast.UpdatedByID(childComplexity), true
-
-	case "RenewalLikelihood.comment":
-		if e.complexity.RenewalLikelihood.Comment == nil {
-			break
-		}
-
-		return e.complexity.RenewalLikelihood.Comment(childComplexity), true
-
-	case "RenewalLikelihood.previousProbability":
-		if e.complexity.RenewalLikelihood.PreviousProbability == nil {
-			break
-		}
-
-		return e.complexity.RenewalLikelihood.PreviousProbability(childComplexity), true
-
-	case "RenewalLikelihood.probability":
-		if e.complexity.RenewalLikelihood.Probability == nil {
-			break
-		}
-
-		return e.complexity.RenewalLikelihood.Probability(childComplexity), true
-
-	case "RenewalLikelihood.updatedAt":
-		if e.complexity.RenewalLikelihood.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.RenewalLikelihood.UpdatedAt(childComplexity), true
-
-	case "RenewalLikelihood.updatedBy":
-		if e.complexity.RenewalLikelihood.UpdatedBy == nil {
-			break
-		}
-
-		return e.complexity.RenewalLikelihood.UpdatedBy(childComplexity), true
-
-	case "RenewalLikelihood.updatedById":
-		if e.complexity.RenewalLikelihood.UpdatedByID == nil {
-			break
-		}
-
-		return e.complexity.RenewalLikelihood.UpdatedByID(childComplexity), true
 
 	case "RenewalSummary.arrForecast":
 		if e.complexity.RenewalSummary.ArrForecast == nil {
@@ -7916,7 +7888,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAnalysisDescriptionInput,
 		ec.unmarshalInputAnalysisInput,
 		ec.unmarshalInputAttachmentInput,
-		ec.unmarshalInputBillingDetailsInput,
 		ec.unmarshalInputContactInput,
 		ec.unmarshalInputContactOrganizationInput,
 		ec.unmarshalInputContactTagInput,
@@ -7953,6 +7924,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputMeetingUpdateInput,
 		ec.unmarshalInputNoteInput,
 		ec.unmarshalInputNoteUpdateInput,
+		ec.unmarshalInputOnboardingStatusInput,
 		ec.unmarshalInputOpportunityRenewalUpdateInput,
 		ec.unmarshalInputOpportunityUpdateInput,
 		ec.unmarshalInputOrganizationInput,
@@ -7962,8 +7934,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputPhoneNumberUpdateInput,
 		ec.unmarshalInputPlayerInput,
 		ec.unmarshalInputPlayerUpdate,
-		ec.unmarshalInputRenewalForecastInput,
-		ec.unmarshalInputRenewalLikelihoodInput,
 		ec.unmarshalInputServiceLineItemCloseInput,
 		ec.unmarshalInputServiceLineItemInput,
 		ec.unmarshalInputServiceLineItemUpdateInput,
@@ -8091,6 +8061,15 @@ enum ActionType {
     RENEWAL_LIKELIHOOD_UPDATED
     RENEWAL_FORECAST_UPDATED
     CONTRACT_STATUS_UPDATED
+    SERVICE_LINE_ITEM_PRICE_UPDATED
+    SERVICE_LINE_ITEM_QUANTITY_UPDATED
+    SERVICE_LINE_ITEM_BILLED_TYPE_UPDATED
+    SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED
+    SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED
+    SERVICE_LINE_ITEM_BILLED_TYPE_USAGE_CREATED
+    CONTRACT_RENEWED
+    SERVICE_LINE_ITEM_REMOVED
+    ONBOARDING_STATUS_CHANGED
 }`, BuiltIn: false},
 	{Name: "../schemas/action_item.graphqls", Input: `type ActionItem {
     id: ID!
@@ -8562,6 +8541,7 @@ type Contract implements Node {
     endedAt:            Time
     name:               String!
     renewalCycle:       ContractRenewalCycle!
+    renewalPeriods:     Int64
     status:             ContractStatus!
     serviceLineItems:   [ServiceLineItem!] @goField(forceResolver: true)
     opportunities:      [Opportunity!] @goField(forceResolver: true)
@@ -8578,6 +8558,7 @@ input ContractInput {
     organizationId:     ID!
     name:               String
     renewalCycle:       ContractRenewalCycle
+    renewalPeriods:     Int64
     appSource:          String
     contractUrl:        String
     serviceStartedAt:   Time
@@ -8590,6 +8571,7 @@ input ContractUpdateInput {
     name:               String
     contractUrl:        String
     renewalCycle:       ContractRenewalCycle
+    renewalPeriods:     Int64
     serviceStartedAt:   Time
     signedAt:           Time
     endedAt:            Time
@@ -8602,6 +8584,7 @@ enum ContractRenewalCycle {
     QUARTERLY_RENEWAL
     ANNUAL_RENEWAL
 }
+
 enum ContractStatus {
     UNDEFINED
     DRAFT
@@ -8806,7 +8789,7 @@ enum CustomFieldTemplateType {
 }`, BuiltIn: false},
 	{Name: "../schemas/dashboard.graphqls", Input: `extend type Query {
     """
-    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT, FORECAST_ARR, RENEWAL_DATE
+    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE, ONBOARDING_STATUS
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
@@ -8817,6 +8800,8 @@ enum CustomFieldTemplateType {
     dashboard_RevenueAtRisk(period: DashboardPeriodInput): DashboardRevenueAtRisk
     dashboard_RetentionRate(period: DashboardPeriodInput): DashboardRetentionRate
     dashboard_NewCustomers(period: DashboardPeriodInput): DashboardNewCustomers
+    dashboard_TimeToOnboard(period: DashboardPeriodInput): DashboardTimeToOnboard
+    dashboard_OnboardingCompletion(period: DashboardPeriodInput): DashboardOnboardingCompletion
 }
 
 input DashboardPeriodInput {
@@ -8834,17 +8819,19 @@ type DashboardCustomerMap {
 
 type DashboardMRRPerCustomer {
     mrrPerCustomer: Float!
-    increasePercentage: Float!
+    increasePercentage: String!
     perMonth: [DashboardMRRPerCustomerPerMonth]!
 }
+
 type DashboardMRRPerCustomerPerMonth {
+    year: Int!
     month: Int!
-    value: Int!
+    value: Float!
 }
 
 type DashboardGrossRevenueRetention {
     grossRevenueRetention: Float!
-    increasePercentage: Float!
+    increasePercentage: String!
     perMonth: [DashboardGrossRevenueRetentionPerMonth]!
 }
 type DashboardGrossRevenueRetentionPerMonth {
@@ -8854,17 +8841,18 @@ type DashboardGrossRevenueRetentionPerMonth {
 
 type DashboardARRBreakdown {
     arrBreakdown: Float!
-    increasePercentage: Float!
+    increasePercentage: String!
     perMonth: [DashboardARRBreakdownPerMonth]!
 }
 type DashboardARRBreakdownPerMonth {
+    year: Int!
     month: Int!
-    newlyContracted: Int!
-    renewals: Int!
-    upsells: Int!
-    downgrades: Int!
-    cancellations: Int!
-    churned: Int!
+    newlyContracted: Float!
+    renewals: Float!
+    upsells: Float!
+    downgrades: Float!
+    cancellations: Float!
+    churned: Float!
 }
 
 type DashboardRevenueAtRisk {
@@ -8873,11 +8861,12 @@ type DashboardRevenueAtRisk {
 }
 
 type DashboardRetentionRate {
-    retentionRate: Int!
-    increasePercentage: Float!
+    retentionRate: Float!
+    increasePercentage: String!
     perMonth: [DashboardRetentionRatePerMonth]!
 }
 type DashboardRetentionRatePerMonth {
+    year: Int!
     month: Int!
     renewCount: Int!
     churnCount: Int!
@@ -8885,7 +8874,7 @@ type DashboardRetentionRatePerMonth {
 
 type DashboardNewCustomers {
     thisMonthCount: Int!
-    thisMonthIncreasePercentage: Float!
+    thisMonthIncreasePercentage: String!
     perMonth: [DashboardNewCustomersPerMonth]!
 }
 type DashboardNewCustomersPerMonth {
@@ -8898,6 +8887,30 @@ enum DashboardCustomerMapState {
     OK
     AT_RISK
     CHURNED
+}
+
+type DashboardTimeToOnboard {
+    timeToOnboard: Float
+    increasePercentage: Float
+    perMonth: [DashboardTimeToOnboardPerMonth!]!
+}
+
+type DashboardTimeToOnboardPerMonth {
+    year: Int!
+    month: Int!
+    value: Float!
+}
+
+type DashboardOnboardingCompletion {
+    completionPercentage: Float!
+    increasePercentage: Float!
+    perMonth: [DashboardOnboardingCompletionPerMonth!]!
+}
+
+type DashboardOnboardingCompletionPerMonth {
+    year: Int!
+    month: Int!
+    value: Float!
 }`, BuiltIn: false},
 	{Name: "../schemas/directive.graphqls", Input: `directive @goField(
     forceResolver: Boolean
@@ -9123,6 +9136,8 @@ enum ExternalSystemType {
     SLACK
     INTERCOM
     SALESFORCE
+    STRIPE
+    MIXPANEL
 }
 
 type ExternalSystem {
@@ -9747,7 +9762,7 @@ input NoteUpdateInput {
 }
 extend type Mutation {
     opportunityUpdate(input: OpportunityUpdateInput!): Opportunity!
-    opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!): Opportunity!
+    opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!, ownerUserId: ID): Opportunity!
 }
 
 type Opportunity implements Node {
@@ -9805,6 +9820,7 @@ input OpportunityRenewalUpdateInput {
     renewalLikelihood:  OpportunityRenewalLikelihood
     comments:           String
     appSource:          String
+    ownerUserId:        ID
 }
 
 input OpportunityUpdateInput {
@@ -9829,12 +9845,6 @@ input OpportunityUpdateInput {
 extend type Mutation {
     organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UpdateRenewalLikelihood(input: RenewalLikelihoodInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UpdateRenewalForecast(input: RenewalForecastInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UpdateBillingDetails(input: BillingDetailsInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UpdateRenewalLikelihoodAsync(input: RenewalLikelihoodInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use organization_UpdateRenewalLikelihood instead")
-    organization_UpdateRenewalForecastAsync(input: RenewalForecastInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use organization_UpdateRenewalForecast instead")
-    organization_UpdateBillingDetailsAsync(input: BillingDetailsInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use organization_UpdateBillingDetails instead")
     organization_Archive(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ArchiveAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Hide(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -9848,6 +9858,7 @@ extend type Mutation {
     organization_AddSocial(organizationId: ID!, input: SocialInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_UpdateOnboardingStatus(input: OnboardingStatusInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LinkedOrganization {
@@ -9875,6 +9886,10 @@ type Organization implements Node {
     isCustomer:  Boolean
     market:      Market
     employees:   Int64
+    yearFounded: Int64
+    headquarters: String
+    employeeGrowthRate: String
+    logoUrl:      String
     lastFundingRound: FundingRound
     lastFundingAmount: String
     source: DataSource!
@@ -9911,30 +9926,8 @@ type Organization implements Node {
 }
 
 type OrgAccountDetails {
-    renewalLikelihood: RenewalLikelihood @deprecated
-    renewalForecast: RenewalForecast @deprecated
-    billingDetails: BillingDetails @deprecated
     renewalSummary: RenewalSummary
-}
-
-type RenewalLikelihood {
-    probability: RenewalLikelihoodProbability
-    previousProbability: RenewalLikelihoodProbability
-    comment: String
-    updatedAt: Time
-    updatedById: String
-    updatedBy: User @goField(forceResolver: true)
-}
-
-type RenewalForecast {
-    amount: Float
-    potentialAmount: Float
-    comment: String
-    updatedAt: Time
-    updatedById: String
-    updatedBy: User @goField(forceResolver: true)
-    arr: Float
-    maxArr: Float
+    onboarding: OnboardingDetails
 }
 
 type RenewalSummary {
@@ -9944,12 +9937,10 @@ type RenewalSummary {
     nextRenewalDate:   Time
 }
 
-type BillingDetails {
-    amount: Float
-    frequency: RenewalCycle
-    renewalCycle: RenewalCycle
-    renewalCycleStart: Time
-    renewalCycleNext: Time
+type OnboardingDetails {
+    status: OnboardingStatus!
+    comments: String
+    updatedAt: Time
 }
 
 type OrganizationPage implements Pages {
@@ -9965,7 +9956,7 @@ input OrganizationInput {
     **Required.**
     """
     referenceId:   String
-    name:          String!
+    name:          String
     description:   String
     note:          String
     domains:       [String!]
@@ -9979,33 +9970,41 @@ input OrganizationInput {
     fieldSets:     [FieldSetInput!] @deprecated
     templateId:    ID @deprecated
     market:        Market
+    logoUrl:            String
+    employeeGrowthRate: String
+    headquarters:       String
+    yearFounded:        Int64
     employees:     Int64
     appSource:     String
 }
 
 input OrganizationUpdateInput {
-    id:   ID!
+    id: ID!
     referenceId: String
     """
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """
-    patch:             Boolean
-    name:              String!
-    description:       String
-    note:              String
-    domains:           [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
-    website:           String
-    industry:          String
-    subIndustry:       String
-    industryGroup:     String
-    isPublic:          Boolean
-    isCustomer:        Boolean
-    market:            Market
-    employees:         Int64
-    targetAudience:    String
-    valueProposition:  String
-    lastFundingRound:  FundingRound
-    lastFundingAmount: String
+    patch:              Boolean
+    name:               String
+    description:        String
+    note:               String
+    domains:            [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    website:            String
+    industry:           String
+    subIndustry:        String
+    industryGroup:      String
+    isPublic:           Boolean
+    isCustomer:         Boolean
+    market:             Market
+    employees:          Int64
+    targetAudience:     String
+    valueProposition:   String
+    lastFundingRound:   FundingRound
+    lastFundingAmount:  String
+    logoUrl:            String
+    employeeGrowthRate: String
+    headquarters:       String
+    yearFounded:        Int64
 }
 
 input LinkOrganizationsInput {
@@ -10014,24 +10013,10 @@ input LinkOrganizationsInput {
     type: String
 }
 
-input RenewalLikelihoodInput {
-    id: ID!
-    probability: RenewalLikelihoodProbability
-    comment: String
-}
-
-input RenewalForecastInput {
-    id: ID!
-    amount: Float
-    comment: String
-}
-
-input BillingDetailsInput {
-    id: ID!
-    amount: Float
-    frequency: RenewalCycle
-    renewalCycle: RenewalCycle
-    renewalCycleStart: Time
+input OnboardingStatusInput {
+    organizationId: ID!
+    status: OnboardingStatus!
+    comments: String
 }
 
 type SuggestedMergeOrganization {
@@ -10062,20 +10047,14 @@ enum FundingRound {
     BRIDGE
 }
 
-enum RenewalLikelihoodProbability {
-    HIGH
-    MEDIUM
-    LOW
-    ZERO
-}
-
-enum RenewalCycle {
-    WEEKLY
-    BIWEEKLY
-    MONTHLY
-    QUARTERLY
-    BIANNUALLY
-    ANNUALLY
+enum OnboardingStatus {
+    NOT_APPLICABLE
+    NOT_STARTED
+    ON_TRACK
+    LATE
+    STUCK
+    DONE
+    SUCCESSFUL
 }
 
 enum LastTouchpointType {
@@ -10418,13 +10397,15 @@ input SocialUpdateInput {
 	{Name: "../schemas/source.graphqls", Input: `enum DataSource {
     NA,
     OPENLINE
+    WEBSCRAPE
     HUBSPOT
     ZENDESK_SUPPORT
     PIPEDRIVE
     SLACK
-    WEBSCRAPE
     INTERCOM
     SALESFORCE
+    STRIPE
+    MIXPANEL
 }`, BuiltIn: false},
 	{Name: "../schemas/state.graphqls", Input: `type State {
     id: ID!
@@ -12484,6 +12465,15 @@ func (ec *executionContext) field_Mutation_opportunityRenewalUpdate_args(ctx con
 		}
 	}
 	args["input"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["ownerUserId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerUserId"))
+		arg1, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ownerUserId"] = arg1
 	return args, nil
 }
 
@@ -12748,88 +12738,13 @@ func (ec *executionContext) field_Mutation_organization_UnsetOwner_args(ctx cont
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_organization_UpdateBillingDetailsAsync_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_organization_UpdateOnboardingStatus_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.BillingDetailsInput
+	var arg0 model.OnboardingStatusInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNBillingDetailsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBillingDetailsInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_UpdateBillingDetails_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.BillingDetailsInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNBillingDetailsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBillingDetailsInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_UpdateRenewalForecastAsync_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.RenewalForecastInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNRenewalForecastInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalForecastInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_UpdateRenewalForecast_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.RenewalForecastInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNRenewalForecastInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalForecastInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_UpdateRenewalLikelihoodAsync_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.RenewalLikelihoodInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNRenewalLikelihoodInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalLikelihoodInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_UpdateRenewalLikelihood_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.RenewalLikelihoodInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNRenewalLikelihoodInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalLikelihoodInput(ctx, tmp)
+		arg0, err = ec.unmarshalNOnboardingStatusInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingStatusInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -13864,6 +13779,21 @@ func (ec *executionContext) field_Query_dashboard_NewCustomers_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_dashboard_OnboardingCompletion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["period"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_dashboard_RetentionRate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -13880,6 +13810,21 @@ func (ec *executionContext) field_Query_dashboard_RetentionRate_args(ctx context
 }
 
 func (ec *executionContext) field_Query_dashboard_RevenueAtRisk_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["period"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_dashboard_TimeToOnboard_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *model.DashboardPeriodInput
@@ -15748,211 +15693,6 @@ func (ec *executionContext) fieldContext_Attachment_appSource(ctx context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _BillingDetails_amount(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_BillingDetails_amount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Amount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*float64)
-	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_BillingDetails_amount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "BillingDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _BillingDetails_frequency(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_BillingDetails_frequency(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Frequency, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.RenewalCycle)
-	fc.Result = res
-	return ec.marshalORenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalCycle(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_BillingDetails_frequency(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "BillingDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type RenewalCycle does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _BillingDetails_renewalCycle(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_BillingDetails_renewalCycle(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RenewalCycle, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.RenewalCycle)
-	fc.Result = res
-	return ec.marshalORenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalCycle(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_BillingDetails_renewalCycle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "BillingDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type RenewalCycle does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _BillingDetails_renewalCycleStart(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_BillingDetails_renewalCycleStart(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RenewalCycleStart, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*time.Time)
-	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_BillingDetails_renewalCycleStart(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "BillingDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _BillingDetails_renewalCycleNext(ctx context.Context, field graphql.CollectedField, obj *model.BillingDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_BillingDetails_renewalCycleNext(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RenewalCycleNext, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*time.Time)
-	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_BillingDetails_renewalCycleNext(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "BillingDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -19164,6 +18904,47 @@ func (ec *executionContext) fieldContext_Contract_renewalCycle(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Contract_renewalPeriods(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_renewalPeriods(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalPeriods, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	fc.Result = res
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_renewalPeriods(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contract_status(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contract_status(ctx, field)
 	if err != nil {
@@ -21129,9 +20910,9 @@ func (ec *executionContext) _DashboardARRBreakdown_increasePercentage(ctx contex
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdown_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21141,7 +20922,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdown_increasePercentag
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21186,6 +20967,8 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdown_perMonth(ctx cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "year":
+				return ec.fieldContext_DashboardARRBreakdownPerMonth_year(ctx, field)
 			case "month":
 				return ec.fieldContext_DashboardARRBreakdownPerMonth_month(ctx, field)
 			case "newlyContracted":
@@ -21202,6 +20985,50 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdown_perMonth(ctx cont
 				return ec.fieldContext_DashboardARRBreakdownPerMonth_churned(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DashboardARRBreakdownPerMonth", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardARRBreakdownPerMonth_year(ctx context.Context, field graphql.CollectedField, obj *model.DashboardARRBreakdownPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardARRBreakdownPerMonth_year(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Year, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_year(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardARRBreakdownPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21277,9 +21104,9 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth_newlyContracted(ctx c
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_newlyContracted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21289,7 +21116,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_newlyCont
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21321,9 +21148,9 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth_renewals(ctx context.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_renewals(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21333,7 +21160,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_renewals(
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21365,9 +21192,9 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth_upsells(ctx context.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_upsells(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21377,7 +21204,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_upsells(c
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21409,9 +21236,9 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth_downgrades(ctx contex
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_downgrades(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21421,7 +21248,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_downgrade
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21453,9 +21280,9 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth_cancellations(ctx con
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_cancellations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21465,7 +21292,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_cancellat
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21497,9 +21324,9 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth_churned(ctx context.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_churned(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21509,7 +21336,7 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_churned(c
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21636,6 +21463,14 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(ctx c
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -21905,9 +21740,9 @@ func (ec *executionContext) _DashboardGrossRevenueRetention_increasePercentage(c
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardGrossRevenueRetention_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21917,7 +21752,7 @@ func (ec *executionContext) fieldContext_DashboardGrossRevenueRetention_increase
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22131,9 +21966,9 @@ func (ec *executionContext) _DashboardMRRPerCustomer_increasePercentage(ctx cont
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardMRRPerCustomer_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22143,7 +21978,7 @@ func (ec *executionContext) fieldContext_DashboardMRRPerCustomer_increasePercent
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22188,12 +22023,58 @@ func (ec *executionContext) fieldContext_DashboardMRRPerCustomer_perMonth(ctx co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "year":
+				return ec.fieldContext_DashboardMRRPerCustomerPerMonth_year(ctx, field)
 			case "month":
 				return ec.fieldContext_DashboardMRRPerCustomerPerMonth_month(ctx, field)
 			case "value":
 				return ec.fieldContext_DashboardMRRPerCustomerPerMonth_value(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DashboardMRRPerCustomerPerMonth", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardMRRPerCustomerPerMonth_year(ctx context.Context, field graphql.CollectedField, obj *model.DashboardMRRPerCustomerPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardMRRPerCustomerPerMonth_year(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Year, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardMRRPerCustomerPerMonth_year(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardMRRPerCustomerPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22269,9 +22150,9 @@ func (ec *executionContext) _DashboardMRRPerCustomerPerMonth_value(ctx context.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardMRRPerCustomerPerMonth_value(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22281,7 +22162,7 @@ func (ec *executionContext) fieldContext_DashboardMRRPerCustomerPerMonth_value(c
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22357,9 +22238,9 @@ func (ec *executionContext) _DashboardNewCustomers_thisMonthIncreasePercentage(c
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardNewCustomers_thisMonthIncreasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22369,7 +22250,7 @@ func (ec *executionContext) fieldContext_DashboardNewCustomers_thisMonthIncrease
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22559,6 +22440,278 @@ func (ec *executionContext) fieldContext_DashboardNewCustomersPerMonth_count(ctx
 	return fc, nil
 }
 
+func (ec *executionContext) _DashboardOnboardingCompletion_completionPercentage(ctx context.Context, field graphql.CollectedField, obj *model.DashboardOnboardingCompletion) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardOnboardingCompletion_completionPercentage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CompletionPercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardOnboardingCompletion_completionPercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardOnboardingCompletion",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardOnboardingCompletion_increasePercentage(ctx context.Context, field graphql.CollectedField, obj *model.DashboardOnboardingCompletion) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardOnboardingCompletion_increasePercentage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IncreasePercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardOnboardingCompletion_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardOnboardingCompletion",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardOnboardingCompletion_perMonth(ctx context.Context, field graphql.CollectedField, obj *model.DashboardOnboardingCompletion) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardOnboardingCompletion_perMonth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerMonth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DashboardOnboardingCompletionPerMonth)
+	fc.Result = res
+	return ec.marshalNDashboardOnboardingCompletionPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardOnboardingCompletionPerMonthᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardOnboardingCompletion_perMonth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardOnboardingCompletion",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "year":
+				return ec.fieldContext_DashboardOnboardingCompletionPerMonth_year(ctx, field)
+			case "month":
+				return ec.fieldContext_DashboardOnboardingCompletionPerMonth_month(ctx, field)
+			case "value":
+				return ec.fieldContext_DashboardOnboardingCompletionPerMonth_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardOnboardingCompletionPerMonth", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardOnboardingCompletionPerMonth_year(ctx context.Context, field graphql.CollectedField, obj *model.DashboardOnboardingCompletionPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardOnboardingCompletionPerMonth_year(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Year, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardOnboardingCompletionPerMonth_year(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardOnboardingCompletionPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardOnboardingCompletionPerMonth_month(ctx context.Context, field graphql.CollectedField, obj *model.DashboardOnboardingCompletionPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardOnboardingCompletionPerMonth_month(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Month, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardOnboardingCompletionPerMonth_month(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardOnboardingCompletionPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardOnboardingCompletionPerMonth_value(ctx context.Context, field graphql.CollectedField, obj *model.DashboardOnboardingCompletionPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardOnboardingCompletionPerMonth_value(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardOnboardingCompletionPerMonth_value(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardOnboardingCompletionPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DashboardRetentionRate_retentionRate(ctx context.Context, field graphql.CollectedField, obj *model.DashboardRetentionRate) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DashboardRetentionRate_retentionRate(ctx, field)
 	if err != nil {
@@ -22585,9 +22738,9 @@ func (ec *executionContext) _DashboardRetentionRate_retentionRate(ctx context.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardRetentionRate_retentionRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22597,7 +22750,7 @@ func (ec *executionContext) fieldContext_DashboardRetentionRate_retentionRate(ct
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22629,9 +22782,9 @@ func (ec *executionContext) _DashboardRetentionRate_increasePercentage(ctx conte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardRetentionRate_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22641,7 +22794,7 @@ func (ec *executionContext) fieldContext_DashboardRetentionRate_increasePercenta
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22686,6 +22839,8 @@ func (ec *executionContext) fieldContext_DashboardRetentionRate_perMonth(ctx con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "year":
+				return ec.fieldContext_DashboardRetentionRatePerMonth_year(ctx, field)
 			case "month":
 				return ec.fieldContext_DashboardRetentionRatePerMonth_month(ctx, field)
 			case "renewCount":
@@ -22694,6 +22849,50 @@ func (ec *executionContext) fieldContext_DashboardRetentionRate_perMonth(ctx con
 				return ec.fieldContext_DashboardRetentionRatePerMonth_churnCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DashboardRetentionRatePerMonth", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardRetentionRatePerMonth_year(ctx context.Context, field graphql.CollectedField, obj *model.DashboardRetentionRatePerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardRetentionRatePerMonth_year(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Year, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardRetentionRatePerMonth_year(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardRetentionRatePerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22909,6 +23108,272 @@ func (ec *executionContext) _DashboardRevenueAtRisk_atRisk(ctx context.Context, 
 func (ec *executionContext) fieldContext_DashboardRevenueAtRisk_atRisk(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DashboardRevenueAtRisk",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardTimeToOnboard_timeToOnboard(ctx context.Context, field graphql.CollectedField, obj *model.DashboardTimeToOnboard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardTimeToOnboard_timeToOnboard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TimeToOnboard, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardTimeToOnboard_timeToOnboard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardTimeToOnboard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardTimeToOnboard_increasePercentage(ctx context.Context, field graphql.CollectedField, obj *model.DashboardTimeToOnboard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardTimeToOnboard_increasePercentage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IncreasePercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardTimeToOnboard_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardTimeToOnboard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardTimeToOnboard_perMonth(ctx context.Context, field graphql.CollectedField, obj *model.DashboardTimeToOnboard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardTimeToOnboard_perMonth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerMonth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DashboardTimeToOnboardPerMonth)
+	fc.Result = res
+	return ec.marshalNDashboardTimeToOnboardPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardTimeToOnboardPerMonthᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardTimeToOnboard_perMonth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardTimeToOnboard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "year":
+				return ec.fieldContext_DashboardTimeToOnboardPerMonth_year(ctx, field)
+			case "month":
+				return ec.fieldContext_DashboardTimeToOnboardPerMonth_month(ctx, field)
+			case "value":
+				return ec.fieldContext_DashboardTimeToOnboardPerMonth_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardTimeToOnboardPerMonth", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardTimeToOnboardPerMonth_year(ctx context.Context, field graphql.CollectedField, obj *model.DashboardTimeToOnboardPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardTimeToOnboardPerMonth_year(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Year, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardTimeToOnboardPerMonth_year(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardTimeToOnboardPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardTimeToOnboardPerMonth_month(ctx context.Context, field graphql.CollectedField, obj *model.DashboardTimeToOnboardPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardTimeToOnboardPerMonth_month(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Month, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardTimeToOnboardPerMonth_month(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardTimeToOnboardPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardTimeToOnboardPerMonth_value(ctx context.Context, field graphql.CollectedField, obj *model.DashboardTimeToOnboardPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardTimeToOnboardPerMonth_value(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardTimeToOnboardPerMonth_value(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardTimeToOnboardPerMonth",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -23771,6 +24236,14 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -29430,6 +29903,14 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -30173,6 +30654,14 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -34803,6 +35292,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_name(ctx, field)
 			case "renewalCycle":
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
+			case "renewalPeriods":
+				return ec.fieldContext_Contract_renewalPeriods(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceLineItems":
@@ -34926,6 +35417,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_name(ctx, field)
 			case "renewalCycle":
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
+			case "renewalPeriods":
+				return ec.fieldContext_Contract_renewalPeriods(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceLineItems":
@@ -38105,6 +38598,14 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -40308,7 +40809,7 @@ func (ec *executionContext) _Mutation_opportunityRenewalUpdate(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().OpportunityRenewalUpdate(rctx, fc.Args["input"].(model.OpportunityRenewalUpdateInput))
+		return ec.resolvers.Mutation().OpportunityRenewalUpdate(rctx, fc.Args["input"].(model.OpportunityRenewalUpdateInput), fc.Args["ownerUserId"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -40506,6 +41007,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -40691,6 +41200,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -40763,516 +41280,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_organization_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_UpdateRenewalLikelihood(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_UpdateRenewalLikelihood(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationUpdateRenewalLikelihood(rctx, fc.Args["input"].(model.RenewalLikelihoodInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_UpdateRenewalLikelihood(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_UpdateRenewalLikelihood_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_UpdateRenewalForecast(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_UpdateRenewalForecast(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationUpdateRenewalForecast(rctx, fc.Args["input"].(model.RenewalForecastInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_UpdateRenewalForecast(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_UpdateRenewalForecast_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_UpdateBillingDetails(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_UpdateBillingDetails(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationUpdateBillingDetails(rctx, fc.Args["input"].(model.BillingDetailsInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_UpdateBillingDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_UpdateBillingDetails_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_UpdateRenewalLikelihoodAsync(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_UpdateRenewalLikelihoodAsync(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationUpdateRenewalLikelihoodAsync(rctx, fc.Args["input"].(model.RenewalLikelihoodInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_UpdateRenewalLikelihoodAsync(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_UpdateRenewalLikelihoodAsync_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_UpdateRenewalForecastAsync(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_UpdateRenewalForecastAsync(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationUpdateRenewalForecastAsync(rctx, fc.Args["input"].(model.RenewalForecastInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_UpdateRenewalForecastAsync(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_UpdateRenewalForecastAsync_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_UpdateBillingDetailsAsync(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_UpdateBillingDetailsAsync(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationUpdateBillingDetailsAsync(rctx, fc.Args["input"].(model.BillingDetailsInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_UpdateBillingDetailsAsync(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_UpdateBillingDetailsAsync_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -41900,6 +41907,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -42085,6 +42100,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -42270,6 +42293,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -42697,6 +42728,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -42882,6 +42921,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -42954,6 +43001,199 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_organization_UnsetOwner_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_organization_UpdateOnboardingStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_UpdateOnboardingStatus(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().OrganizationUpdateOnboardingStatus(rctx, fc.Args["input"].(model.OnboardingStatusInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Organization); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organization_UpdateOnboardingStatus_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -46997,6 +47237,132 @@ func (ec *executionContext) fieldContext_NotePage_totalElements(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _OnboardingDetails_status(ctx context.Context, field graphql.CollectedField, obj *model.OnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OnboardingDetails_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.OnboardingStatus)
+	fc.Result = res
+	return ec.marshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OnboardingDetails_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OnboardingStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OnboardingDetails_comments(ctx context.Context, field graphql.CollectedField, obj *model.OnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OnboardingDetails_comments(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Comments, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OnboardingDetails_comments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OnboardingDetails_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.OnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OnboardingDetails_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OnboardingDetails_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Opportunity_id(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Opportunity_id(ctx, field)
 	if err != nil {
@@ -48226,173 +48592,6 @@ func (ec *executionContext) fieldContext_Opportunity_externalLinks(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _OrgAccountDetails_renewalLikelihood(ctx context.Context, field graphql.CollectedField, obj *model.OrgAccountDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OrgAccountDetails_renewalLikelihood(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RenewalLikelihood, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.RenewalLikelihood)
-	fc.Result = res
-	return ec.marshalORenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalLikelihood(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_OrgAccountDetails_renewalLikelihood(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "OrgAccountDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "probability":
-				return ec.fieldContext_RenewalLikelihood_probability(ctx, field)
-			case "previousProbability":
-				return ec.fieldContext_RenewalLikelihood_previousProbability(ctx, field)
-			case "comment":
-				return ec.fieldContext_RenewalLikelihood_comment(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_RenewalLikelihood_updatedAt(ctx, field)
-			case "updatedById":
-				return ec.fieldContext_RenewalLikelihood_updatedById(ctx, field)
-			case "updatedBy":
-				return ec.fieldContext_RenewalLikelihood_updatedBy(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type RenewalLikelihood", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _OrgAccountDetails_renewalForecast(ctx context.Context, field graphql.CollectedField, obj *model.OrgAccountDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OrgAccountDetails_renewalForecast(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RenewalForecast, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.RenewalForecast)
-	fc.Result = res
-	return ec.marshalORenewalForecast2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalForecast(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_OrgAccountDetails_renewalForecast(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "OrgAccountDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "amount":
-				return ec.fieldContext_RenewalForecast_amount(ctx, field)
-			case "potentialAmount":
-				return ec.fieldContext_RenewalForecast_potentialAmount(ctx, field)
-			case "comment":
-				return ec.fieldContext_RenewalForecast_comment(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_RenewalForecast_updatedAt(ctx, field)
-			case "updatedById":
-				return ec.fieldContext_RenewalForecast_updatedById(ctx, field)
-			case "updatedBy":
-				return ec.fieldContext_RenewalForecast_updatedBy(ctx, field)
-			case "arr":
-				return ec.fieldContext_RenewalForecast_arr(ctx, field)
-			case "maxArr":
-				return ec.fieldContext_RenewalForecast_maxArr(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type RenewalForecast", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _OrgAccountDetails_billingDetails(ctx context.Context, field graphql.CollectedField, obj *model.OrgAccountDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OrgAccountDetails_billingDetails(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.BillingDetails, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.BillingDetails)
-	fc.Result = res
-	return ec.marshalOBillingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBillingDetails(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_OrgAccountDetails_billingDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "OrgAccountDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "amount":
-				return ec.fieldContext_BillingDetails_amount(ctx, field)
-			case "frequency":
-				return ec.fieldContext_BillingDetails_frequency(ctx, field)
-			case "renewalCycle":
-				return ec.fieldContext_BillingDetails_renewalCycle(ctx, field)
-			case "renewalCycleStart":
-				return ec.fieldContext_BillingDetails_renewalCycleStart(ctx, field)
-			case "renewalCycleNext":
-				return ec.fieldContext_BillingDetails_renewalCycleNext(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type BillingDetails", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _OrgAccountDetails_renewalSummary(ctx context.Context, field graphql.CollectedField, obj *model.OrgAccountDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrgAccountDetails_renewalSummary(ctx, field)
 	if err != nil {
@@ -48439,6 +48638,55 @@ func (ec *executionContext) fieldContext_OrgAccountDetails_renewalSummary(ctx co
 				return ec.fieldContext_RenewalSummary_nextRenewalDate(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RenewalSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrgAccountDetails_onboarding(ctx context.Context, field graphql.CollectedField, obj *model.OrgAccountDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrgAccountDetails_onboarding(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Onboarding, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OnboardingDetails)
+	fc.Result = res
+	return ec.marshalOOnboardingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingDetails(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrgAccountDetails_onboarding(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrgAccountDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "status":
+				return ec.fieldContext_OnboardingDetails_status(ctx, field)
+			case "comments":
+				return ec.fieldContext_OnboardingDetails_comments(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_OnboardingDetails_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OnboardingDetails", field.Name)
 		},
 	}
 	return fc, nil
@@ -49241,6 +49489,170 @@ func (ec *executionContext) fieldContext_Organization_employees(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_yearFounded(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_yearFounded(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.YearFounded, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	fc.Result = res
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_yearFounded(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_headquarters(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_headquarters(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Headquarters, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_headquarters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_employeeGrowthRate(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EmployeeGrowthRate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_employeeGrowthRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_logoUrl(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_logoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LogoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_logoUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_lastFundingRound(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_lastFundingRound(ctx, field)
 	if err != nil {
@@ -49922,6 +50334,8 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_name(ctx, field)
 			case "renewalCycle":
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
+			case "renewalPeriods":
+				return ec.fieldContext_Contract_renewalPeriods(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceLineItems":
@@ -50929,14 +51343,10 @@ func (ec *executionContext) fieldContext_Organization_accountDetails(ctx context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "renewalLikelihood":
-				return ec.fieldContext_OrgAccountDetails_renewalLikelihood(ctx, field)
-			case "renewalForecast":
-				return ec.fieldContext_OrgAccountDetails_renewalForecast(ctx, field)
-			case "billingDetails":
-				return ec.fieldContext_OrgAccountDetails_billingDetails(ctx, field)
 			case "renewalSummary":
 				return ec.fieldContext_OrgAccountDetails_renewalSummary(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_OrgAccountDetails_onboarding(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrgAccountDetails", field.Name)
 		},
@@ -51021,6 +51431,14 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -51297,6 +51715,14 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -52678,6 +53104,14 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -54258,6 +54692,8 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_name(ctx, field)
 			case "renewalCycle":
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
+			case "renewalPeriods":
+				return ec.fieldContext_Contract_renewalPeriods(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceLineItems":
@@ -54763,6 +55199,126 @@ func (ec *executionContext) fieldContext_Query_dashboard_NewCustomers(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_dashboard_NewCustomers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_dashboard_TimeToOnboard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboard_TimeToOnboard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardTimeToOnboard(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DashboardTimeToOnboard)
+	fc.Result = res
+	return ec.marshalODashboardTimeToOnboard2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardTimeToOnboard(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboard_TimeToOnboard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "timeToOnboard":
+				return ec.fieldContext_DashboardTimeToOnboard_timeToOnboard(ctx, field)
+			case "increasePercentage":
+				return ec.fieldContext_DashboardTimeToOnboard_increasePercentage(ctx, field)
+			case "perMonth":
+				return ec.fieldContext_DashboardTimeToOnboard_perMonth(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardTimeToOnboard", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboard_TimeToOnboard_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_dashboard_OnboardingCompletion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboard_OnboardingCompletion(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardOnboardingCompletion(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DashboardOnboardingCompletion)
+	fc.Result = res
+	return ec.marshalODashboardOnboardingCompletion2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardOnboardingCompletion(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboard_OnboardingCompletion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "completionPercentage":
+				return ec.fieldContext_DashboardOnboardingCompletion_completionPercentage(ctx, field)
+			case "increasePercentage":
+				return ec.fieldContext_DashboardOnboardingCompletion_increasePercentage(ctx, field)
+			case "perMonth":
+				return ec.fieldContext_DashboardOnboardingCompletion_perMonth(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardOnboardingCompletion", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboard_OnboardingCompletion_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -55997,6 +56553,14 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -57353,660 +57917,6 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalForecast_amount(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalForecast_amount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Amount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*float64)
-	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalForecast_amount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalForecast",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalForecast_potentialAmount(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalForecast_potentialAmount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PotentialAmount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*float64)
-	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalForecast_potentialAmount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalForecast",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalForecast_comment(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalForecast_comment(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Comment, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalForecast_comment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalForecast",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalForecast_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalForecast_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*time.Time)
-	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalForecast_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalForecast",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalForecast_updatedById(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalForecast_updatedById(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedByID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalForecast_updatedById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalForecast",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalForecast_updatedBy(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalForecast_updatedBy(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.RenewalForecast().UpdatedBy(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalForecast_updatedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalForecast",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "firstName":
-				return ec.fieldContext_User_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_User_lastName(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "internal":
-				return ec.fieldContext_User_internal(ctx, field)
-			case "bot":
-				return ec.fieldContext_User_bot(ctx, field)
-			case "timezone":
-				return ec.fieldContext_User_timezone(ctx, field)
-			case "profilePhotoUrl":
-				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
-			case "player":
-				return ec.fieldContext_User_player(ctx, field)
-			case "roles":
-				return ec.fieldContext_User_roles(ctx, field)
-			case "emails":
-				return ec.fieldContext_User_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_User_phoneNumbers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_User_jobRoles(ctx, field)
-			case "calendars":
-				return ec.fieldContext_User_calendars(ctx, field)
-			case "source":
-				return ec.fieldContext_User_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_User_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_User_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalForecast_arr(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalForecast_arr(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Arr, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*float64)
-	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalForecast_arr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalForecast",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalForecast_maxArr(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalForecast_maxArr(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.MaxArr, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*float64)
-	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalForecast_maxArr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalForecast",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalLikelihood_probability(ctx context.Context, field graphql.CollectedField, obj *model.RenewalLikelihood) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalLikelihood_probability(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Probability, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.RenewalLikelihoodProbability)
-	fc.Result = res
-	return ec.marshalORenewalLikelihoodProbability2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalLikelihoodProbability(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalLikelihood_probability(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalLikelihood",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type RenewalLikelihoodProbability does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalLikelihood_previousProbability(ctx context.Context, field graphql.CollectedField, obj *model.RenewalLikelihood) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalLikelihood_previousProbability(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PreviousProbability, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.RenewalLikelihoodProbability)
-	fc.Result = res
-	return ec.marshalORenewalLikelihoodProbability2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalLikelihoodProbability(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalLikelihood_previousProbability(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalLikelihood",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type RenewalLikelihoodProbability does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalLikelihood_comment(ctx context.Context, field graphql.CollectedField, obj *model.RenewalLikelihood) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalLikelihood_comment(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Comment, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalLikelihood_comment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalLikelihood",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalLikelihood_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.RenewalLikelihood) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalLikelihood_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*time.Time)
-	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalLikelihood_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalLikelihood",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalLikelihood_updatedById(ctx context.Context, field graphql.CollectedField, obj *model.RenewalLikelihood) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalLikelihood_updatedById(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedByID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalLikelihood_updatedById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalLikelihood",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RenewalLikelihood_updatedBy(ctx context.Context, field graphql.CollectedField, obj *model.RenewalLikelihood) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalLikelihood_updatedBy(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.RenewalLikelihood().UpdatedBy(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RenewalLikelihood_updatedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RenewalLikelihood",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "firstName":
-				return ec.fieldContext_User_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_User_lastName(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "internal":
-				return ec.fieldContext_User_internal(ctx, field)
-			case "bot":
-				return ec.fieldContext_User_bot(ctx, field)
-			case "timezone":
-				return ec.fieldContext_User_timezone(ctx, field)
-			case "profilePhotoUrl":
-				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
-			case "player":
-				return ec.fieldContext_User_player(ctx, field)
-			case "roles":
-				return ec.fieldContext_User_roles(ctx, field)
-			case "emails":
-				return ec.fieldContext_User_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_User_phoneNumbers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_User_jobRoles(ctx, field)
-			case "calendars":
-				return ec.fieldContext_User_calendars(ctx, field)
-			case "source":
-				return ec.fieldContext_User_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_User_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_User_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -59584,6 +59494,14 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "lastFundingRound":
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
@@ -63607,8 +63525,6 @@ func (ec *executionContext) unmarshalInputAnalysisDescriptionInput(ctx context.C
 		}
 		switch k {
 		case "interactionEventId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interactionEventId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -63616,8 +63532,6 @@ func (ec *executionContext) unmarshalInputAnalysisDescriptionInput(ctx context.C
 			}
 			it.InteractionEventID = data
 		case "interactionSessionId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interactionSessionId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -63625,8 +63539,6 @@ func (ec *executionContext) unmarshalInputAnalysisDescriptionInput(ctx context.C
 			}
 			it.InteractionSessionID = data
 		case "meetingId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -63654,8 +63566,6 @@ func (ec *executionContext) unmarshalInputAnalysisInput(ctx context.Context, obj
 		}
 		switch k {
 		case "content":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -63663,8 +63573,6 @@ func (ec *executionContext) unmarshalInputAnalysisInput(ctx context.Context, obj
 			}
 			it.Content = data
 		case "contentType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -63672,8 +63580,6 @@ func (ec *executionContext) unmarshalInputAnalysisInput(ctx context.Context, obj
 			}
 			it.ContentType = data
 		case "analysisType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("analysisType"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -63681,8 +63587,6 @@ func (ec *executionContext) unmarshalInputAnalysisInput(ctx context.Context, obj
 			}
 			it.AnalysisType = data
 		case "describes":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("describes"))
 			data, err := ec.unmarshalNAnalysisDescriptionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnalysisDescriptionInputᚄ(ctx, v)
 			if err != nil {
@@ -63690,8 +63594,6 @@ func (ec *executionContext) unmarshalInputAnalysisInput(ctx context.Context, obj
 			}
 			it.Describes = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -63719,8 +63621,6 @@ func (ec *executionContext) unmarshalInputAttachmentInput(ctx context.Context, o
 		}
 		switch k {
 		case "mimeType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mimeType"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -63728,8 +63628,6 @@ func (ec *executionContext) unmarshalInputAttachmentInput(ctx context.Context, o
 			}
 			it.MimeType = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -63737,8 +63635,6 @@ func (ec *executionContext) unmarshalInputAttachmentInput(ctx context.Context, o
 			}
 			it.Name = data
 		case "size":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
 			data, err := ec.unmarshalNInt642int64(ctx, v)
 			if err != nil {
@@ -63746,8 +63642,6 @@ func (ec *executionContext) unmarshalInputAttachmentInput(ctx context.Context, o
 			}
 			it.Size = data
 		case "extension":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("extension"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -63755,79 +63649,12 @@ func (ec *executionContext) unmarshalInputAttachmentInput(ctx context.Context, o
 			}
 			it.Extension = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.AppSource = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputBillingDetailsInput(ctx context.Context, obj interface{}) (model.BillingDetailsInput, error) {
-	var it model.BillingDetailsInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"id", "amount", "frequency", "renewalCycle", "renewalCycleStart"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "id":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
-		case "amount":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
-			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Amount = data
-		case "frequency":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("frequency"))
-			data, err := ec.unmarshalORenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalCycle(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Frequency = data
-		case "renewalCycle":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalCycle"))
-			data, err := ec.unmarshalORenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalCycle(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.RenewalCycle = data
-		case "renewalCycleStart":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalCycleStart"))
-			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.RenewalCycleStart = data
 		}
 	}
 
@@ -63849,8 +63676,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 		}
 		switch k {
 		case "templateId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -63858,8 +63683,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.TemplateID = data
 		case "prefix":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefix"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -63867,8 +63690,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.Prefix = data
 		case "firstName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -63876,8 +63697,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.FirstName = data
 		case "lastName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -63885,8 +63704,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.LastName = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -63894,8 +63711,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.Name = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -63903,8 +63718,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.Description = data
 		case "timezone":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -63912,8 +63725,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.Timezone = data
 		case "profilePhotoUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrl"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -63921,8 +63732,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.ProfilePhotoURL = data
 		case "createdAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -63930,8 +63739,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.CreatedAt = data
 		case "customFields":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
 			data, err := ec.unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInputᚄ(ctx, v)
 			if err != nil {
@@ -63939,8 +63746,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.CustomFields = data
 		case "fieldSets":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
 			data, err := ec.unmarshalOFieldSetInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetInputᚄ(ctx, v)
 			if err != nil {
@@ -63948,8 +63753,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.FieldSets = data
 		case "email":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalOEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailInput(ctx, v)
 			if err != nil {
@@ -63957,8 +63760,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.Email = data
 		case "phoneNumber":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumber"))
 			data, err := ec.unmarshalOPhoneNumberInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx, v)
 			if err != nil {
@@ -63966,8 +63767,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.PhoneNumber = data
 		case "ownerId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -63975,8 +63774,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.OwnerID = data
 		case "externalReference":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
 			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
 			if err != nil {
@@ -63984,8 +63781,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			}
 			it.ExternalReference = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64013,8 +63808,6 @@ func (ec *executionContext) unmarshalInputContactOrganizationInput(ctx context.C
 		}
 		switch k {
 		case "contactId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -64022,8 +63815,6 @@ func (ec *executionContext) unmarshalInputContactOrganizationInput(ctx context.C
 			}
 			it.ContactID = data
 		case "organizationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -64051,8 +63842,6 @@ func (ec *executionContext) unmarshalInputContactTagInput(ctx context.Context, o
 		}
 		switch k {
 		case "contactId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -64060,8 +63849,6 @@ func (ec *executionContext) unmarshalInputContactTagInput(ctx context.Context, o
 			}
 			it.ContactID = data
 		case "tagId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -64089,8 +63876,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -64098,8 +63883,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 			}
 			it.ID = data
 		case "prefix":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefix"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64107,8 +63890,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 			}
 			it.Prefix = data
 		case "firstName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64116,8 +63897,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 			}
 			it.FirstName = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64125,8 +63904,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 			}
 			it.Name = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64134,8 +63911,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 			}
 			it.Description = data
 		case "timezone":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64143,8 +63918,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 			}
 			it.Timezone = data
 		case "profilePhotoUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrl"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64152,8 +63925,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 			}
 			it.ProfilePhotoURL = data
 		case "lastName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64161,8 +63932,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 			}
 			it.LastName = data
 		case "label":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64170,8 +63939,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 			}
 			it.Label = data
 		case "ownerId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -64191,7 +63958,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "name", "renewalCycle", "appSource", "contractUrl", "serviceStartedAt", "signedAt", "externalReference"}
+	fieldsInOrder := [...]string{"organizationId", "name", "renewalCycle", "renewalPeriods", "appSource", "contractUrl", "serviceStartedAt", "signedAt", "externalReference"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -64199,8 +63966,6 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		}
 		switch k {
 		case "organizationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -64208,8 +63973,6 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 			}
 			it.OrganizationID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64217,17 +63980,20 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 			}
 			it.Name = data
 		case "renewalCycle":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalCycle"))
 			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.RenewalCycle = data
+		case "renewalPeriods":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalPeriods"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalPeriods = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64235,8 +64001,6 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 			}
 			it.AppSource = data
 		case "contractUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractUrl"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64244,8 +64008,6 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 			}
 			it.ContractURL = data
 		case "serviceStartedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStartedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -64253,8 +64015,6 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 			}
 			it.ServiceStartedAt = data
 		case "signedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("signedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -64262,8 +64022,6 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 			}
 			it.SignedAt = data
 		case "externalReference":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
 			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
 			if err != nil {
@@ -64283,7 +64041,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "name", "contractUrl", "renewalCycle", "serviceStartedAt", "signedAt", "endedAt", "appSource"}
+	fieldsInOrder := [...]string{"contractId", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -64291,8 +64049,6 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		}
 		switch k {
 		case "contractId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -64300,8 +64056,6 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 			}
 			it.ContractID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64309,8 +64063,6 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 			}
 			it.Name = data
 		case "contractUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractUrl"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64318,17 +64070,20 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 			}
 			it.ContractURL = data
 		case "renewalCycle":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalCycle"))
 			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.RenewalCycle = data
+		case "renewalPeriods":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalPeriods"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalPeriods = data
 		case "serviceStartedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStartedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -64336,8 +64091,6 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 			}
 			it.ServiceStartedAt = data
 		case "signedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("signedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -64345,8 +64098,6 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 			}
 			it.SignedAt = data
 		case "endedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -64354,8 +64105,6 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 			}
 			it.EndedAt = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64383,8 +64132,6 @@ func (ec *executionContext) unmarshalInputCustomFieldEntityType(ctx context.Cont
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -64392,8 +64139,6 @@ func (ec *executionContext) unmarshalInputCustomFieldEntityType(ctx context.Cont
 			}
 			it.ID = data
 		case "entityType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
 			data, err := ec.unmarshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityType(ctx, v)
 			if err != nil {
@@ -64421,8 +64166,6 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -64430,8 +64173,6 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 			}
 			it.ID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64439,8 +64180,6 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 			}
 			it.Name = data
 		case "datatype":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("datatype"))
 			data, err := ec.unmarshalOCustomFieldDataType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDataType(ctx, v)
 			if err != nil {
@@ -64448,8 +64187,6 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 			}
 			it.Datatype = data
 		case "value":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			data, err := ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, v)
 			if err != nil {
@@ -64457,8 +64194,6 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 			}
 			it.Value = data
 		case "templateId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -64486,8 +64221,6 @@ func (ec *executionContext) unmarshalInputCustomFieldTemplateInput(ctx context.C
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -64495,8 +64228,6 @@ func (ec *executionContext) unmarshalInputCustomFieldTemplateInput(ctx context.C
 			}
 			it.Name = data
 		case "type":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
 			data, err := ec.unmarshalNCustomFieldTemplateType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateType(ctx, v)
 			if err != nil {
@@ -64504,8 +64235,6 @@ func (ec *executionContext) unmarshalInputCustomFieldTemplateInput(ctx context.C
 			}
 			it.Type = data
 		case "order":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
@@ -64513,8 +64242,6 @@ func (ec *executionContext) unmarshalInputCustomFieldTemplateInput(ctx context.C
 			}
 			it.Order = data
 		case "mandatory":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mandatory"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -64522,8 +64249,6 @@ func (ec *executionContext) unmarshalInputCustomFieldTemplateInput(ctx context.C
 			}
 			it.Mandatory = data
 		case "length":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("length"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -64531,8 +64256,6 @@ func (ec *executionContext) unmarshalInputCustomFieldTemplateInput(ctx context.C
 			}
 			it.Length = data
 		case "min":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("min"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -64540,8 +64263,6 @@ func (ec *executionContext) unmarshalInputCustomFieldTemplateInput(ctx context.C
 			}
 			it.Min = data
 		case "max":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("max"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -64569,8 +64290,6 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -64578,8 +64297,6 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 			}
 			it.ID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -64587,8 +64304,6 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 			}
 			it.Name = data
 		case "datatype":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("datatype"))
 			data, err := ec.unmarshalNCustomFieldDataType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDataType(ctx, v)
 			if err != nil {
@@ -64596,8 +64311,6 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 			}
 			it.Datatype = data
 		case "value":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			data, err := ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, v)
 			if err != nil {
@@ -64625,8 +64338,6 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 		}
 		switch k {
 		case "prefix":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefix"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64634,8 +64345,6 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 			}
 			it.Prefix = data
 		case "firstName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64643,8 +64352,6 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 			}
 			it.FirstName = data
 		case "lastName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64652,8 +64359,6 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 			}
 			it.LastName = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64661,8 +64366,6 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 			}
 			it.Name = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64670,8 +64373,6 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 			}
 			it.Description = data
 		case "timezone":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64679,8 +64380,6 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 			}
 			it.Timezone = data
 		case "email":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalOEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailInput(ctx, v)
 			if err != nil {
@@ -64688,8 +64387,6 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 			}
 			it.Email = data
 		case "createdAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -64697,8 +64394,6 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 			}
 			it.CreatedAt = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64726,8 +64421,6 @@ func (ec *executionContext) unmarshalInputDashboardPeriodInput(ctx context.Conte
 		}
 		switch k {
 		case "start":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("start"))
 			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
 			if err != nil {
@@ -64735,8 +64428,6 @@ func (ec *executionContext) unmarshalInputDashboardPeriodInput(ctx context.Conte
 			}
 			it.Start = data
 		case "end":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end"))
 			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
 			if err != nil {
@@ -64764,8 +64455,6 @@ func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj in
 		}
 		switch k {
 		case "email":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -64773,8 +64462,6 @@ func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj in
 			}
 			it.Email = data
 		case "label":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
 			data, err := ec.unmarshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx, v)
 			if err != nil {
@@ -64782,8 +64469,6 @@ func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj in
 			}
 			it.Label = data
 		case "primary":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -64791,8 +64476,6 @@ func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj in
 			}
 			it.Primary = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64820,8 +64503,6 @@ func (ec *executionContext) unmarshalInputEmailUpdateInput(ctx context.Context, 
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -64829,8 +64510,6 @@ func (ec *executionContext) unmarshalInputEmailUpdateInput(ctx context.Context, 
 			}
 			it.ID = data
 		case "label":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
 			data, err := ec.unmarshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx, v)
 			if err != nil {
@@ -64838,8 +64517,6 @@ func (ec *executionContext) unmarshalInputEmailUpdateInput(ctx context.Context, 
 			}
 			it.Label = data
 		case "primary":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -64847,8 +64524,6 @@ func (ec *executionContext) unmarshalInputEmailUpdateInput(ctx context.Context, 
 			}
 			it.Primary = data
 		case "email":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64876,8 +64551,6 @@ func (ec *executionContext) unmarshalInputEntityTemplateInput(ctx context.Contex
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -64885,8 +64558,6 @@ func (ec *executionContext) unmarshalInputEntityTemplateInput(ctx context.Contex
 			}
 			it.Name = data
 		case "extends":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("extends"))
 			data, err := ec.unmarshalOEntityTemplateExtension2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityTemplateExtension(ctx, v)
 			if err != nil {
@@ -64894,8 +64565,6 @@ func (ec *executionContext) unmarshalInputEntityTemplateInput(ctx context.Contex
 			}
 			it.Extends = data
 		case "fieldSetTemplateInputs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSetTemplateInputs"))
 			data, err := ec.unmarshalOFieldSetTemplateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetTemplateInputᚄ(ctx, v)
 			if err != nil {
@@ -64903,8 +64572,6 @@ func (ec *executionContext) unmarshalInputEntityTemplateInput(ctx context.Contex
 			}
 			it.FieldSetTemplateInputs = data
 		case "customFieldTemplateInputs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFieldTemplateInputs"))
 			data, err := ec.unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateInputᚄ(ctx, v)
 			if err != nil {
@@ -64932,8 +64599,6 @@ func (ec *executionContext) unmarshalInputExternalSystemReferenceInput(ctx conte
 		}
 		switch k {
 		case "externalId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -64941,8 +64606,6 @@ func (ec *executionContext) unmarshalInputExternalSystemReferenceInput(ctx conte
 			}
 			it.ExternalID = data
 		case "syncDate":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("syncDate"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -64950,8 +64613,6 @@ func (ec *executionContext) unmarshalInputExternalSystemReferenceInput(ctx conte
 			}
 			it.SyncDate = data
 		case "type":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
 			data, err := ec.unmarshalNExternalSystemType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemType(ctx, v)
 			if err != nil {
@@ -64959,8 +64620,6 @@ func (ec *executionContext) unmarshalInputExternalSystemReferenceInput(ctx conte
 			}
 			it.Type = data
 		case "externalUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalUrl"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64968,8 +64627,6 @@ func (ec *executionContext) unmarshalInputExternalSystemReferenceInput(ctx conte
 			}
 			it.ExternalURL = data
 		case "externalSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -64997,8 +64654,6 @@ func (ec *executionContext) unmarshalInputFieldSetInput(ctx context.Context, obj
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -65006,8 +64661,6 @@ func (ec *executionContext) unmarshalInputFieldSetInput(ctx context.Context, obj
 			}
 			it.ID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -65015,8 +64668,6 @@ func (ec *executionContext) unmarshalInputFieldSetInput(ctx context.Context, obj
 			}
 			it.Name = data
 		case "customFields":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
 			data, err := ec.unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInputᚄ(ctx, v)
 			if err != nil {
@@ -65024,8 +64675,6 @@ func (ec *executionContext) unmarshalInputFieldSetInput(ctx context.Context, obj
 			}
 			it.CustomFields = data
 		case "templateId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -65053,8 +64702,6 @@ func (ec *executionContext) unmarshalInputFieldSetTemplateInput(ctx context.Cont
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -65062,8 +64709,6 @@ func (ec *executionContext) unmarshalInputFieldSetTemplateInput(ctx context.Cont
 			}
 			it.Name = data
 		case "order":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
@@ -65071,8 +64716,6 @@ func (ec *executionContext) unmarshalInputFieldSetTemplateInput(ctx context.Cont
 			}
 			it.Order = data
 		case "customFieldTemplateInputs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFieldTemplateInputs"))
 			data, err := ec.unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateInputᚄ(ctx, v)
 			if err != nil {
@@ -65100,8 +64743,6 @@ func (ec *executionContext) unmarshalInputFieldSetUpdateInput(ctx context.Contex
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -65109,8 +64750,6 @@ func (ec *executionContext) unmarshalInputFieldSetUpdateInput(ctx context.Contex
 			}
 			it.ID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -65138,8 +64777,6 @@ func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interf
 		}
 		switch k {
 		case "NOT":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("NOT"))
 			data, err := ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, v)
 			if err != nil {
@@ -65147,8 +64784,6 @@ func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interf
 			}
 			it.Not = data
 		case "AND":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("AND"))
 			data, err := ec.unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilterᚄ(ctx, v)
 			if err != nil {
@@ -65156,8 +64791,6 @@ func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interf
 			}
 			it.And = data
 		case "OR":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("OR"))
 			data, err := ec.unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilterᚄ(ctx, v)
 			if err != nil {
@@ -65165,8 +64798,6 @@ func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interf
 			}
 			it.Or = data
 		case "filter":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
 			data, err := ec.unmarshalOFilterItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilterItem(ctx, v)
 			if err != nil {
@@ -65204,8 +64835,6 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 		}
 		switch k {
 		case "property":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("property"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -65213,8 +64842,6 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 			}
 			it.Property = data
 		case "operation":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("operation"))
 			data, err := ec.unmarshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐComparisonOperator(ctx, v)
 			if err != nil {
@@ -65222,8 +64849,6 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 			}
 			it.Operation = data
 		case "value":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			data, err := ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, v)
 			if err != nil {
@@ -65231,8 +64856,6 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 			}
 			it.Value = data
 		case "caseSensitive":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("caseSensitive"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -65240,8 +64863,6 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 			}
 			it.CaseSensitive = data
 		case "includeEmpty":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("includeEmpty"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -65269,8 +64890,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 		}
 		switch k {
 		case "eventIdentifier":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventIdentifier"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65278,8 +64897,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.EventIdentifier = data
 		case "externalId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65287,8 +64904,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.ExternalID = data
 		case "externalSystemId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystemId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65296,8 +64911,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.ExternalSystemID = data
 		case "content":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65305,8 +64918,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.Content = data
 		case "contentType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65314,8 +64925,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.ContentType = data
 		case "channel":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65323,8 +64932,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.Channel = data
 		case "channelData":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelData"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65332,8 +64939,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.ChannelData = data
 		case "interactionSession":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interactionSession"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -65341,8 +64946,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.InteractionSession = data
 		case "meetingId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -65350,8 +64953,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.MeetingID = data
 		case "sentBy":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sentBy"))
 			data, err := ec.unmarshalNInteractionEventParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantInputᚄ(ctx, v)
 			if err != nil {
@@ -65359,8 +64960,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.SentBy = data
 		case "sentTo":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sentTo"))
 			data, err := ec.unmarshalNInteractionEventParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantInputᚄ(ctx, v)
 			if err != nil {
@@ -65368,8 +64967,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.SentTo = data
 		case "repliesTo":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repliesTo"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -65377,8 +64974,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.RepliesTo = data
 		case "eventType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventType"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65386,8 +64981,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.EventType = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -65395,8 +64988,6 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 			}
 			it.AppSource = data
 		case "createdAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -65424,8 +65015,6 @@ func (ec *executionContext) unmarshalInputInteractionEventParticipantInput(ctx c
 		}
 		switch k {
 		case "email":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65433,8 +65022,6 @@ func (ec *executionContext) unmarshalInputInteractionEventParticipantInput(ctx c
 			}
 			it.Email = data
 		case "phoneNumber":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumber"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65442,8 +65029,6 @@ func (ec *executionContext) unmarshalInputInteractionEventParticipantInput(ctx c
 			}
 			it.PhoneNumber = data
 		case "contactID":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactID"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -65451,8 +65036,6 @@ func (ec *executionContext) unmarshalInputInteractionEventParticipantInput(ctx c
 			}
 			it.ContactID = data
 		case "userID":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -65460,8 +65043,6 @@ func (ec *executionContext) unmarshalInputInteractionEventParticipantInput(ctx c
 			}
 			it.UserID = data
 		case "type":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65489,8 +65070,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 		}
 		switch k {
 		case "sessionIdentifier":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sessionIdentifier"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65498,8 +65077,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 			}
 			it.SessionIdentifier = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -65507,8 +65084,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 			}
 			it.Name = data
 		case "status":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -65516,8 +65091,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 			}
 			it.Status = data
 		case "type":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65525,8 +65098,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 			}
 			it.Type = data
 		case "channel":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65534,8 +65105,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 			}
 			it.Channel = data
 		case "channelData":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelData"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65543,8 +65112,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 			}
 			it.ChannelData = data
 		case "attendedBy":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attendedBy"))
 			data, err := ec.unmarshalOInteractionSessionParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSessionParticipantInputᚄ(ctx, v)
 			if err != nil {
@@ -65552,8 +65119,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 			}
 			it.AttendedBy = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -65581,8 +65146,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionParticipantInput(ctx
 		}
 		switch k {
 		case "email":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65590,8 +65153,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionParticipantInput(ctx
 			}
 			it.Email = data
 		case "phoneNumber":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumber"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65599,8 +65160,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionParticipantInput(ctx
 			}
 			it.PhoneNumber = data
 		case "contactID":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactID"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -65608,8 +65167,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionParticipantInput(ctx
 			}
 			it.ContactID = data
 		case "userID":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -65617,8 +65174,6 @@ func (ec *executionContext) unmarshalInputInteractionSessionParticipantInput(ctx
 			}
 			it.UserID = data
 		case "type":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65646,8 +65201,6 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 		}
 		switch k {
 		case "organizationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -65655,8 +65208,6 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 			}
 			it.OrganizationID = data
 		case "jobTitle":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobTitle"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65664,8 +65215,6 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 			}
 			it.JobTitle = data
 		case "primary":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -65673,8 +65222,6 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 			}
 			it.Primary = data
 		case "startedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -65682,8 +65229,6 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 			}
 			it.StartedAt = data
 		case "endedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -65691,8 +65236,6 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 			}
 			it.EndedAt = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65700,8 +65243,6 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 			}
 			it.AppSource = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65709,8 +65250,6 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 			}
 			it.Description = data
 		case "company":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("company"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65738,8 +65277,6 @@ func (ec *executionContext) unmarshalInputJobRoleUpdateInput(ctx context.Context
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -65747,8 +65284,6 @@ func (ec *executionContext) unmarshalInputJobRoleUpdateInput(ctx context.Context
 			}
 			it.ID = data
 		case "startedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -65756,8 +65291,6 @@ func (ec *executionContext) unmarshalInputJobRoleUpdateInput(ctx context.Context
 			}
 			it.StartedAt = data
 		case "endedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -65765,8 +65298,6 @@ func (ec *executionContext) unmarshalInputJobRoleUpdateInput(ctx context.Context
 			}
 			it.EndedAt = data
 		case "organizationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -65774,8 +65305,6 @@ func (ec *executionContext) unmarshalInputJobRoleUpdateInput(ctx context.Context
 			}
 			it.OrganizationID = data
 		case "jobTitle":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobTitle"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65783,8 +65312,6 @@ func (ec *executionContext) unmarshalInputJobRoleUpdateInput(ctx context.Context
 			}
 			it.JobTitle = data
 		case "primary":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -65792,8 +65319,6 @@ func (ec *executionContext) unmarshalInputJobRoleUpdateInput(ctx context.Context
 			}
 			it.Primary = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65801,8 +65326,6 @@ func (ec *executionContext) unmarshalInputJobRoleUpdateInput(ctx context.Context
 			}
 			it.Description = data
 		case "company":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("company"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65830,8 +65353,6 @@ func (ec *executionContext) unmarshalInputLinkOrganizationsInput(ctx context.Con
 		}
 		switch k {
 		case "organizationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -65839,8 +65360,6 @@ func (ec *executionContext) unmarshalInputLinkOrganizationsInput(ctx context.Con
 			}
 			it.OrganizationID = data
 		case "subOrganizationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subOrganizationId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -65848,8 +65367,6 @@ func (ec *executionContext) unmarshalInputLinkOrganizationsInput(ctx context.Con
 			}
 			it.SubOrganizationID = data
 		case "type":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65877,8 +65394,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -65886,8 +65401,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.ID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65895,8 +65408,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.Name = data
 		case "rawAddress":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rawAddress"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65904,8 +65415,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.RawAddress = data
 		case "country":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("country"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65913,8 +65422,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.Country = data
 		case "region":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("region"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65922,8 +65429,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.Region = data
 		case "district":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("district"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65931,8 +65436,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.District = data
 		case "locality":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("locality"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65940,8 +65443,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.Locality = data
 		case "street":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("street"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65949,8 +65450,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.Street = data
 		case "address":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65958,8 +65457,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.Address = data
 		case "address2":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address2"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65967,8 +65464,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.Address2 = data
 		case "zip":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("zip"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65976,8 +65471,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.Zip = data
 		case "addressType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressType"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65985,8 +65478,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.AddressType = data
 		case "houseNumber":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("houseNumber"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -65994,8 +65485,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.HouseNumber = data
 		case "postalCode":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postalCode"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66003,8 +65492,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.PostalCode = data
 		case "plusFour":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("plusFour"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66012,8 +65499,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.PlusFour = data
 		case "commercial":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commercial"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -66021,8 +65506,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.Commercial = data
 		case "predirection":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("predirection"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66030,8 +65513,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.Predirection = data
 		case "latitude":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("latitude"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
@@ -66039,8 +65520,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.Latitude = data
 		case "longitude":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("longitude"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
@@ -66048,8 +65527,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.Longitude = data
 		case "timeZone":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timeZone"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66057,8 +65534,6 @@ func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Contex
 			}
 			it.TimeZone = data
 		case "utcOffset":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("utcOffset"))
 			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
@@ -66086,8 +65561,6 @@ func (ec *executionContext) unmarshalInputLogEntryInput(ctx context.Context, obj
 		}
 		switch k {
 		case "content":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66095,8 +65568,6 @@ func (ec *executionContext) unmarshalInputLogEntryInput(ctx context.Context, obj
 			}
 			it.Content = data
 		case "contentType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66104,8 +65575,6 @@ func (ec *executionContext) unmarshalInputLogEntryInput(ctx context.Context, obj
 			}
 			it.ContentType = data
 		case "tags":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tags"))
 			data, err := ec.unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagIDOrNameInputᚄ(ctx, v)
 			if err != nil {
@@ -66113,8 +65582,6 @@ func (ec *executionContext) unmarshalInputLogEntryInput(ctx context.Context, obj
 			}
 			it.Tags = data
 		case "startedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -66122,8 +65589,6 @@ func (ec *executionContext) unmarshalInputLogEntryInput(ctx context.Context, obj
 			}
 			it.StartedAt = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66151,8 +65616,6 @@ func (ec *executionContext) unmarshalInputLogEntryUpdateInput(ctx context.Contex
 		}
 		switch k {
 		case "content":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66160,8 +65623,6 @@ func (ec *executionContext) unmarshalInputLogEntryUpdateInput(ctx context.Contex
 			}
 			it.Content = data
 		case "contentType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66169,8 +65630,6 @@ func (ec *executionContext) unmarshalInputLogEntryUpdateInput(ctx context.Contex
 			}
 			it.ContentType = data
 		case "startedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -66198,8 +65657,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66207,8 +65664,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.Name = data
 		case "attendedBy":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attendedBy"))
 			data, err := ec.unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInputᚄ(ctx, v)
 			if err != nil {
@@ -66216,8 +65671,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.AttendedBy = data
 		case "createdBy":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdBy"))
 			data, err := ec.unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInputᚄ(ctx, v)
 			if err != nil {
@@ -66225,8 +65678,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.CreatedBy = data
 		case "createdAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -66234,8 +65685,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.CreatedAt = data
 		case "startedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -66243,8 +65692,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.StartedAt = data
 		case "endedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -66252,8 +65699,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.EndedAt = data
 		case "conferenceUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("conferenceUrl"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66261,8 +65706,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.ConferenceURL = data
 		case "meetingExternalUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingExternalUrl"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66270,8 +65713,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.MeetingExternalURL = data
 		case "agenda":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("agenda"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66279,8 +65720,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.Agenda = data
 		case "agendaContentType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("agendaContentType"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66288,8 +65727,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.AgendaContentType = data
 		case "note":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
 			data, err := ec.unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteInput(ctx, v)
 			if err != nil {
@@ -66297,8 +65734,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.Note = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66306,8 +65741,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.AppSource = data
 		case "externalSystem":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystem"))
 			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
 			if err != nil {
@@ -66315,8 +65748,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			}
 			it.ExternalSystem = data
 		case "status":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
 			data, err := ec.unmarshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingStatus(ctx, v)
 			if err != nil {
@@ -66344,8 +65775,6 @@ func (ec *executionContext) unmarshalInputMeetingParticipantInput(ctx context.Co
 		}
 		switch k {
 		case "contactId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -66353,8 +65782,6 @@ func (ec *executionContext) unmarshalInputMeetingParticipantInput(ctx context.Co
 			}
 			it.ContactID = data
 		case "userId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -66362,8 +65789,6 @@ func (ec *executionContext) unmarshalInputMeetingParticipantInput(ctx context.Co
 			}
 			it.UserID = data
 		case "organizationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -66391,8 +65816,6 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66400,8 +65823,6 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			}
 			it.Name = data
 		case "startedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -66409,8 +65830,6 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			}
 			it.StartedAt = data
 		case "endedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -66418,8 +65837,6 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			}
 			it.EndedAt = data
 		case "conferenceUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("conferenceUrl"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66427,8 +65844,6 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			}
 			it.ConferenceURL = data
 		case "meetingExternalUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingExternalUrl"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66436,8 +65851,6 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			}
 			it.MeetingExternalURL = data
 		case "agenda":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("agenda"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66445,8 +65858,6 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			}
 			it.Agenda = data
 		case "agendaContentType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("agendaContentType"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66454,8 +65865,6 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			}
 			it.AgendaContentType = data
 		case "note":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
 			data, err := ec.unmarshalONoteUpdateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteUpdateInput(ctx, v)
 			if err != nil {
@@ -66463,8 +65872,6 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			}
 			it.Note = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66472,8 +65879,6 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			}
 			it.AppSource = data
 		case "status":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
 			data, err := ec.unmarshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingStatus(ctx, v)
 			if err != nil {
@@ -66481,8 +65886,6 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			}
 			it.Status = data
 		case "externalSystem":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystem"))
 			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
 			if err != nil {
@@ -66510,8 +65913,6 @@ func (ec *executionContext) unmarshalInputNoteInput(ctx context.Context, obj int
 		}
 		switch k {
 		case "content":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66519,8 +65920,6 @@ func (ec *executionContext) unmarshalInputNoteInput(ctx context.Context, obj int
 			}
 			it.Content = data
 		case "contentType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66528,8 +65927,6 @@ func (ec *executionContext) unmarshalInputNoteInput(ctx context.Context, obj int
 			}
 			it.ContentType = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66557,8 +65954,6 @@ func (ec *executionContext) unmarshalInputNoteUpdateInput(ctx context.Context, o
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -66566,8 +65961,6 @@ func (ec *executionContext) unmarshalInputNoteUpdateInput(ctx context.Context, o
 			}
 			it.ID = data
 		case "content":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66575,14 +65968,53 @@ func (ec *executionContext) unmarshalInputNoteUpdateInput(ctx context.Context, o
 			}
 			it.Content = data
 		case "contentType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.ContentType = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputOnboardingStatusInput(ctx context.Context, obj interface{}) (model.OnboardingStatusInput, error) {
+	var it model.OnboardingStatusInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "status", "comments"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "comments":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comments"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Comments = data
 		}
 	}
 
@@ -66596,7 +66028,7 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "renewalLikelihood", "comments", "appSource"}
+	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "renewalLikelihood", "comments", "appSource", "ownerUserId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -66604,8 +66036,6 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 		}
 		switch k {
 		case "opportunityId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opportunityId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -66613,8 +66043,6 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 			}
 			it.OpportunityID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66622,8 +66050,6 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 			}
 			it.Name = data
 		case "amount":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
@@ -66631,8 +66057,6 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 			}
 			it.Amount = data
 		case "renewalLikelihood":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalLikelihood"))
 			data, err := ec.unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx, v)
 			if err != nil {
@@ -66640,8 +66064,6 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 			}
 			it.RenewalLikelihood = data
 		case "comments":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comments"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66649,14 +66071,19 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 			}
 			it.Comments = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.AppSource = data
+		case "ownerUserId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerUserId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OwnerUserID = data
 		}
 	}
 
@@ -66678,8 +66105,6 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 		}
 		switch k {
 		case "opportunityId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opportunityId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -66687,8 +66112,6 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 			}
 			it.OpportunityID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66696,8 +66119,6 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 			}
 			it.Name = data
 		case "amount":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
@@ -66705,8 +66126,6 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 			}
 			it.Amount = data
 		case "externalType":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalType"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66714,8 +66133,6 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 			}
 			it.ExternalType = data
 		case "externalStage":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalStage"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66723,8 +66140,6 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 			}
 			it.ExternalStage = data
 		case "estimatedClosedDate":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("estimatedClosedDate"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -66732,8 +66147,6 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 			}
 			it.EstimatedClosedDate = data
 		case "generalNotes":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("generalNotes"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66741,8 +66154,6 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 			}
 			it.GeneralNotes = data
 		case "nextSteps":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextSteps"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66750,8 +66161,6 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 			}
 			it.NextSteps = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66759,8 +66168,6 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 			}
 			it.AppSource = data
 		case "externalReference":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
 			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
 			if err != nil {
@@ -66780,7 +66187,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"referenceId", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "isCustomer", "customFields", "fieldSets", "templateId", "market", "employees", "appSource"}
+	fieldsInOrder := [...]string{"referenceId", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "isCustomer", "customFields", "fieldSets", "templateId", "market", "logoUrl", "employeeGrowthRate", "headquarters", "yearFounded", "employees", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -66788,8 +66195,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		}
 		switch k {
 		case "referenceId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66797,17 +66202,13 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.ReferenceID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Name = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66815,8 +66216,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.Description = data
 		case "note":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66824,8 +66223,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.Note = data
 		case "domains":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domains"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -66833,8 +66230,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.Domains = data
 		case "website":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("website"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66842,8 +66237,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.Website = data
 		case "industry":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("industry"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66851,8 +66244,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.Industry = data
 		case "subIndustry":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subIndustry"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66860,8 +66251,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.SubIndustry = data
 		case "industryGroup":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("industryGroup"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66869,8 +66258,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.IndustryGroup = data
 		case "isPublic":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isPublic"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -66878,8 +66265,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.IsPublic = data
 		case "isCustomer":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isCustomer"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -66887,8 +66272,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.IsCustomer = data
 		case "customFields":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
 			data, err := ec.unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInputᚄ(ctx, v)
 			if err != nil {
@@ -66896,8 +66279,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.CustomFields = data
 		case "fieldSets":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
 			data, err := ec.unmarshalOFieldSetInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetInputᚄ(ctx, v)
 			if err != nil {
@@ -66905,8 +66286,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.FieldSets = data
 		case "templateId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -66914,17 +66293,41 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.TemplateID = data
 		case "market":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("market"))
 			data, err := ec.unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMarket(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Market = data
+		case "logoUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LogoURL = data
+		case "employeeGrowthRate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("employeeGrowthRate"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmployeeGrowthRate = data
+		case "headquarters":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("headquarters"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Headquarters = data
+		case "yearFounded":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("yearFounded"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.YearFounded = data
 		case "employees":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("employees"))
 			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
@@ -66932,8 +66335,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			}
 			it.Employees = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66953,7 +66354,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "referenceId", "patch", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "isCustomer", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount"}
+	fieldsInOrder := [...]string{"id", "referenceId", "patch", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "isCustomer", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount", "logoUrl", "employeeGrowthRate", "headquarters", "yearFounded"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -66961,8 +66362,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -66970,8 +66369,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.ID = data
 		case "referenceId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -66979,8 +66376,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.ReferenceID = data
 		case "patch":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("patch"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -66988,17 +66383,13 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.Patch = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Name = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67006,8 +66397,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.Description = data
 		case "note":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67015,8 +66404,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.Note = data
 		case "domains":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domains"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -67024,8 +66411,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.Domains = data
 		case "website":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("website"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67033,8 +66418,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.Website = data
 		case "industry":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("industry"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67042,8 +66425,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.Industry = data
 		case "subIndustry":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subIndustry"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67051,8 +66432,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.SubIndustry = data
 		case "industryGroup":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("industryGroup"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67060,8 +66439,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.IndustryGroup = data
 		case "isPublic":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isPublic"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -67069,8 +66446,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.IsPublic = data
 		case "isCustomer":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isCustomer"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -67078,8 +66453,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.IsCustomer = data
 		case "market":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("market"))
 			data, err := ec.unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMarket(ctx, v)
 			if err != nil {
@@ -67087,8 +66460,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.Market = data
 		case "employees":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("employees"))
 			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
@@ -67096,8 +66467,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.Employees = data
 		case "targetAudience":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetAudience"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67105,8 +66474,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.TargetAudience = data
 		case "valueProposition":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueProposition"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67114,8 +66481,6 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.ValueProposition = data
 		case "lastFundingRound":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastFundingRound"))
 			data, err := ec.unmarshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFundingRound(ctx, v)
 			if err != nil {
@@ -67123,14 +66488,40 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			}
 			it.LastFundingRound = data
 		case "lastFundingAmount":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastFundingAmount"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.LastFundingAmount = data
+		case "logoUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LogoURL = data
+		case "employeeGrowthRate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("employeeGrowthRate"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmployeeGrowthRate = data
+		case "headquarters":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("headquarters"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Headquarters = data
+		case "yearFounded":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("yearFounded"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.YearFounded = data
 		}
 	}
 
@@ -67152,8 +66543,6 @@ func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj in
 		}
 		switch k {
 		case "page":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
@@ -67161,8 +66550,6 @@ func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj in
 			}
 			it.Page = data
 		case "limit":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
@@ -67190,8 +66577,6 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 		}
 		switch k {
 		case "phoneNumber":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumber"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -67199,8 +66584,6 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 			}
 			it.PhoneNumber = data
 		case "countryCodeA2":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("countryCodeA2"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67208,8 +66591,6 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 			}
 			it.CountryCodeA2 = data
 		case "label":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
 			data, err := ec.unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx, v)
 			if err != nil {
@@ -67217,8 +66598,6 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 			}
 			it.Label = data
 		case "primary":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -67246,8 +66625,6 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -67255,8 +66632,6 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 			}
 			it.ID = data
 		case "label":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
 			data, err := ec.unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx, v)
 			if err != nil {
@@ -67264,8 +66639,6 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 			}
 			it.Label = data
 		case "primary":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -67273,8 +66646,6 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 			}
 			it.Primary = data
 		case "phoneNumber":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumber"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67282,8 +66653,6 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 			}
 			it.PhoneNumber = data
 		case "countryCodeA2":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("countryCodeA2"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67311,8 +66680,6 @@ func (ec *executionContext) unmarshalInputPlayerInput(ctx context.Context, obj i
 		}
 		switch k {
 		case "identityId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("identityId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67320,8 +66687,6 @@ func (ec *executionContext) unmarshalInputPlayerInput(ctx context.Context, obj i
 			}
 			it.IdentityID = data
 		case "authId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authId"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -67329,8 +66694,6 @@ func (ec *executionContext) unmarshalInputPlayerInput(ctx context.Context, obj i
 			}
 			it.AuthID = data
 		case "provider":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("provider"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -67338,8 +66701,6 @@ func (ec *executionContext) unmarshalInputPlayerInput(ctx context.Context, obj i
 			}
 			it.Provider = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67367,8 +66728,6 @@ func (ec *executionContext) unmarshalInputPlayerUpdate(ctx context.Context, obj 
 		}
 		switch k {
 		case "identityId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("identityId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67376,108 +66735,12 @@ func (ec *executionContext) unmarshalInputPlayerUpdate(ctx context.Context, obj 
 			}
 			it.IdentityID = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.AppSource = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputRenewalForecastInput(ctx context.Context, obj interface{}) (model.RenewalForecastInput, error) {
-	var it model.RenewalForecastInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"id", "amount", "comment"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "id":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
-		case "amount":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
-			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Amount = data
-		case "comment":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comment"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Comment = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputRenewalLikelihoodInput(ctx context.Context, obj interface{}) (model.RenewalLikelihoodInput, error) {
-	var it model.RenewalLikelihoodInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"id", "probability", "comment"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "id":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
-		case "probability":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("probability"))
-			data, err := ec.unmarshalORenewalLikelihoodProbability2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalLikelihoodProbability(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Probability = data
-		case "comment":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comment"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Comment = data
 		}
 	}
 
@@ -67499,8 +66762,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemCloseInput(ctx context.
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -67508,8 +66769,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemCloseInput(ctx context.
 			}
 			it.ID = data
 		case "endedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -67537,8 +66796,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 		}
 		switch k {
 		case "contractId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -67546,8 +66803,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 			}
 			it.ContractID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67555,8 +66810,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 			}
 			it.Name = data
 		case "billed":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billed"))
 			data, err := ec.unmarshalOBilledType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBilledType(ctx, v)
 			if err != nil {
@@ -67564,8 +66817,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 			}
 			it.Billed = data
 		case "price":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
@@ -67573,8 +66824,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 			}
 			it.Price = data
 		case "quantity":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
 			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
@@ -67582,8 +66831,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 			}
 			it.Quantity = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67591,8 +66838,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 			}
 			it.AppSource = data
 		case "externalReference":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
 			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
 			if err != nil {
@@ -67600,8 +66845,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 			}
 			it.ExternalReference = data
 		case "startedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -67609,8 +66852,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 			}
 			it.StartedAt = data
 		case "endedAt":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
@@ -67638,8 +66879,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 		}
 		switch k {
 		case "serviceLineItemId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceLineItemId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -67647,8 +66886,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 			}
 			it.ServiceLineItemID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67656,8 +66893,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 			}
 			it.Name = data
 		case "billed":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billed"))
 			data, err := ec.unmarshalOBilledType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBilledType(ctx, v)
 			if err != nil {
@@ -67665,8 +66900,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 			}
 			it.Billed = data
 		case "price":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
@@ -67674,8 +66907,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 			}
 			it.Price = data
 		case "quantity":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
 			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
@@ -67683,8 +66914,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 			}
 			it.Quantity = data
 		case "comments":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comments"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67692,8 +66921,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 			}
 			it.Comments = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67701,8 +66928,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 			}
 			it.AppSource = data
 		case "externalReference":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
 			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
 			if err != nil {
@@ -67710,8 +66935,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 			}
 			it.ExternalReference = data
 		case "isRetroactiveCorrection":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isRetroactiveCorrection"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -67739,8 +66962,6 @@ func (ec *executionContext) unmarshalInputSocialInput(ctx context.Context, obj i
 		}
 		switch k {
 		case "platformName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("platformName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67748,8 +66969,6 @@ func (ec *executionContext) unmarshalInputSocialInput(ctx context.Context, obj i
 			}
 			it.PlatformName = data
 		case "url":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -67757,8 +66976,6 @@ func (ec *executionContext) unmarshalInputSocialInput(ctx context.Context, obj i
 			}
 			it.URL = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67786,8 +67003,6 @@ func (ec *executionContext) unmarshalInputSocialUpdateInput(ctx context.Context,
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -67795,8 +67010,6 @@ func (ec *executionContext) unmarshalInputSocialUpdateInput(ctx context.Context,
 			}
 			it.ID = data
 		case "platformName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("platformName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67804,8 +67017,6 @@ func (ec *executionContext) unmarshalInputSocialUpdateInput(ctx context.Context,
 			}
 			it.PlatformName = data
 		case "url":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -67840,8 +67051,6 @@ func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interf
 		}
 		switch k {
 		case "by":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("by"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -67849,8 +67058,6 @@ func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interf
 			}
 			it.By = data
 		case "direction":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
 			data, err := ec.unmarshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx, v)
 			if err != nil {
@@ -67858,8 +67065,6 @@ func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interf
 			}
 			it.Direction = data
 		case "caseSensitive":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("caseSensitive"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -67887,8 +67092,6 @@ func (ec *executionContext) unmarshalInputTagIdOrNameInput(ctx context.Context, 
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
@@ -67896,8 +67099,6 @@ func (ec *executionContext) unmarshalInputTagIdOrNameInput(ctx context.Context, 
 			}
 			it.ID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67925,8 +67126,6 @@ func (ec *executionContext) unmarshalInputTagInput(ctx context.Context, obj inte
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -67934,8 +67133,6 @@ func (ec *executionContext) unmarshalInputTagInput(ctx context.Context, obj inte
 			}
 			it.Name = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -67963,8 +67160,6 @@ func (ec *executionContext) unmarshalInputTagUpdateInput(ctx context.Context, ob
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -67972,8 +67167,6 @@ func (ec *executionContext) unmarshalInputTagUpdateInput(ctx context.Context, ob
 			}
 			it.ID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -68001,8 +67194,6 @@ func (ec *executionContext) unmarshalInputTenantInput(ctx context.Context, obj i
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -68010,8 +67201,6 @@ func (ec *executionContext) unmarshalInputTenantInput(ctx context.Context, obj i
 			}
 			it.Name = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -68039,8 +67228,6 @@ func (ec *executionContext) unmarshalInputTimeRange(ctx context.Context, obj int
 		}
 		switch k {
 		case "from":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
 			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
 			if err != nil {
@@ -68048,8 +67235,6 @@ func (ec *executionContext) unmarshalInputTimeRange(ctx context.Context, obj int
 			}
 			it.From = data
 		case "to":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
 			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
 			if err != nil {
@@ -68077,8 +67262,6 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 		}
 		switch k {
 		case "firstName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -68086,8 +67269,6 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 			}
 			it.FirstName = data
 		case "lastName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -68095,8 +67276,6 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 			}
 			it.LastName = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -68104,8 +67283,6 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 			}
 			it.Name = data
 		case "timezone":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -68113,8 +67290,6 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 			}
 			it.Timezone = data
 		case "profilePhotoUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrl"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -68122,8 +67297,6 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 			}
 			it.ProfilePhotoURL = data
 		case "email":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalNEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailInput(ctx, v)
 			if err != nil {
@@ -68131,8 +67304,6 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 			}
 			it.Email = data
 		case "player":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("player"))
 			data, err := ec.unmarshalNPlayerInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPlayerInput(ctx, v)
 			if err != nil {
@@ -68140,8 +67311,6 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 			}
 			it.Player = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -68149,8 +67318,6 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 			}
 			it.AppSource = data
 		case "jobRoles":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobRoles"))
 			data, err := ec.unmarshalOJobRoleInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleInputᚄ(ctx, v)
 			if err != nil {
@@ -68178,8 +67345,6 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 		}
 		switch k {
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
@@ -68187,8 +67352,6 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 			}
 			it.ID = data
 		case "firstName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -68196,8 +67359,6 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 			}
 			it.FirstName = data
 		case "lastName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -68205,8 +67366,6 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 			}
 			it.LastName = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -68214,8 +67373,6 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 			}
 			it.Name = data
 		case "timezone":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -68223,8 +67380,6 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 			}
 			it.Timezone = data
 		case "profilePhotoUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrl"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -68252,8 +67407,6 @@ func (ec *executionContext) unmarshalInputWorkspaceInput(ctx context.Context, ob
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -68261,8 +67414,6 @@ func (ec *executionContext) unmarshalInputWorkspaceInput(ctx context.Context, ob
 			}
 			it.Name = data
 		case "provider":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("provider"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -68270,8 +67421,6 @@ func (ec *executionContext) unmarshalInputWorkspaceInput(ctx context.Context, ob
 			}
 			it.Provider = data
 		case "appSource":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -69095,50 +68244,6 @@ func (ec *executionContext) _Attachment(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var billingDetailsImplementors = []string{"BillingDetails"}
-
-func (ec *executionContext) _BillingDetails(ctx context.Context, sel ast.SelectionSet, obj *model.BillingDetails) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, billingDetailsImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("BillingDetails")
-		case "amount":
-			out.Values[i] = ec._BillingDetails_amount(ctx, field, obj)
-		case "frequency":
-			out.Values[i] = ec._BillingDetails_frequency(ctx, field, obj)
-		case "renewalCycle":
-			out.Values[i] = ec._BillingDetails_renewalCycle(ctx, field, obj)
-		case "renewalCycleStart":
-			out.Values[i] = ec._BillingDetails_renewalCycleStart(ctx, field, obj)
-		case "renewalCycleNext":
-			out.Values[i] = ec._BillingDetails_renewalCycleNext(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -70117,6 +69222,8 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "renewalPeriods":
+			out.Values[i] = ec._Contract_renewalPeriods(ctx, field, obj)
 		case "status":
 			out.Values[i] = ec._Contract_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -70792,6 +69899,11 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth(ctx context.Context, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("DashboardARRBreakdownPerMonth")
+		case "year":
+			out.Values[i] = ec._DashboardARRBreakdownPerMonth_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "month":
 			out.Values[i] = ec._DashboardARRBreakdownPerMonth_month(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -71093,6 +70205,11 @@ func (ec *executionContext) _DashboardMRRPerCustomerPerMonth(ctx context.Context
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("DashboardMRRPerCustomerPerMonth")
+		case "year":
+			out.Values[i] = ec._DashboardMRRPerCustomerPerMonth_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "month":
 			out.Values[i] = ec._DashboardMRRPerCustomerPerMonth_month(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -71224,6 +70341,104 @@ func (ec *executionContext) _DashboardNewCustomersPerMonth(ctx context.Context, 
 	return out
 }
 
+var dashboardOnboardingCompletionImplementors = []string{"DashboardOnboardingCompletion"}
+
+func (ec *executionContext) _DashboardOnboardingCompletion(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardOnboardingCompletion) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardOnboardingCompletionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardOnboardingCompletion")
+		case "completionPercentage":
+			out.Values[i] = ec._DashboardOnboardingCompletion_completionPercentage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "increasePercentage":
+			out.Values[i] = ec._DashboardOnboardingCompletion_increasePercentage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "perMonth":
+			out.Values[i] = ec._DashboardOnboardingCompletion_perMonth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var dashboardOnboardingCompletionPerMonthImplementors = []string{"DashboardOnboardingCompletionPerMonth"}
+
+func (ec *executionContext) _DashboardOnboardingCompletionPerMonth(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardOnboardingCompletionPerMonth) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardOnboardingCompletionPerMonthImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardOnboardingCompletionPerMonth")
+		case "year":
+			out.Values[i] = ec._DashboardOnboardingCompletionPerMonth_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "month":
+			out.Values[i] = ec._DashboardOnboardingCompletionPerMonth_month(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "value":
+			out.Values[i] = ec._DashboardOnboardingCompletionPerMonth_value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var dashboardRetentionRateImplementors = []string{"DashboardRetentionRate"}
 
 func (ec *executionContext) _DashboardRetentionRate(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardRetentionRate) graphql.Marshaler {
@@ -71284,6 +70499,11 @@ func (ec *executionContext) _DashboardRetentionRatePerMonth(ctx context.Context,
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("DashboardRetentionRatePerMonth")
+		case "year":
+			out.Values[i] = ec._DashboardRetentionRatePerMonth_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "month":
 			out.Values[i] = ec._DashboardRetentionRatePerMonth_month(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -71340,6 +70560,98 @@ func (ec *executionContext) _DashboardRevenueAtRisk(ctx context.Context, sel ast
 			}
 		case "atRisk":
 			out.Values[i] = ec._DashboardRevenueAtRisk_atRisk(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var dashboardTimeToOnboardImplementors = []string{"DashboardTimeToOnboard"}
+
+func (ec *executionContext) _DashboardTimeToOnboard(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardTimeToOnboard) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardTimeToOnboardImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardTimeToOnboard")
+		case "timeToOnboard":
+			out.Values[i] = ec._DashboardTimeToOnboard_timeToOnboard(ctx, field, obj)
+		case "increasePercentage":
+			out.Values[i] = ec._DashboardTimeToOnboard_increasePercentage(ctx, field, obj)
+		case "perMonth":
+			out.Values[i] = ec._DashboardTimeToOnboard_perMonth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var dashboardTimeToOnboardPerMonthImplementors = []string{"DashboardTimeToOnboardPerMonth"}
+
+func (ec *executionContext) _DashboardTimeToOnboardPerMonth(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardTimeToOnboardPerMonth) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardTimeToOnboardPerMonthImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardTimeToOnboardPerMonth")
+		case "year":
+			out.Values[i] = ec._DashboardTimeToOnboardPerMonth_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "month":
+			out.Values[i] = ec._DashboardTimeToOnboardPerMonth_month(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "value":
+			out.Values[i] = ec._DashboardTimeToOnboardPerMonth_value(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -74803,48 +74115,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "organization_UpdateRenewalLikelihood":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_UpdateRenewalLikelihood(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "organization_UpdateRenewalForecast":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_UpdateRenewalForecast(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "organization_UpdateBillingDetails":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_UpdateBillingDetails(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "organization_UpdateRenewalLikelihoodAsync":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_UpdateRenewalLikelihoodAsync(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "organization_UpdateRenewalForecastAsync":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_UpdateRenewalForecastAsync(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "organization_UpdateBillingDetailsAsync":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_UpdateBillingDetailsAsync(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "organization_Archive":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_Archive(ctx, field)
@@ -74920,6 +74190,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "organization_UnsetOwner":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_UnsetOwner(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organization_UpdateOnboardingStatus":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organization_UpdateOnboardingStatus(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -75401,6 +74678,49 @@ func (ec *executionContext) _NotePage(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var onboardingDetailsImplementors = []string{"OnboardingDetails"}
+
+func (ec *executionContext) _OnboardingDetails(ctx context.Context, sel ast.SelectionSet, obj *model.OnboardingDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, onboardingDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OnboardingDetails")
+		case "status":
+			out.Values[i] = ec._OnboardingDetails_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "comments":
+			out.Values[i] = ec._OnboardingDetails_comments(ctx, field, obj)
+		case "updatedAt":
+			out.Values[i] = ec._OnboardingDetails_updatedAt(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var opportunityImplementors = []string{"Opportunity", "Node"}
 
 func (ec *executionContext) _Opportunity(ctx context.Context, sel ast.SelectionSet, obj *model.Opportunity) graphql.Marshaler {
@@ -75650,14 +74970,10 @@ func (ec *executionContext) _OrgAccountDetails(ctx context.Context, sel ast.Sele
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("OrgAccountDetails")
-		case "renewalLikelihood":
-			out.Values[i] = ec._OrgAccountDetails_renewalLikelihood(ctx, field, obj)
-		case "renewalForecast":
-			out.Values[i] = ec._OrgAccountDetails_renewalForecast(ctx, field, obj)
-		case "billingDetails":
-			out.Values[i] = ec._OrgAccountDetails_billingDetails(ctx, field, obj)
 		case "renewalSummary":
 			out.Values[i] = ec._OrgAccountDetails_renewalSummary(ctx, field, obj)
+		case "onboarding":
+			out.Values[i] = ec._OrgAccountDetails_onboarding(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -75779,6 +75095,14 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_market(ctx, field, obj)
 		case "employees":
 			out.Values[i] = ec._Organization_employees(ctx, field, obj)
+		case "yearFounded":
+			out.Values[i] = ec._Organization_yearFounded(ctx, field, obj)
+		case "headquarters":
+			out.Values[i] = ec._Organization_headquarters(ctx, field, obj)
+		case "employeeGrowthRate":
+			out.Values[i] = ec._Organization_employeeGrowthRate(ctx, field, obj)
+		case "logoUrl":
+			out.Values[i] = ec._Organization_logoUrl(ctx, field, obj)
 		case "lastFundingRound":
 			out.Values[i] = ec._Organization_lastFundingRound(ctx, field, obj)
 		case "lastFundingAmount":
@@ -77537,6 +76861,44 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "dashboard_TimeToOnboard":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboard_TimeToOnboard(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "dashboard_OnboardingCompletion":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboard_OnboardingCompletion(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "email":
 			field := field
 
@@ -78105,164 +77467,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var renewalForecastImplementors = []string{"RenewalForecast"}
-
-func (ec *executionContext) _RenewalForecast(ctx context.Context, sel ast.SelectionSet, obj *model.RenewalForecast) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, renewalForecastImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("RenewalForecast")
-		case "amount":
-			out.Values[i] = ec._RenewalForecast_amount(ctx, field, obj)
-		case "potentialAmount":
-			out.Values[i] = ec._RenewalForecast_potentialAmount(ctx, field, obj)
-		case "comment":
-			out.Values[i] = ec._RenewalForecast_comment(ctx, field, obj)
-		case "updatedAt":
-			out.Values[i] = ec._RenewalForecast_updatedAt(ctx, field, obj)
-		case "updatedById":
-			out.Values[i] = ec._RenewalForecast_updatedById(ctx, field, obj)
-		case "updatedBy":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._RenewalForecast_updatedBy(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "arr":
-			out.Values[i] = ec._RenewalForecast_arr(ctx, field, obj)
-		case "maxArr":
-			out.Values[i] = ec._RenewalForecast_maxArr(ctx, field, obj)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var renewalLikelihoodImplementors = []string{"RenewalLikelihood"}
-
-func (ec *executionContext) _RenewalLikelihood(ctx context.Context, sel ast.SelectionSet, obj *model.RenewalLikelihood) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, renewalLikelihoodImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("RenewalLikelihood")
-		case "probability":
-			out.Values[i] = ec._RenewalLikelihood_probability(ctx, field, obj)
-		case "previousProbability":
-			out.Values[i] = ec._RenewalLikelihood_previousProbability(ctx, field, obj)
-		case "comment":
-			out.Values[i] = ec._RenewalLikelihood_comment(ctx, field, obj)
-		case "updatedAt":
-			out.Values[i] = ec._RenewalLikelihood_updatedAt(ctx, field, obj)
-		case "updatedById":
-			out.Values[i] = ec._RenewalLikelihood_updatedById(ctx, field, obj)
-		case "updatedBy":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._RenewalLikelihood_updatedBy(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -79811,11 +79015,6 @@ func (ec *executionContext) marshalNBilledType2githubᚗcomᚋopenlineᚑaiᚋop
 	return v
 }
 
-func (ec *executionContext) unmarshalNBillingDetailsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBillingDetailsInput(ctx context.Context, v interface{}) (model.BillingDetailsInput, error) {
-	res, err := ec.unmarshalInputBillingDetailsInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -80491,6 +79690,60 @@ func (ec *executionContext) marshalNDashboardNewCustomersPerMonth2ᚕᚖgithub�
 	return ret
 }
 
+func (ec *executionContext) marshalNDashboardOnboardingCompletionPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardOnboardingCompletionPerMonthᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardOnboardingCompletionPerMonth) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDashboardOnboardingCompletionPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardOnboardingCompletionPerMonth(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDashboardOnboardingCompletionPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardOnboardingCompletionPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardOnboardingCompletionPerMonth) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DashboardOnboardingCompletionPerMonth(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNDashboardRetentionRatePerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardRetentionRatePerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardRetentionRatePerMonth) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -80527,6 +79780,60 @@ func (ec *executionContext) marshalNDashboardRetentionRatePerMonth2ᚕᚖgithub�
 	wg.Wait()
 
 	return ret
+}
+
+func (ec *executionContext) marshalNDashboardTimeToOnboardPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardTimeToOnboardPerMonthᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardTimeToOnboardPerMonth) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDashboardTimeToOnboardPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardTimeToOnboardPerMonth(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDashboardTimeToOnboardPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardTimeToOnboardPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardTimeToOnboardPerMonth) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DashboardTimeToOnboardPerMonth(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx context.Context, v interface{}) (model.DataSource, error) {
@@ -82010,6 +81317,21 @@ func (ec *executionContext) marshalNNotedEntity2ᚕgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
+func (ec *executionContext) unmarshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingStatus(ctx context.Context, v interface{}) (model.OnboardingStatus, error) {
+	var res model.OnboardingStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingStatus(ctx context.Context, sel ast.SelectionSet, v model.OnboardingStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNOnboardingStatusInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingStatusInput(ctx context.Context, v interface{}) (model.OnboardingStatusInput, error) {
+	res, err := ec.unmarshalInputOnboardingStatusInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNOpportunity2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v model.Opportunity) graphql.Marshaler {
 	return ec._Opportunity(ctx, sel, &v)
 }
@@ -82275,16 +81597,6 @@ func (ec *executionContext) marshalNPlayerUser2ᚖgithubᚗcomᚋopenlineᚑai�
 		return graphql.Null
 	}
 	return ec._PlayerUser(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNRenewalForecastInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalForecastInput(ctx context.Context, v interface{}) (model.RenewalForecastInput, error) {
-	res, err := ec.unmarshalInputRenewalForecastInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNRenewalLikelihoodInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalLikelihoodInput(ctx context.Context, v interface{}) (model.RenewalLikelihoodInput, error) {
-	res, err := ec.unmarshalInputRenewalLikelihoodInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx context.Context, sel ast.SelectionSet, v model.Result) graphql.Marshaler {
@@ -83178,13 +82490,6 @@ func (ec *executionContext) marshalOBilledType2ᚖgithubᚗcomᚋopenlineᚑai�
 	return v
 }
 
-func (ec *executionContext) marshalOBillingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBillingDetails(ctx context.Context, sel ast.SelectionSet, v *model.BillingDetails) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._BillingDetails(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -83454,6 +82759,13 @@ func (ec *executionContext) marshalODashboardNewCustomersPerMonth2ᚖgithubᚗco
 	return ec._DashboardNewCustomersPerMonth(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalODashboardOnboardingCompletion2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardOnboardingCompletion(ctx context.Context, sel ast.SelectionSet, v *model.DashboardOnboardingCompletion) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardOnboardingCompletion(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx context.Context, v interface{}) (*model.DashboardPeriodInput, error) {
 	if v == nil {
 		return nil, nil
@@ -83481,6 +82793,13 @@ func (ec *executionContext) marshalODashboardRevenueAtRisk2ᚖgithubᚗcomᚋope
 		return graphql.Null
 	}
 	return ec._DashboardRevenueAtRisk(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODashboardTimeToOnboard2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardTimeToOnboard(ctx context.Context, sel ast.SelectionSet, v *model.DashboardTimeToOnboard) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardTimeToOnboard(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Email) graphql.Marshaler {
@@ -83961,6 +83280,13 @@ func (ec *executionContext) unmarshalONoteUpdateInput2ᚖgithubᚗcomᚋopenline
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalOOnboardingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingDetails(ctx context.Context, sel ast.SelectionSet, v *model.OnboardingDetails) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._OnboardingDetails(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Opportunity) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -84078,52 +83404,6 @@ func (ec *executionContext) unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlin
 }
 
 func (ec *executionContext) marshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx context.Context, sel ast.SelectionSet, v *model.PhoneNumberLabel) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
-}
-
-func (ec *executionContext) unmarshalORenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalCycle(ctx context.Context, v interface{}) (*model.RenewalCycle, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.RenewalCycle)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalORenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalCycle(ctx context.Context, sel ast.SelectionSet, v *model.RenewalCycle) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
-}
-
-func (ec *executionContext) marshalORenewalForecast2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalForecast(ctx context.Context, sel ast.SelectionSet, v *model.RenewalForecast) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._RenewalForecast(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalORenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalLikelihood(ctx context.Context, sel ast.SelectionSet, v *model.RenewalLikelihood) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._RenewalLikelihood(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalORenewalLikelihoodProbability2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalLikelihoodProbability(ctx context.Context, v interface{}) (*model.RenewalLikelihoodProbability, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.RenewalLikelihoodProbability)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalORenewalLikelihoodProbability2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalLikelihoodProbability(ctx context.Context, sel ast.SelectionSet, v *model.RenewalLikelihoodProbability) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

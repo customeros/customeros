@@ -24,12 +24,14 @@ type CustomFieldTemplateRepository interface {
 }
 
 type customFieldTemplateRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewCustomFieldTemplateRepository(driver *neo4j.DriverWithContext) CustomFieldTemplateRepository {
+func NewCustomFieldTemplateRepository(driver *neo4j.DriverWithContext, database string) CustomFieldTemplateRepository {
 	return &customFieldTemplateRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 

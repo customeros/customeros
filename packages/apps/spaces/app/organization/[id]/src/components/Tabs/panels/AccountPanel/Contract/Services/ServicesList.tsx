@@ -13,7 +13,7 @@ import { toastError } from '@ui/presentation/Toast';
 import { BilledType, ServiceLineItem } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { useCloseServiceLineItemMutation } from '@organization/src/graphql/closeServiceLineItem.generated';
+import { useDeleteServiceLineItemMutation } from '@organization/src/graphql/deleteServiceLineItem.generated';
 import {
   GetContractsQuery,
   useGetContractsQuery,
@@ -34,6 +34,8 @@ function getBilledTypeLabel(billedType: BilledType): string {
       return ' one-time';
     case BilledType.Usage:
       return '/use';
+    case BilledType.Quarterly:
+      return '/quarter';
     default:
       return '';
   }
@@ -42,11 +44,11 @@ function getBilledTypeLabel(billedType: BilledType): string {
 const ServiceItem = ({
   data,
   onOpen,
-  onCloseService,
+  onDeleteService,
 }: {
   data: ServiceLineItem;
   onOpen: (props: ServiceLineItem) => void;
-  onCloseService: (props: { input: { id: string } }) => void;
+  onDeleteService: (props: { id: string }) => void;
 }) => {
   const allowedFractionDigits = data.billed === BilledType.Usage ? 4 : 2;
 
@@ -97,7 +99,7 @@ const ServiceItem = ({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              onCloseService({ input: { id: data?.id } });
+              onDeleteService({ id: data?.id });
             }}
           />
         </Flex>
@@ -121,9 +123,10 @@ export const ServicesList = ({ data, contractId }: ServicesListProps) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const queryKey = useGetContractsQuery.getKey({ id: orgId });
-  const closeServiceLineItem = useCloseServiceLineItemMutation(client, {
-    onMutate: ({ input }) => {
+  const deleteServiceLineItem = useDeleteServiceLineItemMutation(client, {
+    onMutate: ({ id }) => {
       queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
         return produce(currentCache, (draft) => {
@@ -140,13 +143,14 @@ export const ServicesList = ({ data, contractId }: ServicesListProps) => {
               return {
                 ...contractData,
                 serviceLineItems: contractData?.serviceLineItems?.filter(
-                  (el) => el.id !== input.id,
+                  (el) => el.id !== id,
                 ),
               };
             });
           }
         });
       });
+
       const previousEntries =
         queryClient.getQueryData<GetContractsQuery>(queryKey);
 
@@ -184,7 +188,7 @@ export const ServicesList = ({ data, contractId }: ServicesListProps) => {
           <ServiceItem
             data={service}
             onOpen={handleOpenModal}
-            onCloseService={closeServiceLineItem.mutate}
+            onDeleteService={deleteServiceLineItem.mutate}
           />
           {filteredData?.length > 1 && filteredData?.length - 1 !== i && (
             <Divider w='full' orientation='horizontal' />

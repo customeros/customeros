@@ -84,6 +84,73 @@
       "id": "",
       "name": "BCC",
       "domain": "bcc.com",
+      "contracts": [
+        {
+          "name":               "BCC Contract Name 001",
+          "renewalCycle":       "MONTHLY_RENEWAL",
+          "renewalPeriods":     1,
+          "contractUrl":        "https://BCCContractName001.com",
+          "serviceStartedAt":   "2023-07-04T09:00:00Z",
+          "signedAt":           "2023-07-04T09:00:00Z",
+          "serviceLines": [
+            {
+              "name":               "Service line 001 for BCC Contract Name 001",
+              "billed":             "MONTHLY",
+              "price":              12,
+              "quantity":           4,
+              "startedAt":          "2023-07-04T09:00:00Z",
+              "endedAt":            "2023-07-08T09:00:00Z"
+            },
+            {
+              "name":               "Service line 002 for BCC Contract Name 001",
+              "billed":             "ANNUALLY",
+              "price":              13,
+              "quantity":           5,
+              "startedAt":          "2023-07-05T09:00:00Z",
+              "endedAt":            "2025-07-08T09:00:00Z"
+            },
+            {
+              "name":               "Service line 003 for BCC Contract Name 001",
+              "billed":             "ANNUALLY",
+              "price":              11,
+              "quantity":           3,
+              "startedAt":          "2023-07-04T09:00:00Z"
+            },
+            {
+              "name":               "Service line 004 for BCC Contract Name 001",
+              "billed":             "MONTHLY",
+              "price":              10,
+              "quantity":           2,
+              "startedAt":          "2023-07-06T09:00:00Z"
+            }
+          ]
+        },
+        {
+          "name":               "BCC Contract Name 002",
+          "renewalCycle":       "QUARTERLY_RENEWAL",
+          "renewalPeriods":     1,
+          "contractUrl":        "https://BCCContractName002.com",
+          "serviceStartedAt":   "2023-08-05T09:00:00Z",
+          "signedAt":           "2023-08-05T09:00:00Z",
+          "serviceLines": [
+            {
+              "name":               "Service line 001 for BCC Contract Name 002",
+              "billed":             "ONCE",
+              "price":              30,
+              "quantity":           10,
+              "startedAt":          "2023-08-05T09:00:00Z"
+            },
+            {
+              "name":               "Service line 002 for BCC Contract Name 002",
+              "billed":             "ONCE",
+              "price":              40,
+              "quantity":           15,
+              "startedAt":          "2023-08-05T09:00:00Z",
+              "endedAt":            "2023-09-08T09:00:00Z"
+            }
+          ]
+        }
+      ],
       "people": [
         {
           "email": "jordan.davis@bcc.com",
@@ -96,7 +163,6 @@
           "description": "Champion,Influencer"
         }
       ],
-
       "emails": [
         {
           "from": "alfonso.perez@bcc.com",
@@ -182,6 +248,10 @@
       "id": "",
       "name": "Acme",
       "domain": "acme.com",
+      "onboardingStatusInput": {
+        "status": "LATE",
+        "comments": "There must be a reason for status change - embrace the change"
+      },
       "people": [
         {
           "email": "daniel.kim@acme.com"

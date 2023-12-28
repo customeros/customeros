@@ -57,13 +57,13 @@ func (s *contactSyncService) Sync(ctx context.Context, dataService source.Source
 		if len(contactsForWebhooks) > 0 {
 			err := s.postContacts(ctx, tenant, contactsForWebhooks)
 			if err != nil {
-				s.log.Errorf("error while posting log contacts to webhooks: %v", err.Error())
+				s.log.Errorf("error while posting contacts to webhooks: %v", err.Error())
 				for _, contactForWebhooks := range contactsForWebhooks {
 					failed++
 					_ = dataService.MarkProcessed(ctx, contactForWebhooks.SyncId, runId, false, false, "")
 				}
 			} else {
-				s.log.Infof("successfully posted %d log contacts to webhooks", len(contactsForWebhooks))
+				s.log.Infof("successfully posted %d contacts to webhooks", len(contactsForWebhooks))
 				for _, contactForWebhooks := range contactsForWebhooks {
 					completed++
 					_ = dataService.MarkProcessed(ctx, contactForWebhooks.SyncId, runId, true, false, "")

@@ -3,26 +3,6 @@ query GetOrganizationById($organizationId: ID!){
     id
     name
     accountDetails {
-        renewalLikelihood {
-            probability
-            previousProbability
-            comment
-            updatedAt
-            updatedById
-        }
-        renewalForecast {
-            amount
-            potentialAmount
-            comment
-            updatedAt
-            updatedById
-        }
-        billingDetails {
-            amount
-            frequency
-            renewalCycle
-            renewalCycleStart
-        }
         renewalSummary {
             arrForecast
             maxArrForecast

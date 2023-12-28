@@ -7,12 +7,6 @@ extend type Query {
 extend type Mutation {
     organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UpdateRenewalLikelihood(input: RenewalLikelihoodInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UpdateRenewalForecast(input: RenewalForecastInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UpdateBillingDetails(input: BillingDetailsInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UpdateRenewalLikelihoodAsync(input: RenewalLikelihoodInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use organization_UpdateRenewalLikelihood instead")
-    organization_UpdateRenewalForecastAsync(input: RenewalForecastInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use organization_UpdateRenewalForecast instead")
-    organization_UpdateBillingDetailsAsync(input: BillingDetailsInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use organization_UpdateBillingDetails instead")
     organization_Archive(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ArchiveAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Hide(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -26,6 +20,7 @@ extend type Mutation {
     organization_AddSocial(organizationId: ID!, input: SocialInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_UpdateOnboardingStatus(input: OnboardingStatusInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LinkedOrganization {
@@ -53,6 +48,10 @@ type Organization implements Node {
     isCustomer:  Boolean
     market:      Market
     employees:   Int64
+    yearFounded: Int64
+    headquarters: String
+    employeeGrowthRate: String
+    logoUrl:      String
     lastFundingRound: FundingRound
     lastFundingAmount: String
     source: DataSource!
@@ -89,30 +88,8 @@ type Organization implements Node {
 }
 
 type OrgAccountDetails {
-    renewalLikelihood: RenewalLikelihood @deprecated
-    renewalForecast: RenewalForecast @deprecated
-    billingDetails: BillingDetails @deprecated
     renewalSummary: RenewalSummary
-}
-
-type RenewalLikelihood {
-    probability: RenewalLikelihoodProbability
-    previousProbability: RenewalLikelihoodProbability
-    comment: String
-    updatedAt: Time
-    updatedById: String
-    updatedBy: User @goField(forceResolver: true)
-}
-
-type RenewalForecast {
-    amount: Float
-    potentialAmount: Float
-    comment: String
-    updatedAt: Time
-    updatedById: String
-    updatedBy: User @goField(forceResolver: true)
-    arr: Float
-    maxArr: Float
+    onboarding: OnboardingDetails
 }
 
 type RenewalSummary {
@@ -122,12 +99,10 @@ type RenewalSummary {
     nextRenewalDate:   Time
 }
 
-type BillingDetails {
-    amount: Float
-    frequency: RenewalCycle
-    renewalCycle: RenewalCycle
-    renewalCycleStart: Time
-    renewalCycleNext: Time
+type OnboardingDetails {
+    status: OnboardingStatus!
+    comments: String
+    updatedAt: Time
 }
 
 type OrganizationPage implements Pages {
@@ -143,7 +118,7 @@ input OrganizationInput {
     **Required.**
     """
     referenceId:   String
-    name:          String!
+    name:          String
     description:   String
     note:          String
     domains:       [String!]
@@ -157,33 +132,41 @@ input OrganizationInput {
     fieldSets:     [FieldSetInput!] @deprecated
     templateId:    ID @deprecated
     market:        Market
+    logoUrl:            String
+    employeeGrowthRate: String
+    headquarters:       String
+    yearFounded:        Int64
     employees:     Int64
     appSource:     String
 }
 
 input OrganizationUpdateInput {
-    id:   ID!
+    id: ID!
     referenceId: String
     """
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """
-    patch:             Boolean
-    name:              String!
-    description:       String
-    note:              String
-    domains:           [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
-    website:           String
-    industry:          String
-    subIndustry:       String
-    industryGroup:     String
-    isPublic:          Boolean
-    isCustomer:        Boolean
-    market:            Market
-    employees:         Int64
-    targetAudience:    String
-    valueProposition:  String
-    lastFundingRound:  FundingRound
-    lastFundingAmount: String
+    patch:              Boolean
+    name:               String
+    description:        String
+    note:               String
+    domains:            [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    website:            String
+    industry:           String
+    subIndustry:        String
+    industryGroup:      String
+    isPublic:           Boolean
+    isCustomer:         Boolean
+    market:             Market
+    employees:          Int64
+    targetAudience:     String
+    valueProposition:   String
+    lastFundingRound:   FundingRound
+    lastFundingAmount:  String
+    logoUrl:            String
+    employeeGrowthRate: String
+    headquarters:       String
+    yearFounded:        Int64
 }
 
 input LinkOrganizationsInput {
@@ -192,24 +175,10 @@ input LinkOrganizationsInput {
     type: String
 }
 
-input RenewalLikelihoodInput {
-    id: ID!
-    probability: RenewalLikelihoodProbability
-    comment: String
-}
-
-input RenewalForecastInput {
-    id: ID!
-    amount: Float
-    comment: String
-}
-
-input BillingDetailsInput {
-    id: ID!
-    amount: Float
-    frequency: RenewalCycle
-    renewalCycle: RenewalCycle
-    renewalCycleStart: Time
+input OnboardingStatusInput {
+    organizationId: ID!
+    status: OnboardingStatus!
+    comments: String
 }
 
 type SuggestedMergeOrganization {
@@ -240,20 +209,14 @@ enum FundingRound {
     BRIDGE
 }
 
-enum RenewalLikelihoodProbability {
-    HIGH
-    MEDIUM
-    LOW
-    ZERO
-}
-
-enum RenewalCycle {
-    WEEKLY
-    BIWEEKLY
-    MONTHLY
-    QUARTERLY
-    BIANNUALLY
-    ANNUALLY
+enum OnboardingStatus {
+    NOT_APPLICABLE
+    NOT_STARTED
+    ON_TRACK
+    LATE
+    STUCK
+    DONE
+    SUCCESSFUL
 }
 
 enum LastTouchpointType {

@@ -2,13 +2,16 @@ package graph
 
 import (
 	"context"
+	"strings"
+
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	ieevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
+	isevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
@@ -19,59 +22,58 @@ import (
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"golang.org/x/sync/errgroup"
-	"strings"
 
-	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
 type GraphSubscriber struct {
-	log                         logger.Logger
-	db                          *esdb.Client
-	cfg                         *config.Config
-	repositories                *repository.Repositories
-	phoneNumberEventHandler     *GraphPhoneNumberEventHandler
-	contactEventHandler         *ContactEventHandler
-	organizationEventHandler    *OrganizationEventHandler
-	emailEventHandler           *GraphEmailEventHandler
-	userEventHandler            *GraphUserEventHandler
-	locationEventHandler        *GraphLocationEventHandler
-	jobRoleEventHandler         *GraphJobRoleEventHandler
-	interactionEventHandler     *GraphInteractionEventHandler
-	logEntryEventHandler        *GraphLogEntryEventHandler
-	issueEventHandler           *GraphIssueEventHandler
-	commentEventHandler         *GraphCommentEventHandler
-	opportunityEventHandler     *OpportunityEventHandler
-	contractEventHandler        *ContractEventHandler
-	serviceLineItemEventHandler *ServiceLineItemEventHandler
+	log                            logger.Logger
+	db                             *esdb.Client
+	cfg                            *config.Config
+	phoneNumberEventHandler        *PhoneNumberEventHandler
+	contactEventHandler            *ContactEventHandler
+	organizationEventHandler       *OrganizationEventHandler
+	emailEventHandler              *EmailEventHandler
+	userEventHandler               *UserEventHandler
+	locationEventHandler           *LocationEventHandler
+	jobRoleEventHandler            *JobRoleEventHandler
+	interactionEventHandler        *InteractionEventHandler
+	interactionSessionEventHandler *InteractionSessionEventHandler
+	logEntryEventHandler           *LogEntryEventHandler
+	issueEventHandler              *IssueEventHandler
+	commentEventHandler            *CommentEventHandler
+	opportunityEventHandler        *OpportunityEventHandler
+	contractEventHandler           *ContractEventHandler
+	serviceLineItemEventHandler    *ServiceLineItemEventHandler
 }
 
-func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commandHandlers *command.CommandHandlers, cfg *config.Config) *GraphSubscriber {
+func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphSubscriber {
 	return &GraphSubscriber{
-		log:                         log,
-		db:                          db,
-		repositories:                repositories,
-		cfg:                         cfg,
-		contactEventHandler:         &ContactEventHandler{repositories: repositories},
-		organizationEventHandler:    &OrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commandHandlers.Organization},
-		phoneNumberEventHandler:     &GraphPhoneNumberEventHandler{Repositories: repositories},
-		emailEventHandler:           &GraphEmailEventHandler{Repositories: repositories},
-		userEventHandler:            &GraphUserEventHandler{repositories: repositories, log: log},
-		locationEventHandler:        &GraphLocationEventHandler{Repositories: repositories},
-		jobRoleEventHandler:         &GraphJobRoleEventHandler{Repositories: repositories},
-		interactionEventHandler:     &GraphInteractionEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
-		logEntryEventHandler:        &GraphLogEntryEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
-		issueEventHandler:           &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
-		commentEventHandler:         &GraphCommentEventHandler{repositories: repositories, log: log},
-		opportunityEventHandler:     &OpportunityEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity, organizationCommands: commandHandlers.Organization},
-		contractEventHandler:        &ContractEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity},
-		serviceLineItemEventHandler: &ServiceLineItemEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity},
+		log:                            log,
+		db:                             db,
+		cfg:                            cfg,
+		contactEventHandler:            NewContactEventHandler(log, repositories),
+		organizationEventHandler:       NewOrganizationEventHandler(log, repositories, grpcClients),
+		phoneNumberEventHandler:        NewPhoneNumberEventHandler(repositories),
+		emailEventHandler:              NewEmailEventHandler(repositories),
+		userEventHandler:               NewUserEventHandler(log, repositories),
+		locationEventHandler:           NewLocationEventHandler(repositories),
+		jobRoleEventHandler:            NewJobRoleEventHandler(repositories),
+		interactionEventHandler:        NewInteractionEventHandler(log, repositories, grpcClients),
+		interactionSessionEventHandler: NewInteractionSessionEventHandler(log, repositories, grpcClients),
+		logEntryEventHandler:           NewLogEntryEventHandler(log, repositories, grpcClients),
+		issueEventHandler:              NewIssueEventHandler(log, repositories, grpcClients),
+		commentEventHandler:            NewCommentEventHandler(log, repositories),
+		opportunityEventHandler:        NewOpportunityEventHandler(log, repositories, grpcClients),
+		contractEventHandler:           NewContractEventHandler(log, repositories, grpcClients),
+		serviceLineItemEventHandler:    NewServiceLineItemEventHandler(log, repositories, grpcClients),
 	}
 }
 
@@ -201,12 +203,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnDomainLinkedToOrganization(ctx, evt)
 	case orgevents.OrganizationAddSocialV1:
 		return s.organizationEventHandler.OnSocialAddedToOrganization(ctx, evt)
-	case orgevents.OrganizationUpdateRenewalLikelihoodV1:
-		return s.organizationEventHandler.OnRenewalLikelihoodUpdate(ctx, evt)
-	case orgevents.OrganizationUpdateRenewalForecastV1:
-		return s.organizationEventHandler.OnRenewalForecastUpdate(ctx, evt)
-	case orgevents.OrganizationUpdateBillingDetailsV1:
-		return s.organizationEventHandler.OnBillingDetailsUpdate(ctx, evt)
 	case orgevents.OrganizationHideV1:
 		return s.organizationEventHandler.OnOrganizationHide(ctx, evt)
 	case orgevents.OrganizationShowV1:
@@ -223,8 +219,15 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnLinkWithParentOrganization(ctx, evt)
 	case orgevents.OrganizationRemoveParentV1:
 		return s.organizationEventHandler.OnUnlinkFromParentOrganization(ctx, evt)
+	case orgevents.OrganizationUpdateOnboardingStatusV1:
+		return s.organizationEventHandler.OnUpdateOnboardingStatus(ctx, evt)
+	case orgevents.OrganizationUpdateOwnerV1:
+		return s.organizationEventHandler.OnUpdateOwner(ctx, evt)
 	case orgevents.OrganizationRequestRenewalForecastV1,
 		orgevents.OrganizationRequestNextCycleDateV1,
+		orgevents.OrganizationUpdateRenewalLikelihoodV1,
+		orgevents.OrganizationUpdateRenewalForecastV1,
+		orgevents.OrganizationUpdateBillingDetailsV1,
 		orgevents.OrganizationRequestScrapeByWebsiteV1:
 		return nil
 
@@ -269,6 +272,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.interactionEventHandler.OnCreate(ctx, evt)
 	case ieevent.InteractionEventUpdateV1:
 		return s.interactionEventHandler.OnUpdate(ctx, evt)
+
+	case isevent.InteractionSessionCreateV1:
+		return s.interactionSessionEventHandler.OnCreate(ctx, evt)
 
 	case logentryevents.LogEntryCreateV1:
 		return s.logEntryEventHandler.OnCreate(ctx, evt)

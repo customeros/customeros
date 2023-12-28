@@ -1,0 +1,11 @@
+query GetDashboard_TimeToOnboard {
+  dashboard_TimeToOnboard {
+    timeToOnboard
+    increasePercentage
+    perMonth {
+      year
+      month
+      value
+    }
+  }
+}

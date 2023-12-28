@@ -1,7 +1,7 @@
 package grpc_client
 
 import (
-	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
+	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	"google.golang.org/grpc"
 )
 

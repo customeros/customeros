@@ -27,18 +27,18 @@ func StartCron(cont *container.Container) *cron.Cron {
 	c := cron.New()
 
 	// Add jobs
-	err := c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateOrgNextCycleDate, func() {
-		lockAndRunJob(cont, organizationGroup, updateOrganizationNextCycleDate)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "updateOrganizationNextCycleDate", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateContract, func() {
+	err := c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateContract, func() {
 		lockAndRunJob(cont, contractGroup, updateContractsStatusAndRenewal)
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "updateContractsStatusAndRenewal", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleWebScrapeOrganization, func() {
+		lockAndRunJob(cont, organizationGroup, webScrapeOrganizations)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "webScrapeOrganizations", err.Error())
 	}
 
 	c.Start()
@@ -60,10 +60,10 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 	return nil
 }
 
-func updateOrganizationNextCycleDate(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpdateNextCycleDate()
-}
-
 func updateContractsStatusAndRenewal(cont *container.Container) {
 	service.NewContractService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpkeepContracts()
+}
+
+func webScrapeOrganizations(cont *container.Container) {
+	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).WebScrapeOrganizations()
 }

@@ -67,6 +67,7 @@
     "typescript": "^5.0.4"
   },
   "resolutions": {
-    "postcss": "8.4.31"
+    "postcss": "8.4.31",
+    "vite": "^4.5.1"
   }
 }

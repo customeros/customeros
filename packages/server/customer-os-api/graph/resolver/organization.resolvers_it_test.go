@@ -2,6 +2,9 @@ package resolver
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -12,10 +15,8 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestQueryResolver_Organizations_FilterByNameLike(t *testing.T) {
@@ -55,22 +56,32 @@ func TestQueryResolver_Organization(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
+	now := utils.NowPtr()
 	inputOrganizationEntity := entity.OrganizationEntity{
-		Name:              "Organization name",
-		CustomerOsId:      "C-123-ABC",
-		ReferenceId:       "100/200",
-		Description:       "Organization description",
-		Website:           "Organization_website.com",
-		Industry:          "tech",
-		SubIndustry:       "tech-sub",
-		IndustryGroup:     "tech-group",
-		TargetAudience:    "tech-audience",
-		ValueProposition:  "value-proposition",
-		LastFundingRound:  "Seed",
-		LastFundingAmount: "10k",
-		Note:              "Some note",
-		IsPublic:          true,
-		IsCustomer:        true,
+		Name:               "Organization name",
+		CustomerOsId:       "C-123-ABC",
+		ReferenceId:        "100/200",
+		Description:        "Organization description",
+		Website:            "Organization_website.com",
+		Industry:           "tech",
+		SubIndustry:        "tech-sub",
+		IndustryGroup:      "tech-group",
+		TargetAudience:     "tech-audience",
+		ValueProposition:   "value-proposition",
+		LastFundingRound:   "Seed",
+		LastFundingAmount:  "10k",
+		Note:               "Some note",
+		IsPublic:           true,
+		IsCustomer:         true,
+		YearFounded:        utils.ToPtr(int64(2019)),
+		Headquarters:       "San Francisco, CA",
+		EmployeeGrowthRate: "10%",
+		LogoUrl:            "https://www.openline.ai/logo.png",
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:    entity.OnboardingStatusDone,
+			Comments:  "some comments",
+			UpdatedAt: now,
+		},
 	}
 	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, inputOrganizationEntity)
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain1.com")
@@ -104,7 +115,14 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, model.FundingRoundSeed, *organizationStruct.Organization.LastFundingRound)
 	require.Equal(t, inputOrganizationEntity.LastFundingAmount, *organizationStruct.Organization.LastFundingAmount)
 	require.Equal(t, "Some note", *organizationStruct.Organization.Note)
+	require.Equal(t, inputOrganizationEntity.YearFounded, organizationStruct.Organization.YearFounded)
+	require.Equal(t, inputOrganizationEntity.Headquarters, *organizationStruct.Organization.Headquarters)
+	require.Equal(t, inputOrganizationEntity.EmployeeGrowthRate, *organizationStruct.Organization.EmployeeGrowthRate)
+	require.Equal(t, inputOrganizationEntity.LogoUrl, *organizationStruct.Organization.LogoURL)
 	require.NotNil(t, organizationStruct.Organization.CreatedAt)
+	require.Equal(t, inputOrganizationEntity.OnboardingDetails.UpdatedAt, organizationStruct.Organization.AccountDetails.Onboarding.UpdatedAt)
+	require.Equal(t, model.OnboardingStatusDone, organizationStruct.Organization.AccountDetails.Onboarding.Status)
+	require.Equal(t, inputOrganizationEntity.OnboardingDetails.Comments, *organizationStruct.Organization.AccountDetails.Onboarding.Comments)
 }
 
 func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
@@ -861,26 +879,6 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 
 	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org",
-		RenewalLikelihood: entity.RenewalLikelihood{
-			RenewalLikelihood:         "0-HIGH",
-			PreviousRenewalLikelihood: "1-MEDIUM",
-			Comment:                   utils.StringPtr("comment 1"),
-			UpdatedAt:                 utils.TimePtr(utils.Now()),
-			UpdatedBy:                 utils.StringPtr("user 1"),
-		},
-		RenewalForecast: entity.RenewalForecast{
-			Amount:          utils.ToPtr[float64](1000),
-			PotentialAmount: utils.ToPtr[float64](0.5),
-			Comment:         utils.StringPtr("comment 2"),
-			UpdatedAt:       nil,
-			UpdatedById:     nil,
-		},
-		BillingDetails: entity.BillingDetails{
-			Amount:            utils.ToPtr[float64](1.1),
-			Frequency:         "MONTHLY",
-			RenewalCycle:      "ANNUALLY",
-			RenewalCycleStart: utils.TimePtr(utils.Now()),
-		},
 		RenewalSummary: entity.RenewalSummary{
 			ArrForecast:            utils.ToPtr[float64](500),
 			MaxArrForecast:         utils.ToPtr[float64](1000),
@@ -904,20 +902,6 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 
 	require.Equal(t, organizationId, organization.ID)
 	require.Equal(t, "org", organization.Name)
-	require.Equal(t, model.RenewalLikelihoodProbabilityHigh, *organization.AccountDetails.RenewalLikelihood.Probability)
-	require.Equal(t, model.RenewalLikelihoodProbabilityMedium, *organization.AccountDetails.RenewalLikelihood.PreviousProbability)
-	require.Equal(t, "comment 1", *organization.AccountDetails.RenewalLikelihood.Comment)
-	require.Equal(t, "user 1", *organization.AccountDetails.RenewalLikelihood.UpdatedByID)
-	require.NotNil(t, organization.AccountDetails.RenewalLikelihood.UpdatedAt)
-	require.Equal(t, 1000.0, *organization.AccountDetails.RenewalForecast.Amount)
-	require.Equal(t, 0.5, *organization.AccountDetails.RenewalForecast.PotentialAmount)
-	require.Equal(t, "comment 2", *organization.AccountDetails.RenewalForecast.Comment)
-	require.Nil(t, organization.AccountDetails.RenewalForecast.UpdatedAt)
-	require.Nil(t, organization.AccountDetails.RenewalForecast.UpdatedBy)
-	require.Equal(t, 1.1, *organization.AccountDetails.BillingDetails.Amount)
-	require.Equal(t, model.RenewalCycleMonthly, *organization.AccountDetails.BillingDetails.Frequency)
-	require.Equal(t, model.RenewalCycleAnnually, *organization.AccountDetails.BillingDetails.RenewalCycle)
-	require.NotNil(t, organization.AccountDetails.BillingDetails.RenewalCycleStart)
 	require.Equal(t, 500.0, *organization.AccountDetails.RenewalSummary.ArrForecast)
 	require.Equal(t, 1000.0, *organization.AccountDetails.RenewalSummary.MaxArrForecast)
 	require.Equal(t, model.OpportunityRenewalLikelihoodHighRenewal, *organization.AccountDetails.RenewalSummary.RenewalLikelihood)
@@ -1299,6 +1283,20 @@ func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+		UpdateOrganizationOwner: func(context context.Context, org *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, organizationId, org.OrganizationId)
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
+			require.Equal(t, userId, org.OwnerUserId)
+			neo4jt.UserOwnsOrganization(ctx, driver, userId, organizationId)
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: organizationId,
+			}, nil
+		},
+	}
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
 	rawResponse := callGraphQL(t, "organization/set_owner",
 		map[string]interface{}{"organizationId": organizationId, "userId": userId})
 
@@ -1330,6 +1328,21 @@ func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
 	newOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 	neo4jt.UserOwnsOrganization(ctx, driver, previousOwnerId, organizationId)
+
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+		UpdateOrganizationOwner: func(context context.Context, org *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, organizationId, org.OrganizationId)
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
+			require.Equal(t, newOwnerId, org.OwnerUserId)
+			neo4jt.UserOwnsOrganization(ctx, driver, newOwnerId, organizationId)
+			neo4jt.DeleteUserOwnsOrganization(ctx, driver, previousOwnerId, organizationId)
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: organizationId,
+			}, nil
+		},
+	}
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	rawResponse := callGraphQL(t, "organization/set_owner",
 		map[string]interface{}{"organizationId": organizationId, "userId": newOwnerId})
@@ -1505,33 +1518,33 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	hoursAgo3 := now.Add(time.Duration(-3) * time.Hour)
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
-	orgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "just another org")
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "org name"})
+	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "just another org"})
 	contractId1 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		Name:                 "contract 1",
-		CreatedAt:            now,
-		UpdatedAt:            now,
-		ServiceStartedAt:     &hoursAgo3,
-		SignedAt:             &hoursAgo2,
-		EndedAt:              &hoursAgo1,
-		ContractRenewalCycle: entity.ContractRenewalCycleMonthlyRenewal,
-		ContractStatus:       entity.ContractStatusDraft,
-		ContractUrl:          "url1",
-		Source:               entity.DataSourceOpenline,
-		AppSource:            "test1",
+		Name:             "contract 1",
+		CreatedAt:        now,
+		UpdatedAt:        now,
+		ServiceStartedAt: &hoursAgo3,
+		SignedAt:         &hoursAgo2,
+		EndedAt:          &hoursAgo1,
+		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
+		ContractStatus:   entity.ContractStatusDraft,
+		ContractUrl:      "url1",
+		Source:           entity.DataSourceOpenline,
+		AppSource:        "test1",
 	})
 	contractId2 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		Name:                 "contract 2",
-		CreatedAt:            yesterday,
-		UpdatedAt:            yesterday,
-		ServiceStartedAt:     &hoursAgo1,
-		SignedAt:             &hoursAgo3,
-		EndedAt:              &hoursAgo2,
-		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
-		ContractStatus:       entity.ContractStatusLive,
-		ContractUrl:          "url2",
-		Source:               entity.DataSourceOpenline,
-		AppSource:            "test2",
+		Name:             "contract 2",
+		CreatedAt:        yesterday,
+		UpdatedAt:        yesterday,
+		ServiceStartedAt: &hoursAgo1,
+		SignedAt:         &hoursAgo3,
+		EndedAt:          &hoursAgo2,
+		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
+		ContractStatus:   entity.ContractStatusLive,
+		ContractUrl:      "url2",
+		Source:           entity.DataSourceOpenline,
+		AppSource:        "test2",
 	})
 	contractId3 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId2, entity.ContractEntity{})
 
@@ -1585,4 +1598,45 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	require.Equal(t, "url2", *secondContract.ContractURL)
 	require.Equal(t, model.DataSourceOpenline, secondContract.Source)
 	require.Equal(t, "test2", secondContract.AppSource)
+}
+
+func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+
+	calledEventsPlatform := false
+
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, organizationId, org.OrganizationId)
+			require.Equal(t, testUserId, org.LoggedInUserId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
+			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_DONE, org.OnboardingStatus)
+			require.Equal(t, "Set to done", org.Comments)
+			calledEventsPlatform = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: organizationId,
+			}, nil
+		},
+	}
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "organization/update_onboarding_status",
+		map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization_UpdateOnboardingStatus model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_UpdateOnboardingStatus
+	require.Equal(t, organizationId, organization.ID)
+	require.True(t, calledEventsPlatform)
 }

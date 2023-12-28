@@ -14,8 +14,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	interactioneventpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	interactioneventpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -118,8 +118,9 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.syncInteractionEvent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag("externalSystem", interactionEventInput.ExternalSystem)
-	span.LogFields(log.Object("syncDate", syncDate), log.Object("interactionEventInput", interactionEventInput))
+	span.SetTag(tracing.SpanTagExternalSystem, interactionEventInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate))
+	tracing.LogObjectAsJson(span, "interactionEventInput", interactionEventInput)
 
 	tenant := common.GetTenantFromContext(ctx)
 	var failedSync = false
@@ -147,6 +148,37 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 		return NewSkippedSyncStatus(reason)
 	}
 
+	senderId, senderLabel := s.getSenderIdAndLabel(ctx, interactionEventInput, span)
+	receiversIdAndRelationType := make(map[string]string)
+	receiversIdAndLabel := make(map[string]string)
+	s.getReceiversIdAndLabel(ctx, interactionEventInput, span, receiversIdAndLabel, receiversIdAndRelationType)
+	syncStatus, done := s.checkRequiredContact(interactionEventInput, senderLabel, receiversIdAndLabel, tenant, span)
+	if done {
+		return syncStatus
+	}
+
+	// Lock interaction event creation
+	syncMutex.Lock()
+	defer syncMutex.Unlock()
+
+	if interactionEventInput.HasSessionDetails() {
+		interactionSessionId, err := s.services.InteractionSessionService.MergeInteractionSession(ctx, tenant, interactionEventInput.ExternalSystem, interactionEventInput.SessionDetails, syncDate)
+		if err != nil {
+			failedSync = true
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("Failed merging interaction session with external reference %s for tenant %s :%s", interactionEventInput.SessionDetails.ExternalId, tenant, err.Error())
+			s.log.Error(reason)
+			return NewFailedSyncStatus(reason)
+		}
+		if interactionSessionId != "" && !interactionEventInput.BelongsTo.Available() {
+			interactionEventInput.BelongsTo = model.BelongsTo{
+				Session: model.ReferencedInteractionSession{
+					ExternalId: interactionEventInput.SessionDetails.ExternalId,
+				},
+			}
+		}
+	}
+
 	parentId, parentLabel, syncStatus, done := s.getParentIdAndLabel(ctx, interactionEventInput, span)
 	if done {
 		return syncStatus
@@ -156,20 +188,8 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 		return syncStatus
 	}
 
-	senderId, senderLabel := s.getSenderIdAndLabel(ctx, interactionEventInput, span)
-	receiversIdAndRelationType := make(map[string]string)
-	receiversIdAndLabel := make(map[string]string)
-	s.getReceiversIdAndLabel(ctx, interactionEventInput, span, receiversIdAndLabel, receiversIdAndRelationType)
-	syncStatus, done = s.checkRequiredContact(interactionEventInput, senderLabel, receiversIdAndLabel, tenant, span)
-	if done {
-		return syncStatus
-	}
-
-	// Lock interaction event creation
-	syncMutex.Lock()
-	defer syncMutex.Unlock()
 	// Check if interaction event already exists
-	interactionEventId, err := s.repositories.InteractionEventRepository.GetMatchedInteractionEventId(ctx, tenant, interactionEventInput.ExternalId, interactionEventInput.ExternalSystem)
+	interactionEventId, err := s.repositories.InteractionEventRepository.GetMatchedInteractionEventId(ctx, tenant, interactionEventInput.ExternalId, interactionEventInput.ExternalSystem, interactionEventInput.ExternalSourceEntity)
 	if err != nil {
 		failedSync = true
 		tracing.TraceErr(span, err)
@@ -184,8 +204,6 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 		interactionEventId = utils.NewUUIDIfEmpty(interactionEventId)
 		interactionEventInput.Id = interactionEventId
 		span.LogFields(log.String("interactionEventId", interactionEventId))
-
-		// TODO if session details provided merge session using events in interaction session service
 
 		// Create or update interaction event
 		interactionEventGrpcRequest := interactioneventpb.UpsertInteractionEventGrpcRequest{
@@ -242,6 +260,7 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 				})
 			}
 		}
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = s.grpcClients.InteractionEventClient.UpsertInteractionEvent(ctx, &interactionEventGrpcRequest)
 		if err != nil {
 			failedSync = true
@@ -249,7 +268,7 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 			reason = fmt.Sprintf("failed sending event to upsert interaction event with external reference %s for tenant %s :%s", interactionEventInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
-		// Wait for issue to be created in neo4j
+		// Wait for interaction event to be created in neo4j
 		if !failedSync && !matchingInteractionEventExists {
 			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
 				issue, findErr := s.repositories.InteractionEventRepository.GetById(ctx, tenant, interactionEventId)

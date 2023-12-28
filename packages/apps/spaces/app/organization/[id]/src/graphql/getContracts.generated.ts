@@ -52,6 +52,7 @@ export type GetContractsQuery = {
       signedAt?: any | null;
       endedAt?: any | null;
       renewalCycle: Types.ContractRenewalCycle;
+      renewalPeriods?: any | null;
       status: Types.ContractStatus;
       contractUrl?: string | null;
       opportunities?: Array<{
@@ -67,6 +68,13 @@ export type GetContractsQuery = {
         renewalUpdatedByUserId: string;
         renewalUpdatedByUserAt: any;
         renewedAt: any;
+        owner?: {
+          __typename?: 'User';
+          id: string;
+          firstName: string;
+          lastName: string;
+          name?: string | null;
+        } | null;
       }> | null;
       serviceLineItems?: Array<{
         __typename?: 'ServiceLineItem';
@@ -78,6 +86,7 @@ export type GetContractsQuery = {
         price: number;
         quantity: any;
         source: Types.DataSource;
+        comments: string;
         sourceOfTruth: Types.DataSource;
         appSource: string;
         endedAt?: any | null;
@@ -108,6 +117,7 @@ export const GetContractsDocument = `
       signedAt
       endedAt
       renewalCycle
+      renewalPeriods
       status
       contractUrl
       opportunities {
@@ -122,6 +132,12 @@ export const GetContractsDocument = `
         renewalUpdatedByUserId
         renewalUpdatedByUserAt
         renewedAt
+        owner {
+          id
+          firstName
+          lastName
+          name
+        }
       }
       serviceLineItems {
         id
@@ -132,6 +148,7 @@ export const GetContractsDocument = `
         price
         quantity
         source
+        comments
         sourceOfTruth
         appSource
         endedAt

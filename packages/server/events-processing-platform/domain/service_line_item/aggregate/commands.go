@@ -156,7 +156,7 @@ func (a *ServiceLineItemAggregate) closeServiceLineItem(ctx context.Context, cmd
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 	endedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.EndedAt, utils.Now())
 
-	closeEvent, err := event.NewServiceLineItemCloseEvent(a, endedAtNotNil, updatedAtNotNil)
+	closeEvent, err := event.NewServiceLineItemCloseEvent(a, endedAtNotNil, updatedAtNotNil, cmd.SliIsCanceled)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewServiceLineItemCloseEvent")

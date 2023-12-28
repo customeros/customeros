@@ -28,6 +28,7 @@ import { ContractSubtitle } from '@organization/src/components/Tabs/panels/Accou
 
 import { UrlInput } from './UrlInput';
 import { Services } from './Services/Services';
+import { FormPeriodInput } from './PeriodInput';
 import { billingFrequencyOptions } from '../utils';
 import { RenewalARRCard } from './RenewalARR/RenewalARRCard';
 import { ContractDTO, TimeToRenewalForm } from './Contract.dto';
@@ -89,7 +90,7 @@ export const ContractCard = ({
       toastError(
         `${
           invalidDate
-            ? 'The contract end date needs to be after the service start date'
+            ? 'The contract must end after the service start or signing date'
             : 'Failed to update contract'
         }`,
         `update-contract-error-${error}`,
@@ -101,7 +102,8 @@ export const ContractCard = ({
       }
       timeoutRef.current = setTimeout(() => {
         queryClient.invalidateQueries(queryKey);
-      }, 1000);
+        queryClient.invalidateQueries(['GetTimeline.infinite']);
+      }, 800);
     },
   });
 
@@ -118,13 +120,75 @@ export const ContractCard = ({
     organizationName,
     ...(data ?? {}),
   });
+
   const { setDefaultValues, state } = useForm<TimeToRenewalForm>({
     formId,
     defaultValues,
     stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        if (action.payload.name === 'name') {
-          updateContractDebounced({
+        switch (action.payload.name) {
+          case 'renewalPeriods':
+            return next;
+          case 'name': {
+            updateContractDebounced({
+              input: {
+                contractId: data.id,
+                ...ContractDTO.toPayload({
+                  ...state.values,
+                  [action.payload.name]: action.payload.value,
+                }),
+              },
+            });
+
+            return next;
+          }
+          case 'renewalCycle': {
+            let renewalPeriods = '1';
+
+            if (action.payload.value.value === 'MULTI_YEAR') {
+              renewalPeriods = '2';
+            }
+
+            updateContract.mutate({
+              input: {
+                contractId: data.id,
+                ...ContractDTO.toPayload({
+                  ...state.values,
+                  renewalCycle: action.payload.value,
+                  renewalPeriods,
+                }),
+              },
+            });
+
+            return {
+              ...next,
+              values: {
+                ...next.values,
+                renewalPeriods,
+              },
+            };
+          }
+          case 'contractUrl':
+            return next;
+          default: {
+            updateContract.mutate({
+              input: {
+                contractId: data.id,
+                ...ContractDTO.toPayload({
+                  ...state.values,
+                  [action.payload.name]: action.payload.value,
+                }),
+              },
+            });
+
+            return next;
+          }
+        }
+      }
+
+      if (action.type === 'FIELD_BLUR') {
+        if (action.payload.name === 'renewalPeriods') {
+          updateContract.mutate({
             input: {
               contractId: data.id,
               ...ContractDTO.toPayload({
@@ -134,21 +198,14 @@ export const ContractCard = ({
             },
           });
 
-          return next;
+          return {
+            ...next,
+            values: {
+              ...next.values,
+              renewalPeriods: action.payload?.value || '2',
+            },
+          };
         }
-        if (action.payload.name === 'contractUrl') {
-          return next;
-        }
-
-        updateContract.mutate({
-          input: {
-            contractId: data.id,
-            ...ContractDTO.toPayload({
-              ...state.values,
-              [action.payload.name]: action.payload.value,
-            }),
-          },
-        });
       }
 
       return next;
@@ -313,7 +370,11 @@ export const ContractCard = ({
               calendarIconHidden
             />
           </Flex>
-          <Flex gap='4' flexGrow={0}>
+          <Flex
+            gap='4'
+            flexGrow={0}
+            mb={state.values.renewalCycle?.value === 'MULTI_YEAR' ? '2' : '0'}
+          >
             <DatePicker
               label='Service starts'
               placeholder='Start date'
@@ -324,15 +385,22 @@ export const ContractCard = ({
               calendarIconHidden
             />
             <FormSelect
-              label='Contract renews'
+              label='Renewal cycle'
               placeholder='Renewal cycle'
               isLabelVisible
               name='renewalCycle'
               formId={formId}
               options={billingFrequencyOptions}
-              // isClearable
             />
           </Flex>
+          {state.values.renewalCycle?.value === 'MULTI_YEAR' && (
+            <FormPeriodInput
+              formId={formId}
+              label='Renews every'
+              name='renewalPeriods'
+              placeholder='Renews every'
+            />
+          )}
         </CardBody>
       )}
       <CardFooter p='0' mt={1} w='full' flexDir='column'>
@@ -352,7 +420,11 @@ export const ContractCard = ({
           )}
         </Collapse>
 
-        <Services contractId={data.id} data={data?.serviceLineItems} />
+        <Services
+          contractId={data.id}
+          data={data?.serviceLineItems}
+          contractName={data.name}
+        />
       </CardFooter>
     </Card>
   );

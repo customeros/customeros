@@ -23,20 +23,28 @@ const (
 	Anthropic = "anthropic"
 	OpenAI    = "openai"
 
-	NodeLabel_Organization     = "Organization"
-	NodeLabel_InteractionEvent = "InteractionEvent"
-	NodeLabel_User             = "User"
-	NodeLabel_Contact          = "Contact"
-	NodeLabel_LogEntry         = "LogEntry"
-	NodeLabel_Issue            = "Issue"
-	NodeLabel_Comment          = "Comment"
-	NodeLabel_Opportunity      = "Opportunity"
-	NodeLabel_Contract         = "Contract"
+	NodeLabel_Organization       = "Organization"
+	NodeLabel_InteractionEvent   = "InteractionEvent"
+	NodeLabel_InteractionSession = "InteractionSession"
+	NodeLabel_User               = "User"
+	NodeLabel_Contact            = "Contact"
+	NodeLabel_LogEntry           = "LogEntry"
+	NodeLabel_Issue              = "Issue"
+	NodeLabel_Comment            = "Comment"
+	NodeLabel_Opportunity        = "Opportunity"
+	NodeLabel_Contract           = "Contract"
 
 	RenewalLikelihood_Order_High   = 40
 	RenewalLikelihood_Order_Medium = 30
 	RenewalLikelihood_Order_Low    = 20
 	RenewalLikelihood_Order_Zero   = 10
+
+	OnboardingStatus_Order_NotStarted = 10
+	OnboardingStatus_Order_Stuck      = 20
+	OnboardingStatus_Order_Late       = 30
+	OnboardingStatus_Order_OnTrack    = 40
+	OnboardingStatus_Order_Done       = 50
+	OnboardingStatus_Order_Successful = 60
 
 	TenantKeyHeader = "X-OPENLINE-TENANT-KEY"
 	ApiKeyHeader    = "X-Openline-API-KEY"

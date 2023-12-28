@@ -4,6 +4,7 @@ import { useForm } from 'react-inverted-form';
 import { useRef, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
+import { useSession } from 'next-auth/react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Button } from '@ui/form/Button';
@@ -11,14 +12,18 @@ import { FeaturedIcon } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
 import { toastError } from '@ui/presentation/Toast';
 import { DotSingle } from '@ui/media/icons/DotSingle';
-import { BilledType, DataSource } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { ActionType, BilledType, DataSource } from '@graphql/types';
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { Tab, Tabs, TabList, TabPanel, TabPanels } from '@ui/disclosure/Tabs';
+import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
 import { useCreateServiceMutation } from '@organization/src/graphql/createService.generated';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import {
   GetContractsQuery,
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
+import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
 import {
   Modal,
   ModalBody,
@@ -39,12 +44,14 @@ interface SubscriptionServiceModalProps {
   isOpen: boolean;
   contractId: string;
   onClose: () => void;
+  contractName: string;
 }
 
 export const CreateServiceModal = ({
   isOpen,
   onClose,
   contractId,
+  contractName,
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
   const formId = `create-service-item-${contractId}`;
@@ -56,7 +63,12 @@ export const CreateServiceModal = ({
   const id = useParams()?.id as string;
   const { modal } = useAddServiceModalContext();
   const queryKey = useGetContractsQuery.getKey({ id });
-
+  const updateTimelineCache = useUpdateCacheWithNewEvent();
+  const [timelineMeta] = useTimelineMeta();
+  const timelineQueryKey = useInfiniteGetTimelineQuery.getKey(
+    timelineMeta.getTimelineVariables,
+  );
+  const session = useSession();
   const createService = useCreateServiceMutation(client, {
     onMutate: ({ input }) => {
       queryClient.cancelQueries({ queryKey });
@@ -127,8 +139,49 @@ export const CreateServiceModal = ({
       );
       toastError('Failed to create service', 'update-service-error');
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       modal.onClose();
+      const isRecurring = [
+        BilledType.Annually,
+        BilledType.Monthly,
+        BilledType.Quarterly,
+      ].includes(variables?.input?.billed as BilledType);
+      const metadata = JSON.stringify({
+        price: variables?.input?.price,
+        billedType: variables?.input?.billed,
+      });
+      const user = session?.data?.user?.name ?? '';
+      const actionType = isRecurring
+        ? ActionType.ServiceLineItemBilledTypeRecurringCreated
+        : variables?.input?.billed === BilledType.Usage
+        ? ActionType.ServiceLineItemBilledTypeUsageCreated
+        : ActionType.ServiceLineItemBilledTypeOnceCreated;
+      updateTimelineCache(
+        {
+          __typename: 'Action',
+          id: Math.random().toString(),
+          createdAt: new Date(),
+          updatedAt: '',
+          actionType,
+          appSource: 'customeros-optimistic-update',
+          source: 'customeros-optimistic-update',
+          metadata,
+          actionCreatedBy: {
+            firstName: user,
+            lastName: '',
+          },
+          content: `${user} added a ${
+            isRecurring
+              ? 'recurring'
+              : variables?.input.billed === BilledType.Usage
+              ? 'use based'
+              : 'one-time'
+          } service to ${contractName}: ${
+            variables.input.name
+          } , at ${formatCurrency(variables.input.price ?? 0)}`,
+        },
+        timelineQueryKey,
+      );
     },
     onSettled: () => {
       if (timeoutRef.current) {
@@ -136,6 +189,7 @@ export const CreateServiceModal = ({
       }
       timeoutRef.current = setTimeout(() => {
         queryClient.invalidateQueries(queryKey);
+        queryClient.invalidateQueries(timelineQueryKey);
       }, 1000);
     },
   });

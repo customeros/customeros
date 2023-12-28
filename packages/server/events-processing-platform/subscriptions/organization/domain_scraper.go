@@ -1,9 +1,18 @@
 package organization
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+
+	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
+	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
@@ -11,36 +20,36 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/pkg/errors"
-	"io"
-	"net/http"
-	"net/url"
-	"strings"
+	"golang.org/x/net/context"
 )
 
-type DomainScraper struct {
+type WebScraper interface {
+	Scrape(domainOrWebsite, tenant, organizationId string, directScrape bool) (*WebscrapeResponseV1, error)
+}
+
+type DomainScraperV1 struct {
 	log          logger.Logger
 	cfg          *config.Config
 	repositories *repository.Repositories
+	aiModel      ai.AiModel
 }
 
-func NewDomainScraper(log logger.Logger, cfg *config.Config, repositories *repository.Repositories) *DomainScraper {
-	return &DomainScraper{
+func NewDomainScraper(log logger.Logger, cfg *config.Config, repositories *repository.Repositories, aiModel ai.AiModel) WebScraper {
+	return &DomainScraperV1{
 		log:          log,
 		cfg:          cfg,
 		repositories: repositories,
+		aiModel:      aiModel,
 	}
 }
 
-func (ds *DomainScraper) Scrape(domainOrWebsite, tenant, organizationId string) (*WebscrapeResponseV1, error) {
+func (ds *DomainScraperV1) Scrape(domainOrWebsite, tenant, organizationId string, directScrape bool) (*WebscrapeResponseV1, error) {
 	domainUrl := strings.TrimSpace(domainOrWebsite)
-	if !strings.HasPrefix(domainUrl, "http") && !strings.HasPrefix(domainUrl, "www") {
-		domainUrl = fmt.Sprintf("https://%s", domainUrl)
-	}
+	httpClient := &http.Client{} // have one client to be reused around the scraper
 	jsonStruct := jsonStructure()
-
-	html, err := ds.getHtml(domainUrl)
+	html, err := ds.getHtmlWithRetry(domainUrl, directScrape, httpClient)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to getHtml domain: %s", domainUrl))
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to getHtml. domain: %s ", domainUrl))
 	}
 	socialLinks, err := ds.extractSocialLinks(html)
 	if err != nil {
@@ -62,13 +71,50 @@ func (ds *DomainScraper) Scrape(domainOrWebsite, tenant, organizationId string) 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run data prompt")
 	}
+
+	if r.Linkedin != "" {
+		lId := getLinkedinId(r.Linkedin)
+		r, err = ds.addLinkedinData(ds.cfg.Services.ScrapingDogApiKey, lId, r, httpClient)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to add linkedin data")
+		}
+	}
+
 	return r, nil
 }
 
-func (ds *DomainScraper) getHtml(domainUrl string) (*string, error) {
-	response, err := ds.getRequest(ds.cfg.Services.ScrapingBeeApiKey, domainUrl)
+func (ds *DomainScraperV1) getHtmlWithRetry(domainUrl string, directScrape bool, httpClient *http.Client) (*string, error) {
+	dUrl := domainUrl
+	if !strings.HasPrefix(domainUrl, "http") {
+		dUrl = fmt.Sprintf("https://%s", domainUrl)
+	}
+	html, err := ds.getHtml(dUrl, directScrape, httpClient)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute request")
+		ds.log.Warnf("Error getting html, retrying for domain: %s", dUrl)
+		if !strings.HasPrefix(domainUrl, "http") {
+			dUrl = fmt.Sprintf("http://%s", domainUrl)
+		}
+		html, err = ds.getHtml(dUrl, directScrape, httpClient)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to getHtml. domain: %s ", dUrl))
+		}
+	}
+	return html, nil
+}
+
+func (ds *DomainScraperV1) getHtml(domainUrl string, directGet bool, httpClient *http.Client) (*string, error) {
+	var response *http.Response
+	var err error
+	if directGet {
+		response, err = ds.getRequest(domainUrl)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to execute request")
+		}
+	} else {
+		response, err = ds.proxyGetRequest(ds.cfg.Services.ScrapingBeeApiKey, domainUrl, httpClient)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to execute request")
+		}
 	}
 
 	if response.StatusCode != 200 {
@@ -86,8 +132,10 @@ func (ds *DomainScraper) getHtml(domainUrl string) (*string, error) {
 	return &s, nil
 }
 
-func (ds *DomainScraper) runCompanyPrompt(text *string, tenant, organizationId string) (*string, error) {
-	prompt := strings.ReplaceAll(ds.cfg.Services.OpenAi.ScrapeCompanyPrompt, "{{text}}", *text)
+func (ds *DomainScraperV1) runCompanyPrompt(text *string, tenant, organizationId string) (*string, error) {
+	p := strings.ReplaceAll(ds.cfg.Services.OpenAi.ScrapeCompanyPrompt, "{{jsonschema}}", ds.cfg.Services.PromptJsonSchema)
+	prompt := strings.ReplaceAll(p, "{{text}}", *text)
+	ctx := context.TODO()
 
 	promptLog := commonEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
@@ -101,27 +149,28 @@ func (ds *DomainScraper) runCompanyPrompt(text *string, tenant, organizationId s
 		PromptTemplate: &ds.cfg.Services.OpenAi.ScrapeCompanyPrompt,
 		Prompt:         prompt,
 	}
+
+	// ignore error from storing prompt log, since it's not critical
 	promptStoreLogId, _ := ds.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
 
-	aiResult, rawResponse, err := ds.openai(prompt)
+	aiResult, err := ds.aiModel.Inference(ctx, prompt)
 	if err != nil {
 		_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 		return nil, errors.Wrap(err, "unable to get openai result")
 	}
-	_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, *rawResponse)
+	_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResult)
 
-	return aiResult, nil
+	return &aiResult, nil
 }
 
-func (ds *DomainScraper) getRequest(apiKey string, domainUrl string) (*http.Response, error) {
+func (ds *DomainScraperV1) getRequest(domainUrl string) (*http.Response, error) {
 	// Create client
 	client := &http.Client{}
 
-	urlEscaped := url.QueryEscape(domainUrl) // Encoding the URL
 	// Create request
-	req, err := http.NewRequest("GET", "https://app.scrapingbee.com/api/v1/?api_key="+apiKey+"&url="+urlEscaped, nil)
+	req, err := http.NewRequest("GET", domainUrl, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create scrappingbee request")
+		return nil, errors.Wrap(err, "failed to create direct request")
 	}
 	parseFormErr := req.ParseForm()
 	if parseFormErr != nil {
@@ -136,40 +185,39 @@ func (ds *DomainScraper) getRequest(apiKey string, domainUrl string) (*http.Resp
 	return resp, nil // Return the response
 }
 
-func (ds *DomainScraper) extractRelevantText(html *string) (*string, error) {
+func (ds *DomainScraperV1) proxyGetRequest(apiKey string, domainUrl string, httpClient *http.Client) (*http.Response, error) {
+	urlEscaped := url.QueryEscape(domainUrl) // Encoding the URL
+	// Create request
+	req, err := http.NewRequest("GET", "https://app.scrapingbee.com/api/v1/?api_key="+apiKey+"&url="+urlEscaped, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create scrappingbee request")
+	}
+	parseFormErr := req.ParseForm()
+	if parseFormErr != nil {
+		return nil, errors.Wrap(parseFormErr, "failed to parse form")
+	}
+
+	// Fetch Request
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch request")
+	}
+	return resp, nil // Return the response
+}
+
+func (ds *DomainScraperV1) extractRelevantText(html *string) (*string, error) {
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(*html))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create document from reader")
 	}
 
-	doc.Find("script, style").Remove()
-
-	var texts []string
-	doc.Find("*").FilterFunction(func(_ int, s *goquery.Selection) bool {
-		return s.Children().Length() == 0
-	}).Each(func(_ int, s *goquery.Selection) {
-		text := s.Text()
-		text = strings.TrimSpace(text)
-		if text != "" && !contains(texts, text) {
-			texts = append(texts, text)
-		}
-	})
-
-	text := strings.Join(texts, " ")
-	ds.log.Printf("text: %s", text)
-	return &text, nil
+	converter := md.NewConverter("", true, nil)
+	markdown := converter.Convert(doc.Selection)
+	ds.log.Printf("text: %s", markdown)
+	return &markdown, nil
 }
 
-func contains(slice []string, text string) bool {
-	for _, s := range slice {
-		if s == text {
-			return true
-		}
-	}
-	return false
-}
-
-func (ds *DomainScraper) extractSocialLinks(html *string) (*string, error) {
+func (ds *DomainScraperV1) extractSocialLinks(html *string) (*string, error) {
 	socialSites := map[string]string{
 		"linkedin":  "linkedin.com",
 		"twitter":   "twitter.com",
@@ -210,44 +258,7 @@ func (ds *DomainScraper) extractSocialLinks(html *string) (*string, error) {
 	return &s, nil
 }
 
-func (ds *DomainScraper) openai(prompt string) (*string, *string, error) {
-	requestData := map[string]interface{}{}
-	requestData["model"] = "gpt-3.5-turbo"
-	requestData["prompt"] = prompt
-	requestBody, _ := json.Marshal(requestData)
-	request, _ := http.NewRequest("POST", ds.cfg.Services.OpenAi.ApiPath+"/ask", strings.NewReader(string(requestBody)))
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("X-Openline-API-KEY", ds.cfg.Services.OpenAi.ApiKey)
-
-	client := &http.Client{}
-	response, err := client.Do(request)
-	if err != nil {
-		ds.log.Printf("Error making the API request: %s ", err)
-		return nil, nil, err
-	}
-	if response.StatusCode != 200 {
-		ds.log.Printf("Error making the API request: %s", response.Status)
-		return nil, nil, fmt.Errorf("error making the API request: %s", response.Status)
-	}
-	defer response.Body.Close()
-
-	var result map[string]interface{}
-	err = json.NewDecoder(response.Body).Decode(&result)
-	if err != nil {
-		ds.log.Printf("Error parsing the API response: %s", err)
-		return nil, nil, err
-	}
-	rawResponse, err := json.Marshal(result)
-
-	choices := result["choices"].([]interface{})
-	if len(choices) > 0 {
-		categorization := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
-		return &categorization, utils.StringPtr(string(rawResponse)), nil
-	}
-	return nil, utils.StringPtr(string(rawResponse)), errors.New("no result found")
-}
-
-func (ds *DomainScraper) runDataPrompt(analysis, domainUrl, socials, jsonStructure *string, tenant, organizationId string) (*WebscrapeResponseV1, error) {
+func (ds *DomainScraperV1) runDataPrompt(analysis, domainUrl, socials, jsonStructure *string, tenant, organizationId string) (*WebscrapeResponseV1, error) {
 
 	replacements := map[string]string{
 		"{{ANALYSIS}}":       *analysis,
@@ -275,15 +286,16 @@ func (ds *DomainScraper) runDataPrompt(analysis, domainUrl, socials, jsonStructu
 	}
 	promptStoreLogId, _ := ds.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
 
-	cleaned, rawResponse, err := ds.openai(prompt)
+	cleaned, err := ds.aiModel.Inference(context.TODO(), prompt)
+
 	if err != nil {
 		_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 		return nil, err
 	}
-	_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, *rawResponse)
-	ds.log.Printf("scrapeResponse: %s", *cleaned)
+	_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, cleaned)
+	ds.log.Printf("scrapeResponse: %s", cleaned)
 	scrapeResponse := WebscrapeResponseV1{}
-	err = json.Unmarshal([]byte(*cleaned), &scrapeResponse)
+	err = json.Unmarshal([]byte(cleaned), &scrapeResponse)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal response")
 	}
@@ -298,6 +310,133 @@ func (ds *DomainScraper) runDataPrompt(analysis, domainUrl, socials, jsonStructu
 	}
 
 	return &scrapeResponse, nil
+}
+
+func (ds *DomainScraperV1) addLinkedinData(apiKey, companyLinkedinId string, scrapedContent *WebscrapeResponseV1, httpClient *http.Client) (*WebscrapeResponseV1, error) {
+	linkedinData, err := ds.getLinkedinData(apiKey, companyLinkedinId, httpClient)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get linkedin data")
+	}
+	// Fallback if the scraped data is empty
+	if scrapedContent.CompanyName == "" {
+		scrapedContent.CompanyName = (*linkedinData)[0].CompanyName
+	}
+
+	if scrapedContent.Industry == "" {
+		scrapedContent.Industry = (*linkedinData)[0].Industry
+	}
+
+	if scrapedContent.Website == "" {
+		scrapedContent.Website = (*linkedinData)[0].Website
+	}
+
+	if scrapedContent.ValueProposition == "" {
+		scrapedContent.ValueProposition = (*linkedinData)[0].About
+	}
+
+	// enrich org data with linkedin data
+	scrapedContent.LogoUrl = (*linkedinData)[0].ProfilePhoto
+	scrapedContent.CompanySize, err = strconv.ParseInt((*linkedinData)[0].CompanySizeOnLinkedin, 10, 64) // actual value
+	if err != nil {
+		scrapedContent.CompanySize = 0
+	}
+	scrapedContent.YearFounded, err = strconv.ParseInt((*linkedinData)[0].Founded, 10, 64)
+	if err != nil {
+		scrapedContent.YearFounded = 0
+	}
+	scrapedContent.HeadquartersLocation = (*linkedinData)[0].Headquarters
+	scrapedContent.EmployeeGrowthRate = "" // FIXME: not available in linkedin scraped data we need to decide how to calculate this
+	return scrapedContent, nil
+}
+
+func (ds *DomainScraperV1) getLinkedinData(apiKey, companyLinkedinId string, httpClient *http.Client) (*LinkedinScrapeResponse, error) {
+	url := fmt.Sprintf("https://api.scrapingdog.com/linkedin/?api_key=%s&type=company&linkId=%s", apiKey, companyLinkedinId)
+	var apiLimitResponse struct {
+		Success *bool   `json:"success"`
+		Message *string `json:"message"`
+	}
+	linkedinScrape := &LinkedinScrapeResponse{}
+
+	r, err := httpClient.Get(url)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch linkedin scrape request")
+	}
+	defer r.Body.Close()
+
+	data, err := io.ReadAll(r.Body) // copy body so we don't get sticky problems reading it multiple times
+
+	// do raw decode first and check for success plus api limit messages
+	if err := json.NewDecoder(bytes.NewReader(data)).Decode(&apiLimitResponse); err != nil {
+		return nil, errors.Wrap(err, "failed to decode linkedin scrape response")
+	}
+
+	if apiLimitResponse.Success != nil && !*apiLimitResponse.Success {
+		err := errors.New(string(*apiLimitResponse.Message))
+		return nil, errors.Wrap(err, "Received error from linkedin scrape api")
+	}
+
+	if err := json.NewDecoder(bytes.NewReader(data)).Decode(&linkedinScrape); err != nil {
+		return nil, errors.Wrap(err, "failed to decode linkedin scrape response")
+	}
+
+	return linkedinScrape, nil
+}
+
+type LinkedinScrapeResponse []struct {
+	CompanyName             string `json:"company_name"`
+	UniversalNameID         string `json:"universal_name_id"`
+	BackgroundCoverImageURL string `json:"background_cover_image_url"`
+	LinkedinInternalID      string `json:"linkedin_internal_id"`
+	ProfilePhoto            string `json:"profile_photo"`
+	Industry                string `json:"industry"`
+	Location                string `json:"location"`
+	FollowerCount           string `json:"follower_count"`
+	Tagline                 string `json:"tagline"`
+	CompanySizeOnLinkedin   string `json:"company_size_on_linkedin"`
+	About                   string `json:"about"`
+	Website                 string `json:"website"`
+	Industries              string `json:"industries"`
+	CompanySize             string `json:"company_size"`
+	Headquarters            string `json:"headquarters"`
+	Type                    string `json:"type"`
+	Founded                 string `json:"founded"`
+	Specialties             string `json:"specialties"`
+	Description             struct {
+	} `json:"description"`
+	Locations []struct {
+		IsHq               bool   `json:"is_hq"`
+		OfficeAddressLine1 string `json:"office_address_line_1"`
+		OfficeAddressLine2 string `json:"office_address_line_2"`
+		OfficeLocaionLink  string `json:"office_locaion_link"`
+	} `json:"locations"`
+	Employees []struct {
+		EmployeePhoto      string `json:"employee_photo"`
+		EmployeeName       string `json:"employee_name"`
+		EmployeePosition   string `json:"employee_position"`
+		EmployeeProfileURL string `json:"employee_profile_url"`
+	} `json:"employees"`
+	Updates []struct {
+		Text              string `json:"text"`
+		ArticlePostedDate string `json:"article_posted_date"`
+		TotalLikes        string `json:"total_likes"`
+		ArticleTitle      string `json:"article_title"`
+		ArticleSubTitle   string `json:"article_sub_title"`
+		ArticleLink       any    `json:"article_link"`
+		ArticleImage      any    `json:"article_image"`
+	} `json:"updates"`
+	SimilarCompanies []struct {
+		Link     string `json:"link"`
+		Name     string `json:"name"`
+		Summary  string `json:"summary"`
+		Location string `json:"location"`
+	} `json:"similar_companies"`
+	AffiliatedCompanies []struct {
+		Link     string `json:"link"`
+		Name     string `json:"name"`
+		Industry string `json:"industry"`
+		Location string `json:"location"`
+	} `json:"affiliated_companies"`
+	Product []any `json:"product"`
 }
 
 func jsonStructure() *string {
@@ -322,4 +461,15 @@ func jsonStructure() *string {
 
 	s := string(jsonStructure)
 	return &s
+}
+
+func getLinkedinId(linkedinUrl string) string {
+	s := strings.Split(linkedinUrl, "/")
+	lim := len(s)
+	for i, word := range s {
+		if word == "company" && i+1 < lim {
+			return s[i+1]
+		}
+	}
+	return ""
 }

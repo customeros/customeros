@@ -6,10 +6,12 @@ import { FeaturedIcon } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Card, CardHeader } from '@ui/presentation/Card';
+import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import {
   Opportunity,
+  InternalStage,
   ContractRenewalCycle,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
@@ -51,6 +53,8 @@ export const RenewalARRCard = ({
   const formattedAmount = formatCurrency(hasEnded ? 0 : opportunity.amount);
 
   const hasRewenewChanged = formattedMaxAmount !== formattedAmount;
+  const hasRenewalLikelihoodZero =
+    opportunity?.renewalLikelihood === OpportunityRenewalLikelihood.ZeroRenewal;
 
   return (
     <>
@@ -61,11 +65,12 @@ export const RenewalARRCard = ({
         my={2}
         size='lg'
         variant='outline'
-        cursor='pointer'
+        cursor={hasEnded ? 'default' : 'pointer'}
         border='1px solid'
         borderColor='gray.200'
         position='relative'
         onClick={() => {
+          if (opportunity?.internalStage === InternalStage.ClosedLost) return;
           modal.onOpen();
           setIsLocalOpen(true);
         }}
@@ -111,11 +116,9 @@ export const RenewalARRCard = ({
 
                 {!hasEnded && opportunity.renewedAt && startedAt && (
                   <Text color='gray.500' ml={1} fontSize='sm'>
-                    {DateTimeUtils.isToday(opportunity.renewedAt)
-                      ? 'today'
-                      : DateTimeUtils.timeAgo(opportunity.renewedAt, {
-                          addSuffix: true,
-                        })}
+                    {DateTimeUtils.timeAgo(opportunity.renewedAt, {
+                      addSuffix: true,
+                    })}
                   </Text>
                 )}
               </Flex>
@@ -161,14 +164,30 @@ export const RenewalARRCard = ({
           </Flex>
         </CardHeader>
       </Card>
-      <RenewalDetailsModal
-        isOpen={modal.isOpen && isLocalOpen}
-        onClose={() => {
-          modal.onClose();
-          setIsLocalOpen(false);
-        }}
-        data={opportunity}
-      />
+
+      {hasRenewalLikelihoodZero ? (
+        <InfoDialog
+          isOpen={modal.isOpen && isLocalOpen}
+          onClose={modal.onClose}
+          onConfirm={modal.onClose}
+          confirmButtonLabel='Got it'
+          label='This contract ends soon'
+        >
+          <Text fontSize='sm' fontWeight='normal' mt={1}>
+            The renewal likelihood has been downgraded to Zero because the
+            contract is set to end within the current renewal cycle.
+          </Text>
+        </InfoDialog>
+      ) : (
+        <RenewalDetailsModal
+          isOpen={modal.isOpen && isLocalOpen}
+          onClose={() => {
+            modal.onClose();
+            setIsLocalOpen(false);
+          }}
+          data={opportunity}
+        />
+      )}
     </>
   );
 };

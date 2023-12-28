@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
+	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -21,6 +22,9 @@ type ContractRepository interface {
 	GetContractByServiceLineItemId(ctx context.Context, tenant string, serviceLineItemId string) (*dbtype.Node, error)
 	GetContractByOpportunityId(ctx context.Context, tenant string, opportunityId string) (*dbtype.Node, error)
 	UpdateStatus(ctx context.Context, tenant, contractId string, evt event.ContractUpdateStatusEvent) error
+	SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error
+	ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error
+	ContractCausedOnboardingStatusChange(ctx context.Context, tenant, contractId string) error
 }
 
 type contractRepository struct {
@@ -54,6 +58,7 @@ func (r *contractRepository) CreateForOrganization(ctx context.Context, tenant, 
 								ct.contractUrl=$contractUrl,
 								ct.status=$status,
 								ct.renewalCycle=$renewalCycle,
+								ct.renewalPeriods=$renewalPeriods,
 								ct.signedAt=$signedAt,
 								ct.serviceStartedAt=$serviceStartedAt
 							WITH ct, t
@@ -75,6 +80,7 @@ func (r *contractRepository) CreateForOrganization(ctx context.Context, tenant, 
 		"contractUrl":      evt.ContractUrl,
 		"status":           evt.Status,
 		"renewalCycle":     evt.RenewalCycle,
+		"renewalPeriods":   evt.RenewalPeriods,
 		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(evt.SignedAt),
 		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(evt.ServiceStartedAt),
 		"createdByUserId":  evt.CreatedByUserId,
@@ -99,6 +105,7 @@ func (r *contractRepository) UpdateAndReturn(ctx context.Context, tenant, contra
 				ct.serviceStartedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $serviceStartedAt ELSE ct.serviceStartedAt END,
 				ct.status = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $status ELSE ct.status END,
 				ct.renewalCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalCycle ELSE ct.renewalCycle END,
+				ct.renewalPeriods = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalPeriods ELSE ct.renewalPeriods END,
 				ct.updatedAt = $updatedAt,
 				ct.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE ct.sourceOfTruth END
 				RETURN ct`
@@ -110,6 +117,7 @@ func (r *contractRepository) UpdateAndReturn(ctx context.Context, tenant, contra
 		"contractUrl":      evt.ContractUrl,
 		"status":           evt.Status,
 		"renewalCycle":     evt.RenewalCycle,
+		"renewalPeriods":   evt.RenewalPeriods,
 		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(evt.SignedAt),
 		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(evt.ServiceStartedAt),
 		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(evt.EndedAt),
@@ -253,4 +261,71 @@ func (r *contractRepository) UpdateStatus(ctx context.Context, tenant, contractI
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
 	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *contractRepository) SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.SuspendActiveRenewalOpportunity")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})-[r:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
+				SET op.internalStage=$internalStageSuspended, 
+					op.updatedAt=$updatedAt
+				MERGE (ct)-[:SUSPENDED_RENEWAL]->(op)
+				DELETE r`
+	params := map[string]any{
+		"tenant":                 tenant,
+		"contractId":             contractId,
+		"internalStageSuspended": "SUSPENDED",
+		"updatedAt":              utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *contractRepository) ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.ActivateSuspendedRenewalOpportunity")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})-[r:SUSPENDED_RENEWAL]->(op:RenewalOpportunity)
+				SET op.internalStage=$internalStage, 
+					op.updatedAt=$updatedAt
+				MERGE (ct)-[:ACTIVE_RENEWAL]->(op)
+				DELETE r`
+	params := map[string]any{
+		"tenant":        tenant,
+		"contractId":    contractId,
+		"internalStage": opportunitymodel.OpportunityInternalStageStringOpen,
+		"updatedAt":     utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *contractRepository) ContractCausedOnboardingStatusChange(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.ContractCausedOnboardingStatusChange")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
+				SET ct.triggeredOnboardingStatusChange=true`
+	params := map[string]any{
+		"tenant":     tenant,
+		"contractId": contractId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
 }

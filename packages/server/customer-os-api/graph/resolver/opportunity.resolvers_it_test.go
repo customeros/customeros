@@ -8,7 +8,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
@@ -119,6 +119,7 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	ownerUserId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{})
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{})
@@ -134,11 +135,12 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 			require.Equal(t, float64(100), renewalOpportunity.Amount)
 			require.Equal(t, opportunitypb.RenewalLikelihood_HIGH_RENEWAL, renewalOpportunity.RenewalLikelihood)
 			require.Equal(t, "test comments", renewalOpportunity.Comments)
-			require.ElementsMatch(t, []opportunitypb.OpportunityMaskFields{
-				opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_AMOUNT,
-				opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD,
-				opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_COMMENTS},
-				renewalOpportunity.MaskFields)
+			require.Equal(t, ownerUserId, renewalOpportunity.OwnerUserId)
+			require.ElementsMatch(t, []opportunitypb.OpportunityMaskField{
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD,
+				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS},
+				renewalOpportunity.FieldsMask)
 			calledUpdateRenewalOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
 				Id: opportunityId,
@@ -146,9 +148,11 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 		},
 	}
 	events_platform.SetOpportunityCallbacks(&opportunityServiceCallbacks)
+	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId, ownerUserId)
 
 	rawResponse := callGraphQL(t, "update_renewal_opportunity", map[string]interface{}{
 		"opportunityId": opportunityId,
+		"ownerUserId":   ownerUserId,
 	})
 
 	var opportunityRenewalUpdateStruct struct {
@@ -160,6 +164,7 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 	require.Nil(t, err)
 	renewalOpportunity := opportunityRenewalUpdateStruct.OpportunityRenewalUpdate
 	require.Equal(t, opportunityId, renewalOpportunity.ID)
+	require.Equal(t, ownerUserId, renewalOpportunity.Owner.ID)
 
 	require.True(t, calledUpdateRenewalOpportunity)
 }

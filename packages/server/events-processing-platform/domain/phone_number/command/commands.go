@@ -46,9 +46,9 @@ func NewUpsertPhoneNumberCommand(objectId, tenant, loggedInUserId, rawPhoneNumbe
 	}
 }
 
-func NewFailedPhoneNumberValidationCommand(objectId, tenant, rawPhoneNumber, countryCodeA2, validationError string) *FailedPhoneNumberValidationCommand {
+func NewFailedPhoneNumberValidationCommand(objectId, tenant, loggedInUserId, appSource, rawPhoneNumber, countryCodeA2, validationError string) *FailedPhoneNumberValidationCommand {
 	return &FailedPhoneNumberValidationCommand{
-		BaseCommand:     eventstore.NewBaseCommand(objectId, tenant, ""),
+		BaseCommand:     eventstore.NewBaseCommand(objectId, tenant, loggedInUserId).WithAppSource(appSource),
 		RawPhoneNumber:  rawPhoneNumber,
 		ValidationError: validationError,
 		CountryCodeA2:   countryCodeA2,
@@ -64,9 +64,9 @@ func NewSkippedPhoneNumberValidationCommand(objectId, tenant, rawPhoneNumber, co
 	}
 }
 
-func NewPhoneNumberValidatedCommand(objectId, tenant, rawPhoneNumber, e164, countryCodeA2 string) *PhoneNumberValidatedCommand {
+func NewPhoneNumberValidatedCommand(phoneNumberId, tenant, loggedInUserId, appSource, rawPhoneNumber, e164, countryCodeA2 string) *PhoneNumberValidatedCommand {
 	return &PhoneNumberValidatedCommand{
-		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant, ""),
+		BaseCommand:    eventstore.NewBaseCommand(phoneNumberId, tenant, loggedInUserId).WithAppSource(appSource),
 		E164:           e164,
 		RawPhoneNumber: rawPhoneNumber,
 		CountryCodeA2:  countryCodeA2,

@@ -7,7 +7,7 @@ import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -36,17 +36,16 @@ func (h *updateOrganizationCommandHandler) Handle(ctx context.Context, cmd *comm
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateOrganizationCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
-	span.LogFields(log.Object("command", cmd))
+	tracing.LogObjectAsJson(span, "command", cmd)
 
 	validationError, done := validator.Validate(cmd, span)
 	if done {
 		return validationError
 	}
 
-	orgFields := &models.OrganizationFields{
+	orgFields := &model.OrganizationFields{
 		ID:                     cmd.ObjectID,
 		Tenant:                 cmd.Tenant,
-		IgnoreEmptyFields:      cmd.IgnoreEmptyFields,
 		OrganizationDataFields: cmd.DataFields,
 		Source: cmnmod.Source{
 			Source: cmd.Source,
@@ -59,7 +58,7 @@ func (h *updateOrganizationCommandHandler) Handle(ctx context.Context, cmd *comm
 		if err != nil {
 			return err
 		}
-		if err = organizationAggregate.UpdateOrganization(ctx, orgFields, ""); err != nil {
+		if err = organizationAggregate.UpdateOrganization(ctx, orgFields, "", cmd.WebScrapedUrl, cmd.FieldsMask); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
@@ -76,7 +75,7 @@ func (h *updateOrganizationCommandHandler) Handle(ctx context.Context, cmd *comm
 			continue                                           // Retry
 		} else {
 			// Some other error occurred
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "failed to save organization aggregate"))
 			return err
 		}
 	}

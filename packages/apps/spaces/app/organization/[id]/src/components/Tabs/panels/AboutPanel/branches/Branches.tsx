@@ -27,10 +27,15 @@ import {
 
 interface BranchesProps {
   id: string;
+  isReadOnly?: boolean;
   branches?: Organization['subsidiaries'];
 }
 
-export const Branches: React.FC<BranchesProps> = ({ id, branches = [] }) => {
+export const Branches: React.FC<BranchesProps> = ({
+  id,
+  isReadOnly,
+  branches = [],
+}) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const { push } = useRouter();
@@ -192,13 +197,15 @@ export const Branches: React.FC<BranchesProps> = ({ id, branches = [] }) => {
         pb={4}
       >
         <Heading fontSize={'md'}>Branches</Heading>
-        <IconButton
-          size='xs'
-          variant='ghost'
-          aria-label='Add'
-          onClick={handleCreateOrganization}
-          icon={<Plus boxSize='4' />}
-        />
+        {!isReadOnly && (
+          <IconButton
+            size='xs'
+            variant='ghost'
+            aria-label='Add'
+            onClick={handleCreateOrganization}
+            icon={<Plus boxSize='4' />}
+          />
+        )}
       </CardHeader>
       <CardBody as={VStack} pt={0} gap={2} alignItems='baseline'>
         {branches.map(({ organization }) =>

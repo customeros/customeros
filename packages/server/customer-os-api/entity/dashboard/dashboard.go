@@ -6,7 +6,7 @@ import (
 
 type DashboardNewCustomersData struct {
 	ThisMonthCount              int
-	ThisMonthIncreasePercentage float64
+	ThisMonthIncreasePercentage string
 	Months                      []*DashboardNewCustomerMonthData
 }
 type DashboardNewCustomerMonthData struct {
@@ -16,11 +16,12 @@ type DashboardNewCustomerMonthData struct {
 }
 
 type DashboardRetentionRateData struct {
-	RetentionRate      int
-	IncreasePercentage float64
+	RetentionRate      float64
+	IncreasePercentage string
 	Months             []*DashboardRetentionRatePerMonthData
 }
 type DashboardRetentionRatePerMonthData struct {
+	Year          int
 	Month         int
 	RenewCount    int
 	ChurnCount    int
@@ -34,22 +35,23 @@ type DashboardRevenueAtRiskData struct {
 
 type DashboardARRBreakdownData struct {
 	ArrBreakdown       float64
-	IncreasePercentage float64
+	IncreasePercentage string
 	Months             []*DashboardARRBreakdownPerMonthData
 }
 type DashboardARRBreakdownPerMonthData struct {
+	Year            int
 	Month           int
-	NewlyContracted int
-	Renewals        int
-	Upsells         int
-	Downgrades      int
-	Cancellations   int
-	Churned         int
+	NewlyContracted float64
+	Renewals        float64
+	Upsells         float64
+	Downgrades      float64
+	Cancellations   float64
+	Churned         float64
 }
 
 type DashboardGrossRevenueRetentionData struct {
 	GrossRevenueRetention float64
-	IncreasePercentage    float64
+	IncreasePercentage    string
 	Months                []*DashboardGrossRevenueRetentionPerMonthData
 }
 type DashboardGrossRevenueRetentionPerMonthData struct {
@@ -59,12 +61,13 @@ type DashboardGrossRevenueRetentionPerMonthData struct {
 
 type DashboardDashboardMRRPerCustomerData struct {
 	MrrPerCustomer     float64 `json:"mrrPerCustomer"`
-	IncreasePercentage float64
+	IncreasePercentage string
 	Months             []*DashboardDashboardMRRPerCustomerPerMonthData
 }
 type DashboardDashboardMRRPerCustomerPerMonthData struct {
+	Year  int
 	Month int
-	Value int
+	Value float64
 }
 
 type DashboardCustomerMapState string

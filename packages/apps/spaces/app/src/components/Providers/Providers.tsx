@@ -11,7 +11,9 @@ import { createIDBPersister } from '@shared/util/indexedDBPersister';
 import { AnalyticsProvider } from '@shared/components/Providers/AnalyticsProvider';
 
 import { NextAuthProvider } from './SessionProvider';
+import { GrowthbookProvider } from './GrowthbookProvider';
 interface ProvidersProps {
+  isProduction?: boolean;
   children: React.ReactNode;
   sessionEmail?: string | null;
 }
@@ -19,7 +21,11 @@ interface ProvidersProps {
 const hostname =
   typeof window !== 'undefined' ? window?.location?.hostname : 'platform';
 
-export const Providers = ({ children, sessionEmail }: ProvidersProps) => {
+export const Providers = ({
+  children,
+  sessionEmail,
+  isProduction,
+}: ProvidersProps) => {
   const [persister] = useState(() =>
     createIDBPersister(`${sessionEmail ?? 'cos'}-${hostname}`),
   );
@@ -42,7 +48,11 @@ export const Providers = ({ children, sessionEmail }: ProvidersProps) => {
       <ReactQueryDevtools initialIsOpen={false} position='bottom-right' />
       <RecoilRoot>
         <NextAuthProvider>
-          <AnalyticsProvider>{children}</AnalyticsProvider>
+          <GrowthbookProvider>
+            <AnalyticsProvider isProduction={isProduction}>
+              {children}
+            </AnalyticsProvider>
+          </GrowthbookProvider>
         </NextAuthProvider>
       </RecoilRoot>
     </PersistQueryClientProvider>

@@ -42,6 +42,35 @@ type ContactInput struct {
 	ProfilePhotoURL *string     `json:"profilePhotoUrl,omitempty"`
 }
 
+type ContractInput struct {
+	OrganizationId   string    `json:"organizationId"`
+	Name             string    `json:"name"`
+	RenewalCycle     string    `json:"renewalCycle"`
+	RenewalPeriods   int64     `json:"renewalPeriods"`
+	ContractUrl      string    `json:"contractUrl"`
+	ServiceStartedAt time.Time `json:"serviceStartedAt"`
+	SignedAt         time.Time `json:"signedAt"`
+}
+
+type ServiceLineInput struct {
+	ContractId string    `json:"contractId,omitempty"`
+	Name       string    `json:"name"`
+	Billed     string    `json:"billed"`
+	Price      int       `json:"price"`
+	Quantity   int       `json:"quantity"`
+	StartedAt  time.Time `json:"startedAt"`
+}
+
+type ServiceLineEndedInput struct {
+	ContractId string    `json:"contractId,omitempty"`
+	Name       string    `json:"name"`
+	Billed     string    `json:"billed"`
+	Price      int       `json:"price"`
+	Quantity   int       `json:"quantity"`
+	StartedAt  time.Time `json:"startedAt"`
+	EndedAt    time.Time `json:"endedAt"`
+}
+
 type InteractionSessionParticipantInput struct {
 	Email       *string `json:"email,omitempty"`
 	PhoneNumber *string `json:"phoneNumber,omitempty"`
@@ -98,4 +127,10 @@ type MeetingInput struct {
 	Note               *NoteInput                 `json:"note,omitempty"`
 	AppSource          *string                    `json:"appSource,omitempty"`
 	Status             *MeetingStatus             `json:"status,omitempty"`
+}
+
+type OrganizationUpdateOnboardingStatus struct {
+	OrganizationId string `json:"organizationId"`
+	Status         string `json:"status"`
+	Comments       string `json:"comments,omitempty"`
 }

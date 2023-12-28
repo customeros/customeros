@@ -1,14 +1,17 @@
 package repository
 
 import (
-	"errors"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
 
 type ApiKeyRepository interface {
-	GetApiKeyByTenantService(tenantId, serviceId string) (string, error)
+	GetApiKeyByTenantService(ctx context.Context, tenantId, serviceId string) (string, error)
 }
 
 type ApiKeyRepositoryImpl struct {
@@ -19,16 +22,21 @@ func NewApiKeyRepository(gormDb *gorm.DB) *ApiKeyRepositoryImpl {
 	return &ApiKeyRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *ApiKeyRepositoryImpl) GetApiKeyByTenantService(tenantName, serviceId string) (string, error) {
+func (repo *ApiKeyRepositoryImpl) GetApiKeyByTenantService(ctx context.Context, tenantName, serviceId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiKeyRepository.GetApiKeyByTenantService")
+	defer span.Finish()
+	span.LogFields(log.String("tenantName", tenantName), log.String("serviceId", serviceId))
+
 	result := entity.TenantAPIKey{}
 	err := repo.gormDb.First(&result, "tenant_name = ? AND key = ?", tenantName, serviceId).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// handle record not found error
+			span.LogFields(log.String("result", "record not found"))
 			return "", nil
 		} else {
-			return "", fmt.Errorf("GetApiKeyByTenantService: %s", err.Error())
+			tracing.TraceErr(span, err)
+			return "", errors.Wrap(err, "GetApiKeyByTenantService")
 		}
 	}
 	return result.Value, nil

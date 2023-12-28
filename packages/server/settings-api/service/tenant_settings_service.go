@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
@@ -101,6 +102,7 @@ const SERVICE_ZENDESK_TALK = "zendesktalk"
 const SERVICE_ZENDESK_SELL = "zendesksell"
 const SERVICE_ZENDESK_SUNSHINE = "zendesksunshine"
 const SERVICE_ZENEFITS = "zenefits"
+const SERVICE_MIXPANEL = "mixpanel"
 
 type TenantSettingsService interface {
 	GetForTenant(tenantName string) (*entity.TenantSettings, map[string]bool, error)
@@ -1300,8 +1302,21 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.ZenefitsToken = &token
 
-		}
+		case SERVICE_MIXPANEL:
+			username, _ := data["username"].(string)
+			secret, _ := data["secret"].(string)
+			projectId, _ := data["projectId"].(string)
+			projectSecret, _ := data["projectSecret"].(string)
+			projectTimezone, _ := data["projectTimezone"].(string)
+			region, _ := data["region"].(string)
 
+			tenantSettings.MixpanelUsername = &username
+			tenantSettings.MixpanelSecret = &secret
+			tenantSettings.MixpanelProjectId = &projectId
+			tenantSettings.MixpanelProjectSecret = &projectSecret
+			tenantSettings.MixpanelProjectTimezone = &projectTimezone
+			tenantSettings.MixpanelRegion = &region
+		}
 	}
 
 	if legacyUpdate {
@@ -1598,7 +1613,13 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 				tenantSettings.ZendeskSunshineEmail = nil
 			case SERVICE_ZENEFITS:
 				tenantSettings.ZenefitsToken = nil
-
+			case SERVICE_MIXPANEL:
+				tenantSettings.MixpanelUsername = nil
+				tenantSettings.MixpanelSecret = nil
+				tenantSettings.MixpanelProjectSecret = nil
+				tenantSettings.MixpanelProjectId = nil
+				tenantSettings.MixpanelProjectTimezone = nil
+				tenantSettings.MixpanelRegion = nil
 			}
 		}
 

@@ -1,0 +1,14 @@
+query GetDashboard_RetentionRate ($start: Time!, $end: Time!) {
+  dashboard_RetentionRate(
+       period: {start: $start, end: $end}
+     ) {
+    retentionRate
+    increasePercentage
+    perMonth {
+      year
+      month
+      renewCount
+      churnCount
+    }
+  }
+}

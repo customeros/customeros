@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 
 import { useIsRestoring } from '@tanstack/react-query';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { GridItem } from '@ui/layout/Grid';
 import { Organization } from '@graphql/types';
@@ -17,12 +18,14 @@ import { EmptyState } from './src/components/EmptyState/EmptyState';
 
 export default function OrganizationsPage() {
   const isRestoring = useIsRestoring();
+  const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'LAST_TOUCHPOINT', desc: true },
   ]);
 
   const {
     data,
+    tableRef,
     isLoading,
     isFetching,
     totalCount,
@@ -48,8 +51,9 @@ export default function OrganizationsPage() {
         data={data}
         columns={columns}
         sorting={sorting}
-        enableTableActions
-        enableRowSelection
+        tableRef={tableRef}
+        enableTableActions={enableFeature !== null ? enableFeature : true}
+        enableRowSelection={enableFeature !== null ? enableFeature : true}
         canFetchMore={hasNextPage}
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}

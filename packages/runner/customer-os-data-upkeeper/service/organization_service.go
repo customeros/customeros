@@ -3,17 +3,17 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/events_processing_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	orggrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
-	"time"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type OrganizationService interface {
-	UpdateNextCycleDate()
+	WebScrapeOrganizations()
 }
 
 type organizationService struct {
@@ -32,7 +32,7 @@ func NewOrganizationService(cfg *config.Config, log logger.Logger, repositories 
 	}
 }
 
-func (s *organizationService) UpdateNextCycleDate() {
+func (s *organizationService) WebScrapeOrganizations() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
@@ -41,46 +41,37 @@ func (s *organizationService) UpdateNextCycleDate() {
 		return
 	}
 
-	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.UpdateNextCycleDate")
+	s.webScrapeOrganizations(ctx)
+}
+
+func (s *organizationService) webScrapeOrganizations(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.webScrapeOrganizations")
 	defer span.Finish()
 
-	now := utils.Now()
+	records, err := s.repositories.OrganizationRepository.GetOrganizationsForWebScrape(ctx, s.cfg.ProcessConfig.WebScrapedOrganizationsPerCycle)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting organizations for status update: %v", err)
+		return
+	}
+	span.LogFields(log.Int("organizations", len(records)))
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.repositories.OrganizationRepository.GetOrganizationsForNextCycleDateRenew(ctx, now)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting organizations for next cycle date renew: %v", err)
-			return
-		}
-
-		// no organizations found for next cycle date renew
-		if len(records) == 0 {
-			return
-		}
-
-		//process organizations
-		for _, record := range records {
-			_, err = s.eventsProcessingClient.OrganizationClient.RequestRenewNextCycleDate(ctx, &orggrpc.RequestRenewNextCycleDateRequest{
-				Tenant:         record.Tenant,
-				OrganizationId: record.OrganizationId,
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error requesting organization next cycle date renew: %s", err.Error())
-			}
-		}
-
-		//sleep for async processing, then check again
-		time.Sleep(5 * time.Second)
+	// no organizations found for web scraping
+	if len(records) == 0 {
+		return
 	}
 
+	// web scrape organizations
+	for _, record := range records {
+		_, err = s.eventsProcessingClient.OrganizationClient.WebScrapeOrganization(ctx, &organizationpb.WebScrapeOrganizationGrpcRequest{
+			Tenant:         record.Tenant,
+			OrganizationId: record.OrganizationId,
+			AppSource:      constants.AppSourceDataUpkeeper,
+			Url:            record.Url,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error web scraping organization {%s}: %s", record.OrganizationId, err.Error())
+		}
+	}
 }

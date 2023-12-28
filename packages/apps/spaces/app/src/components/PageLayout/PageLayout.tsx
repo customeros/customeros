@@ -7,8 +7,8 @@ interface PageLayoutProps {
 export const PageLayout = ({ children }: PageLayoutProps) => {
   return (
     <Grid
-      p='2'
-      columnGap='2'
+      // p='2'
+      // columnGap='2'
       h='100vh'
       bg='gray.25'
       templateColumns='200px 1fr'

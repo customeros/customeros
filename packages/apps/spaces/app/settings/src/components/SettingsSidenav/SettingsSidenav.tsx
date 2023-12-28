@@ -40,8 +40,7 @@ export const SettingsSidenav = () => {
       flexDir='column'
       gridArea='sidebar'
       position='relative'
-      border='1px solid'
-      borderRadius='2xl'
+      borderRight='1px solid'
       borderColor='gray.200'
     >
       <Flex gap='2' align='center' mb='4'>
@@ -50,7 +49,7 @@ export const SettingsSidenav = () => {
           variant='ghost'
           aria-label='Go back'
           onClick={() => router.push(`/${lastActivePosition.root}`)}
-          icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
+          icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='5' />}
         />
 
         <Text
@@ -72,7 +71,7 @@ export const SettingsSidenav = () => {
           icon={
             <Icons.InfoSquare
               color={checkIsActive('oauth') ? 'gray.700' : 'gray.500'}
-              boxSize='6'
+              boxSize='5'
             />
           }
         />
@@ -83,7 +82,7 @@ export const SettingsSidenav = () => {
           icon={
             <Receipt
               color={checkIsActive('billing') ? 'gray.700' : 'gray.500'}
-              boxSize='6'
+              boxSize='5'
             />
           }
         />
@@ -94,7 +93,7 @@ export const SettingsSidenav = () => {
           icon={
             <Icons.DataFlow3
               color={checkIsActive('integrations') ? 'gray.700' : 'gray.500'}
-              boxSize='6'
+              boxSize='5'
             />
           }
         />

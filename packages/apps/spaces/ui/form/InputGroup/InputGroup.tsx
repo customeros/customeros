@@ -1,6 +1,10 @@
 'use client';
 
-export type { InputGroupProps } from '@chakra-ui/react';
+export type {
+  InputGroupProps,
+  InputLeftElementProps,
+  InputRightElementProps,
+} from '@chakra-ui/react';
 export {
   InputGroup,
   InputLeftElement,

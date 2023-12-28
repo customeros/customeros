@@ -12,8 +12,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -21,7 +21,7 @@ import (
 
 type OpportunityService interface {
 	Update(ctx context.Context, opportunity *entity.OpportunityEntity) error
-	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, appSource string) error
+	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error
 	GetById(ctx context.Context, id string) (*entity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*entity.OpportunityEntities, error)
 }
@@ -145,6 +145,7 @@ func (s *opportunityService) Update(ctx context.Context, opportunity *entity.Opp
 		},
 	}
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunityUpdateRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -155,7 +156,7 @@ func (s *opportunityService) Update(ctx context.Context, opportunity *entity.Opp
 	return nil
 }
 
-func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, appSource string) error {
+func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.UpdateRenewal")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -182,20 +183,21 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		Amount:         utils.IfNotNilFloat64(amount),
 		Comments:       utils.IfNotNilString(comments),
+		OwnerUserId:    utils.IfNotNilString(ownerUserId),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(entity.DataSourceOpenline),
 			AppSource: appSource,
 		},
 	}
-	maskFields := make([]opportunitypb.OpportunityMaskFields, 0)
+	fieldsMask := make([]opportunitypb.OpportunityMaskField, 0)
 	if amount != nil {
-		maskFields = append(maskFields, opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_AMOUNT)
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT)
 	}
 	if comments != nil {
-		maskFields = append(maskFields, opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_COMMENTS)
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS)
 	}
-	maskFields = append(maskFields, opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD)
-	opportunityRenewalUpdateRequest.MaskFields = maskFields
+	fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD)
+	opportunityRenewalUpdateRequest.FieldsMask = fieldsMask
 
 	switch renewalLikelihood {
 	case entity.OpportunityRenewalLikelihoodHigh:
@@ -210,6 +212,7 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_ZERO_RENEWAL
 	}
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunityRenewalUpdateRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)

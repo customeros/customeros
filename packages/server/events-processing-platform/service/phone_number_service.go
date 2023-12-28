@@ -2,9 +2,7 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
@@ -12,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/opentracing/opentracing-go/log"
+	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	"strings"
 )
 
@@ -35,7 +33,7 @@ func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *pho
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "PhoneNumberService.UpsertPhoneNumber")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	tracing.LogObjectAsJson(span, "request", request)
 
 	objectID := strings.TrimSpace(request.Id)
 	var err error
@@ -59,9 +57,41 @@ func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *pho
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("(UpsertPhoneNumber): {%s}", objectID)
-
 	return &phonenumberpb.PhoneNumberIdGrpcResponse{Id: objectID}, nil
+}
+
+func (s *phoneNumberService) FailPhoneNumberValidation(ctx context.Context, request *phonenumberpb.FailPhoneNumberValidationGrpcRequest) (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "PhoneNumberService.FailPhoneNumberValidation")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.SetTag(tracing.SpanTagEntityId, request.PhoneNumberId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	cmd := command.NewFailedPhoneNumberValidationCommand(request.PhoneNumberId, request.Tenant, request.LoggedInUserId, request.AppSource, request.PhoneNumber, request.CountryCodeA2, request.ErrorMessage)
+	if err := s.phoneNumberCommands.FailedPhoneNumberValidation.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(FailPhoneNumberValidation) tenant:{%s}, phoneNumber ID: {%s}, err: %s", request.Tenant, request.PhoneNumberId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &phonenumberpb.PhoneNumberIdGrpcResponse{Id: request.PhoneNumberId}, nil
+}
+
+func (s *phoneNumberService) PassPhoneNumberValidation(ctx context.Context, request *phonenumberpb.PassPhoneNumberValidationGrpcRequest) (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "PhoneNumberService.PassPhoneNumberValidation")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.SetTag(tracing.SpanTagEntityId, request.PhoneNumberId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	cmd := command.NewPhoneNumberValidatedCommand(request.PhoneNumberId, request.Tenant, request.LoggedInUserId, request.AppSource, request.PhoneNumber, request.E164, request.CountryCodeA2)
+	if err := s.phoneNumberCommands.PhoneNumberValidated.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(PhoneNumberValidated) tenant:{%s}, phoneNumber ID: {%s}, err: %s", request.Tenant, request.PhoneNumberId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &phonenumberpb.PhoneNumberIdGrpcResponse{Id: request.PhoneNumberId}, nil
 }
 
 func (s *phoneNumberService) errResponse(err error) error {

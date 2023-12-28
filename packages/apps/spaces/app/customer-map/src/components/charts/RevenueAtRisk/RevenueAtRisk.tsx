@@ -1,15 +1,16 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-import { useRevenueAtRiskQuery } from '@customerMap/graphql/revenueAtRisk.generated';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Skeleton } from '@ui/presentation/Skeleton';
+import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { useRevenueAtRiskQuery } from '@customerMap/graphql/revenueAtRisk.generated';
 
 import { HelpContent } from './HelpContent';
 import { RevenueAtRiskDatum } from './RevenueAtRisk.chart';
@@ -20,8 +21,10 @@ const RevenueAtRiskChart = dynamic(() => import('./RevenueAtRisk.chart'), {
 
 export const RevenueAtRisk = () => {
   const client = getGraphQLClient();
+  const { data: globalCache } = useGlobalCacheQuery(client);
   const { data, isLoading } = useRevenueAtRiskQuery(client);
 
+  const hasContracts = globalCache?.global_Cache?.contractsExist;
   const chartData: RevenueAtRiskDatum = {
     atRisk: data?.dashboard_RevenueAtRisk?.atRisk ?? 0,
     highConfidence: data?.dashboard_RevenueAtRisk?.highConfidence ?? 0,
@@ -30,6 +33,8 @@ export const RevenueAtRisk = () => {
   return (
     <ChartCard
       flex='1'
+      stat={!hasContracts ? 'N/A' : undefined}
+      hasData={hasContracts}
       title='Revenue at risk'
       renderHelpContent={HelpContent}
       renderSubStat={() => (
@@ -69,6 +74,7 @@ export const RevenueAtRisk = () => {
               width={width}
               height={height}
               data={chartData}
+              hasContracts={hasContracts}
             />
           </Skeleton>
         )}

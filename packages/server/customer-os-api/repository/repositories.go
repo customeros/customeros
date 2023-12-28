@@ -57,11 +57,11 @@ func InitRepos(driver *neo4j.DriverWithContext, database string) *Repositories {
 			Neo4jDriver: driver,
 		},
 	}
-	repositories.TimelineEventRepository = NewTimelineEventRepository(driver)
-	repositories.OrganizationRepository = NewOrganizationRepository(driver)
-	repositories.ContactRepository = NewContactRepository(driver)
-	repositories.CustomFieldTemplateRepository = NewCustomFieldTemplateRepository(driver)
-	repositories.CustomFieldRepository = NewCustomFieldRepository(driver)
+	repositories.TimelineEventRepository = NewTimelineEventRepository(driver, database)
+	repositories.OrganizationRepository = NewOrganizationRepository(driver, database)
+	repositories.ContactRepository = NewContactRepository(driver, database)
+	repositories.CustomFieldTemplateRepository = NewCustomFieldTemplateRepository(driver, database)
+	repositories.CustomFieldRepository = NewCustomFieldRepository(driver, database)
 	repositories.EntityTemplateRepository = NewEntityTemplateRepository(driver, &repositories)
 	repositories.FieldSetTemplateRepository = NewFieldSetTemplateRepository(driver, &repositories)
 	repositories.FieldSetRepository = NewFieldSetRepository(driver)

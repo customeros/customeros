@@ -1,3 +1,5 @@
+'use client';
+
 import Image from 'next/image';
 import { useForm } from 'react-inverted-form';
 import { VirtuosoHandle } from 'react-virtuoso';
@@ -57,7 +59,7 @@ const checkPristine = (
 const checkEmpty = (values: Partial<ComposeEmailDtoI>): boolean => {
   return Object.values(values).every((e) => !e.length);
 };
-
+const formId = 'compose-email-preview-modal';
 interface EmailPreviewModalProps {
   invalidateQuery: () => void;
   virtuosoRef?: React.RefObject<VirtuosoHandle>;
@@ -85,7 +87,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const [isSending, setIsSending] = useState(false);
   const { to, cc, bcc } = getEmailParticipantsByType(event?.sentTo || []);
   const from = getEmailParticipantsNameAndEmail(event?.sentBy || [], 'value');
-  const formId = 'compose-email-preview-modal';
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
     to: getEmailParticipantsNameAndEmail(
       [...(event?.sentBy ?? []), ...(to ?? [])],
@@ -105,10 +106,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const { state, setDefaultValues } = useForm<ComposeEmailDtoI>({
     formId,
     defaultValues,
-
-    stateReducer: (state, action, next) => {
-      return next;
-    },
   });
 
   const handleResetEditor = () => {

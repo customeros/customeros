@@ -17,6 +17,11 @@ export interface ContactForm {
   socials: Pick<Social, 'id' | 'url'>[];
 }
 
+const getNameFromEmail = (email: string) => {
+  const name = email?.split('@')[0];
+
+  return `${name}`?.trim()?.replace(/\b\w/g, (char) => char.toUpperCase());
+};
 export class ContactFormDto implements ContactForm {
   id: string; // auxiliary field
   name: string;
@@ -32,9 +37,16 @@ export class ContactFormDto implements ContactForm {
   startedAt: string;
 
   constructor(data?: Partial<Contact> | null) {
+    const nameFromEmail = data?.emails?.[0]?.email
+      ? getNameFromEmail(data?.emails?.[0]?.email ?? '')
+      : '';
+
     this.id = data?.id || ''; // auxiliary field
     this.name =
-      data?.name || `${data?.firstName} ${data?.lastName}`.trim() || '';
+      data?.name ||
+      `${data?.firstName} ${data?.lastName}`.trim() ||
+      nameFromEmail;
+
     this.title = data?.jobRoles?.[0]?.jobTitle || '';
     this.roleId = data?.jobRoles?.[0]?.id || ''; // auxiliary field
     this.role = (() => {

@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"math/rand"
 	"time"
 )
@@ -33,8 +32,8 @@ func generateRandomStringFromCharset(length int) string {
 	return output
 }
 
-func setCommonSpanTagsAndLogFields(span opentracing.Span, evt eventstore.Event) {
+func setEventSpanTagsAndLogFields(span opentracing.Span, evt eventstore.Event) {
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentSubscriptionGraph)
 	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
-	span.LogFields(log.Object("event", evt))
+	tracing.LogObjectAsJson(span, "event", evt)
 }

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
@@ -144,6 +144,83 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 						"error": err.Error(),
 					})
 					return
+				}
+				if organization.OnboardingStatusInput.Status != "" {
+					organizationOnboardingStatus := cosModel.OrganizationUpdateOnboardingStatus{
+						OrganizationId: organizationId,
+						Status:         organization.OnboardingStatusInput.Status,
+						Comments:       organization.OnboardingStatusInput.Comments,
+					}
+					_, err := services.CustomerOsClient.UpdateOrganizationOnboardingStatus(tenant, username, organizationOnboardingStatus)
+					if err != nil {
+						return
+					}
+				}
+			}
+
+			//create Contracts with Service Lines in org
+			for _, contract := range organization.Contracts {
+				contractInput := cosModel.ContractInput{
+					OrganizationId:   organizationId,
+					Name:             contract.Name,
+					RenewalCycle:     contract.RenewalCycle,
+					RenewalPeriods:   contract.RenewalPeriods,
+					ContractUrl:      contract.ContractUrl,
+					ServiceStartedAt: contract.ServiceStartedAt,
+					SignedAt:         contract.SignedAt,
+				}
+				contractId, err := services.CustomerOsClient.CreateContract(tenant, username, contractInput)
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+
+				if contractId == "" {
+					context.JSON(500, gin.H{
+						"error": "contractId is nil",
+					})
+					return
+				}
+
+				for _, serviceLine := range contract.ServiceLines {
+
+					serviceLineInput := func() interface{} {
+						if serviceLine.EndedAt.IsZero() {
+							return cosModel.ServiceLineInput{
+								ContractId: contractId,
+								Name:       serviceLine.Name,
+								Billed:     serviceLine.Billed,
+								Price:      serviceLine.Price,
+								Quantity:   serviceLine.Quantity,
+								StartedAt:  serviceLine.StartedAt,
+							}
+						}
+						return cosModel.ServiceLineEndedInput{
+							ContractId: contractId,
+							Name:       serviceLine.Name,
+							Billed:     serviceLine.Billed,
+							Price:      serviceLine.Price,
+							Quantity:   serviceLine.Quantity,
+							StartedAt:  serviceLine.StartedAt,
+							EndedAt:    serviceLine.EndedAt,
+						}
+					}()
+					serviceLineId, err := services.CustomerOsClient.CreateServiceLine(tenant, username, serviceLineInput)
+					if err != nil {
+						context.JSON(500, gin.H{
+							"error": err.Error(),
+						})
+						return
+					}
+
+					if serviceLineId == "" {
+						context.JSON(500, gin.H{
+							"error": "serviceLineId is nil",
+						})
+						return
+					}
 				}
 			}
 

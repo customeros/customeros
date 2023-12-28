@@ -3,9 +3,9 @@ package phone_number_validation
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
@@ -22,21 +22,15 @@ type PhoneNumberValidationSubscriber struct {
 	log                     logger.Logger
 	db                      *esdb.Client
 	cfg                     *config.Config
-	phoneNumberEventHandler *PhoneNumberEventHandler
-	repositories            *repository.Repositories
+	phoneNumberEventHandler *phoneNumberEventHandler
 }
 
-func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, phoneNumberCommands *command_handler.CommandHandlers, repositories *repository.Repositories) *PhoneNumberValidationSubscriber {
+func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *PhoneNumberValidationSubscriber {
 	return &PhoneNumberValidationSubscriber{
-		log: log,
-		db:  db,
-		cfg: cfg,
-		phoneNumberEventHandler: &PhoneNumberEventHandler{
-			log:                 log,
-			cfg:                 cfg,
-			phoneNumberCommands: phoneNumberCommands,
-			repositories:        repositories,
-		},
+		log:                     log,
+		db:                      db,
+		cfg:                     cfg,
+		phoneNumberEventHandler: NewPhoneNumberEventHandler(repositories, log, cfg, grpcClients),
 	}
 }
 

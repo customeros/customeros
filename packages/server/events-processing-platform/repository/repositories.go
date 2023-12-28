@@ -19,28 +19,29 @@ type Repositories struct {
 	CommonRepositories      *cmn_repository.Repositories
 	CustomerOsIdsRepository repository.CustomerOsIdsRepository
 
-	ContactRepository          ContactRepository
-	OrganizationRepository     OrganizationRepository
-	PhoneNumberRepository      PhoneNumberRepository
-	EmailRepository            EmailRepository
-	UserRepository             UserRepository
-	LocationRepository         LocationRepository
-	CountryRepository          CountryRepository
-	JobRoleRepository          JobRoleRepository
-	SocialRepository           SocialRepository
-	InteractionEventRepository InteractionEventRepository
-	ActionRepository           ActionRepository
-	LogEntryRepository         LogEntryRepository
-	IssueRepository            IssueRepository
-	TagRepository              TagRepository
-	PlayerRepository           PlayerRepository
-	ExternalSystemRepository   ExternalSystemRepository
-	TimelineEventRepository    TimelineEventRepository
-	CustomFieldRepository      CustomFieldRepository
-	CommentRepository          CommentRepository
-	OpportunityRepository      OpportunityRepository
-	ContractRepository         ContractRepository
-	ServiceLineItemRepository  ServiceLineItemRepository
+	ActionRepository             ActionRepository
+	CommentRepository            CommentRepository
+	ContactRepository            ContactRepository
+	ContractRepository           ContractRepository
+	CountryRepository            CountryRepository
+	CustomFieldRepository        CustomFieldRepository
+	EmailRepository              EmailRepository
+	ExternalSystemRepository     ExternalSystemRepository
+	IssueRepository              IssueRepository
+	InteractionEventRepository   InteractionEventRepository
+	InteractionSessionRepository InteractionSessionRepository
+	JobRoleRepository            JobRoleRepository
+	LogEntryRepository           LogEntryRepository
+	LocationRepository           LocationRepository
+	OpportunityRepository        OpportunityRepository
+	OrganizationRepository       OrganizationRepository
+	PhoneNumberRepository        PhoneNumberRepository
+	PlayerRepository             PlayerRepository
+	ServiceLineItemRepository    ServiceLineItemRepository
+	SocialRepository             SocialRepository
+	TagRepository                TagRepository
+	TimelineEventRepository      TimelineEventRepository
+	UserRepository               UserRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *gorm.DB, log logger.Logger) *Repositories {
@@ -48,30 +49,31 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		Drivers: Drivers{
 			Neo4jDriver: driver,
 		},
-		CommonRepositories:         cmn_repository.InitRepositories(gormDb, driver),
-		CustomerOsIdsRepository:    repository.NewCustomerOsIdsRepository(gormDb),
-		PhoneNumberRepository:      NewPhoneNumberRepository(driver),
-		EmailRepository:            NewEmailRepository(driver),
-		ContactRepository:          NewContactRepository(driver),
-		OrganizationRepository:     NewOrganizationRepository(driver, neo4jDatabase),
-		UserRepository:             NewUserRepository(driver),
-		LocationRepository:         NewLocationRepository(driver),
-		CountryRepository:          NewCountryRepository(driver),
-		JobRoleRepository:          NewJobRoleRepository(driver),
-		SocialRepository:           NewSocialRepository(driver),
-		InteractionEventRepository: NewInteractionEventRepository(driver, neo4jDatabase),
-		ActionRepository:           NewActionRepository(driver),
-		LogEntryRepository:         NewLogEntryRepository(driver),
-		IssueRepository:            NewIssueRepository(driver, neo4jDatabase),
-		TagRepository:              NewTagRepository(driver),
-		PlayerRepository:           NewPlayerRepository(driver),
-		ExternalSystemRepository:   NewExternalSystemRepository(driver),
-		TimelineEventRepository:    NewTimelineEventRepository(driver, log),
-		CustomFieldRepository:      NewCustomFieldRepository(driver),
-		CommentRepository:          NewCommentRepository(driver, neo4jDatabase),
-		OpportunityRepository:      NewOpportunityRepository(driver, neo4jDatabase),
-		ContractRepository:         NewContractRepository(driver, neo4jDatabase),
-		ServiceLineItemRepository:  NewServiceLineItemRepository(driver, neo4jDatabase),
+		CommonRepositories:           cmn_repository.InitRepositories(gormDb, driver),
+		CustomerOsIdsRepository:      repository.NewCustomerOsIdsRepository(gormDb),
+		PhoneNumberRepository:        NewPhoneNumberRepository(driver),
+		EmailRepository:              NewEmailRepository(driver),
+		ContactRepository:            NewContactRepository(driver),
+		OrganizationRepository:       NewOrganizationRepository(driver, neo4jDatabase),
+		UserRepository:               NewUserRepository(driver),
+		LocationRepository:           NewLocationRepository(driver),
+		CountryRepository:            NewCountryRepository(driver),
+		JobRoleRepository:            NewJobRoleRepository(driver),
+		SocialRepository:             NewSocialRepository(driver),
+		InteractionEventRepository:   NewInteractionEventRepository(driver, neo4jDatabase),
+		InteractionSessionRepository: NewInteractionSessionRepository(driver, neo4jDatabase),
+		ActionRepository:             NewActionRepository(driver),
+		LogEntryRepository:           NewLogEntryRepository(driver),
+		IssueRepository:              NewIssueRepository(driver, neo4jDatabase),
+		TagRepository:                NewTagRepository(driver),
+		PlayerRepository:             NewPlayerRepository(driver),
+		ExternalSystemRepository:     NewExternalSystemRepository(driver),
+		TimelineEventRepository:      NewTimelineEventRepository(driver, log),
+		CustomFieldRepository:        NewCustomFieldRepository(driver),
+		CommentRepository:            NewCommentRepository(driver, neo4jDatabase),
+		OpportunityRepository:        NewOpportunityRepository(driver, neo4jDatabase),
+		ContractRepository:           NewContractRepository(driver, neo4jDatabase),
+		ServiceLineItemRepository:    NewServiceLineItemRepository(driver, neo4jDatabase),
 	}
 
 	err := gormDb.AutoMigrate(&entity.CustomerOsIds{})

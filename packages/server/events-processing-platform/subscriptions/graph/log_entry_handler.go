@@ -5,26 +5,34 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
-	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
-	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
-type GraphLogEntryEventHandler struct {
-	log                  logger.Logger
-	organizationCommands *orgcmdhnd.CommandHandlers
-	repositories         *repository.Repositories
+type LogEntryEventHandler struct {
+	log          logger.Logger
+	repositories *repository.Repositories
+	grpcClients  *grpc_client.Clients
 }
 
-func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnCreate")
+func NewLogEntryEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *LogEntryEventHandler {
+	return &LogEntryEventHandler{
+		log:          log,
+		repositories: repositories,
+		grpcClients:  grpcClients,
+	}
+}
+
+func (h *LogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryEventHandler.OnCreate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.LogEntryCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -49,19 +57,24 @@ func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore
 		}
 	}
 
-	err = h.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd.NewRefreshLastTouchpointCommand(eventData.Tenant, eventData.LoggedOrganizationId, "", constants.AppSourceEventProcessingPlatform))
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = h.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+		Tenant:         eventData.Tenant,
+		OrganizationId: eventData.LoggedOrganizationId,
+		AppSource:      constants.AppSourceEventProcessingPlatform,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("RefreshLastTouchpointCommand failed: %v", err.Error())
+		h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", eventData.LoggedOrganizationId, err.Error())
 	}
 
 	return nil
 }
 
-func (h *GraphLogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnCreate")
+func (h *LogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryEventHandler.OnUpdate")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.LogEntryUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -79,10 +92,10 @@ func (h *GraphLogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore
 	return err
 }
 
-func (h *GraphLogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnAddTag")
+func (h *LogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryEventHandler.OnAddTag")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.LogEntryAddTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -100,10 +113,10 @@ func (h *GraphLogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore
 	return err
 }
 
-func (h *GraphLogEntryEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnRemoveTag")
+func (h *LogEntryEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryEventHandler.OnRemoveTag")
 	defer span.Finish()
-	setCommonSpanTagsAndLogFields(span, evt)
+	setEventSpanTagsAndLogFields(span, evt)
 
 	var eventData event.LogEntryRemoveTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

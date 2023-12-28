@@ -1,0 +1,257 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "common/source.proto";
+import "common/external_system.proto";
+
+option go_package = "api/grpc/v1/organization;organization_grpc_service";
+
+enum OrganizationMaskField {
+  ORGANIZATION_PROPERTY_NONE = 0; // No property, ignored by the server
+  ORGANIZATION_PROPERTY_ALL = 1; // All properties, if present in the list all other properties are ignored
+  ORGANIZATION_PROPERTY_NAME = 2;
+  ORGANIZATION_PROPERTY_VALUE_PROPOSITION = 3;
+  ORGANIZATION_PROPERTY_TARGET_AUDIENCE = 4;
+  ORGANIZATION_PROPERTY_REFERENCE_ID = 5;
+  ORGANIZATION_PROPERTY_IS_CUSTOMER = 6;
+  ORGANIZATION_PROPERTY_IS_PUBLIC = 7;
+  ORGANIZATION_PROPERTY_HIDE = 8;
+  ORGANIZATION_PROPERTY_DESCRIPTION = 9;
+  ORGANIZATION_PROPERTY_WEBSITE = 10;
+  ORGANIZATION_PROPERTY_INDUSTRY = 11;
+  ORGANIZATION_PROPERTY_SUB_INDUSTRY = 12;
+  ORGANIZATION_PROPERTY_INDUSTRY_GROUP = 13;
+  ORGANIZATION_PROPERTY_MARKET = 14;
+  ORGANIZATION_PROPERTY_EMPLOYEES = 15;
+  ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND = 16;
+  ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT = 17;
+  ORGANIZATION_PROPERTY_NOTE = 18;
+  ORGANIZATION_PROPERTY_YEAR_FOUNDED = 19;
+  ORGANIZATION_PROPERTY_LOGO_URL = 20;
+  ORGANIZATION_PROPERTY_HEADQUARTERS = 21;
+  ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE = 22;
+}
+
+message UpsertOrganizationGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string name = 3;
+  string description = 4;
+  string website = 5;
+  string industry = 6;
+  bool isPublic = 7;
+  int64 employees = 8;
+  string market = 9;
+  google.protobuf.Timestamp  createdAt = 13;
+  google.protobuf.Timestamp  updatedAt = 14;
+  string subIndustry = 15;
+  string industryGroup = 16;
+  string targetAudience = 17;
+  string valueProposition = 18;
+  string lastFundingRound = 19;
+  string lastFundingAmount = 20;
+  bool hide = 22;
+  string note = 23;
+  SourceFields sourceFields = 25;
+  ExternalSystemFields externalSystemFields = 26;
+  string loggedInUserId = 27;
+  string referenceId = 28;
+  bool isCustomer = 29;
+  bool webScrapeMetadata = 30;
+  repeated OrganizationMaskField fieldsMask = 31;
+  string logoUrl = 32;
+  string headquarters = 33;
+  string employeeGrowthRate = 34;
+  optional int64 yearFounded = 35;
+}
+
+message UpdateOrganizationGrpcRequest {
+  string organizationId = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  google.protobuf.Timestamp  updatedAt = 4;
+  repeated OrganizationMaskField fieldsMask = 5;
+  SourceFields sourceFields = 6;
+  string webScrapedUrl = 7;
+  string market = 8;
+  string industry = 9;
+  string subIndustry = 10;
+  string industryGroup = 11;
+  string targetAudience = 12;
+  string valueProposition = 13;
+  string logoUrl = 14;
+  string headquarters = 15;
+  string employeeGrowthRate = 16;
+  optional int64 yearFounded = 17;
+  string name = 18;
+  string description = 19;
+  string website = 20;
+  int64 employees = 21;
+}
+
+message OrganizationIdGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
+message LinkPhoneNumberToOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string phoneNumberId = 3;
+  bool primary = 4;
+  string label = 5;
+  string loggedInUserId = 6;
+}
+
+message LinkEmailToOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string emailId = 3;
+  bool primary = 4;
+  string label = 5;
+  string loggedInUserId = 6;
+}
+
+message LinkLocationToOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string locationId = 3;
+  string loggedInUserId = 4;
+}
+
+message LinkDomainToOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string domain = 3;
+  string userId = 4 [deprecated = true];
+  string loggedInUserId = 5;
+  string appSource = 6;
+}
+
+enum CustomFieldDataType {
+  TEXT = 0;
+  BOOL = 1;
+  DATETIME = 2;
+  INTEGER = 3;
+  DECIMAL = 4;
+}
+
+message CustomFieldValue {
+  optional string stringValue = 1;
+  optional bool boolValue = 2;
+  optional google.protobuf.Timestamp  datetimeValue = 3;
+  optional int64 integerValue = 4;
+  optional double decimalValue = 5;
+}
+
+message CustomFieldForOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string userId = 3 [deprecated = true];
+  string customFieldId = 4;
+  string customFieldName = 5;
+  CustomFieldValue customFieldValue = 6;
+  CustomFieldDataType customFieldDataType = 7;
+  optional string customFieldTemplateId = 8;
+  SourceFields sourceFields = 9;
+  google.protobuf.Timestamp  createdAt = 10;
+  google.protobuf.Timestamp  updatedAt = 11;
+  string loggedInUserId = 12;
+}
+
+message AddParentOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string parentOrganizationId = 3;
+  string loggedInUserId = 4;
+  string type = 5;
+  string appSource = 6;
+}
+
+message RemoveParentOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string parentOrganizationId = 3;
+  string loggedInUserId = 4;
+  string appSource = 5;
+}
+
+message WebScrapeOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string url = 3;
+  string appSource = 4;
+  string loggedInUserId = 5;
+}
+
+message UpdateOnboardingStatusGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string loggedInUserId = 3;
+  OnboardingStatus onboardingStatus = 4;
+  string comments = 5;
+  google.protobuf.Timestamp updatedAt = 6;
+  string appSource = 7;
+  string causedByContractId = 8;
+}
+
+enum OnboardingStatus {
+  ONBOARDING_STATUS_NOT_APPLICABLE = 0;
+  ONBOARDING_STATUS_NOT_STARTED = 1;
+  ONBOARDING_STATUS_ON_TRACK = 2;
+  ONBOARDING_STATUS_LATE = 3;
+  ONBOARDING_STATUS_STUCK = 4;
+  ONBOARDING_STATUS_DONE = 5;
+  ONBOARDING_STATUS_SUCCESSFUL = 6;
+}
+
+message AddSocialGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string loggedInUserId = 3;
+  SourceFields sourceFields = 4;
+  string socialId = 5;
+  string url = 6;
+  string platform = 7;
+  google.protobuf.Timestamp  createdAt = 8;
+  google.protobuf.Timestamp  updatedAt = 9;
+}
+
+message UpdateOrganizationOwnerGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string ownerUserId = 3;
+  string loggedInUserId = 4; // The user who is performing the action
+  string appSource = 5;
+}
+
+message OrganizationIdGrpcResponse {
+  string id = 1;
+}
+
+message CustomFieldIdGrpcResponse {
+  string id = 1;
+}
+
+service organizationGrpcService {
+  rpc UpsertOrganization(UpsertOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc WebScrapeOrganization(WebScrapeOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc LinkPhoneNumberToOrganization(LinkPhoneNumberToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc LinkEmailToOrganization(LinkEmailToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc LinkDomainToOrganization(LinkDomainToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc UpsertCustomFieldToOrganization(CustomFieldForOrganizationGrpcRequest) returns (CustomFieldIdGrpcResponse);
+  rpc HideOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc ShowOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc RefreshLastTouchpoint(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc RefreshRenewalSummary(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc RefreshArr(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc AddParentOrganization(AddParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc RemoveParentOrganization(RemoveParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc UpdateOnboardingStatus(UpdateOnboardingStatusGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc UpdateOrganization(UpdateOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc AddSocial(AddSocialGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc UpdateOrganizationOwner(UpdateOrganizationOwnerGrpcRequest) returns (OrganizationIdGrpcResponse);
+}

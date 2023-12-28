@@ -2,6 +2,11 @@ package server
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/labstack/echo/v4"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -11,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
@@ -18,16 +24,13 @@ import (
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph"
 	interaction_event_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/interaction_event"
 	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/location_validation"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/notifications"
 	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/organization"
 	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/phone_number_validation"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
 const (
@@ -116,8 +119,17 @@ func (server *server) Start(parentCtx context.Context) error {
 	server.aggregateStore = aggregateStore
 	server.commandHandlers = command.NewCommandHandlers(server.log, server.cfg, aggregateStore, server.repositories)
 
+	// Setting up gRPC client
+	df := grpc_client.NewDialFactory(server.cfg)
+	gRPCconn, err := df.GetEventsProcessingPlatformConn()
+	if err != nil {
+		server.log.Fatalf("Failed to connect: %v", err)
+	}
+	defer df.Close(gRPCconn)
+	grpcClients := grpc_client.InitClients(gRPCconn)
+
 	if server.cfg.Subscriptions.GraphSubscription.Enabled {
-		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, esdb, server.repositories, server.commandHandlers, server.cfg)
+		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, esdb, server.repositories, grpcClients, server.cfg)
 		go func() {
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {
@@ -128,7 +140,7 @@ func (server *server) Start(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.EmailValidationSubscription.Enabled {
-		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.Email)
+		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.log, esdb, server.cfg, grpcClients)
 		go func() {
 			err := emailValidationSubscriber.Connect(ctx, emailValidationSubscriber.ProcessEvents)
 			if err != nil {
@@ -139,7 +151,7 @@ func (server *server) Start(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.PhoneNumberValidationSubscription.Enabled {
-		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.PhoneNumber, server.repositories)
+		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.log, esdb, server.cfg, server.repositories, grpcClients)
 		go func() {
 			err := phoneNumberValidationSubscriber.Connect(ctx, phoneNumberValidationSubscriber.ProcessEvents)
 			if err != nil {
@@ -161,7 +173,7 @@ func (server *server) Start(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.OrganizationSubscription.Enabled {
-		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.Organization, server.repositories, server.caches)
+		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, esdb, server.cfg, server.repositories, server.caches, grpcClients)
 		go func() {
 			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
 			if err != nil {
@@ -172,7 +184,7 @@ func (server *server) Start(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.OrganizationWebscrapeSubscription.Enabled {
-		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationWebscrapeSubscriber(server.log, esdb, server.cfg, server.commandHandlers.Organization, server.repositories, server.caches)
+		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationWebscrapeSubscriber(server.log, esdb, server.cfg, server.repositories, server.caches, grpcClients)
 		go func() {
 			err := organizationWebscrapeSubscriber.Connect(ctx, organizationWebscrapeSubscriber.ProcessEvents)
 			if err != nil {
@@ -193,17 +205,16 @@ func (server *server) Start(parentCtx context.Context) error {
 		}()
 	}
 
-	// TODO
-	//if server.cfg.Subscriptions.ContractSubscription.Enabled {
-	//	contractSubscriber := contract_subscription.NewContractSubscriber(server.log, esdb, server.cfg, server.commandHandlers.InteractionEvent, server.repositories)
-	//	go func() {
-	//		err := contractSubscriber.Connect(ctx, contractSubscriber.ProcessEvents)
-	//		if err != nil {
-	//			server.log.Errorf("(interactionEventSubscriber.Connect) err: {%v}", err)
-	//			cancel()
-	//		}
-	//	}()
-	//}
+	if server.cfg.Subscriptions.NotificationsSubscription.Enabled {
+		notificationsSubscriber := notifications.NewNotificationsSubscriber(server.log, esdb, server.repositories, grpcClients, server.cfg)
+		go func() {
+			err := notificationsSubscriber.Connect(ctx, notificationsSubscriber.ProcessEvents)
+			if err != nil {
+				server.log.Errorf("(notificationsSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
 
 	//server.runMetrics(cancel)
 	//server.runHealthCheck(ctx)

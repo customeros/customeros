@@ -64,6 +64,15 @@ export type OrganizationQuery = {
       firstName: string;
       lastName: string;
     } | null;
+    accountDetails?: {
+      __typename?: 'OrgAccountDetails';
+      onboarding?: {
+        __typename?: 'OnboardingDetails';
+        status: Types.OnboardingStatus;
+        comments?: string | null;
+        updatedAt?: any | null;
+      } | null;
+    } | null;
   } | null;
 };
 
@@ -108,6 +117,13 @@ export const OrganizationDocument = `
       id
       firstName
       lastName
+    }
+    accountDetails {
+      onboarding {
+        status
+        comments
+        updatedAt
+      }
     }
   }
 }

@@ -54,7 +54,7 @@ func InitServices(log logger.Logger,
 		PhoneNumberService:        NewPhoneNumberService(log, repositories, grpcClients),
 		SyncStatusService:         NewSyncStatusService(log, repositories),
 		ExternalSystemService:     NewExternalSystemService(log, repositories, cache),
-		InteractionSessionService: NewInteractionSessionService(log, repositories),
+		InteractionSessionService: NewInteractionSessionService(log, repositories, grpcClients),
 	}
 	services.cfg = cfg
 	services.UserService = NewUserService(log, repositories, grpcClients, &services)

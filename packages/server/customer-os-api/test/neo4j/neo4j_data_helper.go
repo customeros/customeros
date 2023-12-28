@@ -3,6 +3,9 @@ package neo4j
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
@@ -10,8 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"log"
-	"time"
 )
 
 func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
@@ -780,74 +781,60 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 							org.lastTouchpointAt=$lastTouchpointAt,
 							org.lastTouchpointType=$lastTouchpointType,
 							org.note=$note,
+							org.logoUrl=$logoUrl,
+							org.yearFounded=$yearFounded,
+							org.headquarters=$headquarters,
+							org.employeeGrowthRate=$employeeGrowthRate,
 							org.isPublic=$isPublic, 
 							org.isCustomer=$isCustomer, 
 							org.hide=$hide,
 							org.createdAt=$now,
 							org.updatedAt=$now,
-							org.renewalLikelihood=$renewalLikelihood,
-							org.renewalLikelihoodPrevious=$renewalLikelihoodPrevious,
-							org.renewalLikelihoodComment=$renewalLikelihoodComment,
-							org.renewalLikelihoodUpdatedAt=$renewalLikelihoodUpdatedAt,
-							org.renewalLikelihoodUpdatedBy=$renewalLikelihoodUpdatedBy,
-							org.renewalForecastAmount=$renewalForecast,
-							org.renewalForecastPotentialAmount=$renewalForecastPotential,
-							org.renewalForecastComment=$renewalForecastComment,
-							org.renewalForecastUpdatedAt=$renewalForecastUpdatedAt,
-							org.renewalForecastUpdatedBy=$renewalForecastUpdatedBy,
-							org.billingDetailsAmount=$billingDetailsAmount,
-							org.billingDetailsFrequency=$billingDetailsFrequency,
-							org.billingDetailsRenewalCycle=$billingDetailsRenewalCycle,
-							org.billingDetailsRenewalCycleStart=$billingDetailsRenewalCycleStart,
-							org.billingDetailsRenewalCycleNext=$billingDetailsRenewalCycleNext,
 							org.renewalForecastArr=$renewalForecastArr,
 							org.renewalForecastMaxArr=$renewalForecastMaxArr,
 							org.derivedNextRenewalAt=$derivedNextRenewalAt,
 							org.derivedRenewalLikelihood=$derivedRenewalLikelihood,
-							org.derivedRenewalLikelihoodOrder=$derivedRenewalLikelihoodOrder
+							org.derivedRenewalLikelihoodOrder=$derivedRenewalLikelihoodOrder,
+							org.onboardingStatus=$onboardingStatus,
+							org.onboardingStatusOrder=$onboardingStatusOrder,
+							org.onboardingUpdatedAt=$onboardingUpdatedAt,
+							org.onboardingComments=$onboardingComments
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":                              organizationId.String(),
-		"customerOsId":                    organization.CustomerOsId,
-		"referenceId":                     organization.ReferenceId,
-		"tenant":                          tenant,
-		"name":                            organization.Name,
-		"description":                     organization.Description,
-		"website":                         organization.Website,
-		"industry":                        organization.Industry,
-		"isPublic":                        organization.IsPublic,
-		"isCustomer":                      organization.IsCustomer,
-		"subIndustry":                     organization.SubIndustry,
-		"industryGroup":                   organization.IndustryGroup,
-		"targetAudience":                  organization.TargetAudience,
-		"valueProposition":                organization.ValueProposition,
-		"hide":                            organization.Hide,
-		"lastTouchpointAt":                utils.TimePtrFirstNonNilNillableAsAny(organization.LastTouchpointAt, &now),
-		"lastTouchpointType":              organization.LastTouchpointType,
-		"lastFundingRound":                organization.LastFundingRound,
-		"lastFundingAmount":               organization.LastFundingAmount,
-		"note":                            organization.Note,
-		"renewalLikelihood":               organization.RenewalLikelihood.RenewalLikelihood,
-		"renewalLikelihoodPrevious":       organization.RenewalLikelihood.PreviousRenewalLikelihood,
-		"renewalLikelihoodComment":        organization.RenewalLikelihood.Comment,
-		"renewalLikelihoodUpdatedBy":      organization.RenewalLikelihood.UpdatedBy,
-		"renewalLikelihoodUpdatedAt":      utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalLikelihood.UpdatedAt),
-		"renewalForecast":                 organization.RenewalForecast.Amount,
-		"renewalForecastPotential":        organization.RenewalForecast.PotentialAmount,
-		"renewalForecastComment":          organization.RenewalForecast.Comment,
-		"renewalForecastUpdatedBy":        organization.RenewalForecast.UpdatedById,
-		"renewalForecastUpdatedAt":        utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalForecast.UpdatedAt),
-		"billingDetailsAmount":            organization.BillingDetails.Amount,
-		"billingDetailsFrequency":         organization.BillingDetails.Frequency,
-		"billingDetailsRenewalCycle":      organization.BillingDetails.RenewalCycle,
-		"billingDetailsRenewalCycleStart": utils.TimePtrFirstNonNilNillableAsAny(utils.ToDatePtr(organization.BillingDetails.RenewalCycleStart)),
-		"billingDetailsRenewalCycleNext":  utils.TimePtrFirstNonNilNillableAsAny(utils.ToDatePtr(organization.BillingDetails.RenewalCycleNext)),
-		"renewalForecastArr":              organization.RenewalSummary.ArrForecast,
-		"renewalForecastMaxArr":           organization.RenewalSummary.MaxArrForecast,
-		"derivedNextRenewalAt":            utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalSummary.NextRenewalAt),
-		"derivedRenewalLikelihood":        organization.RenewalSummary.RenewalLikelihood,
-		"derivedRenewalLikelihoodOrder":   organization.RenewalSummary.RenewalLikelihoodOrder,
-		"now":                             utils.Now(),
+		"id":                            organizationId.String(),
+		"customerOsId":                  organization.CustomerOsId,
+		"referenceId":                   organization.ReferenceId,
+		"tenant":                        tenant,
+		"name":                          organization.Name,
+		"description":                   organization.Description,
+		"website":                       organization.Website,
+		"industry":                      organization.Industry,
+		"isPublic":                      organization.IsPublic,
+		"isCustomer":                    organization.IsCustomer,
+		"subIndustry":                   organization.SubIndustry,
+		"industryGroup":                 organization.IndustryGroup,
+		"targetAudience":                organization.TargetAudience,
+		"valueProposition":              organization.ValueProposition,
+		"hide":                          organization.Hide,
+		"lastTouchpointAt":              utils.TimePtrFirstNonNilNillableAsAny(organization.LastTouchpointAt, &now),
+		"lastTouchpointType":            organization.LastTouchpointType,
+		"lastFundingRound":              organization.LastFundingRound,
+		"lastFundingAmount":             organization.LastFundingAmount,
+		"note":                          organization.Note,
+		"logoUrl":                       organization.LogoUrl,
+		"yearFounded":                   organization.YearFounded,
+		"headquarters":                  organization.Headquarters,
+		"employeeGrowthRate":            organization.EmployeeGrowthRate,
+		"renewalForecastArr":            organization.RenewalSummary.ArrForecast,
+		"renewalForecastMaxArr":         organization.RenewalSummary.MaxArrForecast,
+		"derivedNextRenewalAt":          utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalSummary.NextRenewalAt),
+		"derivedRenewalLikelihood":      organization.RenewalSummary.RenewalLikelihood,
+		"derivedRenewalLikelihoodOrder": organization.RenewalSummary.RenewalLikelihoodOrder,
+		"onboardingStatus":              string(organization.OnboardingDetails.Status),
+		"onboardingStatusOrder":         organization.OnboardingDetails.SortingOrder,
+		"onboardingUpdatedAt":           utils.TimePtrFirstNonNilNillableAsAny(organization.OnboardingDetails.UpdatedAt),
+		"onboardingComments":            organization.OnboardingDetails.Comments,
+		"now":                           utils.Now(),
 	})
 	return organizationId.String()
 }
@@ -919,6 +906,15 @@ func UserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, 
 	query := `MATCH (o:Organization {id:$organizationId}),
 			        (u:User {id:$userId})
 			MERGE (u)-[:OWNS]->(o)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"organizationId": organizationId,
+		"userId":         userId,
+	})
+}
+
+func DeleteUserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, userId, organizationId string) {
+	query := `MATCH (u:User {id:$userId})-[r:OWNS]->(o:Organization {id:$organizationId})     
+			DELETE r`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"organizationId": organizationId,
 		"userId":         userId,
@@ -1575,6 +1571,31 @@ func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	return actionId.String()
 }
 
+func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType entity.ActionType, createdAt time.Time, extraProperties map[string]string) string {
+	var actionId, _ = uuid.NewRandom()
+
+	query := `MATCH (o:Organization {id:$organizationId}) 
+				MERGE (o)<-[:ACTION_ON]-(a:Action {id:$id}) 
+				ON CREATE SET 	a.type=$type, 
+								a.createdAt=$createdAt, 
+								a.source=$source, 
+								a.appSource=$appSource, 
+								a:Action_%s, 
+								a:TimelineEvent, 
+								a:TimelineEvent_%s,
+								a += $extraProperties`
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
+		"id":              actionId.String(),
+		"organizationId":  organizationId,
+		"type":            actionType,
+		"createdAt":       createdAt,
+		"source":          "openline",
+		"appSource":       "test",
+		"extraProperties": extraProperties,
+	})
+	return actionId.String()
+}
+
 func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, contract entity.ContractEntity) string {
 	contractId := utils.NewUUIDIfEmpty(contract.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (o:Organization {id:$orgId})
@@ -1588,6 +1609,7 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 					c.appSource=$appSource,
 					c.status=$status,
 					c.renewalCycle=$renewalCycle,
+					c.renewalPeriods=$renewalPeriods,
 					c.signedAt=$signedAt,
 					c.serviceStartedAt=$serviceStartedAt,
 					c.endedAt=$endedAt,
@@ -1605,7 +1627,8 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 		"sourceOfTruth":    contract.SourceOfTruth,
 		"appSource":        contract.AppSource,
 		"status":           contract.ContractStatus,
-		"renewalCycle":     contract.ContractRenewalCycle,
+		"renewalCycle":     contract.RenewalCycle,
+		"renewalPeriods":   contract.RenewalPeriods,
 		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
 		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
 		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
@@ -1625,38 +1648,57 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 					sli.source=$source,
 					sli.sourceOfTruth=$sourceOfTruth,
 					sli.appSource=$appSource,
+					sli.isCanceled=$isCanceled,	
 					sli.billed=$billed,	
 					sli.quantity=$quantity,	
 					sli.price=$price,
+					sli.previousBilled=$previousBilled,	
+					sli.previousQuantity=$previousQuantity,	
+					sli.previousPrice=$previousPrice,
                     sli.comments=$comments,
+					sli.startedAt=$startedAt,
+					sli.endedAt=$endedAt,
 					sli.createdAt=$createdAt,
 					sli.updatedAt=$updatedAt,
 	                sli.parentId=$parentId
 				`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":            serviceLineItemId,
-		"contractId":    contractId,
-		"tenant":        tenant,
-		"name":          serviceLineItem.Name,
-		"source":        serviceLineItem.Source,
-		"sourceOfTruth": serviceLineItem.SourceOfTruth,
-		"appSource":     serviceLineItem.AppSource,
-		"billed":        serviceLineItem.Billed,
-		"quantity":      serviceLineItem.Quantity,
-		"comments":      serviceLineItem.Comments,
-		"price":         serviceLineItem.Price,
-		"createdAt":     serviceLineItem.CreatedAt,
-		"updatedAt":     serviceLineItem.UpdatedAt,
-		"parentId":      serviceLineItem.ParentID,
-	})
+	params := map[string]any{
+		"id":               serviceLineItemId,
+		"contractId":       contractId,
+		"tenant":           tenant,
+		"name":             serviceLineItem.Name,
+		"source":           serviceLineItem.Source,
+		"sourceOfTruth":    serviceLineItem.SourceOfTruth,
+		"appSource":        serviceLineItem.AppSource,
+		"isCanceled":       serviceLineItem.IsCanceled,
+		"billed":           serviceLineItem.Billed,
+		"quantity":         serviceLineItem.Quantity,
+		"price":            serviceLineItem.Price,
+		"previousBilled":   serviceLineItem.PreviousBilled,
+		"previousQuantity": serviceLineItem.PreviousQuantity,
+		"previousPrice":    serviceLineItem.PreviousPrice,
+		"startedAt":        serviceLineItem.StartedAt,
+		"comments":         serviceLineItem.Comments,
+		"createdAt":        serviceLineItem.CreatedAt,
+		"updatedAt":        serviceLineItem.UpdatedAt,
+		"parentId":         serviceLineItem.ParentID,
+	}
+
+	if serviceLineItem.EndedAt != nil {
+		params["endedAt"] = *serviceLineItem.EndedAt
+	} else {
+		params["endedAt"] = nil
+	}
+
+	ExecuteWriteQuery(ctx, driver, query, params)
 	return serviceLineItemId
 }
 
 func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, opportunity entity.OpportunityEntity) string {
 	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
-				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(op:Opportunity {id:$id})<-[:HAS_OPPORTUNITY]-(c)
+				MERGE (t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity {id:$id})<-[:HAS_OPPORTUNITY]-(c)
 				SET 
                     op:Opportunity_%s,
 					op.name=$name,
@@ -1806,6 +1848,30 @@ func GetAllLabels(ctx context.Context, driver *neo4j.DriverWithContext) []string
 	return labels
 }
 
+func GetNodeById(ctx context.Context, driver *neo4j.DriverWithContext, label string, id string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *driver)
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		result, err := tx.Run(ctx, fmt.Sprintf(`
+			MATCH (n:%s {id:$id}) RETURN n`, label),
+			map[string]interface{}{
+				"id": id,
+			})
+		record, err := result.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	node := queryResult.(dbtype.Node)
+	return &node, nil
+}
+
 func contains(slice []string, value string) bool {
 	for _, v := range slice {
 		if v == value {
@@ -1813,4 +1879,16 @@ func contains(slice []string, value string) bool {
 		}
 	}
 	return false
+}
+
+func FirstTimeOfMonth(year, month int) time.Time {
+	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+}
+
+func MiddleTimeOfMonth(year, month int) time.Time {
+	return FirstTimeOfMonth(year, month).AddDate(0, 0, 15)
+}
+
+func LastTimeOfMonth(year, month int) time.Time {
+	return FirstTimeOfMonth(year, month).AddDate(0, 1, 0).Add(-time.Nanosecond)
 }

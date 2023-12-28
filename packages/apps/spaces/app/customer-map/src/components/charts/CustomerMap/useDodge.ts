@@ -16,7 +16,7 @@ export type DodgedCircleData<Datum> = {
 };
 
 const LOW_R = 4; // min radius value
-const TOP_R = 30; // max radius value
+const TOP_R = 60; // max radius value
 const PADDING = 6; // padding between circles
 
 interface UseBubblesOptions<Datum> {

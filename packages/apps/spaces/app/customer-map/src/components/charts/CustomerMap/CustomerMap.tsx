@@ -2,7 +2,6 @@
 import dynamic from 'next/dynamic';
 
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-import { useCustomerMapQuery } from '@customerMap/graphql/customerMap.generated';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
@@ -11,6 +10,8 @@ import { Text } from '@ui/typography/Text';
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { useCustomerMapQuery } from '@customerMap/graphql/customerMap.generated';
 
 import { HelpContent } from './HelpContent';
 import { HelpButton } from '../../HelpButton';
@@ -23,6 +24,7 @@ const CustomerMapChart = dynamic(() => import('./CustomerMap.chart'), {
 export const CustomerMap = () => {
   const client = getGraphQLClient();
   const { data, isLoading } = useCustomerMapQuery(client);
+  const { data: globalCacheData } = useGlobalCacheQuery(client);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const chartData = (data?.dashboard_CustomerMap ?? []).map((d) => ({
@@ -34,6 +36,8 @@ export const CustomerMap = () => {
       status: d?.state,
     },
   })) as CustomerMapDatum[];
+
+  const hasContracts = globalCacheData?.global_Cache?.contractsExist;
 
   return (
     <Box
@@ -47,11 +51,25 @@ export const CustomerMap = () => {
       <ParentSize>
         {({ width }) => (
           <>
-            <Flex gap='2' align='center'>
-              <Text fontWeight='semibold' fontSize='xl'>
-                Customer map
-              </Text>
-              <HelpButton isOpen={isOpen} onOpen={onOpen} />
+            <Flex direction='column' position='relative'>
+              <Flex gap='2' align='center'>
+                <Text fontWeight='semibold' fontSize='xl'>
+                  Customer map
+                </Text>
+                <HelpButton isOpen={isOpen} onOpen={onOpen} />
+              </Flex>
+              {!hasContracts && (
+                <Text
+                  bottom='0'
+                  color='gray.400'
+                  fontSize='lg'
+                  fontWeight='semibold'
+                  position='absolute'
+                  transform='translateY(100%)'
+                >
+                  No data yet
+                </Text>
+              )}
             </Flex>
             <Skeleton
               w='full'
@@ -60,7 +78,12 @@ export const CustomerMap = () => {
               startColor='gray.300'
               isLoaded={!isLoading}
             >
-              <CustomerMapChart width={width} height={350} data={chartData} />
+              <CustomerMapChart
+                width={width}
+                height={350}
+                data={chartData}
+                hasContracts={hasContracts}
+              />
             </Skeleton>
             <InfoDialog
               label='Customer map'

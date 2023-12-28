@@ -2,10 +2,10 @@ package servicet
 
 import (
 	"context"
-	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
+	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"

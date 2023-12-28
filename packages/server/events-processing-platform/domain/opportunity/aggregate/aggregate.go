@@ -139,7 +139,6 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 			a.Opportunity.MaxAmount = eventData.MaxAmount
 		}
 	}
-
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 
 	if eventData.ExternalSystem.Available() {
@@ -170,18 +169,26 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 	}
 
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
-	a.Opportunity.RenewalDetails.RenewalLikelihood = eventData.RenewalLikelihood
+	if eventData.UpdateRenewalLikelihood() {
+		a.Opportunity.RenewalDetails.RenewalLikelihood = eventData.RenewalLikelihood
+	}
 	if eventData.UpdatedByUserId != "" &&
 		(eventData.Amount != a.Opportunity.Amount || eventData.RenewalLikelihood != a.Opportunity.RenewalDetails.RenewalLikelihood) {
 		a.Opportunity.RenewalDetails.RenewalUpdatedByUserAt = &eventData.UpdatedAt
 		a.Opportunity.RenewalDetails.RenewalUpdatedByUserId = eventData.UpdatedByUserId
 	}
-	a.Opportunity.Comments = eventData.Comments
-	a.Opportunity.Amount = eventData.Amount
+	if eventData.UpdateComments() {
+		a.Opportunity.Comments = eventData.Comments
+	}
+	if eventData.UpdateAmount() {
+		a.Opportunity.Amount = eventData.Amount
+	}
 	if eventData.Source == constants.SourceOpenline {
 		a.Opportunity.Source.SourceOfTruth = eventData.Source
 	}
-
+	if eventData.OwnerUserId != "" {
+		a.Opportunity.OwnerUserId = eventData.OwnerUserId
+	}
 	return nil
 }
 

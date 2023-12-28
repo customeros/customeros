@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common";
+//option go_package = "api/grpc/v1/common";
+
+message ExternalSystemFields {
+  string externalSystemId = 1;
+  string externalUrl = 2;
+  string externalId = 3;
+  string externalSource = 4;
+  google.protobuf.Timestamp  syncDate = 5;
+  string externalIdSecond = 6;
+}

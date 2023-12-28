@@ -14,8 +14,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -118,8 +118,9 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryService.syncLogEntry")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag("externalSystem", logEntryInput.ExternalSystem)
-	span.LogFields(log.Object("syncDate", syncDate), log.Object("logEntryInput", logEntryInput))
+	span.SetTag(tracing.SpanTagExternalSystem, logEntryInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate))
+	tracing.LogObjectAsJson(span, "logEntryInput", logEntryInput)
 
 	var failedSync = false
 	var reason = ""
@@ -233,6 +234,7 @@ func (s *logEntryService) sendLogEntryToEventStoreForLoggedOrganization(ctx cont
 	}
 	failedSync := false
 	reason := ""
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.LogEntryClient.UpsertLogEntry(ctx, request)
 	if err != nil {
 		failedSync = true

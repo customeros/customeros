@@ -5,13 +5,13 @@ go 1.21
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
 require (
-	github.com/99designs/gqlgen v0.17.40
-	github.com/aws/aws-sdk-go v1.48.10
+	github.com/99designs/gqlgen v0.17.41
+	github.com/aws/aws-sdk-go v1.49.9
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.5.0
 	github.com/h2non/filetype v1.1.3
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
@@ -67,11 +67,11 @@ require (
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/arch v0.5.0 // indirect
-	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/grpc v1.59.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/grpc v1.60.1 // indirect
+	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

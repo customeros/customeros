@@ -1,15 +1,16 @@
 package aggregate
 
 import (
+	"strings"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 const (
@@ -18,14 +19,14 @@ const (
 
 type OrganizationAggregate struct {
 	*aggregate.CommonTenantIdAggregate
-	Organization *models.Organization
+	Organization *model.Organization
 }
 
 func NewOrganizationAggregateWithTenantAndID(tenant, id string) *OrganizationAggregate {
 	organizationAggregate := OrganizationAggregate{}
 	organizationAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(OrganizationAggregateType, tenant, id)
 	organizationAggregate.SetWhen(organizationAggregate.When)
-	organizationAggregate.Organization = &models.Organization{}
+	organizationAggregate.Organization = &model.Organization{}
 	organizationAggregate.Tenant = tenant
 
 	return &organizationAggregate
@@ -48,12 +49,6 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onDomainLink(event)
 	case events.OrganizationAddSocialV1:
 		return a.onAddSocial(event)
-	case events.OrganizationUpdateRenewalLikelihoodV1:
-		return a.onUpdateRenewalLikelihood(event)
-	case events.OrganizationUpdateRenewalForecastV1:
-		return a.onUpdateRenewalForecast(event)
-	case events.OrganizationUpdateBillingDetailsV1:
-		return a.onUpdateBillingDetails(event)
 	case events.OrganizationHideV1:
 		return a.onHide(event)
 	case events.OrganizationShowV1:
@@ -64,7 +59,14 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onAddParent(event)
 	case events.OrganizationRemoveParentV1:
 		return a.onRemoveParent(event)
-	case events.OrganizationRequestRenewalForecastV1,
+	case events.OrganizationUpdateOnboardingStatusV1:
+		return a.onOnboardingStatusUpdate(event)
+	case events.OrganizationUpdateOwnerV1:
+		return a.onOrganizationOwnerUpdate(event)
+	case events.OrganizationUpdateRenewalLikelihoodV1,
+		events.OrganizationUpdateRenewalForecastV1,
+		events.OrganizationUpdateBillingDetailsV1,
+		events.OrganizationRequestRenewalForecastV1,
 		events.OrganizationRequestNextCycleDateV1,
 		events.OrganizationRefreshLastTouchpointV1,
 		events.OrganizationRefreshArrV1,
@@ -110,6 +112,10 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	if eventData.ExternalSystem.Available() {
 		a.Organization.ExternalSystems = []cmnmod.ExternalSystem{eventData.ExternalSystem}
 	}
+	a.Organization.YearFounded = eventData.YearFounded
+	a.Organization.Headquarters = eventData.Headquarters
+	a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+	a.Organization.LogoUrl = eventData.LogoUrl
 	return nil
 }
 
@@ -118,76 +124,136 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
+
+	// Update only if the source of truth is 'openline' or the new source matches the source of truth
 	if eventData.Source == constants.SourceOpenline {
 		a.Organization.Source.SourceOfTruth = eventData.Source
 	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt
 
 	if eventData.Source != a.Organization.Source.SourceOfTruth && a.Organization.Source.SourceOfTruth == constants.SourceOpenline {
-		if a.Organization.Name == "" {
+		if a.Organization.Name == "" && eventData.UpdateName() {
 			a.Organization.Name = eventData.Name
 		}
-		if a.Organization.Description == "" {
+		if a.Organization.Description == "" && eventData.UpdateDescription() {
 			a.Organization.Description = eventData.Description
 		}
-		if a.Organization.Website == "" {
+		if a.Organization.Website == "" && eventData.UpdateWebsite() {
 			a.Organization.Website = eventData.Website
 		}
-		if a.Organization.Industry == "" {
+		if a.Organization.Industry == "" && eventData.UpdateIndustry() {
 			a.Organization.Industry = eventData.Industry
 		}
-		if a.Organization.SubIndustry == "" {
+		if a.Organization.SubIndustry == "" && eventData.UpdateSubIndustry() {
 			a.Organization.SubIndustry = eventData.SubIndustry
 		}
-		if a.Organization.IndustryGroup == "" {
+		if a.Organization.IndustryGroup == "" && eventData.UpdateIndustryGroup() {
 			a.Organization.IndustryGroup = eventData.IndustryGroup
 		}
-		if a.Organization.TargetAudience == "" {
+		if a.Organization.TargetAudience == "" && eventData.UpdateTargetAudience() {
 			a.Organization.TargetAudience = eventData.TargetAudience
 		}
-		if a.Organization.ValueProposition == "" {
+		if a.Organization.ValueProposition == "" && eventData.UpdateValueProposition() {
 			a.Organization.ValueProposition = eventData.ValueProposition
 		}
-		if a.Organization.LastFundingRound == "" {
+		if a.Organization.LastFundingRound == "" && eventData.UpdateLastFundingRound() {
 			a.Organization.LastFundingRound = eventData.LastFundingRound
 		}
-		if a.Organization.LastFundingAmount == "" {
+		if a.Organization.LastFundingAmount == "" && eventData.UpdateLastFundingAmount() {
 			a.Organization.LastFundingAmount = eventData.LastFundingAmount
 		}
-		if a.Organization.ReferenceId == "" {
+		if a.Organization.ReferenceId == "" && eventData.UpdateReferenceId() {
 			a.Organization.ReferenceId = eventData.ReferenceId
 		}
-		if a.Organization.Note == "" {
+		if a.Organization.Note == "" && eventData.UpdateNote() {
 			a.Organization.Note = eventData.Note
 		}
-		if a.Organization.Employees == 0 {
+		if a.Organization.Employees == 0 && eventData.UpdateEmployees() {
 			a.Organization.Employees = eventData.Employees
 		}
-		if a.Organization.Market == "" {
+		if a.Organization.Market == "" && eventData.UpdateMarket() {
 			a.Organization.Market = eventData.Market
 		}
-		if !a.Organization.IsCustomer {
+		if !a.Organization.IsCustomer && eventData.UpdateIsCustomer() {
 			a.Organization.IsCustomer = eventData.IsCustomer
+		}
+		if a.Organization.YearFounded == nil && eventData.UpdateYearFounded() {
+			a.Organization.YearFounded = eventData.YearFounded
+		}
+		if a.Organization.Headquarters == "" && eventData.UpdateHeadquarters() {
+			a.Organization.Headquarters = eventData.Headquarters
+		}
+		if a.Organization.EmployeeGrowthRate == "" && eventData.UpdateEmployeeGrowthRate() {
+			a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+		}
+		if a.Organization.LogoUrl == "" && eventData.UpdateLogoUrl() {
+			a.Organization.LogoUrl = eventData.LogoUrl
 		}
 	} else {
 		if !eventData.IgnoreEmptyFields {
-			a.Organization.IsPublic = eventData.IsPublic
-			a.Organization.IsCustomer = eventData.IsCustomer
-			a.Organization.Hide = eventData.Hide
-			a.Organization.Name = eventData.Name
-			a.Organization.Description = eventData.Description
-			a.Organization.Website = eventData.Website
-			a.Organization.Industry = eventData.Industry
-			a.Organization.SubIndustry = eventData.SubIndustry
-			a.Organization.IndustryGroup = eventData.IndustryGroup
-			a.Organization.TargetAudience = eventData.TargetAudience
-			a.Organization.ValueProposition = eventData.ValueProposition
-			a.Organization.LastFundingRound = eventData.LastFundingRound
-			a.Organization.LastFundingAmount = eventData.LastFundingAmount
-			a.Organization.ReferenceId = eventData.ReferenceId
-			a.Organization.Note = eventData.Note
-			a.Organization.Employees = eventData.Employees
-			a.Organization.Market = eventData.Market
+			if eventData.UpdateIsPublic() {
+				a.Organization.IsPublic = eventData.IsPublic
+			}
+			if eventData.UpdateIsCustomer() {
+				a.Organization.IsCustomer = eventData.IsCustomer
+			}
+			if eventData.UpdateHide() {
+				a.Organization.Hide = eventData.Hide
+			}
+			if eventData.UpdateName() {
+				a.Organization.Name = eventData.Name
+			}
+			if eventData.UpdateDescription() {
+				a.Organization.Description = eventData.Description
+			}
+			if eventData.UpdateWebsite() {
+				a.Organization.Website = eventData.Website
+			}
+			if eventData.UpdateIndustry() {
+				a.Organization.Industry = eventData.Industry
+			}
+			if eventData.UpdateSubIndustry() {
+				a.Organization.SubIndustry = eventData.SubIndustry
+			}
+			if eventData.UpdateIndustryGroup() {
+				a.Organization.IndustryGroup = eventData.IndustryGroup
+			}
+			if eventData.UpdateTargetAudience() {
+				a.Organization.TargetAudience = eventData.TargetAudience
+			}
+			if eventData.UpdateValueProposition() {
+				a.Organization.ValueProposition = eventData.ValueProposition
+			}
+			if eventData.UpdateLastFundingRound() {
+				a.Organization.LastFundingRound = eventData.LastFundingRound
+			}
+			if eventData.UpdateLastFundingAmount() {
+				a.Organization.LastFundingAmount = eventData.LastFundingAmount
+			}
+			if eventData.UpdateReferenceId() {
+				a.Organization.ReferenceId = eventData.ReferenceId
+			}
+			if eventData.UpdateNote() {
+				a.Organization.Note = eventData.Note
+			}
+			if eventData.UpdateEmployees() {
+				a.Organization.Employees = eventData.Employees
+			}
+			if eventData.UpdateMarket() {
+				a.Organization.Market = eventData.Market
+			}
+			if eventData.UpdateYearFounded() {
+				a.Organization.YearFounded = eventData.YearFounded
+			}
+			if eventData.UpdateHeadquarters() {
+				a.Organization.Headquarters = eventData.Headquarters
+			}
+			if eventData.UpdateEmployeeGrowthRate() {
+				a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+			}
+			if eventData.UpdateLogoUrl() {
+				a.Organization.LogoUrl = eventData.LogoUrl
+			}
 		} else {
 			if eventData.Name != "" {
 				a.Organization.Name = eventData.Name
@@ -234,6 +300,18 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 			if eventData.IsCustomer {
 				a.Organization.IsCustomer = eventData.IsCustomer
 			}
+			if eventData.YearFounded != nil {
+				a.Organization.YearFounded = eventData.YearFounded
+			}
+			if eventData.Headquarters != "" {
+				a.Organization.Headquarters = eventData.Headquarters
+			}
+			if eventData.EmployeeGrowthRate != "" {
+				a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
+			}
+			if eventData.LogoUrl != "" {
+				a.Organization.LogoUrl = eventData.LogoUrl
+			}
 		}
 	}
 	if eventData.ExternalSystem.Available() {
@@ -263,9 +341,9 @@ func (a *OrganizationAggregate) onPhoneNumberLink(event eventstore.Event) error 
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Organization.PhoneNumbers == nil {
-		a.Organization.PhoneNumbers = make(map[string]models.OrganizationPhoneNumber)
+		a.Organization.PhoneNumbers = make(map[string]model.OrganizationPhoneNumber)
 	}
-	a.Organization.PhoneNumbers[eventData.PhoneNumberId] = models.OrganizationPhoneNumber{
+	a.Organization.PhoneNumbers[eventData.PhoneNumberId] = model.OrganizationPhoneNumber{
 		Label:   eventData.Label,
 		Primary: eventData.Primary,
 	}
@@ -279,9 +357,9 @@ func (a *OrganizationAggregate) onEmailLink(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Organization.Emails == nil {
-		a.Organization.Emails = make(map[string]models.OrganizationEmail)
+		a.Organization.Emails = make(map[string]model.OrganizationEmail)
 	}
-	a.Organization.Emails[eventData.EmailId] = models.OrganizationEmail{
+	a.Organization.Emails[eventData.EmailId] = model.OrganizationEmail{
 		Label:   eventData.Label,
 		Primary: eventData.Primary,
 	}
@@ -318,50 +396,11 @@ func (a *OrganizationAggregate) onAddSocial(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Organization.Socials == nil {
-		a.Organization.Socials = make(map[string]models.Social)
+		a.Organization.Socials = make(map[string]model.Social)
 	}
-	a.Organization.Socials[eventData.SocialId] = models.Social{
+	a.Organization.Socials[eventData.SocialId] = model.Social{
 		PlatformName: eventData.PlatformName,
 		Url:          eventData.Url,
-	}
-	return nil
-}
-
-func (a *OrganizationAggregate) onUpdateRenewalLikelihood(event eventstore.Event) error {
-	var eventData events.OrganizationUpdateRenewalLikelihoodEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	a.Organization.RenewalLikelihood.RenewalLikelihood = eventData.RenewalLikelihood
-	a.Organization.RenewalLikelihood.Comment = eventData.Comment
-	a.Organization.RenewalLikelihood.UpdatedBy = eventData.UpdatedBy
-	a.Organization.RenewalLikelihood.UpdatedAt = eventData.UpdatedAt
-	return nil
-}
-
-func (a *OrganizationAggregate) onUpdateRenewalForecast(event eventstore.Event) error {
-	var eventData events.OrganizationUpdateRenewalForecastEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	a.Organization.RenewalForecast.Amount = eventData.Amount
-	a.Organization.RenewalForecast.Comment = eventData.Comment
-	a.Organization.RenewalForecast.UpdatedBy = eventData.UpdatedBy
-	a.Organization.RenewalForecast.UpdatedAt = eventData.UpdatedAt
-	return nil
-}
-
-func (a *OrganizationAggregate) onUpdateBillingDetails(event eventstore.Event) error {
-	var eventData events.OrganizationUpdateBillingDetailsEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	a.Organization.BillingDetails.Amount = eventData.Amount
-	a.Organization.BillingDetails.Frequency = eventData.Frequency
-	a.Organization.BillingDetails.RenewalCycle = eventData.RenewalCycle
-	a.Organization.BillingDetails.RenewalCycleStart = eventData.RenewalCycleStart
-	if eventData.UpdatedBy == "" {
-		a.Organization.BillingDetails.RenewalCycleNext = eventData.RenewalCycleNext
 	}
 	return nil
 }
@@ -391,7 +430,7 @@ func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) erro
 	}
 
 	if a.Organization.CustomFields == nil {
-		a.Organization.CustomFields = make(map[string]models.CustomField)
+		a.Organization.CustomFields = make(map[string]model.CustomField)
 	}
 
 	if val, ok := a.Organization.CustomFields[eventData.CustomFieldId]; ok {
@@ -400,7 +439,7 @@ func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) erro
 		val.CustomFieldValue = eventData.CustomFieldValue
 		val.Name = eventData.CustomFieldName
 	} else {
-		a.Organization.CustomFields[eventData.CustomFieldId] = models.CustomField{
+		a.Organization.CustomFields[eventData.CustomFieldId] = model.CustomField{
 			Source: cmnmod.Source{
 				Source:        eventData.Source,
 				SourceOfTruth: eventData.SourceOfTruth,
@@ -411,7 +450,7 @@ func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) erro
 			Id:                  eventData.CustomFieldId,
 			TemplateId:          eventData.TemplateId,
 			Name:                eventData.CustomFieldName,
-			CustomFieldDataType: models.CustomFieldDataType(eventData.CustomFieldDataType),
+			CustomFieldDataType: model.CustomFieldDataType(eventData.CustomFieldDataType),
 			CustomFieldValue:    eventData.CustomFieldValue,
 		}
 	}
@@ -424,9 +463,9 @@ func (a *OrganizationAggregate) onAddParent(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Organization.ParentOrganizations == nil {
-		a.Organization.ParentOrganizations = make(map[string]models.ParentOrganization)
+		a.Organization.ParentOrganizations = make(map[string]model.ParentOrganization)
 	}
-	a.Organization.ParentOrganizations[eventData.ParentOrganizationId] = models.ParentOrganization{
+	a.Organization.ParentOrganizations[eventData.ParentOrganizationId] = model.ParentOrganization{
 		OrganizationId: eventData.ParentOrganizationId,
 		Type:           eventData.Type,
 	}
@@ -439,5 +478,30 @@ func (a *OrganizationAggregate) onRemoveParent(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	delete(a.Organization.ParentOrganizations, eventData.ParentOrganizationId)
+	return nil
+}
+
+func (a *OrganizationAggregate) onOnboardingStatusUpdate(event eventstore.Event) error {
+	var eventData events.UpdateOnboardingStatusEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Organization.OnboardingDetails = model.OnboardingDetails{
+		Status:    eventData.Status,
+		Comments:  eventData.Comments,
+		UpdatedAt: eventData.UpdatedAt,
+	}
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onOrganizationOwnerUpdate(event eventstore.Event) error {
+	var eventData events.OrganizationOwnerUpdateEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	// do nothing
 	return nil
 }

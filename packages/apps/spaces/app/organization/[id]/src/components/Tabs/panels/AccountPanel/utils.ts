@@ -5,9 +5,7 @@ import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/ge
 import {
   Maybe,
   BilledType,
-  RenewalCycle,
   ContractRenewalCycle,
-  RenewalLikelihoodProbability,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
@@ -18,23 +16,6 @@ export const invalidateAccountDetailsQuery = (
   queryClient.invalidateQueries(
     useOrganizationAccountDetailsQuery.getKey({ id }),
   );
-
-export function getARRColor(
-  renewalLikelihood?: Maybe<RenewalLikelihoodProbability> | undefined,
-) {
-  switch (renewalLikelihood) {
-    case 'HIGH':
-      return 'success';
-    case 'MEDIUM':
-      return 'warning';
-    case 'LOW':
-      return 'error';
-    case 'ZERO':
-      return 'gray';
-    default:
-      return 'gray';
-  }
-}
 
 export function getRenewalLikelihoodColor(
   renewalLikelihood?: Maybe<OpportunityRenewalLikelihood> | undefined,
@@ -68,23 +49,19 @@ export function getRenewalLikelihoodLabel(
       return '';
   }
 }
-
-export const frequencyOptions: SelectOption<RenewalCycle>[] = [
-  { label: 'Weekly', value: RenewalCycle.Weekly },
-  { label: 'Biweekly', value: RenewalCycle.Biweekly },
-  { label: 'Monthly', value: RenewalCycle.Monthly },
-  { label: 'Quarterly', value: RenewalCycle.Quarterly },
-  { label: 'Biannually', value: RenewalCycle.Biannually },
-  { label: 'Annually', value: RenewalCycle.Annually },
-];
-export const billingFrequencyOptions: SelectOption<ContractRenewalCycle>[] = [
+export const billingFrequencyOptions: SelectOption<
+  ContractRenewalCycle | 'MULTI_YEAR'
+>[] = [
   { label: 'Monthly', value: ContractRenewalCycle.MonthlyRenewal },
+  { label: 'Quarterly', value: ContractRenewalCycle.QuarterlyRenewal },
   { label: 'Annually', value: ContractRenewalCycle.AnnualRenewal },
+  { label: 'Multi-year', value: 'MULTI_YEAR' },
 ];
 
 export const billedTypeOptions: SelectOption<BilledType>[] = [
   { label: 'Once', value: BilledType.Once },
   { label: 'Usage', value: BilledType.Usage },
   { label: 'Monthly', value: BilledType.Monthly },
+  { label: 'Quarterly', value: BilledType.Quarterly },
   { label: 'Annually', value: BilledType.Annually },
 ];

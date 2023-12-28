@@ -9,7 +9,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
+	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -37,6 +37,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 			require.Equal(t, "Contract 1", contract.Name)
 			require.Equal(t, "https://contract.com", contract.ContractUrl)
 			require.Equal(t, contractpb.RenewalCycle_MONTHLY_RENEWAL, contract.RenewalCycle)
+			require.Equal(t, int64(7), *contract.RenewalPeriods)
 			expectedServiceStartedAt, err := time.Parse(time.RFC3339, "2019-01-01T00:00:00Z")
 			if err != nil {
 				t.Fatalf("Failed to parse expected timestamp: %v", err)
@@ -95,6 +96,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, "Updated Contract", contract.Name)
 			require.Equal(t, "https://contract.com/updated", contract.ContractUrl)
 			require.Equal(t, contractpb.RenewalCycle_ANNUALLY_RENEWAL, contract.RenewalCycle)
+			require.Equal(t, int64(3), *contract.RenewalPeriods)
 			expectedServiceStartedAt, err := time.Parse(time.RFC3339, "2019-01-01T00:00:00Z")
 			if err != nil {
 				t.Fatalf("Failed to parse expected timestamp: %v", err)

@@ -21,6 +21,12 @@ export interface SelectProps extends Props<any, any, any> {
   leftElement?: React.ReactNode;
 }
 
+// NOTE: custom elements like Control or ClearIndicator are wrapped in a useCallback without any dependencies on purpose.
+// This is to avoid re-renders which cause the internal state of react-select to send up in weird states.
+// Examples: Adding leftElement in the dependency array of the Control component will make the select unable to un-focus after selecting an option.
+
+// Ideally, custom components should be declared outside of the Select component as per documentation. https://react-select.com/components#defining-components
+
 export const Select = forwardRef<SelectInstance, SelectProps>(
   ({ leftElement, chakraStyles, components: _components, ...props }, ref) => {
     const Control = useCallback(({ children, ...rest }: ControlProps) => {
@@ -164,7 +170,8 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
             borderRadius: 'md',
             color: 'gray.700',
             noOfLines: 1,
-            '-webkit-box-align': 'start',
+            // '-webkit-box-align': 'start',
+            WebkitBoxAlign: 'start',
             bg: state.isSelected ? 'primary.50' : 'white',
             boxShadow: state.isFocused ? 'menuOptionsFocus' : 'none',
             _hover: { bg: state.isSelected ? 'primary.50' : 'gray.100' },

@@ -28,12 +28,18 @@ query getOrganizations(
       website
       domains
       isCustomer
+      logoUrl
       accountDetails {
         renewalSummary {
           arrForecast
           maxArrForecast
           renewalLikelihood
           nextRenewalDate
+        }
+        onboarding {
+          status
+          comments
+          updatedAt
         }
       }
 

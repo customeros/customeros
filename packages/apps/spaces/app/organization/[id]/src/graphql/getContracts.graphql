@@ -18,6 +18,7 @@ query getContracts($id: ID!) {
       signedAt
       endedAt
       renewalCycle
+      renewalPeriods
       status
       contractUrl
       opportunities {
@@ -32,7 +33,12 @@ query getContracts($id: ID!) {
         renewalUpdatedByUserId
         renewalUpdatedByUserAt
         renewedAt
-
+        owner {
+          id
+          firstName
+          lastName
+          name
+        }
       }
       serviceLineItems {
         id
@@ -43,6 +49,7 @@ query getContracts($id: ID!) {
         price
         quantity
         source
+        comments
         sourceOfTruth
         appSource
         endedAt

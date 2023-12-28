@@ -2,7 +2,7 @@ package events_platform
 
 import (
 	"context"
-	phonenumberproto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
+	phonenumberproto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 )
 
 type MockPhoneNumberServiceCallbacks struct {

@@ -12,7 +12,7 @@ import { GrossRevenueRetention } from './src/components/charts/GrossRevenueReten
 
 export default function DashboardPage() {
   return (
-    <Flex flexDir='column' pl='1' pt='4'>
+    <Flex flexDir='column' pl='3' pt='4'>
       <Flex mb='6'>
         <CustomerMap />
       </Flex>

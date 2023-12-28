@@ -3,6 +3,8 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
+	"github.com/google/uuid"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
@@ -14,7 +16,7 @@ import (
 )
 
 func TestQueryResolver_Search_Organization_By_Name(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -54,7 +56,7 @@ func assert_Search_Organization_By_Name(t *testing.T, searchTerm string, include
 }
 
 func TestQueryResolver_Search_Organization_By_Website(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -98,7 +100,7 @@ func assert_Search_Organization_By_Website(t *testing.T, searchTerm string, incl
 }
 
 func TestQueryResolver_Search_Organization_By_ORGANIZATION_Filter(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -163,7 +165,7 @@ func assert_Search_Organization_By_ORGANIZATION(t *testing.T, searchTerm string)
 }
 
 func TestQueryResolver_Search_Organization_By_Regions(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -230,7 +232,7 @@ func assert_Search_Organization_By_Regions(t *testing.T, region1 string, region2
 }
 
 func TestQueryResolver_Search_Organization_By_Name_And_Regions(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -306,7 +308,7 @@ func assert_Search_Organization_By_Name_And_Regions(t *testing.T, region1 string
 }
 
 func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyFalse(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -343,7 +345,7 @@ func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyFalse(t *tes
 }
 
 func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyTrue(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -380,7 +382,7 @@ func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyTrue(t *test
 }
 
 func TestQueryResolver_Sort_Organizations_ByLastTouchpointAt(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -421,7 +423,7 @@ func TestQueryResolver_Sort_Organizations_ByLastTouchpointAt(t *testing.T) {
 }
 
 func TestQueryResolver_Sort_Organizations_ByLastTouchpointType(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -462,7 +464,7 @@ func TestQueryResolver_Sort_Organizations_ByLastTouchpointType(t *testing.T) {
 }
 
 func TestQueryResolver_Sort_Organizations_ByForecastAmount(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -515,15 +517,12 @@ func TestQueryResolver_Sort_Organizations_ByForecastAmount(t *testing.T) {
 }
 
 func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org1",
-		RenewalLikelihood: entity.RenewalLikelihood{
-			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityMedium),
-		},
 		RenewalSummary: entity.RenewalSummary{
 			RenewalLikelihoodOrder: utils.Int64Ptr(30),
 		},
@@ -533,18 +532,12 @@ func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
 	})
 	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org3",
-		RenewalLikelihood: entity.RenewalLikelihood{
-			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityHigh),
-		},
 		RenewalSummary: entity.RenewalSummary{
 			RenewalLikelihoodOrder: utils.Int64Ptr(40),
 		},
 	})
 	organizationId4 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org4",
-		RenewalLikelihood: entity.RenewalLikelihood{
-			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityLow),
-		},
 		RenewalSummary: entity.RenewalSummary{
 			RenewalLikelihoodOrder: utils.Int64Ptr(20),
 		},
@@ -576,18 +569,18 @@ func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
 	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[3].ID)
 }
 
-func TestQueryResolver_Sort_Organizations_ByRenewalCycleNext(t *testing.T) {
-	ctx := context.TODO()
+func TestQueryResolver_Sort_Organizations_ByRenewalDate(t *testing.T) {
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	daysFromNow10 := time.Now().AddDate(0, 0, 10)
-	daysFromNow20 := time.Now().AddDate(0, 0, 20)
+	daysFromNow10 := utils.Now().AddDate(0, 0, 10)
+	daysFromNow20 := utils.Now().AddDate(0, 0, 20)
 
 	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org1",
-		BillingDetails: entity.BillingDetails{
-			RenewalCycleNext: utils.TimePtr(daysFromNow10),
+		RenewalSummary: entity.RenewalSummary{
+			NextRenewalAt: utils.TimePtr(daysFromNow10),
 		},
 	})
 	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -595,8 +588,8 @@ func TestQueryResolver_Sort_Organizations_ByRenewalCycleNext(t *testing.T) {
 	})
 	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org3",
-		BillingDetails: entity.BillingDetails{
-			RenewalCycleNext: utils.TimePtr(daysFromNow20),
+		RenewalSummary: entity.RenewalSummary{
+			NextRenewalAt: utils.TimePtr(daysFromNow20),
 		},
 	})
 
@@ -606,7 +599,7 @@ func TestQueryResolver_Sort_Organizations_ByRenewalCycleNext(t *testing.T) {
 		map[string]interface{}{
 			"page":    1,
 			"limit":   10,
-			"sortBy":  "RENEWAL_CYCLE_NEXT",
+			"sortBy":  "RENEWAL_DATE",
 			"sortDir": "ASC",
 		})
 
@@ -626,7 +619,7 @@ func TestQueryResolver_Sort_Organizations_ByRenewalCycleNext(t *testing.T) {
 }
 
 func TestQueryResolver_Sort_Organizations_ByOrganizationName_WithOrganizationHierarchy(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
@@ -690,4 +683,216 @@ func TestQueryResolver_Sort_Organizations_ByOrganizationName_WithOrganizationHie
 	require.Equal(t, parent2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[4].ID)
 	require.Equal(t, sub2_1OrgId, organizationsPageStruct.DashboardView_Organizations.Content[5].ID)
 	require.Equal(t, sub2_2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[6].ID)
+}
+
+func insertContractWithActiveRenewalOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, contract)
+	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, opportunity)
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opportunityId)
+	return contractId
+}
+
+func insertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, contract)
+	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, opportunity)
+	return contractId
+}
+
+func insertServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt time.Time) string {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:        id,
+		ParentID:  id,
+		Billed:    billedType,
+		Price:     price,
+		Quantity:  quantity,
+		StartedAt: startedAt,
+	})
+	return id
+}
+
+func insertServiceLineItemEnded(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:        id,
+		ParentID:  id,
+		Billed:    billedType,
+		Price:     price,
+		Quantity:  quantity,
+		StartedAt: startedAt,
+		EndedAt:   &endedAt,
+	})
+	return id
+}
+
+func insertServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:         id,
+		ParentID:   id,
+		Billed:     billedType,
+		Price:      price,
+		Quantity:   quantity,
+		IsCanceled: true,
+		StartedAt:  startedAt,
+		EndedAt:    &endedAt,
+	})
+	return id
+}
+
+func insertServiceLineItemWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt time.Time, parentId string) {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:               id,
+		ParentID:         parentId,
+		Billed:           billedType,
+		Price:            price,
+		Quantity:         quantity,
+		PreviousBilled:   previousBilledType,
+		PreviousPrice:    previousPrice,
+		PreviousQuantity: previousQuantity,
+		StartedAt:        startedAt,
+	})
+}
+
+func insertServiceLineItemEndedWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:               id,
+		ParentID:         parentId,
+		Billed:           billedType,
+		Price:            price,
+		Quantity:         quantity,
+		PreviousBilled:   previousBilledType,
+		PreviousPrice:    previousPrice,
+		PreviousQuantity: previousQuantity,
+		StartedAt:        startedAt,
+		EndedAt:          &endedAt,
+	})
+}
+
+func insertServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		ID:               id,
+		ParentID:         parentId,
+		Billed:           billedType,
+		Price:            price,
+		Quantity:         quantity,
+		PreviousBilled:   previousBilledType,
+		PreviousPrice:    previousPrice,
+		PreviousQuantity: previousQuantity,
+		IsCanceled:       true,
+		StartedAt:        startedAt,
+		EndedAt:          &endedAt,
+	})
+}
+
+func TestQueryResolver_Search_Organization_ByOnboardingStatus(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateTenantOrganization(ctx, driver, tenantName, "org excluded")
+
+	today := utils.Now()
+	yesterday := today.AddDate(0, 0, -1)
+
+	orgNA := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:    entity.OnboardingStatusNotApplicable,
+			UpdatedAt: nil,
+		},
+	})
+	orgSuccess := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusSuccessful,
+			UpdatedAt:    &today,
+			SortingOrder: utils.Int64Ptr(60),
+		},
+	})
+	orgStuckYesterday := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusStuck,
+			UpdatedAt:    &yesterday,
+			SortingOrder: utils.Int64Ptr(20),
+		},
+	})
+	orgDone := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusDone,
+			UpdatedAt:    &today,
+			SortingOrder: utils.Int64Ptr(50),
+		},
+	})
+	orgOnTrack := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusOnTrack,
+			UpdatedAt:    &yesterday,
+			SortingOrder: utils.Int64Ptr(40),
+		},
+	})
+	orgStuckToday := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusStuck,
+			UpdatedAt:    &today,
+			SortingOrder: utils.Int64Ptr(20),
+		},
+	})
+	orgLate := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusLate,
+			UpdatedAt:    &yesterday,
+			SortingOrder: utils.Int64Ptr(30),
+		},
+	})
+	orgNotStarted := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       entity.OnboardingStatusNotStarted,
+			UpdatedAt:    &yesterday,
+			SortingOrder: utils.Int64Ptr(10),
+		},
+	})
+
+	require.Equal(t, 9, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"DONE"}, []string{orgDone})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"LATE"}, []string{orgLate})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"STUCK"}, []string{orgStuckYesterday, orgStuckToday})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"NOT_STARTED"}, []string{orgNotStarted})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"SUCCESSFUL"}, []string{orgSuccess})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"DONE", "LATE"}, []string{orgLate, orgDone})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{"DONE", "LATE", "NOT_APPLICABLE"}, []string{orgLate, orgDone, orgNA})
+	assert_Search_Organization_ByOnboardingStatus(t, []string{}, []string{orgNotStarted, orgStuckYesterday, orgStuckToday, orgLate, orgOnTrack, orgDone, orgSuccess, orgNA})
+}
+
+func assert_Search_Organization_ByOnboardingStatus(t *testing.T, searchStatuses []string, expectedOrgs []string) {
+	query := "/dashboard_view/organization/dashboard_view_organization_filter_by_onboarding_status"
+	options := []client.Option{
+		client.Var("page", 1),
+		client.Var("limit", 10),
+		client.Var("searchTerm", searchStatuses),
+	}
+
+	rawResponse, err := c.RawPost(getQuery(query), options...)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var responseRaw struct {
+		DashboardView_Organizations model.OrganizationPage
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &responseRaw)
+	require.Nil(t, err)
+	require.NotNil(t, responseRaw)
+
+	require.Equal(t, int64(len(expectedOrgs)), responseRaw.DashboardView_Organizations.TotalElements)
+	for i, org := range responseRaw.DashboardView_Organizations.Content {
+		require.Equal(t, expectedOrgs[i], org.ID)
+	}
 }

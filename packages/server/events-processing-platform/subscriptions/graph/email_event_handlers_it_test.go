@@ -20,7 +20,7 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	emailEventHandler := &GraphEmailEventHandler{
+	emailEventHandler := &EmailEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
 	myMailId, _ := uuid.NewUUID()
@@ -75,7 +75,7 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	propsAfterEmailCreate := utils.GetPropsFromNode(*dbNodeAfterEmailCreate)
 	require.Equal(t, emailId, utils.GetStringPropOrEmpty(propsAfterEmailCreate, "id"))
 
-	emailEventHandler := &GraphEmailEventHandler{
+	emailEventHandler := &EmailEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
 	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
@@ -133,7 +133,7 @@ func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
 	event, err := emailEvents.NewEmailFailedValidationEvent(emailAggregate, tenantName, validationError)
 	require.Nil(t, err)
 
-	emailEventHandler := &GraphEmailEventHandler{
+	emailEventHandler := &EmailEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
 	err = emailEventHandler.OnEmailValidationFailed(context.Background(), event)
@@ -201,7 +201,7 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	event, err := emailEvents.NewEmailValidatedEvent(emailAggregate, tenantName, rawEmailCreate, isReachable, validationError, domain, username, emailCreate, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, IsDeliverable, isDisabled, isValidSyntax)
 	require.Nil(t, err)
 
-	emailEventHandler := &GraphEmailEventHandler{
+	emailEventHandler := &EmailEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
 	err = emailEventHandler.OnEmailValidated(context.Background(), event)

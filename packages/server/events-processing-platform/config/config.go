@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -25,6 +26,7 @@ type Subscriptions struct {
 	OrganizationWebscrapeSubscription OrganizationWebscrapeSubscription
 	InteractionEventSubscription      InteractionEventSubscription
 	ContractSubscription              ContractSubscription
+	NotificationsSubscription         NotificationsSubscription
 }
 
 type GraphSubscription struct {
@@ -99,26 +101,63 @@ type ContractSubscription struct {
 	MessageTimeoutSec int32  `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_MESSAGE_TIMEOUT" envDefault:"120" validate:"required,gte=0"`
 }
 
+type NotificationsSubscription struct {
+	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_ENABLED" envDefault:"false"`
+	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_GROUP_NAME" envDefault:"notifications-v1" validate:"required"`
+	Prefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_PREFIX" envDefault:"notifications-" validate:"required"`
+	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
+	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
+}
+
 type Services struct {
-	ValidationApi     string `env:"VALIDATION_API" validate:"required"`
-	ValidationApiKey  string `env:"VALIDATION_API_KEY" validate:"required"`
-	ScrapingBeeApiKey string `env:"SCRAPING_BEE_API_KEY" validate:"required"`
-	OpenAi            struct {
+	ValidationApi                  string `env:"VALIDATION_API" validate:"required"`
+	ValidationApiKey               string `env:"VALIDATION_API_KEY" validate:"required"`
+	EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL" validate:"required"`
+	EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY" validate:"required"`
+	ScrapingBeeApiKey              string `env:"SCRAPING_BEE_API_KEY" validate:"required"`
+	ScrapingDogApiKey              string `env:"SCRAPING_DOG_API_KEY" validate:"required"`
+	PromptJsonSchema               string `env:"PROMPT_JSON_SCHEMA" validate:"required" envDefault:"{
+		"$schema": "http://json-schema.org/draft-07/schema#",
+		"type": "object",
+		"properties": {
+		  "companyName": {
+			"type": "string",
+			"description": "the name of the company"
+		  },
+		  "market": {
+			"type": "string",
+			"description": "One of the following options: [B2B, B2C, or Marketplace]"
+		  },
+		  "industry": {
+			"type": "string",
+			"description": "Industry category per the Global Industry Classification Standard (GISB)"
+		  },
+		  "industryGroup": {
+			"type": "string",
+			"description": "Industry Group per the Global Industry Classification Standard (GISB)"
+		  },
+		  "subIndustry": {
+			"type": "string",
+			"description": "Sub-industry category per the Global Industry Classification Standard (GISB)"
+		  },
+		  "targetAudience": {
+			"type": "string",
+			"description": "analysis of the company's target audience"
+		  },
+		  "valueProposition": {
+			"type": "string",
+			"description": "analysis of the company's core value proposition"
+		  }
+		},
+		"required": ["companyName", "market", "valueProposition", "industry"],
+		"additionalProperties": false
+	  }"`
+	OpenAi struct {
 		ApiPath             string `env:"OPENAI_API_PATH,required" envDefault:"N/A"`
 		ApiKey              string `env:"OPENAI_API_KEY,required" envDefault:"N/A"`
-		ScrapeCompanyPrompt string `env:"SCRAPE_COMPANY_PROMPT,required" envDefault:"Analyze the following text from a company website.
-                         {{text}}
-                         Analyze the text and respond (in English) as defined below:
-                         {
-                           companyName:  the name of the company,
-                           market: One of the following options: B2B, B2C, or Marketplace,
-                           industry: Industry per the Global Industry Classification Standard (GISB),
-                           industryGroup: Industry Group per the Global Industry Classification Standard (GISB),
-                           subIndustry: Sub-industry per the Global Industry Classification Standard (GISB),
-                           targetAudience: analysis of the company's target audience,
-                           valueProposition: analysis of the company's core value proposition,
-                         }"`
-		ScrapeDataPrompt string `env:"SCRAPE_DATA_PROMPT,required" envDefault:"The following is data scraped from a website:  Please combine and format the data into a clean json response
+		Organization        string `env:"OPENAI_ORGANIZATION,required" envDefault:""`
+		ScrapeCompanyPrompt string `env:"SCRAPE_COMPANY_PROMPT,required" envDefault:"Analyze the text below and return the complete schema {{jsonschema}}\n\nTEXT\n{{text}}"`
+		ScrapeDataPrompt    string `env:"SCRAPE_DATA_PROMPT,required" envDefault:"The following is data scraped from a website:  Please combine and format the data into a clean json response
 
                       {{ANALYSIS}}
 
@@ -143,6 +182,10 @@ type Services struct {
 		IndustryLookupPrompt2   string `env:"ANTHROPIC_INDUSTRY_LOOKUP_PROMPT,required" envDefault:"What GICS value from following list (Aerospace & Defense,Air Freight & Logistics,Automobile Components,Automobiles,Banks,Beverages,Biotechnology,Broadline Retail,Building Products,Capital Markets,Chemicals,Commercial Services & Supplies,Communications Equipment,Construction & Engineering,Construction Materials,Consumer Finance,Consumer Staples Distribution & Retail,Containers & Packaging,Diversified Consumer Services,Diversified REITs,Diversified Telecommunication Services,Distributors,Electric Utilities,Electrical Equipment,Electronic Equipment,Instruments & Components,Energy Equipment & Services,Entertainment,Financial Services,Food Products,Gas Utilities,Ground Transportation,Health Care Equipment & Supplies,Health Care Providers & Services,Health Care REITs,Health Care Technology,Hotel & Resort REITs,Hotels,Restaurants & Leisure,Household Durables,Household Products,Independent Power and Renewable Electricity Producers,Industrial Conglomerates,Industrial REITs,Insurance,Interactive Media & Services,Internet Software & Services,IT Services,Leisure Products,Life Sciences Tools & Services,Machinery,Marine Transportation,Media,Metals & Mining,Mortgage Real Estate Investment Trusts (REITs),Multi-Utilities,Office REITs,Oil,Gas & Consumable Fuels,Paper & Forest Products,Passenger Airlines,Personal Products,Pharmaceuticals,Professional Services,Real Estate Management & Development,Residential REITs,Retail REITs,Semiconductors & Semiconductor Equipment,Software,Specialized REITs,Specialty Retail,Technology Hardware,Storage & Peripherals,Textiles,Apparel & Luxury Goods,Tobacco,Trading Companies & Distributors,Transportation Infrastructure,Water Utilities,Wireless Telecommunication Services) is chosen in next statement. Strictly provide the value only: %s"`
 		EmailSummaryPrompt      string `env:"ANTHROPIC_EMAIL_SUMMARY_PROMPT,required" envDefault:"Make a 120 characters summary for this html email: %v"`
 		EmailActionsItemsPrompt string `env:"ANTHROPIC_EMAIL_ACTIONS_ITEMS_PROMPT,required" envDefault:"Give me the action points to be taken for the email. The criticality for the action points should be at least medium severity. return response in jSON format, key - \"items\", value - array of strings. The email is: %v"`
+	}
+	Novu struct {
+		ApiPath string `env:"NOVU_API_PATH,required" envDefault:"N/A"`
+		ApiKey  string `env:"NOVU_API_KEY,required" envDefault:"N/A"`
 	}
 }
 

@@ -3,11 +3,11 @@ module github.com/openline-ai/openline-customer-os/packages/runner/integrity-che
 go 1.21
 
 require (
-	github.com/aws/aws-sdk-go v1.48.10
+	github.com/aws/aws-sdk-go v1.49.9
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.15.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231117155323-f87352798440
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231223141039-1ccda1d986b4
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/robfig/cron v1.2.0
 	github.com/stretchr/testify v1.8.4
@@ -15,7 +15,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/google/uuid v1.4.0 // indirect
+	github.com/google/uuid v1.5.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.4.3 // indirect
@@ -30,9 +30,9 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.15.0 // indirect
-	golang.org/x/net v0.18.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
+	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect

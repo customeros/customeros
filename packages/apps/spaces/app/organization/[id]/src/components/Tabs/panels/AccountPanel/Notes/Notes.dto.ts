@@ -25,7 +25,6 @@ export class NotesDTO implements NotesForm {
     return {
       id: data.id,
       note: data.note,
-      name: '',
       patch: true,
     } as UpdateOrganizationMutationVariables['input'];
   }
