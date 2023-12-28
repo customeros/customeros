@@ -6,13 +6,14 @@ on:
     paths:
       - packages/server/customer-os-common-ai/**
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
       - packages/server/events-processing-platform/**
       - .github/workflows/build-events-processing-platform.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-ai/**
-      - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
       - packages/server/events-processing-platform/**
       - .github/workflows/build-events-processing-platform.yml
@@ -107,6 +108,7 @@ jobs:
           mkdir tmp-sources
           mkdir tmp-sources/customer-os-common-ai
           mkdir tmp-sources/customer-os-common-module
+          mkdir tmp-sources/customer-os-neo4j-repository
           mkdir tmp-sources/events-processing-platform
           mkdir tmp-sources/events-processing-proto
 
@@ -114,6 +116,7 @@ jobs:
           cp .env tmp-sources/events-processing-platform/.env
           cp -r ../customer-os-common-ai/* tmp-sources/customer-os-common-ai
           cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
+          cp -r ../customer-os-neo4j-repository/* tmp-sources/customer-os-neo4j-repository
           cp -r ../events-processing-proto/* tmp-sources/events-processing-proto
 
           cp Dockerfile tmp-sources/Dockerfile

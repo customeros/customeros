@@ -2,10 +2,12 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
 )
 
 type Repositories struct {
 	Drivers                       Drivers
+	Neo4jRepositories             *neo4jrepository.Repositories
 	TimelineEventRepository       TimelineEventRepository
 	OrganizationRepository        OrganizationRepository
 	ContactRepository             ContactRepository
@@ -57,6 +59,7 @@ func InitRepos(driver *neo4j.DriverWithContext, database string) *Repositories {
 			Neo4jDriver: driver,
 		},
 	}
+	repositories.Neo4jRepositories = neo4jrepository.InitNeo4jRepositories(driver, database)
 	repositories.TimelineEventRepository = NewTimelineEventRepository(driver, database)
 	repositories.OrganizationRepository = NewOrganizationRepository(driver, database)
 	repositories.ContactRepository = NewContactRepository(driver, database)

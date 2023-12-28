@@ -24,6 +24,14 @@ RUN cd /workspace/build/customer-os-common-module && go mod download && go mod v
 COPY customer-os-common-module/. /workspace/build/customer-os-common-module/
 RUN cd /workspace/build/customer-os-common-module && go build
 
+#copy and build neo4j repository
+COPY customer-os-neo4j-repository/go.mod /workspace/build/customer-os-neo4j-repository/go.mod
+COPY customer-os-neo4j-repository/go.sum /workspace/build/customer-os-neo4j-repository/go.sum
+RUN cd /workspace/build/customer-os-neo4j-repository && go mod download && go mod verify
+
+COPY customer-os-neo4j-repository/. /workspace/build/customer-os-neo4j-repository/
+RUN cd /workspace/build/customer-os-neo4j-repository && go build
+
 #copy and events-processing-proto
 COPY events-processing-proto/go.mod /workspace/build/events-processing-proto/go.mod
 COPY events-processing-proto/go.sum /workspace/build/events-processing-proto/go.sum
