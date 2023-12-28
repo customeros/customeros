@@ -15,8 +15,6 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, userId string, event events.UserCreateEvent) error
-	CreateUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, userId string, event events.UserCreateEvent) error
 	UpdateUser(ctx context.Context, userId string, event events.UserUpdateEvent) error
 	AddRole(ctx context.Context, tenant, userId, role string, timestamp time.Time) error
 	RemoveRole(ctx context.Context, tenant, userId, role string, timestamp time.Time) error
@@ -30,72 +28,6 @@ func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 	return &userRepository{
 		driver: driver,
 	}
-}
-
-func (r *userRepository) CreateUser(ctx context.Context, userId string, event events.UserCreateEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.CreateUser")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		return nil, r.CreateUserInTx(ctx, tx, userId, event)
-	})
-	return err
-}
-
-func (r *userRepository) CreateUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, userId string, event events.UserCreateEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.CreateUserInTx")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
-	span.LogFields(log.String("userId", userId), log.Object("event", event))
-
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
-		 MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id}) 
-		 ON CREATE SET 	u.name = $name,
-						u.firstName = $firstName,
-						u.lastName = $lastName,
-						u.source = $source,
-						u.sourceOfTruth = $sourceOfTruth,
-						u.appSource = $appSource,
-						u.createdAt = $createdAt,
-						u.updatedAt = $updatedAt,
-						u.internal = $internal,
-						u.bot = $bot,
-						u.profilePhotoUrl = $profilePhotoUrl,
-						u.timezone = $timezone,
-						u.syncedWithEventStore = true 
-		 ON MATCH SET 	u.name = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.name is null OR u.name = '' THEN $name ELSE u.name END,
-						u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.firstName is null OR u.firstName = '' THEN $firstName ELSE u.firstName END,
-						u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.lastName is null OR u.lastName = '' THEN $lastName ELSE u.lastName END,
-						u.timezone = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.timezone is null OR u.timezone = '' THEN $timezone ELSE u.timezone END,
-						u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
-						u.internal = $internal,
-						u.bot = $bot,
-						u.updatedAt = $updatedAt,
-						u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END,
-						u.syncedWithEventStore = true`, event.Tenant)
-	span.LogFields(log.String("query", query))
-
-	return utils.ExecuteQueryInTx(ctx, tx, query, map[string]any{
-		"tenant":          event.Tenant,
-		"id":              userId,
-		"name":            event.Name,
-		"firstName":       event.FirstName,
-		"lastName":        event.LastName,
-		"internal":        event.Internal,
-		"bot":             event.Bot,
-		"profilePhotoUrl": event.ProfilePhotoUrl,
-		"timezone":        event.Timezone,
-		"source":          helper.GetSource(event.SourceFields.Source),
-		"sourceOfTruth":   helper.GetSourceOfTruth(event.SourceFields.SourceOfTruth),
-		"appSource":       helper.GetAppSource(event.SourceFields.AppSource),
-		"createdAt":       event.CreatedAt,
-		"updatedAt":       event.UpdatedAt,
-		"overwrite":       helper.GetSourceOfTruth(event.SourceFields.SourceOfTruth) == constants.SourceOpenline,
-	})
 }
 
 func (r *userRepository) UpdateUser(ctx context.Context, userId string, event events.UserUpdateEvent) error {
