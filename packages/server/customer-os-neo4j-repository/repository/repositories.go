@@ -5,18 +5,20 @@ import (
 )
 
 type Repositories struct {
-	CommonReadRepository   CommonReadRepository
-	ContractReadRepository ContractReadRepository
-	UserReadRepository     UserReadRepository
-	UserWriteRepository    UserWriteRepository
+	CommonReadRepository    CommonReadRepository
+	ContractReadRepository  ContractReadRepository
+	LogEntryWriteRepository LogEntryWriteRepository
+	UserReadRepository      UserReadRepository
+	UserWriteRepository     UserWriteRepository
 }
 
 func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string) *Repositories {
 	repositories := Repositories{
-		CommonReadRepository:   NewCommonReadRepository(driver, neo4jDatabase),
-		ContractReadRepository: NewContractReadRepository(driver, neo4jDatabase),
-		UserReadRepository:     NewUserReadRepository(driver, neo4jDatabase),
-		UserWriteRepository:    NewUserWriteRepository(driver, neo4jDatabase),
+		CommonReadRepository:    NewCommonReadRepository(driver, neo4jDatabase),
+		ContractReadRepository:  NewContractReadRepository(driver, neo4jDatabase),
+		LogEntryWriteRepository: NewLogEntryWriteRepository(driver, neo4jDatabase),
+		UserReadRepository:      NewUserReadRepository(driver, neo4jDatabase),
+		UserWriteRepository:     NewUserWriteRepository(driver, neo4jDatabase),
 	}
 	return &repositories
 }
