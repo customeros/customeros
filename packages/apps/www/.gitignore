@@ -3,3 +3,4 @@
 
 # Env files
 .env
+.vercel
