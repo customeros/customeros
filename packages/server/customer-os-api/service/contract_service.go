@@ -197,7 +197,7 @@ func (s *contractService) GetById(ctx context.Context, contractId string) (*enti
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("contractId", contractId))
 
-	if contractDbNode, err := s.repositories.ContractRepository.GetById(ctx, common.GetContext(ctx).Tenant, contractId); err != nil {
+	if contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, common.GetContext(ctx).Tenant, contractId); err != nil {
 		tracing.TraceErr(span, err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Contract with id {%s} not found", contractId))
 		return nil, wrappedErr

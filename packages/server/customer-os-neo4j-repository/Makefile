@@ -1,8 +1,5 @@
-run: build
-	go run github.com/openline-ai/customer-os-neo4j-repository
-
 build:
-	go build -v
+	go build -v ./...
 
 .PHONY: test
 test:
@@ -12,6 +9,6 @@ install:
 	go install gotest.tools/gotestsum@latest
 
 clean:
-	rm -rf github.com/openline-ai/customer-os-neo4j-repository
+	rm -rf ./bin/*
 
 all: install build
