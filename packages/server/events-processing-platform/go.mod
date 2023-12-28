@@ -49,7 +49,7 @@ require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Boostport/mjml-go v0.14.4
-	github.com/JohannesKaufmann/html-to-markdown v1.4.2
+	github.com/JohannesKaufmann/html-to-markdown v1.5.0
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/Microsoft/hcsshim v0.11.4 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
