@@ -228,7 +228,7 @@ func (s *contractService) ContractsExistForTenant(ctx context.Context) (bool, er
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.ContractsExistForTenant")
 	defer span.Finish()
 
-	contractsExistForTenant, err := s.repositories.ContractRepository.ContractsExistForTenant(ctx, common.GetTenantFromContext(ctx))
+	contractsExistForTenant, err := s.repositories.Neo4jRepositories.ContractReadRepository.TenantsHasAtLeastOneContract(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
 		return false, err
 	}
