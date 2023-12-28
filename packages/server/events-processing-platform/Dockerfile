@@ -6,6 +6,7 @@ RUN mkdir /workspace/build
 RUN mkdir /workspace/build/customer-os-api
 RUN mkdir /workspace/build/customer-os-common-ai
 RUN mkdir /workspace/build/customer-os-common-module
+RUN mkdir /workspace/build/customer-os-neo4j-repository
 RUN mkdir /workspace/build/events-processing-proto
 
 #copy and build AI module
@@ -25,7 +26,6 @@ COPY customer-os-common-module/. /workspace/build/customer-os-common-module/
 RUN cd /workspace/build/customer-os-common-module && go build
 
 #copy and build customer-os-neo4j-repository
-RUN mkdir /workspace/build/customer-os-neo4j-repository
 COPY customer-os-neo4j-repository/go.mod /workspace/build/customer-os-neo4j-repository/go.mod
 COPY customer-os-neo4j-repository/go.sum /workspace/build/customer-os-neo4j-repository/go.sum
 RUN cd /workspace/build/customer-os-neo4j-repository && go mod download && go mod verify
