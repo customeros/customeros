@@ -351,7 +351,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		return err
 	}
 
-	contractDbNode, err := h.repositories.ContractRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
+	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting contract for service line item %s: %s", serviceLineItemId, err.Error())
@@ -552,7 +552,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 		userEntity = graph_db.MapDbNodeToUserEntity(*user)
 	}
 
-	contractDbNode, err := h.repositories.ContractRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
+	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting contract for service line item %s: %s", serviceLineItemId, err.Error())
@@ -616,7 +616,7 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 		return err
 	}
 
-	contractDbNode, err := h.repositories.ContractRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
+	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting contract for service line item %s: %s", serviceLineItemId, err.Error())

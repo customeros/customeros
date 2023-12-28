@@ -185,7 +185,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 	}
 	// set contract id if it's not a retroactive correction
 	if !isRetroactiveCorrection {
-		contractDbNode, err := s.repositories.ContractRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItem.ID)
+		contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItem.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItem.ID, err.Error())

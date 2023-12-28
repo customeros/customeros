@@ -131,7 +131,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 		h.log.Errorf("error while updating next cycle date for opportunity %s: %s", opportunityId, err.Error())
 	}
 
-	contractDbNode, err := h.repositories.ContractRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
+	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting contract for opportunity %s: %s", opportunityId, err.Error())
@@ -284,7 +284,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 	}
 	// update renewal ARR if likelihood changed but amount didn't
 	if likelihoodChanged && !amountChanged {
-		contractDbNode, err := h.repositories.ContractRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while getting contract for opportunity %s: %s", opportunityId, err.Error())
@@ -328,7 +328,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 
 	// prepare action for likelihood change
 	if likelihoodChanged {
-		contractDbNode, err := h.repositories.ContractRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while getting contract for opportunity %s: %s", opportunityId, err.Error())
