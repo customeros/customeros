@@ -1,11 +1,20 @@
 import React, { useMemo, forwardRef, useCallback, ComponentType } from 'react';
 
+import { Portal } from '@chakra-ui/react';
+import {
+  Menu,
+  MenuItem,
+  MenuButton,
+  MenuList as ChakraMenuList,
+} from '@chakra-ui/menu';
 import {
   OptionProps,
   MenuListProps,
+  MultiValueProps,
   ChakraStylesConfig,
 } from 'chakra-react-select';
 
+import { Button } from '@ui/form/Button';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { SelectOption, chakraStyles } from '@ui/utils';
 import { SelectInstance } from '@ui/form/SyncSelect/Select';
@@ -33,12 +42,15 @@ export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   withTooltip?: boolean;
   // TODO: discard customStyles in favour of existing chakraStyles
   customStyles?: CustomStylesFn;
+  MultiValue?: ComponentType<MultiValueProps>;
   optionAction?: (data: string) => JSX.Element;
   Option?: ComponentType<OptionProps<SelectOption>>;
 }
 
 export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
   ({ chakraStyles, ...props }, ref) => {
+    const containerRef = React.useRef();
+
     const Control = useCallback(({ children, ...rest }: ControlProps) => {
       return (
         <chakraComponents.Control {...rest}>
@@ -85,7 +97,15 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
       return (
         <chakraComponents.MenuList {...rest}>
           {rest.children}
+          <Button>Remove option</Button>
         </chakraComponents.MenuList>
+      );
+    }, []);
+    const MultiValue = useCallback((rest: MultiValueProps) => {
+      return (
+        <chakraComponents.MultiValue {...rest}>
+          {rest.children}
+        </chakraComponents.MultiValue>
       );
     }, []);
 
@@ -94,7 +114,9 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         Control,
         MultiValueLabel,
         MenuList,
+        MultiValue: props?.MultiValue || MultiValue,
         ClearIndicator: () => null,
+
         DropdownIndicator: () => null,
         Option: (props?.Option || Option) as ComponentType<OptionProps>,
       }),

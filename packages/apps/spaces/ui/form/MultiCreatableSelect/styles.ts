@@ -15,7 +15,7 @@ export const multiCreatableSelectStyles = (
     paddingRight: 2,
     gap: 0,
     color: 'gray.500',
-    background: 'gray.100',
+    background: 'primary.100',
     border: '1px solid',
     borderColor: 'gray.200',
     fontSize: 'sm',
@@ -73,16 +73,23 @@ export const multiCreatableSelectStyles = (
     ...props,
     color: 'gray.500',
     fontWeight: 'regular',
+    overflow: 'visible',
   }),
   valueContainer: (props: CSSWithMultiValues) => ({
     ...props,
-    maxH: '86px',
-    overflowY: 'auto',
+    // maxH: '86px',
+    overflow: 'visible',
+  }),
+  control: (props: CSSWithMultiValues) => ({
+    ...props,
+    // maxH: '86px',
+    overflow: 'visible',
   }),
   ...omit<ChakraStylesConfig<unknown, false, GroupBase<unknown>>>(
     chakraStyles,
     [
       'container',
+      'control',
       'multiValueRemove',
       'multiValue',
       'clearIndicator',
@@ -91,6 +98,7 @@ export const multiCreatableSelectStyles = (
       'groupHeading',
       'input',
       'valueContainer',
+      'multiValueContainer',
     ],
   ),
 });
