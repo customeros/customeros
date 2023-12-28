@@ -48,7 +48,7 @@ func (h *UserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Even
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var err error
-		userCreateData := neo4jrepository.UserCreateData{
+		userCreateData := neo4jrepository.UserCreateFields{
 			Name:      eventData.Name,
 			FirstName: eventData.FirstName,
 			LastName:  eventData.LastName,
@@ -98,7 +98,18 @@ func (h *UserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Even
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.UserRepository.UpdateUser(ctx, userId, eventData)
+	data := neo4jrepository.UserUpdateFields{
+		Name:            eventData.Name,
+		Source:          helper.GetSource(eventData.Source),
+		FirstName:       eventData.FirstName,
+		LastName:        eventData.LastName,
+		UpdatedAt:       eventData.UpdatedAt,
+		Internal:        eventData.Internal,
+		Bot:             eventData.Bot,
+		ProfilePhotoUrl: eventData.ProfilePhotoUrl,
+		Timezone:        eventData.Timezone,
+	}
+	err := h.repositories.Neo4jRepositories.UserWriteRepository.UpdateUser(ctx, eventData.Tenant, userId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving user %s: %s", userId, err.Error())
@@ -213,7 +224,7 @@ func (h *UserEventHandler) OnAddRole(ctx context.Context, evt eventstore.Event) 
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.UserRepository.AddRole(ctx, eventData.Tenant, userId, eventData.Role, eventData.At)
+	err := h.repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, eventData.Tenant, userId, eventData.Role, eventData.At)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding role %s to user %s: %s", eventData.Role, userId, err.Error())
@@ -234,7 +245,7 @@ func (h *UserEventHandler) OnRemoveRole(ctx context.Context, evt eventstore.Even
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.UserRepository.RemoveRole(ctx, eventData.Tenant, userId, eventData.Role, eventData.At)
+	err := h.repositories.Neo4jRepositories.UserWriteRepository.RemoveRole(ctx, eventData.Tenant, userId, eventData.Role, eventData.At)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while removing role %s from user %s: %s", eventData.Role, userId, err.Error())
