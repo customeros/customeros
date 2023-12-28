@@ -196,7 +196,6 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		defer session.Close(ctx)
 
 		_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-			//var err error
 			if eventData.ExternalSystem.Available() {
 				innerErr := h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jentity.NodeLabel_Organization, eventData.ExternalSystem)
 				if innerErr != nil {
