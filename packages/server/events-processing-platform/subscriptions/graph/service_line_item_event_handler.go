@@ -153,7 +153,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "json.Unmarshal")
 	} else {
 		if usrMetadata.UserId != "" {
-			user, err = h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, usrMetadata.UserId)
+			user, err = h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, usrMetadata.UserId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
@@ -384,7 +384,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "json.Unmarshal")
 	} else {
 		if usrMetadata.UserId != "" {
-			user, err = h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, usrMetadata.UserId)
+			user, err = h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, usrMetadata.UserId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
@@ -543,7 +543,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "json.Unmarshal")
 	} else {
 		if usrMetadata.UserId != "" {
-			user, err = h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, usrMetadata.UserId)
+			user, err = h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, usrMetadata.UserId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
