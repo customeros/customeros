@@ -67,6 +67,20 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
+    directory: "/packages/server/customer-os-neo4j-repository"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "module/customer-os-neo4j-repository"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
     directory: "/packages/server/events-processing-proto"
     schedule:
       interval: "daily"
