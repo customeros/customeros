@@ -9,7 +9,6 @@ type UserData struct {
 	LastName        string        `json:"lastName,omitempty"`
 	Email           string        `json:"email,omitempty"`
 	PhoneNumbers    []PhoneNumber `json:"phoneNumbers,omitempty"`
-	ExternalOwnerId string        `json:"externalOwnerId,omitempty"` // Deprecated in favor or ExternalIdSecond, to be removed after release of sync-process is modified and released
 	ProfilePhotoUrl string        `json:"profilePhotoUrl,omitempty"`
 	Timezone        string        `json:"timezone,omitempty"`
 	Bot             bool          `json:"bot,omitempty"`
