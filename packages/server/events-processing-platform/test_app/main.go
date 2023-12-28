@@ -98,7 +98,7 @@ func main() {
 	//testAddContractService()
 	//testCloseLooseOpportunity()
 	//testUpdateOnboardingStatus()
-	testUpdateOrgOwner()
+	//testUpdateOrgOwner()
 }
 
 func testRequestGenerateSummaryRequest() {
@@ -560,7 +560,7 @@ func testUserLinkWithEmail() {
 func testCreateContract() {
 	tenant := "openline"
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	organizationId := "d03ea434-51cb-43ed-b97d-63f46db6ff51"
+	organizationId := "a6119e17-9a2c-4b8b-85d9-f0007ea49c13"
 	yesterday := utils.Now().AddDate(0, 0, -1)
 
 	result, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
