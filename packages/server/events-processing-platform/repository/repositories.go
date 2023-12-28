@@ -43,7 +43,6 @@ type Repositories struct {
 	SocialRepository             SocialRepository
 	TagRepository                TagRepository
 	TimelineEventRepository      TimelineEventRepository
-	UserRepository               UserRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *gorm.DB, log logger.Logger) *Repositories {
@@ -58,7 +57,6 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		EmailRepository:              NewEmailRepository(driver),
 		ContactRepository:            NewContactRepository(driver),
 		OrganizationRepository:       NewOrganizationRepository(driver, neo4jDatabase),
-		UserRepository:               NewUserRepository(driver),
 		LocationRepository:           NewLocationRepository(driver),
 		CountryRepository:            NewCountryRepository(driver),
 		JobRoleRepository:            NewJobRoleRepository(driver),
