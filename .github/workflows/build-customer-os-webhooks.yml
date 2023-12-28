@@ -5,6 +5,7 @@ on:
     branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-neo4j-repository/**
       - packages/server/customer-os-common-auth/**
       - packages/server/events-processing-proto/**
       - packages/server/customer-os-webhooks/**
@@ -12,6 +13,7 @@ on:
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-neo4j-repository/**
       - packages/server/customer-os-common-auth/**
       - packages/server/events-processing-proto/**
       - packages/server/customer-os-webhooks/**
@@ -103,6 +105,7 @@ jobs:
         run: |
           mkdir tmp-sources
           mkdir tmp-sources/customer-os-common-module
+          mkdir tmp-sources/customer-os-neo4j-repository
           mkdir tmp-sources/customer-os-webhooks
           mkdir tmp-sources/events-processing-proto
           mkdir tmp-sources/customer-os-common-auth
@@ -110,6 +113,7 @@ jobs:
           rsync -av --progress --exclude="tmp-sources" * tmp-sources/customer-os-webhooks
           cp .env tmp-sources/customer-os-webhooks/.env
           cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
+          cp -r ../customer-os-neo4j-repository/* tmp-sources/customer-os-neo4j-repository
           cp -r ../events-processing-proto/* tmp-sources/events-processing-proto
           cp -r ../customer-os-common-auth/* tmp-sources/customer-os-common-auth
           

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
@@ -201,8 +202,8 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		// Wait for user to be created in neo4j
 		if !failedSync && !matchingUserExists {
 			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				user, findErr := s.repositories.UserRepository.GetById(ctx, tenant, userId)
-				if user != nil && findErr == nil {
+				found, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, neo4jentity.NodeLabel_User)
+				if found && findErr == nil {
 					break
 				}
 				time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)

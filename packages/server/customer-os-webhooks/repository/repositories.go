@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository/postgres/entity"
@@ -9,9 +10,9 @@ import (
 )
 
 type Repositories struct {
-	Drivers       Drivers
-	neo4jDatabase string
-
+	Drivers                      Drivers
+	neo4jDatabase                string
+	Neo4jRepositories            *neo4jrepository.Repositories
 	CommonRepositories           *commonRepository.Repositories
 	SyncRunWebhookRepository     repository.SyncRunWebhookRepository
 	ExternalSystemRepository     ExternalSystemRepository
