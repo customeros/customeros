@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 )
@@ -17,14 +16,12 @@ import (
 type contactService struct {
 	contactpb.UnimplementedContactGrpcServiceServer
 	log                    logger.Logger
-	repositories           *repository.Repositories
 	contactCommandHandlers *command_handler.CommandHandlers
 }
 
-func NewContactService(log logger.Logger, repositories *repository.Repositories, contactCommandHandlers *command_handler.CommandHandlers) *contactService {
+func NewContactService(log logger.Logger, contactCommandHandlers *command_handler.CommandHandlers) *contactService {
 	return &contactService{
 		log:                    log,
-		repositories:           repositories,
 		contactCommandHandlers: contactCommandHandlers,
 	}
 }

@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
+	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"strings"
@@ -17,11 +17,11 @@ import (
 type emailService struct {
 	emailpb.UnimplementedEmailGrpcServiceServer
 	log                  logger.Logger
-	repositories         *repository.Repositories
+	repositories         *neo4jrepository.Repositories
 	emailCommandHandlers *command_handler.CommandHandlers
 }
 
-func NewEmailService(log logger.Logger, repositories *repository.Repositories, emailCommandHandlers *command_handler.CommandHandlers) *emailService {
+func NewEmailService(log logger.Logger, repositories *neo4jrepository.Repositories, emailCommandHandlers *command_handler.CommandHandlers) *emailService {
 	return &emailService{
 		log:                  log,
 		repositories:         repositories,
@@ -38,7 +38,7 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *emailpb.UpsertE
 	emailId := strings.TrimSpace(request.Id)
 	var err error
 	if emailId == "" {
-		emailId, err = s.repositories.EmailRepository.GetIdIfExists(ctx, request.Tenant, request.RawEmail)
+		emailId, err = s.repositories.EmailReadRepository.GetEmailIdIfExists(ctx, request.Tenant, request.RawEmail)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("(UpsertEmail) tenant:{%s}, email: {%s}, err: {%v}", request.Tenant, request.RawEmail, err)

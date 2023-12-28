@@ -8,6 +8,7 @@ type Repositories struct {
 	CommentWriteRepository  CommentWriteRepository
 	CommonReadRepository    CommonReadRepository
 	ContractReadRepository  ContractReadRepository
+	EmailReadRepository     EmailReadRepository
 	LogEntryWriteRepository LogEntryWriteRepository
 	SocialWriteRepository   SocialWriteRepository
 	TagWriteRepository      TagWriteRepository
@@ -20,6 +21,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		CommentWriteRepository:  NewCommentWriteRepository(driver, neo4jDatabase),
 		CommonReadRepository:    NewCommonReadRepository(driver, neo4jDatabase),
 		ContractReadRepository:  NewContractReadRepository(driver, neo4jDatabase),
+		EmailReadRepository:     NewEmailReadRepository(driver, neo4jDatabase),
 		LogEntryWriteRepository: NewLogEntryWriteRepository(driver, neo4jDatabase),
 		SocialWriteRepository:   NewSocialWriteRepository(driver, neo4jDatabase),
 		TagWriteRepository:      NewTagWriteRepository(driver, neo4jDatabase),

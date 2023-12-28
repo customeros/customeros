@@ -70,7 +70,7 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 }
 
 func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
-	contactService := service.NewContactService(server.log, server.repositories, server.commandHandlers.Contact)
+	contactService := service.NewContactService(server.log, server.commandHandlers.Contact)
 	contactpb.RegisterContactGrpcServiceServer(grpcServer, contactService)
 
 	organizationService := service.NewOrganizationService(server.log, server.repositories, server.commandHandlers.Organization)
@@ -79,7 +79,7 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 	phoneNumberService := service.NewPhoneNumberService(server.log, server.repositories, server.commandHandlers.PhoneNumber)
 	phonenumpb.RegisterPhoneNumberGrpcServiceServer(grpcServer, phoneNumberService)
 
-	emailService := service.NewEmailService(server.log, server.repositories, server.commandHandlers.Email)
+	emailService := service.NewEmailService(server.log, server.repositories.Neo4jRepositories, server.commandHandlers.Email)
 	emailpb.RegisterEmailGrpcServiceServer(grpcServer, emailService)
 
 	userService := service.NewUserService(server.log, server.commandHandlers.User)
