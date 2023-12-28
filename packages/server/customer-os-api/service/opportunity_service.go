@@ -120,7 +120,7 @@ func (s *opportunityService) Update(ctx context.Context, opportunity *entity.Opp
 		return err
 	}
 
-	opportunityExists, _ := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunity.Id, entity.NodeLabel_Opportunity)
+	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunity.Id, entity.NodeLabel_Opportunity)
 	if !opportunityExists {
 		err := fmt.Errorf("(OpportunityService.Update) opportunity with id {%s} not found", opportunity.Id)
 		s.log.Error(err.Error())
@@ -169,7 +169,7 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 		return err
 	}
 
-	opportunityExists, _ := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, entity.NodeLabel_Opportunity)
+	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, entity.NodeLabel_Opportunity)
 	if !opportunityExists {
 		err := fmt.Errorf("(OpportunityService.UpdateRenewal) opportunity with id {%s} not found", opportunityId)
 		s.log.Error(err.Error())

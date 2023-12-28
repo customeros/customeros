@@ -94,7 +94,7 @@ func (s *organizationService) ExistsById(ctx context.Context, organizationId str
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	return s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, entity.NodeLabel_Organization)
+	return s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, entity.NodeLabel_Organization)
 }
 
 func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
@@ -318,7 +318,7 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationId", subOrganizationId), log.String("subsidiaryType", subsidiaryType))
 
-	parentExists, err := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, entity.NodeLabel_Organization)
+	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, entity.NodeLabel_Organization)
 	if err != nil {
 		s.log.Errorf("error checking if parent organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
@@ -331,7 +331,7 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		return err
 	}
 
-	subExists, err := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subOrganizationId, entity.NodeLabel_Organization)
+	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subOrganizationId, entity.NodeLabel_Organization)
 	if err != nil {
 		s.log.Errorf("error checking if sub organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
@@ -366,7 +366,7 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationId", subOrganizationId))
 
-	parentExists, err := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, entity.NodeLabel_Organization)
+	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, entity.NodeLabel_Organization)
 	if err != nil {
 		s.log.Errorf("error checking if parent organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
@@ -379,7 +379,7 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 		return err
 	}
 
-	subExists, err := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subOrganizationId, entity.NodeLabel_Organization)
+	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subOrganizationId, entity.NodeLabel_Organization)
 	if err != nil {
 		s.log.Errorf("error checking if sub organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
