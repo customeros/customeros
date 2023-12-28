@@ -3,11 +3,14 @@ package graph
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	neo4jmodel "github.com/openline-ai/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -45,7 +48,23 @@ func (h *UserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Even
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var err error
-		err = h.repositories.UserRepository.CreateUserInTx(ctx, tx, userId, eventData)
+		userCreateData := neo4jrepository.UserCreateData{
+			Name:      eventData.Name,
+			FirstName: eventData.FirstName,
+			LastName:  eventData.LastName,
+			SourceFields: neo4jmodel.Source{
+				Source:        helper.GetSource(eventData.SourceFields.Source),
+				SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
+				AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),
+			},
+			CreatedAt:       eventData.CreatedAt,
+			UpdatedAt:       eventData.UpdatedAt,
+			Internal:        eventData.Internal,
+			Bot:             eventData.Bot,
+			ProfilePhotoUrl: eventData.ProfilePhotoUrl,
+			Timezone:        eventData.Timezone,
+		}
+		err = h.repositories.Neo4jRepositories.UserWriteRepository.CreateUserInTx(ctx, tx, eventData.Tenant, userId, userCreateData)
 		if err != nil {
 			h.log.Errorf("Error while saving user %s: %s", userId, err.Error())
 			return nil, err
