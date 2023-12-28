@@ -12,7 +12,6 @@ import (
 )
 
 type ContractRepository interface {
-	GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	GetContractByServiceLineItemId(ctx context.Context, tenant string, serviceLineItemId string) (*dbtype.Node, error)
 	ContractsExistForTenant(ctx context.Context, tenant string) (bool, error)
 }
@@ -27,36 +26,6 @@ func NewContractRepository(driver *neo4j.DriverWithContext, database string) Con
 		driver:   driver,
 		database: database,
 	}
-}
-
-func (r *contractRepository) GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(contract:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t)
-			WHERE o.id IN $organizationIds
-			RETURN contract, o.id ORDER BY contract.createdAt DESC`
-	params := map[string]any{
-		"tenant":          tenant,
-		"organizationIds": organizationIds,
-	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *contractRepository) GetContractByServiceLineItemId(ctx context.Context, tenant string, serviceLineItemId string) (*dbtype.Node, error) {
