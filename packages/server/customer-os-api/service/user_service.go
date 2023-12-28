@@ -398,7 +398,7 @@ func (s *userService) GetById(parentCtx context.Context, userId string) (*entity
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	if userDbNode, err := s.repositories.UserRepository.GetById(ctx, common.GetContext(ctx).Tenant, userId); err != nil {
+	if userDbNode, err := s.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, common.GetContext(ctx).Tenant, userId); err != nil {
 		return nil, err
 	} else {
 		return s.mapDbNodeToUserEntity(*userDbNode), nil

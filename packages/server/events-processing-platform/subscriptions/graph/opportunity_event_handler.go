@@ -402,7 +402,7 @@ func (h *OpportunityEventHandler) saveLikelihoodChangeAction(ctx context.Context
 	})
 	userName := ""
 	if eventData.UpdatedByUserId != "" {
-		userDbNode, err := h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, eventData.UpdatedByUserId)
+		userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, eventData.UpdatedByUserId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to get user %s: %s", eventData.UpdatedByUserId, err.Error())

@@ -81,7 +81,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	email = graph_db.MapDbNodeToEmailEntity(*emailDbNode)
 
 	// target user
-	userDbNode, err := h.repositories.UserRepository.GetUser(ctx, tenant, userId)
+	userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -93,7 +93,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 
 	// actor user
-	actorDbNode, err := h.repositories.UserRepository.GetUser(ctx, tenant, actorUserId)
+	actorDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, actorUserId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
