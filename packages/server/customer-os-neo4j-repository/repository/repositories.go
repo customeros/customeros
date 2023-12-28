@@ -5,6 +5,7 @@ import (
 )
 
 type Repositories struct {
+	CommentWriteRepository  CommentWriteRepository
 	CommonReadRepository    CommonReadRepository
 	ContractReadRepository  ContractReadRepository
 	LogEntryWriteRepository LogEntryWriteRepository
@@ -16,6 +17,7 @@ type Repositories struct {
 
 func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string) *Repositories {
 	repositories := Repositories{
+		CommentWriteRepository:  NewCommentWriteRepository(driver, neo4jDatabase),
 		CommonReadRepository:    NewCommonReadRepository(driver, neo4jDatabase),
 		ContractReadRepository:  NewContractReadRepository(driver, neo4jDatabase),
 		LogEntryWriteRepository: NewLogEntryWriteRepository(driver, neo4jDatabase),

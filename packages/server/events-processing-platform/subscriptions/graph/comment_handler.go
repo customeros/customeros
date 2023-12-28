@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -53,7 +56,20 @@ func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event
 	}
 
 	commentId := aggregate.GetCommentObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.CommentRepository.Create(ctx, eventData.Tenant, commentId, eventData)
+	data := neo4jrepository.CommentCreateFields{
+		Content:          eventData.Content,
+		ContentType:      eventData.ContentType,
+		CreatedAt:        eventData.CreatedAt,
+		UpdatedAt:        eventData.UpdatedAt,
+		AuthorUserId:     eventData.AuthorUserId,
+		CommentedIssueId: eventData.CommentedIssueId,
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSource(eventData.Source),
+			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source),
+			AppSource:     helper.GetAppSource(eventData.AppSource),
+		},
+	}
+	err := h.repositories.Neo4jRepositories.CommentWriteRepository.Create(ctx, eventData.Tenant, commentId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving comment %s: %s", commentId, err.Error())
@@ -84,7 +100,13 @@ func (h *CommentEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event
 	}
 
 	commentId := aggregate.GetCommentObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.CommentRepository.Update(ctx, eventData.Tenant, commentId, eventData)
+	data := neo4jrepository.CommentUpdateFields{
+		Content:     eventData.Content,
+		ContentType: eventData.ContentType,
+		UpdatedAt:   eventData.UpdatedAt,
+		Source:      helper.GetSource(eventData.Source),
+	}
+	err := h.repositories.Neo4jRepositories.CommentWriteRepository.Update(ctx, eventData.Tenant, commentId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving comment %s: %s", commentId, err.Error())
