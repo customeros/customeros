@@ -24,7 +24,6 @@ type Repositories struct {
 	ActionRepository             ActionRepository
 	ContactRepository            ContactRepository
 	ContractRepository           ContractRepository
-	CountryRepository            CountryRepository
 	CustomFieldRepository        CustomFieldRepository
 	EmailRepository              EmailRepository
 	ExternalSystemRepository     ExternalSystemRepository
@@ -54,7 +53,6 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		ContactRepository:            NewContactRepository(driver),
 		OrganizationRepository:       NewOrganizationRepository(driver, neo4jDatabase),
 		LocationRepository:           NewLocationRepository(driver),
-		CountryRepository:            NewCountryRepository(driver),
 		JobRoleRepository:            NewJobRoleRepository(driver),
 		InteractionEventRepository:   NewInteractionEventRepository(driver, neo4jDatabase),
 		InteractionSessionRepository: NewInteractionSessionRepository(driver, neo4jDatabase),

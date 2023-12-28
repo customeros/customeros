@@ -170,7 +170,7 @@ func (h *LocationEventHandler) prepareCountry(ctx context.Context, tenant, event
 	if eventCountry != "" {
 		return eventCountry
 	}
-	country, err := h.repositories.CountryRepository.GetDefaultCountryCodeA3(ctx, tenant)
+	country, err := h.repositories.Neo4jRepositories.CountryReadRepository.GetDefaultCountryCodeA3(ctx, tenant)
 	if err != nil {
 		return ""
 	}
