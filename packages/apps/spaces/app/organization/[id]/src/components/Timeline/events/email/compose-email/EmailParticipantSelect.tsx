@@ -1,27 +1,17 @@
 'use client';
-import React, { FC, useCallback } from 'react';
+import React, { FC } from 'react';
 import { OptionsOrGroups } from 'react-select';
 
-import { GroupBase, OptionProps, MultiValueProps } from 'chakra-react-select';
-import {
-  Menu,
-  MenuItem,
-  MenuButton,
-  MenuList as ChakraMenuList,
-} from '@chakra-ui/menu';
+import { GroupBase } from 'chakra-react-select';
 
 import { Flex } from '@ui/layout/Flex';
-import { SelectOption } from '@ui/utils';
 import { Text } from '@ui/typography/Text';
-import { Copy01 } from '@ui/media/icons/Copy01';
-import { IconButton } from '@ui/form/IconButton';
-import { chakraComponents } from '@ui/form/SyncSelect';
 import { Contact, ComparisonOperator } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { emailRegex } from '@organization/src/components/Timeline/events/email/utils';
 import { GetContactsEmailListDocument } from '@organization/src/graphql/getContactsEmailList.generated';
-import { EmailFormMultiCreatableSelect } from '@organization/src/components/Timeline/events/email/compose-email/EmailFormMultiCreatableSelect';
+
+import { EmailFormMultiCreatableSelect } from './EmailFormMultiCreatableSelect';
 interface EmailParticipantSelect {
   formId: string;
   entryType: string;

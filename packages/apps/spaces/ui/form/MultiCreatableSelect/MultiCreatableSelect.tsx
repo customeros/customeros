@@ -1,12 +1,6 @@
 import React, { useMemo, forwardRef, useCallback, ComponentType } from 'react';
 
-import { Portal } from '@chakra-ui/react';
-import {
-  Menu,
-  MenuItem,
-  MenuButton,
-  MenuList as ChakraMenuList,
-} from '@chakra-ui/menu';
+import { MultiValueComponent } from 'react-select/dist/declarations/src/animated/MultiValue';
 import {
   OptionProps,
   MenuListProps,
@@ -14,7 +8,6 @@ import {
   ChakraStylesConfig,
 } from 'chakra-react-select';
 
-import { Button } from '@ui/form/Button';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { SelectOption, chakraStyles } from '@ui/utils';
 import { SelectInstance } from '@ui/form/SyncSelect/Select';
@@ -42,15 +35,13 @@ export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   withTooltip?: boolean;
   // TODO: discard customStyles in favour of existing chakraStyles
   customStyles?: CustomStylesFn;
-  MultiValue?: ComponentType<MultiValueProps>;
   optionAction?: (data: string) => JSX.Element;
   Option?: ComponentType<OptionProps<SelectOption>>;
+  MultiValue?: ComponentType<MultiValueProps<SelectOption>>;
 }
 
 export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
-  ({ chakraStyles, ...props }, ref) => {
-    const containerRef = React.useRef();
-
+  ({ chakraStyles, components: _components, ...props }, ref) => {
     const Control = useCallback(({ children, ...rest }: ControlProps) => {
       return (
         <chakraComponents.Control {...rest}>
@@ -82,22 +73,24 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
       [],
     );
 
-    const Option = useCallback((rest: OptionProps<SelectOption>) => {
-      return (
-        <chakraComponents.Option {...rest}>
-          {rest.data.label || rest.data.value}
-          {props?.optionAction &&
-            rest?.isFocused &&
-            props.optionAction(rest.data.value)}
-        </chakraComponents.Option>
-      );
-    }, []);
+    const Option = useCallback(
+      (rest: OptionProps<SelectOption>) => {
+        return (
+          <chakraComponents.Option {...rest}>
+            {rest.data.label || rest.data.value}
+            {props?.optionAction &&
+              rest?.isFocused &&
+              props.optionAction(rest.data.value)}
+          </chakraComponents.Option>
+        );
+      },
+      [props.optionAction],
+    );
 
     const MenuList = useCallback((rest: MenuListProps) => {
       return (
         <chakraComponents.MenuList {...rest}>
           {rest.children}
-          <Button>Remove option</Button>
         </chakraComponents.MenuList>
       );
     }, []);
@@ -114,13 +107,12 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         Control,
         MultiValueLabel,
         MenuList,
-        MultiValue: props?.MultiValue || MultiValue,
-        ClearIndicator: () => null,
-
+        MultiValue: (props?.MultiValue || MultiValue) as MultiValueComponent,
         DropdownIndicator: () => null,
         Option: (props?.Option || Option) as ComponentType<OptionProps>,
+        ..._components,
       }),
-      [Control, MultiValueLabel],
+      [Control, MultiValueLabel, _components],
     );
 
     return (

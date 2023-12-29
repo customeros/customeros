@@ -8,21 +8,23 @@ export const multiCreatableSelectStyles = (
     | ChakraStylesConfig<unknown, boolean, GroupBase<unknown>>
     | undefined,
 ) => ({
-  multiValue: (base: CSSWithMultiValues) => ({
-    ...base,
-    padding: 0,
-    paddingLeft: 2,
-    paddingRight: 2,
-    gap: 0,
-    color: 'gray.500',
-    background: 'primary.100',
-    border: '1px solid',
-    borderColor: 'gray.200',
-    fontSize: 'sm',
-    marginRight: 1,
-    cursor: 'default',
-    height: '4',
-  }),
+  multiValue: (base: CSSWithMultiValues) => {
+    return {
+      ...base,
+      padding: 0,
+      paddingLeft: 2,
+      paddingRight: 2,
+      gap: 0,
+      color: 'gray.500',
+      background: 'gray.100',
+      border: '1px solid',
+      borderColor: 'gray.200',
+      fontSize: 'sm',
+      marginRight: 1,
+      cursor: 'default',
+      height: '4',
+    };
+  },
   clearIndicator: (base: CSSWithMultiValues) => ({
     ...base,
     background: 'transparent',
