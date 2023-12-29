@@ -203,7 +203,19 @@ func (h *UserEventHandler) OnAddPlayer(ctx context.Context, evt eventstore.Event
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.PlayerRepository.Merge(ctx, eventData.Tenant, userId, eventData)
+	data := neo4jrepository.PlayerFields{
+		AuthId:     eventData.AuthId,
+		Provider:   eventData.Provider,
+		IdentityId: eventData.IdentityId,
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSource(eventData.SourceFields.Source),
+			SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
+			AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),
+		},
+		CreatedAt: eventData.CreatedAt,
+		UpdatedAt: utils.Now(),
+	}
+	err := h.repositories.Neo4jRepositories.PlayerWriteRepository.Merge(ctx, eventData.Tenant, userId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding player %s to user %s: %s", eventData.AuthId, userId, err.Error())
