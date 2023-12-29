@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/customer-os-neo4j-repository/constant"
+	"github.com/openline-ai/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/customer-os-neo4j-repository/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -92,7 +92,7 @@ func (r *commentWriteRepository) Create(ctx context.Context, tenant, commentId s
 		"contentType":      data.ContentType,
 		"commentedIssueId": data.CommentedIssueId,
 		"authorUserId":     data.AuthorUserId,
-		"overwrite":        data.SourceFields.Source == constant.SourceOpenline,
+		"overwrite":        data.SourceFields.Source == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -124,7 +124,7 @@ func (r *commentWriteRepository) Update(ctx context.Context, tenant, commentId s
 		"content":       data.Content,
 		"contentType":   data.ContentType,
 		"sourceOfTruth": data.Source,
-		"overwrite":     data.Source == constant.SourceOpenline,
+		"overwrite":     data.Source == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

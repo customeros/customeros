@@ -3,7 +3,7 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/customer-os-neo4j-repository/constant"
+	"github.com/openline-ai/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/customer-os-neo4j-repository/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -125,7 +125,7 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx neo4j.Manag
 		"appSource":       data.SourceFields.AppSource,
 		"createdAt":       data.CreatedAt,
 		"updatedAt":       data.UpdatedAt,
-		"overwrite":       data.SourceFields.SourceOfTruth == constant.SourceOpenline,
+		"overwrite":       data.SourceFields.SourceOfTruth == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -165,7 +165,7 @@ func (r *userWriteRepository) UpdateUser(ctx context.Context, tenant, userId str
 		"bot":             data.Bot,
 		"profilePhotoUrl": data.ProfilePhotoUrl,
 		"timezone":        data.Timezone,
-		"overwrite":       data.Source == constant.SourceOpenline,
+		"overwrite":       data.Source == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

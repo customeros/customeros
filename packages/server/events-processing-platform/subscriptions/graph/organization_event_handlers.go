@@ -110,7 +110,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	}
 
 	// Set create action
-	_, err = h.repositories.ActionRepository.MergeByActionType(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionCreated, "", "", eventData.CreatedAt)
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, eventData.Tenant, organizationId, neo4jentity.ORGANIZATION, neo4jentity.ActionCreated, "", "", eventData.CreatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating likelihood update action for organization %s: %s", organizationId, err.Error())
@@ -399,7 +399,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 	}
 
 	if lastTouchpointAt == nil {
-		timelineEventNode, err = h.repositories.ActionRepository.GetSingleAction(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionCreated)
+		timelineEventNode, err = h.repositories.Neo4jRepositories.ActionReadRepository.GetSingleAction(ctx, eventData.Tenant, organizationId, neo4jentity.ORGANIZATION, neo4jentity.ActionCreated)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to get created action: %v", err.Error())
@@ -457,7 +457,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 		timelineEventType = "MEETING"
 	case entity.NodeLabel_Action:
 		timelineEventAction := timelineEvent.(*entity.ActionEntity)
-		if timelineEventAction.Type == entity.ActionCreated {
+		if timelineEventAction.Type == neo4jentity.ActionCreated {
 			timelineEventType = "ACTION_CREATED"
 		} else {
 			timelineEventType = "ACTION"
@@ -746,7 +746,7 @@ func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.
 		"status":   eventData.Status,
 		"comments": eventData.Comments,
 	}
-	_, err := h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, extraActionProperties)
+	_, err := h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, neo4jentity.ORGANIZATION, neo4jentity.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, extraActionProperties)
 	return err
 }
 

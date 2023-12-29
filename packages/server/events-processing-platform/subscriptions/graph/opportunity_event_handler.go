@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -421,6 +420,6 @@ func (h *OpportunityEventHandler) saveLikelihoodChangeAction(ctx context.Context
 	extraActionProperties := map[string]interface{}{
 		"comments": eventData.Comments,
 	}
-	_, err = h.repositories.ActionRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt, extraActionProperties)
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, neo4jentity.CONTRACT, neo4jentity.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt, extraActionProperties)
 	return err
 }
