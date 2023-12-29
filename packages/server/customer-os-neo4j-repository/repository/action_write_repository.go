@@ -5,40 +5,41 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/customer-os-neo4j-repository/constants"
+	"github.com/openline-ai/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/customer-os-neo4j-repository/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
-type ActionRepository interface {
+type ActionWriteRepository interface {
 	Create(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time) (*dbtype.Node, error)
 	CreateWithProperties(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time, extraProperties map[string]any) (*dbtype.Node, error)
-	GetSingleAction(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType) (*dbtype.Node, error)
 	MergeByActionType(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time) (*dbtype.Node, error)
 }
 
-type actionRepository struct {
-	driver *neo4j.DriverWithContext
+type actionWriteRepository struct {
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewActionRepository(driver *neo4j.DriverWithContext) ActionRepository {
-	return &actionRepository{
-		driver: driver,
+func NewActionWriteRepository(driver *neo4j.DriverWithContext, database string) ActionWriteRepository {
+	return &actionWriteRepository{
+		driver:   driver,
+		database: database,
 	}
 }
 
-func (r *actionRepository) Create(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time) (*dbtype.Node, error) {
+func (r *actionWriteRepository) Create(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time) (*dbtype.Node, error) {
 	return r.CreateWithProperties(ctx, tenant, entityId, entityType, actionType, content, metadata, createdAt, nil)
 }
 
-func (r *actionRepository) CreateWithProperties(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time, extraProperties map[string]any) (*dbtype.Node, error) {
+func (r *actionWriteRepository) CreateWithProperties(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time, extraProperties map[string]any) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.CreateWithProperties")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("entityId", entityId),
 		log.String("entityType", entityType.String()),
 		log.String("actionType", string(actionType)),
@@ -47,14 +48,7 @@ func (r *actionRepository) CreateWithProperties(ctx context.Context, tenant, ent
 		log.Object("createdAt", createdAt),
 		log.Object("extraProperties", extraProperties))
 
-	cypher := ""
-	switch entityType {
-	case entity.ORGANIZATION:
-		cypher = fmt.Sprintf(`MATCH (n:Organization_%s {id:$entityId}) `, tenant)
-	case entity.CONTRACT:
-		cypher = fmt.Sprintf(`MATCH (n:Contract_%s {id:$entityId}) `, tenant)
-	}
-
+	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id:$entityId}) `, entityType.Neo4jLabel(), tenant)
 	cypher += fmt.Sprintf(` MERGE (n)<-[:ACTION_ON]-(a:Action {id:randomUUID()}) 
 				ON CREATE SET 	a.type=$type, 
 								a.content=$content,
@@ -99,70 +93,22 @@ func (r *actionRepository) CreateWithProperties(ctx context.Context, tenant, ent
 		}
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
 }
 
-func (r *actionRepository) GetSingleAction(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.GetSingleAction")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("entityId", entityId),
-		log.String("entityType", entityType.String()),
-		log.String("actionType", string(actionType)))
-
-	query := ""
-	switch entityType {
-	case entity.ORGANIZATION:
-		query = fmt.Sprintf(`MATCH  (n:Organization_%s {id:$entityId}) `, tenant)
-	case entity.CONTRACT:
-		query = fmt.Sprintf(`MATCH  (n:Contract_%s {id:$entityId}) `, tenant)
-	}
-
-	query += `WITH n
-			  MATCH (n)<-[:ACTION_ON]-(a:Action {type:$type})
-			  return a limit 1`
-
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"entityId": entityId,
-				"type":     actionType,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
-}
-
-func (r *actionRepository) MergeByActionType(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time) (*dbtype.Node, error) {
+func (r *actionWriteRepository) MergeByActionType(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.MergeByActionType")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("entityId", entityId),
 		log.String("entityType", entityType.String()),
 		log.String("actionType", string(actionType)),
 		log.String("content", content))
 
-	cypher := ""
-	switch entityType {
-	case entity.ORGANIZATION:
-		cypher = fmt.Sprintf(`MATCH  (n:Organization_%s {id:$entityId}) `, tenant)
-	case entity.CONTRACT:
-		cypher = fmt.Sprintf(`MATCH  (n:Contract_%s {id:$entityId}) `, tenant)
-	}
-
+	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id:$entityId}) `, entityType.Neo4jLabel(), tenant)
 	cypher += fmt.Sprintf(`WITH n
 								OPTIONAL MATCH (n)<-[:ACTION_ON]-(checkA:Action {type:$type})
 								FOREACH (ignore IN CASE WHEN checkA IS NULL THEN [1] ELSE [] END |
@@ -177,7 +123,7 @@ func (r *actionRepository) MergeByActionType(ctx context.Context, tenant, entity
 								a:Action_%s, 
 								a:TimelineEvent, 
 								a:TimelineEvent_%s)`, tenant, tenant)
-	cypher += ` 	WITH n
+	cypher += ` WITH n
 				MATCH (n)<-[:ACTION_ON]-(act:Action {type:$type})
 				RETURN act `
 	params := map[string]any{
@@ -205,6 +151,7 @@ func (r *actionRepository) MergeByActionType(ctx context.Context, tenant, entity
 		}
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil

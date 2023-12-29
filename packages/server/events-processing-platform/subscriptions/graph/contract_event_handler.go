@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -257,7 +256,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 	})
 	message := contractEntity.Name + " renewed"
 
-	_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionContractRenewed, message, metadata, utils.Now())
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, eventData.Tenant, contractId, neo4jentity.CONTRACT, neo4jentity.ActionContractRenewed, message, metadata, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())
@@ -337,7 +336,7 @@ func (h *ContractEventHandler) createActionForStatusChange(ctx context.Context, 
 	case string(model.ContractStatusStringEnded):
 		message = contractName + " has ended"
 	}
-	_, err = h.repositories.ActionRepository.Create(ctx, tenant, contractId, entity.CONTRACT, entity.ActionContractStatusUpdated, message, metadata, utils.Now())
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractId, neo4jentity.CONTRACT, neo4jentity.ActionContractStatusUpdated, message, metadata, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating status update action for contract %s: %s", contractId, err.Error())
