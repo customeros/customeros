@@ -1,20 +1,11 @@
 'use client';
 import React, { FC } from 'react';
-import { OptionsOrGroups } from 'react-select';
-
-import { GroupBase } from 'chakra-react-select';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { Copy01 } from '@ui/media/icons/Copy01';
-import { IconButton } from '@ui/form/IconButton';
-import { Contact, ComparisonOperator } from '@graphql/types';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { emailRegex } from '@organization/src/components/Timeline/events/email/utils';
-import { GetContactsEmailListDocument } from '@organization/src/graphql/getContactsEmailList.generated';
-import { EmailFormMultiCreatableSelect } from '@organization/src/components/Timeline/events/email/compose-email/EmailFormMultiCreatableSelect';
 
+import { EmailFormMultiCreatableSelect } from './EmailFormMultiCreatableSelect';
 interface EmailParticipantSelect {
   formId: string;
   entryType: string;
@@ -28,100 +19,23 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
   formId,
   autofocus = false,
 }) => {
-  const client = getGraphQLClient();
-  const [_, copyToClipboard] = useCopyToClipboard();
-
-  const getFilteredSuggestions = async (
-    filterString: string,
-    callback: (options: OptionsOrGroups<unknown, GroupBase<unknown>>) => void,
-  ) => {
-    try {
-      const results = await client.request<{
-        contacts: { content: Contact[] };
-      }>(GetContactsEmailListDocument, {
-        pagination: {
-          page: 1,
-          limit: 5,
-        },
-        where: {
-          OR: [
-            {
-              filter: {
-                property: 'FIRST_NAME',
-                value: filterString,
-                operation: ComparisonOperator.Contains,
-              },
-            },
-            {
-              filter: {
-                property: 'LAST_NAME',
-                value: filterString,
-                operation: ComparisonOperator.Contains,
-              },
-            },
-            {
-              filter: {
-                property: 'NAME',
-                value: filterString,
-                operation: ComparisonOperator.Contains,
-              },
-            },
-          ],
-        },
-      });
-
-      const options: OptionsOrGroups<unknown, GroupBase<unknown>> = (
-        results?.contacts?.content || []
-      )
-        .filter((e: Contact) => e.emails.length)
-        .map((e: Contact) =>
-          e.emails.map((email) => ({
-            value: email.email,
-            label: `${e.firstName} ${e.lastName}`,
-          })),
-        )
-        .flat();
-
-      callback(options);
-    } catch (error) {
-      callback([]);
-    }
-  };
-
   return (
     <Flex
       alignItems='baseline'
       marginBottom={-1}
       marginTop={0}
       flex={1}
-      maxH='86px'
+      overflow='visible'
     >
       <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
         {entryType}:
       </Text>
       <EmailFormMultiCreatableSelect
-        optionAction={(data: string) => (
-          <IconButton
-            aria-label='Copy'
-            size='xs'
-            p={0}
-            height={5}
-            variant='ghost'
-            icon={<Copy01 boxSize={3} color='gray.500' />}
-            onClick={(e) => {
-              e.stopPropagation();
-              copyToClipboard(data, 'Email copied!');
-            }}
-          />
-        )}
         autoFocus={autofocus}
         name={fieldName}
         formId={formId}
         placeholder='Enter name or email...'
         noOptionsMessage={() => null}
-        loadOptions={(inputValue: string, callback) => {
-          getFilteredSuggestions(inputValue, callback);
-        }}
         allowCreateWhileLoading={false}
         formatCreateLabel={(input) => {
           return input;

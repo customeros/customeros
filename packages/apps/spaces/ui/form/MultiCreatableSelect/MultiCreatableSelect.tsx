@@ -1,8 +1,10 @@
 import React, { useMemo, forwardRef, useCallback, ComponentType } from 'react';
 
+import { MultiValueComponent } from 'react-select/dist/declarations/src/animated/MultiValue';
 import {
   OptionProps,
   MenuListProps,
+  MultiValueProps,
   ChakraStylesConfig,
 } from 'chakra-react-select';
 
@@ -35,10 +37,11 @@ export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   customStyles?: CustomStylesFn;
   optionAction?: (data: string) => JSX.Element;
   Option?: ComponentType<OptionProps<SelectOption>>;
+  MultiValue?: ComponentType<MultiValueProps<SelectOption>>;
 }
 
 export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
-  ({ chakraStyles, ...props }, ref) => {
+  ({ chakraStyles, components: _components, ...props }, ref) => {
     const Control = useCallback(({ children, ...rest }: ControlProps) => {
       return (
         <chakraComponents.Control {...rest}>
@@ -70,16 +73,19 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
       [],
     );
 
-    const Option = useCallback((rest: OptionProps<SelectOption>) => {
-      return (
-        <chakraComponents.Option {...rest}>
-          {rest.data.label || rest.data.value}
-          {props?.optionAction &&
-            rest?.isFocused &&
-            props.optionAction(rest.data.value)}
-        </chakraComponents.Option>
-      );
-    }, []);
+    const Option = useCallback(
+      (rest: OptionProps<SelectOption>) => {
+        return (
+          <chakraComponents.Option {...rest}>
+            {rest.data.label || rest.data.value}
+            {props?.optionAction &&
+              rest?.isFocused &&
+              props.optionAction(rest.data.value)}
+          </chakraComponents.Option>
+        );
+      },
+      [props.optionAction],
+    );
 
     const MenuList = useCallback((rest: MenuListProps) => {
       return (
@@ -88,17 +94,25 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         </chakraComponents.MenuList>
       );
     }, []);
+    const MultiValue = useCallback((rest: MultiValueProps) => {
+      return (
+        <chakraComponents.MultiValue {...rest}>
+          {rest.children}
+        </chakraComponents.MultiValue>
+      );
+    }, []);
 
     const components = useMemo(
       () => ({
         Control,
         MultiValueLabel,
         MenuList,
-        ClearIndicator: () => null,
+        MultiValue: (props?.MultiValue || MultiValue) as MultiValueComponent,
         DropdownIndicator: () => null,
         Option: (props?.Option || Option) as ComponentType<OptionProps>,
+        ..._components,
       }),
-      [Control, MultiValueLabel],
+      [Control, MultiValueLabel, _components],
     );
 
     return (

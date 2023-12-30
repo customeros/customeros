@@ -686,6 +686,20 @@ export type DashboardNewCustomersPerMonth = {
   year: Scalars['Int'];
 };
 
+export type DashboardOnboardingCompletion = {
+  __typename?: 'DashboardOnboardingCompletion';
+  completionPercentage: Scalars['Float'];
+  increasePercentage: Scalars['Float'];
+  perMonth: Array<DashboardOnboardingCompletionPerMonth>;
+};
+
+export type DashboardOnboardingCompletionPerMonth = {
+  __typename?: 'DashboardOnboardingCompletionPerMonth';
+  month: Scalars['Int'];
+  value: Scalars['Float'];
+  year: Scalars['Int'];
+};
+
 export type DashboardPeriodInput = {
   end: Scalars['Time'];
   start: Scalars['Time'];
@@ -729,11 +743,13 @@ export type DashboardTimeToOnboardPerMonth = {
 export enum DataSource {
   Hubspot = 'HUBSPOT',
   Intercom = 'INTERCOM',
+  Mixpanel = 'MIXPANEL',
   Na = 'NA',
   Openline = 'OPENLINE',
   Pipedrive = 'PIPEDRIVE',
   Salesforce = 'SALESFORCE',
   Slack = 'SLACK',
+  Stripe = 'STRIPE',
   Webscrape = 'WEBSCRAPE',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
@@ -904,9 +920,11 @@ export enum ExternalSystemType {
   Calcom = 'CALCOM',
   Hubspot = 'HUBSPOT',
   Intercom = 'INTERCOM',
+  Mixpanel = 'MIXPANEL',
   Pipedrive = 'PIPEDRIVE',
   Salesforce = 'SALESFORCE',
   Slack = 'SLACK',
+  Stripe = 'STRIPE',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
 
@@ -2666,6 +2684,7 @@ export type Query = {
   dashboard_GrossRevenueRetention?: Maybe<DashboardGrossRevenueRetention>;
   dashboard_MRRPerCustomer?: Maybe<DashboardMrrPerCustomer>;
   dashboard_NewCustomers?: Maybe<DashboardNewCustomers>;
+  dashboard_OnboardingCompletion?: Maybe<DashboardOnboardingCompletion>;
   dashboard_RetentionRate?: Maybe<DashboardRetentionRate>;
   dashboard_RevenueAtRisk?: Maybe<DashboardRevenueAtRisk>;
   dashboard_TimeToOnboard?: Maybe<DashboardTimeToOnboard>;
@@ -2747,6 +2766,10 @@ export type QueryDashboard_MrrPerCustomerArgs = {
 };
 
 export type QueryDashboard_NewCustomersArgs = {
+  period?: InputMaybe<DashboardPeriodInput>;
+};
+
+export type QueryDashboard_OnboardingCompletionArgs = {
   period?: InputMaybe<DashboardPeriodInput>;
 };
 

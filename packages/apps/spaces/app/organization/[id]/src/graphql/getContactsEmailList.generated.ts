@@ -24,6 +24,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type GetContactsEmailListQueryVariables = Types.Exact<{
+  id: Types.Scalars['ID'];
   pagination: Types.Pagination;
   where?: Types.InputMaybe<Types.Filter>;
   sort?: Types.InputMaybe<Array<Types.SortBy> | Types.SortBy>;
@@ -31,32 +32,48 @@ export type GetContactsEmailListQueryVariables = Types.Exact<{
 
 export type GetContactsEmailListQuery = {
   __typename?: 'Query';
-  contacts: {
-    __typename?: 'ContactsPage';
-    content: Array<{
-      __typename?: 'Contact';
-      id: string;
-      firstName?: string | null;
-      lastName?: string | null;
-      emails: Array<{
-        __typename?: 'Email';
+  organization?: {
+    __typename?: 'Organization';
+    id: string;
+    contacts: {
+      __typename?: 'ContactsPage';
+      content: Array<{
+        __typename?: 'Contact';
         id: string;
-        email?: string | null;
+        firstName?: string | null;
+        lastName?: string | null;
+        organizations: {
+          __typename?: 'OrganizationPage';
+          content: Array<{ __typename?: 'Organization'; id: string }>;
+        };
+        emails: Array<{
+          __typename?: 'Email';
+          id: string;
+          email?: string | null;
+        }>;
       }>;
-    }>;
-  };
+    };
+  } | null;
 };
 
 export const GetContactsEmailListDocument = `
-    query GetContactsEmailList($pagination: Pagination!, $where: Filter, $sort: [SortBy!]) {
-  contacts(pagination: $pagination, where: $where, sort: $sort) {
-    content {
-      id
-      firstName
-      lastName
-      emails {
+    query GetContactsEmailList($id: ID!, $pagination: Pagination!, $where: Filter, $sort: [SortBy!]) {
+  organization(id: $id) {
+    id
+    contacts(pagination: $pagination, where: $where, sort: $sort) {
+      content {
         id
-        email
+        firstName
+        lastName
+        organizations(pagination: {page: 1, limit: 1}) {
+          content {
+            id
+          }
+        }
+        emails {
+          id
+          email
+        }
       }
     }
   }
