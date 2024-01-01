@@ -672,7 +672,7 @@ func (h *OrganizationEventHandler) OnUpdateOnboardingStatus(ctx context.Context,
 	}
 
 	if eventData.CausedByContractId != "" {
-		err = h.repositories.ContractRepository.ContractCausedOnboardingStatusChange(ctx, eventData.Tenant, eventData.CausedByContractId)
+		err = h.repositories.Neo4jRepositories.ContractWriteRepository.ContractCausedOnboardingStatusChange(ctx, eventData.Tenant, eventData.CausedByContractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to update contract %s caused onboarding status change: %s", eventData.CausedByContractId, err.Error())

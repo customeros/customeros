@@ -3,6 +3,8 @@ package graph
 import (
 	"context"
 	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
@@ -11,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/contract"
@@ -55,7 +58,25 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	}
 
 	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.ContractRepository.CreateForOrganization(ctx, eventData.Tenant, contractId, eventData)
+	data := neo4jrepository.ContractCreateFields{
+		OrganizationId:   eventData.OrganizationId,
+		Name:             eventData.Name,
+		ContractUrl:      eventData.ContractUrl,
+		CreatedByUserId:  eventData.CreatedByUserId,
+		ServiceStartedAt: eventData.ServiceStartedAt,
+		SignedAt:         eventData.SignedAt,
+		RenewalCycle:     eventData.RenewalCycle,
+		RenewalPeriods:   eventData.RenewalPeriods,
+		Status:           eventData.Status,
+		CreatedAt:        eventData.CreatedAt,
+		UpdatedAt:        eventData.UpdatedAt,
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSource(eventData.Source.Source),
+			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
+			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source.Source),
+		},
+	}
+	err := h.repositories.Neo4jRepositories.ContractWriteRepository.CreateForOrganization(ctx, eventData.Tenant, contractId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving contract %s: %s", contractId, err.Error())
@@ -111,7 +132,19 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	}
 	beforeUpdateContractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
 
-	updatedContractDbNode, err := h.repositories.ContractRepository.UpdateAndReturn(ctx, eventData.Tenant, contractId, eventData)
+	data := neo4jrepository.ContractUpdateFields{
+		Name:             eventData.Name,
+		ContractUrl:      eventData.ContractUrl,
+		ServiceStartedAt: eventData.ServiceStartedAt,
+		Status:           eventData.Status,
+		Source:           helper.GetSource(eventData.Source),
+		RenewalPeriods:   eventData.RenewalPeriods,
+		RenewalCycle:     eventData.RenewalCycle,
+		UpdatedAt:        eventData.UpdatedAt,
+		SignedAt:         eventData.SignedAt,
+		EndedAt:          eventData.EndedAt,
+	}
+	updatedContractDbNode, err := h.repositories.Neo4jRepositories.ContractWriteRepository.UpdateAndReturn(ctx, eventData.Tenant, contractId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s: %s", contractId, err.Error())
@@ -129,7 +162,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	}
 
 	if beforeUpdateContractEntity.RenewalCycle != "" && afterUpdateContractEntity.RenewalCycle == "" {
-		err = h.repositories.ContractRepository.SuspendActiveRenewalOpportunity(ctx, eventData.Tenant, contractId)
+		err = h.repositories.Neo4jRepositories.ContractWriteRepository.SuspendActiveRenewalOpportunity(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while suspending renewal opportunity for contract %s: %s", contractId, err.Error())
@@ -167,7 +200,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		}
 	} else {
 		if beforeUpdateContractEntity.RenewalCycle == "" && afterUpdateContractEntity.RenewalCycle != "" {
-			err = h.repositories.ContractRepository.ActivateSuspendedRenewalOpportunity(ctx, eventData.Tenant, contractId)
+			err = h.repositories.Neo4jRepositories.ContractWriteRepository.ActivateSuspendedRenewalOpportunity(ctx, eventData.Tenant, contractId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Error while activating renewal opportunity for contract %s: %s", contractId, err.Error())
@@ -286,7 +319,7 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 	//we will use this boolean below to check if the status has changed
 	statusChanged := contractEntity.Status != eventData.Status
 
-	err = h.repositories.ContractRepository.UpdateStatus(ctx, eventData.Tenant, contractId, eventData)
+	err = h.repositories.Neo4jRepositories.ContractWriteRepository.UpdateStatus(ctx, eventData.Tenant, contractId, eventData.Status, eventData.ServiceStartedAt, eventData.EndedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
