@@ -11,7 +11,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 replace github.com/openline-ai/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
 require (
-	github.com/99designs/gqlgen v0.17.41
+	github.com/99designs/gqlgen v0.17.42
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/gin-contrib/cors v1.5.0
