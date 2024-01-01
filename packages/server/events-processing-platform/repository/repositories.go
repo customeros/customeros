@@ -22,7 +22,6 @@ type Repositories struct {
 	CustomerOsIdsRepository repository.CustomerOsIdsRepository
 
 	ContactRepository            ContactRepository
-	ContractRepository           ContractRepository
 	CustomFieldRepository        CustomFieldRepository
 	EmailRepository              EmailRepository
 	ExternalSystemRepository     ExternalSystemRepository
@@ -59,7 +58,6 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		TimelineEventRepository:      NewTimelineEventRepository(driver, log),
 		CustomFieldRepository:        NewCustomFieldRepository(driver),
 		OpportunityRepository:        NewOpportunityRepository(driver, neo4jDatabase),
-		ContractRepository:           NewContractRepository(driver, neo4jDatabase),
 		ServiceLineItemRepository:    NewServiceLineItemRepository(driver, neo4jDatabase),
 	}
 
