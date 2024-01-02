@@ -588,14 +588,29 @@ func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt 
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	customFieldExists, err := h.repositories.CustomFieldRepository.ExistsById(ctx, eventData.Tenant, eventData.CustomFieldId)
+	customFieldExists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CustomFieldId, neo4jentity.NodeLabel_CustomField)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to check if custom field exists: %s", err.Error())
 		return err
 	}
 	if !customFieldExists {
-		err = h.repositories.CustomFieldRepository.AddCustomFieldToOrganization(ctx, eventData.Tenant, organizationId, eventData)
+		data := neo4jrepository.CustomFieldCreateFields{
+			CreatedAt:           eventData.CreatedAt,
+			UpdatedAt:           eventData.UpdatedAt,
+			ExistsInEventStore:  eventData.ExistsInEventStore,
+			TemplateId:          eventData.TemplateId,
+			CustomFieldId:       eventData.CustomFieldId,
+			CustomFieldName:     eventData.CustomFieldName,
+			CustomFieldDataType: eventData.CustomFieldDataType,
+			CustomFieldValue:    eventData.CustomFieldValue,
+			SourceFields: neo4jmodel.Source{
+				Source:        helper.GetSource(eventData.Source),
+				SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
+				AppSource:     helper.GetSource(eventData.AppSource),
+			},
+		}
+		err = h.repositories.Neo4jRepositories.CustomFieldWriteRepository.AddCustomFieldToOrganization(ctx, eventData.Tenant, organizationId, data)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to add custom field to organization: %s", err.Error())
