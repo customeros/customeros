@@ -2,6 +2,7 @@ package subscriptions
 
 import (
 	"context"
+
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -111,6 +112,21 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		false,
 		false,
 		esdb.Start{},
+	); err != nil {
+		return err
+	}
+
+	notificationEventSubSettings := esdb.SubscriptionSettingsDefault()
+	if err := s.subscribeToAll(ctx,
+		s.cfg.Subscriptions.NotificationsSubscription.GroupName,
+		nil,
+		&notificationEventSubSettings,
+		false,
+		false,
+		esdb.Position{
+			Commit:  s.cfg.Subscriptions.NotificationsSubscription.StartPosition,
+			Prepare: s.cfg.Subscriptions.NotificationsSubscription.StartPosition,
+		},
 	); err != nil {
 		return err
 	}
