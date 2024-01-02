@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
@@ -112,7 +113,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, now, action.CreatedAt)
-	require.Equal(t, entity.ActionCreated, action.Type)
+	require.Equal(t, neo4jentity.ActionCreated, action.Type)
 	require.Equal(t, "", action.Content)
 	require.Equal(t, "", action.Metadata)
 
@@ -507,7 +508,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 	require.NotNil(t, action.Id)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
-	require.Equal(t, entity.ActionOnboardingStatusChanged, action.Type)
+	require.Equal(t, neo4jentity.ActionOnboardingStatusChanged, action.Type)
 	require.Equal(t, "Olivia Rhye changed the onboarding status to Done", action.Content)
 	require.Equal(t, fmt.Sprintf(`{"status":"%s","comments":"%s","userId":"%s","contractId":"%s"}`, "DONE", "Some comments", userId, ""), action.Metadata)
 }
@@ -568,7 +569,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	require.NotNil(t, action.Id)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
-	require.Equal(t, entity.ActionOnboardingStatusChanged, action.Type)
+	require.Equal(t, neo4jentity.ActionOnboardingStatusChanged, action.Type)
 	require.Equal(t, "The onboarding status was automatically set to Not started", action.Content)
 	require.Equal(t, fmt.Sprintf(`{"status":"%s","comments":"%s","userId":"%s","contractId":"%s"}`, "NOT_STARTED", "Some comments", "", contractId), action.Metadata)
 	// Check extra properties

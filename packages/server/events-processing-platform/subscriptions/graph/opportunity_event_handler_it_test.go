@@ -587,7 +587,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	require.NotNil(t, action.Id)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
-	require.Equal(t, entity.ActionRenewalLikelihoodUpdated, action.Type)
+	require.Equal(t, neo4jentity.ActionRenewalLikelihoodUpdated, action.Type)
 	require.Equal(t, "Renewal likelihood set to Medium", action.Content)
 	require.Equal(t, fmt.Sprintf(`{"likelihood":"%s","reason":"%s"}`, "MEDIUM", "Updated likelihood"), action.Metadata)
 	// Check extra properties

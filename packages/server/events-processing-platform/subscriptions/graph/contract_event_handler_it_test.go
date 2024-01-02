@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -760,7 +761,7 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	require.NotNil(t, action.Id)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
-	require.Equal(t, entity.ActionContractStatusUpdated, action.Type)
+	require.Equal(t, neo4jentity.ActionContractStatusUpdated, action.Type)
 	require.Equal(t, "test contract has ended", action.Content)
 	require.Equal(t, `{"status":"ENDED","contract-name":"test contract","comment":"test contract is now ENDED"}`, action.Metadata)
 }
@@ -837,7 +838,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	require.NotNil(t, action.Id)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
-	require.Equal(t, entity.ActionContractStatusUpdated, action.Type)
+	require.Equal(t, neo4jentity.ActionContractStatusUpdated, action.Type)
 	require.Equal(t, "test contract is now live", action.Content)
 	require.Equal(t, `{"status":"LIVE","contract-name":"test contract","comment":"test contract is now LIVE"}`, action.Metadata)
 }
