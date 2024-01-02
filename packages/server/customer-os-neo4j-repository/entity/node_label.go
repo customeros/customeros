@@ -3,6 +3,7 @@ package entity
 const (
 	NodeLabel_TimelineEvent      = "TimelineEvent"
 	NodeLabel_Contact            = "Contact"
+	NodeLabel_CustomField        = "CustomField"
 	NodeLabel_JobRole            = "JobRole"
 	NodeLabel_Email              = "Email"
 	NodeLabel_InteractionEvent   = "InteractionEvent"

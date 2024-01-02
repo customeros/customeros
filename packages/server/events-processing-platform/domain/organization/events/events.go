@@ -1,6 +1,7 @@
 package events
 
 import (
+	neo4jmodel "github.com/openline-ai/customer-os-neo4j-repository/model"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -381,18 +382,18 @@ func NewOrganizationRefreshRenewalSummaryEvent(aggregate eventstore.Aggregate) (
 }
 
 type OrganizationUpsertCustomField struct {
-	Tenant              string                 `json:"tenant" validate:"required"`
-	Source              string                 `json:"source,omitempty"`
-	SourceOfTruth       string                 `json:"sourceOfTruth,omitempty"`
-	AppSource           string                 `json:"appSource,omitempty"`
-	CreatedAt           time.Time              `json:"createdAt"`
-	UpdatedAt           time.Time              `json:"updatedAt"`
-	ExistsInEventStore  bool                   `json:"existsInEventStore"`
-	TemplateId          *string                `json:"templateId,omitempty"`
-	CustomFieldId       string                 `json:"customFieldId"`
-	CustomFieldName     string                 `json:"customFieldName"`
-	CustomFieldDataType string                 `json:"customFieldDataType"`
-	CustomFieldValue    model.CustomFieldValue `json:"customFieldValue"`
+	Tenant              string                      `json:"tenant" validate:"required"`
+	Source              string                      `json:"source,omitempty"`
+	SourceOfTruth       string                      `json:"sourceOfTruth,omitempty"`
+	AppSource           string                      `json:"appSource,omitempty"`
+	CreatedAt           time.Time                   `json:"createdAt"`
+	UpdatedAt           time.Time                   `json:"updatedAt"`
+	ExistsInEventStore  bool                        `json:"existsInEventStore"`
+	TemplateId          *string                     `json:"templateId,omitempty"`
+	CustomFieldId       string                      `json:"customFieldId"`
+	CustomFieldName     string                      `json:"customFieldName"`
+	CustomFieldDataType string                      `json:"customFieldDataType"`
+	CustomFieldValue    neo4jmodel.CustomFieldValue `json:"customFieldValue"`
 }
 
 func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFields cmnmod.Source, createdAt, updatedAt time.Time, customField model.CustomField, foundInEventStore bool) (eventstore.Event, error) {

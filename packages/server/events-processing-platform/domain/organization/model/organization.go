@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	neo4jmodel "github.com/openline-ai/customer-os-neo4j-repository/model"
 	"time"
 
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -46,38 +47,15 @@ type Social struct {
 	Url          string `json:"url"`
 }
 
-type CustomFieldValue struct {
-	Str     *string    `json:"string,omitempty"`
-	Int     *int64     `json:"int,omitempty"`
-	Time    *time.Time `json:"time,omitempty"`
-	Bool    *bool      `json:"bool,omitempty"`
-	Decimal *float64   `json:"decimal,omitempty"`
-}
-
-func (c *CustomFieldValue) RealValue() any {
-	if c.Int != nil {
-		return *c.Int
-	} else if c.Decimal != nil {
-		return *c.Decimal
-	} else if c.Time != nil {
-		return *c.Time
-	} else if c.Bool != nil {
-		return *c.Bool
-	} else if c.Str != nil {
-		return *c.Str
-	}
-	return nil
-}
-
 type CustomField struct {
-	Id                  string              `json:"id"`
-	Name                string              `json:"name"`
-	TemplateId          *string             `json:"templateId,omitempty"`
-	CustomFieldValue    CustomFieldValue    `json:"customFieldValue"`
-	CustomFieldDataType CustomFieldDataType `json:"customFieldDataType"`
-	Source              cmnmod.Source       `json:"source"`
-	CreatedAt           time.Time           `json:"createdAt,omitempty"`
-	UpdatedAt           time.Time           `json:"updatedAt,omitempty"`
+	Id                  string                      `json:"id"`
+	Name                string                      `json:"name"`
+	TemplateId          *string                     `json:"templateId,omitempty"`
+	CustomFieldValue    neo4jmodel.CustomFieldValue `json:"customFieldValue"`
+	CustomFieldDataType CustomFieldDataType         `json:"customFieldDataType"`
+	Source              cmnmod.Source               `json:"source"`
+	CreatedAt           time.Time                   `json:"createdAt,omitempty"`
+	UpdatedAt           time.Time                   `json:"updatedAt,omitempty"`
 }
 
 type Organization struct {
