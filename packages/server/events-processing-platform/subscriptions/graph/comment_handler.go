@@ -41,7 +41,7 @@ func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event
 	}
 
 	if eventData.CommentedIssueId != "" {
-		issueExists, err := h.repositories.IssueRepository.ExistsById(ctx, eventData.Tenant, eventData.CommentedIssueId)
+		issueExists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CommentedIssueId, neo4jentity.NodeLabel_Issue)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while checking if issue %s exists: %s", eventData.CommentedIssueId, err.Error())

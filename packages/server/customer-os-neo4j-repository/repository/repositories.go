@@ -13,6 +13,7 @@ type Repositories struct {
 	ContractWriteRepository   ContractWriteRepository
 	CountryReadRepository     CountryReadRepository
 	EmailReadRepository       EmailReadRepository
+	IssueWriteRepository      IssueWriteRepository
 	LogEntryWriteRepository   LogEntryWriteRepository
 	PhoneNumberReadRepository PhoneNumberReadRepository
 	PlayerWriteRepository     PlayerWriteRepository
@@ -32,6 +33,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		ContractWriteRepository:   NewContractWriteRepository(driver, neo4jDatabase),
 		CountryReadRepository:     NewCountryReadRepository(driver, neo4jDatabase),
 		EmailReadRepository:       NewEmailReadRepository(driver, neo4jDatabase),
+		IssueWriteRepository:      NewIssueWriteRepository(driver, neo4jDatabase),
 		LogEntryWriteRepository:   NewLogEntryWriteRepository(driver, neo4jDatabase),
 		PhoneNumberReadRepository: NewPhoneNumberReadRepository(driver, neo4jDatabase),
 		PlayerWriteRepository:     NewPlayerWriteRepository(driver, neo4jDatabase),
