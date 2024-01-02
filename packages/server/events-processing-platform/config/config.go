@@ -106,7 +106,7 @@ type NotificationsSubscription struct {
 	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_GROUP_NAME" envDefault:"notifications-v1" validate:"required"`
 	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
 	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
-	StartPosition    uint64 `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_START_POSITION" envDefault:"0"`
+	StartPosition    uint64 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_START_POSITION" envDefault:"720391063"`
 }
 
 type Services struct {

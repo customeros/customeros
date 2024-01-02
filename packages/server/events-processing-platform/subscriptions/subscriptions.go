@@ -123,7 +123,10 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		&notificationEventSubSettings,
 		false,
 		false,
-		esdb.Start{},
+		esdb.Position{
+			Commit:  s.cfg.Subscriptions.NotificationsSubscription.StartPosition,
+			Prepare: s.cfg.Subscriptions.NotificationsSubscription.StartPosition,
+		},
 	); err != nil {
 		return err
 	}
