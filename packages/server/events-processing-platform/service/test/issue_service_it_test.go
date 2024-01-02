@@ -20,7 +20,7 @@ func TestIssueService_UpsertIssue_CreateIssue(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
-	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(nil, aggregateStore)
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	require.Nil(t, err)
 
 	issueClient := issuepb.NewIssueGrpcServiceClient(grpcConnection)
@@ -78,7 +78,7 @@ func TestIssueService_UpsertIssue_UpdateIssue(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
-	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(nil, aggregateStore)
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	require.Nil(t, err)
 
 	issueClient := issuepb.NewIssueGrpcServiceClient(grpcConnection)
