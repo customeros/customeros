@@ -7,13 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
-type EmailableUser struct {
-	FirstName    string `json:"firstName"`
-	LastName     string `json:"lastName"`
-	Email        string `json:"email"`
-	SubscriberID string `json:"subscriberId"` // must be unique uuid for user
-}
-
 type NovuProvider struct {
 	NovuClient *novu.APIClient
 	log        logger.Logger
@@ -26,7 +19,7 @@ func NewNovuProvider(log logger.Logger, apiKey string) *NovuProvider {
 	}
 }
 
-func (np *NovuProvider) SendEmail(ctx context.Context, u *EmailableUser, payload map[string]interface{}, eventId string) error {
+func (np *NovuProvider) SendNotification(ctx context.Context, u *NotifiableUser, payload map[string]interface{}, workflowId string) error {
 	to := map[string]interface{}{
 		"lastName":     u.LastName,
 		"firstName":    u.FirstName,
@@ -36,7 +29,7 @@ func (np *NovuProvider) SendEmail(ctx context.Context, u *EmailableUser, payload
 
 	data := novu.ITriggerPayloadOptions{To: to, Payload: payload}
 
-	_, err := np.NovuClient.EventApi.Trigger(ctx, eventId, data)
+	_, err := np.NovuClient.EventApi.Trigger(ctx, workflowId, data)
 
 	if err != nil {
 		np.log.Errorf("(NotificationsSubscriber.NovuProvider.SendEmail) error: %s", err.Error())

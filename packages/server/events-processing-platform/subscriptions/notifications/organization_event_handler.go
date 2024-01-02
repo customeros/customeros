@@ -48,7 +48,21 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 	err := h.notificationProviderSendEmail(
 		ctx,
 		span,
-		EventIdOrgOwnerUpdateEmail,
+		WorkflowIdOrgOwnerUpdateEmail,
+		eventData.OwnerUserId,
+		eventData.ActorUserId,
+		eventData.OrganizationId,
+		eventData.Tenant,
+	)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	err = h.notificationProviderSendInAppNotification(
+		ctx,
+		span,
+		WorkflowIdOrgOwnerUpdateAppNotification,
 		eventData.OwnerUserId,
 		eventData.ActorUserId,
 		eventData.OrganizationId,
@@ -62,7 +76,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 	return err
 }
 
-func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Context, span opentracing.Span, eventId, userId, actorUserId, orgId, tenant string) error {
+func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Context, span opentracing.Span, workflowId, userId, actorUserId, orgId, tenant string) error {
 	///////////////////////////////////       Get User, Actor, Org Content       ///////////////////////////////////
 	// target user email
 	emailDbNode, err := h.repositories.EmailRepository.GetEmailForUser(ctx, tenant, userId)
@@ -131,12 +145,82 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 
 	// call notification service
-	err = h.notificationProvider.SendEmail(ctx, &EmailableUser{
+	err = h.notificationProvider.SendNotification(ctx, &NotifiableUser{
 		FirstName:    user.FirstName,
 		LastName:     user.LastName,
 		Email:        email.Email,
 		SubscriberID: userId,
-	}, payload, EventIdOrgOwnerUpdateEmail)
+	}, payload, workflowId)
+
+	return err
+}
+
+func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx context.Context, span opentracing.Span, workflowId, userId, actorUserId, orgId, tenant string) error {
+	///////////////////////////////////       Get User, Actor, Org Content       ///////////////////////////////////
+	// target user email
+	emailDbNode, err := h.repositories.EmailRepository.GetEmailForUser(ctx, tenant, userId)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
+	}
+
+	var email *entity.EmailEntity
+	if emailDbNode == nil {
+		tracing.TraceErr(span, err)
+		err = errors.New("email db node not found")
+		return errors.Wrap(err, "h.notificationProviderSendInAppNotification")
+	}
+	email = graph_db.MapDbNodeToEmailEntity(*emailDbNode)
+
+	// target user
+	userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
+	}
+	var user *entity.UserEntity
+	if userDbNode != nil {
+		user = graph_db.MapDbNodeToUserEntity(*userDbNode)
+	}
+
+	// actor user
+	actorDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, actorUserId)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
+	}
+	var actor *entity.UserEntity
+	if userDbNode != nil {
+		actor = graph_db.MapDbNodeToUserEntity(*actorDbNode)
+	}
+
+	// Organization
+	orgDbNode, err := h.repositories.OrganizationRepository.GetOrganization(ctx, tenant, orgId)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "h.repositories.OrganizationRepository.GetOrganization")
+	}
+	var org *entity.OrganizationEntity
+	if orgDbNode != nil {
+		org = graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
+	}
+	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
+
+	payload := map[string]interface{}{
+		"notificationText": fmt.Sprintf("%s %s added you as an owner to %s", actor.FirstName, actor.LastName, org.Name),
+	}
+
+	// call notification service
+	err = h.notificationProvider.SendNotification(ctx, &NotifiableUser{
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		Email:        email.Email,
+		SubscriberID: userId,
+	}, payload, workflowId)
 
 	return err
 }
