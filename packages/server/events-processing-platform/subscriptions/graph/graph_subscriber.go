@@ -16,6 +16,7 @@ import (
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
+	masterplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
@@ -52,6 +53,7 @@ type GraphSubscriber struct {
 	opportunityEventHandler        *OpportunityEventHandler
 	contractEventHandler           *ContractEventHandler
 	serviceLineItemEventHandler    *ServiceLineItemEventHandler
+	masterPlanEventHandler         *MasterPlanEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphSubscriber {
@@ -74,6 +76,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		opportunityEventHandler:        NewOpportunityEventHandler(log, repositories, grpcClients),
 		contractEventHandler:           NewContractEventHandler(log, repositories, grpcClients),
 		serviceLineItemEventHandler:    NewServiceLineItemEventHandler(log, repositories, grpcClients),
+		masterPlanEventHandler:         NewMasterPlanEventHandler(log, repositories),
 	}
 }
 
@@ -335,6 +338,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.serviceLineItemEventHandler.OnDelete(ctx, evt)
 	case servicelineitemevent.ServiceLineItemCloseV1:
 		return s.serviceLineItemEventHandler.OnClose(ctx, evt)
+
+	case masterplanevent.MasterPlanCreateV1:
+		return s.masterPlanEventHandler.OnCreate(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
