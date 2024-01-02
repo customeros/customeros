@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "common/source.proto";
+
+option go_package = "api/grpc/v1/master_plan;master_plan_grpc_service";
+
+message CreateMasterPlanGrpcRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string name = 3;
+  google.protobuf.Timestamp createdAt = 4;
+  SourceFields sourceFields = 5;
+}
+
+message MasterPlanIdGrpcResponse {
+  string id = 1;
+}
+
+message MasterPlanMilestoneIdGrpcResponse {
+  string id = 1;
+}
+
+// Service definition
+service MasterPlanGrpcService {
+  rpc CreateMasterPlan(CreateMasterPlanGrpcRequest) returns (MasterPlanIdGrpcResponse);
+}
