@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -285,17 +284,18 @@ func (r *emailRepository) GetEmailForUser(ctx context.Context, tenant string, us
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect(ctx)
+			return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	if len(result.([]*db.Record)) > 0 {
-		return result.([]*db.Record)[0].Values[0].(*dbtype.Node), nil
+	if result == nil {
+		return nil, nil
 	}
-	return nil, nil
+
+	return result.(*dbtype.Node), nil
 }
 
 func (r *emailRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
