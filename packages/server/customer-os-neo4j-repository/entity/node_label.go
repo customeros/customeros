@@ -11,6 +11,7 @@ const (
 	NodeLabel_Note               = "Note"
 	NodeLabel_LogEntry           = "LogEntry"
 	NodeLabel_Organization       = "Organization"
+	NodeLabel_MasterPlan         = "MasterPlan"
 	NodeLabel_Action             = "Action"
 	NodeLabel_PageView           = "PageView"
 	NodeLabel_PhoneNumber        = "PhoneNumber"

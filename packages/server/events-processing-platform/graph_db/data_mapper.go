@@ -342,6 +342,23 @@ func MapDbNodeToAnalysisEntity(node dbtype.Node) *entity.AnalysisEntity {
 	return &analysisEntity
 }
 
+func MapDbNodeToMasterPlanEntity(node *dbtype.Node) *entity.MasterPlanEntity {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
+	masterPlan := entity.MasterPlanEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &masterPlan
+}
+
 func MigrateStartedAt(props map[string]any) time.Time {
 	if props["createdAt"] != nil {
 		return utils.GetTimePropOrNow(props, "createdAt")
