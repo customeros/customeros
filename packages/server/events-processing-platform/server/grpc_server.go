@@ -14,6 +14,7 @@ import (
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
+	masterplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
@@ -114,4 +115,7 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 
 	serviceLineItemService := service.NewServiceLineItemService(server.log, server.commandHandlers.ServiceLineItem, server.aggregateStore)
 	servicelineitempb.RegisterServiceLineItemGrpcServiceServer(grpcServer, serviceLineItemService)
+
+	masterPlanService := service.NewMasterPlanService(server.log, server.commandHandlers.MasterPlan, server.aggregateStore)
+	masterplanpb.RegisterMasterPlanGrpcServiceServer(grpcServer, masterPlanService)
 }
