@@ -275,7 +275,7 @@ func (r *emailRepository) GetEmailForUser(ctx context.Context, tenant string, us
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	q := fmt.Sprintf("match (e:Email_%s)<-[:HAS]-(u:User_%s {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) return e", tenant, tenant)
+	q := fmt.Sprintf("match (e:Email_%s)<-[:HAS]-(u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WHERE u:User_%s return e", tenant, tenant)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, q,
@@ -291,13 +291,11 @@ func (r *emailRepository) GetEmailForUser(ctx context.Context, tenant string, us
 	if err != nil {
 		return nil, err
 	}
-	if len(result.([]*db.Record)) == 0 {
-		return nil, nil
-	}
-	if len(result.([]*db.Record)) > 1 { // FIXME: this is a hack to get the first email, query for primary email instead
+
+	if len(result.([]*db.Record)) > 0 {
 		return result.([]*db.Record)[0].Values[0].(*dbtype.Node), nil
 	}
-	return result.(*dbtype.Node), err
+	return nil, nil
 }
 
 func (r *emailRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
