@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	neo4jmodel "github.com/openline-ai/customer-os-neo4j-repository/model"
 
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -274,7 +275,7 @@ func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Contex
 		Id:         customFieldId,
 		Name:       request.CustomFieldName,
 		TemplateId: request.CustomFieldTemplateId,
-		CustomFieldValue: model.CustomFieldValue{
+		CustomFieldValue: neo4jmodel.CustomFieldValue{
 			Str:     request.CustomFieldValue.StringValue,
 			Bool:    request.CustomFieldValue.BoolValue,
 			Time:    utils.TimestampProtoToTimePtr(request.CustomFieldValue.DatetimeValue),
