@@ -3,10 +3,6 @@ package neo4j
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"sort"
-	"testing"
-
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
@@ -381,7 +377,7 @@ func CreateEmailForUser(ctx context.Context, driver *neo4j.DriverWithContext, te
 func LinkEmailWithUser(ctx context.Context, driver *neo4j.DriverWithContext, emailId, userId string) {
 	query := `MATCH (e:Email {id:$emailId}), (u:User {id:$userId})
 				MERGE (u)-[:HAS]->(e) `
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"emailId": emailId,
 		"userId":  userId,
 	})
