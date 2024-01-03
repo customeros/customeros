@@ -240,6 +240,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Renewa
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
 		MaxAmount:         10,
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -263,6 +264,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Renewa
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
 		MaxAmount:         10,
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
 	})
@@ -286,6 +288,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Renewa
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
 		MaxAmount:         10,
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
 	})
@@ -309,6 +312,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Contra
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
 		MaxAmount:         10,
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodZero,
 	})
@@ -332,6 +336,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_High_1_At_R
 		ServiceStartedAt: &contractServiceStartedAt,
 	}, entity.OpportunityEntity{
 		MaxAmount:         10,
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -341,6 +346,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_High_1_At_R
 		ContractStatus:   entity.ContractStatusLive,
 	}, entity.OpportunityEntity{
 		MaxAmount:         10,
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
 	})
@@ -367,6 +373,110 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_High_1_At_R
 	require.Equal(t, float64(10), dashboardReport.Dashboard_RevenueAtRisk.AtRisk)
 }
 
+func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_2_Opportunities_Ok(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contractServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contractServiceStartedAt,
+	})
+
+	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageClosedWon,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+		MaxAmount:         5,
+	})
+	opId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+		MaxAmount:         12,
+	})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_revenue_at_risk",
+		map[string]interface{}{
+			"start": "2000-02-01T00:00:00.000Z",
+			"end":   "2500-01-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_RevenueAtRisk model.DashboardRevenueAtRisk
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(12), dashboardReport.Dashboard_RevenueAtRisk.HighConfidence)
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RevenueAtRisk.AtRisk)
+}
+
+func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_2_Opportunities_At_Risk(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contractServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 8)
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contractServiceStartedAt,
+	})
+
+	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageClosedWon,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+		MaxAmount:         5,
+	})
+	opId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+		MaxAmount:         12,
+	})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_revenue_at_risk",
+		map[string]interface{}{
+			"start": "2000-02-01T00:00:00.000Z",
+			"end":   "2500-01-01T00:00:00.000Z",
+		})
+
+	var dashboardReport struct {
+		Dashboard_RevenueAtRisk model.DashboardRevenueAtRisk
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, float64(0), dashboardReport.Dashboard_RevenueAtRisk.HighConfidence)
+	require.Equal(t, float64(12), dashboardReport.Dashboard_RevenueAtRisk.AtRisk)
+}
+
 func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_At_Risk(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -383,6 +493,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_A
 		ServiceStartedAt: &contractServiceStartedAt,
 	}, entity.OpportunityEntity{
 		MaxAmount:         10,
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -396,6 +507,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_A
 		ContractStatus:   entity.ContractStatusLive,
 	}, entity.OpportunityEntity{
 		MaxAmount:         10,
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
 	})

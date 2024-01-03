@@ -538,14 +538,15 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[r]->(op:Opportunity_%s)
-					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL
-					
+					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL 
+						AND op.internalType = 'RENEWAL' AND op.internalStage in ['OPEN', 'EVALUATING']
+
 					WITH o, c, op, COLLECT(type(r)) AS relTypes
 
 					WITH o.id AS oid,
 						COLLECT(DISTINCT CASE
-							WHEN c.status = 'ENDED' AND NOT 'ACTIVE_RENEWAL' IN relTypes THEN 'CHURNED'
-							WHEN c.status = 'LIVE' AND 'ACTIVE_RENEWAL' in relTypes AND op.internalType = 'RENEWAL' AND op.renewalLikelihood = 'HIGH' THEN 'OK'
+							WHEN c.status = 'ENDED' THEN 'CHURNED'
+							WHEN c.status = 'LIVE' AND 'ACTIVE_RENEWAL' in relTypes AND op.renewalLikelihood = 'HIGH' THEN 'OK'
 							ELSE 'AT_RISK'
 						END) AS statuses,
 						COLLECT(DISTINCT { serviceStartedAt: c.serviceStartedAt }) AS contractsStartedAt
@@ -637,7 +638,7 @@ func (r *dashboardRepository) GetDashboardRevenueAtRiskData(ctx context.Context,
 			`
 					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:ACTIVE_RENEWAL]->(op:Opportunity_%s)
 					WHERE 
-						o.hide = false AND o.isCustomer = true AND c.status = 'LIVE' AND op.internalType = 'RENEWAL'
+						o.hide = false AND o.isCustomer = true AND c.status = 'LIVE' AND op.internalType = 'RENEWAL' AND op.internalStage in ['OPEN', 'EVALUATING']
 					
 					WITH COLLECT(DISTINCT { renewalLikelihood: op.renewalLikelihood, maxAmount: op.maxAmount }) AS contractDetails
 					

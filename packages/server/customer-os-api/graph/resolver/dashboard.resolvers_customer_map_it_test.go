@@ -195,6 +195,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -241,6 +242,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
 	})
@@ -287,6 +289,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
 	})
@@ -333,6 +336,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodZero,
 	})
@@ -381,6 +385,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Closed_Contrac
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
 	})
@@ -390,6 +395,233 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Closed_Contrac
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
+		map[string]interface{}{})
+
+	var dashboardReport struct {
+		Dashboard_CustomerMap []model.DashboardCustomerMap
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+
+	org1 := dashboardReport.Dashboard_CustomerMap[0]
+	require.Equal(t, orgId, org1.Organization.ID)
+	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
+	require.Equal(t, model.DashboardCustomerMapStateChurned, org1.State)
+	require.Equal(t, float64(12), org1.Arr)
+}
+
+func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportunities_Should_Be_OK(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contract1ServiceStartedAt,
+	})
+	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageClosedWon,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	})
+	opId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
+
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
+		map[string]interface{}{})
+
+	var dashboardReport struct {
+		Dashboard_CustomerMap []model.DashboardCustomerMap
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+
+	org1 := dashboardReport.Dashboard_CustomerMap[0]
+	require.Equal(t, orgId, org1.Organization.ID)
+	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
+	require.Equal(t, model.DashboardCustomerMapStateOk, org1.State)
+	require.Equal(t, float64(12), org1.Arr)
+}
+
+func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_3_Opportunities_Should_Be_OK(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contract1ServiceStartedAt,
+	})
+	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageClosedLost,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodZero,
+	})
+	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageClosedWon,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	})
+	opId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
+
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 3})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
+		map[string]interface{}{})
+
+	var dashboardReport struct {
+		Dashboard_CustomerMap []model.DashboardCustomerMap
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+
+	org1 := dashboardReport.Dashboard_CustomerMap[0]
+	require.Equal(t, orgId, org1.Organization.ID)
+	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
+	require.Equal(t, model.DashboardCustomerMapStateOk, org1.State)
+	require.Equal(t, float64(12), org1.Arr)
+}
+
+func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportunities_Should_Be_At_Risk(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contract1ServiceStartedAt,
+	})
+	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageClosedWon,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
+	opId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
+
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
+		map[string]interface{}{})
+
+	var dashboardReport struct {
+		Dashboard_CustomerMap []model.DashboardCustomerMap
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+
+	org1 := dashboardReport.Dashboard_CustomerMap[0]
+	require.Equal(t, orgId, org1.Organization.ID)
+	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
+	require.Equal(t, model.DashboardCustomerMapStateAtRisk, org1.State)
+	require.Equal(t, float64(12), org1.Arr)
+}
+
+func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportunities_Should_Be_Churned(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
+
+	contract1ServiceStartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contract1ServiceEndedAt := neo4jt.FirstTimeOfMonth(2023, 8)
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt: &contract1ServiceStartedAt,
+		EndedAt:          &contract1ServiceEndedAt,
+	})
+	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageClosedWon,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
+	opId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
+	})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opId)
+
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
@@ -428,6 +660,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -486,6 +719,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -497,6 +731,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
 	})
@@ -541,6 +776,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -552,6 +788,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
 	})
@@ -596,6 +833,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -607,6 +845,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodZero,
 	})
@@ -651,6 +890,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
 	})
@@ -705,6 +945,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -764,6 +1005,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Closed_Sec
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
 	})
@@ -775,6 +1017,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Closed_Sec
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -821,6 +1064,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -832,6 +1076,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
 	})
@@ -878,6 +1123,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -891,6 +1137,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
 	})
@@ -937,6 +1184,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1ServiceEndedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -950,6 +1198,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
 	})
@@ -995,6 +1244,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -1011,6 +1261,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -1066,6 +1317,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 		ServiceStartedAt: &contract1ServiceStartedAt,
 		EndedAt:          &contract1EndedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -1075,6 +1327,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -1090,6 +1343,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract2ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium,
 	})
@@ -1100,6 +1354,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 		ServiceStartedAt: &contract2ServiceStartedAt,
 		EndedAt:          &contract2ServiceEndedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
 	})
@@ -1153,6 +1408,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Annually_SLI(t *testing.T) {
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
 	})
@@ -1199,6 +1455,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Quarterly_SLI(t *testing.T) {
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
 	})
@@ -1245,6 +1502,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Monthly_SLI(t *testing.T) {
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contract1ServiceStartedAt,
 	}, entity.OpportunityEntity{
+		InternalStage:     entity.InternalStageOpen,
 		InternalType:      entity.InternalTypeRenewal,
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow,
 	})
