@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { dodge } from './dodge';
 
@@ -36,11 +37,16 @@ export const useDodge = <Datum>({
   const minMaxX = d3.extent(data, (d) => d.x) as [Date, Date];
   const minMaxR = d3.extent(data, (d) => d.r) as [number, number];
 
+  const isTaller = useFeatureIsOn('taller-customer-map-chart');
+
   const xScale = d3
     .scaleTime()
     .domain(minMaxX)
     .range([marginLeft, width + marginRight]);
-  const rScale = d3.scaleLinear().domain(minMaxR).range([LOW_R, TOP_R]);
+  const rScale = d3
+    .scaleLinear()
+    .domain(minMaxR)
+    .range([LOW_R, isTaller ? 20 : TOP_R]);
 
   function transformData(input: CircleData<Datum>[]) {
     return dodge(input, {

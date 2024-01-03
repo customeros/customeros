@@ -24,6 +24,7 @@ import { getMonthLabel } from '../util';
 export type GrossRevenueRetentionDatum = {
   month: number;
   value: number;
+  index: number;
 };
 
 interface GrossRevenueRetentionProps {
@@ -44,7 +45,7 @@ const height = 200;
 const axisHeight = 8;
 
 const getDate = (d: GrossRevenueRetentionDatum) =>
-  set(new Date(), { month: d.month - 1, date: 1 });
+  set(new Date(), { month: d.month - 1, year: d.index });
 const bisectDate = bisector<GrossRevenueRetentionDatum, Date>((d) =>
   getDate(d),
 ).left;

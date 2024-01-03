@@ -14,7 +14,7 @@ import { HelpContent } from './HelpContent';
 import { PercentageTrend } from '../../PercentageTrend';
 import { TimeToOnboardDatum } from './TimeToOnboard.chart';
 
-const MrrPerCustomerChart = dynamic(() => import('./TimeToOnboard.chart'), {
+const TimeToOnboardChart = dynamic(() => import('./TimeToOnboard.chart'), {
   ssr: false,
 });
 
@@ -25,11 +25,17 @@ export const TimeToOnboard = () => {
 
   const hasContracts = globalCacheData?.global_Cache?.contractsExist;
   const chartData = (data?.dashboard_TimeToOnboard?.perMonth ?? []).map(
-    (d) => ({
-      month: d?.month,
-      value: d?.value,
-    }),
+    (d, index, arr) => {
+      const decIndex = arr.findIndex((d) => d.month === 12);
+
+      return {
+        month: d?.month,
+        value: d?.value,
+        index: decIndex > index - 1 ? 1 : 2,
+      };
+    },
   ) as TimeToOnboardDatum[];
+
   const stat = formatCurrency(
     data?.dashboard_TimeToOnboard?.timeToOnboard ?? 0,
   );
@@ -55,7 +61,7 @@ export const TimeToOnboard = () => {
             startColor='gray.300'
             isLoaded={!isLoading}
           >
-            <MrrPerCustomerChart
+            <TimeToOnboardChart
               width={width}
               data={chartData}
               hasContracts={hasContracts}

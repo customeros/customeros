@@ -34,6 +34,7 @@ const axisHeight = 8;
 export type TimeToOnboardDatum = {
   month: number;
   value: number;
+  index: number;
 };
 
 interface MrrPerCustomerProps {
@@ -43,8 +44,9 @@ interface MrrPerCustomerProps {
   data?: TimeToOnboardDatum[];
 }
 
-const getDate = (d: TimeToOnboardDatum) =>
-  set(new Date(), { month: d.month - 1, date: 1 });
+const getDate = (d: TimeToOnboardDatum) => {
+  return set(new Date(), { month: d.month - 1, year: d.index });
+};
 const bisectDate = bisector<TimeToOnboardDatum, Date>((d) => getDate(d)).left;
 const getY = (d: TimeToOnboardDatum) => d.value;
 

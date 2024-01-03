@@ -25,10 +25,15 @@ export const MrrPerCustomer = () => {
 
   const hasContracts = globalCacheData?.global_Cache?.contractsExist;
   const chartData = (data?.dashboard_MRRPerCustomer?.perMonth ?? []).map(
-    (d) => ({
-      month: d?.month,
-      value: d?.value,
-    }),
+    (d, index, arr) => {
+      const decIndex = arr.findIndex((d) => d?.month === 12);
+
+      return {
+        month: d?.month,
+        value: d?.value,
+        index: decIndex > index - 1 ? 1 : 2,
+      };
+    },
   ) as MrrPerCustomerDatum[];
   const stat = formatCurrency(
     data?.dashboard_MRRPerCustomer?.mrrPerCustomer ?? 0,

@@ -9,6 +9,7 @@ import { RevenueAtRisk } from './src/components/charts/RevenueAtRisk';
 import { RetentionRate } from './src/components/charts/RetentionRate';
 import { TimeToOnboard } from './src/components/charts/TimeToOnboard';
 import { MrrPerCustomer } from './src/components/charts/MrrPerCustomer';
+import { OnboardingCompletion } from './src/components/charts/OnboardingCompletion';
 import { GrossRevenueRetention } from './src/components/charts/GrossRevenueRetention';
 
 export default function DashboardPage() {
@@ -35,6 +36,7 @@ export default function DashboardPage() {
 
       <Flex gap='3'>
         <TimeToOnboard />
+        <OnboardingCompletion />
       </Flex>
     </Flex>
   );
