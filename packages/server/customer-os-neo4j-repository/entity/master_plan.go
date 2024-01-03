@@ -13,3 +13,5 @@ type MasterPlanEntity struct {
 	AppSource     string
 	Name          string
 }
+
+type MasterPlanEntities []MasterPlanEntity

@@ -30,6 +30,10 @@ var AllDataSource = []DataSource{
 	DataSourceMixpanel,
 }
 
+func (ds DataSource) String() string {
+	return string(ds)
+}
+
 func GetDataSource(s string) DataSource {
 	if IsValidDataSource(s) {
 		return DataSource(s)

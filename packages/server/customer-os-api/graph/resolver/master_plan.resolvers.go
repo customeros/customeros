@@ -6,12 +6,35 @@ package resolver
 
 import (
 	"context"
-	"fmt"
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
 // MasterPlanCreate is the resolver for the masterPlan_Create field.
 func (r *mutationResolver) MasterPlanCreate(ctx context.Context, input model.MasterPlanInput) (*model.MasterPlan, error) {
-	panic(fmt.Errorf("not implemented: MasterPlanCreate - masterPlan_Create"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanCreate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	masterPlanId, err := r.Services.MasterPlanService.Create(ctx, utils.IfNotNilString(input.Name))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create master plan")
+		return &model.MasterPlan{ID: masterPlanId}, err
+	}
+
+	createdMasterPlanEntity, err := r.Services.MasterPlanService.GetById(ctx, masterPlanId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Master plan details not yet available. Master plan id: %s", masterPlanId)
+		return &model.MasterPlan{ID: masterPlanId}, nil
+	}
+	span.LogFields(log.String("response.masterPlanId", masterPlanId))
+	return mapper.MapEntityToMasterPlan(createdMasterPlanEntity), nil
 }
