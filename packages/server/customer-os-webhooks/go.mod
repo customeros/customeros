@@ -20,7 +20,7 @@ require (
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/google/uuid v1.5.0
 	github.com/joho/godotenv v1.5.1
-	github.com/neo4j/neo4j-go-driver/v5 v5.15.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.16.0
 	github.com/openline-ai/customer-os-neo4j-repository v0.0.0-00010101000000-000000000000
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230919071321-b1ec8acfb667
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231227140027-08b87eac2360
