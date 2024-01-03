@@ -112,6 +112,10 @@ func (s *NotificationsSubscriber) When(ctx context.Context, evt eventstore.Event
 		return nil
 	}
 
+	if s.cfg.Subscriptions.NotificationsSubscription.IgnoreEvents {
+		return nil
+	}
+
 	switch evt.GetEventType() {
 
 	case orgevents.OrganizationUpdateOwnerV1:
