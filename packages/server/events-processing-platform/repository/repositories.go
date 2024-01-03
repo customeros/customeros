@@ -29,7 +29,6 @@ type Repositories struct {
 	OpportunityRepository      OpportunityRepository
 	OrganizationRepository     OrganizationRepository
 	PhoneNumberRepository      PhoneNumberRepository
-	ServiceLineItemRepository  ServiceLineItemRepository
 	TimelineEventRepository    TimelineEventRepository
 }
 
@@ -50,7 +49,6 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		ExternalSystemRepository:   NewExternalSystemRepository(driver),
 		TimelineEventRepository:    NewTimelineEventRepository(driver, log),
 		OpportunityRepository:      NewOpportunityRepository(driver, neo4jDatabase),
-		ServiceLineItemRepository:  NewServiceLineItemRepository(driver, neo4jDatabase),
 	}
 
 	err := gormDb.AutoMigrate(&entity.CustomerOsIds{})

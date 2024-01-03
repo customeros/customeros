@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
@@ -14,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/contract"
@@ -119,7 +122,28 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			billedTypeChanged = previousServiceLineItem.Billed != eventData.Billed
 		}
 	}
-	err := h.repositories.ServiceLineItemRepository.CreateForContract(ctx, eventData.Tenant, serviceLineItemId, eventData, isNewVersionForExistingSLI, previousQuantity, previousPrice, previousBilled)
+	data := neo4jrepository.ServiceLineItemCreateFields{
+		IsNewVersionForExistingSLI: isNewVersionForExistingSLI,
+		PreviousQuantity:           previousQuantity,
+		PreviousPrice:              previousPrice,
+		PreviousBilled:             previousBilled,
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSource(eventData.Source.Source),
+			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source.SourceOfTruth),
+		},
+		ContractId: eventData.ContractId,
+		ParentId:   eventData.ParentId,
+		CreatedAt:  eventData.CreatedAt,
+		UpdatedAt:  eventData.UpdatedAt,
+		StartedAt:  eventData.StartedAt,
+		EndedAt:    eventData.EndedAt,
+		Price:      eventData.Price,
+		Quantity:   eventData.Quantity,
+		Name:       eventData.Name,
+		Billed:     eventData.Billed,
+		Comments:   eventData.Comments,
+	}
+	err := h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.CreateForContract(ctx, eventData.Tenant, serviceLineItemId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving service line item %s: %s", serviceLineItemId, err.Error())
@@ -345,7 +369,16 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	quantityChanged := serviceLineItemEntity.Quantity != eventData.Quantity
 	billedTypeChanged := serviceLineItemEntity.Billed != eventData.Billed
 
-	err = h.repositories.ServiceLineItemRepository.Update(ctx, eventData.Tenant, serviceLineItemId, eventData)
+	data := neo4jrepository.ServiceLineItemUpdateFields{
+		Price:     eventData.Price,
+		Quantity:  eventData.Quantity,
+		Billed:    eventData.Billed,
+		Comments:  eventData.Comments,
+		Name:      eventData.Name,
+		Source:    helper.GetSource(eventData.Source.Source),
+		UpdatedAt: eventData.UpdatedAt,
+	}
+	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.Update(ctx, eventData.Tenant, serviceLineItemId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating service line item %s: %s", serviceLineItemId, err.Error())
@@ -566,7 +599,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 		contractName = "Unnamed contract"
 	}
 
-	err = h.repositories.ServiceLineItemRepository.Delete(ctx, eventData.Tenant, serviceLineItemId)
+	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.Delete(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while deleting service line item %s: %s", serviceLineItemId, err.Error())
@@ -610,7 +643,7 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 	}
 
 	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.ServiceLineItemRepository.Close(ctx, eventData.Tenant, serviceLineItemId, eventData)
+	err := h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.Close(ctx, eventData.Tenant, serviceLineItemId, eventData.UpdatedAt, eventData.EndedAt, eventData.IsCanceled)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while closing service line item %s: %s", serviceLineItemId, err.Error())
