@@ -49,7 +49,7 @@ function template(name, options = { infinite: false }) {
     const cacheKey = ${hookName}.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<${queryType}>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<${queryType}>(cacheKey, mutator);
     }
     return { previousEntries };
