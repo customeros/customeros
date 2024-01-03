@@ -155,29 +155,29 @@ useGlobalCacheQuery.fetcher = (
     headers,
   );
 
-useGlobal_CacheQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: Global_CacheQueryVariables) =>
-  (mutator: (cacheEntry: Global_CacheQuery) => Global_CacheQuery) => {
-    const cacheKey = useGlobal_CacheQuery.getKey(variables);
+useGlobalCacheQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GlobalCacheQueryVariables) =>
+  (mutator: (cacheEntry: GlobalCacheQuery) => GlobalCacheQuery) => {
+    const cacheKey = useGlobalCacheQuery.getKey(variables);
     const previousEntries =
-      queryClient.getQueryData<Global_CacheQuery>(cacheKey);
+      queryClient.getQueryData<GlobalCacheQuery>(cacheKey);
     if (previousEntries) {
-      queryClient.setQueryData<Global_CacheQuery>(cacheKey, mutator);
+      queryClient.setQueryData<GlobalCacheQuery>(cacheKey, mutator);
     }
     return { previousEntries };
   };
-useInfiniteGlobal_CacheQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: Global_CacheQueryVariables) =>
+useInfiniteGlobalCacheQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GlobalCacheQueryVariables) =>
   (
     mutator: (
-      cacheEntry: InfiniteData<Global_CacheQuery>,
-    ) => InfiniteData<Global_CacheQuery>,
+      cacheEntry: InfiniteData<GlobalCacheQuery>,
+    ) => InfiniteData<GlobalCacheQuery>,
   ) => {
-    const cacheKey = useInfiniteGlobal_CacheQuery.getKey(variables);
+    const cacheKey = useInfiniteGlobalCacheQuery.getKey(variables);
     const previousEntries =
-      queryClient.getQueryData<InfiniteData<Global_CacheQuery>>(cacheKey);
+      queryClient.getQueryData<InfiniteData<GlobalCacheQuery>>(cacheKey);
     if (previousEntries) {
-      queryClient.setQueryData<InfiniteData<Global_CacheQuery>>(
+      queryClient.setQueryData<InfiniteData<GlobalCacheQuery>>(
         cacheKey,
         mutator,
       );
