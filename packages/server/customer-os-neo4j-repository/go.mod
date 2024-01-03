@@ -3,7 +3,7 @@ module github.com/openline-ai/customer-os-neo4j-repository
 go 1.21
 
 require (
-	github.com/neo4j/neo4j-go-driver/v5 v5.15.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.16.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231227140027-08b87eac2360
 	github.com/opentracing/opentracing-go v1.2.0
 	golang.org/x/net v0.19.0
