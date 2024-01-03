@@ -3,6 +3,7 @@ package notifications
 import (
 	"context"
 	"fmt"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"strings"
 	"testing"
 
@@ -53,7 +54,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: "test org",
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1,
 		"User":         2, "User_" + tenantName: 2,
 		"Action": 0, "TimelineEvent": 0})
@@ -74,13 +75,13 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 	require.Nil(t, err)
 
 	// verify no new nodes created nor changed, our handler just sends notification
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 2, "User_" + tenantName: 2,
 		"Organization": 1, "Organization_" + tenantName: 1,
 		"Action": 0, "Action_" + tenantName: 0,
 		"TimelineEvent": 0, "TimelineEvent_" + tenantName: 0})
 
-	orgDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
 	require.Nil(t, err)
 	require.NotNil(t, orgDbNode)
 
