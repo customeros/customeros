@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -122,3 +123,33 @@ useGetMentionOptionsQuery.fetcher = (
     variables,
     headers,
   );
+
+useGetMentionOptionsQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GetMentionOptionsQueryVariables) =>
+  (mutator: (cacheEntry: GetMentionOptionsQuery) => GetMentionOptionsQuery) => {
+    const cacheKey = useGetMentionOptionsQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<GetMentionOptionsQuery>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<GetMentionOptionsQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteGetMentionOptionsQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GetMentionOptionsQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<GetMentionOptionsQuery>,
+    ) => InfiniteData<GetMentionOptionsQuery>,
+  ) => {
+    const cacheKey = useInfiniteGetMentionOptionsQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<GetMentionOptionsQuery>>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<InfiniteData<GetMentionOptionsQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };

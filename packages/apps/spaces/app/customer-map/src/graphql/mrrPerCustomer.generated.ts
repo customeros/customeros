@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../src/types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -119,3 +120,33 @@ useMrrPerCustomerQuery.fetcher = (
     variables,
     headers,
   );
+
+useMrrPerCustomerQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: MrrPerCustomerQueryVariables) =>
+  (mutator: (cacheEntry: MrrPerCustomerQuery) => MrrPerCustomerQuery) => {
+    const cacheKey = useMrrPerCustomerQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<MrrPerCustomerQuery>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<MrrPerCustomerQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteMrrPerCustomerQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: MrrPerCustomerQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<MrrPerCustomerQuery>,
+    ) => InfiniteData<MrrPerCustomerQuery>,
+  ) => {
+    const cacheKey = useInfiniteMrrPerCustomerQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<MrrPerCustomerQuery>>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<InfiniteData<MrrPerCustomerQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };

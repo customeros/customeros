@@ -49,11 +49,12 @@ const config: CodegenConfig = {
               '// @ts-nocheck remove this when typscript-react-query plugin is fixed',
           },
         },
+        'scripts/expose-cache-mutator.js',
       ],
     },
   },
   hooks: {
-    afterOneFileWrite: ['prettier --write'],
+    afterOneFileWrite: ['prettier --write', 'echo'],
   },
 };
 export default config;

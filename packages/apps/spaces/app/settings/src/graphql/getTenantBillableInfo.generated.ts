@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../src/types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -116,3 +117,33 @@ useGetBillableInfoQuery.fetcher = (
     variables,
     headers,
   );
+
+useGetBillableInfoQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GetBillableInfoQueryVariables) =>
+  (mutator: (cacheEntry: GetBillableInfoQuery) => GetBillableInfoQuery) => {
+    const cacheKey = useGetBillableInfoQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<GetBillableInfoQuery>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<GetBillableInfoQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteGetBillableInfoQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GetBillableInfoQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<GetBillableInfoQuery>,
+    ) => InfiniteData<GetBillableInfoQuery>,
+  ) => {
+    const cacheKey = useInfiniteGetBillableInfoQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<GetBillableInfoQuery>>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<InfiniteData<GetBillableInfoQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };

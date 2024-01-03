@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../src/types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -119,3 +120,33 @@ useRetentionRateQuery.fetcher = (
     variables,
     headers,
   );
+
+useRetentionRateQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: RetentionRateQueryVariables) =>
+  (mutator: (cacheEntry: RetentionRateQuery) => RetentionRateQuery) => {
+    const cacheKey = useRetentionRateQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<RetentionRateQuery>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<RetentionRateQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteRetentionRateQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: RetentionRateQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<RetentionRateQuery>,
+    ) => InfiniteData<RetentionRateQuery>,
+  ) => {
+    const cacheKey = useInfiniteRetentionRateQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<RetentionRateQuery>>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<InfiniteData<RetentionRateQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };

@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -42,10 +43,6 @@ export type GetContactsEmailListQuery = {
         id: string;
         firstName?: string | null;
         lastName?: string | null;
-        organizations: {
-          __typename?: 'OrganizationPage';
-          content: Array<{ __typename?: 'Organization'; id: string }>;
-        };
         emails: Array<{
           __typename?: 'Email';
           id: string;
@@ -65,11 +62,6 @@ export const GetContactsEmailListDocument = `
         id
         firstName
         lastName
-        organizations(pagination: {page: 1, limit: 1}) {
-          content {
-            id
-          }
-        }
         emails {
           id
           email
@@ -139,3 +131,39 @@ useGetContactsEmailListQuery.fetcher = (
     variables,
     headers,
   );
+
+useGetContactsEmailListQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GetContactsEmailListQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: GetContactsEmailListQuery,
+    ) => GetContactsEmailListQuery,
+  ) => {
+    const cacheKey = useGetContactsEmailListQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<GetContactsEmailListQuery>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<GetContactsEmailListQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteGetContactsEmailListQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GetContactsEmailListQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<GetContactsEmailListQuery>,
+    ) => InfiniteData<GetContactsEmailListQuery>,
+  ) => {
+    const cacheKey = useInfiniteGetContactsEmailListQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<GetContactsEmailListQuery>>(
+        cacheKey,
+      );
+    if (previousEntry) {
+      queryClient.setQueryData<InfiniteData<GetContactsEmailListQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };

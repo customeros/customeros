@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../src/types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -108,3 +109,33 @@ useRevenueAtRiskQuery.fetcher = (
     variables,
     headers,
   );
+
+useRevenueAtRiskQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: RevenueAtRiskQueryVariables) =>
+  (mutator: (cacheEntry: RevenueAtRiskQuery) => RevenueAtRiskQuery) => {
+    const cacheKey = useRevenueAtRiskQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<RevenueAtRiskQuery>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<RevenueAtRiskQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteRevenueAtRiskQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: RevenueAtRiskQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<RevenueAtRiskQuery>,
+    ) => InfiniteData<RevenueAtRiskQuery>,
+  ) => {
+    const cacheKey = useInfiniteRevenueAtRiskQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<RevenueAtRiskQuery>>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<InfiniteData<RevenueAtRiskQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };

@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../src/types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -123,3 +124,39 @@ useGrossRevenueRetentionQuery.fetcher = (
     variables,
     headers,
   );
+
+useGrossRevenueRetentionQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GrossRevenueRetentionQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: GrossRevenueRetentionQuery,
+    ) => GrossRevenueRetentionQuery,
+  ) => {
+    const cacheKey = useGrossRevenueRetentionQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<GrossRevenueRetentionQuery>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<GrossRevenueRetentionQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteGrossRevenueRetentionQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GrossRevenueRetentionQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<GrossRevenueRetentionQuery>,
+    ) => InfiniteData<GrossRevenueRetentionQuery>,
+  ) => {
+    const cacheKey = useInfiniteGrossRevenueRetentionQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<GrossRevenueRetentionQuery>>(
+        cacheKey,
+      );
+    if (previousEntry) {
+      queryClient.setQueryData<InfiniteData<GrossRevenueRetentionQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };

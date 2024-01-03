@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -153,3 +154,33 @@ useGlobalCacheQuery.fetcher = (
     variables,
     headers,
   );
+
+useGlobal_CacheQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: Global_CacheQueryVariables) =>
+  (mutator: (cacheEntry: Global_CacheQuery) => Global_CacheQuery) => {
+    const cacheKey = useGlobal_CacheQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<Global_CacheQuery>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<Global_CacheQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteGlobal_CacheQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: Global_CacheQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<Global_CacheQuery>,
+    ) => InfiniteData<Global_CacheQuery>,
+  ) => {
+    const cacheKey = useInfiniteGlobal_CacheQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<Global_CacheQuery>>(cacheKey);
+    if (previousEntry) {
+      queryClient.setQueryData<InfiniteData<Global_CacheQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };
