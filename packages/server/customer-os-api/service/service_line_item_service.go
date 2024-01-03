@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -48,7 +49,7 @@ type ServiceLineItemCreateData struct {
 	ServiceLineItemEntity *entity.ServiceLineItemEntity
 	ContractId            string
 	ExternalReference     *entity.ExternalSystemEntity
-	Source                entity.DataSource
+	Source                neo4jentity.DataSource
 	AppSource             string
 	StartedAt             *time.Time
 	EndedAt               *time.Time
@@ -345,8 +346,8 @@ func (s *serviceLineItemService) mapDbNodeToServiceLineItemEntity(dbNode dbtype.
 		Price:         utils.GetFloatPropOrZero(props, "price"),
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
 		Comments:      utils.GetStringPropOrEmpty(props, "comments"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		ParentID:      utils.GetStringPropOrEmpty(props, "parentId"),
 	}

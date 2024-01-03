@@ -6,8 +6,8 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -38,7 +38,7 @@ type ContactRepository interface {
 	// Deprecated, use events-platform
 	RemoveOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error)
 	// Deprecated, use events-platform
-	MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string, sourceOfTruth entity.DataSource) error
+	MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string, sourceOfTruth neo4jentity.DataSource) error
 	// Deprecated, use events-platform
 	MergeContactRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string) error
 	// Deprecated, use events-platform
@@ -473,7 +473,7 @@ func (r *contactRepository) GetContactsForPhoneNumber(ctx context.Context, tenan
 	return result.([]*dbtype.Node), err
 }
 
-func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string, sourceOfTruth entity.DataSource) error {
+func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string, sourceOfTruth neo4jentity.DataSource) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergeContactPropertiesInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

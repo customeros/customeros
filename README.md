@@ -138,7 +138,7 @@ A massive thank you goes out to all these wonderful people ([emoji key][emoji]):
 
 - This repo is licensed under [Apache 2.0][apache2], with the exception of the ee directory (if applicable).
 - Premium features (contained in the ee directory) require an Openline Enterprise license.  See our [pricing page][pricing] for more details.
-- Copyright &copy; Openline Technologies Inc. 2022
+- Copyright &copy; Openline Technologies Inc. 2022 - 2024
 
 <!--- References --->
 

@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"time"
 )
@@ -40,8 +41,8 @@ type CustomFieldEntity struct {
 	DataType      string
 	Value         model.AnyTypeValue
 	TemplateId    *string
-	Source        DataSource
-	SourceOfTruth DataSource
+	Source        neo4jentity.DataSource
+	SourceOfTruth neo4jentity.DataSource
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }

@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -12,8 +13,8 @@ func MapUserInputToEntity(input model.UserInput) *entity.UserEntity {
 		FirstName:       input.FirstName,
 		LastName:        input.LastName,
 		Name:            utils.IfNotNilString(input.Name),
-		Source:          entity.DataSourceOpenline,
-		SourceOfTruth:   entity.DataSourceOpenline,
+		Source:          neo4jentity.DataSourceOpenline,
+		SourceOfTruth:   neo4jentity.DataSourceOpenline,
 		Timezone:        utils.IfNotNilString(input.Timezone),
 		ProfilePhotoUrl: utils.IfNotNilString(input.ProfilePhotoURL),
 		AppSource:       utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),

@@ -7,13 +7,13 @@ package resolver
 import (
 	"context"
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -93,7 +93,7 @@ func (r *mutationResolver) LogEntryCreateForOrganization(ctx context.Context, or
 		StartedAt:   timestamppb.New(utils.IfNotNilTimeWithDefault(input.StartedAt, utils.Now())),
 		SourceFields: &grpccommon.SourceFields{
 			AppSource: constants.AppSourceCustomerOsApi,
-			Source:    string(entity.DataSourceOpenline),
+			Source:    string(neo4jentity.DataSourceOpenline),
 		},
 		LoggedOrganizationId: utils.StringPtr(organizationID),
 		AuthorUserId:         utils.StringPtr(common.GetUserIdFromContext(ctx)),
@@ -152,7 +152,7 @@ func (r *mutationResolver) LogEntryUpdate(ctx context.Context, id string, input 
 		Content:     utils.IfNotNilString(input.Content),
 		ContentType: utils.IfNotNilString(input.ContentType),
 		SourceFields: &grpccommon.SourceFields{
-			SourceOfTruth: string(entity.DataSourceOpenline),
+			SourceOfTruth: string(neo4jentity.DataSourceOpenline),
 		},
 	}
 	if input.StartedAt != nil {

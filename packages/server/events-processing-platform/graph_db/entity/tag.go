@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"time"
 )
 
@@ -10,7 +11,7 @@ type TagEntity struct {
 	Name      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Source    DataSource
+	Source    neo4jentity.DataSource
 	AppSource string
 	TaggedAt  time.Time
 

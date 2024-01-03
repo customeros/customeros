@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -13,7 +14,7 @@ import (
 )
 
 type ActionRepository interface {
-	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType entity.EntityType, actionType entity.ActionType, source entity.DataSource, appSource string) (*dbtype.Node, error)
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType entity.EntityType, actionType entity.ActionType, source neo4jentity.DataSource, appSource string) (*dbtype.Node, error)
 }
 
 type actionRepository struct {
@@ -26,7 +27,7 @@ func NewActionRepository(driver *neo4j.DriverWithContext) ActionRepository {
 	}
 }
 
-func (r *actionRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType entity.EntityType, actionType entity.ActionType, source entity.DataSource, appSource string) (*dbtype.Node, error) {
+func (r *actionRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType entity.EntityType, actionType entity.ActionType, source neo4jentity.DataSource, appSource string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.Create")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

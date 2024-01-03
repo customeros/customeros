@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -310,7 +311,7 @@ func (s *emailService) CreateEmailAddressByEvents(ctx context.Context, email, ap
 			Tenant:   common.GetTenantFromContext(ctx),
 			RawEmail: email,
 			SourceFields: &commongrpc.SourceFields{
-				Source:    string(entity.DataSourceOpenline),
+				Source:    string(neo4jentity.DataSourceOpenline),
 				AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi),
 			},
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -341,8 +342,8 @@ func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEnt
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Email:         utils.GetStringPropOrEmpty(props, "email"),
 		RawEmail:      utils.GetStringPropOrEmpty(props, "rawEmail"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),

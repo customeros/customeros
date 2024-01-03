@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
@@ -151,8 +152,8 @@ func (s *locationService) mapDbNodeToLocationEntity(node dbtype.Node) *entity.Lo
 		Longitude:     utils.GetFloatPropOrNil(props, "longitude"),
 		TimeZone:      utils.GetStringPropOrEmpty(props, "timeZone"),
 		UtcOffset:     utils.GetInt64PropOrZero(props, "utcOffset"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &result

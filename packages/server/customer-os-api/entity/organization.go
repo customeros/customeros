@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"time"
 )
 
@@ -34,8 +35,8 @@ type OrganizationEntity struct {
 	Headquarters       string
 	EmployeeGrowthRate string
 	LogoUrl            string
-	Source             DataSource
-	SourceOfTruth      DataSource
+	Source             neo4jentity.DataSource
+	SourceOfTruth      neo4jentity.DataSource
 	AppSource          string
 
 	LinkedOrganizationType *string

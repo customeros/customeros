@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"time"
 )
 
@@ -11,8 +12,8 @@ type EmailEntity struct {
 	RawEmail      string `neo4jDb:"property:rawEmail;lookupName:RAW_EMAIL;supportCaseSensitive:true"`
 	Label         string
 	Primary       bool
-	Source        DataSource
-	SourceOfTruth DataSource
+	Source        neo4jentity.DataSource
+	SourceOfTruth neo4jentity.DataSource
 	AppSource     string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time

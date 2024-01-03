@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	comentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -72,7 +73,7 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
 			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
-		if !entity.IsValidDataSource(strings.ToLower(org.ExternalSystem)) {
+		if !neo4jentity.IsValidDataSource(strings.ToLower(org.ExternalSystem)) {
 			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", org.ExternalSystem))
 			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
@@ -476,8 +477,8 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(dbNode dbtype.Node) 
 		Market:            utils.GetStringPropOrEmpty(props, "market"),
 		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:            neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:     neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
 		LastTouchpointAt:  utils.GetTimePropOrNil(props, "lastTouchpointAt"),
 		LastTouchpointId:  utils.GetStringPropOrNil(props, "lastTouchpointId"),

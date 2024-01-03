@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -336,8 +337,8 @@ func (s *meetingService) mapDbNodeToMeetingEntity(node dbtype.Node) *entity.Meet
 		EndedAt:            utils.GetTimePropOrNil(props, "endedAt"),
 		Recording:          utils.GetStringPropOrNil(props, "recording"),
 		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:      entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:             neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Status:             &status,
 	}
 

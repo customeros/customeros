@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -14,8 +15,8 @@ func MapNoteInputToEntity(input *model.NoteInput) *entity.NoteEntity {
 	noteEntity := entity.NoteEntity{
 		Content:       utils.IfNotNilString(input.Content),
 		ContentType:   utils.IfNotNilString(input.ContentType),
-		Source:        entity.DataSourceOpenline,
-		SourceOfTruth: entity.DataSourceOpenline,
+		Source:        neo4jentity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
 		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
 	return &noteEntity
@@ -29,7 +30,7 @@ func MapNoteUpdateInputToEntity(input *model.NoteUpdateInput) *entity.NoteEntity
 		Id:            input.ID,
 		Content:       utils.IfNotNilString(input.Content),
 		ContentType:   utils.IfNotNilString(input.ContentType),
-		SourceOfTruth: entity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
 	}
 	return &noteEntity
 }

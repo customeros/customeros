@@ -64,7 +64,7 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) (Sy
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
 			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
-		if !entity.IsValidDataSource(strings.ToLower(user.ExternalSystem)) {
+		if !neo4jentity.IsValidDataSource(strings.ToLower(user.ExternalSystem)) {
 			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", user.ExternalSystem))
 			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
@@ -285,8 +285,8 @@ func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEnti
 		Name:            utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
 		Internal:        utils.GetBoolPropOrFalse(props, "internal"),

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -120,7 +121,7 @@ func (s *interactionSessionService) createInteractionSessionInDBTxWork(ctx conte
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
 						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
 						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *attendedBy.Email}),
-						Source:        entity.DataSourceOpenline,
+						Source:        neo4jentity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionSessionRepository.LinkWithAttendedByEmailInTx(ctx, tx, tenant, interactionSessionId, *attendedBy.Email, attendedBy.Type)
@@ -139,7 +140,7 @@ func (s *interactionSessionService) createInteractionSessionInDBTxWork(ctx conte
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
 						ContactEntity:     &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
 						PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *attendedBy.PhoneNumber}),
-						Source:            entity.DataSourceOpenline,
+						Source:            neo4jentity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionSessionRepository.LinkWithAttendedByPhoneNumberInTx(ctx, tx, tenant, interactionSessionId, *attendedBy.PhoneNumber, attendedBy.Type)
@@ -240,8 +241,8 @@ func (s *interactionSessionService) mapDbNodeToInteractionSessionEntity(node dbt
 		Channel:           utils.GetStringPropOrNil(props, "channel"),
 		ChannelData:       utils.GetStringPropOrNil(props, "channelData"),
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:            neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:     neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &interactionSessionEntity
 }

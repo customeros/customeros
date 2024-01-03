@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
@@ -63,7 +64,7 @@ func (s *interactionEventService) SyncInteractionEvents(ctx context.Context, int
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
 			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
-		if !entity.IsValidDataSource(strings.ToLower(interactionEvent.ExternalSystem)) {
+		if !neo4jentity.IsValidDataSource(strings.ToLower(interactionEvent.ExternalSystem)) {
 			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", interactionEvent.ExternalSystem))
 			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
@@ -301,8 +302,8 @@ func (s *interactionEventService) mapDbNodeToInteractionEventEntity(dbNode dbtyp
 		EventType:     utils.GetStringPropOrEmpty(props, "eventType"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &output

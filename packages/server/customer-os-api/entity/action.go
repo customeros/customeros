@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"time"
 )
 
@@ -11,7 +12,7 @@ type ActionEntity struct {
 	Content       string
 	Metadata      string
 	Type          ActionType
-	Source        DataSource
+	Source        neo4jentity.DataSource
 	AppSource     string
 	DataloaderKey string
 }

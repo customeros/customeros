@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -24,8 +25,8 @@ func MapCustomFieldInputToEntity(input *model.CustomFieldInput) *entity.CustomFi
 		Value:         input.Value,
 		DataType:      input.Datatype.String(),
 		TemplateId:    input.TemplateID,
-		Source:        entity.DataSourceOpenline,
-		SourceOfTruth: entity.DataSourceOpenline,
+		Source:        neo4jentity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
 	}
 	customFieldEntity.AdjustValueByDatatype()
 	return &customFieldEntity
@@ -37,7 +38,7 @@ func MapCustomFieldUpdateInputToEntity(input *model.CustomFieldUpdateInput) *ent
 		Name:          input.Name,
 		DataType:      input.Datatype.String(),
 		Value:         input.Value,
-		SourceOfTruth: entity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
 	}
 	customFieldEntity.AdjustValueByDatatype()
 	return &customFieldEntity

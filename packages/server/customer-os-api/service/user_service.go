@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -100,7 +101,7 @@ func (s *userService) Update(ctx context.Context, userId, firstName, lastName st
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		Id:             userId,
 		SourceFields: &commonpb.SourceFields{
-			Source:    string(entity.DataSourceOpenline),
+			Source:    string(neo4jentity.DataSourceOpenline),
 			AppSource: constants.AppSourceCustomerOsApi,
 		},
 		FirstName:       firstName,
@@ -689,8 +690,8 @@ func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEnti
 		Name:            utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
 		Internal:        utils.GetBoolPropOrFalse(props, "internal"),

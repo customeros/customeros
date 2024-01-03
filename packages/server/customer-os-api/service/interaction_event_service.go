@@ -6,6 +6,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -51,8 +52,8 @@ type InteractionEventCreateData struct {
 	RepliesTo              *string
 	SentBy                 []ParticipantAddressData
 	SentTo                 []ParticipantAddressData
-	Source                 entity.DataSource
-	SourceOfTruth          entity.DataSource
+	Source                 neo4jentity.DataSource
+	SourceOfTruth          neo4jentity.DataSource
 }
 
 type interactionEventService struct {
@@ -168,7 +169,7 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
 						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
 						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentTo.Email}),
-						Source:        entity.DataSourceOpenline,
+						Source:        neo4jentity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionEventRepository.LinkWithSentXXEmailInTx(ctx, tx, tenant, interactionEventId, *sentTo.Email, sentTo.Type, repository.SENT_TO)
@@ -187,7 +188,7 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
 						ContactEntity:     &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
 						PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *sentTo.PhoneNumber}),
-						Source:            entity.DataSourceOpenline,
+						Source:            neo4jentity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionEventRepository.LinkWithSentXXPhoneNumberInTx(ctx, tx, tenant, interactionEventId, *sentTo.PhoneNumber, sentTo.Type, repository.SENT_TO)
@@ -221,7 +222,7 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
 						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
 						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentBy.Email}),
-						Source:        entity.DataSourceOpenline,
+						Source:        neo4jentity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionEventRepository.LinkWithSentXXEmailInTx(ctx, tx, tenant, interactionEventId, *sentBy.Email, sentBy.Type, repository.SENT_BY)
@@ -240,7 +241,7 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
 						ContactEntity:     &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
 						PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *sentBy.PhoneNumber}),
-						Source:            entity.DataSourceOpenline,
+						Source:            neo4jentity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionEventRepository.LinkWithSentXXPhoneNumberInTx(ctx, tx, tenant, interactionEventId, *sentBy.PhoneNumber, sentBy.Type, repository.SENT_BY)
@@ -501,8 +502,8 @@ func (s *interactionEventService) mapDbPropsToInteractionEventEntity(props map[s
 		Content:         utils.GetStringPropOrEmpty(props, "content"),
 		ContentType:     utils.GetStringPropOrEmpty(props, "contentType"),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &interactionEventEntity
 }

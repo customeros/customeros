@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -196,7 +197,7 @@ func (s *tagService) mapDbNodeToTagEntity(dbNode dbtype.Node) *entity.TagEntity 
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		Source:    neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 	}
 	return &tag
 }

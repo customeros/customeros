@@ -1,6 +1,7 @@
 package entity
 
 import (
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"time"
 )
 
@@ -23,8 +24,8 @@ type OpportunityEntity struct {
 	RenewalUpdatedByUserId string
 	RenewalUpdatedByUserAt time.Time
 	Comments               string
-	Source                 DataSource
-	SourceOfTruth          DataSource
+	Source                 neo4jentity.DataSource
+	SourceOfTruth          neo4jentity.DataSource
 	AppSource              string
 	OwnerUserId            string
 
@@ -41,8 +42,8 @@ type OpportunityRenewalEntity struct {
 	RenewalUpdatedByUserId string
 	RenewalUpdatedByUserAt time.Time
 	Comments               string
-	Source                 DataSource
-	SourceOfTruth          DataSource
+	Source                 neo4jentity.DataSource
+	SourceOfTruth          neo4jentity.DataSource
 	AppSource              string
 
 	DataloaderKey string

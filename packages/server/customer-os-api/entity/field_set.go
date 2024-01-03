@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"time"
 )
 
@@ -12,8 +13,8 @@ type FieldSetEntity struct {
 	UpdatedAt     time.Time
 	TemplateId    *string
 	CustomFields  *CustomFieldEntities
-	Source        DataSource
-	SourceOfTruth DataSource
+	Source        neo4jentity.DataSource
+	SourceOfTruth neo4jentity.DataSource
 }
 
 func (set FieldSetEntity) ToString() string {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -47,7 +48,7 @@ type ContractCreateData struct {
 	ContractEntity    *entity.ContractEntity
 	OrganizationId    string
 	ExternalReference *entity.ExternalSystemEntity
-	Source            entity.DataSource
+	Source            neo4jentity.DataSource
 	AppSource         string
 }
 
@@ -252,8 +253,8 @@ func (s *contractService) mapDbNodeToContractEntity(dbNode dbtype.Node) *entity.
 		ContractStatus:   contractStatus,
 		RenewalCycle:     contractRenewalCycle,
 		RenewalPeriods:   utils.GetInt64PropOrNil(props, "renewalPeriods"),
-		Source:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:           neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:    neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &contract

@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -293,8 +294,8 @@ func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID 
 	span.LogFields(log.String("request.meetingID", meetingID))
 
 	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.MEETING, meetingID, entity.SourceFields{
-		Source:        entity.DataSourceOpenline,
-		SourceOfTruth: entity.DataSourceOpenline,
+		Source:        neo4jentity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
 		AppSource:     constants.AppSourceCustomerOsApi,
 	})
 	if err != nil {
