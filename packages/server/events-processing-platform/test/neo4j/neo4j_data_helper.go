@@ -3,6 +3,10 @@ package neo4j
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"sort"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
@@ -10,9 +14,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/stretchr/testify/require"
-	"reflect"
-	"sort"
-	"testing"
 )
 
 func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
@@ -371,6 +372,21 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 		"updatedAt":   entity.UpdatedAt,
 	})
 	return emailId
+}
+
+func CreateEmailForUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string, entity entity.EmailEntity) string {
+	emailId := CreateEmail(ctx, driver, tenant, entity)
+	LinkEmailWithUser(ctx, driver, emailId, userId)
+	return emailId
+}
+
+func LinkEmailWithUser(ctx context.Context, driver *neo4j.DriverWithContext, emailId, userId string) {
+	query := `MATCH (e:Email {id:$emailId}), (u:User {id:$userId})
+				MERGE (u)-[:HAS]->(e) `
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"emailId": emailId,
+		"userId":  userId,
+	})
 }
 
 func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location entity.LocationEntity) string {
