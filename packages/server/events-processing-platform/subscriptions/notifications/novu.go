@@ -32,7 +32,7 @@ func (np *NovuProvider) SendNotification(ctx context.Context, u *NotifiableUser,
 	_, err := np.NovuClient.EventApi.Trigger(ctx, workflowId, data)
 
 	if err != nil {
-		np.log.Errorf("(NotificationsSubscriber.NovuProvider.SendEmail) error: %s", err.Error())
+		np.log.Errorf("(NotificationsSubscriber.NovuProvider.SendNotification) error: %s", err.Error())
 		return err
 	}
 

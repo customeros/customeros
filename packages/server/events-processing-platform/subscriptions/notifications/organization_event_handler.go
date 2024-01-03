@@ -237,7 +237,7 @@ func parseOrgOwnerUpdateEmail(actor, target *entity.UserEntity, orgName string) 
 
 	var mjmlError mjml.Error
 	if errors.As(err, &mjmlError) {
-		return "", fmt.Errorf("(NotificationsSubscriber.NovuProvider.SendEmail) error: %s", mjmlError.Message)
+		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", mjmlError.Message)
 	}
 	return html, err
 }
