@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
@@ -18,11 +19,11 @@ func TestTimelineEventRepository_CalculateAndGetLastTouchpoint_LastTouchpointIsL
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, entity.OrganizationEntity{Name: "org 1"})
 	logEntryId := neo4jt.CreateLogEntryForOrg(ctx, driver, tenantName, organizationId, entity.LogEntryEntity{Content: "test content", StartedAt: utils.Now()})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization":  1,
 		"LogEntry":      1,
 		"TimelineEvent": 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{
 		"CREATED_BY": 0,
 		"LOGGED":     1,
 	})
