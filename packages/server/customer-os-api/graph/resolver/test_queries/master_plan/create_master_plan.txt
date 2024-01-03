@@ -1,0 +1,9 @@
+mutation CreateMasterPlan() {
+masterPlan_Create(
+    input: {
+        name: "Draft plan"
+    }) {
+    id
+    name
+  }
+}

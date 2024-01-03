@@ -17,6 +17,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
+// Deprecated, use neo4jtest.CleanupAllData instead
 func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
 	neo4jtest.ExecuteWriteQuery(ctx, driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
 }
@@ -32,6 +33,7 @@ func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverW
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 }
 
+// Deprecated, use neo4jtest.CreateTenant instead
 func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := `MERGE (t:Tenant {name:$tenant})`
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
