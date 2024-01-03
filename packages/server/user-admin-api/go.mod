@@ -10,7 +10,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lucasepe/codename v0.2.0
 	github.com/machinebox/graphql v0.2.2
-	github.com/neo4j/neo4j-go-driver/v5 v5.15.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.16.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231120145804-10b6738ad211
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231120145804-10b6738ad211
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20231223141039-1ccda1d986b4
