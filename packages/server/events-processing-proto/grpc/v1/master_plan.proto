@@ -13,6 +13,19 @@ message CreateMasterPlanGrpcRequest {
   SourceFields sourceFields = 5;
 }
 
+message CreateMasterPlanMilestoneGrpcRequest {
+  string tenant = 1;
+  string masterPlanId = 2;
+  string loggedInUserId = 3;
+  string name = 4;
+  google.protobuf.Timestamp createdAt = 5;
+  SourceFields sourceFields = 6;
+  bool optional = 7;
+  int64 durationHours = 8;
+  repeated string items = 9;
+  int64 order = 10;
+}
+
 message MasterPlanIdGrpcResponse {
   string id = 1;
 }
@@ -24,4 +37,5 @@ message MasterPlanMilestoneIdGrpcResponse {
 // Service definition
 service MasterPlanGrpcService {
   rpc CreateMasterPlan(CreateMasterPlanGrpcRequest) returns (MasterPlanIdGrpcResponse);
+  rpc CreateMasterPlanMilestone(CreateMasterPlanMilestoneGrpcRequest) returns (MasterPlanMilestoneIdGrpcResponse);
 }
