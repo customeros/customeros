@@ -21,17 +21,16 @@ type Repositories struct {
 	CommonRepositories      *cmn_repository.Repositories
 	CustomerOsIdsRepository repository.CustomerOsIdsRepository
 
-	EmailRepository              EmailRepository
-	ExternalSystemRepository     ExternalSystemRepository
-	InteractionEventRepository   InteractionEventRepository
-	InteractionSessionRepository InteractionSessionRepository
-	JobRoleRepository            JobRoleRepository
-	LocationRepository           LocationRepository
-	OpportunityRepository        OpportunityRepository
-	OrganizationRepository       OrganizationRepository
-	PhoneNumberRepository        PhoneNumberRepository
-	ServiceLineItemRepository    ServiceLineItemRepository
-	TimelineEventRepository      TimelineEventRepository
+	EmailRepository            EmailRepository
+	ExternalSystemRepository   ExternalSystemRepository
+	InteractionEventRepository InteractionEventRepository
+	JobRoleRepository          JobRoleRepository
+	LocationRepository         LocationRepository
+	OpportunityRepository      OpportunityRepository
+	OrganizationRepository     OrganizationRepository
+	PhoneNumberRepository      PhoneNumberRepository
+	ServiceLineItemRepository  ServiceLineItemRepository
+	TimelineEventRepository    TimelineEventRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *gorm.DB, log logger.Logger) *Repositories {
@@ -39,20 +38,19 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		Drivers: Drivers{
 			Neo4jDriver: driver,
 		},
-		Neo4jRepositories:            neo4jrepository.InitNeo4jRepositories(driver, neo4jDatabase),
-		CommonRepositories:           cmn_repository.InitRepositories(gormDb, driver),
-		CustomerOsIdsRepository:      repository.NewCustomerOsIdsRepository(gormDb),
-		PhoneNumberRepository:        NewPhoneNumberRepository(driver),
-		EmailRepository:              NewEmailRepository(driver),
-		OrganizationRepository:       NewOrganizationRepository(driver, neo4jDatabase),
-		LocationRepository:           NewLocationRepository(driver),
-		JobRoleRepository:            NewJobRoleRepository(driver),
-		InteractionEventRepository:   NewInteractionEventRepository(driver, neo4jDatabase),
-		InteractionSessionRepository: NewInteractionSessionRepository(driver, neo4jDatabase),
-		ExternalSystemRepository:     NewExternalSystemRepository(driver),
-		TimelineEventRepository:      NewTimelineEventRepository(driver, log),
-		OpportunityRepository:        NewOpportunityRepository(driver, neo4jDatabase),
-		ServiceLineItemRepository:    NewServiceLineItemRepository(driver, neo4jDatabase),
+		Neo4jRepositories:          neo4jrepository.InitNeo4jRepositories(driver, neo4jDatabase),
+		CommonRepositories:         cmn_repository.InitRepositories(gormDb, driver),
+		CustomerOsIdsRepository:    repository.NewCustomerOsIdsRepository(gormDb),
+		PhoneNumberRepository:      NewPhoneNumberRepository(driver),
+		EmailRepository:            NewEmailRepository(driver),
+		OrganizationRepository:     NewOrganizationRepository(driver, neo4jDatabase),
+		LocationRepository:         NewLocationRepository(driver),
+		JobRoleRepository:          NewJobRoleRepository(driver),
+		InteractionEventRepository: NewInteractionEventRepository(driver, neo4jDatabase),
+		ExternalSystemRepository:   NewExternalSystemRepository(driver),
+		TimelineEventRepository:    NewTimelineEventRepository(driver, log),
+		OpportunityRepository:      NewOpportunityRepository(driver, neo4jDatabase),
+		ServiceLineItemRepository:  NewServiceLineItemRepository(driver, neo4jDatabase),
 	}
 
 	err := gormDb.AutoMigrate(&entity.CustomerOsIds{})
