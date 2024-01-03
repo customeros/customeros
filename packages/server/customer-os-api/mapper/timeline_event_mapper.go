@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
 func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.TimelineEvent {
@@ -10,31 +11,31 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.T
 		return nil
 	}
 	switch (*timelineEventEntity).TimelineEventLabel() {
-	case entity.NodeLabel_PageView:
+	case neo4jentity.NodeLabel_PageView:
 		pageViewEntity := (*timelineEventEntity).(*entity.PageViewEntity)
 		return MapEntityToPageView(pageViewEntity)
-	case entity.NodeLabel_InteractionSession:
+	case neo4jentity.NodeLabel_InteractionSession:
 		interactionSessionEntity := (*timelineEventEntity).(*entity.InteractionSessionEntity)
 		return MapEntityToInteractionSession(interactionSessionEntity)
-	case entity.NodeLabel_Issue:
+	case neo4jentity.NodeLabel_Issue:
 		issueEntity := (*timelineEventEntity).(*entity.IssueEntity)
 		return MapEntityToIssue(issueEntity)
-	case entity.NodeLabel_Note:
+	case neo4jentity.NodeLabel_Note:
 		noteEntity := (*timelineEventEntity).(*entity.NoteEntity)
 		return MapEntityToNote(noteEntity)
-	case entity.NodeLabel_InteractionEvent:
+	case neo4jentity.NodeLabel_InteractionEvent:
 		interactionEventEntity := (*timelineEventEntity).(*entity.InteractionEventEntity)
 		return MapEntityToInteractionEvent(interactionEventEntity)
-	case entity.NodeLabel_Analysis:
+	case neo4jentity.NodeLabel_Analysis:
 		analysisEntity := (*timelineEventEntity).(*entity.AnalysisEntity)
 		return MapEntityToAnalysis(analysisEntity)
-	case entity.NodeLabel_Meeting:
+	case neo4jentity.NodeLabel_Meeting:
 		meetingEntity := (*timelineEventEntity).(*entity.MeetingEntity)
 		return MapEntityToMeeting(meetingEntity)
-	case entity.NodeLabel_Action:
+	case neo4jentity.NodeLabel_Action:
 		actionEntity := (*timelineEventEntity).(*entity.ActionEntity)
 		return MapEntityToAction(actionEntity)
-	case entity.NodeLabel_LogEntry:
+	case neo4jentity.NodeLabel_LogEntry:
 		logEntryEntity := (*timelineEventEntity).(*entity.LogEntryEntity)
 		return MapEntityToLogEntry(logEntryEntity)
 	}

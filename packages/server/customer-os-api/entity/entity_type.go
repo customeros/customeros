@@ -1,5 +1,7 @@
 package entity
 
+import neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+
 type EntityType string
 
 const (
@@ -23,21 +25,21 @@ func (entityType EntityType) String() string {
 func (entityType EntityType) Neo4jLabel() string {
 	switch entityType {
 	case CONTACT:
-		return NodeLabel_Contact
+		return neo4jentity.NodeLabel_Contact
 	case USER:
-		return NodeLabel_User
+		return neo4jentity.NodeLabel_User
 	case ORGANIZATION:
-		return NodeLabel_Organization
+		return neo4jentity.NodeLabel_Organization
 	case MEETING:
-		return NodeLabel_Meeting
+		return neo4jentity.NodeLabel_Meeting
 	case COMMENT:
-		return NodeLabel_Comment
+		return neo4jentity.NodeLabel_Comment
 	case ISSUE:
-		return NodeLabel_Issue
+		return neo4jentity.NodeLabel_Issue
 	case LOG_ENTRY:
-		return NodeLabel_LogEntry
+		return neo4jentity.NodeLabel_LogEntry
 	case INTERACTION_EVENT:
-		return NodeLabel_InteractionEvent
+		return neo4jentity.NodeLabel_InteractionEvent
 	}
 	return "Unknown"
 }

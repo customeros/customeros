@@ -18,6 +18,7 @@ type Repositories struct {
 	InteractionSessionWriteRepository InteractionSessionWriteRepository
 	IssueWriteRepository              IssueWriteRepository
 	LogEntryWriteRepository           LogEntryWriteRepository
+	MasterPlanReadRepository          MasterPlanReadRepository
 	MasterPlanWriteRepository         MasterPlanWriteRepository
 	PhoneNumberReadRepository         PhoneNumberReadRepository
 	PlayerWriteRepository             PlayerWriteRepository
@@ -44,6 +45,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		InteractionSessionWriteRepository: NewInteractionSessionWriteRepository(driver, neo4jDatabase),
 		IssueWriteRepository:              NewIssueWriteRepository(driver, neo4jDatabase),
 		LogEntryWriteRepository:           NewLogEntryWriteRepository(driver, neo4jDatabase),
+		MasterPlanReadRepository:          NewMasterPlanReadRepository(driver, neo4jDatabase),
 		MasterPlanWriteRepository:         NewMasterPlanWriteRepository(driver, neo4jDatabase),
 		PhoneNumberReadRepository:         NewPhoneNumberReadRepository(driver, neo4jDatabase),
 		PlayerWriteRepository:             NewPlayerWriteRepository(driver, neo4jDatabase),

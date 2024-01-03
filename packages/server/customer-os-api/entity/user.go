@@ -45,11 +45,11 @@ func (UserEntity) IsIssueParticipant() {}
 func (UserEntity) IsMeetingParticipant() {}
 
 func (UserEntity) ParticipantLabel() string {
-	return NodeLabel_User
+	return neo4jentity.NodeLabel_User
 }
 
 func (UserEntity) MeetingParticipantLabel() string {
-	return NodeLabel_User
+	return neo4jentity.NodeLabel_User
 }
 
 func (user UserEntity) GetDataloaderKey() string {
@@ -58,7 +58,7 @@ func (user UserEntity) GetDataloaderKey() string {
 
 func (UserEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_User,
-		NodeLabel_User + "_" + tenant,
+		neo4jentity.NodeLabel_User,
+		neo4jentity.NodeLabel_User + "_" + tenant,
 	}
 }

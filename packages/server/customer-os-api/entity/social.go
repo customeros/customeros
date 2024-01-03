@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"time"
 )
 
@@ -24,7 +25,7 @@ type SocialEntities []SocialEntity
 
 func (social SocialEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_Social,
-		NodeLabel_Social + "_" + tenant,
+		neo4jentity.NodeLabel_Social,
+		neo4jentity.NodeLabel_Social + "_" + tenant,
 	}
 }

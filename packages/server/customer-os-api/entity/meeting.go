@@ -35,14 +35,14 @@ func (MeetingEntity) IsTimelineEvent() {
 }
 
 func (MeetingEntity) TimelineEventLabel() string {
-	return NodeLabel_Meeting
+	return neo4jentity.NodeLabel_Meeting
 }
 
 func (MeetingEntity) IsAnalysisDescribe() {
 }
 
 func (MeetingEntity) AnalysisDescribeLabel() string {
-	return NodeLabel_Meeting
+	return neo4jentity.NodeLabel_Meeting
 }
 
 func (meeting *MeetingEntity) SetDataloaderKey(key string) {

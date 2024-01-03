@@ -38,12 +38,12 @@ func (analysis AnalysisEntity) GetDataloaderKey() string {
 }
 
 func (AnalysisEntity) TimelineEventLabel() string {
-	return NodeLabel_Analysis
+	return neo4jentity.NodeLabel_Analysis
 }
 
 func (AnalysisEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_Analysis,
-		NodeLabel_Analysis + "_" + tenant,
+		neo4jentity.NodeLabel_Analysis,
+		neo4jentity.NodeLabel_Analysis + "_" + tenant,
 	}
 }

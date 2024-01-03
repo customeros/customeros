@@ -76,7 +76,7 @@ func (organization OrganizationEntity) ToString() string {
 func (OrganizationEntity) IsNotedEntity() {}
 
 func (OrganizationEntity) NotedEntityLabel() string {
-	return NodeLabel_Organization
+	return neo4jentity.NodeLabel_Organization
 }
 
 func (OrganizationEntity) IsInteractionEventParticipant() {}
@@ -84,13 +84,13 @@ func (OrganizationEntity) IsInteractionEventParticipant() {}
 func (OrganizationEntity) IsIssueParticipant() {}
 
 func (OrganizationEntity) ParticipantLabel() string {
-	return NodeLabel_Organization
+	return neo4jentity.NodeLabel_Organization
 }
 
 func (OrganizationEntity) IsMeetingParticipant() {}
 
 func (OrganizationEntity) MeetingParticipantLabel() string {
-	return NodeLabel_Organization
+	return neo4jentity.NodeLabel_Organization
 }
 
 func (organization OrganizationEntity) GetDataloaderKey() string {
@@ -101,7 +101,7 @@ type OrganizationEntities []OrganizationEntity
 
 func (organization OrganizationEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_Organization,
-		NodeLabel_Organization + "_" + tenant,
+		neo4jentity.NodeLabel_Organization,
+		neo4jentity.NodeLabel_Organization + "_" + tenant,
 	}
 }

@@ -27,7 +27,7 @@ type ActionItemEntities []ActionItemEntity
 
 func (entity ActionItemEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_ActionItem,
-		NodeLabel_ActionItem + "_" + tenant,
+		neo4jentity.NodeLabel_ActionItem,
+		neo4jentity.NodeLabel_ActionItem + "_" + tenant,
 	}
 }

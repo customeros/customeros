@@ -22,7 +22,7 @@ import (
 
 type MasterPlanService interface {
 	Create(ctx context.Context, name string) (string, error)
-	GetById(ctx context.Context, id string) (*neo4jentity.MasterPlanEntity, error)
+	GetById(ctx context.Context, masterPlanId string) (*neo4jentity.MasterPlanEntity, error)
 }
 type masterPlanService struct {
 	log          logger.Logger
@@ -75,23 +75,26 @@ func (s *masterPlanService) Create(ctx context.Context, name string) (string, er
 	return response.Id, nil
 }
 
-func (s *masterPlanService) GetById(ctx context.Context, contractId string) (*neo4jentity.MasterPlanEntity, error) {
+func (s *masterPlanService) GetById(ctx context.Context, masterPlanId string) (*neo4jentity.MasterPlanEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contractId", contractId))
+	span.SetTag(tracing.SpanTagEntityId, masterPlanId)
 
-	if contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, common.GetContext(ctx).Tenant, contractId); err != nil {
+	if masterPlanDbNode, err := s.repositories.Neo4jRepositories.MasterPlanReadRepository.GetMasterPlanById(ctx, common.GetContext(ctx).Tenant, masterPlanId); err != nil {
 		tracing.TraceErr(span, err)
-		wrappedErr := errors.Wrap(err, fmt.Sprintf("Contract with id {%s} not found", contractId))
+		wrappedErr := errors.Wrap(err, fmt.Sprintf("Master plan with id {%s} not found", masterPlanId))
 		return nil, wrappedErr
 	} else {
-		return s.mapDbNodeToMasterPlanEntity(*contractDbNode), nil
+		return s.mapDbNodeToMasterPlanEntity(masterPlanDbNode), nil
 	}
 }
 
-func (s *masterPlanService) mapDbNodeToMasterPlanEntity(dbNode dbtype.Node) *neo4jentity.MasterPlanEntity {
-	props := utils.GetPropsFromNode(dbNode)
+func (s *masterPlanService) mapDbNodeToMasterPlanEntity(dbNode *dbtype.Node) *neo4jentity.MasterPlanEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
 	masterPlan := neo4jentity.MasterPlanEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),

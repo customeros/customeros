@@ -33,14 +33,14 @@ func (InteractionSessionEntity) IsTimelineEvent() {
 }
 
 func (InteractionSessionEntity) TimelineEventLabel() string {
-	return NodeLabel_InteractionSession
+	return neo4jentity.NodeLabel_InteractionSession
 }
 
 func (InteractionSessionEntity) IsAnalysisDescribe() {
 }
 
 func (InteractionSessionEntity) AnalysisDescribeLabel() string {
-	return NodeLabel_InteractionSession
+	return neo4jentity.NodeLabel_InteractionSession
 }
 
 func (interactionSession *InteractionSessionEntity) SetDataloaderKey(key string) {

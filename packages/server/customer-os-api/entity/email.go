@@ -45,13 +45,13 @@ func (EmailEntity) IsInteractionEventParticipant() {}
 func (EmailEntity) IsInteractionSessionParticipant() {}
 
 func (EmailEntity) ParticipantLabel() string {
-	return NodeLabel_Email
+	return neo4jentity.NodeLabel_Email
 }
 
 func (EmailEntity) IsMeetingParticipant() {}
 
 func (EmailEntity) MeetingParticipantLabel() string {
-	return NodeLabel_Email
+	return neo4jentity.NodeLabel_Email
 }
 
 func (email EmailEntity) GetDataloaderKey() string {
@@ -60,7 +60,7 @@ func (email EmailEntity) GetDataloaderKey() string {
 
 func (EmailEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_Email,
-		NodeLabel_Email + "_" + tenant,
+		neo4jentity.NodeLabel_Email,
+		neo4jentity.NodeLabel_Email + "_" + tenant,
 	}
 }

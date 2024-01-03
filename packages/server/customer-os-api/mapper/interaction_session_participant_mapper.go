@@ -5,30 +5,31 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"reflect"
 )
 
 func MapEntityToInteractionSessionParticipant(interactionSessionParticipantEntity *entity.InteractionSessionParticipant) any {
 	switch (*interactionSessionParticipantEntity).ParticipantLabel() {
-	case entity.NodeLabel_Email:
+	case neo4jentity.NodeLabel_Email:
 		emailEntity := (*interactionSessionParticipantEntity).(*entity.EmailEntity)
 		return model.EmailParticipant{
 			EmailParticipant: MapEntityToEmail(emailEntity),
 			Type:             utils.StringPtrNillable(emailEntity.InteractionEventParticipantDetails.Type),
 		}
-	case entity.NodeLabel_PhoneNumber:
+	case neo4jentity.NodeLabel_PhoneNumber:
 		phoneNumberEntity := (*interactionSessionParticipantEntity).(*entity.PhoneNumberEntity)
 		return model.PhoneNumberParticipant{
 			PhoneNumberParticipant: MapEntityToPhoneNumber(phoneNumberEntity),
 			Type:                   utils.StringPtrNillable(phoneNumberEntity.InteractionEventParticipantDetails.Type),
 		}
-	case entity.NodeLabel_User:
+	case neo4jentity.NodeLabel_User:
 		userEntity := (*interactionSessionParticipantEntity).(*entity.UserEntity)
 		return model.UserParticipant{
 			UserParticipant: MapEntityToUser(userEntity),
 			Type:            utils.StringPtrNillable(userEntity.InteractionEventParticipantDetails.Type),
 		}
-	case entity.NodeLabel_Contact:
+	case neo4jentity.NodeLabel_Contact:
 		contactEntity := (*interactionSessionParticipantEntity).(*entity.ContactEntity)
 		return model.ContactParticipant{
 			ContactParticipant: MapEntityToContact(contactEntity),

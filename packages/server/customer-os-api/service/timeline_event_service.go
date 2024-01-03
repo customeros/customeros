@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
@@ -146,23 +147,23 @@ func (s *timelineEventService) convertDbNodesToTimelineEvents(dbNodes []*dbtype.
 }
 
 func (s *timelineEventService) convertDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
-	if slices.Contains(dbNode.Labels, entity.NodeLabel_PageView) {
+	if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_PageView) {
 		return s.services.PageViewService.mapDbNodeToPageView(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_InteractionSession) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_InteractionSession) {
 		return s.services.InteractionSessionService.mapDbNodeToInteractionSessionEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Issue) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_Issue) {
 		return s.services.IssueService.mapDbNodeToIssue(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Note) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_Note) {
 		return s.services.NoteService.mapDbNodeToNoteEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_InteractionEvent) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_InteractionEvent) {
 		return s.services.InteractionEventService.mapDbNodeToInteractionEventEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Analysis) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_Analysis) {
 		return s.services.AnalysisService.mapDbNodeToAnalysisEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Meeting) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_Meeting) {
 		return s.services.MeetingService.mapDbNodeToMeetingEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Action) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_Action) {
 		return s.services.ActionService.mapDbNodeToActionEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_LogEntry) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabel_LogEntry) {
 		return s.services.LogEntryService.mapDbNodeToLogEntryEntity(dbNode)
 	}
 	return nil

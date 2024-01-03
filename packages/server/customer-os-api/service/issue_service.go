@@ -174,15 +174,15 @@ func (s *issueService) mapDbNodeToIssue(node dbtype.Node) *entity.IssueEntity {
 func (s *issueService) convertDbNodesToIssueParticipants(records []*utils.DbNodeAndId) entity.IssueParticipants {
 	issueParticipants := entity.IssueParticipants{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, entity.NodeLabel_User) {
+		if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_User) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			issueParticipants = append(issueParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Contact) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Contact) {
 			participant := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			issueParticipants = append(issueParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Organization) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Organization) {
 			participant := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			issueParticipants = append(issueParticipants, participant)

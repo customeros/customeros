@@ -511,32 +511,32 @@ func (s *interactionEventService) mapDbPropsToInteractionEventEntity(props map[s
 func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(records []*utils.DbNodeWithRelationAndId) entity.InteractionEventParticipants {
 	interactionEventParticipants := entity.InteractionEventParticipants{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, entity.NodeLabel_Email) {
+		if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Email) {
 			participant := s.services.EmailService.mapDbNodeToEmailEntity(*v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_PhoneNumber) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_PhoneNumber) {
 			participant := s.services.PhoneNumberService.mapDbNodeToPhoneNumberEntity(*v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_User) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_User) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Contact) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Contact) {
 			participant := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Organization) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Organization) {
 			participant := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_JobRole) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_JobRole) {
 			participant := s.services.JobRoleService.mapDbNodeToJobRoleEntity(*v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId

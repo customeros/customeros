@@ -447,19 +447,19 @@ func (s *meetingService) FindAll(ctx context.Context, externalSystemID string, e
 func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.DbNodeWithRelationAndId) entity.MeetingParticipants {
 	meetingParticipants := entity.MeetingParticipants{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, entity.NodeLabel_User) {
+		if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_User) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Contact) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Contact) {
 			participant := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Organization) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Organization) {
 			participant := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Email) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Email) {
 			participant := s.services.EmailService.mapDbNodeToEmailEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
