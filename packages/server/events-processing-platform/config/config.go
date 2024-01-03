@@ -188,8 +188,8 @@ type Services struct {
 		ApiKey string `env:"NOVU_API_KEY,required" envDefault:"N/A"`
 	}
 	MJML struct {
-		ApplicationId string `env:"MJML_APPLICATION_ID" envDefault:"N/A"`
-		SecretKey     string `env:"MJML_SECRET_KEY" envDefault:"N/A"`
+		ApplicationId string `env:"MJML_APPLICATION_ID" envDefault:""`
+		SecretKey     string `env:"MJML_SECRET_KEY" envDefault:""`
 	}
 }
 
