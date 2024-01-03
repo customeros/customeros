@@ -8,7 +8,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../events-processing-proto
 
-replace github.com/openline-ai/customer-os-neo4j-repository => ../customer-os-neo4j-repository
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
 require (
 	github.com/99designs/gqlgen v0.17.42
@@ -23,10 +23,10 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.16.0
-	github.com/openline-ai/customer-os-neo4j-repository v0.0.0-00010101000000-000000000000
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231122210237-45ffd94cc905
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231227140027-08b87eac2360
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-00010101000000-000000000000
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240103161206-4c7810d86694
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240103161206-4c7810d86694
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240103161206-4c7810d86694
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.18.0

@@ -1,7 +1,7 @@
 package model
 
 import (
-	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type ParticipantType string

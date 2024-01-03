@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 
 	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"

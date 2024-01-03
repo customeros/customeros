@@ -1,6 +1,6 @@
 package entity
 
-import neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+import neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 
 type SourceFields struct {
 	Source        neo4jentity.DataSource `json:"source"`

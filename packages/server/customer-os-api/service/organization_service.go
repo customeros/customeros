@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"reflect"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"

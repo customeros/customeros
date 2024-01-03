@@ -1117,6 +1117,28 @@ type LogEntryUpdateInput struct {
 	StartedAt   *time.Time `json:"startedAt,omitempty"`
 }
 
+type MasterPlan struct {
+	ID            string     `json:"id"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+	Name          string     `json:"name"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+}
+
+func (MasterPlan) IsSourceFields()                   {}
+func (this MasterPlan) GetID() string                { return this.ID }
+func (this MasterPlan) GetSource() DataSource        { return this.Source }
+func (this MasterPlan) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this MasterPlan) GetAppSource() string         { return this.AppSource }
+
+func (MasterPlan) IsNode() {}
+
+type MasterPlanInput struct {
+	Name *string `json:"name,omitempty"`
+}
+
 type Meeting struct {
 	ID                 string               `json:"id"`
 	Name               *string              `json:"name,omitempty"`
@@ -1209,6 +1231,9 @@ func (this MeetingsPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
+
+type Mutation struct {
+}
 
 type Note struct {
 	ID            string        `json:"id"`
@@ -1594,6 +1619,9 @@ type PlayerUser struct {
 	User    *User  `json:"user"`
 	Default bool   `json:"default"`
 	Tenant  string `json:"tenant"`
+}
+
+type Query struct {
 }
 
 type RenewalSummary struct {

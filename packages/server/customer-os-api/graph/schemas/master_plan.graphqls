@@ -1,0 +1,17 @@
+extend type Mutation {
+    masterPlan_Create(input: MasterPlanInput!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type MasterPlan implements SourceFields & Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    name:               String!
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+}
+
+input MasterPlanInput {
+    name: String
+}

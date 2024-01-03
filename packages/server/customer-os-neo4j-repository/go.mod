@@ -1,4 +1,4 @@
-module github.com/openline-ai/customer-os-neo4j-repository
+module github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository
 
 go 1.21
 

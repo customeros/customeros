@@ -1,7 +1,7 @@
 package events
 
 import (
-	neo4jmodel "github.com/openline-ai/customer-os-neo4j-repository/model"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"

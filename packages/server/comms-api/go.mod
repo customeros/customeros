@@ -20,7 +20,7 @@ require (
 	github.com/machinebox/graphql v0.2.2
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-00010101000000-000000000000
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231123194903-77ec1248f93b
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231227140027-08b87eac2360
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240103161206-4c7810d86694
 	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231204145631-027844670c8a
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/redis/go-redis/v9 v9.3.1
