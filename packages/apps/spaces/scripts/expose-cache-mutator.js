@@ -1,4 +1,5 @@
 const { parse } = require('graphql');
+const camelCase = require('lodash/camelCase');
 const upperFirst = require('lodash/upperFirst');
 const { oldVisit } = require('@graphql-codegen/plugin-helpers');
 
@@ -12,7 +13,7 @@ const plugin = (_schema, documents, _config) => {
       enter: {
         OperationDefinition(node) {
           if (node.operation === 'query') {
-            const queryName = node.name.value;
+            const queryName = camelCase(node.name.value);
 
             output = '\n'.concat(
               template(queryName),
