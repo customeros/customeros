@@ -60,3 +60,40 @@ func (s *masterPlanService) CreateMasterPlan(ctx context.Context, request *maste
 	// Return the ID of the newly created master plan
 	return &masterplanpb.MasterPlanIdGrpcResponse{Id: masterPlanId}, nil
 }
+
+func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, request *masterplanpb.CreateMasterPlanMilestoneGrpcRequest) (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "MasterPlanService.CreateMasterPlanMilestone")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	milestoneId := uuid.New().String()
+
+	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
+
+	sourceFields := commonmodel.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+
+	createMasterPlanMilestoneCommand := command.NewCreateMasterPlanMilestoneCommand(
+		request.MasterPlanId,
+		request.Tenant,
+		request.LoggedInUserId,
+		milestoneId,
+		request.Name,
+		request.Order,
+		request.DurationHours,
+		request.Items,
+		request.Optional,
+		sourceFields,
+		createdAt,
+	)
+
+	if err := s.masterPlanCommandHandlers.CreateMasterPlanMilestone.Handle(ctx, createMasterPlanMilestoneCommand); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(CreateMasterPlanMilestone.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	// Return the ID of the newly created master plan
+	return &masterplanpb.MasterPlanMilestoneIdGrpcResponse{Id: milestoneId}, nil
+}

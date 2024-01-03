@@ -2,6 +2,8 @@ package servicet
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
@@ -55,4 +57,65 @@ func TestMasterPlanService_CreateMasterPlan(t *testing.T) {
 	require.Equal(t, "app", eventData.SourceFields.AppSource)
 	require.Equal(t, "source", eventData.SourceFields.Source)
 	require.Equal(t, "source", eventData.SourceFields.SourceOfTruth)
+}
+
+func TestMasterPlanService_CreateMasterPlanMilestone(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// setup test environment
+	tenant := "ziggy"
+	masterPlanId := "master-plan-id"
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	masterPlanAggregate := aggregate.NewMasterPlanAggregateWithTenantAndID(tenant, masterPlanId)
+	createEvent, _ := event.NewMasterPlanCreateEvent(masterPlanAggregate, "", commonmodel.Source{}, utils.Now())
+	masterPlanAggregate.UncommittedEvents = append(masterPlanAggregate.UncommittedEvents, createEvent)
+	aggregateStore.Save(ctx, masterPlanAggregate)
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	masterPlanClient := masterplanpb.NewMasterPlanGrpcServiceClient(grpcConnection)
+
+	response, err := masterPlanClient.CreateMasterPlanMilestone(ctx, &masterplanpb.CreateMasterPlanMilestoneGrpcRequest{
+		Tenant:       tenant,
+		MasterPlanId: masterPlanId,
+		Name:         "New Milestone",
+		SourceFields: &commonpb.SourceFields{
+			AppSource: "app",
+			Source:    "source",
+		},
+		DurationHours: 1,
+		Order:         2,
+		Items:         []string{"item1", "item2"},
+		Optional:      true,
+	})
+	require.Nil(t, err)
+	require.NotNil(t, response)
+
+	milestoneId := response.Id
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[masterPlanAggregate.ID]
+	require.Equal(t, 2, len(eventList))
+	require.Equal(t, event.MasterPlanCreateV1, eventList[0].GetEventType())
+	require.Equal(t, event.MasterPlanMilestoneCreateV1, eventList[1].GetEventType())
+	require.Equal(t, string(aggregate.MasterPlanAggregateType)+"-"+tenant+"-"+masterPlanId, eventList[1].GetAggregateID())
+
+	var eventData event.MasterPlanMilestoneCreateEvent
+	err = eventList[1].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	// Assertions to validate the contract create event data
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, milestoneId, eventData.MilestoneId)
+	require.Equal(t, "New Milestone", eventData.Name)
+	test.AssertRecentTime(t, eventData.CreatedAt)
+	require.Equal(t, "app", eventData.SourceFields.AppSource)
+	require.Equal(t, "source", eventData.SourceFields.Source)
+	require.Equal(t, "source", eventData.SourceFields.SourceOfTruth)
+	require.Equal(t, int64(1), eventData.DurationHours)
+	require.Equal(t, int64(2), eventData.Order)
+	require.Equal(t, []string{"item1", "item2"}, eventData.Items)
+	require.Equal(t, true, eventData.Optional)
 }

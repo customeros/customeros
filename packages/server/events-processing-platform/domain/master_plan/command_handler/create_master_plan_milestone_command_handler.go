@@ -15,7 +15,7 @@ import (
 )
 
 type CreateMasterPlanMilestoneCommandHandler interface {
-	Handle(ctx context.Context, cmd *command.CreateMasterPlanCommand) error
+	Handle(ctx context.Context, cmd *command.CreateMasterPlanMilestoneCommand) error
 }
 
 type createMasterPlanMilestoneCommandHandler struct {
@@ -29,7 +29,7 @@ func NewCreateMasterPlanMilestoneCommandHandler(log logger.Logger, es eventstore
 }
 
 // Handle processes the CreateMasterPlanCommand to create a new master plan.
-func (h *createMasterPlanMilestoneCommandHandler) Handle(ctx context.Context, cmd *command.CreateMasterPlanCommand) error {
+func (h *createMasterPlanMilestoneCommandHandler) Handle(ctx context.Context, cmd *command.CreateMasterPlanMilestoneCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "createMasterPlanMilestoneCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
