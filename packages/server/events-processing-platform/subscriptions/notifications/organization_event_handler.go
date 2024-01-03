@@ -1,8 +1,11 @@
 package notifications
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 
@@ -23,7 +26,7 @@ type OrganizationEventHandler struct {
 	repositories         *repository.Repositories
 	log                  logger.Logger
 	notificationProvider NotificationProvider
-	// cfg                  *config.Config
+	cfg                  config.Config
 }
 
 func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Repositories, cfg *config.Config) *OrganizationEventHandler {
@@ -31,6 +34,7 @@ func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Rep
 		repositories:         repositories,
 		log:                  log,
 		notificationProvider: NewNotificationProvider(log, cfg.Services.Novu.ApiKey),
+		cfg:                  *cfg,
 	}
 }
 
@@ -130,7 +134,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		org = graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
 	}
 	///////////////////////////////////       Get Email Content       ///////////////////////////////////
-	html, err := parseOrgOwnerUpdateEmail(actor, user, org.Name)
+	html, err := parseOrgOwnerUpdateEmail(actor, user, org.Name, h.cfg.Services.MJML.ApplicationId, h.cfg.Services.MJML.SecretKey)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "notifications.parseOrgOwnerUpdateEmail")
@@ -225,19 +229,51 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	return err
 }
 
-func parseOrgOwnerUpdateEmail(actor, target *entity.UserEntity, orgName string) (string, error) {
-	var html string
-	var err error
+func parseOrgOwnerUpdateEmail(actor, target *entity.UserEntity, orgName, mjmlAppId, mjmlSecret string) (string, error) {
 	rawMjml, _ := os.ReadFile("./email_templates/ownership.single.mjml")
 	mjmlf := strings.Replace(string(rawMjml[:]), "{{userFirstName}}", target.FirstName, -1)
 	mjmlf = strings.Replace(mjmlf, "{{actorFirstName}}", actor.FirstName, -1)
 	mjmlf = strings.Replace(mjmlf, "{{actorLastName}}", actor.LastName, -1)
 	mjmlf = strings.Replace(mjmlf, "{{orgName}}", orgName, -1)
-	html, err = mjml.ToHTML(context.Background(), mjmlf) // mjml.WithMinify(true)
-
-	var mjmlError mjml.Error
-	if errors.As(err, &mjmlError) {
-		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", mjmlError.Message)
+	mjmlMap := map[string]string{
+		"mjml": mjmlf,
 	}
-	return html, err
+
+	if mjmlSecret == "" || mjmlAppId == "" {
+		html, err := mjml.ToHTML(context.Background(), mjmlf) // mjml.WithMinify(true)
+		var mjmlError mjml.Error
+		if errors.As(err, &mjmlError) {
+			return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", mjmlError.Message)
+		}
+		return html, err
+	}
+	mjmlJSON, err := json.Marshal(mjmlMap)
+	if err != nil {
+		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
+	}
+	requestBody := []byte(string(mjmlJSON))
+	req, err := http.NewRequest("POST", "https://api.mjml.io/v1/render", bytes.NewBuffer(requestBody))
+	if err != nil {
+		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
+	}
+	req.SetBasicAuth(mjmlAppId, mjmlSecret)
+
+	// Make the HTTP request
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
+	}
+	defer response.Body.Close()
+	var result struct {
+		HTML        string   `json:"html"`
+		Errors      []string `json:"errors"`
+		MJML        string   `json:"mjml"`
+		MJMLVersion string   `json:"mjml_version"`
+	}
+	err = json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
+	}
+	return result.HTML, err
 }
