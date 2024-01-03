@@ -35,8 +35,8 @@ func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity 
 		Market:             utils.GetStringPropOrEmpty(props, "market"),
 		CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:      entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:             neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
 		LastTouchpointAt:   utils.GetTimePropOrNil(props, "lastTouchpointAt"),
 		LastTouchpointId:   utils.GetStringPropOrNil(props, "lastTouchpointId"),
@@ -77,8 +77,8 @@ func MapDbNodeToUserEntity(node dbtype.Node) *entity.UserEntity {
 		Name:            utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
 		Internal:        utils.GetBoolPropOrFalse(props, "internal"),
@@ -97,8 +97,8 @@ func MapDbNodeToActionEntity(node dbtype.Node) *entity.ActionEntity {
 		Metadata:      utils.GetStringPropOrEmpty(props, "metadata"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &action
 }
@@ -113,8 +113,8 @@ func MapDbNodeToLogEntryEntity(node dbtype.Node) *entity.LogEntryEntity {
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &logEntry
 }
@@ -128,9 +128,9 @@ func MapDbNodeToSocialEntity(node dbtype.Node) *entity.SocialEntity {
 		CreatedAt:    utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:    utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		SourceFields: entity.SourceFields{
-			Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+			Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 			AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-			SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+			SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		},
 	}
 	return &social
@@ -150,8 +150,8 @@ func MapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEven
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &issue
 }
@@ -169,8 +169,8 @@ func MapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSe
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &issue
 }
@@ -186,8 +186,8 @@ func MapDbNodeToIssueEntity(node dbtype.Node) *entity.IssueEntity {
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &issue
 }
@@ -201,8 +201,8 @@ func MapDbNodeToCommentEntity(node dbtype.Node) *entity.CommentEntity {
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &comment
 }
@@ -229,8 +229,8 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:            neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:     neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		OwnerUserId:       utils.GetStringPropOrEmpty(props, "ownerUserId"),
 		RenewalDetails: entity.RenewalDetails{
 			RenewedAt:              utils.GetTimePropOrNil(props, "renewedAt"),
@@ -254,8 +254,8 @@ func MapDbNodeToContractEntity(node *dbtype.Node) *entity.ContractEntity {
 		CreatedAt:                       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:                       utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:                       utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:                          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:                   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:                          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:                   neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		ServiceStartedAt:                utils.GetTimePropOrNil(props, "serviceStartedAt"),
 		SignedAt:                        utils.GetTimePropOrNil(props, "signedAt"),
 		EndedAt:                         utils.GetTimePropOrNil(props, "endedAt"),
@@ -280,8 +280,8 @@ func MapDbNodeToPageView(node dbtype.Node) *entity.PageViewEntity {
 		EngagedTime:    utils.GetInt64PropOrZero(props, "engagedTime"),
 		StartedAt:      utils.GetTimePropOrNow(props, "startedAt"),
 		EndedAt:        utils.GetTimePropOrNow(props, "endedAt"),
-		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:         neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:  neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &pageViewAction
@@ -295,8 +295,8 @@ func MapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity {
 		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &result
@@ -318,8 +318,8 @@ func MapDbNodeToMeetingEntity(node dbtype.Node) *entity.MeetingEntity {
 		EndedAt:            utils.GetTimePropOrNil(props, "endedAt"),
 		Recording:          utils.GetStringPropOrNil(props, "recording"),
 		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:      entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:             neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Status:             &status,
 	}
 
@@ -336,8 +336,8 @@ func MapDbNodeToAnalysisEntity(node dbtype.Node) *entity.AnalysisEntity {
 		Content:       utils.GetStringPropOrEmpty(props, "content"),
 		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &analysisEntity
 }
@@ -423,8 +423,8 @@ func MapDbNodeToServiceLineItemEntity(node dbtype.Node) *entity.ServiceLineItemE
 		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
 		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Billed:        utils.GetStringPropOrEmpty(props, "billed"),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
@@ -444,8 +444,8 @@ func MapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
 		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Primary:        utils.GetBoolPropOrFalse(props, "primary"),
-		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:         neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:  neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
 		Label:          utils.GetStringPropOrEmpty(props, "label"),
 		Validated:      utils.GetBoolPropOrNil(props, "validated"),

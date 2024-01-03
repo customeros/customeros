@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"time"
 )
 
@@ -16,8 +17,8 @@ type InteractionSessionEntity struct {
 	Channel           *string
 	ChannelData       *string
 	AppSource         string
-	Source            DataSource
-	SourceOfTruth     DataSource
+	Source            neo4jentity.DataSource
+	SourceOfTruth     neo4jentity.DataSource
 
 	DataloaderKey string
 }

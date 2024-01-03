@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"time"
 )
 
@@ -16,8 +17,8 @@ type PlayerEntity struct {
 	IdentityId    *string
 	AuthId        string
 	Provider      string
-	Source        DataSource
-	SourceOfTruth DataSource
+	Source        neo4jentity.DataSource
+	SourceOfTruth neo4jentity.DataSource
 	AppSource     string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time

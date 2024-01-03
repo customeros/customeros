@@ -3,6 +3,7 @@ package unit_tests
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"time"
@@ -18,7 +19,7 @@ func (s *MockedAttachmentService) GetAttachmentById(ctx context.Context, id stri
 	return nil, nil
 }
 
-func (s *MockedAttachmentService) Create(ctx context.Context, newAnalysis *entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*entity.AttachmentEntity, error) {
+func (s *MockedAttachmentService) Create(ctx context.Context, newAnalysis *entity.AttachmentEntity, source, sourceOfTruth neo4jentity.DataSource) (*entity.AttachmentEntity, error) {
 	timeToHardcode := time.Date(2023, 9, 28, 12, 0, 0, 0, time.UTC)
 	timePointer := &timeToHardcode
 	return &entity.AttachmentEntity{

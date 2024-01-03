@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -48,7 +49,7 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 			Provider:       input.Player.Provider,
 			IdentityId:     utils.IfNotNilString(input.Player.IdentityID),
 			SourceFields: &commongrpc.SourceFields{
-				Source:    string(entity.DataSourceOpenline),
+				Source:    string(neo4jentity.DataSourceOpenline),
 				AppSource: utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 			},
 		})

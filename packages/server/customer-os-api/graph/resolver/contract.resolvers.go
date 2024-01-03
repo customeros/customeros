@@ -6,12 +6,12 @@ package resolver
 
 import (
 	"context"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -105,7 +105,7 @@ func (r *mutationResolver) ContractCreate(ctx context.Context, input model.Contr
 		ContractEntity:    mapper.MapContractInputToEntity(input),
 		OrganizationId:    input.OrganizationID,
 		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
-		Source:            entity.DataSourceOpenline,
+		Source:            neo4jentity.DataSourceOpenline,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

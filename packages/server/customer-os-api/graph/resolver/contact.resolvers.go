@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"time"
@@ -289,7 +290,7 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 		PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(input.PhoneNumber),
 		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
 		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
-		Source:            entity.DataSourceOpenline,
+		Source:            neo4jentity.DataSourceOpenline,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -461,7 +462,7 @@ func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.organizationID", input.OrganizationID))
 
-	updatedContact, err := r.Services.ContactService.AddOrganization(ctx, input.ContactID, input.OrganizationID, string(entity.DataSourceOpenline), constants.AppSourceCustomerOsApi)
+	updatedContact, err := r.Services.ContactService.AddOrganization(ctx, input.ContactID, input.OrganizationID, string(neo4jentity.DataSourceOpenline), constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", input.OrganizationID, input.ContactID)
@@ -494,8 +495,8 @@ func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID 
 	span.LogFields(log.String("request.contactID", contactID))
 
 	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.CONTACT, contactID, entity.SourceFields{
-		Source:        entity.DataSourceOpenline,
-		SourceOfTruth: entity.DataSourceOpenline,
+		Source:        neo4jentity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
 		AppSource:     constants.AppSourceCustomerOsApi,
 	})
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -17,7 +18,7 @@ type AttachmentRepository interface {
 	LinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, linkedWith LinkedWith, linkedNature *LinkedNature, attachmentId, includedById string) (*dbtype.Node, error)
 	UnlinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, linkedWith LinkedWith, linkedNature *LinkedNature, attachmentId, includedById string) (*dbtype.Node, error)
 	GetAttachmentsForXX(ctx context.Context, tenant string, linkedWith LinkedWith, linkedNature *LinkedNature, ids []string) ([]*utils.DbNodeAndId, error)
-	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAttachment entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAttachment entity.AttachmentEntity, source, sourceOfTruth neo4jentity.DataSource) (*dbtype.Node, error)
 }
 
 type attachmentRepository struct {
@@ -119,7 +120,7 @@ func (r *attachmentRepository) GetAttachmentsForXX(ctx context.Context, tenant s
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *attachmentRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAttachment entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
+func (r *attachmentRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAttachment entity.AttachmentEntity, source, sourceOfTruth neo4jentity.DataSource) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentRepository.Create")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

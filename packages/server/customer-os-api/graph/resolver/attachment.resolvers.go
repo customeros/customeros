@@ -6,9 +6,9 @@ package resolver
 
 import (
 	"context"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -21,7 +21,7 @@ func (r *mutationResolver) AttachmentCreate(ctx context.Context, input model.Att
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	attachmentCreated, err := r.Services.AttachmentService.Create(ctx, mapper.MapAttachmentInputToEntity(&input), entity.DataSourceOpenline, entity.DataSourceOpenline)
+	attachmentCreated, err := r.Services.AttachmentService.Create(ctx, mapper.MapAttachmentInputToEntity(&input), neo4jentity.DataSourceOpenline, neo4jentity.DataSourceOpenline)
 
 	if err != nil {
 		tracing.TraceErr(span, err)

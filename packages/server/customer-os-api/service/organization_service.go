@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"reflect"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -235,7 +236,7 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 
 	tenant := common.GetTenantFromContext(ctx)
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		err = s.repositories.OrganizationRepository.MergeOrganizationPropertiesInTx(ctx, tx, tenant, primaryOrganizationId, mergedOrganizationId, entity.DataSourceOpenline)
+		err = s.repositories.OrganizationRepository.MergeOrganizationPropertiesInTx(ctx, tx, tenant, primaryOrganizationId, mergedOrganizationId, neo4jentity.DataSourceOpenline)
 		if err != nil {
 			return nil, err
 		}
@@ -775,8 +776,8 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 		EmployeeGrowthRate: utils.GetStringPropOrEmpty(props, "employeeGrowthRate"),
 		CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:      entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:             neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
 		LastTouchpointId:   utils.GetStringPropOrNil(props, "lastTouchpointId"),
 		LastTouchpointAt:   utils.GetTimePropOrNil(props, "lastTouchpointAt"),

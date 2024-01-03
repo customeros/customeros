@@ -1,6 +1,9 @@
 package entity
 
-import "time"
+import (
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	"time"
+)
 
 type ServiceLineItemEntity struct {
 	ID               string
@@ -17,8 +20,8 @@ type ServiceLineItemEntity struct {
 	PreviousPrice    float64
 	PreviousQuantity int64
 	Comments         string
-	Source           DataSource
-	SourceOfTruth    DataSource
+	Source           neo4jentity.DataSource
+	SourceOfTruth    neo4jentity.DataSource
 	AppSource        string
 	ParentID         string
 

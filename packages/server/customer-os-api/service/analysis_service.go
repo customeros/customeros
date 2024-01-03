@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -34,8 +35,8 @@ type AnalysisDescriptionData struct {
 type AnalysisCreateData struct {
 	AnalysisEntity *entity.AnalysisEntity
 	Describes      []AnalysisDescriptionData
-	Source         entity.DataSource
-	SourceOfTruth  entity.DataSource
+	Source         neo4jentity.DataSource
+	SourceOfTruth  neo4jentity.DataSource
 }
 
 type analysisService struct {
@@ -153,8 +154,8 @@ func (s *analysisService) mapDbNodeToAnalysisEntity(node dbtype.Node) *entity.An
 		Content:       utils.GetStringPropOrEmpty(props, "content"),
 		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &analysisEntity
 }

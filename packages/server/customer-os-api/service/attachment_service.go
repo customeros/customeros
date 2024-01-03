@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -15,7 +16,7 @@ import (
 type AttachmentService interface {
 	GetAttachmentById(ctx context.Context, id string) (*entity.AttachmentEntity, error)
 
-	Create(ctx context.Context, newAnalysis *entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*entity.AttachmentEntity, error)
+	Create(ctx context.Context, newAnalysis *entity.AttachmentEntity, source, sourceOfTruth neo4jentity.DataSource) (*entity.AttachmentEntity, error)
 	GetAttachmentsForNode(ctx context.Context, linkedWith repository.LinkedWith, linkedNature *repository.LinkedNature, ids []string) (*entity.AttachmentEntities, error)
 
 	LinkNodeWithAttachment(ctx context.Context, linkedWith repository.LinkedWith, linkedNature *repository.LinkedNature, attachmentId, includedById string) (*dbtype.Node, error)
@@ -74,7 +75,7 @@ func (s *attachmentService) GetAttachmentsForNode(ctx context.Context, linkedWit
 	return &analysisDescribes, nil
 }
 
-func (s *attachmentService) Create(ctx context.Context, newAnalysis *entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*entity.AttachmentEntity, error) {
+func (s *attachmentService) Create(ctx context.Context, newAnalysis *entity.AttachmentEntity, source, sourceOfTruth neo4jentity.DataSource) (*entity.AttachmentEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -85,7 +86,7 @@ func (s *attachmentService) Create(ctx context.Context, newAnalysis *entity.Atta
 	return s.MapDbNodeToAttachmentEntity(*interactionEventDbNode.(*dbtype.Node)), nil
 }
 
-func (s *attachmentService) createAttachmentInDBTxWork(ctx context.Context, newAttachment *entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) func(tx neo4j.ManagedTransaction) (any, error) {
+func (s *attachmentService) createAttachmentInDBTxWork(ctx context.Context, newAttachment *entity.AttachmentEntity, source, sourceOfTruth neo4jentity.DataSource) func(tx neo4j.ManagedTransaction) (any, error) {
 	return func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
 		analysisDbNode, err := s.repositories.AttachmentRepository.Create(ctx, tx, tenant, *newAttachment, source, sourceOfTruth)
@@ -131,8 +132,8 @@ func (s *attachmentService) MapDbNodeToAttachmentEntity(node dbtype.Node) *entit
 		Extension:     utils.GetStringPropOrEmpty(props, "extension"),
 		Size:          utils.GetInt64PropOrZero(props, "size"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &analysisEntity
 }

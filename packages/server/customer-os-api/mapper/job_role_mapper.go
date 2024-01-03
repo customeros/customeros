@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -18,8 +19,8 @@ func MapJobRoleInputToEntity(input *model.JobRoleInput) *entity.JobRoleEntity {
 		Company:       input.Company,
 		StartedAt:     input.StartedAt,
 		EndedAt:       input.EndedAt,
-		Source:        entity.DataSourceOpenline,
-		SourceOfTruth: entity.DataSourceOpenline,
+		Source:        neo4jentity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
 		AppSource:     utils.IfNotNilString(input.AppSource),
 	}
 	if len(jobRoleEntity.AppSource) == 0 {
@@ -38,7 +39,7 @@ func MapJobRoleUpdateInputToEntity(input *model.JobRoleUpdateInput) *entity.JobR
 		EndedAt:       input.EndedAt,
 		JobTitle:      utils.IfNotNilString(input.JobTitle),
 		Primary:       utils.IfNotNilBool(input.Primary),
-		SourceOfTruth: entity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
 		Description:   input.Description,
 		Company:       input.Company,
 	}

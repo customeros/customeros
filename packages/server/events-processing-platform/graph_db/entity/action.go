@@ -11,8 +11,8 @@ type ActionEntity struct {
 	Content       string
 	Metadata      string
 	Type          neo4jentity.ActionType
-	Source        DataSource
-	SourceOfTruth DataSource
+	Source        neo4jentity.DataSource
+	SourceOfTruth neo4jentity.DataSource
 	AppSource     string
 }
 

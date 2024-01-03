@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -10,7 +11,7 @@ import (
 func MapTenantInputToEntity(input model.TenantInput) entity.TenantEntity {
 	tenantEntity := entity.TenantEntity{
 		Name:      input.Name,
-		Source:    entity.DataSourceOpenline,
+		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: utils.IfNotNilString(input.AppSource),
 	}
 	if len(tenantEntity.AppSource) == 0 {

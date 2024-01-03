@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -55,7 +56,7 @@ type ContactCreateData struct {
 	EmailEntity       *entity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
 	ExternalReference *entity.ExternalSystemEntity
-	Source            entity.DataSource
+	Source            neo4jentity.DataSource
 	AppSource         string
 }
 
@@ -250,7 +251,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 	upsertContactRequest := contactpb.UpsertContactGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
-			Source:    string(entity.DataSourceOpenline),
+			Source:    string(neo4jentity.DataSourceOpenline),
 			AppSource: utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi),
 		},
 		LoggedInUserId:  common.GetUserIdFromContext(ctx),
@@ -460,7 +461,7 @@ func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedCont
 
 	tenant := common.GetContext(ctx).Tenant
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		err = s.repositories.ContactRepository.MergeContactPropertiesInTx(ctx, tx, tenant, primaryContactId, mergedContactId, entity.DataSourceOpenline)
+		err = s.repositories.ContactRepository.MergeContactPropertiesInTx(ctx, tx, tenant, primaryContactId, mergedContactId, neo4jentity.DataSourceOpenline)
 		if err != nil {
 			return nil, err
 		}
@@ -677,8 +678,8 @@ func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.Co
 		Prefix:          utils.GetStringPropOrEmpty(props, "prefix"),
 		CreatedAt:       utils.ToPtr(utils.GetTimePropOrEpochStart(props, "createdAt")),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &contact

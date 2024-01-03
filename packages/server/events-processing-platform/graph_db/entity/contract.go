@@ -1,6 +1,7 @@
 package entity
 
 import (
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
 )
@@ -9,8 +10,8 @@ type ContractEntity struct {
 	Id                              string
 	CreatedAt                       time.Time
 	UpdatedAt                       time.Time
-	Source                          DataSource
-	SourceOfTruth                   DataSource
+	Source                          neo4jentity.DataSource
+	SourceOfTruth                   neo4jentity.DataSource
 	AppSource                       string
 	Name                            string
 	ContractUrl                     string

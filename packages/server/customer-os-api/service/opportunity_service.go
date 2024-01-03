@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -95,8 +96,8 @@ func (s *opportunityService) mapDbNodeToOpportunityEntity(dbNode dbtype.Node) *e
 		RenewalUpdatedByUserAt: utils.GetTimePropOrEpochStart(props, "renewalUpdatedByUserAt"),
 		RenewalUpdatedByUserId: utils.GetStringPropOrEmpty(props, "renewalUpdatedByUserId"),
 		Comments:               utils.GetStringPropOrEmpty(props, "comments"),
-		Source:                 entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:                 neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:              utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &opportunity
@@ -185,7 +186,7 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 		Comments:       utils.IfNotNilString(comments),
 		OwnerUserId:    utils.IfNotNilString(ownerUserId),
 		SourceFields: &commonpb.SourceFields{
-			Source:    string(entity.DataSourceOpenline),
+			Source:    string(neo4jentity.DataSourceOpenline),
 			AppSource: appSource,
 		},
 	}

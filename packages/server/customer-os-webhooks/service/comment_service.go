@@ -5,6 +5,7 @@ import (
 	_e "errors"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
@@ -64,7 +65,7 @@ func (s *commentService) SyncComments(ctx context.Context, comments []model.Comm
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
 			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
-		if !entity.IsValidDataSource(strings.ToLower(comment.ExternalSystem)) {
+		if !neo4jentity.IsValidDataSource(strings.ToLower(comment.ExternalSystem)) {
 			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", comment.ExternalSystem))
 			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
@@ -239,7 +240,7 @@ func (s *commentService) mapDbNodeToCommentEntity(dbNode dbtype.Node) *entity.Co
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 }

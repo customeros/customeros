@@ -6,13 +6,13 @@ package resolver
 
 import (
 	"context"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -39,7 +39,7 @@ func (r *mutationResolver) PlayerMerge(ctx context.Context, userID string, input
 		Provider:       input.Provider,
 		IdentityId:     utils.IfNotNilString(input.IdentityID),
 		SourceFields: &commongrpc.SourceFields{
-			Source:    string(entity.DataSourceOpenline),
+			Source:    string(neo4jentity.DataSourceOpenline),
 			AppSource: utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 		},
 	})

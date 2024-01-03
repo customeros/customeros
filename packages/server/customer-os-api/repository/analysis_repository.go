@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -17,7 +18,7 @@ type AnalysisRepository interface {
 	LinkWithDescribesXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, linkedWith LinkedWith, entityId, analysisId string) error
 	GetDescribesForAnalysis(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetDescribedByForXX(ctx context.Context, tenant string, ids []string, linkedWith LinkedWith) ([]*utils.DbNodeAndId, error)
-	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAnalysis entity.AnalysisEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAnalysis entity.AnalysisEntity, source, sourceOfTruth neo4jentity.DataSource) (*dbtype.Node, error)
 }
 
 type analysisRepository struct {
@@ -113,7 +114,7 @@ func (r *analysisRepository) GetDescribedByForXX(ctx context.Context, tenant str
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *analysisRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAnalysis entity.AnalysisEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
+func (r *analysisRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAnalysis entity.AnalysisEntity, source, sourceOfTruth neo4jentity.DataSource) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisRepository.Create")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

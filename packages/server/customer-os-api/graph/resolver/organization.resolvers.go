@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"time"
@@ -82,7 +83,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		Headquarters:       utils.IfNotNilString(input.Headquarters),
 		EmployeeGrowthRate: utils.IfNotNilString(input.EmployeeGrowthRate),
 		SourceFields: &commonpb.SourceFields{
-			Source:    string(entity.DataSourceOpenline),
+			Source:    string(neo4jentity.DataSourceOpenline),
 			AppSource: utils.IfNotNilString(input.AppSource),
 		},
 		Note: utils.IfNotNilString(input.Note),
@@ -161,7 +162,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 				CustomFieldTemplateId: customFieldEntity.TemplateId,
 				CustomFieldValue:      &customFieldValue,
 				SourceFields: &commonpb.SourceFields{
-					Source:    string(entity.DataSourceOpenline),
+					Source:    string(neo4jentity.DataSourceOpenline),
 					AppSource: utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 				},
 			})
@@ -274,7 +275,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		Headquarters:       utils.IfNotNilString(input.Headquarters),
 		EmployeeGrowthRate: utils.IfNotNilString(input.EmployeeGrowthRate),
 		SourceFields: &commonpb.SourceFields{
-			Source: string(entity.DataSourceOpenline),
+			Source: string(neo4jentity.DataSourceOpenline),
 		},
 	})
 	if err != nil {
@@ -523,8 +524,8 @@ func (r *mutationResolver) OrganizationAddNewLocation(ctx context.Context, organ
 	span.LogFields(log.String("request.organizationID", organizationID))
 
 	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.ORGANIZATION, organizationID, entity.SourceFields{
-		Source:        entity.DataSourceOpenline,
-		SourceOfTruth: entity.DataSourceOpenline,
+		Source:        neo4jentity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
 		AppSource:     constants.AppSourceCustomerOsApi,
 	})
 	if err != nil {
