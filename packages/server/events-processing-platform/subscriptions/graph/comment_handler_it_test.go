@@ -2,6 +2,7 @@ package graph
 
 import (
 	"github.com/google/uuid"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/aggregate"
@@ -27,7 +28,7 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 	commentedIssueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
 	authorUserId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "ExternalSystem": 1, "Comment": 0, "TimelineEvent": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "ExternalSystem": 1, "Comment": 0, "TimelineEvent": 1})
 
 	// prepare event handler
 	commentEventHandler := &CommentEventHandler{
@@ -55,16 +56,16 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 	err = commentEventHandler.OnCreate(context.Background(), createEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "User_" + tenantName: 1,
 		"ExternalSystem": 1, "ExternalSystem_" + tenantName: 1,
 		"Issue": 1, "Issue_" + tenantName: 1,
 		"Comment": 1, "Comment_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, commentId, "COMMENTED", commentedIssueId)
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, commentId, "CREATED_BY", authorUserId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, commentId, "COMMENTED", commentedIssueId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, commentId, "CREATED_BY", authorUserId)
 
-	commentDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Comment_"+tenantName, commentId)
+	commentDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Comment_"+tenantName, commentId)
 	require.Nil(t, err)
 	require.NotNil(t, commentDbNode)
 
@@ -90,7 +91,7 @@ func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
 		Content:     "test content",
 		ContentType: "text",
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Comment": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Comment": 1})
 
 	// prepare event handler
 	commentEventHandler := &CommentEventHandler{
@@ -105,9 +106,9 @@ func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
 	err = commentEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Comment": 1, "Comment_" + tenantName: 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Comment": 1, "Comment_" + tenantName: 1})
 
-	commentDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Comment_"+tenantName, commentId)
+	commentDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Comment_"+tenantName, commentId)
 	require.Nil(t, err)
 	require.NotNil(t, commentDbNode)
 
@@ -131,7 +132,7 @@ func TestGraphCommentEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNon
 		Source:        constants.SourceOpenline,
 		SourceOfTruth: constants.SourceOpenline,
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Comment": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Comment": 1})
 
 	// prepare event handler
 	commentEventHandler := &CommentEventHandler{
@@ -146,10 +147,10 @@ func TestGraphCommentEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNon
 	err = commentEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Comment": 1, "Comment_" + tenantName: 1})
 
-	commentDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Comment_"+tenantName, commentId)
+	commentDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Comment_"+tenantName, commentId)
 	require.Nil(t, err)
 	require.NotNil(t, commentDbNode)
 

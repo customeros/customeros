@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -30,7 +31,7 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 	reporterOrgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	submitterOrgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	submitterUserId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "Organization": 2, "ExternalSystem": 1, "Issue": 0, "TimelineEvent": 0})
 
 	// prepare grpc mock
@@ -78,23 +79,23 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 	err = issueEventHandler.OnCreate(context.Background(), createEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "User_" + tenantName: 1,
 		"Organization": 2, "Organization_" + tenantName: 2,
 		"ExternalSystem": 1, "ExternalSystem_" + tenantName: 1,
 		"Issue": 1, "Issue_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"REPORTED_BY":    1,
 		"SUBMITTED_BY":   2,
 		"IS_LINKED_WITH": 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "REPORTED_BY", reporterOrgId)
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "SUBMITTED_BY", submitterOrgId)
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "SUBMITTED_BY", submitterUserId)
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "IS_LINKED_WITH", externalSystemId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "REPORTED_BY", reporterOrgId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "SUBMITTED_BY", submitterOrgId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "SUBMITTED_BY", submitterUserId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "IS_LINKED_WITH", externalSystemId)
 
-	issueDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
+	issueDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
 
@@ -129,7 +130,7 @@ func TestGraphIssueEventHandler_OnUpdate(t *testing.T) {
 		Priority:    "high",
 	})
 	neo4jt.LinkIssueReportedBy(ctx, testDatabase.Driver, issueId, orgId)
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "Issue": 1, "TimelineEvent": 1})
 
 	// prepare event handler
@@ -150,12 +151,12 @@ func TestGraphIssueEventHandler_OnUpdate(t *testing.T) {
 	err = issueEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "Organization_" + tenantName: 1,
 		"Issue": 1, "Issue_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
-	issueDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
+	issueDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
 
@@ -183,7 +184,7 @@ func TestGraphIssueEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOp
 		SourceOfTruth: constants.SourceOpenline,
 	})
 	neo4jt.LinkIssueReportedBy(ctx, testDatabase.Driver, issueId, orgId)
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "Issue": 1, "TimelineEvent": 1})
 
 	// prepare event handler
@@ -204,12 +205,12 @@ func TestGraphIssueEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOp
 	err = issueEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "Organization_" + tenantName: 1,
 		"Issue": 1, "Issue_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
-	issueDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
+	issueDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
 
@@ -232,8 +233,8 @@ func TestGraphIssueEventHandler_OnAddUserAssignee(t *testing.T) {
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"ASSIGNED_TO": 0})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"ASSIGNED_TO": 0})
 
 	// prepare event handler
 	issueEventHandler := &IssueEventHandler{
@@ -248,13 +249,13 @@ func TestGraphIssueEventHandler_OnAddUserAssignee(t *testing.T) {
 	err = issueEventHandler.OnAddUserAssignee(context.Background(), addUserAssigneeEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "User_" + tenantName: 1,
 		"Issue": 1, "Issue_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "ASSIGNED_TO", userId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "ASSIGNED_TO", userId)
 
-	issueDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
+	issueDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
 	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
@@ -270,8 +271,8 @@ func TestGraphIssueEventHandler_OnRemoveUserAssignee(t *testing.T) {
 	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
 	neo4jt.LinkIssueAssignedTo(ctx, testDatabase.Driver, issueId, userId)
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"ASSIGNED_TO": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"ASSIGNED_TO": 1})
 
 	// prepare event handler
 	issueEventHandler := &IssueEventHandler{
@@ -286,13 +287,13 @@ func TestGraphIssueEventHandler_OnRemoveUserAssignee(t *testing.T) {
 	err = issueEventHandler.OnRemoveUserAssignee(context.Background(), removeUserAssigneeEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "User_" + tenantName: 1,
 		"Issue": 1, "Issue_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"ASSIGNED_TO": 0})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"ASSIGNED_TO": 0})
 
-	issueDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
+	issueDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
 	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
@@ -307,8 +308,8 @@ func TestGraphIssueEventHandler_OnAddUserFollower(t *testing.T) {
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"FOLLOWED_BY": 0})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"FOLLOWED_BY": 0})
 
 	// prepare event handler
 	issueEventHandler := &IssueEventHandler{
@@ -323,13 +324,13 @@ func TestGraphIssueEventHandler_OnAddUserFollower(t *testing.T) {
 	err = issueEventHandler.OnAddUserFollower(context.Background(), addUserFollowerEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "User_" + tenantName: 1,
 		"Issue": 1, "Issue_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "FOLLOWED_BY", userId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "FOLLOWED_BY", userId)
 
-	issueDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
+	issueDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
 	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
@@ -345,8 +346,8 @@ func TestGraphIssueEventHandler_OnRemoveUserFollower(t *testing.T) {
 	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
 	neo4jt.LinkIssueFollowedBy(ctx, testDatabase.Driver, issueId, userId)
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"FOLLOWED_BY": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"FOLLOWED_BY": 1})
 
 	// prepare event handler
 	issueEventHandler := &IssueEventHandler{
@@ -361,13 +362,13 @@ func TestGraphIssueEventHandler_OnRemoveUserFollower(t *testing.T) {
 	err = issueEventHandler.OnRemoveUserFollower(context.Background(), removeUserFollowerEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "User_" + tenantName: 1,
 		"Issue": 1, "Issue_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"FOLLOWED_BY": 0})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"FOLLOWED_BY": 0})
 
-	issueDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
+	issueDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
 	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)

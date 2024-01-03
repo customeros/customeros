@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -30,7 +31,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	userIdCreator := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, "sf")
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "User": 1, "ExternalSystem": 1, "Contract": 0})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "User": 1, "ExternalSystem": 1, "Contract": 0})
 
 	// Prepare the event handler
 	contractEventHandler := &ContractEventHandler{
@@ -111,16 +112,16 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 
 	// Verify
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1,
 		"User":         1,
 		"Contract":     1, "Contract_" + tenantName: 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "CREATED_BY", userIdCreator)
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "HAS_CONTRACT", contractId)
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "IS_LINKED_WITH", "sf")
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "CREATED_BY", userIdCreator)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "HAS_CONTRACT", contractId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "IS_LINKED_WITH", "sf")
 
-	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	contractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
 	require.NotNil(t, contractDbNode)
 
@@ -154,7 +155,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 		Name:        "test contract",
 		ContractUrl: "http://contract.url",
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1})
 
 	// prepare grpc mock
 	calledEventsPlatformCreateRenewalOpportunity := false
@@ -201,9 +202,9 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
 
-	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	contractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
 	require.NotNil(t, contractDbNode)
 
@@ -406,14 +407,14 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	require.Nil(t, err)
 
 	// Verify
-	neo4jt.AssertRelationships(ctx, t, testDatabase.Driver, contractId, []string{"SUSPENDED_RENEWAL", "HAS_OPPORTUNITY"}, opportunityId)
-	opportunityDbNode, _ := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Opportunity", opportunityId)
+	neo4jtest.AssertRelationships(ctx, t, testDatabase.Driver, contractId, []string{"SUSPENDED_RENEWAL", "HAS_OPPORTUNITY"}, opportunityId)
+	opportunityDbNode, _ := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Opportunity", opportunityId)
 	require.Nil(t, err)
 	require.NotNil(t, opportunityDbNode)
 	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, "SUSPENDED", opportunity.InternalStage)
 
-	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	contractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
 	require.NotNil(t, contractDbNode)
 	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
@@ -521,7 +522,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 		},
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Opportunity": 1})
 
 	// prepare grpc mock
 	calledEventsPlatformToUpdateRenewalOpportunity := false
@@ -596,9 +597,9 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
 
-	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	contractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
 	require.NotNil(t, contractDbNode)
 
@@ -638,7 +639,7 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 		EndedAt:          &now,
 		SourceOfTruth:    constants.SourceOpenline,
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1})
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
@@ -669,9 +670,9 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
 
-	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	contractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
 	require.NotNil(t, contractDbNode)
 
@@ -700,7 +701,7 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 		Name:   "test contract",
 		Status: string(model.ContractStatusStringDraft),
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
 		"Contract": 1, "Contract_" + tenantName: 1, "Action": 0, "TimelineEvent": 0})
 
 	// prepare event handler
@@ -737,12 +738,12 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	err = contractEventHandler.OnUpdateStatus(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
 		"Contract": 1, "Contract_" + tenantName: 1,
 		"Action": 1, "Action_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
-	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	contractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
 	require.NotNil(t, contractDbNode)
 
@@ -754,7 +755,7 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	require.True(t, calledEventsPlatformForOnboardingStatusChange)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -777,7 +778,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 		Name:   "test contract",
 		Status: string(model.ContractStatusStringDraft),
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
 		"Contract": 1, "Contract_" + tenantName: 1, "Action": 0, "TimelineEvent": 0})
 
 	// prepare event handler
@@ -814,12 +815,12 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	err = contractEventHandler.OnUpdateStatus(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
 		"Contract": 1, "Contract_" + tenantName: 1,
 		"Action": 1, "Action_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
-	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	contractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
 	require.NotNil(t, contractDbNode)
 
@@ -831,7 +832,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	require.True(t, calledEventsPlatformForOnboardingStatusChange)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)

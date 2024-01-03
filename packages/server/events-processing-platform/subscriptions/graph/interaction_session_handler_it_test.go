@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -55,18 +56,18 @@ func TestGraphInteractionSessionEventHandler_OnCreate(t *testing.T) {
 	err = interactionSessionEventHandler.OnCreate(context.Background(), createEvent)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"ExternalSystem": 1, "ExternalSystem_" + tenantName: 1,
 		"InteractionSession": 1, "InteractionSession_" + tenantName: 1,
 		"Tenant": 1,
 	})
-	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"InteractionSession", "InteractionSession_" + tenantName, "Tenant", "ExternalSystem", "ExternalSystem_" + tenantName})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"InteractionSession", "InteractionSession_" + tenantName, "Tenant", "ExternalSystem", "ExternalSystem_" + tenantName})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"IS_LINKED_WITH": 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, interactionSessionId, "IS_LINKED_WITH", externalSystemId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, interactionSessionId, "IS_LINKED_WITH", externalSystemId)
 
-	interactionSessionDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "InteractionSession_"+tenantName, interactionSessionId)
+	interactionSessionDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "InteractionSession_"+tenantName, interactionSessionId)
 	require.Nil(t, err)
 	require.NotNil(t, interactionSessionDbNode)
 

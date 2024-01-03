@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -41,11 +42,11 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	err = contactEventHandler.OnContactCreate(context.Background(), event)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "Contact_"+tenantName), "Incorrect number of Contact_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "CONTACT_BELONGS_TO_TENANT"), "Incorrect number of CONTACT_BELONGS_TO_TENANT relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "Contact"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "Contact_"+tenantName), "Incorrect number of Contact_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "CONTACT_BELONGS_TO_TENANT"), "Incorrect number of CONTACT_BELONGS_TO_TENANT relationships in Neo4j")
 
-	dbContactNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, myContactId.String())
+	dbContactNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, myContactId.String())
 	require.Nil(t, err)
 	require.NotNil(t, dbContactNode)
 	contactProps := utils.GetPropsFromNode(*dbContactNode)
@@ -70,8 +71,8 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 		Name: contactName,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contact": 1, "Contact_" + tenantName: 1})
-	dbNodeAfterContactCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contact": 1, "Contact_" + tenantName: 1})
+	dbNodeAfterContactCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterContactCreate)
 	propsAfterContactCreate := utils.GetPropsFromNode(*dbNodeAfterContactCreate)
@@ -82,7 +83,7 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 		Name: locationName,
 	})
 
-	dbNodeAfterLocationCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
+	dbNodeAfterLocationCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterLocationCreate)
 	propsAfterLocationCreate := utils.GetPropsFromNode(*dbNodeAfterLocationCreate)
@@ -98,8 +99,8 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 	err = contactEventHandler.OnLocationLinkToContact(context.Background(), event)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "ASSOCIATED_WITH"), "Incorrect number of ASSOCIATED_WITH relationships in Neo4j")
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contactId, "ASSOCIATED_WITH", locationId)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "ASSOCIATED_WITH"), "Incorrect number of ASSOCIATED_WITH relationships in Neo4j")
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contactId, "ASSOCIATED_WITH", locationId)
 }
 
 func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
@@ -115,8 +116,8 @@ func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
 		UpdatedAt: now,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contact": 1, "Contact_" + tenantName: 1})
-	dbNodeAfterContactCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contact": 1, "Contact_" + tenantName: 1})
+	dbNodeAfterContactCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterContactCreate)
 	propsAfterContactCreate := utils.GetPropsFromNode(*dbNodeAfterContactCreate)
@@ -133,7 +134,7 @@ func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
 		AppSource:      constants.SourceOpenline,
 	})
 
-	dbNodeAfterPhoneNumberCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "PhoneNumber_"+tenantName, phoneNumberId)
+	dbNodeAfterPhoneNumberCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "PhoneNumber_"+tenantName, phoneNumberId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterPhoneNumberCreate)
 	propsAfterPhoneNumberCreate := utils.GetPropsFromNode(*dbNodeAfterPhoneNumberCreate)
@@ -152,10 +153,10 @@ func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
 	err = contactEventHandler.OnPhoneNumberLinkToContact(context.Background(), event)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contactId, "HAS", phoneNumberId)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contactId, "HAS", phoneNumberId)
 
-	dbContactNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
+	dbContactNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
 	require.Nil(t, err)
 	require.NotNil(t, dbContactNode)
 	contactProps := utils.GetPropsFromNode(*dbContactNode)
@@ -175,8 +176,8 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 		UpdatedAt: now,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contact": 1, "Contact_" + tenantName: 1})
-	dbNodeAfterContactCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contact": 1, "Contact_" + tenantName: 1})
+	dbNodeAfterContactCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterContactCreate)
 	propsAfterContactCreate := utils.GetPropsFromNode(*dbNodeAfterContactCreate)
@@ -193,7 +194,7 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 		AppSource:     constants.SourceOpenline,
 	})
 
-	dbNodeAfterEmailCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
+	dbNodeAfterEmailCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterEmailCreate)
 	propsAfterEmailCreate := utils.GetPropsFromNode(*dbNodeAfterEmailCreate)
@@ -212,10 +213,10 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 	err = contactEventHandler.OnEmailLinkToContact(context.Background(), userLinkEmailEvent)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contactId, "HAS", emailId)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contactId, "HAS", emailId)
 
-	dbContactNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
+	dbContactNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
 	require.Nil(t, err)
 	require.NotNil(t, dbContactNode)
 	contactProps := utils.GetPropsFromNode(*dbContactNode)
@@ -235,8 +236,8 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 		UpdatedAt: now,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contact": 1, "Contact_" + tenantName: 1})
-	dbNodeAfterContactCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contact": 1, "Contact_" + tenantName: 1})
+	dbNodeAfterContactCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterContactCreate)
 	propsAfterContactCreate := utils.GetPropsFromNode(*dbNodeAfterContactCreate)
@@ -247,7 +248,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 		Name: organizationName,
 	})
 
-	dbNodeAfterOrganizationCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, organizationId)
+	dbNodeAfterOrganizationCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, organizationId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterOrganizationCreate)
 	propsAfterOrganizationCreate := utils.GetPropsFromNode(*dbNodeAfterOrganizationCreate)
@@ -271,15 +272,15 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	err = contactEventHandler.OnContactLinkToOrganization(context.Background(), event)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "WORKS_AS"), "Incorrect number of WORKS_AS relationships in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "ROLE_IN"), "Incorrect number of ROLE_IN relationships in Neo4j")
-	jobRole, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "JobRole_"+tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "WORKS_AS"), "Incorrect number of WORKS_AS relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "ROLE_IN"), "Incorrect number of ROLE_IN relationships in Neo4j")
+	jobRole, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "JobRole_"+tenantName)
 	require.Nil(t, err)
 	jobRolesProps := utils.GetPropsFromNode(*jobRole)
 	jobRoleId := utils.GetStringPropOrEmpty(jobRolesProps, "id")
 	require.NotNil(t, jobRoleId)
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contactId, "WORKS_AS", jobRoleId)
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, jobRoleId, "ROLE_IN", organizationId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contactId, "WORKS_AS", jobRoleId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, jobRoleId, "ROLE_IN", organizationId)
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(jobRolesProps, "source"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(jobRolesProps, "sourceOfTruth"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(jobRolesProps, "appSource"))
@@ -291,7 +292,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	require.Equal(t, &curTime, utils.GetTimePropOrNil(jobRolesProps, "createdAt"))
 	require.Equal(t, &curTime, utils.GetTimePropOrNil(jobRolesProps, "updatedAt"))
 
-	dbNodeForContactAfterContactLinkToOrganization, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
+	dbNodeForContactAfterContactLinkToOrganization, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeForContactAfterContactLinkToOrganization)
 	propsForContactAfterContactLinkToOrganization := utils.GetPropsFromNode(*dbNodeForContactAfterContactLinkToOrganization)
@@ -325,8 +326,8 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 		SourceOfTruth:   entity.DataSource(sourceOfTruthCreate),
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contact": 1, "Contact_" + tenantName: 1})
-	dbNodeAfterContactCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contact": 1, "Contact_" + tenantName: 1})
+	dbNodeAfterContactCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterContactCreate)
 	propsAfterContactCreate := utils.GetPropsFromNode(*dbNodeAfterContactCreate)
@@ -359,7 +360,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 	err = contactEventHandler.OnContactUpdate(context.Background(), event)
 	require.Nil(t, err)
 
-	contact, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Contact_"+tenantName)
+	contact, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Contact_"+tenantName)
 	require.Nil(t, err)
 	contactProps := utils.GetPropsFromNode(*contact)
 	contactId = utils.GetStringPropOrEmpty(contactProps, "id")
