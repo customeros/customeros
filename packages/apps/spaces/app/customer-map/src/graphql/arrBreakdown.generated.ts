@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../src/types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -127,3 +128,33 @@ useArrBreakdownQuery.fetcher = (
     variables,
     headers,
   );
+
+useArrBreakdownQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: ArrBreakdownQueryVariables) =>
+  (mutator: (cacheEntry: ArrBreakdownQuery) => ArrBreakdownQuery) => {
+    const cacheKey = useArrBreakdownQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<ArrBreakdownQuery>(cacheKey);
+    if (previousEntries) {
+      queryClient.setQueryData<ArrBreakdownQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteArrBreakdownQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: ArrBreakdownQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<ArrBreakdownQuery>,
+    ) => InfiniteData<ArrBreakdownQuery>,
+  ) => {
+    const cacheKey = useInfiniteArrBreakdownQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<ArrBreakdownQuery>>(cacheKey);
+    if (previousEntries) {
+      queryClient.setQueryData<InfiniteData<ArrBreakdownQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };

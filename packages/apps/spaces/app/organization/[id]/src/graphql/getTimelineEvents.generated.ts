@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -927,3 +928,33 @@ useGetTimelineEventsQuery.fetcher = (
     variables,
     headers,
   );
+
+useGetTimelineEventsQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GetTimelineEventsQueryVariables) =>
+  (mutator: (cacheEntry: GetTimelineEventsQuery) => GetTimelineEventsQuery) => {
+    const cacheKey = useGetTimelineEventsQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<GetTimelineEventsQuery>(cacheKey);
+    if (previousEntries) {
+      queryClient.setQueryData<GetTimelineEventsQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteGetTimelineEventsQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GetTimelineEventsQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<GetTimelineEventsQuery>,
+    ) => InfiniteData<GetTimelineEventsQuery>,
+  ) => {
+    const cacheKey = useInfiniteGetTimelineEventsQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<GetTimelineEventsQuery>>(cacheKey);
+    if (previousEntries) {
+      queryClient.setQueryData<InfiniteData<GetTimelineEventsQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };

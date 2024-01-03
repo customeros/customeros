@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -91,3 +92,32 @@ useTenantNameQuery.fetcher = (
     variables,
     headers,
   );
+
+useTenantNameQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: TenantNameQueryVariables) =>
+  (mutator: (cacheEntry: TenantNameQuery) => TenantNameQuery) => {
+    const cacheKey = useTenantNameQuery.getKey(variables);
+    const previousEntries = queryClient.getQueryData<TenantNameQuery>(cacheKey);
+    if (previousEntries) {
+      queryClient.setQueryData<TenantNameQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteTenantNameQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: TenantNameQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<TenantNameQuery>,
+    ) => InfiniteData<TenantNameQuery>,
+  ) => {
+    const cacheKey = useInfiniteTenantNameQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<TenantNameQuery>>(cacheKey);
+    if (previousEntries) {
+      queryClient.setQueryData<InfiniteData<TenantNameQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };

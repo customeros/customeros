@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -110,3 +111,49 @@ useOrganizationAccountDetailsQuery.fetcher = (
     OrganizationAccountDetailsQuery,
     OrganizationAccountDetailsQueryVariables
   >(client, OrganizationAccountDetailsDocument, variables, headers);
+
+useOrganizationAccountDetailsQuery.mutateCacheEntry =
+  (
+    queryClient: QueryClient,
+    variables: OrganizationAccountDetailsQueryVariables,
+  ) =>
+  (
+    mutator: (
+      cacheEntry: OrganizationAccountDetailsQuery,
+    ) => OrganizationAccountDetailsQuery,
+  ) => {
+    const cacheKey = useOrganizationAccountDetailsQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<OrganizationAccountDetailsQuery>(cacheKey);
+    if (previousEntries) {
+      queryClient.setQueryData<OrganizationAccountDetailsQuery>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };
+useInfiniteOrganizationAccountDetailsQuery.mutateCacheEntry =
+  (
+    queryClient: QueryClient,
+    variables: OrganizationAccountDetailsQueryVariables,
+  ) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<OrganizationAccountDetailsQuery>,
+    ) => InfiniteData<OrganizationAccountDetailsQuery>,
+  ) => {
+    const cacheKey =
+      useInfiniteOrganizationAccountDetailsQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<OrganizationAccountDetailsQuery>>(
+        cacheKey,
+      );
+    if (previousEntries) {
+      queryClient.setQueryData<InfiniteData<OrganizationAccountDetailsQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };

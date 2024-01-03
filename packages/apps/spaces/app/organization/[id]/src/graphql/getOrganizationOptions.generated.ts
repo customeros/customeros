@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -132,3 +133,39 @@ useGetOrganizationOptionsQuery.fetcher = (
     variables,
     headers,
   );
+
+useGetOrganizationOptionsQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GetOrganizationOptionsQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: GetOrganizationOptionsQuery,
+    ) => GetOrganizationOptionsQuery,
+  ) => {
+    const cacheKey = useGetOrganizationOptionsQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<GetOrganizationOptionsQuery>(cacheKey);
+    if (previousEntries) {
+      queryClient.setQueryData<GetOrganizationOptionsQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteGetOrganizationOptionsQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GetOrganizationOptionsQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<GetOrganizationOptionsQuery>,
+    ) => InfiniteData<GetOrganizationOptionsQuery>,
+  ) => {
+    const cacheKey = useInfiniteGetOrganizationOptionsQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<GetOrganizationOptionsQuery>>(
+        cacheKey,
+      );
+    if (previousEntries) {
+      queryClient.setQueryData<InfiniteData<GetOrganizationOptionsQuery>>(
+        cacheKey,
+        mutator,
+      );
+    }
+    return { previousEntries };
+  };

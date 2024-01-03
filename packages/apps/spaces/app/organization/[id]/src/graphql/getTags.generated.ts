@@ -1,6 +1,7 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -94,3 +95,29 @@ useGetTagsQuery.fetcher = (
     variables,
     headers,
   );
+
+useGetTagsQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GetTagsQueryVariables) =>
+  (mutator: (cacheEntry: GetTagsQuery) => GetTagsQuery) => {
+    const cacheKey = useGetTagsQuery.getKey(variables);
+    const previousEntries = queryClient.getQueryData<GetTagsQuery>(cacheKey);
+    if (previousEntries) {
+      queryClient.setQueryData<GetTagsQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteGetTagsQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables: GetTagsQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<GetTagsQuery>,
+    ) => InfiniteData<GetTagsQuery>,
+  ) => {
+    const cacheKey = useInfiniteGetTagsQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<GetTagsQuery>>(cacheKey);
+    if (previousEntries) {
+      queryClient.setQueryData<InfiniteData<GetTagsQuery>>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
