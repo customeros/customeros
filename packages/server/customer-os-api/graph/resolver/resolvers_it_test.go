@@ -7,6 +7,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -165,8 +166,9 @@ func assertRawResponseError(t *testing.T, response *client.Response, err error) 
 	require.NotNil(t, response.Errors)
 }
 
+// Deprecated, use neo4jtest.AssertNeo4jLabels instead
 func assertNeo4jLabels(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, expectedLabels []string) {
-	actualLabels := neo4jt.GetAllLabels(ctx, driver)
+	actualLabels := neo4jtest.GetAllLabels(ctx, driver)
 	sort.Strings(expectedLabels)
 	sort.Strings(actualLabels)
 	if !reflect.DeepEqual(actualLabels, expectedLabels) {
@@ -174,6 +176,7 @@ func assertNeo4jLabels(ctx context.Context, t *testing.T, driver *neo4j.DriverWi
 	}
 }
 
+// Deprecated, use neo4jtest.AssertNeo4jNodeCount instead
 func assertNeo4jNodeCount(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, nodes map[string]int) {
 	for name, expectedCount := range nodes {
 		actualCount := neo4jt.GetCountOfNodes(ctx, driver, name)
@@ -181,6 +184,7 @@ func assertNeo4jNodeCount(ctx context.Context, t *testing.T, driver *neo4j.Drive
 	}
 }
 
+// Deprecated, use neo4jtest.AssertNeo4jRelationCount instead
 func assertNeo4jRelationCount(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, relations map[string]int) {
 	for name, expectedCount := range relations {
 		actualCount := neo4jt.GetCountOfRelationships(ctx, driver, name)
@@ -188,6 +192,7 @@ func assertNeo4jRelationCount(ctx context.Context, t *testing.T, driver *neo4j.D
 	}
 }
 
+// Deprecated, use neo4jtest.AssertRelationship instead
 func assertRelationship(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, fromNodeId, relationshipType, toNodeId string) {
 	rel, err := neo4jt.GetRelationship(ctx, driver, fromNodeId, toNodeId)
 	require.Nil(t, err)
