@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"testing"
 	"time"
 
@@ -133,7 +134,7 @@ func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "some other organization")
 	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:      "WORK",
-		Source:    entity.DataSourceOpenline,
+		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test",
 		Country:   "testCountry",
 		Region:    "testRegion",
@@ -144,7 +145,7 @@ func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 	})
 	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:      "UNKNOWN",
-		Source:    entity.DataSourceOpenline,
+		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test",
 	})
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId1, locationId1)
@@ -1530,7 +1531,7 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
 		ContractStatus:   entity.ContractStatusDraft,
 		ContractUrl:      "url1",
-		Source:           entity.DataSourceOpenline,
+		Source:           neo4jentity.DataSourceOpenline,
 		AppSource:        "test1",
 	})
 	contractId2 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
@@ -1543,7 +1544,7 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
 		ContractStatus:   entity.ContractStatusLive,
 		ContractUrl:      "url2",
-		Source:           entity.DataSourceOpenline,
+		Source:           neo4jentity.DataSourceOpenline,
 		AppSource:        "test2",
 	})
 	contractId3 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId2, entity.ContractEntity{})

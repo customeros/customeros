@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -138,8 +139,8 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, "test identifier", interactionEvent.Identifier)
 	require.Equal(t, "test event type", interactionEvent.EventType)
 	require.Equal(t, true, interactionEvent.Hide)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), interactionEvent.Source)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.Source)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, interactionEvent.AppSource)
 	require.Equal(t, now, interactionEvent.CreatedAt)
 	require.Equal(t, now, interactionEvent.UpdatedAt)
@@ -202,7 +203,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, "test channel data updated", interactionEvent.ChannelData)
 	require.Equal(t, "test identifier updated", interactionEvent.Identifier)
 	require.Equal(t, "test event type updated", interactionEvent.EventType)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
 	require.Equal(t, now, interactionEvent.UpdatedAt)
 }
 
@@ -264,7 +265,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 	require.Equal(t, "test identifier", interactionEvent.Identifier)
 	require.Equal(t, "test event type", interactionEvent.EventType)
 	require.Equal(t, false, interactionEvent.Hide)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
 	require.Equal(t, now, interactionEvent.UpdatedAt)
 }
 

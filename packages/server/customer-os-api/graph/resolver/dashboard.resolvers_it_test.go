@@ -5,6 +5,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
@@ -118,12 +119,12 @@ func TestQueryResolver_Search_Organization_By_ORGANIZATION_Filter(t *testing.T) 
 
 	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:   "LOCATION 1",
-		Source: entity.DataSourceOpenline,
+		Source: neo4jentity.DataSourceOpenline,
 		Region: "NY",
 	})
 	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:   "LOCATION 2",
-		Source: entity.DataSourceOpenline,
+		Source: neo4jentity.DataSourceOpenline,
 		Region: "TX",
 	})
 
@@ -177,12 +178,12 @@ func TestQueryResolver_Search_Organization_By_Regions(t *testing.T) {
 
 	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:   "LOCATION 1",
-		Source: entity.DataSourceOpenline,
+		Source: neo4jentity.DataSourceOpenline,
 		Region: "NY",
 	})
 	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:   "LOCATION 2",
-		Source: entity.DataSourceOpenline,
+		Source: neo4jentity.DataSourceOpenline,
 		Region: "TX",
 	})
 
@@ -245,7 +246,7 @@ func TestQueryResolver_Search_Organization_By_Name_And_Regions(t *testing.T) {
 
 	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:   "LOCATION 1",
-		Source: entity.DataSourceOpenline,
+		Source: neo4jentity.DataSourceOpenline,
 		Region: "NY",
 	})
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId1, locationId1)
@@ -253,7 +254,7 @@ func TestQueryResolver_Search_Organization_By_Name_And_Regions(t *testing.T) {
 
 	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:   "LOCATION 2",
-		Source: entity.DataSourceOpenline,
+		Source: neo4jentity.DataSourceOpenline,
 		Region: "TX",
 	})
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId3, locationId2)

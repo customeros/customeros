@@ -2,6 +2,7 @@ package graph
 
 import (
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -74,8 +75,8 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, commentId, comment.Id)
 	require.Equal(t, "test content", comment.Content)
 	require.Equal(t, "text", comment.ContentType)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), comment.Source)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), comment.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), comment.Source)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), comment.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, comment.AppSource)
 	require.Equal(t, now, comment.CreatedAt)
 	require.Equal(t, now, comment.UpdatedAt)
@@ -117,7 +118,7 @@ func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, commentId, comment.Id)
 	require.Equal(t, "test content update", comment.Content)
 	require.Equal(t, "html", comment.ContentType)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), comment.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), comment.SourceOfTruth)
 	require.Equal(t, now, comment.UpdatedAt)
 }
 
@@ -159,6 +160,6 @@ func TestGraphCommentEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNon
 	require.Equal(t, commentId, comment.Id)
 	require.Equal(t, "original content", comment.Content)
 	require.Equal(t, "type updated", comment.ContentType)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), comment.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), comment.SourceOfTruth)
 	require.Equal(t, now, comment.UpdatedAt)
 }

@@ -3,6 +3,7 @@ package neo4j
 import (
 	"context"
 	"fmt"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"log"
 	"time"
@@ -283,7 +284,7 @@ func CreateContactWithId(ctx context.Context, driver *neo4j.DriverWithContext, t
 }
 
 func CreateDefaultFieldSet(ctx context.Context, driver *neo4j.DriverWithContext, contactId string) string {
-	return CreateFieldSet(ctx, driver, contactId, entity.FieldSetEntity{Name: "name", Source: entity.DataSourceOpenline, SourceOfTruth: entity.DataSourceOpenline})
+	return CreateFieldSet(ctx, driver, contactId, entity.FieldSetEntity{Name: "name", Source: neo4jentity.DataSourceOpenline, SourceOfTruth: neo4jentity.DataSourceOpenline})
 }
 
 func CreateFieldSet(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, fieldSet entity.FieldSetEntity) string {
@@ -311,8 +312,8 @@ func CreateDefaultCustomFieldInSet(ctx context.Context, driver *neo4j.DriverWith
 	return createCustomFieldInSet(ctx, driver, fieldSetId,
 		entity.CustomFieldEntity{
 			Name:          "name",
-			Source:        entity.DataSourceOpenline,
-			SourceOfTruth: entity.DataSourceOpenline,
+			Source:        neo4jentity.DataSourceOpenline,
+			SourceOfTruth: neo4jentity.DataSourceOpenline,
 			DataType:      model.CustomFieldDataTypeText.String(),
 			Value:         model.AnyTypeValue{Str: utils.StringPtr("value")}})
 }
@@ -347,8 +348,8 @@ func CreateDefaultCustomFieldInContact(ctx context.Context, driver *neo4j.Driver
 		entity.CustomFieldEntity{
 			Name:          "name",
 			DataType:      model.CustomFieldDataTypeText.String(),
-			Source:        entity.DataSourceOpenline,
-			SourceOfTruth: entity.DataSourceOpenline,
+			Source:        neo4jentity.DataSourceOpenline,
+			SourceOfTruth: neo4jentity.DataSourceOpenline,
 			Value:         model.AnyTypeValue{Str: utils.StringPtr("value")}})
 }
 
@@ -1524,7 +1525,7 @@ func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
 		"tenant":       tenant,
 		"id":           socialId.String(),
-		"source":       entity.DataSourceOpenline,
+		"source":       neo4jentity.DataSourceOpenline,
 		"appSource":    "test",
 		"platformName": social.PlatformName,
 		"url":          social.Url,

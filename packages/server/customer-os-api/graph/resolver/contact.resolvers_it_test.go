@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/99designs/gqlgen/client"
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -89,7 +90,7 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 			require.Equal(t, "", contact.Timezone)
 			require.Equal(t, "", contact.ProfilePhotoUrl)
 			require.Equal(t, "openline", contact.Tenant)
-			require.Equal(t, string(entity.DataSourceOpenline), contact.SourceFields.Source)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), contact.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
 			require.Equal(t, testUserId, contact.LoggedInUserId)
 			calledCreateContact = true
@@ -158,7 +159,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 			require.Equal(t, "America/Los_Angeles", contact.Timezone)
 			require.Equal(t, "http://www.abc.com", contact.ProfilePhotoUrl)
 			require.Equal(t, tenantName, contact.Tenant)
-			require.Equal(t, string(entity.DataSourceOpenline), contact.SourceFields.Source)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), contact.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
 			require.Equal(t, testUserId, contact.LoggedInUserId)
 			calledCreateContact = true
@@ -201,7 +202,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 			require.Equal(t, "contact@abc.com", data.RawEmail)
 			require.Equal(t, tenantName, data.Tenant)
 			require.Equal(t, testUserId, data.LoggedInUserId)
-			require.Equal(t, string(entity.DataSourceOpenline), data.SourceFields.Source)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), data.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, data.SourceFields.AppSource)
 			calledCreateEmail = true
 			neo4jt.CreateEmail(ctx, driver, tenantName, entity.EmailEntity{
@@ -218,7 +219,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 			require.Equal(t, "+1234567890", data.PhoneNumber)
 			require.Equal(t, tenantName, data.Tenant)
 			require.Equal(t, testUserId, data.LoggedInUserId)
-			require.Equal(t, string(entity.DataSourceOpenline), data.SourceFields.Source)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), data.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, data.SourceFields.AppSource)
 			calledCreatePhoneNumber = true
 			neo4jt.CreatePhoneNumber(ctx, driver, tenantName, entity.PhoneNumberEntity{
@@ -348,8 +349,8 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 		LastName:        "last",
 		Description:     "description",
 		ProfilePhotoUrl: "original url",
-		Source:          entity.DataSourceHubspot,
-		SourceOfTruth:   entity.DataSourceHubspot,
+		Source:          neo4jentity.DataSourceHubspot,
+		SourceOfTruth:   neo4jentity.DataSourceHubspot,
 	})
 
 	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
@@ -363,7 +364,7 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 			require.Equal(t, "updated timezone", contact.Timezone)
 			require.Equal(t, "http://updated.com", contact.ProfilePhotoUrl)
 			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
-			require.Equal(t, string(entity.DataSourceOpenline), contact.SourceFields.Source)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), contact.SourceFields.Source)
 			require.Equal(t, tenantName, contact.Tenant)
 			require.Equal(t, testUserId, contact.LoggedInUserId)
 			return &contactgrpc.ContactIdGrpcResponse{
@@ -641,7 +642,7 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 	neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:         "WORK",
-		Source:       entity.DataSourceOpenline,
+		Source:       neo4jentity.DataSourceOpenline,
 		AppSource:    "test",
 		Country:      "testCountry",
 		Region:       "testRegion",
@@ -665,7 +666,7 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 	})
 	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:      "UNKNOWN",
-		Source:    entity.DataSourceOpenline,
+		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test",
 	})
 	neo4jt.ContactAssociatedWithLocation(ctx, driver, contactId, locationId1)

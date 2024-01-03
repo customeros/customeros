@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
@@ -75,7 +76,7 @@ func TestMutationResolver_OpportunityUpdate(t *testing.T) {
 			require.Equal(t, tenantName, opportunity.Tenant)
 			require.Equal(t, opportunityId, opportunity.Id)
 			require.Equal(t, testUserId, opportunity.LoggedInUserId)
-			require.Equal(t, string(entity.DataSourceOpenline), opportunity.SourceFields.Source)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), opportunity.SourceFields.Source)
 			require.Equal(t, "test app source", opportunity.SourceFields.AppSource)
 			require.Equal(t, "Updated Opportunity", opportunity.Name)
 			require.Equal(t, float64(100), opportunity.Amount)
@@ -130,7 +131,7 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 			require.Equal(t, tenantName, renewalOpportunity.Tenant)
 			require.Equal(t, opportunityId, renewalOpportunity.Id)
 			require.Equal(t, testUserId, renewalOpportunity.LoggedInUserId)
-			require.Equal(t, string(entity.DataSourceOpenline), renewalOpportunity.SourceFields.Source)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), renewalOpportunity.SourceFields.Source)
 			require.Equal(t, "test app source", renewalOpportunity.SourceFields.AppSource)
 			require.Equal(t, float64(100), renewalOpportunity.Amount)
 			require.Equal(t, opportunitypb.RenewalLikelihood_HIGH_RENEWAL, renewalOpportunity.RenewalLikelihood)
