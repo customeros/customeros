@@ -2,7 +2,7 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 )
 
 type Repositories struct {

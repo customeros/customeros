@@ -3,8 +3,8 @@ package neo4j
 import (
 	"context"
 	"fmt"
-	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
-	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"log"
 	"time"
 

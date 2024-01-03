@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	neo4jmodel "github.com/openline-ai/customer-os-neo4j-repository/model"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"time"
 
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"

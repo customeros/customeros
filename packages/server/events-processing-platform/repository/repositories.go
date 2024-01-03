@@ -2,8 +2,8 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
 	cmn_repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"

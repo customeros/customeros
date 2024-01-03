@@ -3,7 +3,7 @@ package notifications
 import (
 	"context"
 	"fmt"
-	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"strings"
 	"testing"
 

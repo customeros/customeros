@@ -3,7 +3,7 @@ package organization
 import (
 	"context"
 	"fmt"
-	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
