@@ -21,6 +21,7 @@ type Repositories struct {
 	MasterPlanWriteRepository         MasterPlanWriteRepository
 	PhoneNumberReadRepository         PhoneNumberReadRepository
 	PlayerWriteRepository             PlayerWriteRepository
+	ServiceLineItemReadRepository     ServiceLineItemReadRepository
 	SocialWriteRepository             SocialWriteRepository
 	TagWriteRepository                TagWriteRepository
 	UserReadRepository                UserReadRepository
@@ -45,6 +46,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		MasterPlanWriteRepository:         NewMasterPlanWriteRepository(driver, neo4jDatabase),
 		PhoneNumberReadRepository:         NewPhoneNumberReadRepository(driver, neo4jDatabase),
 		PlayerWriteRepository:             NewPlayerWriteRepository(driver, neo4jDatabase),
+		ServiceLineItemReadRepository:     NewServiceLineItemReadRepository(driver, neo4jDatabase),
 		SocialWriteRepository:             NewSocialWriteRepository(driver, neo4jDatabase),
 		TagWriteRepository:                NewTagWriteRepository(driver, neo4jDatabase),
 		UserReadRepository:                NewUserReadRepository(driver, neo4jDatabase),

@@ -256,7 +256,7 @@ func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, co
 	var arr float64
 
 	// Fetch service line items for the contract from the database
-	sliDbNodes, err := h.repositories.ServiceLineItemRepository.GetAllForContract(ctx, tenant, contract.Id)
+	sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetAllForContract(ctx, tenant, contract.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return 0, err
