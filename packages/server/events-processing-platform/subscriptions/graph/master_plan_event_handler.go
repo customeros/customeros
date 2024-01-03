@@ -48,3 +48,27 @@ func (h *MasterPlanEventHandler) OnCreate(ctx context.Context, evt eventstore.Ev
 	}
 	return err
 }
+
+func (h *MasterPlanEventHandler) OnCreateMilestone(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanEventHandler.OnCreateMilestone")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.MasterPlanMilestoneCreateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	masterPlanId := aggregate.GetMasterPlanObjectID(evt.GetAggregateID(), eventData.Tenant)
+	source := helper.GetSource(eventData.SourceFields.Source)
+	appSource := helper.GetAppSource(eventData.SourceFields.AppSource)
+	err := h.repositories.Neo4jRepositories.MasterPlanWriteRepository.CreateMilestone(ctx, eventData.Tenant, masterPlanId, eventData.MilestoneId,
+		eventData.Name, source, appSource, eventData.Order, eventData.DurationHours, eventData.Items, eventData.Optional, eventData.CreatedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while saving master plan milestone %s: %s", masterPlanId, err.Error())
+		return err
+	}
+	return err
+}
