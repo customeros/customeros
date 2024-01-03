@@ -57,6 +57,11 @@ func (h *updateOnboardingStatusCommandHandler) Handle(ctx context.Context, cmd *
 
 		if eventstore.IsEventStoreErrorCodeWrongExpectedVersion(err) {
 			// Handle concurrency error
+			if attempt == h.cfg.RetriesOnOptimisticLockException-1 {
+				// If we have reached the maximum number of retries, return an error
+				tracing.TraceErr(span, err)
+				return err
+			}
 			span.LogFields(log.Int("retryAttempt", attempt+1))
 			time.Sleep(utils.BackOffExponentialDelay(attempt)) // backoffDelay is a function that increases the delay with each attempt
 			continue                                           // Retry

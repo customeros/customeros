@@ -21,6 +21,8 @@ func (a *MasterPlanAggregate) HandleCommand(ctx context.Context, cmd eventstore.
 	switch c := cmd.(type) {
 	case *command.CreateMasterPlanCommand:
 		return a.createMasterPlan(ctx, c)
+	case *command.CreateMasterPlanMilestoneCommand:
+		return a.createMasterPlanMilestone(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -45,7 +47,31 @@ func (a *MasterPlanAggregate) createMasterPlan(ctx context.Context, cmd *command
 	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
-		App:    cmd.SourceFields.AppSource,
+		App:    cmd.GetAppSource(),
+	})
+
+	return a.Apply(createEvent)
+}
+
+func (a *MasterPlanAggregate) createMasterPlanMilestone(ctx context.Context, cmd *command.CreateMasterPlanMilestoneCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MasterPlanAggregate.createMasterPlanMilestone")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
+
+	createEvent, err := event.NewMasterPlanMilestoneCreateEvent(a, cmd.MilestoneId, cmd.Name, cmd.DurationHours, cmd.Order, cmd.Items, cmd.Optional, cmd.SourceFields, createdAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewMasterPlanMilestoneCreateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.GetAppSource(),
 	})
 
 	return a.Apply(createEvent)

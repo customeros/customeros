@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -14,45 +14,48 @@ import (
 	"time"
 )
 
-// DeleteServiceLineItemCommandHandler defines the interface for a handler that can process DeleteServiceLineItemCommands.
-type DeleteServiceLineItemCommandHandler interface {
-	Handle(ctx context.Context, cmd *command.DeleteServiceLineItemCommand) error
+type CreateMasterPlanMilestoneCommandHandler interface {
+	Handle(ctx context.Context, cmd *command.CreateMasterPlanCommand) error
 }
 
-type deleteServiceLineItemCommandHandler struct {
+type createMasterPlanMilestoneCommandHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 	cfg config.Utils
 }
 
-// NewDeleteServiceLineItemCommandHandler creates a new handler for updating service line items.
-func NewDeleteServiceLineItemCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) DeleteServiceLineItemCommandHandler {
-	return &deleteServiceLineItemCommandHandler{log: log, es: es, cfg: cfg}
+func NewCreateMasterPlanMilestoneCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) CreateMasterPlanMilestoneCommandHandler {
+	return &createMasterPlanMilestoneCommandHandler{log: log, es: es, cfg: cfg}
 }
 
-// Handle processes the DeleteServiceLineItemCommand to delete an existing service line item.
-func (h *deleteServiceLineItemCommandHandler) Handle(ctx context.Context, cmd *command.DeleteServiceLineItemCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "deleteServiceLineItemCommandHandler.Handle")
+// Handle processes the CreateMasterPlanCommand to create a new master plan.
+func (h *createMasterPlanMilestoneCommandHandler) Handle(ctx context.Context, cmd *command.CreateMasterPlanCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "createMasterPlanMilestoneCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
-	span.LogFields(log.Object("command", cmd))
+	tracing.LogObjectAsJson(span, "command", cmd)
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
-		// Load the service line item aggregate
-		sliAggregate, err := aggregate.LoadServiceLineItemAggregate(ctx, h.es, cmd.Tenant, cmd.GetObjectID())
+		// Load or initialize the master plan aggregate
+		masterPlanAggregate, err := aggregate.LoadMasterPlanAggregate(ctx, h.es, cmd.Tenant, cmd.GetObjectID())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
+		if aggregate.IsAggregateNotFound(masterPlanAggregate) {
+			tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
+			return eventstore.ErrAggregateNotFound
+		}
+
 		// Apply the command to the aggregate
-		if err = sliAggregate.HandleCommand(ctx, cmd); err != nil {
+		if err = masterPlanAggregate.HandleCommand(ctx, cmd); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
 		// Persist the changes to the event store
-		err = h.es.Save(ctx, sliAggregate)
+		err = h.es.Save(ctx, masterPlanAggregate)
 		if err == nil {
 			return nil // Save successful
 		}
