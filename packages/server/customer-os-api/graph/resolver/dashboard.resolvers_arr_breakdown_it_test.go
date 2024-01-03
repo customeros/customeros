@@ -513,14 +513,12 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_No_Recurring_SLI(t *testing.T) {
 	}, entity.OpportunityEntity{})
 
 	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
-	sli1EndedAt := neo4jt.LastTimeOfMonth(2023, 7)
 
 	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
 		Price:      1,
 		Quantity:   2,
 		IsCanceled: true,
 		StartedAt:  sli1StartedAt,
-		EndedAt:    &sli1EndedAt,
 	})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -2174,7 +2172,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_Before_Month(t *testing.T) {
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, entity.OpportunityEntity{})
-	insertServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1StartedAt)
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -3090,7 +3088,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Ended_Contract_No_Upsell_In_Month(t *t
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1EndedAt,
 	}, entity.OpportunityEntity{})
-	insertServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1EndedAt)
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -3135,7 +3133,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Ended_Contract_With_Upsell_In_Month(t 
 		EndedAt:          &sli1EndedAt,
 	}, entity.OpportunityEntity{})
 	sliId := insertServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt, sli1MiddleAt)
-	insertServiceLineItemEndedWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sli1EndedAt, sliId)
+	insertServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeAnnually, 24, 4, entity.BilledTypeAnnually, 12, 2, sli1MiddleAt, sliId)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -4779,7 +4777,7 @@ func Test_Dashboard_ARR_Breakdown_1_Contract_With_Upsell_1_Contract_Without_Upse
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
 	// 12 / year
-	insertServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 2, sli1StartedAt, sli1EndAt)
+	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -4794,8 +4792,8 @@ func Test_Dashboard_ARR_Breakdown_1_Contract_With_Upsell_1_Contract_Without_Upse
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(48), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, "+33%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(60), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "+67%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
@@ -4833,7 +4831,7 @@ func Test_Dashboard_ARR_Breakdown_1_Contract_With_Downgrade_1_Contract_Without_D
 		ServiceStartedAt: &sli1StartedAt,
 	}, entity.OpportunityEntity{})
 	// 12 / year
-	insertServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 2, sli1StartedAt, sli1EndAt)
+	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 6, 2, sli1StartedAt)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
 		map[string]interface{}{
@@ -4848,8 +4846,8 @@ func Test_Dashboard_ARR_Breakdown_1_Contract_With_Downgrade_1_Contract_Without_D
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, float64(12), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
-	require.Equal(t, "-67%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
+	require.Equal(t, float64(24), dashboardReport.Dashboard_ARRBreakdown.ArrBreakdown)
+	require.Equal(t, "-33%", dashboardReport.Dashboard_ARRBreakdown.IncreasePercentage)
 	require.Equal(t, 1, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
 	for _, month := range dashboardReport.Dashboard_ARRBreakdown.PerMonth {
