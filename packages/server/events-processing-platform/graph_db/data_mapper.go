@@ -342,19 +342,40 @@ func MapDbNodeToAnalysisEntity(node dbtype.Node) *entity.AnalysisEntity {
 	return &analysisEntity
 }
 
-func MapDbNodeToMasterPlanEntity(node *dbtype.Node) *entity.MasterPlanEntity {
+func MapDbNodeToMasterPlanEntity(node *dbtype.Node) *neo4jentity.MasterPlanEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	masterPlan := entity.MasterPlanEntity{
+	masterPlan := neo4jentity.MasterPlanEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &masterPlan
+}
+
+func MapDbNodeToMasterPlanMilestoneEntity(node *dbtype.Node) *neo4jentity.MasterPlanMilestoneEntity {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
+	masterPlan := neo4jentity.MasterPlanMilestoneEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Optional:      utils.GetBoolPropOrFalse(props, "optional"),
+		Order:         utils.GetInt64PropOrZero(props, "order"),
+		DurationHours: utils.GetInt64PropOrZero(props, "durationHours"),
+		Items:         utils.GetListStringPropOrEmpty(props, "items"),
 	}
 	return &masterPlan
 }
