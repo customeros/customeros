@@ -137,7 +137,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.True(t, timeNow.Equal(*contract.ServiceStartedAt))
 	require.True(t, timeNow.Equal(*contract.SignedAt))
 	require.Nil(t, contract.EndedAt)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), contract.Source)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, contract.AppSource)
 
 	// Verify events platform was called
@@ -219,7 +219,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	require.True(t, yesterday.Equal(*contract.ServiceStartedAt))
 	require.True(t, daysAgo2.Equal(*contract.SignedAt))
 	require.True(t, tomorrow.Equal(*contract.EndedAt))
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
 
 	// Verify call to events platform
 	require.True(t, calledEventsPlatformCreateRenewalOpportunity)
@@ -614,7 +614,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	require.True(t, yesterday.Equal(*contract.ServiceStartedAt))
 	require.True(t, daysAgo2.Equal(*contract.SignedAt))
 	require.True(t, tomorrow.Equal(*contract.EndedAt))
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
 
 	// Verify event platform was called
 	require.True(t, calledEventsPlatformToUpdateRenewalOpportunity)
@@ -687,7 +687,7 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	require.True(t, now.Equal(*contract.ServiceStartedAt))
 	require.True(t, now.Equal(*contract.SignedAt))
 	require.True(t, now.Equal(*contract.EndedAt))
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
 }
 
 func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
@@ -760,7 +760,7 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
 	require.NotNil(t, action.Id)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, neo4jentity.ActionContractStatusUpdated, action.Type)
 	require.Equal(t, "test contract has ended", action.Content)
@@ -837,7 +837,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
 	require.NotNil(t, action.Id)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, neo4jentity.ActionContractStatusUpdated, action.Type)
 	require.Equal(t, "test contract is now live", action.Content)

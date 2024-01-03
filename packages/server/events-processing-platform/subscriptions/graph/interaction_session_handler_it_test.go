@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -11,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -80,8 +80,8 @@ func TestGraphInteractionSessionEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, "test name", interactionEvent.Name)
 	require.Equal(t, "test status", interactionEvent.Status)
 	require.Equal(t, "test type", interactionEvent.Type)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), interactionEvent.Source)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.Source)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, interactionEvent.AppSource)
 	require.Equal(t, now, interactionEvent.CreatedAt)
 	require.Equal(t, now, interactionEvent.UpdatedAt)

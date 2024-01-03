@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -96,9 +97,9 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, logEntryId, logEntry.Id)
 	require.Equal(t, "test content", logEntry.Content)
 	require.Equal(t, "test content type", logEntry.ContentType)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), logEntry.Source)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), logEntry.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, logEntry.AppSource)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), logEntry.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), logEntry.SourceOfTruth)
 	require.Equal(t, now, logEntry.CreatedAt)
 	require.Equal(t, now, logEntry.UpdatedAt)
 	require.Equal(t, now, logEntry.StartedAt)
@@ -145,7 +146,7 @@ func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, logEntryId, logEntry.Id)
 	require.Equal(t, "test content", logEntry.Content)
 	require.Equal(t, "test content type", logEntry.ContentType)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), logEntry.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), logEntry.SourceOfTruth)
 	require.Equal(t, now, logEntry.UpdatedAt)
 	require.Equal(t, now, logEntry.StartedAt)
 }

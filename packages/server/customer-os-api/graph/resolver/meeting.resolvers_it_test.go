@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/99designs/gqlgen/client"
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -25,8 +26,8 @@ func TestMutationResolver_Meeting(t *testing.T) {
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
-		Source:        entity.DataSourceHubspot,
-		SourceOfTruth: entity.DataSourceHubspot,
+		Source:        neo4jentity.DataSourceHubspot,
+		SourceOfTruth: neo4jentity.DataSourceHubspot,
 	})
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test organization")
 	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
@@ -205,8 +206,8 @@ func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
-		Source:        entity.DataSourceHubspot,
-		SourceOfTruth: entity.DataSourceHubspot,
+		Source:        neo4jentity.DataSourceHubspot,
+		SourceOfTruth: neo4jentity.DataSourceHubspot,
 	})
 
 	testContactId2 := "test_contact_id_2"
@@ -214,8 +215,8 @@ func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
-		Source:        entity.DataSourceHubspot,
-		SourceOfTruth: entity.DataSourceHubspot,
+		Source:        neo4jentity.DataSourceHubspot,
+		SourceOfTruth: neo4jentity.DataSourceHubspot,
 	})
 
 	// create meeting
@@ -657,8 +658,8 @@ func TestMutationResolver_GetMeetings(t *testing.T) {
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
-		Source:        entity.DataSourceHubspot,
-		SourceOfTruth: entity.DataSourceHubspot,
+		Source:        neo4jentity.DataSourceHubspot,
+		SourceOfTruth: neo4jentity.DataSourceHubspot,
 	})
 
 	testContactId2 := "test_contact_id_2"
@@ -666,8 +667,8 @@ func TestMutationResolver_GetMeetings(t *testing.T) {
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
-		Source:        entity.DataSourceHubspot,
-		SourceOfTruth: entity.DataSourceHubspot,
+		Source:        neo4jentity.DataSourceHubspot,
+		SourceOfTruth: neo4jentity.DataSourceHubspot,
 	})
 
 	// create meeting
@@ -745,8 +746,8 @@ func TestMutationResolver_GetMeetingsWithExternalId(t *testing.T) {
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
-		Source:        entity.DataSourceHubspot,
-		SourceOfTruth: entity.DataSourceHubspot,
+		Source:        neo4jentity.DataSourceHubspot,
+		SourceOfTruth: neo4jentity.DataSourceHubspot,
 	})
 
 	testContactId2 := "test_contact_id_2"
@@ -754,8 +755,8 @@ func TestMutationResolver_GetMeetingsWithExternalId(t *testing.T) {
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
-		Source:        entity.DataSourceHubspot,
-		SourceOfTruth: entity.DataSourceHubspot,
+		Source:        neo4jentity.DataSourceHubspot,
+		SourceOfTruth: neo4jentity.DataSourceHubspot,
 	})
 
 	// create meeting

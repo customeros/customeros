@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -31,7 +32,7 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 			require.Equal(t, tenantName, serviceLineItem.Tenant)
 			require.Equal(t, contractId, serviceLineItem.ContractId)
 			require.Equal(t, testUserId, serviceLineItem.LoggedInUserId)
-			require.Equal(t, string(entity.DataSourceOpenline), serviceLineItem.SourceFields.Source)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), serviceLineItem.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, serviceLineItem.SourceFields.AppSource)
 			require.Equal(t, "Service Line Item 1", serviceLineItem.Name)
 			require.Equal(t, servicelineitempb.BilledType_MONTHLY_BILLED, serviceLineItem.Billed)
@@ -83,7 +84,7 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 		UpdateServiceLineItem: func(context context.Context, serviceLineItem *servicelineitempb.UpdateServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
 			require.Equal(t, tenantName, serviceLineItem.Tenant)
 			require.Equal(t, testUserId, serviceLineItem.LoggedInUserId)
-			require.Equal(t, string(entity.DataSourceOpenline), serviceLineItem.SourceFields.Source)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), serviceLineItem.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, serviceLineItem.SourceFields.AppSource)
 			require.Equal(t, "Service Line Item 1", serviceLineItem.Name)
 			require.Equal(t, servicelineitempb.BilledType_MONTHLY_BILLED, serviceLineItem.Billed)

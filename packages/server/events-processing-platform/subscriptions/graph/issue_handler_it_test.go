@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -106,8 +107,8 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, "test description", issue.Description)
 	require.Equal(t, "open", issue.Status)
 	require.Equal(t, "high", issue.Priority)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), issue.Source)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), issue.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), issue.Source)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), issue.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, issue.AppSource)
 	require.Equal(t, now, issue.CreatedAt)
 	require.Equal(t, now, issue.UpdatedAt)
@@ -167,7 +168,7 @@ func TestGraphIssueEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, "test description updated", issue.Description)
 	require.Equal(t, "closed", issue.Status)
 	require.Equal(t, "low", issue.Priority)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), issue.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), issue.SourceOfTruth)
 	require.Equal(t, now, issue.UpdatedAt)
 }
 
@@ -221,7 +222,7 @@ func TestGraphIssueEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOp
 	require.Equal(t, "test description", issue.Description)
 	require.Equal(t, "closed", issue.Status)
 	require.Equal(t, "low", issue.Priority)
-	require.Equal(t, entity.DataSource(constants.SourceOpenline), issue.SourceOfTruth)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), issue.SourceOfTruth)
 	require.Equal(t, now, issue.UpdatedAt)
 }
 

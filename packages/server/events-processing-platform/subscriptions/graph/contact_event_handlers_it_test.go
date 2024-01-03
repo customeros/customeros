@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -323,7 +324,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 		Prefix:          prefixCreate,
 		Description:     descriptionCreate,
 		UpdatedAt:       now,
-		SourceOfTruth:   entity.DataSource(sourceOfTruthCreate),
+		SourceOfTruth:   neo4jentity.DataSource(sourceOfTruthCreate),
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contact": 1, "Contact_" + tenantName: 1})

@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"github.com/google/uuid"
+	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -32,7 +33,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 			require.Equal(t, tenantName, contract.Tenant)
 			require.Equal(t, orgId, contract.OrganizationId)
 			require.Equal(t, testUserId, contract.LoggedInUserId)
-			require.Equal(t, string(entity.DataSourceOpenline), contract.SourceFields.Source)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), contract.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, contract.SourceFields.AppSource)
 			require.Equal(t, "Contract 1", contract.Name)
 			require.Equal(t, "https://contract.com", contract.ContractUrl)
@@ -91,7 +92,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, tenantName, contract.Tenant)
 			require.Equal(t, contractId, contract.Id)
 			require.Equal(t, testUserId, contract.LoggedInUserId)
-			require.Equal(t, string(entity.DataSourceOpenline), contract.SourceFields.Source)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), contract.SourceFields.Source)
 			require.Equal(t, "test app source", contract.SourceFields.AppSource)
 			require.Equal(t, "Updated Contract", contract.Name)
 			require.Equal(t, "https://contract.com/updated", contract.ContractUrl)
@@ -155,7 +156,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Billed:    entity.BilledTypeAnnually,
 		Price:     13,
 		Quantity:  2,
-		Source:    entity.DataSourceOpenline,
+		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test1",
 	})
 	serviceLineItemId2 := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
@@ -165,7 +166,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Billed:    entity.BilledTypeUsage,
 		Price:     255,
 		Quantity:  23,
-		Source:    entity.DataSourceOpenline,
+		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test2",
 	})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
@@ -231,7 +232,7 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 		Amount:        49,
 		InternalType:  entity.InternalTypeUpsell,
 		InternalStage: entity.InternalStageOpen,
-		Source:        entity.DataSourceOpenline,
+		Source:        neo4jentity.DataSourceOpenline,
 		GeneralNotes:  "test notes 1",
 		Comments:      "test comments 1",
 		AppSource:     "test1",
@@ -243,7 +244,7 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 		Amount:        1239,
 		InternalType:  entity.InternalTypeNbo,
 		InternalStage: entity.InternalStageEvaluating,
-		Source:        entity.DataSourceOpenline,
+		Source:        neo4jentity.DataSourceOpenline,
 		GeneralNotes:  "test notes 2",
 		Comments:      "test comments 2",
 		AppSource:     "test2",
