@@ -2,6 +2,7 @@ package organization
 
 import (
 	"context"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"testing"
 
 	"os"
@@ -52,11 +53,11 @@ func TestWebScraping(t *testing.T) {
 	organizationId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{Name: "org 1"})
 	_ = neo4jt.CreateLogEntryForOrg(ctx, testDatabase.Driver, tenantName, organizationId, entity.LogEntryEntity{Content: "test content", StartedAt: utils.Now()})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization":  1,
 		"LogEntry":      1,
 		"TimelineEvent": 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"CREATED_BY": 0,
 		"LOGGED":     1,
 	})
