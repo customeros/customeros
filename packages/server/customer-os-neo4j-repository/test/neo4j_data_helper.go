@@ -13,9 +13,10 @@ func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
 }
 
 func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
-	query := `MERGE (t:Tenant {name:$tenant})`
+	query := `MERGE (t:Tenant {name:$tenant}) ON CREATE SET t.createdAt=$now`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant": tenant,
+		"now":    utils.Now(),
 	})
 }
 
