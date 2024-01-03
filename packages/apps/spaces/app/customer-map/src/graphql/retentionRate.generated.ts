@@ -127,7 +127,7 @@ useRetentionRateQuery.mutateCacheEntry =
     const cacheKey = useRetentionRateQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<RetentionRateQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<RetentionRateQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -142,7 +142,7 @@ useInfiniteRetentionRateQuery.mutateCacheEntry =
     const cacheKey = useInfiniteRetentionRateQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<RetentionRateQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<RetentionRateQuery>>(
         cacheKey,
         mutator,

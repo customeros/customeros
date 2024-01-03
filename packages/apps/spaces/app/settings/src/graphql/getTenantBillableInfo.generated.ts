@@ -124,7 +124,7 @@ useGetBillableInfoQuery.mutateCacheEntry =
     const cacheKey = useGetBillableInfoQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<GetBillableInfoQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<GetBillableInfoQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -139,7 +139,7 @@ useInfiniteGetBillableInfoQuery.mutateCacheEntry =
     const cacheKey = useInfiniteGetBillableInfoQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<GetBillableInfoQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<GetBillableInfoQuery>>(
         cacheKey,
         mutator,

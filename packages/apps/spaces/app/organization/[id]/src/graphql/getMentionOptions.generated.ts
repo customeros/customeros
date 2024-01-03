@@ -130,7 +130,7 @@ useGetMentionOptionsQuery.mutateCacheEntry =
     const cacheKey = useGetMentionOptionsQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<GetMentionOptionsQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<GetMentionOptionsQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -145,7 +145,7 @@ useInfiniteGetMentionOptionsQuery.mutateCacheEntry =
     const cacheKey = useInfiniteGetMentionOptionsQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<GetMentionOptionsQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<GetMentionOptionsQuery>>(
         cacheKey,
         mutator,

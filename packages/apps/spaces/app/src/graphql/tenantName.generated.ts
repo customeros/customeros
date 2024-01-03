@@ -98,7 +98,7 @@ useTenantNameQuery.mutateCacheEntry =
   (mutator: (cacheEntry: TenantNameQuery) => TenantNameQuery) => {
     const cacheKey = useTenantNameQuery.getKey(variables);
     const previousEntries = queryClient.getQueryData<TenantNameQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<TenantNameQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -113,7 +113,7 @@ useInfiniteTenantNameQuery.mutateCacheEntry =
     const cacheKey = useInfiniteTenantNameQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<TenantNameQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<TenantNameQuery>>(
         cacheKey,
         mutator,

@@ -227,7 +227,7 @@ useGetContractsQuery.mutateCacheEntry =
     const cacheKey = useGetContractsQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<GetContractsQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<GetContractsQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -242,7 +242,7 @@ useInfiniteGetContractsQuery.mutateCacheEntry =
     const cacheKey = useInfiniteGetContractsQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<GetContractsQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<GetContractsQuery>>(
         cacheKey,
         mutator,

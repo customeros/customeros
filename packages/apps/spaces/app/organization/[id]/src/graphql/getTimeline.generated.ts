@@ -1045,7 +1045,7 @@ useGetTimelineQuery.mutateCacheEntry =
     const cacheKey = useGetTimelineQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<GetTimelineQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<GetTimelineQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -1060,7 +1060,7 @@ useInfiniteGetTimelineQuery.mutateCacheEntry =
     const cacheKey = useInfiniteGetTimelineQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<GetTimelineQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<GetTimelineQuery>>(
         cacheKey,
         mutator,

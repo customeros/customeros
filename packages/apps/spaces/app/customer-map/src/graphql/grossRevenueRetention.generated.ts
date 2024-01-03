@@ -135,7 +135,7 @@ useGrossRevenueRetentionQuery.mutateCacheEntry =
     const cacheKey = useGrossRevenueRetentionQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<GrossRevenueRetentionQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<GrossRevenueRetentionQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -152,7 +152,7 @@ useInfiniteGrossRevenueRetentionQuery.mutateCacheEntry =
       queryClient.getQueryData<InfiniteData<GrossRevenueRetentionQuery>>(
         cacheKey,
       );
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<GrossRevenueRetentionQuery>>(
         cacheKey,
         mutator,

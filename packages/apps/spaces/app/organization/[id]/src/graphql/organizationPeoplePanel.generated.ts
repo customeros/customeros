@@ -227,7 +227,7 @@ useOrganizationPeoplePanelQuery.mutateCacheEntry =
     const cacheKey = useOrganizationPeoplePanelQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<OrganizationPeoplePanelQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<OrganizationPeoplePanelQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -247,7 +247,7 @@ useInfiniteOrganizationPeoplePanelQuery.mutateCacheEntry =
       queryClient.getQueryData<InfiniteData<OrganizationPeoplePanelQuery>>(
         cacheKey,
       );
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<OrganizationPeoplePanelQuery>>(
         cacheKey,
         mutator,

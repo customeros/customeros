@@ -116,7 +116,7 @@ useCustomerMapQuery.mutateCacheEntry =
     const cacheKey = useCustomerMapQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<CustomerMapQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<CustomerMapQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -131,7 +131,7 @@ useInfiniteCustomerMapQuery.mutateCacheEntry =
     const cacheKey = useInfiniteCustomerMapQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<CustomerMapQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<CustomerMapQuery>>(
         cacheKey,
         mutator,

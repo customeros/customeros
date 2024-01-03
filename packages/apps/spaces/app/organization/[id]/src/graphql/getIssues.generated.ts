@@ -224,7 +224,7 @@ useGetIssuesQuery.mutateCacheEntry =
   (mutator: (cacheEntry: GetIssuesQuery) => GetIssuesQuery) => {
     const cacheKey = useGetIssuesQuery.getKey(variables);
     const previousEntries = queryClient.getQueryData<GetIssuesQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<GetIssuesQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -239,7 +239,7 @@ useInfiniteGetIssuesQuery.mutateCacheEntry =
     const cacheKey = useInfiniteGetIssuesQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<GetIssuesQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<GetIssuesQuery>>(cacheKey, mutator);
     }
     return { previousEntries };

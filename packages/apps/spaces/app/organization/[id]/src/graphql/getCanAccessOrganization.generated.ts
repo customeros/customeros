@@ -117,7 +117,7 @@ useGetCanAccessOrganizationQuery.mutateCacheEntry =
     const cacheKey = useGetCanAccessOrganizationQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<GetCanAccessOrganizationQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<GetCanAccessOrganizationQuery>(
         cacheKey,
         mutator,
@@ -140,7 +140,7 @@ useInfiniteGetCanAccessOrganizationQuery.mutateCacheEntry =
       queryClient.getQueryData<InfiniteData<GetCanAccessOrganizationQuery>>(
         cacheKey,
       );
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<GetCanAccessOrganizationQuery>>(
         cacheKey,
         mutator,

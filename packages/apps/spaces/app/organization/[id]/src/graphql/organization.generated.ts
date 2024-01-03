@@ -197,7 +197,7 @@ useOrganizationQuery.mutateCacheEntry =
     const cacheKey = useOrganizationQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<OrganizationQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<OrganizationQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -212,7 +212,7 @@ useInfiniteOrganizationQuery.mutateCacheEntry =
     const cacheKey = useInfiniteOrganizationQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<OrganizationQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<OrganizationQuery>>(
         cacheKey,
         mutator,

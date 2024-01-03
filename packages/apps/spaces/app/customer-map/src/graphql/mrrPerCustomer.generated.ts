@@ -127,7 +127,7 @@ useMrrPerCustomerQuery.mutateCacheEntry =
     const cacheKey = useMrrPerCustomerQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<MrrPerCustomerQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<MrrPerCustomerQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -142,7 +142,7 @@ useInfiniteMrrPerCustomerQuery.mutateCacheEntry =
     const cacheKey = useInfiniteMrrPerCustomerQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<MrrPerCustomerQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<MrrPerCustomerQuery>>(
         cacheKey,
         mutator,

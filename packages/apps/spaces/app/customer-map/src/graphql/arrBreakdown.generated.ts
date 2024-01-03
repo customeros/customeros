@@ -135,7 +135,7 @@ useArrBreakdownQuery.mutateCacheEntry =
     const cacheKey = useArrBreakdownQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<ArrBreakdownQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<ArrBreakdownQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -150,7 +150,7 @@ useInfiniteArrBreakdownQuery.mutateCacheEntry =
     const cacheKey = useInfiniteArrBreakdownQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<ArrBreakdownQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<ArrBreakdownQuery>>(
         cacheKey,
         mutator,

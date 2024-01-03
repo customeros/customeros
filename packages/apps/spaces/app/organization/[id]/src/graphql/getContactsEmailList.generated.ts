@@ -142,7 +142,7 @@ useGetContactsEmailListQuery.mutateCacheEntry =
     const cacheKey = useGetContactsEmailListQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<GetContactsEmailListQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<GetContactsEmailListQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -159,7 +159,7 @@ useInfiniteGetContactsEmailListQuery.mutateCacheEntry =
       queryClient.getQueryData<InfiniteData<GetContactsEmailListQuery>>(
         cacheKey,
       );
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<GetContactsEmailListQuery>>(
         cacheKey,
         mutator,

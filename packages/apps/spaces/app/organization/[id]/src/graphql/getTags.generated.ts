@@ -101,7 +101,7 @@ useGetTagsQuery.mutateCacheEntry =
   (mutator: (cacheEntry: GetTagsQuery) => GetTagsQuery) => {
     const cacheKey = useGetTagsQuery.getKey(variables);
     const previousEntries = queryClient.getQueryData<GetTagsQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<GetTagsQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -116,7 +116,7 @@ useInfiniteGetTagsQuery.mutateCacheEntry =
     const cacheKey = useInfiniteGetTagsQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<GetTagsQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<GetTagsQuery>>(cacheKey, mutator);
     }
     return { previousEntries };

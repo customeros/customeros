@@ -161,7 +161,7 @@ useGlobal_CacheQuery.mutateCacheEntry =
     const cacheKey = useGlobal_CacheQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<Global_CacheQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<Global_CacheQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -176,7 +176,7 @@ useInfiniteGlobal_CacheQuery.mutateCacheEntry =
     const cacheKey = useInfiniteGlobal_CacheQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<Global_CacheQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<Global_CacheQuery>>(
         cacheKey,
         mutator,

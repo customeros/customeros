@@ -122,7 +122,7 @@ useGetUsersQuery.mutateCacheEntry =
   (mutator: (cacheEntry: GetUsersQuery) => GetUsersQuery) => {
     const cacheKey = useGetUsersQuery.getKey(variables);
     const previousEntries = queryClient.getQueryData<GetUsersQuery>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<GetUsersQuery>(cacheKey, mutator);
     }
     return { previousEntries };
@@ -137,7 +137,7 @@ useInfiniteGetUsersQuery.mutateCacheEntry =
     const cacheKey = useInfiniteGetUsersQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<GetUsersQuery>>(cacheKey);
-    if (previousEntry) {
+    if (previousEntries) {
       queryClient.setQueryData<InfiniteData<GetUsersQuery>>(cacheKey, mutator);
     }
     return { previousEntries };
