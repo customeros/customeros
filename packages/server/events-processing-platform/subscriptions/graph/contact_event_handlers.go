@@ -4,10 +4,13 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -45,7 +48,24 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var err error
-		err = h.repositories.ContactRepository.CreateContactInTx(ctx, tx, contactId, eventData)
+
+		data := neo4jrepository.ContactCreateFields{
+			FirstName:       eventData.FirstName,
+			LastName:        eventData.LastName,
+			Prefix:          eventData.Prefix,
+			Description:     eventData.Description,
+			Timezone:        eventData.Timezone,
+			ProfilePhotoUrl: eventData.ProfilePhotoUrl,
+			Name:            eventData.Name,
+			CreatedAt:       eventData.CreatedAt,
+			UpdatedAt:       eventData.UpdatedAt,
+			SourceFields: neo4jmodel.Source{
+				Source:        helper.GetSource(eventData.Source),
+				SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceOfTruth),
+				AppSource:     helper.GetAppSource(eventData.AppSource),
+			},
+		}
+		err = h.repositories.Neo4jRepositories.ContactWriteRepository.CreateContactInTx(ctx, tx, eventData.Tenant, contactId, data)
 		if err != nil {
 			h.log.Errorf("Error while saving contact %s: %s", contactId, err.Error())
 			return nil, err
@@ -79,7 +99,18 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 	}
 
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.ContactRepository.UpdateContact(ctx, contactId, eventData)
+	data := neo4jrepository.ContactUpdateFields{
+		FirstName:       eventData.FirstName,
+		LastName:        eventData.LastName,
+		Prefix:          eventData.Prefix,
+		Description:     eventData.Description,
+		Timezone:        eventData.Timezone,
+		ProfilePhotoUrl: eventData.ProfilePhotoUrl,
+		Name:            eventData.Name,
+		UpdatedAt:       eventData.UpdatedAt,
+		Source:          eventData.Source,
+	}
+	err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateContact(ctx, eventData.Tenant, contactId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving contact %s: %s", contactId, err.Error())
