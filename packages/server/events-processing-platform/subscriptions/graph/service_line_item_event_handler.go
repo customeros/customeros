@@ -103,7 +103,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	reasonForChange := eventData.Comments
 	if isNewVersionForExistingSLI {
 		//get the previous service line item to get the previous price and quantity
-		sliDbNode, err := h.repositories.ServiceLineItemRepository.GetServiceLineItemById(ctx, eventData.Tenant, eventData.ParentId)
+		sliDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, eventData.ParentId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while getting latest service line item with parent id %s: %s", eventData.ParentId, err.Error())
@@ -125,7 +125,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		h.log.Errorf("Error while saving service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
-	serviceLineItemDbNode, err := h.repositories.ServiceLineItemRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
+	serviceLineItemDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting service line item by id %s: %s", serviceLineItemId, err.Error())
@@ -334,7 +334,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-	serviceLineItemDbNode, err := h.repositories.ServiceLineItemRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
+	serviceLineItemDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -525,7 +525,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-	serviceLineItemDbNode, err := h.repositories.ServiceLineItemRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
+	serviceLineItemDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
