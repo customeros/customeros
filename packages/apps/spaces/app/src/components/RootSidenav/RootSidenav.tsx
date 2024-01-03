@@ -6,17 +6,22 @@ import { produce } from 'immer';
 import { signOut } from 'next-auth/react';
 import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
+import { PopoverNotificationCenter } from '@novu/notification-center';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
 import { Image } from '@ui/media/Image';
+import { Button } from '@ui/form/Button';
 import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
+import { ArrowsRight } from '@ui/media/icons/ArrowsRight';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { EmptyNotifications } from '@shared/components/Notifications/EmptyNotifications';
+import { NotificationsHeader } from '@shared/components/Notifications/NotificationsHeader';
 
 import { SidenavItem } from './components/SidenavItem';
 import logoCustomerOs from './assets/logo-customeros.png';
@@ -168,7 +173,40 @@ export const RootSidenav = () => {
         flexWrap='initial'
         flexGrow='1'
         justifyContent='flex-end'
+        sx={{
+          '& > span': {
+            width: '100%',
+          },
+        }}
       >
+        <PopoverNotificationCenter
+          colorScheme='light'
+          position='right-end'
+          emptyState={<EmptyNotifications />}
+          header={() => <NotificationsHeader />}
+        >
+          {({ unseenCount }) => (
+            <Button
+              px='3'
+              w='full'
+              size='md'
+              variant='ghost'
+              fontSize='sm'
+              textDecoration='none'
+              fontWeight='regular'
+              justifyContent='flex-start'
+              borderRadius='md'
+              color={'gray.500'}
+              leftIcon={<ArrowsRight color='inherit' boxSize='5' />}
+              _focus={{
+                boxShadow: 'sidenavItemFocus',
+              }}
+            >
+              Up next
+              {!!unseenCount && <Flex>{unseenCount}</Flex>}
+            </Button>
+          )}
+        </PopoverNotificationCenter>
         <GoogleSidebarNotification />
 
         <SidenavItem
