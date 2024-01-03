@@ -258,22 +258,22 @@ func (s *interactionSessionService) mapDbRelationshipToParticipantDetails(relati
 func (s *interactionSessionService) convertDbNodesToInteractionSessionParticipants(records []*utils.DbNodeWithRelationAndId) entity.InteractionSessionParticipants {
 	interactionEventParticipants := entity.InteractionSessionParticipants{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, entity.NodeLabel_Email) {
+		if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Email) {
 			participant := s.services.EmailService.mapDbNodeToEmailEntity(*v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_PhoneNumber) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_PhoneNumber) {
 			participant := s.services.PhoneNumberService.mapDbNodeToPhoneNumberEntity(*v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_User) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_User) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Contact) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Contact) {
 			participant := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId

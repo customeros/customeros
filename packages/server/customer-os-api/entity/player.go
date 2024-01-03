@@ -34,6 +34,6 @@ type PersonEntities []PlayerEntity
 
 func (PlayerEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_Player,
+		neo4jentity.NodeLabel_Player,
 	}
 }

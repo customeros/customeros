@@ -4,18 +4,19 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"reflect"
 )
 
 func MapEntityToActionDescribes(analysisDescribe *entity.AnalysisDescribe) any {
 	switch (*analysisDescribe).AnalysisDescribeLabel() {
-	case entity.NodeLabel_InteractionSession:
+	case neo4jentity.NodeLabel_InteractionSession:
 		sessionEntity := (*analysisDescribe).(*entity.InteractionSessionEntity)
 		return MapEntityToInteractionSession(sessionEntity)
-	case entity.NodeLabel_InteractionEvent:
+	case neo4jentity.NodeLabel_InteractionEvent:
 		eventEntity := (*analysisDescribe).(*entity.InteractionEventEntity)
 		return MapEntityToInteractionEvent(eventEntity)
-	case entity.NodeLabel_Meeting:
+	case neo4jentity.NodeLabel_Meeting:
 		meetingEntity := (*analysisDescribe).(*entity.MeetingEntity)
 		return MapEntityToMeeting(meetingEntity)
 	}

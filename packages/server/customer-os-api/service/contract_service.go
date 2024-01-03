@@ -93,7 +93,7 @@ func (s *contractService) Update(ctx context.Context, contract *entity.ContractE
 		return err
 	}
 
-	contractExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), contract.Id, entity.NodeLabel_Contract)
+	contractExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), contract.Id, neo4jentity.NodeLabel_Contract)
 	if !contractExists {
 		err := fmt.Errorf("(ContractService.Update) contract with id {%s} not found", contract.Id)
 		s.log.Error(err.Error())
@@ -182,7 +182,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	response, err := s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
 
 	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		contractFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, entity.NodeLabel_Contract)
+		contractFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, neo4jentity.NodeLabel_Contract)
 		if contractFound && findErr == nil {
 			span.LogFields(log.Bool("contractSavedInGraphDb", true))
 			break

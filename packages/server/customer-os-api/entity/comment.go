@@ -29,5 +29,5 @@ func (comment *CommentEntity) GetDataloaderKey() string {
 }
 
 func (CommentEntity) Labels(tenant string) []string {
-	return []string{NodeLabel_Comment, NodeLabel_Comment + "_" + tenant}
+	return []string{neo4jentity.NodeLabel_Comment, neo4jentity.NodeLabel_Comment + "_" + tenant}
 }

@@ -35,14 +35,14 @@ func (InteractionEventEntity) IsTimelineEvent() {
 }
 
 func (InteractionEventEntity) TimelineEventLabel() string {
-	return NodeLabel_InteractionEvent
+	return neo4jentity.NodeLabel_InteractionEvent
 }
 
 func (InteractionEventEntity) IsAnalysisDescribe() {
 }
 
 func (InteractionEventEntity) AnalysisDescribeLabel() string {
-	return NodeLabel_InteractionEvent
+	return neo4jentity.NodeLabel_InteractionEvent
 }
 
 func (interactionEventEntity *InteractionEventEntity) SetDataloaderKey(key string) {
@@ -55,9 +55,9 @@ func (interactionEventEntity InteractionEventEntity) GetDataloaderKey() string {
 
 func (InteractionEventEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_InteractionEvent,
-		NodeLabel_InteractionEvent + "_" + tenant,
-		NodeLabel_TimelineEvent,
-		NodeLabel_TimelineEvent + "_" + tenant,
+		neo4jentity.NodeLabel_InteractionEvent,
+		neo4jentity.NodeLabel_InteractionEvent + "_" + tenant,
+		neo4jentity.NodeLabel_TimelineEvent,
+		neo4jentity.NodeLabel_TimelineEvent + "_" + tenant,
 	}
 }

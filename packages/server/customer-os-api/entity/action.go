@@ -84,16 +84,16 @@ func (ActionEntity) IsTimelineEvent() {
 }
 
 func (ActionEntity) TimelineEventLabel() string {
-	return NodeLabel_Action
+	return neo4jentity.NodeLabel_Action
 }
 
 type ActionEntities []ActionEntity
 
 func (action ActionEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_Action,
-		NodeLabel_Action + "_" + tenant,
-		NodeLabel_TimelineEvent,
-		NodeLabel_TimelineEvent + "_" + tenant,
+		neo4jentity.NodeLabel_Action,
+		neo4jentity.NodeLabel_Action + "_" + tenant,
+		neo4jentity.NodeLabel_TimelineEvent,
+		neo4jentity.NodeLabel_TimelineEvent + "_" + tenant,
 	}
 }

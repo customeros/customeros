@@ -34,7 +34,7 @@ func (jobRole JobRoleEntity) ToString() string {
 func (JobRoleEntity) IsInteractionEventParticipant() {}
 
 func (JobRoleEntity) ParticipantLabel() string {
-	return NodeLabel_JobRole
+	return neo4jentity.NodeLabel_JobRole
 }
 
 func (jobRole JobRoleEntity) GetDataloaderKey() string {

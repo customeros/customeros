@@ -256,11 +256,11 @@ func (s *noteService) GetNotedEntities(ctx context.Context, ids []string) (*enti
 
 	notedEntities := entity.NotedEntities{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, entity.NodeLabel_Organization) {
+		if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Organization) {
 			notedEntity := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
 			notedEntity.DataloaderKey = v.LinkedNodeId
 			notedEntities = append(notedEntities, notedEntity)
-		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Contact) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Contact) {
 			notedEntity := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
 			notedEntity.DataloaderKey = v.LinkedNodeId
 			notedEntities = append(notedEntities, notedEntity)

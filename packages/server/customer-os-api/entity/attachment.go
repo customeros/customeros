@@ -30,7 +30,7 @@ type AttachmentEntities []AttachmentEntity
 
 func (attachmentEntity AttachmentEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_Attachment,
-		NodeLabel_Attachment + "_" + tenant,
+		neo4jentity.NodeLabel_Attachment,
+		neo4jentity.NodeLabel_Attachment + "_" + tenant,
 	}
 }

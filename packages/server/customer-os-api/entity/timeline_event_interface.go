@@ -1,6 +1,9 @@
 package entity
 
-import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+)
 
 type LastTouchpointType string
 
@@ -21,14 +24,14 @@ const (
 )
 
 var NodeLabelsByTimelineEventType = map[string]string{
-	//model.TimelineEventTypePageView.String():           NodeLabel_PageView,
-	//model.TimelineEventTypeInteractionSession.String(): NodeLabel_InteractionSession,
-	model.TimelineEventTypeIssue.String(): NodeLabel_Issue,
-	//model.TimelineEventTypeNote.String():               NodeLabel_Note,
-	model.TimelineEventTypeInteractionEvent.String(): NodeLabel_InteractionEvent,
-	model.TimelineEventTypeMeeting.String():          NodeLabel_Meeting,
-	model.TimelineEventTypeAction.String():           NodeLabel_Action,
-	model.TimelineEventTypeLogEntry.String():         NodeLabel_LogEntry,
+	//model.TimelineEventTypePageView.String():           neo4jentity.NodeLabel_PageView,
+	//model.TimelineEventTypeInteractionSession.String(): neo4jentity.NodeLabel_InteractionSession,
+	model.TimelineEventTypeIssue.String(): neo4jentity.NodeLabel_Issue,
+	//model.TimelineEventTypeNote.String():               neo4jentity.NodeLabel_Note,
+	model.TimelineEventTypeInteractionEvent.String(): neo4jentity.NodeLabel_InteractionEvent,
+	model.TimelineEventTypeMeeting.String():          neo4jentity.NodeLabel_Meeting,
+	model.TimelineEventTypeAction.String():           neo4jentity.NodeLabel_Action,
+	model.TimelineEventTypeLogEntry.String():         neo4jentity.NodeLabel_LogEntry,
 }
 
 type TimelineEvent interface {
