@@ -251,11 +251,11 @@ func parseOrgOwnerUpdateEmail(actor, target *entity.UserEntity, orgName, mjmlApp
 	if err != nil {
 		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
 	}
-	requestBody := []byte(string(mjmlJSON))
-	req, err := http.NewRequest("POST", "https://api.mjml.io/v1/render", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", "https://api.mjml.io/v1/render", bytes.NewReader(mjmlJSON))
 	if err != nil {
 		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
 	}
+	req.Header.Set("Content-Type", "application/json")
 	req.SetBasicAuth(mjmlAppId, mjmlSecret)
 
 	// Make the HTTP request
