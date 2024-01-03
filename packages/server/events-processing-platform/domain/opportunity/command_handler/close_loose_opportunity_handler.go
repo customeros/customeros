@@ -63,6 +63,11 @@ func (h *closeLooseOpportunityCommandHandler) Handle(ctx context.Context, cmd *c
 		}
 
 		if eventstore.IsEventStoreErrorCodeWrongExpectedVersion(err) {
+			if attempt == h.cfg.RetriesOnOptimisticLockException-1 {
+				// If we have reached the maximum number of retries, return an error
+				tracing.TraceErr(span, err)
+				return err
+			}
 			// Handle concurrency error
 			span.LogFields(log.Int("retryAttempt", attempt+1))
 			time.Sleep(utils.BackOffExponentialDelay(attempt)) // backoffDelay is a function that increases the delay with each attempt

@@ -63,6 +63,6 @@ func NewCommandHandlers(log logger.Logger,
 		Opportunity:        opportunitycmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		Contract:           contractcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		ServiceLineItem:    servicelineitemcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		MasterPlan:         masterplancmdhandler.NewCommandHandlers(log, aggregateStore),
+		MasterPlan:         masterplancmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 	}
 }
