@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -85,11 +86,11 @@ func TestGraphLocationEventHandler_OnLocationCreate(t *testing.T) {
 	err = locationEventHandler.OnLocationCreate(context.Background(), event)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "Location"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "Location_"+tenantName), "Incorrect number of Location_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "LOCATION_BELONGS_TO_TENANT"), "Incorrect number of LOCATION_BELONGS_TO_TENANT relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "Location"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "Location_"+tenantName), "Incorrect number of Location_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "LOCATION_BELONGS_TO_TENANT"), "Incorrect number of LOCATION_BELONGS_TO_TENANT relationships in Neo4j")
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId.String())
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId.String())
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	props := utils.GetPropsFromNode(*dbNode)
@@ -173,7 +174,7 @@ func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
 		AppSource:     constants.SourceOpenline,
 	})
 
-	dbNodeAfterCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
+	dbNodeAfterCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterCreate)
 
@@ -233,7 +234,7 @@ func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
 	err = locationEventHandler.OnLocationValidated(context.Background(), event)
 	require.Nil(t, err)
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	props := utils.GetPropsFromNode(*dbNode)
@@ -314,7 +315,7 @@ func TestGraphLocationEventHandler_OnLocationValidationFailed(t *testing.T) {
 		AppSource:     constants.SourceOpenline,
 	})
 
-	dbNodeAfterCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
+	dbNodeAfterCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterCreate)
 
@@ -356,7 +357,7 @@ func TestGraphLocationEventHandler_OnLocationValidationFailed(t *testing.T) {
 	err = locationEventHandler.OnLocationValidationFailed(context.Background(), event)
 	require.Nil(t, err)
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	props := utils.GetPropsFromNode(*dbNode)
@@ -419,7 +420,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 		AppSource:     constants.SourceOpenline,
 	})
 
-	dbNodeAfterCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
+	dbNodeAfterCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterCreate)
 
@@ -498,7 +499,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 	err = locationEventHandler.OnLocationUpdate(context.Background(), locationUpdateEvent)
 	require.Nil(t, err)
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	locationUpdateProps := utils.GetPropsFromNode(*dbNode)

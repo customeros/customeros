@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -29,7 +30,7 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: "test org",
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "User": 1, "ExternalSystem": 1, "LogEntry": 0, "TimelineEvent": 0})
 
 	// prepare grpc mock
@@ -74,19 +75,19 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	err = logEntryEventHandler.OnCreate(context.Background(), createEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "Organization_" + tenantName: 1,
 		"User": 1, "User_" + tenantName: 1,
 		"ExternalSystem": 1, "ExternalSystem_" + tenantName: 1,
 		"LogEntry": 1, "LogEntry_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"LOGGED":         1,
 		"CREATED_BY":     1,
 		"IS_LINKED_WITH": 1,
 	})
 
-	logEntryDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "LogEntry_"+tenantName, logEntryId)
+	logEntryDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "LogEntry_"+tenantName, logEntryId)
 	require.Nil(t, err)
 	require.NotNil(t, logEntryDbNode)
 
@@ -114,7 +115,7 @@ func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	logEntryId := neo4jt.CreateLogEntryForOrg(ctx, testDatabase.Driver, tenantName, orgId, entity.LogEntryEntity{})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "LogEntry": 1, "TimelineEvent": 1})
 
 	// prepare event handler
@@ -130,12 +131,12 @@ func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
 	err = logEntryEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "Organization_" + tenantName: 1,
 		"LogEntry": 1, "LogEntry_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
-	logEntryDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "LogEntry_"+tenantName, logEntryId)
+	logEntryDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "LogEntry_"+tenantName, logEntryId)
 	require.Nil(t, err)
 	require.NotNil(t, logEntryDbNode)
 
@@ -158,7 +159,7 @@ func TestGraphLogEntryEventHandler_OnAddTag(t *testing.T) {
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	logEntryId := neo4jt.CreateLogEntryForOrg(ctx, testDatabase.Driver, tenantName, orgId, entity.LogEntryEntity{})
 	tagId := neo4jt.CreateTag(ctx, testDatabase.Driver, tenantName, entity.TagEntity{})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "LogEntry": 1, "TimelineEvent": 1, "Tag": 1})
 
 	// prepare event handler
@@ -175,14 +176,14 @@ func TestGraphLogEntryEventHandler_OnAddTag(t *testing.T) {
 	require.Nil(t, err, "failed to execute event handler")
 
 	// CHECK
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "Organization_" + tenantName: 1,
 		"LogEntry": 1, "LogEntry_" + tenantName: 1,
 		"Tag": 1, "Tag_" + tenantName: 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"TAGGED": 1,
 	})
-	relationship, err := neo4jt.GetRelationship(ctx, testDatabase.Driver, logEntryId, tagId)
+	relationship, err := neo4jtest.GetRelationship(ctx, testDatabase.Driver, logEntryId, tagId)
 	require.Nil(t, err)
 	require.NotNil(t, relationship)
 	require.Equal(t, "TAGGED", relationship.Type)
@@ -199,9 +200,9 @@ func TestGraphLogEntryEventHandler_OnRemoveTag(t *testing.T) {
 	logEntryId := neo4jt.CreateLogEntryForOrg(ctx, testDatabase.Driver, tenantName, orgId, entity.LogEntryEntity{})
 	tagId := neo4jt.CreateTag(ctx, testDatabase.Driver, tenantName, entity.TagEntity{})
 	neo4jt.LinkTag(ctx, testDatabase.Driver, tagId, logEntryId)
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "LogEntry": 1, "TimelineEvent": 1, "Tag": 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"TAGGED": 1,
 	})
 
@@ -217,11 +218,11 @@ func TestGraphLogEntryEventHandler_OnRemoveTag(t *testing.T) {
 	err = logEntryEventHandler.OnRemoveTag(context.Background(), removeTagEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "Organization_" + tenantName: 1,
 		"LogEntry": 1, "LogEntry_" + tenantName: 1,
 		"Tag": 1, "Tag_" + tenantName: 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"TAGGED": 0,
 	})
 }

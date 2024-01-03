@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
@@ -35,7 +36,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 0,
 		"User":         1, "User_" + tenantName: 1,
 		"Action": 0, "TimelineEvent": 0})
@@ -80,17 +81,17 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	err = orgEventHandler.OnOrganizationCreate(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "User_" + tenantName: 1,
 		"Organization": 1, "Organization_" + tenantName: 1,
 		"Action": 1, "Action_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"ACTION_ON": 1,
 		"OWNS":      1,
 	})
 
-	orgDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
 	require.Nil(t, err)
 	require.NotNil(t, orgDbNode)
 
@@ -104,7 +105,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	require.Nil(t, organization.OnboardingDetails.SortingOrder)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -141,10 +142,10 @@ func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
 	err = orgEventHandler.OnOrganizationHide(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
-	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant"})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
+	neo4jtest.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant"})
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -173,10 +174,10 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 	err = orgEventHandler.OnOrganizationShow(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
-	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant"})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
+	neo4jtest.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant"})
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -213,10 +214,10 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1, "Social": 2, "Social_" + tenantName: 2})
-	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant", "Social", "Social_" + tenantName})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1, "Social": 2, "Social_" + tenantName: 2})
+	neo4jtest.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant", "Social", "Social_" + tenantName})
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Social_"+tenantName, socialId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Social_"+tenantName, socialId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -259,10 +260,10 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1, "Social": 1, "Social_" + tenantName: 1})
-	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant", "Social", "Social_" + tenantName})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1, "Social": 1, "Social_" + tenantName: 1})
+	neo4jtest.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant", "Social", "Social_" + tenantName})
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Social_"+tenantName, existingSocialId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Social_"+tenantName, existingSocialId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -283,8 +284,8 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing
 		Name: organizationName,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
-	dbNodeAfterOrganizationCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
+	dbNodeAfterOrganizationCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterOrganizationCreate)
 	propsAfterOrganizationCreate := utils.GetPropsFromNode(*dbNodeAfterOrganizationCreate)
@@ -295,7 +296,7 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing
 		Name: locationName,
 	})
 
-	dbNodeAfterLocationCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
+	dbNodeAfterLocationCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterLocationCreate)
 	propsAfterLocationCreate := utils.GetPropsFromNode(*dbNodeAfterLocationCreate)
@@ -311,8 +312,8 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing
 	err = orgEventHandler.OnLocationLinkedToOrganization(context.Background(), event)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "ASSOCIATED_WITH"), "Incorrect number of ASSOCIATED_WITH relationships in Neo4j")
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "ASSOCIATED_WITH", locationId)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "ASSOCIATED_WITH"), "Incorrect number of ASSOCIATED_WITH relationships in Neo4j")
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "ASSOCIATED_WITH", locationId)
 }
 
 func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
@@ -350,7 +351,7 @@ func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdRenewal2_1, true)
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdRenewal2_2, true)
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdNbo2_3, false)
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Contract": 2, "Opportunity": 4})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Contract": 2, "Opportunity": 4})
 
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
@@ -364,7 +365,7 @@ func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
 	err = orgEventHandler.OnRefreshArr(context.Background(), event)
 	require.Nil(t, err)
 
-	orgDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization", orgId)
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization", orgId)
 	require.Nil(t, err)
 	require.NotNil(t, orgDbNode)
 
@@ -424,7 +425,7 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdRenewal2_1, true)
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdRenewal2_2, true)
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdNbo2_3, false)
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Contract": 2, "Opportunity": 4})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Contract": 2, "Opportunity": 4})
 
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
@@ -439,7 +440,7 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 	err = orgEventHandler.OnRefreshRenewalSummary(context.Background(), event)
 	require.Nil(t, err)
 
-	orgDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization", orgId)
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization", orgId)
 	require.Nil(t, err)
 	require.NotNil(t, orgDbNode)
 
@@ -478,7 +479,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 	err = orgEventHandler.OnUpdateOnboardingStatus(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization":                1,
 		"Organization_" + tenantName:  1,
 		"Action":                      1,
@@ -486,11 +487,11 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 		"TimelineEvent":               1,
 		"TimelineEvent_" + tenantName: 1,
 	})
-	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant",
+	neo4jtest.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant",
 		"Action", "Action_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName, "User", "User_" + tenantName})
 
 	// Check organization
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
@@ -501,7 +502,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 	require.Equal(t, now, *organization.OnboardingDetails.UpdatedAt)
 
 	// Check action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -536,16 +537,16 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	require.Nil(t, err)
 
 	// Verify nodes
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "Organization_" + tenantName: 1,
 		"Contract": 1, "Contract_" + tenantName: 1,
 		"Action": 1, "Action_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
-	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant",
+	neo4jtest.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant",
 		"Action", "Action_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName, "Contract", "Contract_" + tenantName})
 
 	// Verify Organization
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
@@ -555,14 +556,14 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	require.Equal(t, now, *organization.OnboardingDetails.UpdatedAt)
 
 	// Verify Contract
-	dbNode, err = neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	dbNode, err = neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
 	contract := graph_db.MapDbNodeToContractEntity(dbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.True(t, contract.TriggeredOnboardingStatusChange)
 
 	// Verify Action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)

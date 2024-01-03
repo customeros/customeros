@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -36,11 +37,11 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 	err = emailEventHandler.OnEmailCreate(context.Background(), event)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "Email"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "EMAIL_ADDRESS_BELONGS_TO_TENANT"), "Incorrect number of EMAIL_ADDRESS_BELONGS_TO_TENANT relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "Email"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "EMAIL_ADDRESS_BELONGS_TO_TENANT"), "Incorrect number of EMAIL_ADDRESS_BELONGS_TO_TENANT relationships in Neo4j")
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, myMailId.String())
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, myMailId.String())
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	props := utils.GetPropsFromNode(*dbNode)
@@ -68,8 +69,8 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 		IsReachable: &isReachable,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Email": 1, "Email_" + tenantName: 1})
-	dbNodeAfterEmailCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Email": 1, "Email_" + tenantName: 1})
+	dbNodeAfterEmailCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterEmailCreate)
 	propsAfterEmailCreate := utils.GetPropsFromNode(*dbNodeAfterEmailCreate)
@@ -87,7 +88,7 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailUpdate(context.Background(), event)
 	require.Nil(t, err)
-	email, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Email_"+tenantName)
+	email, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Email_"+tenantName)
 	require.Nil(t, err)
 
 	emailProps := utils.GetPropsFromNode(*email)
@@ -121,8 +122,8 @@ func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
 		IsReachable: &isReachable,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Email": 1, "Email_" + tenantName: 1})
-	dbNodeAfterEmailCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Email": 1, "Email_" + tenantName: 1})
+	dbNodeAfterEmailCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterEmailCreate)
 	propsAfterEmailtCreate := utils.GetPropsFromNode(*dbNodeAfterEmailCreate)
@@ -139,7 +140,7 @@ func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
 	err = emailEventHandler.OnEmailValidationFailed(context.Background(), event)
 	require.Nil(t, err)
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	emailProps := utils.GetPropsFromNode(*dbNode)
@@ -186,8 +187,8 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 		IsDisabled:     &isDisabled,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Email": 1, "Email_" + tenantName: 1})
-	dbNodeAfterEmailCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Email": 1, "Email_" + tenantName: 1})
+	dbNodeAfterEmailCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterEmailCreate)
 	propsAfterEmailtCreate := utils.GetPropsFromNode(*dbNodeAfterEmailCreate)
@@ -207,7 +208,7 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	err = emailEventHandler.OnEmailValidated(context.Background(), event)
 	require.Nil(t, err)
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	props := utils.GetPropsFromNode(*dbNode)

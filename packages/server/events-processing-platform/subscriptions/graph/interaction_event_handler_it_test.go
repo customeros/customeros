@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -32,7 +33,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
 	contactId := neo4jt.CreateContact(ctx, testDatabase.Driver, tenantName, entity.ContactEntity{})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "Contact": 1, "Organization": 1, "ExternalSystem": 1, "Issue": 1, "TimelineEvent": 1, "InteractionEvent": 0})
 
 	// prepare grpc mock
@@ -104,7 +105,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	err = interactionEventHandler.OnCreate(context.Background(), createEvent)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User": 1, "User_" + tenantName: 1,
 		"Contact": 1, "Contact_" + tenantName: 1,
 		"Organization": 1, "Organization_" + tenantName: 1,
@@ -112,18 +113,18 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 		"Issue": 1, "Issue_" + tenantName: 1,
 		"InteractionEvent": 1, "InteractionEvent_" + tenantName: 1,
 		"TimelineEvent": 2, "TimelineEvent_" + tenantName: 2})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"REPORTED_BY":    1,
 		"IS_LINKED_WITH": 1,
 		"PART_OF":        1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, interactionEventId, "PART_OF", issueId)
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, interactionEventId, "IS_LINKED_WITH", externalSystemId)
-	neo4jt.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, interactionEventId, "SENT_BY", userId, map[string]interface{}{"type": "FROM"})
-	neo4jt.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, interactionEventId, "SENT_TO", contactId, map[string]interface{}{"type": "TO"})
-	neo4jt.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, interactionEventId, "SENT_TO", orgId, map[string]interface{}{"type": "CC"})
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, interactionEventId, "PART_OF", issueId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, interactionEventId, "IS_LINKED_WITH", externalSystemId)
+	neo4jtest.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, interactionEventId, "SENT_BY", userId, map[string]interface{}{"type": "FROM"})
+	neo4jtest.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, interactionEventId, "SENT_TO", contactId, map[string]interface{}{"type": "TO"})
+	neo4jtest.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, interactionEventId, "SENT_TO", orgId, map[string]interface{}{"type": "CC"})
 
-	interactionEventDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName, interactionEventId)
+	interactionEventDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName, interactionEventId)
 	require.Nil(t, err)
 	require.NotNil(t, interactionEventDbNode)
 
@@ -161,7 +162,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate(t *testing.T) {
 		ContentType: "test content type",
 		ChannelData: "test channel data",
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"InteractionEvent": 1, "TimelineEvent": 1})
 
 	// prepare event handler
@@ -184,11 +185,11 @@ func TestGraphInteractionEventEventHandler_OnUpdate(t *testing.T) {
 	err = interactionEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"InteractionEvent": 1, "InteractionEvent_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
-	interactionEventDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName, interactionEventId)
+	interactionEventDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName, interactionEventId)
 	require.Nil(t, err)
 	require.NotNil(t, interactionEventDbNode)
 
@@ -221,7 +222,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 		Hide:          false,
 		SourceOfTruth: constants.SourceOpenline,
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"InteractionEvent": 1, "TimelineEvent": 1})
 
 	// prepare event handler
@@ -245,11 +246,11 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 	err = interactionEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"InteractionEvent": 1, "InteractionEvent_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
-	interactionEventDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName, interactionEventId)
+	interactionEventDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName, interactionEventId)
 	require.Nil(t, err)
 	require.NotNil(t, interactionEventDbNode)
 
@@ -283,10 +284,10 @@ func TestGraphInteractionEventEventHandler_OnSummaryReplace_Create(t *testing.T)
 		Hide:          false,
 		SourceOfTruth: constants.SourceOpenline,
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"InteractionEvent": 1, "TimelineEvent": 1})
 
-	interactionEvent, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName)
+	interactionEvent, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName)
 	require.Nil(t, err)
 	interactionEventProps := utils.GetPropsFromNode(*interactionEvent)
 	interactionEventId = utils.GetStringPropOrEmpty(interactionEventProps, "id")
@@ -305,9 +306,9 @@ func TestGraphInteractionEventEventHandler_OnSummaryReplace_Create(t *testing.T)
 
 	err = interactionEventHandler.OnSummaryReplace(context.Background(), summaryReplaceEvent)
 	require.Nil(t, err, "failed to execute OnSummaryReplace for interactionEventHandler")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "DESCRIBES"), "Incorrect number of DESCRIBES relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "DESCRIBES"), "Incorrect number of DESCRIBES relationships in Neo4j")
 
-	analysis, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Analysis_"+tenantName)
+	analysis, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Analysis_"+tenantName)
 	require.Nil(t, err)
 	analysisProps := utils.GetPropsFromNode(*analysis)
 	require.Equal(t, 9, len(analysisProps))
@@ -339,10 +340,10 @@ func TestGraphInteractionEventEventHandler_OnActionItemsReplace(t *testing.T) {
 		Hide:          false,
 		SourceOfTruth: constants.SourceOpenline,
 	})
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"InteractionEvent": 1, "TimelineEvent": 1})
 
-	interactionEvent, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName)
+	interactionEvent, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName)
 	require.Nil(t, err)
 	interactionEventProps := utils.GetPropsFromNode(*interactionEvent)
 	interactionEventId = utils.GetStringPropOrEmpty(interactionEventProps, "id")
@@ -362,7 +363,7 @@ func TestGraphInteractionEventEventHandler_OnActionItemsReplace(t *testing.T) {
 	err = interactionEventHandler.OnActionItemsReplace(context.Background(), actionItemsReplaceEvent)
 	require.Nil(t, err, "failed to execute OnActionItemsReplace for interactionEventHandler")
 
-	actionItem, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "ActionItem_"+tenantName)
+	actionItem, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "ActionItem_"+tenantName)
 	require.Nil(t, err)
 	actionItemProps := utils.GetPropsFromNode(*actionItem)
 	require.Equal(t, 7, len(actionItemProps))

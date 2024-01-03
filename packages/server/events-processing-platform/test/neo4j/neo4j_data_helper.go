@@ -9,20 +9,18 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
-	"github.com/stretchr/testify/require"
 )
 
 func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
-	ExecuteWriteQuery(ctx, driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
+	neo4jtest.ExecuteWriteQuery(ctx, driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
 }
 
 func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := `MERGE (t:Tenant {name:$tenant})`
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant": tenant,
 	})
 }
@@ -39,7 +37,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 					o.hide=$hide
 				`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant": tenant,
 		"name":   organization.Name,
 		"hide":   organization.Hide,
@@ -61,7 +59,7 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 					u.roles=$roles
 				`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":    tenant,
 		"id":        userId,
 		"firstName": user.FirstName,
@@ -78,7 +76,7 @@ func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 					s.platformName=$platformName
 				`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":           socialId,
 		"url":          social.Url,
 		"platformName": social.PlatformName,
@@ -98,7 +96,7 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 					c.lastName=$lastName
 				`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":    tenant,
 		"id":        contactId,
 		"firstName": contact.FirstName,
@@ -114,7 +112,7 @@ func CreateJobRole(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	}
 	query := fmt.Sprintf(`CREATE (jobRole:JobRole:JobRole_%s {id:$jobRoleId})`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"jobRoleId": jobRoleId,
 	})
 	return jobRoleId
@@ -136,7 +134,7 @@ func CreateLogEntryForOrg(ctx context.Context, driver *neo4j.DriverWithContext, 
 					l.startedAt=$startedAt
 				`, tenant, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":      tenant,
 		"orgId":       orgId,
 		"id":          logEntryId,
@@ -162,7 +160,7 @@ func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 					i.sourceOfTruth=$sourceOfTruth
 				`, tenant, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":        tenant,
 		"id":            issueId,
 		"subject":       issue.Subject,
@@ -184,7 +182,7 @@ func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 					c.sourceOfTruth=$sourceOfTruth
 				`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":            commentId,
 		"content":       comment.Content,
 		"contentType":   comment.ContentType,
@@ -212,7 +210,7 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 					c.endedAt=$endedAt
 				`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":               contractId,
 		"tenant":           tenant,
 		"name":             contract.Name,
@@ -238,7 +236,7 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 func LinkContractWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contractId, organizationId string) {
 	query := `MATCH (c:Contract {id:$contractId}), (o:Organization {id:$organizationId})
 				MERGE (o)-[:HAS_CONTRACT]->(c) `
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contractId":     contractId,
 		"organizationId": organizationId,
 	})
@@ -267,7 +265,7 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 		query += `, op:RenewalOpportunity`
 	}
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                     opportunityId,
 		"name":                   opportunity.Name,
 		"source":                 opportunity.Source,
@@ -290,7 +288,7 @@ func LinkContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithCo
 	if renewal {
 		query += `MERGE (c)-[:ACTIVE_RENEWAL]->(o)`
 	}
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contractId":    contractId,
 		"opportunityId": opportunityId,
 	})
@@ -309,7 +307,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 					sli.comments=$comments
 				`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contractId": contractId,
 		"id":         serviceLineItemId,
 		"price":      serviceLineItem.Price,
@@ -335,7 +333,7 @@ func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, ten
 					i.createdAt=$createdAt,
 					i.updatedAt=$updatedAt`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":         tenant,
 		"id":             phoneNumberId,
 		"e164":           phoneNumber.E164,
@@ -362,7 +360,7 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 									e.createdAt=$createdAt,
 									e.updatedAt=$updatedAt
 							`, tenant)
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":      tenant,
 		"emailId":     emailId,
 		"email":       entity.Email,
@@ -420,7 +418,7 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 					i.source=$source,
 					i.appSource=$appSource`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":        tenant,
 		"id":            locationId,
 		"name":          location.Name,
@@ -458,7 +456,7 @@ func LinkIssueReportedBy(ctx context.Context, driver *neo4j.DriverWithContext, i
 				MATCH (i:Issue {id:$issueId})
 				MERGE (i)-[:REPORTED_BY]->(e)`
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"issueId":  issueId,
 		"entityId": entityId,
 	})
@@ -469,7 +467,7 @@ func LinkIssueAssignedTo(ctx context.Context, driver *neo4j.DriverWithContext, i
 				MATCH (i:Issue {id:$issueId})
 				MERGE (i)-[:ASSIGNED_TO]->(e)`
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"issueId":  issueId,
 		"entityId": entityId,
 	})
@@ -480,7 +478,7 @@ func LinkIssueFollowedBy(ctx context.Context, driver *neo4j.DriverWithContext, i
 				MATCH (i:Issue {id:$issueId})
 				MERGE (i)-[:FOLLOWED_BY]->(e)`
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"issueId":  issueId,
 		"entityId": entityId,
 	})
@@ -502,7 +500,7 @@ func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext
 					i.sourceOfTruth=$sourceOfTruth
 				`, tenant, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":            interactionEventId,
 		"content":       interactionEvent.Content,
 		"contentType":   interactionEvent.ContentType,
@@ -527,7 +525,7 @@ func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 				SET tag:Tag_%s,
 					tag.name=$name`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant": tenant,
 		"tagId":  tagId,
 		"name":   tag.Name,
@@ -542,7 +540,7 @@ func LinkTag(ctx context.Context, driver *neo4j.DriverWithContext, tagId, entity
 				MERGE (e)-[rel:TAGGED]->(t)
 				SET rel.taggedAt=$now`
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tagId":    tagId,
 		"entityId": entityId,
 		"now":      utils.Now(),
@@ -554,7 +552,7 @@ func LinkSocial(ctx context.Context, driver *neo4j.DriverWithContext, socialId, 
 				MATCH (s:Social {id:$socialId})
 				MERGE (e)-[:HAS]->(s)`
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"socialId": socialId,
 		"entityId": entityId,
 	})
@@ -565,7 +563,7 @@ func CreateExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, 
 			  MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})
 				ON CREATE SET ext:ExternalSystem_%s`, tenant)
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":           tenant,
 		"externalSystemId": externalSystem,
 	})
@@ -575,201 +573,11 @@ func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, works
 	query := `MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)-[:HAS_WORKSPACE]->(w:Workspace {name:$workspace, provider:$provider})`
 
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":    tenant,
 		"provider":  provider,
 		"workspace": workspace,
 	})
-}
-
-func GetNodeById(ctx context.Context, driver *neo4j.DriverWithContext, label string, id string) (*dbtype.Node, error) {
-	session := utils.NewNeo4jReadSession(ctx, *driver)
-	defer session.Close(ctx)
-
-	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		result, err := tx.Run(ctx, fmt.Sprintf(`
-			MATCH (n:%s {id:$id}) RETURN n`, label),
-			map[string]interface{}{
-				"id": id,
-			})
-		record, err := result.Single(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return record.Values[0], nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	node := queryResult.(dbtype.Node)
-	return &node, nil
-}
-
-func GetRelationship(ctx context.Context, driver *neo4j.DriverWithContext, fromNodeId, toNodeId string) (*dbtype.Relationship, error) {
-	session := utils.NewNeo4jReadSession(ctx, *driver)
-	defer session.Close(ctx)
-
-	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		result, err := tx.Run(ctx, `MATCH (n {id:$fromNodeId})-[rel]->(m {id:$toNodeId}) RETURN rel limit 1`,
-			map[string]interface{}{
-				"fromNodeId": fromNodeId,
-				"toNodeId":   toNodeId,
-			})
-		record, err := result.Single(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return record.Values[0], nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	node := queryResult.(dbtype.Relationship)
-	return &node, nil
-}
-
-func GetRelationships(ctx context.Context, driver *neo4j.DriverWithContext, fromNodeId, toNodeId string) ([]dbtype.Relationship, error) {
-	session := utils.NewNeo4jReadSession(ctx, *driver)
-	defer session.Close(ctx)
-
-	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		result, err := tx.Run(ctx, `MATCH (n {id:$fromNodeId})-[rel]->(m {id:$toNodeId}) RETURN rel`,
-			map[string]interface{}{
-				"fromNodeId": fromNodeId,
-				"toNodeId":   toNodeId,
-			})
-		records, err := result.Collect(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return records, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	var relationships []dbtype.Relationship
-	for _, record := range queryResult.([]*db.Record) {
-		relationships = append(relationships, record.Values[0].(dbtype.Relationship))
-	}
-	return relationships, nil
-}
-
-func GetFirstNodeByLabel(ctx context.Context, driver *neo4j.DriverWithContext, label string) (*dbtype.Node, error) {
-	session := utils.NewNeo4jReadSession(ctx, *driver)
-	defer session.Close(ctx)
-
-	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		result, err := tx.Run(ctx, fmt.Sprintf(`
-			MATCH (n:%s) RETURN n limit 1`, label),
-			map[string]interface{}{})
-		record, err := result.Single(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return record.Values[0], nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	node := queryResult.(dbtype.Node)
-	return &node, nil
-}
-
-func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {
-	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
-	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
-	return int(result.(*db.Record).Values[0].(int64))
-}
-
-func GetCountOfRelationships(ctx context.Context, driver *neo4j.DriverWithContext, relationship string) int {
-	query := fmt.Sprintf(`MATCH (a)-[r:%s]-(b) RETURN count(distinct r)`, relationship)
-	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
-	return int(result.(*db.Record).Values[0].(int64))
-}
-
-func GetTotalCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext) int {
-	query := `MATCH (n) RETURN count(n)`
-	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
-	return int(result.(*db.Record).Values[0].(int64))
-}
-
-func GetAllLabels(ctx context.Context, driver *neo4j.DriverWithContext) []string {
-	query := `MATCH (n) RETURN DISTINCT labels(n)`
-	dbRecords := ExecuteReadQueryWithCollectionReturn(ctx, driver, query, map[string]any{})
-	labels := []string{}
-	for _, v := range dbRecords {
-		for _, nodeLabels := range v.Values {
-			for _, label := range nodeLabels.([]interface{}) {
-				if !contains(labels, label.(string)) {
-					labels = append(labels, label.(string))
-				}
-			}
-		}
-	}
-	return labels
-}
-
-func contains(slice []string, value string) bool {
-	for _, v := range slice {
-		if v == value {
-			return true
-		}
-	}
-	return false
-}
-
-func AssertNeo4jLabels(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, expectedLabels []string) {
-	actualLabels := GetAllLabels(ctx, driver)
-	sort.Strings(expectedLabels)
-	sort.Strings(actualLabels)
-	if !reflect.DeepEqual(actualLabels, expectedLabels) {
-		t.Errorf("Expected labels: %v, \nActual labels: %v", expectedLabels, actualLabels)
-	}
-}
-
-func AssertNeo4jNodeCount(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, nodes map[string]int) {
-	for name, expectedCount := range nodes {
-		actualCount := GetCountOfNodes(ctx, driver, name)
-		require.Equal(t, expectedCount, actualCount, "Unexpected count for node: "+name)
-	}
-}
-
-func AssertNeo4jRelationCount(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, relations map[string]int) {
-	for name, expectedCount := range relations {
-		actualCount := GetCountOfRelationships(ctx, driver, name)
-		require.Equal(t, expectedCount, actualCount, "Unexpected count for relationship: "+name)
-	}
-}
-
-func AssertRelationship(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, fromNodeId, relationshipType, toNodeId string) {
-	rel, err := GetRelationship(ctx, driver, fromNodeId, toNodeId)
-	require.Nil(t, err)
-	require.NotNil(t, rel)
-	require.Equal(t, relationshipType, rel.Type)
-}
-
-func AssertRelationships(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, fromNodeId string, relationshipTypes []string, toNodeId string) {
-	rels, err := GetRelationships(ctx, driver, fromNodeId, toNodeId)
-	require.Nil(t, err)
-	require.NotNil(t, rels)
-	require.Equal(t, len(relationshipTypes), len(rels))
-	for _, rel := range rels {
-		require.Contains(t, relationshipTypes, rel.Type)
-	}
-}
-
-func AssertRelationshipWithProperties(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, fromNodeId, relationshipType, toNodeId string, expectedProperties map[string]any) {
-	rel, err := GetRelationship(ctx, driver, fromNodeId, toNodeId)
-	require.Nil(t, err)
-	require.NotNil(t, rel)
-	require.Equal(t, relationshipType, rel.Type)
-	for k, v := range expectedProperties {
-		require.Equal(t, v, rel.Props[k])
-	}
 }
 
 func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, codeA2, codeA3, name, phoneCode string) {
@@ -780,7 +588,7 @@ func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, codeA2,
 					c.name = $name, 
 					c.createdAt = $now, 
 					c.updatedAt = $now`
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"codeA2":    codeA2,
 		"codeA3":    codeA3,
 		"phoneCode": phoneCode,

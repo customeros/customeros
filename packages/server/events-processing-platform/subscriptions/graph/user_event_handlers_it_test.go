@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -52,11 +53,11 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	err = userEventHandler.OnUserCreate(context.Background(), event)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "User_"+tenantName), "Incorrect number of User_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "USER_BELONGS_TO_TENANT"), "Incorrect number of USER_BELONGS_TO_TENANT relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "User"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "User_"+tenantName), "Incorrect number of User_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "USER_BELONGS_TO_TENANT"), "Incorrect number of USER_BELONGS_TO_TENANT relationships in Neo4j")
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, myUserId.String())
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, myUserId.String())
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	props := utils.GetPropsFromNode(*dbNode)
@@ -82,8 +83,8 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, "sf")
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 0, "ExternalSystem": 1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 0, "ExternalSystem": 1})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"IS_LINKED_WITH": 0,
 	})
 
@@ -115,16 +116,16 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 	err = userEventHandler.OnUserCreate(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"User":               1,
 		"User_" + tenantName: 1,
 		"ExternalSystem":     1})
-	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"IS_LINKED_WITH":         1,
 		"USER_BELONGS_TO_TENANT": 1,
 	})
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, myUserId.String())
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, myUserId.String())
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	props := utils.GetPropsFromNode(*dbNode)
@@ -196,15 +197,15 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	err = userEventHandler.OnJobRoleLinkedToUser(context.Background(), linkJobRoleEvent)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "User_"+tenantName), "Incorrect number of User_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "USER_BELONGS_TO_TENANT"), "Incorrect number of USER_BELONGS_TO_TENANT relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "User"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "User_"+tenantName), "Incorrect number of User_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "USER_BELONGS_TO_TENANT"), "Incorrect number of USER_BELONGS_TO_TENANT relationships in Neo4j")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "JobRole"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "JobRole_"+tenantName), "Incorrect number of JobRole_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "WORKS_AS"), "Incorrect number of WORKS_AS relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "JobRole"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "JobRole_"+tenantName), "Incorrect number of JobRole_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "WORKS_AS"), "Incorrect number of WORKS_AS relationships in Neo4j")
 
-	dbUserNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, myUserId.String())
+	dbUserNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, myUserId.String())
 	require.Nil(t, err)
 	require.NotNil(t, dbUserNode)
 	userProps := utils.GetPropsFromNode(*dbUserNode)
@@ -220,7 +221,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", utils.GetStringPropOrEmpty(userProps, "profilePhotoUrl"))
 	require.Equal(t, "Africa/Abidjan", utils.GetStringPropOrEmpty(userProps, "timezone"))
 
-	dbJobRoleNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "JobRole_"+tenantName, myJobRoleId.String())
+	dbJobRoleNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "JobRole_"+tenantName, myJobRoleId.String())
 	if err != nil {
 		t.Fatalf("Error getting JobRole node from Neo4j: %s", err.Error())
 	}
@@ -281,15 +282,15 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 	err = jobRoleEventHandler.OnJobRoleCreate(context.Background(), jobRoleCreateEvent)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "User_"+tenantName), "Incorrect number of User_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "USER_BELONGS_TO_TENANT"), "Incorrect number of USER_BELONGS_TO_TENANT relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "User"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "User_"+tenantName), "Incorrect number of User_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "USER_BELONGS_TO_TENANT"), "Incorrect number of USER_BELONGS_TO_TENANT relationships in Neo4j")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "JobRole"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "JobRole_"+tenantName), "Incorrect number of JobRole_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "WORKS_AS"), "Incorrect number of WORKS_AS relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "JobRole"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, "JobRole_"+tenantName), "Incorrect number of JobRole_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "WORKS_AS"), "Incorrect number of WORKS_AS relationships in Neo4j")
 
-	dbUserNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, myUserId.String())
+	dbUserNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, myUserId.String())
 	require.Nil(t, err)
 	require.NotNil(t, dbUserNode)
 	userProps := utils.GetPropsFromNode(*dbUserNode)
@@ -303,7 +304,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(userProps, "appSource"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(userProps, "syncedWithEventStore"))
 
-	dbJobRoleNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "JobRole_"+tenantName, myJobRoleId.String())
+	dbJobRoleNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "JobRole_"+tenantName, myJobRoleId.String())
 	if err != nil {
 		t.Fatalf("Error getting JobRole node from Neo4j: %s", err.Error())
 	}
@@ -340,8 +341,8 @@ func TestGraphUserEventHandler_OnUserUpdate(t *testing.T) {
 		Tenant:           tenantName,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
-	dbNodeAfterUserCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
+	dbNodeAfterUserCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterUserCreate)
 	propsAfterUserCreate := utils.GetPropsFromNode(*dbNodeAfterUserCreate)
@@ -371,7 +372,7 @@ func TestGraphUserEventHandler_OnUserUpdate(t *testing.T) {
 	require.Nil(t, err)
 	err = userEventHandler.OnUserUpdate(context.Background(), event)
 	require.Nil(t, err)
-	user, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
+	user, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
 	require.Nil(t, err)
 
 	userProps := utils.GetPropsFromNode(*user)
@@ -416,8 +417,8 @@ func TestGraphUserEventHandler_OnPhoneNumberLinkedToUser(t *testing.T) {
 		Tenant:           tenantName,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
-	dbNodeAfterUserCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
+	dbNodeAfterUserCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterUserCreate)
 	propsAfterUserCreate := utils.GetPropsFromNode(*dbNodeAfterUserCreate)
@@ -435,7 +436,7 @@ func TestGraphUserEventHandler_OnPhoneNumberLinkedToUser(t *testing.T) {
 		AppSource:      constants.SourceOpenline,
 	})
 
-	dbNodeAfterPhoneNumberCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "PhoneNumber_"+tenantName, phoneNumberId)
+	dbNodeAfterPhoneNumberCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "PhoneNumber_"+tenantName, phoneNumberId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterPhoneNumberCreate)
 
@@ -449,15 +450,15 @@ func TestGraphUserEventHandler_OnPhoneNumberLinkedToUser(t *testing.T) {
 	require.Nil(t, err)
 	err = userEventHandler.OnPhoneNumberLinkedToUser(context.Background(), userLinkPhoneNumberEvent)
 	require.Nil(t, err)
-	userNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
+	userNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, userNode)
 	userProps := utils.GetPropsFromNode(*userNode)
 	require.Less(t, userCreateTime, utils.GetTimePropOrNow(userProps, "updatedAt"))
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "HAS"), "Incorrect number of PHONE_NUMBER_BELONGS_TO_TENANT relationships in Neo4j")
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, userId, "HAS", phoneNumberId)
-	userPhoneRelation, err := neo4jt.GetRelationship(ctx, testDatabase.Driver, userId, phoneNumberId)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "HAS"), "Incorrect number of PHONE_NUMBER_BELONGS_TO_TENANT relationships in Neo4j")
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, userId, "HAS", phoneNumberId)
+	userPhoneRelation, err := neo4jtest.GetRelationship(ctx, testDatabase.Driver, userId, phoneNumberId)
 	require.Nil(t, err)
 	userPhoneRelationProps := utils.GetPropsFromRelationship(*userPhoneRelation)
 	require.Equal(t, true, utils.GetBoolPropOrFalse(userPhoneRelationProps, "primary"))
@@ -488,8 +489,8 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 		Tenant:           tenantName,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
-	dbNodeAfterUserCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
+	dbNodeAfterUserCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterUserCreate)
 	propsAfterUserCreate := utils.GetPropsFromNode(*dbNodeAfterUserCreate)
@@ -506,7 +507,7 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 		AppSource:     constants.SourceOpenline,
 	})
 
-	dbNodeAfterEmailCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
+	dbNodeAfterEmailCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterEmailCreate)
 	propsAfterEmailCreate := utils.GetPropsFromNode(*dbNodeAfterEmailCreate)
@@ -524,15 +525,15 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 	require.Nil(t, err)
 	err = userEventHandler.OnEmailLinkedToUser(context.Background(), userLinkEmailEvent)
 	require.Nil(t, err)
-	userNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
+	userNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, userNode)
 	userProps := utils.GetPropsFromNode(*userNode)
 	require.Less(t, userCreateTime, utils.GetTimePropOrNow(userProps, "updatedAt"))
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "HAS"), "Incorrect number of PHONE_NUMBER_BELONGS_TO_TENANT relationships in Neo4j")
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, userId, "HAS", emailId)
-	userEmailRelation, err := neo4jt.GetRelationship(ctx, testDatabase.Driver, userId, emailId)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "HAS"), "Incorrect number of PHONE_NUMBER_BELONGS_TO_TENANT relationships in Neo4j")
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, userId, "HAS", emailId)
+	userEmailRelation, err := neo4jtest.GetRelationship(ctx, testDatabase.Driver, userId, emailId)
 	require.Nil(t, err)
 	userEmailRelationProps := utils.GetPropsFromRelationship(*userEmailRelation)
 	require.Equal(t, 3, len(userEmailRelationProps))
@@ -564,8 +565,8 @@ func TestGraphUserEventHandler_OnJobRoleLinkedToUser(t *testing.T) {
 		Tenant:           tenantName,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
-	dbNodeAfterUserCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
+	dbNodeAfterUserCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterUserCreate)
 	propsAfterUserCreate := utils.GetPropsFromNode(*dbNodeAfterUserCreate)
@@ -573,7 +574,7 @@ func TestGraphUserEventHandler_OnJobRoleLinkedToUser(t *testing.T) {
 
 	jobRoleId := neo4jt.CreateJobRole(ctx, testDatabase.Driver, tenantName, entity.JobRoleEntity{})
 
-	dbNodeAfterjobRoleCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "JobRole_"+tenantName, jobRoleId)
+	dbNodeAfterjobRoleCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "JobRole_"+tenantName, jobRoleId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterjobRoleCreate)
 	propsAfterJobRoleCreate := utils.GetPropsFromNode(*dbNodeAfterjobRoleCreate)
@@ -589,14 +590,14 @@ func TestGraphUserEventHandler_OnJobRoleLinkedToUser(t *testing.T) {
 	err = userEventHandler.OnJobRoleLinkedToUser(context.Background(), userLinkJobRoleEvent)
 	require.Nil(t, err)
 
-	userNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
+	userNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, userNode)
 	userProps := utils.GetPropsFromNode(*userNode)
 	require.Less(t, userCreateTime, utils.GetTimePropOrNow(userProps, "updatedAt"))
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "WORKS_AS"), "Incorrect number of WORKS_AS relationships in Neo4j")
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, userId, "WORKS_AS", jobRoleId)
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "WORKS_AS"), "Incorrect number of WORKS_AS relationships in Neo4j")
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, userId, "WORKS_AS", jobRoleId)
 }
 
 func TestGraphUserEventHandler_OnAddPlayer(t *testing.T) {
@@ -622,8 +623,8 @@ func TestGraphUserEventHandler_OnAddPlayer(t *testing.T) {
 		Tenant:           tenantName,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
-	dbNodeAfterUserCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
+	dbNodeAfterUserCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterUserCreate)
 	propsAfterUserCreate := utils.GetPropsFromNode(*dbNodeAfterUserCreate)
@@ -649,7 +650,7 @@ func TestGraphUserEventHandler_OnAddPlayer(t *testing.T) {
 	require.Nil(t, err)
 	err = userEventHandler.OnAddPlayer(context.Background(), playerInfoEvent)
 	require.Nil(t, err)
-	player, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Player")
+	player, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Player")
 	require.Nil(t, err)
 
 	playerProps := utils.GetPropsFromNode(*player)
@@ -666,9 +667,9 @@ func TestGraphUserEventHandler_OnAddPlayer(t *testing.T) {
 	require.Equal(t, "PlayerInfoAuthId", utils.GetStringPropOrEmpty(playerProps, "authId"))
 	require.Equal(t, "PlayerInfIdentityId", utils.GetStringPropOrEmpty(playerProps, "identityId"))
 
-	identifiesRelationCount := neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "IDENTIFIES")
+	identifiesRelationCount := neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "IDENTIFIES")
 	require.Equal(t, 1, identifiesRelationCount)
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, playerId, "IDENTIFIES", userId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, playerId, "IDENTIFIES", userId)
 }
 
 func TestGraphUserEventHandler_OnAddRole(t *testing.T) {
@@ -694,8 +695,8 @@ func TestGraphUserEventHandler_OnAddRole(t *testing.T) {
 		Tenant:           tenantName,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
-	dbNodeAfterUserCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
+	dbNodeAfterUserCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterUserCreate)
 	propsAfterUserCreate := utils.GetPropsFromNode(*dbNodeAfterUserCreate)
@@ -712,7 +713,7 @@ func TestGraphUserEventHandler_OnAddRole(t *testing.T) {
 	require.Nil(t, err)
 	err = userEventHandler.OnAddRole(context.Background(), roleEvent)
 	require.Nil(t, err)
-	user, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
+	user, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
 	require.Nil(t, err)
 
 	propsAfterAddRole := utils.GetPropsFromNode(*user)
@@ -745,8 +746,8 @@ func TestGraphUserEventHandler_OnRemoveRole(t *testing.T) {
 		Tenant:           tenantName,
 	})
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
-	dbNodeAfterUserCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
+	dbNodeAfterUserCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeAfterUserCreate)
 	propsAfterUserCreate := utils.GetPropsFromNode(*dbNodeAfterUserCreate)
@@ -763,7 +764,7 @@ func TestGraphUserEventHandler_OnRemoveRole(t *testing.T) {
 	require.Nil(t, err)
 	err = userEventHandler.OnRemoveRole(context.Background(), roleEvent)
 	require.Nil(t, err)
-	user, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
+	user, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
 	require.Nil(t, err)
 
 	propsAfterAddRole := utils.GetPropsFromNode(*user)

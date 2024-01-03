@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	neo4jentity "github.com/openline-ai/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -79,14 +80,14 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -118,7 +119,7 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 		Billed: model.MonthlyBilled.String(),
 	})
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 	})
@@ -158,13 +159,13 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 	})
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -199,7 +200,7 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"Action": 0, "TimelineEvent": 0,
@@ -248,7 +249,7 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 	require.Nil(t, err)
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 0, "ServiceLineItem_" + tenantName: 0,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
@@ -257,7 +258,7 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 	require.True(t, calledEventsPlatformToUpdateOpportunity)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -294,7 +295,7 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"Action": 0, "TimelineEvent": 0,
@@ -343,7 +344,7 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 	require.Nil(t, err)
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 0, "ServiceLineItem_" + tenantName: 0,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
@@ -352,7 +353,7 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 	require.True(t, calledEventsPlatformToUpdateOpportunity)
 
 	// Verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -383,7 +384,7 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 	})
@@ -425,13 +426,13 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 	require.Nil(t, err)
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 	})
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -462,7 +463,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 		Price:  150.0,
 	})
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"Action": 0, "TimelineEvent": 0,
@@ -501,13 +502,13 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -517,7 +518,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 	require.Equal(t, float64(200.0), serviceLineItem.Price)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -546,7 +547,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 		Price:  150.0,
 	})
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"Action": 0, "TimelineEvent": 0,
@@ -586,13 +587,13 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -603,7 +604,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 	require.Equal(t, "test reason for change", serviceLineItem.Comments)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -632,7 +633,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 		Price:  150.0,
 	})
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"Action": 0, "TimelineEvent": 0,
@@ -673,13 +674,13 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -690,7 +691,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -719,7 +720,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 		Price:  150.0,
 	})
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"Action": 0, "TimelineEvent": 0,
@@ -759,13 +760,13 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -776,7 +777,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -804,7 +805,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 		Quantity: 15,
 	})
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"Action": 0, "TimelineEvent": 0,
@@ -842,13 +843,13 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -857,7 +858,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 	require.Equal(t, int64(20), serviceLineItem.Quantity)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -885,7 +886,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 		Quantity: 400,
 	})
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"Action": 0, "TimelineEvent": 0,
@@ -922,13 +923,13 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -938,7 +939,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 	require.Equal(t, int64(350), serviceLineItem.Quantity)
 
 	// verify actionat
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -967,7 +968,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 		Billed: model.AnnuallyBilled.String(),
 	})
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"Action": 0, "TimelineEvent": 0,
@@ -1006,13 +1007,13 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 	require.Nil(t, err, "failed to execute service line item update event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -1022,7 +1023,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -1094,15 +1095,15 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -1119,7 +1120,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -1191,15 +1192,15 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -1216,7 +1217,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -1288,15 +1289,15 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -1313,7 +1314,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -1384,15 +1385,15 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -1408,7 +1409,7 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -1479,15 +1480,15 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -1503,7 +1504,7 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -1578,15 +1579,15 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 2, "ServiceLineItem_" + tenantName: 2,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -1603,7 +1604,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -1679,15 +1680,15 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 2, "ServiceLineItem_" + tenantName: 2,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -1703,7 +1704,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -1778,15 +1779,15 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 2, "ServiceLineItem_" + tenantName: 2,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId)
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -1802,7 +1803,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -1889,15 +1890,15 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 2, "ServiceLineItem_" + tenantName: 2,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId2)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId2)
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId2)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId2)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -1915,7 +1916,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
@@ -1996,15 +1997,15 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 	require.Nil(t, err, "failed to execute service line item create event handler")
 
 	// Assert Neo4j Node Counts
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Contract":        1,
 		"ServiceLineItem": 2, "ServiceLineItem_" + tenantName: 2,
 		"TimelineEvent": 2, "TimelineEvent_" + tenantName: 2,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId2)
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "HAS_SERVICE", serviceLineItemId2)
 
 	// Validate that the service line item is saved in the repository
-	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId2)
+	serviceLineItemDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId2)
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
@@ -2021,7 +2022,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 	require.Nil(t, serviceLineItem.EndedAt)
 
 	// verify action
-	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
 	require.Nil(t, err)
 	require.NotNil(t, actionDbNode)
 	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
