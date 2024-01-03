@@ -1,0 +1,10 @@
+query OnboardingCompletion($period: DashboardPeriodInput) {
+  dashboard_OnboardingCompletion(period: $period) {
+    completionPercentage
+    increasePercentage
+    perMonth {
+      month
+      value
+    }
+  }
+}

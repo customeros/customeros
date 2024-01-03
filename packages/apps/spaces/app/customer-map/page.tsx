@@ -7,6 +7,7 @@ import { ARRBreakdown } from './src/components/charts/ARRBreakdown';
 import { NewCustomers } from './src/components/charts/NewCustomers';
 import { RevenueAtRisk } from './src/components/charts/RevenueAtRisk';
 import { RetentionRate } from './src/components/charts/RetentionRate';
+import { TimeToOnboard } from './src/components/charts/TimeToOnboard';
 import { MrrPerCustomer } from './src/components/charts/MrrPerCustomer';
 import { GrossRevenueRetention } from './src/components/charts/GrossRevenueRetention';
 
@@ -27,9 +28,13 @@ export default function DashboardPage() {
         <RevenueAtRisk />
       </Flex>
 
-      <Flex gap='3'>
+      <Flex gap='3' mb='3'>
         <NewCustomers />
         <RetentionRate />
+      </Flex>
+
+      <Flex gap='3'>
+        <TimeToOnboard />
       </Flex>
     </Flex>
   );

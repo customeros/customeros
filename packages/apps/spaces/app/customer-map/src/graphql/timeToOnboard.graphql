@@ -1,0 +1,10 @@
+query TimeToOnboard($period: DashboardPeriodInput) {
+  dashboard_TimeToOnboard(period: $period) {
+    timeToOnboard
+    increasePercentage
+    perMonth {
+      month
+      value
+    }
+  }
+}
