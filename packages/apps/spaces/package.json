@@ -34,7 +34,7 @@
     "@tanstack/react-query": "^4.36.1",
     "@tanstack/react-query-persist-client": "^5.8.1",
     "@tanstack/react-table": "^8.10.3",
-    "@tanstack/react-virtual": "^3.0.0-beta.54",
+    "@tanstack/react-virtual": "^3.0.1",
     "@visx/visx": "^3.5.1",
     "axios": "^1.6.3",
     "chakra-react-select": "^4.7.6",
