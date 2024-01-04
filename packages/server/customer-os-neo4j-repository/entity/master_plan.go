@@ -12,6 +12,7 @@ type MasterPlanEntity struct {
 	SourceOfTruth DataSource
 	AppSource     string
 	Name          string
+	IsRetired     bool
 }
 
 type MasterPlanEntities []MasterPlanEntity

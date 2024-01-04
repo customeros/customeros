@@ -23,10 +23,10 @@ import (
 type MasterPlanService interface {
 	CreateMasterPlan(ctx context.Context, name string) (string, error)
 	GetMasterPlanById(ctx context.Context, masterPlanId string) (*neo4jentity.MasterPlanEntity, error)
+	GetMasterPlans(ctx context.Context, returnRetired *bool) (*neo4jentity.MasterPlanEntities, error)
 
 	CreateMasterPlanMilestone(ctx context.Context, masterPlanId, name string, order, durationHours int64, optional bool, items []string) (string, error)
 	GetMasterPlanMilestoneById(ctx context.Context, masterPlanMilestoneId string) (*neo4jentity.MasterPlanMilestoneEntity, error)
-	GetAllMasterPlans(ctx context.Context) (*neo4jentity.MasterPlanEntities, error)
 }
 type masterPlanService struct {
 	log          logger.Logger
@@ -162,12 +162,13 @@ func (s *masterPlanService) GetMasterPlanMilestoneById(ctx context.Context, mast
 	}
 }
 
-func (s *masterPlanService) GetAllMasterPlans(ctx context.Context) (*neo4jentity.MasterPlanEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanService.GetAllMasterPlans")
+func (s *masterPlanService) GetMasterPlans(ctx context.Context, returnRetired *bool) (*neo4jentity.MasterPlanEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanService.GetMasterPlans")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("returnRetired", returnRetired))
 
-	masterPlanDbNodes, err := s.repositories.Neo4jRepositories.MasterPlanReadRepository.GetAllMasterPlansOrderByCreatedAt(ctx, common.GetTenantFromContext(ctx))
+	masterPlanDbNodes, err := s.repositories.Neo4jRepositories.MasterPlanReadRepository.GetMasterPlansOrderByCreatedAt(ctx, common.GetTenantFromContext(ctx), returnRetired)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

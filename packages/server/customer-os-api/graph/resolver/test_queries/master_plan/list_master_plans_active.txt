@@ -1,0 +1,9 @@
+query ListMasterPlans() {
+masterPlans(retired: false) {
+    id
+    name
+    createdAt
+    source
+    appSource
+  }
+}

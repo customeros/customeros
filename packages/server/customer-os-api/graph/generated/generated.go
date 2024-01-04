@@ -1003,7 +1003,7 @@ type ComplexityRoot struct {
 		Issue                                 func(childComplexity int, id string) int
 		LogEntry                              func(childComplexity int, id string) int
 		MasterPlan                            func(childComplexity int, id string) int
-		MasterPlans                           func(childComplexity int) int
+		MasterPlans                           func(childComplexity int, retired *bool) int
 		Meeting                               func(childComplexity int, id string) int
 		Opportunity                           func(childComplexity int, id string) int
 		Organization                          func(childComplexity int, id string) int
@@ -1449,7 +1449,7 @@ type QueryResolver interface {
 	Issue(ctx context.Context, id string) (*model.Issue, error)
 	LogEntry(ctx context.Context, id string) (*model.LogEntry, error)
 	MasterPlan(ctx context.Context, id string) (*model.MasterPlan, error)
-	MasterPlans(ctx context.Context) ([]*model.MasterPlan, error)
+	MasterPlans(ctx context.Context, retired *bool) ([]*model.MasterPlan, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.MeetingsPage, error)
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
@@ -7346,7 +7346,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.MasterPlans(childComplexity), true
+		args, err := ec.field_Query_masterPlans_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MasterPlans(childComplexity, args["retired"].(*bool)), true
 
 	case "Query.meeting":
 		if e.complexity.Query.Meeting == nil {
@@ -9810,7 +9815,7 @@ input LogEntryUpdateInput {
 
 extend type Query {
     masterPlan(id: ID!): MasterPlan! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    masterPlans: [MasterPlan!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    masterPlans(retired: Boolean): [MasterPlan!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type MasterPlan implements SourceFields & Node {
@@ -14325,6 +14330,21 @@ func (ec *executionContext) field_Query_masterPlan_args(ctx context.Context, raw
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_masterPlans_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *bool
+	if tmp, ok := rawArgs["retired"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("retired"))
+		arg0, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["retired"] = arg0
 	return args, nil
 }
 
@@ -57470,7 +57490,7 @@ func (ec *executionContext) _Query_masterPlans(ctx context.Context, field graphq
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().MasterPlans(rctx)
+			return ec.resolvers.Query().MasterPlans(rctx, fc.Args["retired"].(*bool))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
@@ -57541,6 +57561,17 @@ func (ec *executionContext) fieldContext_Query_masterPlans(ctx context.Context, 
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MasterPlan", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_masterPlans_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }

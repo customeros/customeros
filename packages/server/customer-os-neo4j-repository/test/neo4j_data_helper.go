@@ -30,7 +30,8 @@ func CreateMasterPlan(ctx context.Context, driver *neo4j.DriverWithContext, tena
 					mp.createdAt=$createdAt,
 					mp.source=$source,
 					mp.sourceOfTruth=$sourceOfTruth,
-					mp.appSource=$appSource
+					mp.appSource=$appSource,
+					mp.retired=$retired
 					`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -41,6 +42,7 @@ func CreateMasterPlan(ctx context.Context, driver *neo4j.DriverWithContext, tena
 		"source":        masterPlan.Source,
 		"sourceOfTruth": masterPlan.SourceOfTruth,
 		"appSource":     masterPlan.AppSource,
+		"retired":       masterPlan.IsRetired,
 	})
 	return masterPlanId
 }

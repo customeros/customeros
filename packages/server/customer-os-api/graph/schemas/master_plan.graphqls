@@ -5,7 +5,7 @@ extend type Mutation {
 
 extend type Query {
     masterPlan(id: ID!): MasterPlan! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    masterPlans: [MasterPlan!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    masterPlans(retired: Boolean): [MasterPlan!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type MasterPlan implements SourceFields & Node {

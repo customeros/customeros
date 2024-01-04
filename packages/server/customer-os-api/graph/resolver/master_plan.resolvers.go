@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -84,12 +85,12 @@ func (r *queryResolver) MasterPlan(ctx context.Context, id string) (*model.Maste
 }
 
 // MasterPlans is the resolver for the masterPlans field.
-func (r *queryResolver) MasterPlans(ctx context.Context) ([]*model.MasterPlan, error) {
+func (r *queryResolver) MasterPlans(ctx context.Context, retired *bool) ([]*model.MasterPlan, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MasterPlans", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	masterPlanEntities, err := r.Services.MasterPlanService.GetAllMasterPlans(ctx)
+	masterPlanEntities, err := r.Services.MasterPlanService.GetMasterPlans(ctx, retired)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get Master plans")
