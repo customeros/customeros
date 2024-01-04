@@ -613,6 +613,20 @@ type ComplexityRoot struct {
 		UpdatedAt     func(childComplexity int) int
 	}
 
+	MasterPlanMilestone struct {
+		AppSource     func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		DurationHours func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Items         func(childComplexity int) int
+		Name          func(childComplexity int) int
+		Optional      func(childComplexity int) int
+		Order         func(childComplexity int) int
+		Source        func(childComplexity int) int
+		SourceOfTruth func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
+	}
+
 	Meeting struct {
 		Agenda             func(childComplexity int) int
 		AgendaContentType  func(childComplexity int) int
@@ -706,6 +720,7 @@ type ComplexityRoot struct {
 		LogEntryResetTags                       func(childComplexity int, id string, input []*model.TagIDOrNameInput) int
 		LogEntryUpdate                          func(childComplexity int, id string, input model.LogEntryUpdateInput) int
 		MasterPlanCreate                        func(childComplexity int, input model.MasterPlanInput) int
+		MasterPlanMilestoneCreate               func(childComplexity int, input model.MasterPlanMilestoneInput) int
 		MeetingAddNewLocation                   func(childComplexity int, meetingID string) int
 		MeetingAddNote                          func(childComplexity int, meetingID string, note *model.NoteInput) int
 		MeetingCreate                           func(childComplexity int, meeting model.MeetingInput) int
@@ -1287,6 +1302,7 @@ type MutationResolver interface {
 	LogEntryRemoveTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
 	LogEntryResetTags(ctx context.Context, id string, input []*model.TagIDOrNameInput) (string, error)
 	MasterPlanCreate(ctx context.Context, input model.MasterPlanInput) (*model.MasterPlan, error)
+	MasterPlanMilestoneCreate(ctx context.Context, input model.MasterPlanMilestoneInput) (*model.MasterPlanMilestone, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
 	MeetingLinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error)
@@ -4155,6 +4171,83 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MasterPlan.UpdatedAt(childComplexity), true
 
+	case "MasterPlanMilestone.appSource":
+		if e.complexity.MasterPlanMilestone.AppSource == nil {
+			break
+		}
+
+		return e.complexity.MasterPlanMilestone.AppSource(childComplexity), true
+
+	case "MasterPlanMilestone.createdAt":
+		if e.complexity.MasterPlanMilestone.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.MasterPlanMilestone.CreatedAt(childComplexity), true
+
+	case "MasterPlanMilestone.durationHours":
+		if e.complexity.MasterPlanMilestone.DurationHours == nil {
+			break
+		}
+
+		return e.complexity.MasterPlanMilestone.DurationHours(childComplexity), true
+
+	case "MasterPlanMilestone.id":
+		if e.complexity.MasterPlanMilestone.ID == nil {
+			break
+		}
+
+		return e.complexity.MasterPlanMilestone.ID(childComplexity), true
+
+	case "MasterPlanMilestone.items":
+		if e.complexity.MasterPlanMilestone.Items == nil {
+			break
+		}
+
+		return e.complexity.MasterPlanMilestone.Items(childComplexity), true
+
+	case "MasterPlanMilestone.name":
+		if e.complexity.MasterPlanMilestone.Name == nil {
+			break
+		}
+
+		return e.complexity.MasterPlanMilestone.Name(childComplexity), true
+
+	case "MasterPlanMilestone.optional":
+		if e.complexity.MasterPlanMilestone.Optional == nil {
+			break
+		}
+
+		return e.complexity.MasterPlanMilestone.Optional(childComplexity), true
+
+	case "MasterPlanMilestone.order":
+		if e.complexity.MasterPlanMilestone.Order == nil {
+			break
+		}
+
+		return e.complexity.MasterPlanMilestone.Order(childComplexity), true
+
+	case "MasterPlanMilestone.source":
+		if e.complexity.MasterPlanMilestone.Source == nil {
+			break
+		}
+
+		return e.complexity.MasterPlanMilestone.Source(childComplexity), true
+
+	case "MasterPlanMilestone.sourceOfTruth":
+		if e.complexity.MasterPlanMilestone.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.MasterPlanMilestone.SourceOfTruth(childComplexity), true
+
+	case "MasterPlanMilestone.updatedAt":
+		if e.complexity.MasterPlanMilestone.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.MasterPlanMilestone.UpdatedAt(childComplexity), true
+
 	case "Meeting.agenda":
 		if e.complexity.Meeting.Agenda == nil {
 			break
@@ -5061,6 +5154,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.MasterPlanCreate(childComplexity, args["input"].(model.MasterPlanInput)), true
+
+	case "Mutation.masterPlanMilestone_Create":
+		if e.complexity.Mutation.MasterPlanMilestoneCreate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_masterPlanMilestone_Create_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MasterPlanMilestoneCreate(childComplexity, args["input"].(model.MasterPlanMilestoneInput)), true
 
 	case "Mutation.meeting_AddNewLocation":
 		if e.complexity.Mutation.MeetingAddNewLocation == nil {
@@ -7993,6 +8098,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputLogEntryInput,
 		ec.unmarshalInputLogEntryUpdateInput,
 		ec.unmarshalInputMasterPlanInput,
+		ec.unmarshalInputMasterPlanMilestoneInput,
 		ec.unmarshalInputMeetingInput,
 		ec.unmarshalInputMeetingParticipantInput,
 		ec.unmarshalInputMeetingUpdateInput,
@@ -9676,6 +9782,7 @@ input LogEntryUpdateInput {
 }`, BuiltIn: false},
 	{Name: "../schemas/master_plan.graphqls", Input: `extend type Mutation {
     masterPlan_Create(input: MasterPlanInput!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    masterPlanMilestone_Create(input: MasterPlanMilestoneInput!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type MasterPlan implements SourceFields & Node {
@@ -9688,8 +9795,31 @@ type MasterPlan implements SourceFields & Node {
     appSource:          String!
 }
 
+type MasterPlanMilestone implements SourceFields & Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    name:               String!
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+    order:              Int64!
+    durationHours:      Int64!
+    optional:           Boolean!
+    items:              [String!]!
+}
+
 input MasterPlanInput {
     name: String
+}
+
+input MasterPlanMilestoneInput {
+    masterPlanId: ID!
+    name: String
+    order: Int64!
+    durationHours: Int64!
+    optional: Boolean!
+    items: [String!]!
 }`, BuiltIn: false},
 	{Name: "../schemas/meeting.graphqls", Input: `"""
 Specifies how many pages of meeting information has been returned in the query response.
@@ -12193,6 +12323,21 @@ func (ec *executionContext) field_Mutation_logEntry_Update_args(ctx context.Cont
 		}
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_masterPlanMilestone_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.MasterPlanMilestoneInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNMasterPlanMilestoneInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlanMilestoneInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -32853,6 +32998,490 @@ func (ec *executionContext) fieldContext_MasterPlan_appSource(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _MasterPlanMilestone_id(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlanMilestone_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlanMilestone_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MasterPlanMilestone_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlanMilestone_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlanMilestone_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MasterPlanMilestone_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlanMilestone_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlanMilestone_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MasterPlanMilestone_name(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlanMilestone_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlanMilestone_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MasterPlanMilestone_source(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlanMilestone_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlanMilestone_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MasterPlanMilestone_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlanMilestone_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlanMilestone_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MasterPlanMilestone_appSource(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlanMilestone_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlanMilestone_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MasterPlanMilestone_order(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlanMilestone_order(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Order, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlanMilestone_order(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MasterPlanMilestone_durationHours(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlanMilestone_durationHours(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DurationHours, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlanMilestone_durationHours(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MasterPlanMilestone_optional(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlanMilestone_optional(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Optional, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlanMilestone_optional(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MasterPlanMilestone_items(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlanMilestone_items(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Items, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlanMilestone_items(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Meeting_id(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Meeting_id(ctx, field)
 	if err != nil {
@@ -39727,6 +40356,115 @@ func (ec *executionContext) fieldContext_Mutation_masterPlan_Create(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_masterPlan_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_masterPlanMilestone_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_masterPlanMilestone_Create(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().MasterPlanMilestoneCreate(rctx, fc.Args["input"].(model.MasterPlanMilestoneInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.MasterPlanMilestone); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.MasterPlanMilestone`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.MasterPlanMilestone)
+	fc.Result = res
+	return ec.marshalNMasterPlanMilestone2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlanMilestone(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_masterPlanMilestone_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MasterPlanMilestone_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_MasterPlanMilestone_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_MasterPlanMilestone_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_MasterPlanMilestone_name(ctx, field)
+			case "source":
+				return ec.fieldContext_MasterPlanMilestone_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_MasterPlanMilestone_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_MasterPlanMilestone_appSource(ctx, field)
+			case "order":
+				return ec.fieldContext_MasterPlanMilestone_order(ctx, field)
+			case "durationHours":
+				return ec.fieldContext_MasterPlanMilestone_durationHours(ctx, field)
+			case "optional":
+				return ec.fieldContext_MasterPlanMilestone_optional(ctx, field)
+			case "items":
+				return ec.fieldContext_MasterPlanMilestone_items(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MasterPlanMilestone", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_masterPlanMilestone_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -66184,6 +66922,68 @@ func (ec *executionContext) unmarshalInputMasterPlanInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputMasterPlanMilestoneInput(ctx context.Context, obj interface{}) (model.MasterPlanMilestoneInput, error) {
+	var it model.MasterPlanMilestoneInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"masterPlanId", "name", "order", "durationHours", "optional", "items"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "masterPlanId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("masterPlanId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MasterPlanID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "order":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			data, err := ec.unmarshalNInt642int64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Order = data
+		case "durationHours":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("durationHours"))
+			data, err := ec.unmarshalNInt642int64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DurationHours = data
+		case "optional":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("optional"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Optional = data
+		case "items":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("items"))
+			data, err := ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Items = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj interface{}) (model.MeetingInput, error) {
 	var it model.MeetingInput
 	asMap := map[string]interface{}{}
@@ -68212,6 +69012,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._PageView(ctx, sel, obj)
+	case model.MasterPlanMilestone:
+		return ec._MasterPlanMilestone(ctx, sel, &obj)
+	case *model.MasterPlanMilestone:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._MasterPlanMilestone(ctx, sel, obj)
 	case model.MasterPlan:
 		return ec._MasterPlan(ctx, sel, &obj)
 	case *model.MasterPlan:
@@ -68226,11 +69033,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Location(ctx, sel, obj)
-	case model.SourceFields:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._SourceFields(ctx, sel, obj)
 	case model.CustomFieldTemplate:
 		return ec._CustomFieldTemplate(ctx, sel, &obj)
 	case *model.CustomFieldTemplate:
@@ -68238,20 +69040,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._CustomFieldTemplate(ctx, sel, obj)
-	case model.InteractionSession:
-		return ec._InteractionSession(ctx, sel, &obj)
-	case *model.InteractionSession:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InteractionSession(ctx, sel, obj)
-	case model.InteractionEvent:
-		return ec._InteractionEvent(ctx, sel, &obj)
-	case *model.InteractionEvent:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InteractionEvent(ctx, sel, obj)
 	case model.Analysis:
 		return ec._Analysis(ctx, sel, &obj)
 	case *model.Analysis:
@@ -68259,18 +69047,23 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Analysis(ctx, sel, obj)
+	case model.InteractionEvent:
+		return ec._InteractionEvent(ctx, sel, &obj)
+	case *model.InteractionEvent:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InteractionEvent(ctx, sel, obj)
+	case model.SourceFields:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SourceFields(ctx, sel, obj)
 	case model.ExtensibleEntity:
 		if obj == nil {
 			return graphql.Null
 		}
 		return ec._ExtensibleEntity(ctx, sel, obj)
-	case model.EntityTemplate:
-		return ec._EntityTemplate(ctx, sel, &obj)
-	case *model.EntityTemplate:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._EntityTemplate(ctx, sel, obj)
 	case model.FieldSetTemplate:
 		return ec._FieldSetTemplate(ctx, sel, &obj)
 	case *model.FieldSetTemplate:
@@ -68278,6 +69071,20 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._FieldSetTemplate(ctx, sel, obj)
+	case model.EntityTemplate:
+		return ec._EntityTemplate(ctx, sel, &obj)
+	case *model.EntityTemplate:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._EntityTemplate(ctx, sel, obj)
+	case model.InteractionSession:
+		return ec._InteractionSession(ctx, sel, &obj)
+	case *model.InteractionSession:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InteractionSession(ctx, sel, obj)
 	case model.CustomField:
 		return ec._CustomField(ctx, sel, &obj)
 	case *model.CustomField:
@@ -68424,6 +69231,13 @@ func (ec *executionContext) _SourceFields(ctx context.Context, sel ast.Selection
 			return graphql.Null
 		}
 		return ec._MasterPlan(ctx, sel, obj)
+	case model.MasterPlanMilestone:
+		return ec._MasterPlanMilestone(ctx, sel, &obj)
+	case *model.MasterPlanMilestone:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._MasterPlanMilestone(ctx, sel, obj)
 	case model.PageView:
 		return ec._PageView(ctx, sel, &obj)
 	case *model.PageView:
@@ -73757,6 +74571,95 @@ func (ec *executionContext) _MasterPlan(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
+var masterPlanMilestoneImplementors = []string{"MasterPlanMilestone", "SourceFields", "Node"}
+
+func (ec *executionContext) _MasterPlanMilestone(ctx context.Context, sel ast.SelectionSet, obj *model.MasterPlanMilestone) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, masterPlanMilestoneImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MasterPlanMilestone")
+		case "id":
+			out.Values[i] = ec._MasterPlanMilestone_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._MasterPlanMilestone_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._MasterPlanMilestone_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._MasterPlanMilestone_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._MasterPlanMilestone_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sourceOfTruth":
+			out.Values[i] = ec._MasterPlanMilestone_sourceOfTruth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "appSource":
+			out.Values[i] = ec._MasterPlanMilestone_appSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "order":
+			out.Values[i] = ec._MasterPlanMilestone_order(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "durationHours":
+			out.Values[i] = ec._MasterPlanMilestone_durationHours(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "optional":
+			out.Values[i] = ec._MasterPlanMilestone_optional(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "items":
+			out.Values[i] = ec._MasterPlanMilestone_items(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var meetingImplementors = []string{"Meeting", "DescriptionNode", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, obj *model.Meeting) graphql.Marshaler {
@@ -74603,6 +75506,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "masterPlan_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_masterPlan_Create(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "masterPlanMilestone_Create":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_masterPlanMilestone_Create(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -81673,6 +82583,25 @@ func (ec *executionContext) marshalNMasterPlan2ᚖgithubᚗcomᚋopenlineᚑai�
 
 func (ec *executionContext) unmarshalNMasterPlanInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlanInput(ctx context.Context, v interface{}) (model.MasterPlanInput, error) {
 	res, err := ec.unmarshalInputMasterPlanInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMasterPlanMilestone2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlanMilestone(ctx context.Context, sel ast.SelectionSet, v model.MasterPlanMilestone) graphql.Marshaler {
+	return ec._MasterPlanMilestone(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMasterPlanMilestone2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlanMilestone(ctx context.Context, sel ast.SelectionSet, v *model.MasterPlanMilestone) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MasterPlanMilestone(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMasterPlanMilestoneInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlanMilestoneInput(ctx context.Context, v interface{}) (model.MasterPlanMilestoneInput, error) {
+	res, err := ec.unmarshalInputMasterPlanMilestoneInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

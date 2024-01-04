@@ -17,3 +17,5 @@ type MasterPlanMilestoneEntity struct {
 	Items         []string
 	Optional      bool
 }
+
+type MasterPlanMilestoneEntities []MasterPlanMilestoneEntity

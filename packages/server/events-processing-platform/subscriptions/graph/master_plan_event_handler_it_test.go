@@ -4,12 +4,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
@@ -57,7 +57,7 @@ func TestMasterPlanEventHandler_OnCreate(t *testing.T) {
 	require.NotNil(t, masterPlanDbNode)
 
 	// verify master plan node
-	masterPlan := graph_db.MapDbNodeToMasterPlanEntity(masterPlanDbNode)
+	masterPlan := neo4jmapper.MapDbNodeToMasterPlanEntity(masterPlanDbNode)
 	require.Equal(t, masterPlanId, masterPlan.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), masterPlan.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, masterPlan.AppSource)
@@ -121,7 +121,7 @@ func TestMasterPlanEventHandler_OnCreateMilestone(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, masterPlanMilestoneDbNode)
 
-	milestone := graph_db.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneDbNode)
+	milestone := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneDbNode)
 	require.Equal(t, milestoneId, milestone.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), milestone.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, milestone.AppSource)

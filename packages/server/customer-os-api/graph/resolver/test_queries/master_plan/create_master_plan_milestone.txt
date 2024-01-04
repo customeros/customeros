@@ -1,0 +1,14 @@
+mutation CreateMasterPlanMilestone($masterPlanId: ID!) {
+masterPlanMilestone_Create(
+    input: {
+        masterPlanId: $masterPlanId
+        name: "Draft milestone"
+        order: 10
+        durationHours: 48
+        optional: true
+        items: ["do A", "do B", "do C"]
+    }) {
+    id
+    name
+  }
+}

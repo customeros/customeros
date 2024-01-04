@@ -10,6 +10,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// Deprecated
 func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
 	props := utils.GetPropsFromNode(node)
 
@@ -68,6 +69,7 @@ func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity 
 	return &output
 }
 
+// Deprecated
 func MapDbNodeToUserEntity(node dbtype.Node) *entity.UserEntity {
 	props := utils.GetPropsFromNode(node)
 	return &entity.UserEntity{
@@ -88,6 +90,7 @@ func MapDbNodeToUserEntity(node dbtype.Node) *entity.UserEntity {
 	}
 }
 
+// Deprecated
 func MapDbNodeToActionEntity(node dbtype.Node) *entity.ActionEntity {
 	props := utils.GetPropsFromNode(node)
 	action := entity.ActionEntity{
@@ -103,6 +106,7 @@ func MapDbNodeToActionEntity(node dbtype.Node) *entity.ActionEntity {
 	return &action
 }
 
+// Deprecated
 func MapDbNodeToLogEntryEntity(node dbtype.Node) *entity.LogEntryEntity {
 	props := utils.GetPropsFromNode(node)
 	logEntry := entity.LogEntryEntity{
@@ -119,6 +123,7 @@ func MapDbNodeToLogEntryEntity(node dbtype.Node) *entity.LogEntryEntity {
 	return &logEntry
 }
 
+// Deprecated
 func MapDbNodeToSocialEntity(node dbtype.Node) *entity.SocialEntity {
 	props := utils.GetPropsFromNode(node)
 	social := entity.SocialEntity{
@@ -136,6 +141,7 @@ func MapDbNodeToSocialEntity(node dbtype.Node) *entity.SocialEntity {
 	return &social
 }
 
+// Deprecated
 func MapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEventEntity {
 	props := utils.GetPropsFromNode(node)
 	issue := entity.InteractionEventEntity{
@@ -156,6 +162,7 @@ func MapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEven
 	return &issue
 }
 
+// Deprecated
 func MapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity {
 	props := utils.GetPropsFromNode(node)
 	issue := entity.InteractionSessionEntity{
@@ -175,6 +182,7 @@ func MapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSe
 	return &issue
 }
 
+// Deprecated
 func MapDbNodeToIssueEntity(node dbtype.Node) *entity.IssueEntity {
 	props := utils.GetPropsFromNode(node)
 	issue := entity.IssueEntity{
@@ -192,6 +200,7 @@ func MapDbNodeToIssueEntity(node dbtype.Node) *entity.IssueEntity {
 	return &issue
 }
 
+// Deprecated
 func MapDbNodeToCommentEntity(node dbtype.Node) *entity.CommentEntity {
 	props := utils.GetPropsFromNode(node)
 	comment := entity.CommentEntity{
@@ -207,6 +216,7 @@ func MapDbNodeToCommentEntity(node dbtype.Node) *entity.CommentEntity {
 	return &comment
 }
 
+// Deprecated
 func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 	if node == nil {
 		return nil
@@ -242,6 +252,7 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 	return &opportunity
 }
 
+// Deprecated
 func MapDbNodeToContractEntity(node *dbtype.Node) *entity.ContractEntity {
 	if node == nil {
 		return nil
@@ -267,6 +278,7 @@ func MapDbNodeToContractEntity(node *dbtype.Node) *entity.ContractEntity {
 	return &contract
 }
 
+// Deprecated
 func MapDbNodeToPageView(node dbtype.Node) *entity.PageViewEntity {
 	props := utils.GetPropsFromNode(node)
 	pageViewAction := entity.PageViewEntity{
@@ -287,6 +299,7 @@ func MapDbNodeToPageView(node dbtype.Node) *entity.PageViewEntity {
 	return &pageViewAction
 }
 
+// Deprecated
 func MapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.NoteEntity{
@@ -302,6 +315,7 @@ func MapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity {
 	return &result
 }
 
+// Deprecated
 func MapDbNodeToMeetingEntity(node dbtype.Node) *entity.MeetingEntity {
 	props := utils.GetPropsFromNode(node)
 	status := entity.GetMeetingStatus(utils.GetStringPropOrEmpty(props, "status"))
@@ -326,6 +340,7 @@ func MapDbNodeToMeetingEntity(node dbtype.Node) *entity.MeetingEntity {
 	return &meetingEntity
 }
 
+// Deprecated
 func MapDbNodeToAnalysisEntity(node dbtype.Node) *entity.AnalysisEntity {
 	props := utils.GetPropsFromNode(node)
 	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
@@ -342,44 +357,6 @@ func MapDbNodeToAnalysisEntity(node dbtype.Node) *entity.AnalysisEntity {
 	return &analysisEntity
 }
 
-func MapDbNodeToMasterPlanEntity(node *dbtype.Node) *neo4jentity.MasterPlanEntity {
-	if node == nil {
-		return nil
-	}
-	props := utils.GetPropsFromNode(*node)
-	masterPlan := neo4jentity.MasterPlanEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-	}
-	return &masterPlan
-}
-
-func MapDbNodeToMasterPlanMilestoneEntity(node *dbtype.Node) *neo4jentity.MasterPlanMilestoneEntity {
-	if node == nil {
-		return nil
-	}
-	props := utils.GetPropsFromNode(*node)
-	masterPlan := neo4jentity.MasterPlanMilestoneEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		Optional:      utils.GetBoolPropOrFalse(props, "optional"),
-		Order:         utils.GetInt64PropOrZero(props, "order"),
-		DurationHours: utils.GetInt64PropOrZero(props, "durationHours"),
-		Items:         utils.GetListStringPropOrEmpty(props, "items"),
-	}
-	return &masterPlan
-}
-
 func MigrateStartedAt(props map[string]any) time.Time {
 	if props["createdAt"] != nil {
 		return utils.GetTimePropOrNow(props, "createdAt")
@@ -390,6 +367,7 @@ func MigrateStartedAt(props map[string]any) time.Time {
 	return time.Now()
 }
 
+// Deprecated
 func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
 	if slices.Contains(dbNode.Labels, entity.NodeLabel_PageView) {
 		return MapDbNodeToPageView(*dbNode)
@@ -413,6 +391,7 @@ func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
 	return nil
 }
 
+// Deprecated
 func MapDbNodeToServiceLineItemEntity(node dbtype.Node) *entity.ServiceLineItemEntity {
 	props := utils.GetPropsFromNode(node)
 	serviceLineItem := entity.ServiceLineItemEntity{
@@ -435,6 +414,7 @@ func MapDbNodeToServiceLineItemEntity(node dbtype.Node) *entity.ServiceLineItemE
 	return &serviceLineItem
 }
 
+// Deprecated
 func MapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
 	props := utils.GetPropsFromNode(node)
 	return &entity.EmailEntity{

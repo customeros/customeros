@@ -6,13 +6,13 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go/log"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
 // MasterPlanCreate is the resolver for the masterPlan_Create field.
@@ -22,14 +22,14 @@ func (r *mutationResolver) MasterPlanCreate(ctx context.Context, input model.Mas
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	masterPlanId, err := r.Services.MasterPlanService.Create(ctx, utils.IfNotNilString(input.Name))
+	masterPlanId, err := r.Services.MasterPlanService.CreateMasterPlan(ctx, utils.IfNotNilString(input.Name))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create master plan")
 		return &model.MasterPlan{ID: masterPlanId}, err
 	}
 
-	createdMasterPlanEntity, err := r.Services.MasterPlanService.GetById(ctx, masterPlanId)
+	createdMasterPlanEntity, err := r.Services.MasterPlanService.GetMasterPlanById(ctx, masterPlanId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Master plan details not yet available. Master plan id: %s", masterPlanId)
@@ -37,4 +37,29 @@ func (r *mutationResolver) MasterPlanCreate(ctx context.Context, input model.Mas
 	}
 	span.LogFields(log.String("response.masterPlanId", masterPlanId))
 	return mapper.MapEntityToMasterPlan(createdMasterPlanEntity), nil
+}
+
+// MasterPlanMilestoneCreate is the resolver for the masterPlanMilestone_Create field.
+func (r *mutationResolver) MasterPlanMilestoneCreate(ctx context.Context, input model.MasterPlanMilestoneInput) (*model.MasterPlanMilestone, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanMilestoneCreate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	masterPlanMilestoneId, err := r.Services.MasterPlanService.CreateMasterPlanMilestone(ctx, input.MasterPlanID, utils.IfNotNilString(input.Name),
+		input.Order, input.DurationHours, input.Optional, input.Items)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create master plan milestone")
+		return &model.MasterPlanMilestone{ID: masterPlanMilestoneId}, err
+	}
+
+	createdMasterPlanMilestoneEntity, err := r.Services.MasterPlanService.GetMasterPlanMilestoneById(ctx, masterPlanMilestoneId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Master plan milestone details not yet available. Master plan milestone id: %s", masterPlanMilestoneId)
+		return &model.MasterPlanMilestone{ID: masterPlanMilestoneId}, nil
+	}
+	span.LogFields(log.String("response.masterPlanMilestoneId", masterPlanMilestoneId))
+	return mapper.MapEntityToMasterPlanMilestone(createdMasterPlanMilestoneEntity), nil
 }
