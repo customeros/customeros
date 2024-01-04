@@ -27,6 +27,7 @@ type MasterPlanService interface {
 
 	CreateMasterPlanMilestone(ctx context.Context, masterPlanId, name string, order, durationHours int64, optional bool, items []string) (string, error)
 	GetMasterPlanMilestoneById(ctx context.Context, masterPlanMilestoneId string) (*neo4jentity.MasterPlanMilestoneEntity, error)
+	GetMasterPlanMilestonesForMasterPlans(ctx context.Context, masterPlanIds []string) (*neo4jentity.MasterPlanMilestoneEntities, error)
 }
 type masterPlanService struct {
 	log          logger.Logger
@@ -178,4 +179,24 @@ func (s *masterPlanService) GetMasterPlans(ctx context.Context, returnRetired *b
 		masterPlanEntities = append(masterPlanEntities, *neo4jmapper.MapDbNodeToMasterPlanEntity(v))
 	}
 	return &masterPlanEntities, nil
+}
+
+func (s *masterPlanService) GetMasterPlanMilestonesForMasterPlans(ctx context.Context, masterPlanIds []string) (*neo4jentity.MasterPlanMilestoneEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanService.GetMasterPlanMilestonesForMasterPlans")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("masterPlanIds", masterPlanIds))
+
+	masterPlanMilestoneDbNodes, err := s.repositories.Neo4jRepositories.MasterPlanReadRepository.GetMasterPlanMilestonesForMasterPlans(ctx, common.GetTenantFromContext(ctx), masterPlanIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	masterPlanMilestoneEntities := make(neo4jentity.MasterPlanMilestoneEntities, 0, len(masterPlanMilestoneDbNodes))
+	for _, v := range masterPlanMilestoneDbNodes {
+		masterPlanMilestoneEntity := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(v.Node)
+		masterPlanMilestoneEntity.DataloaderKey = v.LinkedNodeId
+		masterPlanMilestoneEntities = append(masterPlanMilestoneEntities, *masterPlanMilestoneEntity)
+	}
+	return &masterPlanMilestoneEntities, nil
 }

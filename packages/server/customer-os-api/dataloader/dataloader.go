@@ -93,6 +93,7 @@ type Loaders struct {
 	ContractsForOrganization                    *dataloader.Loader
 	ServiceLineItemsForContract                 *dataloader.Loader
 	OpportunitiesForContract                    *dataloader.Loader
+	MasterPlanMilestonesForMasterPlan           *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -187,6 +188,9 @@ type serviceLineItemBatcher struct {
 }
 type opportunityBatcher struct {
 	opportunityService service.OpportunityService
+}
+type masterPlanBatcher struct {
+	masterPlanService service.MasterPlanService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -284,6 +288,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	opportunityBatcher := &opportunityBatcher{
 		opportunityService: services.OpportunityService,
 	}
+	masterPlanBatcher := &masterPlanBatcher{
+		masterPlanService: services.MasterPlanService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -363,6 +370,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		ContractsForOrganization:                    dataloader.NewBatchedLoader(contractBatcher.getContractsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ServiceLineItemsForContract:                 dataloader.NewBatchedLoader(serviceLineItemBatcher.getServiceLineItemsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OpportunitiesForContract:                    dataloader.NewBatchedLoader(opportunityBatcher.getOpportunitiesForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		MasterPlanMilestonesForMasterPlan:           dataloader.NewBatchedLoader(masterPlanBatcher.getMasterPlanMilestonesForMasterPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

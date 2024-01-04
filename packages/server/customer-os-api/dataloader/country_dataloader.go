@@ -65,7 +65,7 @@ func (b *countryBatcher) getCountriesForPhoneNumbers(ctx context.Context, keys d
 		return []*dataloader.Result{{nil, err}}
 	}
 
-	span.LogFields(log.Int("output - results_length", len(results)))
+	span.LogFields(log.Int("result.length", len(results)))
 
 	return results
 }
