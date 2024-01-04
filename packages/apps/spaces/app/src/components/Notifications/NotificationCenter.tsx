@@ -18,6 +18,11 @@ interface NotificationCenterProps {}
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
   const router = useRouter();
+  const isProduction = process.env.NEXT_PUBLIC_PRODUCTION === 'true';
+  if (isProduction) {
+    // todo remove after feature is released to production
+    return null;
+  }
 
   function handlerOnNotificationClick(message: IMessage) {
     if (message?.cta?.data?.url) {
