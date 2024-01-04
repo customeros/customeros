@@ -13,7 +13,7 @@ import (
 type MasterPlanReadRepository interface {
 	GetMasterPlanById(ctx context.Context, tenant, masterPlanId string) (*dbtype.Node, error)
 	GetMasterPlanMilestoneById(ctx context.Context, tenant, masterPlanMilestoneId string) (*dbtype.Node, error)
-	GetAllMasterPlansOrderByCreatedAt(ctx context.Context, tenant string) ([]*dbtype.Node, error)
+	GetMasterPlansOrderByCreatedAt(ctx context.Context, tenant string, returnRetired *bool) ([]*dbtype.Node, error)
 }
 
 type masterPlanReadRepository struct {
@@ -94,12 +94,20 @@ func (r *masterPlanReadRepository) GetMasterPlanMilestoneById(ctx context.Contex
 	return result.(*dbtype.Node), nil
 }
 
-func (r *masterPlanReadRepository) GetAllMasterPlansOrderByCreatedAt(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanReadRepository.GetAllMasterPlansOrderByCreatedAt")
+func (r *masterPlanReadRepository) GetMasterPlansOrderByCreatedAt(ctx context.Context, tenant string, returnRetired *bool) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanReadRepository.GetMasterPlansOrderByCreatedAt")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(mp:MasterPlan) RETURN mp ORDER BY mp.createdAt`
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(mp:MasterPlan)`
+	if returnRetired != nil {
+		if *returnRetired {
+			cypher += ` WHERE mp.retired = true`
+		} else {
+			cypher += ` WHERE mp.retired IS NULL OR mp.retired = false`
+		}
+	}
+	cypher += ` RETURN mp ORDER BY mp.createdAt`
 	params := map[string]any{
 		"tenant": tenant,
 	}

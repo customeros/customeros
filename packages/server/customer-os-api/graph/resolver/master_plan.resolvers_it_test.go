@@ -170,3 +170,35 @@ func TestQueryResolver_MasterPlans(t *testing.T) {
 	require.Equal(t, "Today plan", masterPlans[1].Name)
 	require.Equal(t, today, masterPlans[1].CreatedAt)
 }
+
+func TestQueryResolver_MasterPlans_OnlyNonRetired(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	today := utils.Now()
+	yesterday := today.Add(-24 * time.Hour)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	masterPlanId_today := neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{
+		Name:      "Today plan",
+		CreatedAt: today,
+	})
+	neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{
+		Name:      "Yesterday plan",
+		CreatedAt: yesterday,
+		IsRetired: true,
+	})
+
+	rawResponse := callGraphQL(t, "master_plan/list_master_plans_active", map[string]interface{}{})
+	require.Nil(t, rawResponse.Errors)
+
+	var masterPlansStruct struct {
+		MasterPlans []model.MasterPlan
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &masterPlansStruct)
+	require.Nil(t, err)
+
+	masterPlans := masterPlansStruct.MasterPlans
+	require.Equal(t, 1, len(masterPlans))
+	require.Equal(t, masterPlanId_today, masterPlans[0].ID)
+}
