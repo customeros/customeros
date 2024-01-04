@@ -137,7 +137,7 @@ func (r *masterPlanReadRepository) GetMasterPlanMilestonesForMasterPlans(ctx con
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(mp:MasterPlan)-[:HAS_MILESTONE]->(m:MasterPlanMilestone)
 		 WHERE mp.id IN $ids 
-		 RETURN m, mp.id`
+		 RETURN m, mp.id ORDER BY m.optional, m.order`
 	params := map[string]any{
 		"tenant": tenant,
 		"ids":    ids,

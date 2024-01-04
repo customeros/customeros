@@ -137,6 +137,99 @@ func TestQueryResolver_MasterPlan(t *testing.T) {
 	require.False(t, masterPlan.Retired)
 }
 
+func TestQueryResolver_MasterPlan_WithMilestones(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	timeNow := utils.Now()
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	masterPlanId := neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{
+		CreatedAt: timeNow,
+	})
+	neo4jtest.CreateMasterPlanMilestone(ctx, driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{
+		Name:          "Optional second",
+		CreatedAt:     timeNow,
+		Order:         2,
+		Optional:      true,
+		DurationHours: 24,
+		Items:         []string{"A", "B"},
+	})
+	neo4jtest.CreateMasterPlanMilestone(ctx, driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{
+		Name:          "Optional first",
+		CreatedAt:     timeNow,
+		Order:         1,
+		Optional:      true,
+		DurationHours: 48,
+		Items:         []string{"C"},
+	})
+	neo4jtest.CreateMasterPlanMilestone(ctx, driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{
+		Name:          "Retired optional",
+		Retired:       true,
+		CreatedAt:     timeNow,
+		Order:         1,
+		Optional:      true,
+		DurationHours: 12,
+		Items:         []string{"F", "G"},
+	})
+	neo4jtest.CreateMasterPlanMilestone(ctx, driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{
+		Name:          "Default",
+		CreatedAt:     timeNow,
+		Order:         10,
+		Optional:      false,
+		DurationHours: 10,
+		Items:         []string{"D"},
+	})
+	neo4jtest.CreateMasterPlanMilestone(ctx, driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{
+		Name:          "Retired default",
+		Retired:       true,
+		CreatedAt:     timeNow,
+		Order:         1,
+		Optional:      false,
+		DurationHours: 50,
+		Items:         []string{"E"},
+	})
+
+	rawResponse := callGraphQL(t, "master_plan/get_master_plan", map[string]interface{}{"id": masterPlanId})
+	require.Nil(t, rawResponse.Errors)
+
+	var masterPlanStruct struct {
+		MasterPlan model.MasterPlan
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &masterPlanStruct)
+	require.Nil(t, err)
+
+	masterPlan := masterPlanStruct.MasterPlan
+	require.Equal(t, masterPlanId, masterPlan.ID)
+	require.Equal(t, 3, len(masterPlan.Milestones))
+	require.Equal(t, 2, len(masterPlan.RetiredMilestones))
+
+	require.Equal(t, "Default", masterPlan.Milestones[0].Name)
+	require.Equal(t, []string{"D"}, masterPlan.Milestones[0].Items)
+	require.Equal(t, false, masterPlan.Milestones[0].Optional)
+	require.Equal(t, int64(10), masterPlan.Milestones[0].DurationHours)
+
+	require.Equal(t, "Optional first", masterPlan.Milestones[1].Name)
+	require.Equal(t, []string{"C"}, masterPlan.Milestones[1].Items)
+	require.Equal(t, true, masterPlan.Milestones[1].Optional)
+	require.Equal(t, int64(48), masterPlan.Milestones[1].DurationHours)
+
+	require.Equal(t, "Optional second", masterPlan.Milestones[2].Name)
+	require.Equal(t, []string{"A", "B"}, masterPlan.Milestones[2].Items)
+	require.Equal(t, true, masterPlan.Milestones[2].Optional)
+	require.Equal(t, int64(24), masterPlan.Milestones[2].DurationHours)
+
+	require.Equal(t, "Retired default", masterPlan.RetiredMilestones[0].Name)
+	require.Equal(t, []string{"E"}, masterPlan.RetiredMilestones[0].Items)
+	require.Equal(t, false, masterPlan.RetiredMilestones[0].Optional)
+	require.Equal(t, int64(50), masterPlan.RetiredMilestones[0].DurationHours)
+
+	require.Equal(t, "Retired optional", masterPlan.RetiredMilestones[1].Name)
+	require.Equal(t, []string{"F", "G"}, masterPlan.RetiredMilestones[1].Items)
+	require.Equal(t, true, masterPlan.RetiredMilestones[1].Optional)
+	require.Equal(t, int64(12), masterPlan.RetiredMilestones[1].DurationHours)
+}
+
 func TestQueryResolver_MasterPlans(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)

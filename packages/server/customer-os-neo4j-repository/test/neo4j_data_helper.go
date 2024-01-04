@@ -58,7 +58,8 @@ func CreateMasterPlanMilestone(ctx context.Context, driver *neo4j.DriverWithCont
 					m.order=$order,
 					m.durationHours=$durationHours,
 					m.optional=$optional,
-					m.items=$items`, tenant)
+					m.items=$items,
+					m.retired=$retired`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":        tenant,
@@ -70,6 +71,7 @@ func CreateMasterPlanMilestone(ctx context.Context, driver *neo4j.DriverWithCont
 		"durationHours": masterPlanMilestone.DurationHours,
 		"optional":      masterPlanMilestone.Optional,
 		"items":         masterPlanMilestone.Items,
+		"retired":       masterPlanMilestone.Retired,
 	})
 	return masterPlanMilestoneId
 }
