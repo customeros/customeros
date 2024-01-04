@@ -12,7 +12,10 @@ interface ProvidersProps {
   children: React.ReactNode;
 }
 
-export const NotificationsProvider = ({ children }: ProvidersProps) => {
+export const NotificationsProvider = ({
+  children,
+  isProduction,
+}: ProvidersProps) => {
   const client = getGraphQLClient();
 
   const { data: globalCacheQuery } = useGlobalCacheQuery(client);
@@ -23,7 +26,9 @@ export const NotificationsProvider = ({ children }: ProvidersProps) => {
     <NovuProvider
       subscriberId={id}
       applicationIdentifier={
-        process.env.NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER as string
+        isProduction
+          ? (process.env.NEXT_PUBLIC_NOTIFICATION_PROD_APP_IDENTIFIER as string)
+          : (process.env.NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER as string)
       }
     >
       {children}
