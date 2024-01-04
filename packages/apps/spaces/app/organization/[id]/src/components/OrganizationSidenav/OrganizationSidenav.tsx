@@ -132,17 +132,6 @@ export const OrganizationSidenav = () => {
             />
           }
         />
-        <SidenavItem
-          label='Issues'
-          isActive={checkIsActive('issues')}
-          onClick={handleItemClick('issues')}
-          icon={
-            <Ticket02
-              color={checkIsActive('issues') ? 'gray.700' : 'gray.500'}
-              boxSize='5'
-            />
-          }
-        />
         {isOnboardingFeatureOn && (
           <SidenavItem
             label='Success'
@@ -156,6 +145,17 @@ export const OrganizationSidenav = () => {
             }
           />
         )}
+        <SidenavItem
+          label='Issues'
+          isActive={checkIsActive('issues')}
+          onClick={handleItemClick('issues')}
+          icon={
+            <Ticket02
+              color={checkIsActive('issues') ? 'gray.700' : 'gray.500'}
+              boxSize='5'
+            />
+          }
+        />
       </VStack>
     </GridItem>
   );
