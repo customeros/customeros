@@ -278,7 +278,7 @@ func (h *OrganizationEventHandler) parseOrgOwnerUpdateEmail(actor, target *entit
 		MJMLVersion string   `json:"mjml_version"`
 	}
 
-	if response.StatusCode != 200 {
+	if response.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", response.Status)
 	}
 
