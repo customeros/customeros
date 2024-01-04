@@ -108,6 +108,7 @@ type NotificationsSubscription struct {
 	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 	StartPosition    uint64 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_START_POSITION" envDefault:"0"`
 	IgnoreEvents     bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"true"`
+	RedirectUrl      string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_REDIRECT_URL" envDefault:"https://app.openline.dev"`
 }
 
 type Services struct {
