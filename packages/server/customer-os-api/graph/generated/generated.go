@@ -1002,6 +1002,8 @@ type ComplexityRoot struct {
 		InteractionSessionBySessionIdentifier func(childComplexity int, sessionIdentifier string) int
 		Issue                                 func(childComplexity int, id string) int
 		LogEntry                              func(childComplexity int, id string) int
+		MasterPlan                            func(childComplexity int, id string) int
+		MasterPlans                           func(childComplexity int) int
 		Meeting                               func(childComplexity int, id string) int
 		Opportunity                           func(childComplexity int, id string) int
 		Organization                          func(childComplexity int, id string) int
@@ -1446,6 +1448,8 @@ type QueryResolver interface {
 	InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error)
 	Issue(ctx context.Context, id string) (*model.Issue, error)
 	LogEntry(ctx context.Context, id string) (*model.LogEntry, error)
+	MasterPlan(ctx context.Context, id string) (*model.MasterPlan, error)
+	MasterPlans(ctx context.Context) ([]*model.MasterPlan, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.MeetingsPage, error)
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
@@ -7325,6 +7329,25 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.LogEntry(childComplexity, args["id"].(string)), true
 
+	case "Query.masterPlan":
+		if e.complexity.Query.MasterPlan == nil {
+			break
+		}
+
+		args, err := ec.field_Query_masterPlan_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MasterPlan(childComplexity, args["id"].(string)), true
+
+	case "Query.masterPlans":
+		if e.complexity.Query.MasterPlans == nil {
+			break
+		}
+
+		return e.complexity.Query.MasterPlans(childComplexity), true
+
 	case "Query.meeting":
 		if e.complexity.Query.Meeting == nil {
 			break
@@ -9783,6 +9806,11 @@ input LogEntryUpdateInput {
 	{Name: "../schemas/master_plan.graphqls", Input: `extend type Mutation {
     masterPlan_Create(input: MasterPlanInput!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Create(input: MasterPlanMilestoneInput!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Query {
+    masterPlan(id: ID!): MasterPlan! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    masterPlans: [MasterPlan!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type MasterPlan implements SourceFields & Node {
@@ -14271,6 +14299,21 @@ func (ec *executionContext) field_Query_issue_args(ctx context.Context, rawArgs 
 }
 
 func (ec *executionContext) field_Query_logEntry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_masterPlan_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -57311,6 +57354,197 @@ func (ec *executionContext) fieldContext_Query_logEntry(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_masterPlan(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_masterPlan(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().MasterPlan(rctx, fc.Args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.MasterPlan); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.MasterPlan`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.MasterPlan)
+	fc.Result = res
+	return ec.marshalNMasterPlan2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlan(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_masterPlan(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MasterPlan_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_MasterPlan_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_MasterPlan_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_MasterPlan_name(ctx, field)
+			case "source":
+				return ec.fieldContext_MasterPlan_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_MasterPlan_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_MasterPlan_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MasterPlan", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_masterPlan_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_masterPlans(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_masterPlans(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().MasterPlans(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.MasterPlan); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.MasterPlan`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.MasterPlan)
+	fc.Result = res
+	return ec.marshalNMasterPlan2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlanᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_masterPlans(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MasterPlan_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_MasterPlan_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_MasterPlan_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_MasterPlan_name(ctx, field)
+			case "source":
+				return ec.fieldContext_MasterPlan_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_MasterPlan_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_MasterPlan_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MasterPlan", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_meeting(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_meeting(ctx, field)
 	if err != nil {
@@ -78595,6 +78829,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "masterPlan":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_masterPlan(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "masterPlans":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_masterPlans(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "meeting":
 			field := field
 
@@ -82569,6 +82847,50 @@ func (ec *executionContext) unmarshalNLogEntryUpdateInput2githubᚗcomᚋopenlin
 
 func (ec *executionContext) marshalNMasterPlan2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlan(ctx context.Context, sel ast.SelectionSet, v model.MasterPlan) graphql.Marshaler {
 	return ec._MasterPlan(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMasterPlan2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlanᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MasterPlan) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMasterPlan2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlan(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNMasterPlan2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlan(ctx context.Context, sel ast.SelectionSet, v *model.MasterPlan) graphql.Marshaler {

@@ -26,13 +26,21 @@ func CreateMasterPlan(ctx context.Context, driver *neo4j.DriverWithContext, tena
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(mp:MasterPlan {id:$id})
 				SET mp:MasterPlan_%s,
-					mp.name=$name`, tenant)
+					mp.name=$name,
+					mp.createdAt=$createdAt,
+					mp.source=$source,
+					mp.sourceOfTruth=$sourceOfTruth,
+					mp.appSource=$appSource
+					`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":    tenant,
-		"id":        masterPlanId,
-		"name":      masterPlan.Name,
-		"createdAt": masterPlan.CreatedAt,
+		"tenant":        tenant,
+		"id":            masterPlanId,
+		"name":          masterPlan.Name,
+		"createdAt":     masterPlan.CreatedAt,
+		"source":        masterPlan.Source,
+		"sourceOfTruth": masterPlan.SourceOfTruth,
+		"appSource":     masterPlan.AppSource,
 	})
 	return masterPlanId
 }

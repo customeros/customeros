@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -62,4 +61,39 @@ func (r *mutationResolver) MasterPlanMilestoneCreate(ctx context.Context, input 
 	}
 	span.LogFields(log.String("response.masterPlanMilestoneId", masterPlanMilestoneId))
 	return mapper.MapEntityToMasterPlanMilestone(createdMasterPlanMilestoneEntity), nil
+}
+
+// MasterPlan is the resolver for the masterPlan field.
+func (r *queryResolver) MasterPlan(ctx context.Context, id string) (*model.MasterPlan, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MasterPlan", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, id)
+
+	masterPlanEntity, err := r.Services.MasterPlanService.GetMasterPlanById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get Master plan with id %s", id)
+		return nil, nil
+	}
+	if masterPlanEntity == nil {
+		graphql.AddErrorf(ctx, "Master plan with id %s not found", id)
+		return nil, nil
+	}
+	return mapper.MapEntityToMasterPlan(masterPlanEntity), nil
+}
+
+// MasterPlans is the resolver for the masterPlans field.
+func (r *queryResolver) MasterPlans(ctx context.Context) ([]*model.MasterPlan, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MasterPlans", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	masterPlanEntities, err := r.Services.MasterPlanService.GetAllMasterPlans(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get Master plans")
+		return nil, nil
+	}
+	return mapper.MapEntitiesToMasterPlans(masterPlanEntities), nil
 }
