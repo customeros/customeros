@@ -6,7 +6,6 @@ import (
 
 type MasterPlanMilestoneEntity struct {
 	DataLoaderKey
-	SourceFields
 	Id            string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
@@ -16,6 +15,9 @@ type MasterPlanMilestoneEntity struct {
 	Items         []string
 	Optional      bool
 	Retired       bool
+	Source        DataSource
+	SourceOfTruth DataSource
+	AppSource     string
 }
 
 type MasterPlanMilestoneEntities []MasterPlanMilestoneEntity

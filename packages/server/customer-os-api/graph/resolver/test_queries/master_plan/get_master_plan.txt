@@ -6,5 +6,23 @@ masterPlan(id: $id) {
     source
     appSource
     retired
+    milestones {
+        id
+        name
+        order
+        durationHours
+        optional
+        retired
+        items
+    }
+    retiredMilestones {
+        id
+        name
+        order
+        durationHours
+        optional
+        retired
+        items
+    }
   }
 }

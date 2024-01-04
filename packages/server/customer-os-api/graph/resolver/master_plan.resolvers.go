@@ -37,7 +37,10 @@ func (r *masterPlanResolver) Milestones(ctx context.Context, obj *model.MasterPl
 			milestones = append(milestones, masterPlanMilestone)
 		}
 	}
-	opentracing.SpanFromContext(ctx).LogFields(log.Int("response.length", len(milestones)))
+	span := opentracing.SpanFromContext(ctx)
+	if span != nil {
+		span.LogFields(log.Int("response.length", len(milestones)))
+	}
 	return milestones, nil
 }
 
@@ -60,7 +63,10 @@ func (r *masterPlanResolver) RetiredMilestones(ctx context.Context, obj *model.M
 			milestones = append(milestones, masterPlanMilestone)
 		}
 	}
-	opentracing.SpanFromContext(ctx).LogFields(log.Int("response.length", len(milestones)))
+	span := opentracing.SpanFromContext(ctx)
+	if span != nil {
+		span.LogFields(log.Int("response.length", len(milestones)))
+	}
 	return milestones, nil
 }
 
