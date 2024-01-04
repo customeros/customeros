@@ -80,7 +80,7 @@
     },
     {
       "name": "Check source fields",
-      "query": "MATCH (n:User|Contact|Email|PhoneNumber|Organization|Issue|Comment|Contract|Opportunity|ServiceLineItem) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
+      "query": "MATCH (n:User|Contact|Email|PhoneNumber|Organization|Issue|Comment|Contract|Opportunity|ServiceLineItem|MasterPlan|MasterPlanMilestone) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
     },
     {
       "name": "Check for comments without parent",
@@ -89,6 +89,10 @@
     {
       "name": "Check for contracts without organization",
       "query": "MATCH (c:Contract) WHERE NOT (c)<-[:HAS_CONTRACT]-(:Organization) return count(c)"
+    },
+    {
+      "name": "Check for multiple organizations share same contract",
+      "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]->(c:Contract) with t, c, count(org) as size_orgs where size_orgs > 1 return count(c)"
     },
     {
       "name": "Check for multiple renewal opportunities for same contract",

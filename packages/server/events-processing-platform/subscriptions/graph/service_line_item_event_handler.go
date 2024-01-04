@@ -130,6 +130,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source.Source),
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source.SourceOfTruth),
+			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
 		},
 		ContractId: eventData.ContractId,
 		ParentId:   eventData.ParentId,
