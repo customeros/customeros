@@ -134,6 +134,7 @@ func TestQueryResolver_MasterPlan(t *testing.T) {
 	require.Equal(t, timeNow, masterPlan.CreatedAt)
 	require.Equal(t, model.DataSourceOpenline, masterPlan.Source)
 	require.Equal(t, "test", masterPlan.AppSource)
+	require.False(t, masterPlan.Retired)
 }
 
 func TestQueryResolver_MasterPlans(t *testing.T) {
@@ -166,9 +167,11 @@ func TestQueryResolver_MasterPlans(t *testing.T) {
 	require.Equal(t, masterPlanId_yday, masterPlans[0].ID)
 	require.Equal(t, "Yesterday plan", masterPlans[0].Name)
 	require.Equal(t, yesterday, masterPlans[0].CreatedAt)
+	require.False(t, masterPlans[0].Retired)
 	require.Equal(t, masterPlanId_today, masterPlans[1].ID)
 	require.Equal(t, "Today plan", masterPlans[1].Name)
 	require.Equal(t, today, masterPlans[1].CreatedAt)
+	require.False(t, masterPlans[1].Retired)
 }
 
 func TestQueryResolver_MasterPlans_OnlyNonRetired(t *testing.T) {
@@ -185,7 +188,7 @@ func TestQueryResolver_MasterPlans_OnlyNonRetired(t *testing.T) {
 	neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{
 		Name:      "Yesterday plan",
 		CreatedAt: yesterday,
-		IsRetired: true,
+		Retired:   true,
 	})
 
 	rawResponse := callGraphQL(t, "master_plan/list_master_plans_active", map[string]interface{}{})

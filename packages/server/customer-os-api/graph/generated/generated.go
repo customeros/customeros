@@ -608,6 +608,7 @@ type ComplexityRoot struct {
 		CreatedAt     func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Name          func(childComplexity int) int
+		Retired       func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
@@ -622,6 +623,7 @@ type ComplexityRoot struct {
 		Name          func(childComplexity int) int
 		Optional      func(childComplexity int) int
 		Order         func(childComplexity int) int
+		Retired       func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
@@ -4154,6 +4156,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MasterPlan.Name(childComplexity), true
 
+	case "MasterPlan.retired":
+		if e.complexity.MasterPlan.Retired == nil {
+			break
+		}
+
+		return e.complexity.MasterPlan.Retired(childComplexity), true
+
 	case "MasterPlan.source":
 		if e.complexity.MasterPlan.Source == nil {
 			break
@@ -4230,6 +4239,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MasterPlanMilestone.Order(childComplexity), true
+
+	case "MasterPlanMilestone.retired":
+		if e.complexity.MasterPlanMilestone.Retired == nil {
+			break
+		}
+
+		return e.complexity.MasterPlanMilestone.Retired(childComplexity), true
 
 	case "MasterPlanMilestone.source":
 		if e.complexity.MasterPlanMilestone.Source == nil {
@@ -9826,6 +9842,7 @@ type MasterPlan implements SourceFields & Node {
     source:             DataSource!
     sourceOfTruth:      DataSource!
     appSource:          String!
+    retired:            Boolean!
 }
 
 type MasterPlanMilestone implements SourceFields & Node {
@@ -9840,6 +9857,7 @@ type MasterPlanMilestone implements SourceFields & Node {
     durationHours:      Int64!
     optional:           Boolean!
     items:              [String!]!
+    retired:            Boolean!
 }
 
 input MasterPlanInput {
@@ -33061,6 +33079,50 @@ func (ec *executionContext) fieldContext_MasterPlan_appSource(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _MasterPlan_retired(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlan) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlan_retired(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Retired, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlan_retired(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlan",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MasterPlanMilestone_id(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MasterPlanMilestone_id(ctx, field)
 	if err != nil {
@@ -33540,6 +33602,50 @@ func (ec *executionContext) fieldContext_MasterPlanMilestone_items(ctx context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MasterPlanMilestone_retired(ctx context.Context, field graphql.CollectedField, obj *model.MasterPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MasterPlanMilestone_retired(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Retired, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MasterPlanMilestone_retired(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MasterPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -40407,6 +40513,8 @@ func (ec *executionContext) fieldContext_Mutation_masterPlan_Create(ctx context.
 				return ec.fieldContext_MasterPlan_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_MasterPlan_appSource(ctx, field)
+			case "retired":
+				return ec.fieldContext_MasterPlan_retired(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MasterPlan", field.Name)
 		},
@@ -40516,6 +40624,8 @@ func (ec *executionContext) fieldContext_Mutation_masterPlanMilestone_Create(ctx
 				return ec.fieldContext_MasterPlanMilestone_optional(ctx, field)
 			case "items":
 				return ec.fieldContext_MasterPlanMilestone_items(ctx, field)
+			case "retired":
+				return ec.fieldContext_MasterPlanMilestone_retired(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MasterPlanMilestone", field.Name)
 		},
@@ -57457,6 +57567,8 @@ func (ec *executionContext) fieldContext_Query_masterPlan(ctx context.Context, f
 				return ec.fieldContext_MasterPlan_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_MasterPlan_appSource(ctx, field)
+			case "retired":
+				return ec.fieldContext_MasterPlan_retired(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MasterPlan", field.Name)
 		},
@@ -57558,6 +57670,8 @@ func (ec *executionContext) fieldContext_Query_masterPlans(ctx context.Context, 
 				return ec.fieldContext_MasterPlan_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_MasterPlan_appSource(ctx, field)
+			case "retired":
+				return ec.fieldContext_MasterPlan_retired(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MasterPlan", field.Name)
 		},
@@ -74813,6 +74927,11 @@ func (ec *executionContext) _MasterPlan(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "retired":
+			out.Values[i] = ec._MasterPlan_retired(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -74899,6 +75018,11 @@ func (ec *executionContext) _MasterPlanMilestone(ctx context.Context, sel ast.Se
 			}
 		case "items":
 			out.Values[i] = ec._MasterPlanMilestone_items(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "retired":
+			out.Values[i] = ec._MasterPlanMilestone_retired(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

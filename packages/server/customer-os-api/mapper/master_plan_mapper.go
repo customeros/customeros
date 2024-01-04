@@ -17,6 +17,7 @@ func MapEntityToMasterPlan(entity *neo4jentity.MasterPlanEntity) *model.MasterPl
 		Source:        MapDataSourceToModel(entity.Source),
 		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:     entity.AppSource,
+		Retired:       entity.Retired,
 	}
 }
 
@@ -44,6 +45,7 @@ func MapEntityToMasterPlanMilestone(entity *neo4jentity.MasterPlanMilestoneEntit
 		DurationHours: entity.DurationHours,
 		Optional:      entity.Optional,
 		Items:         entity.Items,
+		Retired:       entity.Retired,
 	}
 }
 

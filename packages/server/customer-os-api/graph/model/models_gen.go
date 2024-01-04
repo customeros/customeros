@@ -1125,6 +1125,7 @@ type MasterPlan struct {
 	Source        DataSource `json:"source"`
 	SourceOfTruth DataSource `json:"sourceOfTruth"`
 	AppSource     string     `json:"appSource"`
+	Retired       bool       `json:"retired"`
 }
 
 func (MasterPlan) IsSourceFields()                   {}
@@ -1151,6 +1152,7 @@ type MasterPlanMilestone struct {
 	DurationHours int64      `json:"durationHours"`
 	Optional      bool       `json:"optional"`
 	Items         []string   `json:"items"`
+	Retired       bool       `json:"retired"`
 }
 
 func (MasterPlanMilestone) IsSourceFields()                   {}

@@ -42,7 +42,7 @@ func CreateMasterPlan(ctx context.Context, driver *neo4j.DriverWithContext, tena
 		"source":        masterPlan.Source,
 		"sourceOfTruth": masterPlan.SourceOfTruth,
 		"appSource":     masterPlan.AppSource,
-		"retired":       masterPlan.IsRetired,
+		"retired":       masterPlan.Retired,
 	})
 	return masterPlanId
 }
