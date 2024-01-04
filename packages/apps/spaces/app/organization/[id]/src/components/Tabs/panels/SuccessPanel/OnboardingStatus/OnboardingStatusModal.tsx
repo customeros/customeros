@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
@@ -99,16 +99,16 @@ export const OnboardingStatusModal = ({
       onFetching?.(true);
       queryClient.cancelQueries({ queryKey });
 
-      const previousEntries =
-        queryClient.getQueryData<OrganizationQuery>(queryKey);
-      queryClient.setQueryData<OrganizationQuery>(queryKey, (currentCache) => {
+      const { previousEntries } = useOrganizationQuery.mutateCacheEntry(
+        queryClient,
+        { id },
+      )((currentCache) => {
         return produce(currentCache, (draft) => {
           if (!draft) return;
-          set<OrganizationQuery>(
-            draft,
-            'organization.accountDetails.onboarding',
-            { ...input, updatedAt: new Date().toISOString() },
-          );
+          set(draft, 'organization.accountDetails.onboarding', {
+            ...input,
+            updatedAt: new Date().toISOString(),
+          });
         });
       });
 
@@ -138,29 +138,22 @@ export const OnboardingStatusModal = ({
   });
 
   const defaultValues = OnboardingStatusDto.toForm(data);
-  const { state, handleSubmit, setDefaultValues } =
-    useForm<OnboardingStatusForm>({
-      formId,
-      defaultValues,
-      onSubmit: async (values) => {
-        updateOnboardingStatus.mutate({
-          input: OnboardingStatusDto.toPayload({ id, ...values }),
-        });
-      },
-      stateReducer: (_, action, next) => {
-        if (action.type === 'HAS_SUBMITTED') {
-          return { ...next, values: { ...next.values, comments: '' } };
-        }
+  const { state, handleSubmit } = useForm<OnboardingStatusForm>({
+    formId,
+    defaultValues,
+    onSubmit: async (values) => {
+      updateOnboardingStatus.mutate({
+        input: OnboardingStatusDto.toPayload({ id, ...values }),
+      });
+    },
+    stateReducer: (_, action, next) => {
+      if (action.type === 'HAS_SUBMITTED') {
+        return { ...next, values: { ...next.values, comments: '' } };
+      }
 
-        return next;
-      },
-    });
-
-  useEffect(() => {
-    if (!isOpen) {
-      setDefaultValues(defaultValues);
-    }
-  }, [defaultValues]);
+      return next;
+    },
+  });
 
   return (
     <Modal
