@@ -16,6 +16,7 @@ type MasterPlanMilestoneEntity struct {
 	DurationHours int64
 	Items         []string
 	Optional      bool
+	Retired       bool
 }
 
 type MasterPlanMilestoneEntities []MasterPlanMilestoneEntity

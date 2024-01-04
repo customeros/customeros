@@ -16,6 +16,7 @@ type MasterPlan implements SourceFields & Node {
     source:             DataSource!
     sourceOfTruth:      DataSource!
     appSource:          String!
+    retired:            Boolean!
 }
 
 type MasterPlanMilestone implements SourceFields & Node {
@@ -30,6 +31,7 @@ type MasterPlanMilestone implements SourceFields & Node {
     durationHours:      Int64!
     optional:           Boolean!
     items:              [String!]!
+    retired:            Boolean!
 }
 
 input MasterPlanInput {

@@ -19,6 +19,7 @@ func MapDbNodeToMasterPlanEntity(dbNode *dbtype.Node) *neo4jentity.MasterPlanEnt
 		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Retired:       utils.GetBoolPropOrFalse(props, "retired"),
 	}
 	return &entity
 }
@@ -40,6 +41,7 @@ func MapDbNodeToMasterPlanMilestoneEntity(dbNode *dbtype.Node) *neo4jentity.Mast
 		DurationHours: utils.GetInt64PropOrZero(props, "durationHours"),
 		Optional:      utils.GetBoolPropOrFalse(props, "optional"),
 		Items:         utils.GetListStringPropOrEmpty(props, "items"),
+		Retired:       utils.GetBoolPropOrFalse(props, "retired"),
 	}
 	return &entity
 }
