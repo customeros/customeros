@@ -17,6 +17,8 @@ type MasterPlan implements SourceFields & Node {
     sourceOfTruth:      DataSource!
     appSource:          String!
     retired:            Boolean!
+    milestones:         [MasterPlanMilestone!]! @goField(forceResolver: true)
+    retiredMilestones:  [MasterPlanMilestone!]! @goField(forceResolver: true)
 }
 
 type MasterPlanMilestone implements SourceFields & Node {

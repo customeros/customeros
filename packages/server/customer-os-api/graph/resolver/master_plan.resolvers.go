@@ -6,14 +6,63 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go/log"
 )
+
+// Milestones is the resolver for the milestones field.
+func (r *masterPlanResolver) Milestones(ctx context.Context, obj *model.MasterPlan) ([]*model.MasterPlanMilestone, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	masterPlanMilestonesEntities, err := dataloader.For(ctx).GetMasterPlanMilestonesForMasterPlan(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get master plan milestones for master plan %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get master plan milestones for master plan %s", obj.ID)
+		return nil, nil
+	}
+	allMasterPlanMilestones := mapper.MapEntitiesToMasterPlanMilestones(masterPlanMilestonesEntities)
+	// filter out retired milestones
+	var milestones []*model.MasterPlanMilestone
+	for _, masterPlanMilestone := range allMasterPlanMilestones {
+		if !masterPlanMilestone.Retired {
+			milestones = append(milestones, masterPlanMilestone)
+		}
+	}
+	opentracing.SpanFromContext(ctx).LogFields(log.Int("response.length", len(milestones)))
+	return milestones, nil
+}
+
+// RetiredMilestones is the resolver for the retiredMilestones field.
+func (r *masterPlanResolver) RetiredMilestones(ctx context.Context, obj *model.MasterPlan) ([]*model.MasterPlanMilestone, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	masterPlanMilestonesEntities, err := dataloader.For(ctx).GetMasterPlanMilestonesForMasterPlan(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get retired master plan milestones for master plan %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get retired master plan milestones for master plan %s", obj.ID)
+		return nil, nil
+	}
+	allMasterPlanMilestones := mapper.MapEntitiesToMasterPlanMilestones(masterPlanMilestonesEntities)
+	// filter out non-retired milestones
+	var milestones []*model.MasterPlanMilestone
+	for _, masterPlanMilestone := range allMasterPlanMilestones {
+		if masterPlanMilestone.Retired {
+			milestones = append(milestones, masterPlanMilestone)
+		}
+	}
+	opentracing.SpanFromContext(ctx).LogFields(log.Int("response.length", len(milestones)))
+	return milestones, nil
+}
 
 // MasterPlanCreate is the resolver for the masterPlan_Create field.
 func (r *mutationResolver) MasterPlanCreate(ctx context.Context, input model.MasterPlanInput) (*model.MasterPlan, error) {
@@ -98,3 +147,8 @@ func (r *queryResolver) MasterPlans(ctx context.Context, retired *bool) ([]*mode
 	}
 	return mapper.MapEntitiesToMasterPlans(masterPlanEntities), nil
 }
+
+// MasterPlan returns generated.MasterPlanResolver implementation.
+func (r *Resolver) MasterPlan() generated.MasterPlanResolver { return &masterPlanResolver{r} }
+
+type masterPlanResolver struct{ *Resolver }

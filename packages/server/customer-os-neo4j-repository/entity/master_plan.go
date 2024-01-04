@@ -5,14 +5,12 @@ import (
 )
 
 type MasterPlanEntity struct {
-	Id            string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Source        DataSource
-	SourceOfTruth DataSource
-	AppSource     string
-	Name          string
-	Retired       bool
+	SourceFields
+	Id        string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
+	Retired   bool
 }
 
 type MasterPlanEntities []MasterPlanEntity

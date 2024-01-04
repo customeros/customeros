@@ -1118,14 +1118,16 @@ type LogEntryUpdateInput struct {
 }
 
 type MasterPlan struct {
-	ID            string     `json:"id"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt"`
-	Name          string     `json:"name"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     string     `json:"appSource"`
-	Retired       bool       `json:"retired"`
+	ID                string                 `json:"id"`
+	CreatedAt         time.Time              `json:"createdAt"`
+	UpdatedAt         time.Time              `json:"updatedAt"`
+	Name              string                 `json:"name"`
+	Source            DataSource             `json:"source"`
+	SourceOfTruth     DataSource             `json:"sourceOfTruth"`
+	AppSource         string                 `json:"appSource"`
+	Retired           bool                   `json:"retired"`
+	Milestones        []*MasterPlanMilestone `json:"milestones"`
+	RetiredMilestones []*MasterPlanMilestone `json:"retiredMilestones"`
 }
 
 func (MasterPlan) IsSourceFields()                   {}
