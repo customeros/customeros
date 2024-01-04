@@ -59,7 +59,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
             {!message.read && <AvatarBadge boxSize='10px' bg='#0BA5EC' />}
           </Avatar>
           <Flex direction='column' ml={3} gap={1}>
-            <Text fontSize='sm' lineHeight='1'>
+            <Text fontSize='sm' lineHeight='1' noOfLines={2}>
               {message?.content as string}
             </Text>
             <Text fontSize='xs' lineHeight='1' color='gray.500'>
