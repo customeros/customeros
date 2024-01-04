@@ -1461,7 +1461,7 @@ WITH RANGE(startYear * 12 + startMonth - 1, endYear * 12 + endMonth - 1) AS mont
 						 }) AS beginOfMonth,
 						 currentDate + duration({MONTHS: 1}) - duration({NANOSECONDS: 1}) AS endOfMonth
 					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth
-						MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:"openline"})
+						MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 						OPTIONAL MATCH (o)<-[:ACTION_ON]-(action:Action {type:"ONBOARDING_STATUS_CHANGED"})
 							WHERE action.status IN ['DONE','SUCCESSFUL'] 
   							AND action.createdAt >= beginOfMonth
