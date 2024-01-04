@@ -26,7 +26,7 @@ type OrganizationEventHandler struct {
 	repositories         *repository.Repositories
 	log                  logger.Logger
 	notificationProvider NotificationProvider
-	cfg                  config.Config
+	cfg                  *config.Config
 }
 
 func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Repositories, cfg *config.Config) *OrganizationEventHandler {
@@ -34,7 +34,7 @@ func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Rep
 		repositories:         repositories,
 		log:                  log,
 		notificationProvider: NewNotificationProvider(log, cfg.Services.Novu.ApiKey),
-		cfg:                  *cfg,
+		cfg:                  cfg,
 	}
 }
 
@@ -134,7 +134,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		org = graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
 	}
 	///////////////////////////////////       Get Email Content       ///////////////////////////////////
-	html, err := parseOrgOwnerUpdateEmail(actor, user, org.Name, h.cfg.Services.MJML.ApplicationId, h.cfg.Services.MJML.SecretKey)
+	html, err := h.parseOrgOwnerUpdateEmail(actor, user, orgId, org.Name)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "notifications.parseOrgOwnerUpdateEmail")
@@ -215,7 +215,9 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
 
 	payload := map[string]interface{}{
-		"notificationText": fmt.Sprintf("%s %s added you as an owner to %s", actor.FirstName, actor.LastName, org.Name),
+		"notificationText": fmt.Sprintf("%s %s made you the owner of %s", actor.FirstName, actor.LastName, org.Name),
+		"orgId":            orgId,
+		"isArchived":       org.Hide,
 	}
 
 	// call notification service
@@ -229,15 +231,19 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	return err
 }
 
-func parseOrgOwnerUpdateEmail(actor, target *entity.UserEntity, orgName, mjmlAppId, mjmlSecret string) (string, error) {
+func (h *OrganizationEventHandler) parseOrgOwnerUpdateEmail(actor, target *entity.UserEntity, orgId, orgName string) (string, error) {
 	rawMjml, _ := os.ReadFile("./email_templates/ownership.single.mjml")
 	mjmlf := strings.Replace(string(rawMjml[:]), "{{userFirstName}}", target.FirstName, -1)
 	mjmlf = strings.Replace(mjmlf, "{{actorFirstName}}", actor.FirstName, -1)
 	mjmlf = strings.Replace(mjmlf, "{{actorLastName}}", actor.LastName, -1)
 	mjmlf = strings.Replace(mjmlf, "{{orgName}}", orgName, -1)
+	mjmlf = strings.Replace(mjmlf, "{{orgLink}}", fmt.Sprintf("%s/organization/%s", h.cfg.Subscriptions.NotificationsSubscription.RedirectUrl, orgId), -1)
 	mjmlMap := map[string]string{
 		"mjml": mjmlf,
 	}
+
+	mjmlSecret := h.cfg.Services.MJML.SecretKey
+	mjmlAppId := h.cfg.Services.MJML.ApplicationId
 
 	if mjmlSecret == "" || mjmlAppId == "" {
 		html, err := mjml.ToHTML(context.Background(), mjmlf) // mjml.WithMinify(true)
@@ -271,6 +277,11 @@ func parseOrgOwnerUpdateEmail(actor, target *entity.UserEntity, orgName, mjmlApp
 		MJML        string   `json:"mjml"`
 		MJMLVersion string   `json:"mjml_version"`
 	}
+
+	if response.StatusCode != 200 {
+		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", response.Status)
+	}
+
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())

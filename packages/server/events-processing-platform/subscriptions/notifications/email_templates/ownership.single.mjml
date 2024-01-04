@@ -4,8 +4,8 @@
       <mj-column>
         <mj-text>
           <p>Hello {{userFirstName}},</p>
-          <p>{{actorFirstName}} {{actorLastName}} made you the owner of the <a href="#">{{orgName}}</a> account on CustomerOS.</p>
-          <p>You’ll now see <a href="#">{{orgName}}</a> in your Portfolio, and you can:
+          <p>{{actorFirstName}} {{actorLastName}} made you the owner of the <a href="{{orgLink}}">{{orgName}}</a> account on CustomerOS.</p>
+          <p>You’ll now see <a href="{{orgLink}}">{{orgName}}</a> in your Portfolio, and you can:
           <ul>
             <li>Find out everything about the company and their timeline</li>
             <li>Get familiar with the people at {{orgName}}</li>

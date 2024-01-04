@@ -9,6 +9,7 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
@@ -65,7 +66,15 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 		repositories:         testDatabase.Repositories,
 		log:                  testLogger,
 		notificationProvider: &MockNotificationProvider{},
+		cfg: &config.Config{Services: config.Services{MJML: struct {
+			ApplicationId string "env:\"MJML_APPLICATION_ID,required\" envDefault:\"\""
+			SecretKey     string "env:\"MJML_SECRET_KEY,required\" envDefault:\"\""
+		}{ApplicationId: "", SecretKey: ""}}, Subscriptions: config.Subscriptions{NotificationsSubscription: config.NotificationsSubscription{RedirectUrl: "https://app.openline.dev"}}},
 	}
+
+	require.Equal(t, "", orgEventHandler.cfg.Services.MJML.ApplicationId)
+	require.Equal(t, "", orgEventHandler.cfg.Services.MJML.SecretKey)
+
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
 	event, err := events.NewOrganizationOwnerUpdateEvent(orgAggregate, newOwnerUserId, actorUserId, orgId, now)
@@ -95,12 +104,10 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 	require.Nil(t, organization.OnboardingDetails.SortingOrder)
 
 	// verify we call send notification
-	expectedInAppNotification := fmt.Sprintf("%s %s added you as an owner to %s", "actor", "user", "test org")
-	expectedSubString := fmt.Sprintf(`%s %s made you the owner of the <a href="#">%s</a> account on CustomerOS.`, "actor", "user", "test org")
+	expectedInAppNotification := fmt.Sprintf("%s %s made you the owner of %s", "actor", "user", "test org")
+	expectedSubString := fmt.Sprintf(`<p>%s %s made you the owner of the <a href="https://app.openline.dev/organization/%s">%s</a> account on CustomerOS.</p>`, "actor", "user", orgId, "test org")
 	emailContentHasCorrectData := strings.Contains(orgEventHandler.notificationProvider.(*MockNotificationProvider).emailContent, expectedSubString)
 	emailContentIsHTML := strings.Contains(orgEventHandler.notificationProvider.(*MockNotificationProvider).emailContent, "<!doctype html>")
-	require.Equal(t, "", orgEventHandler.cfg.Services.MJML.ApplicationId)
-	require.Equal(t, "", orgEventHandler.cfg.Services.MJML.SecretKey)
 	require.True(t, orgEventHandler.notificationProvider.(*MockNotificationProvider).called)
 	require.Equal(t, orgEventHandler.notificationProvider.(*MockNotificationProvider).notificationText, expectedInAppNotification)
 	require.True(t, emailContentHasCorrectData)
