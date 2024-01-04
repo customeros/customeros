@@ -37,7 +37,7 @@ export const useDodge = <Datum>({
   const minMaxX = d3.extent(data, (d) => d.x) as [Date, Date];
   const minMaxR = d3.extent(data, (d) => d.r) as [number, number];
 
-  const isTaller = useFeatureIsOn('taller-customer-map-chart');
+  const isTopRadiusDecreased = useFeatureIsOn('decrease-circle-top-radius');
 
   const xScale = d3
     .scaleTime()
@@ -46,7 +46,7 @@ export const useDodge = <Datum>({
   const rScale = d3
     .scaleLinear()
     .domain(minMaxR)
-    .range([LOW_R, isTaller ? 20 : TOP_R]);
+    .range([LOW_R, isTopRadiusDecreased ? 20 : TOP_R]);
 
   function transformData(input: CircleData<Datum>[]) {
     return dodge(input, {
