@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 import { produce } from 'immer';
@@ -17,6 +17,7 @@ import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
 import { SidenavItem } from './components/SidenavItem';
 import logoCustomerOs from './assets/logo-customeros.png';
@@ -168,7 +169,13 @@ export const RootSidenav = () => {
         flexWrap='initial'
         flexGrow='1'
         justifyContent='flex-end'
+        sx={{
+          '& > span': {
+            width: '100%',
+          },
+        }}
       >
+        <NotificationCenter />
         <GoogleSidebarNotification />
 
         <SidenavItem

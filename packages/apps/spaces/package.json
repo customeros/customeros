@@ -27,6 +27,7 @@
     "@highlight-run/next": "^7.0.1",
     "@integration-app/react": "^0.2.1",
     "@next/bundle-analyzer": "^13.5.3",
+    "@novu/notification-center": "^0.22.0",
     "@react-spring/web": "^9.7.3",
     "@remirror/pm": "^2.0.8",
     "@remirror/react": "^2.0.27",

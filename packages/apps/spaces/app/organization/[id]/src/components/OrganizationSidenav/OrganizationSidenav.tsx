@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 
 import { useLocalStorage } from 'usehooks-ts';
@@ -17,6 +18,7 @@ import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
+import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
 export const OrganizationSidenav = () => {
   const router = useRouter();
@@ -157,6 +159,21 @@ export const OrganizationSidenav = () => {
           />
         )}
       </VStack>
+      <VStack
+        spacing='1'
+        flexDir='column'
+        flexWrap='initial'
+        flexGrow='1'
+        justifyContent='flex-end'
+        sx={{
+          '& > span': {
+            width: '100%',
+          },
+        }}
+      >
+        <NotificationCenter />
+      </VStack>
+      <Flex h='64px' />
     </GridItem>
   );
 };
