@@ -8,25 +8,25 @@ import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
-import { useMrrPerCustomerQuery } from '@customerMap/graphql/mrrPerCustomer.generated';
+import { useTimeToOnboardQuery } from '@customerMap/graphql/timeToOnboard.generated';
 
 import { HelpContent } from './HelpContent';
 import { PercentageTrend } from '../../PercentageTrend';
-import { MrrPerCustomerDatum } from './MrrPerCustomer.chart';
+import { TimeToOnboardDatum } from './TimeToOnboard.chart';
 
-const MrrPerCustomerChart = dynamic(() => import('./MrrPerCustomer.chart'), {
+const TimeToOnboardChart = dynamic(() => import('./TimeToOnboard.chart'), {
   ssr: false,
 });
 
-export const MrrPerCustomer = () => {
+export const TimeToOnboard = () => {
   const client = getGraphQLClient();
   const { data: globalCacheData } = useGlobalCacheQuery(client);
-  const { data, isLoading } = useMrrPerCustomerQuery(client);
+  const { data, isLoading } = useTimeToOnboardQuery(client);
 
   const hasContracts = globalCacheData?.global_Cache?.contractsExist;
-  const chartData = (data?.dashboard_MRRPerCustomer?.perMonth ?? []).map(
+  const chartData = (data?.dashboard_TimeToOnboard?.perMonth ?? []).map(
     (d, index, arr) => {
-      const decIndex = arr.findIndex((d) => d?.month === 12);
+      const decIndex = arr.findIndex((d) => d.month === 12);
 
       return {
         month: d?.month,
@@ -34,18 +34,21 @@ export const MrrPerCustomer = () => {
         index: decIndex > index - 1 ? 1 : 2,
       };
     },
-  ) as MrrPerCustomerDatum[];
+  ) as TimeToOnboardDatum[];
+
   const stat = formatCurrency(
-    data?.dashboard_MRRPerCustomer?.mrrPerCustomer ?? 0,
+    data?.dashboard_TimeToOnboard?.timeToOnboard ?? 0,
   );
-  const percentage = data?.dashboard_MRRPerCustomer?.increasePercentage ?? '0';
+  const percentage = `${
+    data?.dashboard_TimeToOnboard?.increasePercentage ?? 0
+  }`;
 
   return (
     <ChartCard
       flex='1'
       stat={stat}
       hasData={hasContracts}
-      title='MRR per customer'
+      title='Time to onboard'
       renderHelpContent={HelpContent}
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
@@ -58,7 +61,7 @@ export const MrrPerCustomer = () => {
             startColor='gray.300'
             isLoaded={!isLoading}
           >
-            <MrrPerCustomerChart
+            <TimeToOnboardChart
               width={width}
               data={chartData}
               hasContracts={hasContracts}

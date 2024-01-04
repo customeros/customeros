@@ -34,6 +34,7 @@ const axisHeight = 8;
 export type MrrPerCustomerDatum = {
   month: number;
   value: number;
+  index: number;
 };
 
 interface MrrPerCustomerProps {
@@ -44,7 +45,7 @@ interface MrrPerCustomerProps {
 }
 
 const getDate = (d: MrrPerCustomerDatum) =>
-  set(new Date(), { month: d.month - 1, date: 1 });
+  set(new Date(), { month: d.month - 1, year: d.index });
 const bisectDate = bisector<MrrPerCustomerDatum, Date>((d) => getDate(d)).left;
 const getY = (d: MrrPerCustomerDatum) => d.value;
 

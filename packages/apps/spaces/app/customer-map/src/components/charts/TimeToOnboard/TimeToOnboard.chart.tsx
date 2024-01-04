@@ -21,19 +21,6 @@ import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { mockData } from './mock';
 import { getMonthLabel } from '../util';
 
-export type GrossRevenueRetentionDatum = {
-  month: number;
-  value: number;
-  index: number;
-};
-
-interface GrossRevenueRetentionProps {
-  width: number;
-  height?: number;
-  hasContracts?: boolean;
-  data: GrossRevenueRetentionDatum[];
-}
-
 const margin = {
   top: 10,
   right: 0,
@@ -44,18 +31,30 @@ const margin = {
 const height = 200;
 const axisHeight = 8;
 
-const getDate = (d: GrossRevenueRetentionDatum) =>
-  set(new Date(), { month: d.month - 1, year: d.index });
-const bisectDate = bisector<GrossRevenueRetentionDatum, Date>((d) =>
-  getDate(d),
-).left;
-const getY = (d: GrossRevenueRetentionDatum) => d.value;
+export type TimeToOnboardDatum = {
+  month: number;
+  value: number;
+  index: number;
+};
 
-const GrossRevenueRetention = ({
+interface MrrPerCustomerProps {
+  width: number;
+  height?: number;
+  hasContracts?: boolean;
+  data?: TimeToOnboardDatum[];
+}
+
+const getDate = (d: TimeToOnboardDatum) => {
+  return set(new Date(), { month: d.month - 1, year: d.index });
+};
+const bisectDate = bisector<TimeToOnboardDatum, Date>((d) => getDate(d)).left;
+const getY = (d: TimeToOnboardDatum) => d.value;
+
+const TimeToOnboardChart = ({
   width,
   hasContracts,
   data: _data = [],
-}: GrossRevenueRetentionProps) => {
+}: MrrPerCustomerProps) => {
   const data = hasContracts ? _data : mockData;
   const [primary600, gray300, gray700] = useToken('colors', [
     hasContracts ? 'primary.600' : 'gray.300',
@@ -69,7 +68,7 @@ const GrossRevenueRetention = ({
     showTooltip,
     hideTooltip,
     tooltipData,
-  } = useTooltip<GrossRevenueRetentionDatum>();
+  } = useTooltip<TimeToOnboardDatum>();
 
   const innerHeight = height - margin.top - margin.bottom - axisHeight;
   const innerWidth = width - margin.left - margin.right;
@@ -130,10 +129,10 @@ const GrossRevenueRetention = ({
           toOpacity={hasContracts ? 0.3 : 0.8}
           to={'white'}
           from={primary600}
-          id='revenue-retention-gradient'
+          id='mrr-per-customer-gradient'
         />
         <MarkerCircle
-          id='revenue-retention-marker-circle'
+          id='mrr-per-customer-marker-circle'
           fill={primary600}
           size={2}
           refX={2}
@@ -141,25 +140,25 @@ const GrossRevenueRetention = ({
           stroke='white'
         />
         <MarkerCircle
-          id='revenue-retention-marker-circle-end'
+          id='mrr-per-customer-marker-circle-end'
           stroke={primary600}
           size={2}
           refX={2}
           strokeWidth={1}
           fill='white'
         />
-        <AreaClosed<GrossRevenueRetentionDatum>
+        <AreaClosed<TimeToOnboardDatum>
           data={data}
           x={(d) => scaleX(getDate(d))}
           y={(d) => scaleY(d.value) ?? 0}
           yScale={scaleY}
           strokeWidth={0}
           stroke={primary600}
-          fill='url(#revenue-retention-gradient)'
+          fill='url(#mrr-per-customer-gradient)'
           pointerEvents='none'
         />
 
-        <LinePath<GrossRevenueRetentionDatum>
+        <LinePath<TimeToOnboardDatum>
           data={data}
           curve={curveLinear}
           x={(d) => scaleX(getDate(d))}
@@ -167,9 +166,9 @@ const GrossRevenueRetention = ({
           strokeWidth={2}
           stroke={primary600}
           shapeRendering='geometricPrecision'
-          markerMid='url(#revenue-retention-marker-circle)'
-          markerStart='url(#revenue-retention-marker-circle)'
-          markerEnd='url(#revenue-retention-marker-circle-end)'
+          markerMid='url(#mrr-per-customer-marker-circle)'
+          markerStart='url(#mrr-per-customer-marker-circle)'
+          markerEnd='url(#mrr-per-customer-marker-circle-end)'
         />
         <Bar
           x={0}
@@ -228,7 +227,7 @@ const GrossRevenueRetention = ({
               top: -axisHeight - 16,
               left: tooltipLeft ?? 0,
               position: 'absolute',
-              minWidth: 72,
+              width: 'auto',
               fontSize: '14px',
               textAlign: 'center',
               borderRadius: '8px',
@@ -254,4 +253,4 @@ const GrossRevenueRetention = ({
   );
 };
 
-export default GrossRevenueRetention;
+export default TimeToOnboardChart;

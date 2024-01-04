@@ -1,6 +1,7 @@
 'use client';
 import dynamic from 'next/dynamic';
 
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
 import { Box } from '@ui/layout/Box';
@@ -26,6 +27,7 @@ export const CustomerMap = () => {
   const { data, isLoading } = useCustomerMapQuery(client);
   const { data: globalCacheData } = useGlobalCacheQuery(client);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const isTaller = useFeatureIsOn('taller-customer-map-chart');
 
   const chartData = (data?.dashboard_CustomerMap ?? []).map((d) => ({
     x: d?.contractSignedDate ? new Date(d?.contractSignedDate) : new Date(),
@@ -73,14 +75,14 @@ export const CustomerMap = () => {
             </Flex>
             <Skeleton
               w='full'
-              h='350px'
+              h={isTaller ? '700px' : '350px'}
               endColor='gray.300'
               startColor='gray.300'
               isLoaded={!isLoading}
             >
               <CustomerMapChart
                 width={width}
-                height={350}
+                height={isTaller ? 700 : 350}
                 data={chartData}
                 hasContracts={hasContracts}
               />
