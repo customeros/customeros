@@ -7,16 +7,18 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	masterplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
+	"time"
 )
 
 func TestMutationResolver_MasterPlanCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -57,7 +59,7 @@ func TestMutationResolver_MasterPlanCreate(t *testing.T) {
 }
 
 func TestMutationResolver_MasterPlanMilestoneCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -101,4 +103,70 @@ func TestMutationResolver_MasterPlanMilestoneCreate(t *testing.T) {
 	require.Equal(t, masterPlanMilestoneId, masterPlanMilestone.ID)
 
 	require.True(t, calledCreateMasterPlanMilestone)
+}
+
+func TestQueryResolver_MasterPlan(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	timeNow := utils.Now()
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	masterPlanId := neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{
+		Name:      "Master plan 1",
+		CreatedAt: timeNow,
+		Source:    neo4jentity.DataSourceOpenline,
+		AppSource: "test",
+	})
+
+	rawResponse := callGraphQL(t, "master_plan/get_master_plan", map[string]interface{}{"id": masterPlanId})
+	require.Nil(t, rawResponse.Errors)
+
+	var masterPlanStruct struct {
+		MasterPlan model.MasterPlan
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &masterPlanStruct)
+	require.Nil(t, err)
+
+	masterPlan := masterPlanStruct.MasterPlan
+	require.Equal(t, masterPlanId, masterPlan.ID)
+	require.Equal(t, "Master plan 1", masterPlan.Name)
+	require.Equal(t, timeNow, masterPlan.CreatedAt)
+	require.Equal(t, model.DataSourceOpenline, masterPlan.Source)
+	require.Equal(t, "test", masterPlan.AppSource)
+}
+
+func TestQueryResolver_MasterPlans(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	today := utils.Now()
+	yesterday := today.Add(-24 * time.Hour)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	masterPlanId_today := neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{
+		Name:      "Today plan",
+		CreatedAt: today,
+	})
+	masterPlanId_yday := neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{
+		Name:      "Yesterday plan",
+		CreatedAt: yesterday,
+	})
+
+	rawResponse := callGraphQL(t, "master_plan/list_master_plans", map[string]interface{}{})
+	require.Nil(t, rawResponse.Errors)
+
+	var masterPlansStruct struct {
+		MasterPlans []model.MasterPlan
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &masterPlansStruct)
+	require.Nil(t, err)
+
+	masterPlans := masterPlansStruct.MasterPlans
+	require.Equal(t, masterPlanId_yday, masterPlans[0].ID)
+	require.Equal(t, "Yesterday plan", masterPlans[0].Name)
+	require.Equal(t, yesterday, masterPlans[0].CreatedAt)
+	require.Equal(t, masterPlanId_today, masterPlans[1].ID)
+	require.Equal(t, "Today plan", masterPlans[1].Name)
+	require.Equal(t, today, masterPlans[1].CreatedAt)
 }

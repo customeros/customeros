@@ -1,0 +1,9 @@
+query GetMasterPlan($id: ID!) {
+masterPlan(id: $id) {
+    id
+    name
+    createdAt
+    source
+    appSource
+  }
+}
