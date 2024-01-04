@@ -1139,6 +1139,37 @@ type MasterPlanInput struct {
 	Name *string `json:"name,omitempty"`
 }
 
+type MasterPlanMilestone struct {
+	ID            string     `json:"id"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+	Name          string     `json:"name"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+	Order         int64      `json:"order"`
+	DurationHours int64      `json:"durationHours"`
+	Optional      bool       `json:"optional"`
+	Items         []string   `json:"items"`
+}
+
+func (MasterPlanMilestone) IsSourceFields()                   {}
+func (this MasterPlanMilestone) GetID() string                { return this.ID }
+func (this MasterPlanMilestone) GetSource() DataSource        { return this.Source }
+func (this MasterPlanMilestone) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this MasterPlanMilestone) GetAppSource() string         { return this.AppSource }
+
+func (MasterPlanMilestone) IsNode() {}
+
+type MasterPlanMilestoneInput struct {
+	MasterPlanID  string   `json:"masterPlanId"`
+	Name          *string  `json:"name,omitempty"`
+	Order         int64    `json:"order"`
+	DurationHours int64    `json:"durationHours"`
+	Optional      bool     `json:"optional"`
+	Items         []string `json:"items"`
+}
+
 type Meeting struct {
 	ID                 string               `json:"id"`
 	Name               *string              `json:"name,omitempty"`

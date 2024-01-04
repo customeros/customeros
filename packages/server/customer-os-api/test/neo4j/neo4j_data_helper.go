@@ -112,6 +112,7 @@ func CreateDefaultUser(ctx context.Context, driver *neo4j.DriverWithContext, ten
 	})
 }
 
+// Deprecated, create method in neo4jtest package instead
 func CreateDefaultUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string) string {
 	return CreateUserWithId(ctx, driver, tenant, userId, entity.UserEntity{
 		FirstName:     "first",

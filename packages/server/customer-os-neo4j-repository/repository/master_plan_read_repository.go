@@ -12,6 +12,7 @@ import (
 
 type MasterPlanReadRepository interface {
 	GetMasterPlanById(ctx context.Context, tenant, masterPlanId string) (*dbtype.Node, error)
+	GetMasterPlanMilestoneById(ctx context.Context, tenant, masterPlanMilestoneId string) (*dbtype.Node, error)
 }
 
 type masterPlanReadRepository struct {
@@ -40,6 +41,37 @@ func (r *masterPlanReadRepository) GetMasterPlanById(ctx context.Context, tenant
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     masterPlanId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+
+	})
+	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Bool("result.found", result != nil))
+	return result.(*dbtype.Node), nil
+}
+
+func (r *masterPlanReadRepository) GetMasterPlanMilestoneById(ctx context.Context, tenant, masterPlanMilestoneId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanReadRepository.GetMasterPlanMilestoneById")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, masterPlanMilestoneId)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(:MasterPlan)-[:HAS_MILESTONE]->(m:MasterPlanMilestone {id:$id}) RETURN m`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     masterPlanMilestoneId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

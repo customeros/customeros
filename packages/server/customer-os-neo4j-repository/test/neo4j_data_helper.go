@@ -36,3 +36,30 @@ func CreateMasterPlan(ctx context.Context, driver *neo4j.DriverWithContext, tena
 	})
 	return masterPlanId
 }
+
+func CreateMasterPlanMilestone(ctx context.Context, driver *neo4j.DriverWithContext, tenant, masterPlanId string, masterPlanMilestone entity.MasterPlanMilestoneEntity) string {
+	masterPlanMilestoneId := utils.NewUUIDIfEmpty(masterPlanMilestone.Id)
+
+	query := fmt.Sprintf(`MATCH (mp:MasterPlan {id: $masterPlanId})
+			  MERGE (mp)-[:HAS_MILESTONE]->(m:MasterPlanMilestone {id:$id})
+				SET m:MasterPlanMilestone_%s,
+					m.name=$name,
+					m.createdAt=$createdAt,
+					m.order=$order,
+					m.durationHours=$durationHours,
+					m.optional=$optional,
+					m.items=$items`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":        tenant,
+		"masterPlanId":  masterPlanId,
+		"id":            masterPlanMilestoneId,
+		"name":          masterPlanMilestone.Name,
+		"createdAt":     masterPlanMilestone.CreatedAt,
+		"order":         masterPlanMilestone.Order,
+		"durationHours": masterPlanMilestone.DurationHours,
+		"optional":      masterPlanMilestone.Optional,
+		"items":         masterPlanMilestone.Items,
+	})
+	return masterPlanMilestoneId
+}

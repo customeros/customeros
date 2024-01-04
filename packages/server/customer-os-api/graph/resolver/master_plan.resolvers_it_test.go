@@ -55,3 +55,50 @@ func TestMutationResolver_MasterPlanCreate(t *testing.T) {
 
 	require.True(t, calledCreateMasterPlan)
 }
+
+func TestMutationResolver_MasterPlanMilestoneCreate(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	masterPlanId := neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{})
+	masterPlanMilestoneId := uuid.New().String()
+
+	calledCreateMasterPlanMilestone := false
+
+	masterPlanServiceCallbacks := events_platform.MockMasterPlanServiceCallbacks{
+		CreateMasterPlanMilestone: func(context context.Context, masterPlanMilestone *masterplanpb.CreateMasterPlanMilestoneGrpcRequest) (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+			require.Equal(t, tenantName, masterPlanMilestone.Tenant)
+			require.Equal(t, testUserId, masterPlanMilestone.LoggedInUserId)
+			require.Equal(t, neo4jentity.DataSourceOpenline.String(), masterPlanMilestone.SourceFields.Source)
+			require.Equal(t, constants.AppSourceCustomerOsApi, masterPlanMilestone.SourceFields.AppSource)
+			require.Equal(t, "Draft milestone", masterPlanMilestone.Name)
+			require.Equal(t, int64(10), masterPlanMilestone.Order)
+			require.Equal(t, int64(48), masterPlanMilestone.DurationHours)
+			require.Equal(t, []string{"do A", "do B", "do C"}, masterPlanMilestone.Items)
+			require.Equal(t, true, masterPlanMilestone.Optional)
+			calledCreateMasterPlanMilestone = true
+			neo4jtest.CreateMasterPlanMilestone(ctx, driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{Id: masterPlanMilestoneId})
+			return &masterplanpb.MasterPlanMilestoneIdGrpcResponse{
+				Id: masterPlanMilestoneId,
+			}, nil
+		},
+	}
+	events_platform.SetMasterPlanCallbacks(&masterPlanServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "master_plan/create_master_plan_milestone", map[string]interface{}{"masterPlanId": masterPlanId})
+	require.Nil(t, rawResponse.Errors)
+
+	var masterPlanMilestoneStruct struct {
+		MasterPlanMilestone_Create model.MasterPlanMilestone
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &masterPlanMilestoneStruct)
+	require.Nil(t, err)
+
+	masterPlanMilestone := masterPlanMilestoneStruct.MasterPlanMilestone_Create
+	require.Equal(t, masterPlanMilestoneId, masterPlanMilestone.ID)
+
+	require.True(t, calledCreateMasterPlanMilestone)
+}
