@@ -6,7 +6,6 @@ import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { useTimeToOnboardQuery } from '@customerMap/graphql/timeToOnboard.generated';
 
@@ -36,12 +35,11 @@ export const TimeToOnboard = () => {
     },
   ) as TimeToOnboardDatum[];
 
-  const stat = formatCurrency(
-    data?.dashboard_TimeToOnboard?.timeToOnboard ?? 0,
-  );
+  const statValue = data?.dashboard_TimeToOnboard?.timeToOnboard ?? 0;
+  const stat = `${statValue} ${statValue === 1 ? 'day' : 'days'}`;
   const percentage = `${
     data?.dashboard_TimeToOnboard?.increasePercentage ?? 0
-  }`;
+  }%`;
 
   return (
     <ChartCard

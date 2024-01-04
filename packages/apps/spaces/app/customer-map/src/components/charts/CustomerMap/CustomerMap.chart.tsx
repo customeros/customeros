@@ -187,16 +187,19 @@ const CustomerMapChart = ({
 
             <Group>
               <rect
-                x={crosshairX - 35}
-                width={70}
+                x={crosshairX - 51}
+                width={104}
                 y={outerHeight - margin.bottom - 23}
                 height={35}
                 fill={gray700}
                 rx={8}
               />
-              <text x={crosshairX - 23} y={outerHeight - 20} fill='white'>
+              <text x={crosshairX - 39} y={outerHeight - 20} fill='white'>
                 {tooltipData?.x
-                  ? DateTimeUtils.format(tooltipData?.x?.toISOString(), 'd MMM')
+                  ? DateTimeUtils.format(
+                      tooltipData?.x?.toISOString(),
+                      'd MMM y',
+                    )
                   : 'N/A'}
               </text>
             </Group>

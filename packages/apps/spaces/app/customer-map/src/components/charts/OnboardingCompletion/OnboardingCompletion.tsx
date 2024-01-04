@@ -35,7 +35,7 @@ export const OnboardingCompletion = () => {
 
   const stat = `${
     data?.dashboard_OnboardingCompletion?.completionPercentage ?? 0
-  }`;
+  }%`;
 
   const percentage = `${
     data?.dashboard_OnboardingCompletion?.increasePercentage ?? 0
