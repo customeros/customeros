@@ -51,6 +51,7 @@ export const OnboardingCell = ({
       OnboardingStatus.Done,
       () => 'success.500',
     )
+    .with(OnboardingStatus.NotApplicable, () => 'gray.400')
     .with(OnboardingStatus.Late, OnboardingStatus.Stuck, () => 'warning.500')
     .otherwise(() => 'gray.500');
 
