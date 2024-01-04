@@ -3,9 +3,10 @@ package notifications
 import (
 	"context"
 	"fmt"
-	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"strings"
 	"testing"
+
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
@@ -95,11 +96,13 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 
 	// verify we call send notification
 	expectedInAppNotification := fmt.Sprintf("%s %s added you as an owner to %s", "actor", "user", "test org")
-	require.True(t, orgEventHandler.notificationProvider.(*MockNotificationProvider).called)
-	require.Equal(t, orgEventHandler.notificationProvider.(*MockNotificationProvider).notificationText, expectedInAppNotification)
 	expectedSubString := fmt.Sprintf(`%s %s made you the owner of the <a href="#">%s</a> account on CustomerOS.`, "actor", "user", "test org")
 	emailContentHasCorrectData := strings.Contains(orgEventHandler.notificationProvider.(*MockNotificationProvider).emailContent, expectedSubString)
 	emailContentIsHTML := strings.Contains(orgEventHandler.notificationProvider.(*MockNotificationProvider).emailContent, "<!doctype html>")
+	require.Equal(t, "", orgEventHandler.cfg.Services.MJML.ApplicationId)
+	require.Equal(t, "", orgEventHandler.cfg.Services.MJML.SecretKey)
+	require.True(t, orgEventHandler.notificationProvider.(*MockNotificationProvider).called)
+	require.Equal(t, orgEventHandler.notificationProvider.(*MockNotificationProvider).notificationText, expectedInAppNotification)
 	require.True(t, emailContentHasCorrectData)
 	require.True(t, emailContentIsHTML)
 }

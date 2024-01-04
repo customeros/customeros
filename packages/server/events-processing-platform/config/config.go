@@ -187,6 +187,10 @@ type Services struct {
 	Novu struct {
 		ApiKey string `env:"NOVU_API_KEY,required" envDefault:"N/A"`
 	}
+	MJML struct {
+		ApplicationId string `env:"MJML_APPLICATION_ID,required" envDefault:""`
+		SecretKey     string `env:"MJML_SECRET_KEY,required" envDefault:""`
+	}
 }
 
 type Utils struct {
