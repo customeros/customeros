@@ -20,7 +20,7 @@ type NotifiableUser struct {
 }
 
 type NotificationProvider interface {
-	SendNotification(ctx context.Context, u *NotifiableUser, payload map[string]interface{}, workflowId string) error
+	SendNotification(ctx context.Context, u *NotifiableUser, payload, overrides map[string]interface{}, workflowId string) error
 	// SendInAppNotification(ctx context.Context, u *NotifiableUser, payload map[string]interface{}, eventId string) error
 }
 

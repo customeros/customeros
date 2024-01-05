@@ -100,6 +100,22 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 	email = graph_db.MapDbNodeToEmailEntity(*emailDbNode)
 
+	// actor user email
+	actorEmailDbNode, err := h.repositories.EmailRepository.GetEmailForUser(ctx, tenant, userId)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
+	}
+
+	var actorEmail *entity.EmailEntity
+	if actorEmailDbNode == nil {
+		tracing.TraceErr(span, err)
+		err = errors.New("actor email db node not found")
+		return errors.Wrap(err, "h.notificationProviderSendEmail")
+	}
+	actorEmail = graph_db.MapDbNodeToEmailEntity(*actorEmailDbNode)
+
 	// target user
 	userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
 
@@ -150,13 +166,19 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		"orgName": org.Name,
 	}
 
+	overrides := map[string]interface{}{
+		"email": map[string]string{
+			"replyTo": actorEmail.Email,
+		},
+	}
+
 	// call notification service
 	err = h.notificationProvider.SendNotification(ctx, &NotifiableUser{
 		FirstName:    user.FirstName,
 		LastName:     user.LastName,
 		Email:        email.Email,
 		SubscriberID: userId,
-	}, payload, workflowId)
+	}, payload, overrides, workflowId)
 
 	return err
 }
@@ -222,13 +244,15 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 		"isArchived":       org.Hide,
 	}
 
+	overrides := map[string]interface{}{}
+
 	// call notification service
 	err = h.notificationProvider.SendNotification(ctx, &NotifiableUser{
 		FirstName:    user.FirstName,
 		LastName:     user.LastName,
 		Email:        email.Email,
 		SubscriberID: userId,
-	}, payload, workflowId)
+	}, payload, overrides, workflowId)
 
 	return err
 }
