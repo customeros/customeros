@@ -239,34 +239,38 @@ func (h *OrganizationEventHandler) parseOrgOwnerUpdateEmail(actor, target *entit
 	if _, err := os.Stat(emailPath); err != nil {
 		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
 	}
+
 	rawMjml, _ := os.ReadFile(emailPath)
 	mjmlf := strings.Replace(string(rawMjml[:]), "{{userFirstName}}", target.FirstName, -1)
 	mjmlf = strings.Replace(mjmlf, "{{actorFirstName}}", actor.FirstName, -1)
 	mjmlf = strings.Replace(mjmlf, "{{actorLastName}}", actor.LastName, -1)
 	mjmlf = strings.Replace(mjmlf, "{{orgName}}", orgName, -1)
 	mjmlf = strings.Replace(mjmlf, "{{orgLink}}", fmt.Sprintf("%s/organization/%s", h.cfg.Subscriptions.NotificationsSubscription.RedirectUrl, orgId), -1)
-	mjmlMap := map[string]string{
-		"mjml": mjmlf,
-	}
 
-	mjmlSecret := h.cfg.Services.MJML.SecretKey
-	mjmlAppId := h.cfg.Services.MJML.ApplicationId
-
-	if mjmlSecret == "" || mjmlAppId == "" {
-		html, err := mjml.ToHTML(context.Background(), mjmlf) // mjml.WithMinify(true)
-		var mjmlError mjml.Error
-		if errors.As(err, &mjmlError) {
-			return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", mjmlError.Message)
+	html, err := mjml.ToHTML(context.Background(), mjmlf) // mjml.WithMinify(true)
+	var mjmlError mjml.Error
+	if errors.As(err, &mjmlError) {
+		mjmlSecret := h.cfg.Services.MJML.SecretKey
+		mjmlAppId := h.cfg.Services.MJML.ApplicationId
+		html, err = mjmlToHtmlApi(mjmlf, mjmlAppId, mjmlSecret)
+		if err != nil {
+			return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s:%s", mjmlError.Message, err.Error())
 		}
-		return html, err
+	}
+	return html, err
+}
+
+func mjmlToHtmlApi(mjml, mjmlAppId, mjmlSecret string) (string, error) {
+	mjmlMap := map[string]string{
+		"mjml": mjml,
 	}
 	mjmlJSON, err := json.Marshal(mjmlMap)
 	if err != nil {
-		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
+		return "", fmt.Errorf("(OrganizationEventHandler.mjmlToHtmlApi) error: %s", err.Error())
 	}
 	req, err := http.NewRequest("POST", "https://api.mjml.io/v1/render", bytes.NewReader(mjmlJSON))
 	if err != nil {
-		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
+		return "", fmt.Errorf("(OrganizationEventHandler.mjmlToHtmlApi) error: %s", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.SetBasicAuth(mjmlAppId, mjmlSecret)
@@ -275,7 +279,7 @@ func (h *OrganizationEventHandler) parseOrgOwnerUpdateEmail(actor, target *entit
 	client := &http.Client{}
 	response, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
+		return "", fmt.Errorf("(OrganizationEventHandler.mjmlToHtmlApi) error: %s", err.Error())
 	}
 	defer response.Body.Close()
 	var result struct {
@@ -293,14 +297,14 @@ func (h *OrganizationEventHandler) parseOrgOwnerUpdateEmail(actor, target *entit
 		}
 		err = json.NewDecoder(response.Body).Decode(&badResponse)
 		if err != nil {
-			return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
+			return "", fmt.Errorf("(OrganizationEventHandler.mjmlToHtmlApi) error: %s", err.Error())
 		}
-		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s: %s", response.Status, badResponse.Message)
+		return "", fmt.Errorf("(OrganizationEventHandler.mjmlToHtmlApi) error: %s: %s", response.Status, badResponse.Message)
 	}
 
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
-		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
+		return "", fmt.Errorf("(OrganizationEventHandler.mjmlToHtmlApi) error: %s", err.Error())
 	}
 	return result.HTML, err
 }
