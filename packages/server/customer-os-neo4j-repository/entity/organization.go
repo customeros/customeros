@@ -1,12 +1,9 @@
 package entity
 
 import (
-	"fmt"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"time"
 )
 
-// Deprecated
 type OrganizationEntity struct {
 	ID                 string
 	CustomerOsId       string
@@ -31,8 +28,8 @@ type OrganizationEntity struct {
 	LastTouchpointAt   *time.Time
 	UpdatedAt          time.Time
 	LastTouchpointId   *string
-	Source             neo4jentity.DataSource
-	SourceOfTruth      neo4jentity.DataSource
+	Source             DataSource
+	SourceOfTruth      DataSource
 	AppSource          string
 	YearFounded        *int64
 	Headquarters       string
@@ -49,8 +46,6 @@ type OrganizationEntity struct {
 	RenewalSummary    RenewalSummary
 	OnboardingDetails OnboardingDetails
 	WebScrapeDetails  WebScrapeDetails
-
-	InteractionEventParticipantDetails InteractionEventParticipantDetails
 }
 
 type RenewalSummary struct {
@@ -76,27 +71,4 @@ type WebScrapeDetails struct {
 	WebScrapeAttempts         int64
 }
 
-func (organization OrganizationEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nname: %s", organization.ID, organization.Name)
-}
-
-func (OrganizationEntity) IsNotedEntity() {}
-
-func (OrganizationEntity) NotedEntityLabel() string {
-	return neo4jentity.NodeLabelOrganization
-}
-
-func (OrganizationEntity) IsInteractionEventParticipant() {}
-
-func (OrganizationEntity) ParticipantLabel() string {
-	return neo4jentity.NodeLabelOrganization
-}
-
 type OrganizationEntities []OrganizationEntity
-
-func (organization OrganizationEntity) Labels(tenant string) []string {
-	return []string{
-		neo4jentity.NodeLabelOrganization,
-		neo4jentity.NodeLabelOrganization + "_" + tenant,
-	}
-}
