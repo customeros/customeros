@@ -8,6 +8,7 @@ import (
 type MasterPlan struct {
 	ID           string                         `json:"id"`
 	Name         string                         `json:"name"`
+	Retired      bool                           `json:"retired"`
 	CreatedAt    time.Time                      `json:"createdAt"`
 	UpdatedAt    time.Time                      `json:"updatedAt"`
 	SourceFields commonmodel.Source             `json:"source"`
@@ -17,6 +18,7 @@ type MasterPlan struct {
 type MasterPlanMilestone struct {
 	ID            string             `json:"id"`
 	Name          string             `json:"name"`
+	Retired       bool               `json:"retired"`
 	CreatedAt     time.Time          `json:"createdAt"`
 	UpdatedAt     time.Time          `json:"updatedAt"`
 	SourceFields  commonmodel.Source `json:"source"`

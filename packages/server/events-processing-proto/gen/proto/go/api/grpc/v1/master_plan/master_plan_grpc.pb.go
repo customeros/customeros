@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MasterPlanGrpcServiceClient interface {
 	CreateMasterPlan(ctx context.Context, in *CreateMasterPlanGrpcRequest, opts ...grpc.CallOption) (*MasterPlanIdGrpcResponse, error)
+	UpdateMasterPlan(ctx context.Context, in *UpdateMasterPlanGrpcRequest, opts ...grpc.CallOption) (*MasterPlanIdGrpcResponse, error)
 	CreateMasterPlanMilestone(ctx context.Context, in *CreateMasterPlanMilestoneGrpcRequest, opts ...grpc.CallOption) (*MasterPlanMilestoneIdGrpcResponse, error)
 }
 
@@ -43,6 +44,15 @@ func (c *masterPlanGrpcServiceClient) CreateMasterPlan(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *masterPlanGrpcServiceClient) UpdateMasterPlan(ctx context.Context, in *UpdateMasterPlanGrpcRequest, opts ...grpc.CallOption) (*MasterPlanIdGrpcResponse, error) {
+	out := new(MasterPlanIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/MasterPlanGrpcService/UpdateMasterPlan", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *masterPlanGrpcServiceClient) CreateMasterPlanMilestone(ctx context.Context, in *CreateMasterPlanMilestoneGrpcRequest, opts ...grpc.CallOption) (*MasterPlanMilestoneIdGrpcResponse, error) {
 	out := new(MasterPlanMilestoneIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/MasterPlanGrpcService/CreateMasterPlanMilestone", in, out, opts...)
@@ -57,6 +67,7 @@ func (c *masterPlanGrpcServiceClient) CreateMasterPlanMilestone(ctx context.Cont
 // for forward compatibility
 type MasterPlanGrpcServiceServer interface {
 	CreateMasterPlan(context.Context, *CreateMasterPlanGrpcRequest) (*MasterPlanIdGrpcResponse, error)
+	UpdateMasterPlan(context.Context, *UpdateMasterPlanGrpcRequest) (*MasterPlanIdGrpcResponse, error)
 	CreateMasterPlanMilestone(context.Context, *CreateMasterPlanMilestoneGrpcRequest) (*MasterPlanMilestoneIdGrpcResponse, error)
 }
 
@@ -66,6 +77,9 @@ type UnimplementedMasterPlanGrpcServiceServer struct {
 
 func (UnimplementedMasterPlanGrpcServiceServer) CreateMasterPlan(context.Context, *CreateMasterPlanGrpcRequest) (*MasterPlanIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateMasterPlan not implemented")
+}
+func (UnimplementedMasterPlanGrpcServiceServer) UpdateMasterPlan(context.Context, *UpdateMasterPlanGrpcRequest) (*MasterPlanIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMasterPlan not implemented")
 }
 func (UnimplementedMasterPlanGrpcServiceServer) CreateMasterPlanMilestone(context.Context, *CreateMasterPlanMilestoneGrpcRequest) (*MasterPlanMilestoneIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateMasterPlanMilestone not implemented")
@@ -100,6 +114,24 @@ func _MasterPlanGrpcService_CreateMasterPlan_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MasterPlanGrpcService_UpdateMasterPlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateMasterPlanGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MasterPlanGrpcServiceServer).UpdateMasterPlan(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/MasterPlanGrpcService/UpdateMasterPlan",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MasterPlanGrpcServiceServer).UpdateMasterPlan(ctx, req.(*UpdateMasterPlanGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _MasterPlanGrpcService_CreateMasterPlanMilestone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateMasterPlanMilestoneGrpcRequest)
 	if err := dec(in); err != nil {
@@ -128,6 +160,10 @@ var MasterPlanGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateMasterPlan",
 			Handler:    _MasterPlanGrpcService_CreateMasterPlan_Handler,
+		},
+		{
+			MethodName: "UpdateMasterPlan",
+			Handler:    _MasterPlanGrpcService_UpdateMasterPlan_Handler,
 		},
 		{
 			MethodName: "CreateMasterPlanMilestone",
