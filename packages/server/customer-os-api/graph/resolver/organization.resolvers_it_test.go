@@ -24,14 +24,14 @@ import (
 func TestQueryResolver_Organizations_FilterByNameLike(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "A closed organization")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "OPENLINE")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "the openline")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "some other open organization")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "OpEnLiNe")
 
-	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organizations"),
 		client.Var("page", 1),
@@ -57,7 +57,7 @@ func TestQueryResolver_Organizations_FilterByNameLike(t *testing.T) {
 func TestQueryResolver_Organization(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	now := utils.NowPtr()
 	inputOrganizationEntity := entity.OrganizationEntity{
 		Name:               "Organization name",
@@ -90,7 +90,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain2.com")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "otherOrganization")
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
 	rawResponse := callGraphQL(t, "organization/get_organization_by_id", map[string]interface{}{"organizationId": organizationId})
 
@@ -130,7 +130,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "OPENLINE")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "some other organization")
 	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
@@ -152,9 +152,9 @@ func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId1, locationId1)
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId1, locationId2)
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Location"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organizations_with_locations"),
 		client.Var("page", 1),
@@ -213,7 +213,7 @@ func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 func TestQueryResolver_Organizations_WithTags(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "Org 1 with 2 tags")
 	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "Org 2 with 1 tag")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "Org 3 with 0 tags")
@@ -224,9 +224,9 @@ func TestQueryResolver_Organizations_WithTags(t *testing.T) {
 	neo4jt.TagOrganization(ctx, driver, organizationId1, tag2)
 	neo4jt.TagOrganization(ctx, driver, organizationId2, tag1)
 
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
-	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "TAGGED"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
+	require.Equal(t, 3, neo4jtest.GetCountOfRelationships(ctx, driver, "TAGGED"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organizations_with_tags"),
 		client.Var("page", 1),
@@ -255,18 +255,18 @@ func TestQueryResolver_Organizations_WithTags(t *testing.T) {
 func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
 	userId := neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	noteId1 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "note1", utils.Now())
 	noteId2 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "note2", utils.Now())
 	neo4jt.NoteCreatedByUser(ctx, driver, noteId1, userId)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "NOTED"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "CREATED"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "NOTED"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "CREATED"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_notes_by_id"),
 		client.Var("organizationId", organizationId))
@@ -307,7 +307,7 @@ func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
 func TestMutationResolver_OrganizationArchive(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "LLC LLC")
 	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
@@ -315,8 +315,8 @@ func TestMutationResolver_OrganizationArchive(t *testing.T) {
 	})
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId, locationId)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Location"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/archive_organization"),
 		client.Var("organizationId", organizationId))
@@ -331,7 +331,7 @@ func TestMutationResolver_OrganizationArchive(t *testing.T) {
 	require.NotNil(t, result)
 	require.Equal(t, true, result.Organization_Archive.Result)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization":                       1,
 		"Organization_" + tenantName:         0,
 		"ArchivedOrganization":               0,
@@ -348,18 +348,18 @@ func TestMutationResolver_OrganizationArchive(t *testing.T) {
 func TestQueryResolver_Organization_WithRoles_ById(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "some organization")
 	role1 := neo4jt.ContactWorksForOrganization(ctx, driver, contactId1, organizationId, "CTO", false)
 	role2 := neo4jt.ContactWorksForOrganization(ctx, driver, contactId2, organizationId, "CEO", true)
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "JobRole"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "JobRole"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_job_roles_by_id"),
 		client.Var("organizationId", organizationId))
@@ -392,7 +392,7 @@ func TestQueryResolver_Organization_WithRoles_ById(t *testing.T) {
 func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "organization1")
 	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "organization2")
 	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -404,11 +404,11 @@ func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId3, organizationId)
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId4, organizationId2)
 
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "JobRole"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
-	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "JobRole"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
+	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_contacts_by_id"),
 		client.Var("organizationId", organizationId),
@@ -435,7 +435,7 @@ func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
 func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleContacts(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
 	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -513,18 +513,18 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	issueId3 := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{CreatedAt: secInFuture10})
 	neo4jt.IssueReportedBy(ctx, driver, issueId3, organizationId)
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Issue"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
-	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Analysis"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "LogEntry"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 10, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Issue"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
+	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "InteractionEvent"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Action"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Analysis"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "LogEntry"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 10, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_direct_and_via_contacts"),
 		client.Var("organizationId", organizationId),
@@ -606,7 +606,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
 	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -654,15 +654,15 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	})
 	neo4jt.IssueReportedBy(ctx, driver, issueId1, organizationId)
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Issue"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
-	require.Equal(t, 9, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Issue"))
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "InteractionEvent"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Action"))
+	require.Equal(t, 9, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_total_count"),
 		client.Var("organizationId", organizationId))
@@ -676,15 +676,15 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 func TestQueryResolver_Organization_WithEmails(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
 	emailId1 := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email1", true, "MAIN")
 	emailId2 := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_emails"),
 		client.Var("organizationId", organizationId))
@@ -727,15 +727,15 @@ func TestQueryResolver_Organization_WithEmails(t *testing.T) {
 func TestQueryResolver_Organization_WithPhoneNumbers(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
 	phoneNumberId1 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId, "+1111", true, "MAIN")
 	phoneNumberId2 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId, "+2222", false, "WORK")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_phone_numbers"),
 		client.Var("organizationId", organizationId))
@@ -778,7 +778,7 @@ func TestQueryResolver_Organization_WithPhoneNumbers(t *testing.T) {
 func TestQueryResolver_Organization_WithSubsidiaries(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	parentOrganizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "parent org")
 	subsidiaryOrganizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub org 1")
@@ -786,8 +786,8 @@ func TestQueryResolver_Organization_WithSubsidiaries(t *testing.T) {
 	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrganizationId, subsidiaryOrganizationId1, "shop")
 	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrganizationId, subsidiaryOrganizationId2, "station")
 
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_subsidiaries"),
 		client.Var("organizationId", parentOrganizationId))
@@ -813,14 +813,14 @@ func TestQueryResolver_Organization_WithSubsidiaries(t *testing.T) {
 func TestQueryResolver_Organization_WithParentForSubsidiary(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	parentOrganizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "parent org")
 	subsidiaryOrganizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub org")
 	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrganizationId, subsidiaryOrganizationId1, "shop")
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_parent_for_subsidiary"),
 		client.Var("organizationId", subsidiaryOrganizationId1))
@@ -843,15 +843,15 @@ func TestQueryResolver_Organization_WithParentForSubsidiary(t *testing.T) {
 func TestQueryResolver_Organization_WithSuggestedMerges(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	suggestedAt := utils.Now()
 	primaryOrganizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "primary")
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org")
 	neo4jt.LinkSuggestedMerge(ctx, driver, primaryOrganizationId, organizationId, "AI", suggestedAt, 0.55)
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "SUGGESTED_MERGE"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "SUGGESTED_MERGE"))
 
 	rawResponse := callGraphQL(t, "organization/get_organization_with_suggested_merges", map[string]interface{}{"organizationId": organizationId})
 
@@ -875,7 +875,7 @@ func TestQueryResolver_Organization_WithSuggestedMerges(t *testing.T) {
 func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	nextRenewal := utils.Now().Add(time.Duration(10) * time.Hour)
 
@@ -890,7 +890,7 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 		},
 	})
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
 	rawResponse := callGraphQL(t, "organization/get_organization_with_account_details", map[string]interface{}{"organizationId": organizationId})
 
@@ -913,13 +913,13 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main organization")
 	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
 	mergedOrgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 2")
 
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
 	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
 		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
@@ -950,14 +950,14 @@ func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 	// Check only 1 organization remains after merge
 	// other 2 converted into MergedOrganization
 	// Other notes not impacted
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "MergedOrganization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "MergedOrganization"))
 }
 
 func TestMutationResolver_OrganizationMerge_CheckSubsidiariesMerge(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main organization")
 	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
@@ -969,8 +969,8 @@ func TestMutationResolver_OrganizationMerge_CheckSubsidiariesMerge(t *testing.T)
 	parentForSubsidiaryOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "")
 	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentForSubsidiaryOrgId, mergedOrgId2, "factory")
 
-	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
 		client.Var("parentOrganizationId", parentOrgId),
@@ -993,16 +993,16 @@ func TestMutationResolver_OrganizationMerge_CheckSubsidiariesMerge(t *testing.T)
 	require.Equal(t, 1, len(organization.SubsidiaryOf))
 	require.Equal(t, parentForSubsidiaryOrgId, organization.SubsidiaryOf[0].Organization.ID)
 
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "MergedOrganization"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "MergedOrganization"))
 
-	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 }
 
 func TestMutationResolver_OrganizationMerge_MergeBetweenParentAndSubsidiaryOrg(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main")
 	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
@@ -1011,8 +1011,8 @@ func TestMutationResolver_OrganizationMerge_MergeBetweenParentAndSubsidiaryOrg(t
 	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrgId, mergedOrgId1, "A")
 	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, mergedOrgId2, parentOrgId, "B")
 
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
 		client.Var("parentOrganizationId", parentOrgId),
@@ -1032,16 +1032,16 @@ func TestMutationResolver_OrganizationMerge_MergeBetweenParentAndSubsidiaryOrg(t
 	require.Equal(t, 0, len(organization.Subsidiaries))
 	require.Equal(t, 0, len(organization.SubsidiaryOf))
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "MergedOrganization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "MergedOrganization"))
 
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 }
 
 func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	secAgo60 := utils.Now().Add(time.Duration(-60) * time.Second)
 
@@ -1100,13 +1100,13 @@ func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testin
 func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "parent")
 	subOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub")
 	subsidiaryType := "shop"
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
 
 	calledAddParent := false
 
@@ -1147,20 +1147,20 @@ func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
 	require.Equal(t, 1, len(organization.Subsidiaries))
 	require.Equal(t, subOrgId, organization.Subsidiaries[0].Organization.ID)
 	require.Equal(t, "shop", *organization.Subsidiaries[0].Type)
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
 	assertRelationship(ctx, t, driver, subOrgId, "SUBSIDIARY_OF", parentOrgId)
 }
 
 func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main")
 	subOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub")
 	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrgId, subOrgId, "shop")
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
 
 	calledRemoveParent := false
 
@@ -1193,13 +1193,13 @@ func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
 	require.NotNil(t, organization)
 	require.Equal(t, parentOrgId, organization.ID)
 	require.True(t, calledRemoveParent)
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
 }
 
 func TestMutationResolver_OrganizationAddNewLocation(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 
@@ -1221,16 +1221,16 @@ func TestMutationResolver_OrganizationAddNewLocation(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, location.Source)
 	require.Equal(t, model.DataSourceOpenline, location.SourceOfTruth)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Location"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Location", "Location_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestQueryResolver_Organization_WithSocials(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 
 	socialId1 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
@@ -1244,9 +1244,9 @@ func TestQueryResolver_Organization_WithSocials(t *testing.T) {
 	neo4jt.LinkSocialWithEntity(ctx, driver, orgId, socialId1)
 	neo4jt.LinkSocialWithEntity(ctx, driver, orgId, socialId2)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Social"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Social"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
 
 	rawResponse := callGraphQL(t, "organization/get_organization_with_socials",
 		map[string]interface{}{"organizationId": orgId})
@@ -1280,7 +1280,7 @@ func TestQueryResolver_Organization_WithSocials(t *testing.T) {
 func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
@@ -1315,16 +1315,16 @@ func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 	require.Equal(t, userId, organization.Owner.ID)
 	test.AssertRecentTime(t, organization.UpdatedAt)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	previousOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	newOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
@@ -1362,24 +1362,24 @@ func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
 	require.Equal(t, newOwnerId, organization.Owner.ID)
 	test.AssertRecentTime(t, organization.UpdatedAt)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	ownerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 	neo4jt.UserOwnsOrganization(ctx, driver, ownerId, organizationId)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
 
 	rawResponse := callGraphQL(t, "organization/unset_owner",
 		map[string]interface{}{"organizationId": organizationId})
@@ -1397,16 +1397,16 @@ func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
 	require.Nil(t, organization.Owner)
 	test.AssertRecentTime(t, organization.UpdatedAt)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestQueryResolver_Organization_WithOwner(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
@@ -1429,16 +1429,16 @@ func TestQueryResolver_Organization_WithOwner(t *testing.T) {
 	require.Equal(t, "first", organization.Owner.FirstName)
 	require.Equal(t, "last", organization.Owner.LastName)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestQueryResolver_Organization_WithExternalLinks(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 
@@ -1475,7 +1475,7 @@ func TestQueryResolver_Organization_WithExternalLinks(t *testing.T) {
 func TestQueryResolver_OrganizationDistinctOwners(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	userId2 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
@@ -1504,9 +1504,9 @@ func TestQueryResolver_OrganizationDistinctOwners(t *testing.T) {
 	require.Equal(t, userId1, users[0].ID)
 	require.Equal(t, userId2, users[1].ID)
 
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 3, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
 }
 
 func TestQueryResolver_Organization_WithContracts(t *testing.T) {
@@ -1519,7 +1519,7 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	hoursAgo2 := now.Add(time.Duration(-2) * time.Hour)
 	hoursAgo3 := now.Add(time.Duration(-3) * time.Hour)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "org name"})
 	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "just another org"})
 	contractId1 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
@@ -1550,7 +1550,7 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	})
 	contractId3 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId2, entity.ContractEntity{})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization":           2,
 		"Contract":               3,
 		"Contract_" + tenantName: 3,
@@ -1605,7 +1605,7 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 

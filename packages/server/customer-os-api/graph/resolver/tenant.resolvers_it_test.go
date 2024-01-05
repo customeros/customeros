@@ -79,7 +79,7 @@ func TestMutationResolver_TenantMerge_CheckDefaultData(t *testing.T) {
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
 }
 
 func TestMutationResolver_GetByWorkspace(t *testing.T) {

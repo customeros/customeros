@@ -164,18 +164,10 @@ func assertRawResponseError(t *testing.T, response *client.Response, err error) 
 	require.NotNil(t, response.Errors)
 }
 
-// Deprecated, use neo4jtest.AssertNeo4jNodeCount instead
-func assertNeo4jNodeCount(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, nodes map[string]int) {
-	for name, expectedCount := range nodes {
-		actualCount := neo4jt.GetCountOfNodes(ctx, driver, name)
-		require.Equal(t, expectedCount, actualCount, "Unexpected count for node: "+name)
-	}
-}
-
 // Deprecated, use neo4jtest.AssertNeo4jRelationCount instead
 func assertNeo4jRelationCount(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, relations map[string]int) {
 	for name, expectedCount := range relations {
-		actualCount := neo4jt.GetCountOfRelationships(ctx, driver, name)
+		actualCount := neo4jtest.GetCountOfRelationships(ctx, driver, name)
 		require.Equal(t, expectedCount, actualCount, "Unexpected count for relationship: "+name)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -12,7 +13,7 @@ import (
 func TestQueryResolver_TimelineEvents(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	channel := "EMAIL"
 	interactionEventId1 := neo4jt.CreateInteractionEventFromEntity(ctx, driver, tenantName, entity.InteractionEventEntity{

@@ -10,6 +10,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -19,7 +20,7 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
@@ -72,7 +73,7 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
@@ -121,7 +122,7 @@ func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
@@ -162,7 +163,7 @@ func TestMutationResolver_ServiceLineItemClose(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})

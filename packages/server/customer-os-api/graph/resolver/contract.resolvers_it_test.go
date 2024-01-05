@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
@@ -22,7 +23,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := uuid.New().String()
@@ -81,7 +82,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
@@ -145,7 +146,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	now := utils.Now()
 	yesterday := now.Add(time.Duration(-24) * time.Hour)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
 
@@ -169,7 +170,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test2",
 	})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization":    1,
 		"Contract":        1,
 		"ServiceLineItem": 2,
@@ -221,7 +222,7 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 	now := utils.Now()
 	yesterday := now.Add(time.Duration(-24) * time.Hour)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
 
@@ -249,7 +250,7 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 		Comments:      "test comments 2",
 		AppSource:     "test2",
 	})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization": 1,
 		"Contract":     1,
 		"Opportunity":  2,

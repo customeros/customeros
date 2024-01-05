@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/99designs/gqlgen/client"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -20,8 +21,8 @@ func TestQueryResolver_GCliSearch(t *testing.T) {
 	neo4jt.CreateState(ctx, driver, "USA", "Alabama", "AL")
 	neo4jt.CreateState(ctx, driver, "USA", "Louisiana", "LA")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Country"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "State"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Country"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "State"))
 
 	rawResponse, err := c.RawPost(getQuery("search/gcli_search"),
 		client.Var("keyword", "AL"),

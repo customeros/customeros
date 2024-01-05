@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -16,7 +17,7 @@ func TestMutationResolver_LocationUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{})
 
 	rawResponse, err := c.RawPost(getQuery("location/update_location"),
@@ -57,20 +58,20 @@ func TestMutationResolver_LocationUpdate(t *testing.T) {
 	require.Equal(t, int64(3), *updatedLocation.UtcOffset)
 
 	// Check the number of nodes in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Location"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Location_"+tenantName))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Location_"+tenantName))
 }
 
 func TestMutationResolver_LocationRemoveFromOrganization_UniqueRelation(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{})
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org")
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId, locationId)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Location": 1, "Organization": 1, "Location_" + tenantName: 1, "Organization_" + tenantName: 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Location": 1, "Organization": 1, "Location_" + tenantName: 1, "Organization_" + tenantName: 1})
 	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 1})
 
 	rawResponse := callGraphQL(t, "location/remove_location_from_organization", map[string]interface{}{
@@ -91,7 +92,7 @@ func TestMutationResolver_LocationRemoveFromOrganization_UniqueRelation(t *testi
 
 	// Check the number of nodes in the Neo4j database
 	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 0})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Location":                   0,
 		"Location_" + tenantName:     0,
 		"Organization":               1,
@@ -102,14 +103,14 @@ func TestMutationResolver_LocationRemoveFromOrganization_SharedLocation(t *testi
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{})
 	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
 	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org2")
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId1, locationId)
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId2, locationId)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Location":                   1,
 		"Location_" + tenantName:     1,
 		"Organization":               2,
@@ -134,7 +135,7 @@ func TestMutationResolver_LocationRemoveFromOrganization_SharedLocation(t *testi
 
 	// Check the number of nodes in the Neo4j database
 	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Location":                   1,
 		"Location_" + tenantName:     1,
 		"Organization":               2,

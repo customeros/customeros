@@ -7,6 +7,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -15,7 +16,7 @@ import (
 func TestQueryResolver_LogEntry(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	secAgo60 := utils.Now().Add(-60 * time.Second)
 	secAgo30 := utils.Now().Add(-30 * time.Second)
@@ -35,7 +36,7 @@ func TestQueryResolver_LogEntry(t *testing.T) {
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	neo4jt.LogEntryCreatedByUser(ctx, driver, logEntryId, userId)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization": 1,
 		"LogEntry":     1,
 		"Tag":          2,
