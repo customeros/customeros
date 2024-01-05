@@ -116,7 +116,7 @@ func TestMasterPlanEventHandler_OnCreateMilestone(t *testing.T) {
 		neo4jentity.NodeLabel_MasterPlanMilestone + "_" + tenantName: 1})
 	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, masterPlanId, "HAS_MILESTONE", milestoneId)
 
-	// verify master plan node
+	// verify master plan milestone node
 	masterPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabel_MasterPlanMilestone, milestoneId)
 	require.Nil(t, err)
 	require.NotNil(t, masterPlanMilestoneDbNode)
@@ -179,4 +179,66 @@ func TestMasterPlanEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, timeNow, masterPlan.UpdatedAt)
 	require.Equal(t, "master plan updated name", masterPlan.Name)
 	require.Equal(t, true, masterPlan.Retired)
+}
+
+func TestMasterPlanEventHandler_OnUpdateMilestone(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	masterPlanId := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{})
+	milestoneId := neo4jtest.CreateMasterPlanMilestone(ctx, testDatabase.Driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{})
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jentity.NodeLabel_MasterPlan:          1,
+		neo4jentity.NodeLabel_MasterPlanMilestone: 1,
+	})
+
+	// Prepare the event handler
+	masterPlanEventHandler := &MasterPlanEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	// Create an MasterPlanMilestoneCreateEvent
+	masterPlanAggregate := aggregate.NewMasterPlanAggregateWithTenantAndID(tenantName, masterPlanId)
+	timeNow := utils.Now()
+	updateEvent, err := event.NewMasterPlanMilestoneUpdateEvent(
+		masterPlanAggregate,
+		milestoneId,
+		"new name",
+		24,
+		10,
+		[]string{"item1", "item2"},
+		[]string{event.FieldMaskName, event.FieldMaskOptional, event.FieldMaskItems, event.FieldMaskDurationHours, event.FieldMaskOrder},
+		true,
+		true,
+		timeNow,
+	)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = masterPlanEventHandler.OnUpdateMilestone(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	// verify nodes and relationships
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jentity.NodeLabel_MasterPlan:          1,
+		neo4jentity.NodeLabel_MasterPlanMilestone: 1})
+
+	// verify master plan milestone node
+	masterPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabel_MasterPlanMilestone, milestoneId)
+	require.Nil(t, err)
+	require.NotNil(t, masterPlanMilestoneDbNode)
+
+	milestone := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneDbNode)
+	require.Equal(t, milestoneId, milestone.Id)
+	require.Equal(t, timeNow, milestone.UpdatedAt)
+	require.Equal(t, "new name", milestone.Name)
+	require.Equal(t, int64(10), milestone.Order)
+	require.Equal(t, int64(24), milestone.DurationHours)
+	require.Equal(t, []string{"item1", "item2"}, milestone.Items)
+	require.Equal(t, true, milestone.Optional)
+	require.Equal(t, false, milestone.Retired)
 }
