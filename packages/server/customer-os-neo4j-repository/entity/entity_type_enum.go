@@ -17,15 +17,15 @@ func (entityType EntityType) String() string {
 func (entityType EntityType) Neo4jLabel() string {
 	switch entityType {
 	case CONTACT:
-		return NodeLabel_Contact
+		return NodeLabelContact
 	case USER:
-		return NodeLabel_User
+		return NodeLabelUser
 	case ORGANIZATION:
-		return NodeLabel_Organization
+		return NodeLabelOrganization
 	case MEETING:
-		return NodeLabel_Meeting
+		return NodeLabelMeeting
 	case CONTRACT:
-		return NodeLabel_Contract
+		return NodeLabelContract
 	}
 	return "Unknown"
 }

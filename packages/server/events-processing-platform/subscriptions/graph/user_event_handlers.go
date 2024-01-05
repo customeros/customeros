@@ -70,7 +70,7 @@ func (h *UserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Even
 			return nil, err
 		}
 		if eventData.ExternalSystem.Available() {
-			err = h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, neo4jentity.NodeLabel_User, eventData.ExternalSystem)
+			err = h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, neo4jentity.NodeLabelUser, eventData.ExternalSystem)
 			if err != nil {
 				h.log.Errorf("Error while link user %s with external system %s: %s", userId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, err
@@ -123,7 +123,7 @@ func (h *UserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Even
 		_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 			//var err error
 			if eventData.ExternalSystem.Available() {
-				innerErr := h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, neo4jentity.NodeLabel_User, eventData.ExternalSystem)
+				innerErr := h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, neo4jentity.NodeLabelUser, eventData.ExternalSystem)
 				if innerErr != nil {
 					h.log.Errorf("Error while link user %s with external system %s: %s", userId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 					return nil, innerErr

@@ -25,7 +25,7 @@ func (*LogEntryEntity) IsTimelineEvent() {
 }
 
 func (*LogEntryEntity) TimelineEventLabel() string {
-	return neo4jentity.NodeLabel_LogEntry
+	return neo4jentity.NodeLabelLogEntry
 }
 
 func (logEntry *LogEntryEntity) SetDataloaderKey(key string) {

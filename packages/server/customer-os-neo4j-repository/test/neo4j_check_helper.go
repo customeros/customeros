@@ -181,7 +181,7 @@ func GetTotalCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext) 
 func GetAllLabels(ctx context.Context, driver *neo4j.DriverWithContext) []string {
 	query := `MATCH (n) RETURN DISTINCT labels(n)`
 	dbRecords := ExecuteReadQueryWithCollectionReturn(ctx, driver, query, map[string]any{})
-	labels := []string{}
+	var labels []string
 	for _, v := range dbRecords {
 		for _, nodeLabels := range v.Values {
 			for _, label := range nodeLabels.([]interface{}) {

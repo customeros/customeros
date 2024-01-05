@@ -24,14 +24,14 @@ const (
 )
 
 var NodeLabelsByTimelineEventType = map[string]string{
-	//model.TimelineEventTypePageView.String():           neo4jentity.NodeLabel_PageView,
-	//model.TimelineEventTypeInteractionSession.String(): neo4jentity.NodeLabel_InteractionSession,
-	model.TimelineEventTypeIssue.String(): neo4jentity.NodeLabel_Issue,
-	//model.TimelineEventTypeNote.String():               neo4jentity.NodeLabel_Note,
-	model.TimelineEventTypeInteractionEvent.String(): neo4jentity.NodeLabel_InteractionEvent,
-	model.TimelineEventTypeMeeting.String():          neo4jentity.NodeLabel_Meeting,
-	model.TimelineEventTypeAction.String():           neo4jentity.NodeLabel_Action,
-	model.TimelineEventTypeLogEntry.String():         neo4jentity.NodeLabel_LogEntry,
+	//model.TimelineEventTypePageView.String():           neo4jentity.NodeLabelPageView,
+	//model.TimelineEventTypeInteractionSession.String(): neo4jentity.NodeLabelInteractionSession,
+	model.TimelineEventTypeIssue.String(): neo4jentity.NodeLabelIssue,
+	//model.TimelineEventTypeNote.String():               neo4jentity.NodeLabelNote,
+	model.TimelineEventTypeInteractionEvent.String(): neo4jentity.NodeLabelInteractionEvent,
+	model.TimelineEventTypeMeeting.String():          neo4jentity.NodeLabelMeeting,
+	model.TimelineEventTypeAction.String():           neo4jentity.NodeLabelAction,
+	model.TimelineEventTypeLogEntry.String():         neo4jentity.NodeLabelLogEntry,
 }
 
 type TimelineEvent interface {

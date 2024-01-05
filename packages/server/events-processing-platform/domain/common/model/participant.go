@@ -20,11 +20,11 @@ type Participant struct {
 func (p Participant) NodeLabel() string {
 	switch p.ParticipantType {
 	case UserType:
-		return neo4jentity.NodeLabel_User
+		return neo4jentity.NodeLabelUser
 	case ContactType:
-		return neo4jentity.NodeLabel_Contact
+		return neo4jentity.NodeLabelContact
 	case OrganizationType:
-		return neo4jentity.NodeLabel_Organization
+		return neo4jentity.NodeLabelOrganization
 	default:
 		return ""
 	}

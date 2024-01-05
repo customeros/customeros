@@ -25,21 +25,21 @@ func (entityType EntityType) String() string {
 func (entityType EntityType) Neo4jLabel() string {
 	switch entityType {
 	case CONTACT:
-		return neo4jentity.NodeLabel_Contact
+		return neo4jentity.NodeLabelContact
 	case USER:
-		return neo4jentity.NodeLabel_User
+		return neo4jentity.NodeLabelUser
 	case ORGANIZATION:
-		return neo4jentity.NodeLabel_Organization
+		return neo4jentity.NodeLabelOrganization
 	case MEETING:
-		return neo4jentity.NodeLabel_Meeting
+		return neo4jentity.NodeLabelMeeting
 	case COMMENT:
-		return neo4jentity.NodeLabel_Comment
+		return neo4jentity.NodeLabelComment
 	case ISSUE:
-		return neo4jentity.NodeLabel_Issue
+		return neo4jentity.NodeLabelIssue
 	case LOG_ENTRY:
-		return neo4jentity.NodeLabel_LogEntry
+		return neo4jentity.NodeLabelLogEntry
 	case INTERACTION_EVENT:
-		return neo4jentity.NodeLabel_InteractionEvent
+		return neo4jentity.NodeLabelInteractionEvent
 	}
 	return "Unknown"
 }

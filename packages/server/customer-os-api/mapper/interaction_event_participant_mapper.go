@@ -11,37 +11,37 @@ import (
 
 func MapEntityToInteractionEventParticipant(interactionEventParticipantEntity *entity.InteractionEventParticipant) any {
 	switch (*interactionEventParticipantEntity).ParticipantLabel() {
-	case neo4jentity.NodeLabel_Email:
+	case neo4jentity.NodeLabelEmail:
 		emailEntity := (*interactionEventParticipantEntity).(*entity.EmailEntity)
 		return model.EmailParticipant{
 			EmailParticipant: MapEntityToEmail(emailEntity),
 			Type:             utils.StringPtrNillable(emailEntity.InteractionEventParticipantDetails.Type),
 		}
-	case neo4jentity.NodeLabel_PhoneNumber:
+	case neo4jentity.NodeLabelPhoneNumber:
 		phoneNumberEntity := (*interactionEventParticipantEntity).(*entity.PhoneNumberEntity)
 		return model.PhoneNumberParticipant{
 			PhoneNumberParticipant: MapEntityToPhoneNumber(phoneNumberEntity),
 			Type:                   utils.StringPtrNillable(phoneNumberEntity.InteractionEventParticipantDetails.Type),
 		}
-	case neo4jentity.NodeLabel_User:
+	case neo4jentity.NodeLabelUser:
 		userEntity := (*interactionEventParticipantEntity).(*entity.UserEntity)
 		return model.UserParticipant{
 			UserParticipant: MapEntityToUser(userEntity),
 			Type:            utils.StringPtrNillable(userEntity.InteractionEventParticipantDetails.Type),
 		}
-	case neo4jentity.NodeLabel_Contact:
+	case neo4jentity.NodeLabelContact:
 		contactEntity := (*interactionEventParticipantEntity).(*entity.ContactEntity)
 		return model.ContactParticipant{
 			ContactParticipant: MapEntityToContact(contactEntity),
 			Type:               utils.StringPtrNillable(contactEntity.InteractionEventParticipantDetails.Type),
 		}
-	case neo4jentity.NodeLabel_Organization:
+	case neo4jentity.NodeLabelOrganization:
 		organizationEntity := (*interactionEventParticipantEntity).(*entity.OrganizationEntity)
 		return model.OrganizationParticipant{
 			OrganizationParticipant: MapEntityToOrganization(organizationEntity),
 			Type:                    utils.StringPtrNillable(organizationEntity.InteractionEventParticipantDetails.Type),
 		}
-	case neo4jentity.NodeLabel_JobRole:
+	case neo4jentity.NodeLabelJobRole:
 		jobRoleEntity := (*interactionEventParticipantEntity).(*entity.JobRoleEntity)
 		return model.JobRoleParticipant{
 			JobRoleParticipant: MapEntityToJobRole(jobRoleEntity),

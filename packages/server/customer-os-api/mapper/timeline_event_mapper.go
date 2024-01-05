@@ -11,31 +11,31 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.T
 		return nil
 	}
 	switch (*timelineEventEntity).TimelineEventLabel() {
-	case neo4jentity.NodeLabel_PageView:
+	case neo4jentity.NodeLabelPageView:
 		pageViewEntity := (*timelineEventEntity).(*entity.PageViewEntity)
 		return MapEntityToPageView(pageViewEntity)
-	case neo4jentity.NodeLabel_InteractionSession:
+	case neo4jentity.NodeLabelInteractionSession:
 		interactionSessionEntity := (*timelineEventEntity).(*entity.InteractionSessionEntity)
 		return MapEntityToInteractionSession(interactionSessionEntity)
-	case neo4jentity.NodeLabel_Issue:
+	case neo4jentity.NodeLabelIssue:
 		issueEntity := (*timelineEventEntity).(*entity.IssueEntity)
 		return MapEntityToIssue(issueEntity)
-	case neo4jentity.NodeLabel_Note:
+	case neo4jentity.NodeLabelNote:
 		noteEntity := (*timelineEventEntity).(*entity.NoteEntity)
 		return MapEntityToNote(noteEntity)
-	case neo4jentity.NodeLabel_InteractionEvent:
+	case neo4jentity.NodeLabelInteractionEvent:
 		interactionEventEntity := (*timelineEventEntity).(*entity.InteractionEventEntity)
 		return MapEntityToInteractionEvent(interactionEventEntity)
-	case neo4jentity.NodeLabel_Analysis:
+	case neo4jentity.NodeLabelAnalysis:
 		analysisEntity := (*timelineEventEntity).(*entity.AnalysisEntity)
 		return MapEntityToAnalysis(analysisEntity)
-	case neo4jentity.NodeLabel_Meeting:
+	case neo4jentity.NodeLabelMeeting:
 		meetingEntity := (*timelineEventEntity).(*entity.MeetingEntity)
 		return MapEntityToMeeting(meetingEntity)
-	case neo4jentity.NodeLabel_Action:
+	case neo4jentity.NodeLabelAction:
 		actionEntity := (*timelineEventEntity).(*entity.ActionEntity)
 		return MapEntityToAction(actionEntity)
-	case neo4jentity.NodeLabel_LogEntry:
+	case neo4jentity.NodeLabelLogEntry:
 		logEntryEntity := (*timelineEventEntity).(*entity.LogEntryEntity)
 		return MapEntityToLogEntry(logEntryEntity)
 	}

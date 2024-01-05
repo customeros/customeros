@@ -69,7 +69,7 @@ func (s *masterPlanService) CreateMasterPlan(ctx context.Context, name string) (
 	}
 
 	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		contractFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, neo4jentity.NodeLabel_MasterPlan)
+		contractFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, neo4jentity.NodeLabelMasterPlan)
 		if contractFound && findErr == nil {
 			span.LogFields(log.Bool("response - master plan saved in db", true))
 			break
@@ -93,7 +93,7 @@ func (s *masterPlanService) UpdateMasterPlan(ctx context.Context, masterPlanId s
 		return nil
 	}
 
-	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jentity.NodeLabel_MasterPlan)
+	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jentity.NodeLabelMasterPlan)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -152,7 +152,7 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, maste
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("masterPlanId", masterPlanId), log.String("name", name), log.Int64("order", order), log.Int64("durationHours", durationHours), log.Bool("optional", optional), log.Object("items", items))
 
-	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jentity.NodeLabel_MasterPlan)
+	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jentity.NodeLabelMasterPlan)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
@@ -187,7 +187,7 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, maste
 	}
 
 	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		contractFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, neo4jentity.NodeLabel_MasterPlanMilestone)
+		contractFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, neo4jentity.NodeLabelMasterPlanMilestone)
 		if contractFound && findErr == nil {
 			span.LogFields(log.Bool("response - master plan milestone saved in db", true))
 			break
@@ -264,7 +264,7 @@ func (s *masterPlanService) UpdateMasterPlanMilestone(ctx context.Context, maste
 		return nil
 	}
 
-	masterPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanMilestoneId, neo4jentity.NodeLabel_MasterPlanMilestone)
+	masterPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanMilestoneId, neo4jentity.NodeLabelMasterPlanMilestone)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

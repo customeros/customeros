@@ -174,15 +174,15 @@ func (s *analysisService) convertDbNodesToAnalysis(records []*utils.DbNodeAndId)
 func (s *analysisService) convertDbNodesAnalysisDescribes(records []*utils.DbNodeAndId) entity.AnalysisDescribes {
 	analysisDescribes := entity.AnalysisDescribes{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_InteractionSession) {
+		if slices.Contains(v.Node.Labels, neo4jentity.NodeLabelInteractionSession) {
 			sessionEntity := s.services.InteractionSessionService.mapDbNodeToInteractionSessionEntity(*v.Node)
 			sessionEntity.DataloaderKey = v.LinkedNodeId
 			analysisDescribes = append(analysisDescribes, sessionEntity)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_InteractionEvent) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabelInteractionEvent) {
 			eventEntity := s.services.InteractionEventService.mapDbNodeToInteractionEventEntity(*v.Node)
 			eventEntity.DataloaderKey = v.LinkedNodeId
 			analysisDescribes = append(analysisDescribes, eventEntity)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabel_Meeting) {
+		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabelMeeting) {
 			meetingEntity := s.services.MeetingService.mapDbNodeToMeetingEntity(*v.Node)
 			meetingEntity.DataloaderKey = v.LinkedNodeId
 			analysisDescribes = append(analysisDescribes, meetingEntity)

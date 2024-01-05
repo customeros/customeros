@@ -42,7 +42,7 @@ func (pageView PageViewEntity) GetDataloaderKey() string {
 }
 
 func (PageViewEntity) TimelineEventLabel() string {
-	return neo4jentity.NodeLabel_PageView
+	return neo4jentity.NodeLabelPageView
 }
 
 func (pageView PageViewEntity) Labels() []string {
