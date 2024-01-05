@@ -104,3 +104,41 @@ func (h *MasterPlanEventHandler) OnCreateMilestone(ctx context.Context, evt even
 	}
 	return err
 }
+
+func (h *MasterPlanEventHandler) OnUpdateMilestone(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanEventHandler.OnUpdateMilestone")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.MasterPlanMilestoneUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	masterPlanId := aggregate.GetMasterPlanObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, eventData.MilestoneId)
+
+	data := neo4jrepository.MasterPlanMilestoneUpdateFields{
+		UpdatedAt:           eventData.UpdatedAt,
+		Name:                eventData.Name,
+		Order:               eventData.Order,
+		DurationHours:       eventData.DurationHours,
+		Items:               eventData.Items,
+		Optional:            eventData.Optional,
+		Retired:             eventData.Retired,
+		UpdateName:          eventData.UpdateName(),
+		UpdateOrder:         eventData.UpdateOrder(),
+		UpdateDurationHours: eventData.UpdateDurationHours(),
+		UpdateItems:         eventData.UpdateItems(),
+		UpdateOptional:      eventData.UpdateOptional(),
+		UpdateRetired:       eventData.UpdateRetired(),
+	}
+	err := h.repositories.Neo4jRepositories.MasterPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, masterPlanId, eventData.MilestoneId, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while updating master plan milestone %s: %s", eventData.MilestoneId, err.Error())
+		return err
+	}
+	return err
+}
