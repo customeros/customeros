@@ -5,7 +5,6 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { produce } from 'immer';
 import { signOut } from 'next-auth/react';
 import { useLocalStorage } from 'usehooks-ts';
-import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -29,7 +28,6 @@ export const RootSidenav = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [_, setOrganizationsMeta] = useOrganizationsMeta();
-  const isCustomerMapEnabled = useFeatureIsOn('customer-map-nav-button');
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { root: 'organization' },
@@ -116,16 +114,14 @@ export const RootSidenav = () => {
       </Flex>
 
       <VStack spacing='2' w='full'>
-        {isCustomerMapEnabled && (
-          <SidenavItem
-            label='Customer map'
-            isActive={checkIsActive('customer-map')}
-            onClick={() => handleItemClick('customer-map')}
-            icon={(isActive) => (
-              <Bubbles boxSize='5' color={isActive ? 'gray.700' : 'gray.500'} />
-            )}
-          />
-        )}
+        <SidenavItem
+          label='Customer map'
+          isActive={checkIsActive('customer-map')}
+          onClick={() => handleItemClick('customer-map')}
+          icon={(isActive) => (
+            <Bubbles boxSize='5' color={isActive ? 'gray.700' : 'gray.500'} />
+          )}
+        />
         <SidenavItem
           label='Organizations'
           isActive={checkIsActive('organizations')}
