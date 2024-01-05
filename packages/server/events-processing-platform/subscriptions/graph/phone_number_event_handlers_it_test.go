@@ -20,7 +20,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	phoneNumberEventHandler := &PhoneNumberEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
@@ -55,7 +55,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidated(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	validated := false
 	e164 := "+0123456789"
 	phoneNumberId := neo4jt.CreatePhoneNumber(ctx, testDatabase.Driver, tenantName, entity.PhoneNumberEntity{
@@ -104,7 +104,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidationFailed(t *testing.T
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	validated := false
 	e164 := "+0123456789"
 	phoneNumberId := neo4jt.CreatePhoneNumber(ctx, testDatabase.Driver, tenantName, entity.PhoneNumberEntity{
@@ -155,7 +155,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberUpdate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	validated := false
 	e164 := "+0123456789"
 	phoneNumberId := neo4jt.CreatePhoneNumber(ctx, testDatabase.Driver, tenantName, entity.PhoneNumberEntity{

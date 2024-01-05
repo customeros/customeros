@@ -25,6 +25,8 @@ func (a *MasterPlanAggregate) HandleCommand(ctx context.Context, cmd eventstore.
 		return a.updateMasterPlan(ctx, c)
 	case *command.CreateMasterPlanMilestoneCommand:
 		return a.createMasterPlanMilestone(ctx, c)
+	case *command.UpdateMasterPlanMilestoneCommand:
+		return a.updateMasterPlanMilestone(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -101,4 +103,29 @@ func (a *MasterPlanAggregate) createMasterPlanMilestone(ctx context.Context, cmd
 	})
 
 	return a.Apply(createEvent)
+}
+
+func (a *MasterPlanAggregate) updateMasterPlanMilestone(ctx context.Context, cmd *command.UpdateMasterPlanMilestoneCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MasterPlanAggregate.updateMasterPlanMilestone")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
+
+	updateEvent, err := event.NewMasterPlanMilestoneUpdateEvent(a, cmd.MilestoneId, cmd.Name, cmd.DurationHours, cmd.Order,
+		cmd.Items, cmd.FieldsMask, cmd.Optional, cmd.Retired, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewMasterPlanMilestoneUpdateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.GetAppSource(),
+	})
+
+	return a.Apply(updateEvent)
 }

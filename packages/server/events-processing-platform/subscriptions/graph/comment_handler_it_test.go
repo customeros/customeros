@@ -24,7 +24,7 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 
 	// prepare neo4j data
 	externalSystemId := "hubspot"
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, externalSystemId)
 	commentedIssueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
 	authorUserId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
@@ -87,7 +87,7 @@ func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	commentId := neo4jt.CreateComment(ctx, testDatabase.Driver, tenantName, entity.CommentEntity{
 		Content:     "test content",
 		ContentType: "text",
@@ -127,7 +127,7 @@ func TestGraphCommentEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNon
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	commentId := neo4jt.CreateComment(ctx, testDatabase.Driver, tenantName, entity.CommentEntity{
 		Content:       "original content",
 		Source:        constants.SourceOpenline,

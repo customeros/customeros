@@ -10,17 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 )
 
-func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
-	neo4jtest.ExecuteWriteQuery(ctx, driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
-}
-
-func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
-	query := `MERGE (t:Tenant {name:$tenant})`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant": tenant,
-	})
-}
-
 func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
 	orgId := organization.ID
 	if orgId == "" {
@@ -42,6 +31,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 	return orgId
 }
 
+// Deprecated: use neo4jtest.CreateUser instead
 func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, user entity.UserEntity) string {
 	userId := user.Id
 	if userId == "" {

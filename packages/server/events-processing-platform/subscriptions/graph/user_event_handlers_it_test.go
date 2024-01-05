@@ -25,7 +25,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
@@ -80,7 +80,7 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, "sf")
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 0, "ExternalSystem": 1})
@@ -148,7 +148,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
@@ -239,7 +239,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userEventHandler := &UserEventHandler{
 		repositories: testDatabase.Repositories,
 	}
@@ -322,7 +322,7 @@ func TestGraphUserEventHandler_OnUserUpdate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
@@ -398,7 +398,7 @@ func TestGraphUserEventHandler_OnPhoneNumberLinkedToUser(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
@@ -470,7 +470,7 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
@@ -546,7 +546,7 @@ func TestGraphUserEventHandler_OnJobRoleLinkedToUser(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
@@ -604,7 +604,7 @@ func TestGraphUserEventHandler_OnAddPlayer(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
@@ -676,7 +676,7 @@ func TestGraphUserEventHandler_OnAddRole(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
@@ -727,7 +727,7 @@ func TestGraphUserEventHandler_OnRemoveRole(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName:        "UserFirstNameCreate",

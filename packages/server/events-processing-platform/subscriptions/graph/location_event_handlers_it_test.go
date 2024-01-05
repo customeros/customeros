@@ -21,7 +21,7 @@ func TestGraphLocationEventHandler_OnLocationCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	locationId, _ := uuid.NewUUID()
 	locationAggregate := aggregate.NewLocationAggregateWithTenantAndID(tenantName, locationId.String())
@@ -125,7 +125,7 @@ func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	name := "test_location_name"
 	updatedAt := time.Now().UTC()
 	country := "US"
@@ -266,7 +266,7 @@ func TestGraphLocationEventHandler_OnLocationValidationFailed(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	name := "test_location_name"
 	updatedAt := time.Now().UTC()
 	country := "US"
@@ -371,7 +371,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	name := "test_location_name"
 	updatedAt := time.Now().UTC()
 	country := "US"

@@ -3,6 +3,7 @@ package contract
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
@@ -21,7 +22,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_CreateRenewalOpportunit
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	serviceStartedAt, _ := utils.UnmarshalDateTime("2021-01-01T00:00:00Z")
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
@@ -63,7 +64,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract(t *test
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	serviceStartedAt, _ := utils.UnmarshalDateTime("2021-01-01T00:00:00Z")
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
@@ -106,7 +107,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	yesterday := utils.Now().AddDate(0, 0, -1)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		ServiceStartedAt: &yesterday,
@@ -150,7 +151,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testi
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	serviceStartedAt, _ := utils.UnmarshalDateTime("2021-01-01T00:00:00Z")
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
@@ -194,7 +195,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	yesterday := utils.Now().AddDate(0, 0, -1)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		ServiceStartedAt: &yesterday,
@@ -257,7 +258,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_OnlyOnceBilled(t *testing
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	serviceStartedAt, _ := utils.UnmarshalDateTime("2021-01-01T00:00:00Z")
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
@@ -313,7 +314,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MultipleServices(t *testi
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	serviceStartedAt, _ := utils.UnmarshalDateTime("2021-01-01T00:00:00Z")
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
@@ -381,7 +382,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MediumLikelihood(t *testi
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	serviceStartedAt, _ := utils.UnmarshalDateTime("2021-01-01T00:00:00Z")
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
@@ -441,7 +442,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsBeforeNextRen
 	in10Minutes := utils.Now().Add(time.Minute * 10)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	serviceStartedAt, _ := utils.UnmarshalDateTime("2021-01-01T00:00:00Z")
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
@@ -503,7 +504,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsIn6Months_Pro
 	in1Month := utils.Now().AddDate(0, 1, 0)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	serviceStartedAt, _ := utils.UnmarshalDateTime("2021-01-01T00:00:00Z")
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
@@ -565,7 +566,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsInMoreThan12M
 	in12Months := utils.Now().AddDate(1, 0, 0)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	serviceStartedAt, _ := utils.UnmarshalDateTime("2021-01-01T00:00:00Z")
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		ServiceStartedAt: serviceStartedAt,
@@ -624,7 +625,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	tomorrow := utils.Now().AddDate(0, 0, 1)
 	afterTomorrow := utils.Now().AddDate(0, 0, 2)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
@@ -674,7 +675,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	tomorrow := utils.Now().AddDate(0, 0, 1)
 	afterTomorrow := utils.Now().AddDate(0, 0, 2)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
@@ -704,7 +705,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	afterTomorrow := utils.Now().AddDate(0, 0, 2)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		RenewalCycle: string(model.AnnuallyRenewalCycleString),
@@ -752,7 +753,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	afterTomorrow := utils.Now().AddDate(0, 0, 2)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		RenewalCycle: string(model.AnnuallyRenewalCycleString),

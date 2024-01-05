@@ -27,7 +27,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	userIdCreator := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, "sf")
@@ -150,7 +150,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		Name:        "test contract",
 		ContractUrl: "http://contract.url",
@@ -230,7 +230,7 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		RenewalCycle: string(model.MonthlyRenewalCycleString),
 	})
@@ -290,7 +290,7 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		RenewalCycle: string(model.MonthlyRenewalCycleString),
 	})
@@ -350,7 +350,7 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{
 		RenewalCycle: string(model.MonthlyRenewalCycleString),
@@ -433,7 +433,7 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 	yesterday := now.AddDate(0, 0, -1)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		RenewalCycle:     string(model.MonthlyRenewalCycleString),
 		ServiceStartedAt: &yesterday,
@@ -507,7 +507,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		Name:         "test contract",
 		ContractUrl:  "http://contract.url",
@@ -627,7 +627,7 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	now := utils.Now()
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		Name:             "test contract",
@@ -695,7 +695,7 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{
 		Name:   "test contract",
@@ -772,7 +772,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{
 		Name:   "test contract",

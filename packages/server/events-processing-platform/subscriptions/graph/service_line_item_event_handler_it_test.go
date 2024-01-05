@@ -30,7 +30,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 	contractId := "contract-id-1"
 
 	// Prepare Neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -109,7 +109,7 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -182,7 +182,7 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -275,7 +275,7 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -370,7 +370,7 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		RenewalCycle: string(contractmodel.AnnuallyRenewalCycleString),
 	})
@@ -451,7 +451,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -535,7 +535,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -621,7 +621,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -708,7 +708,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -794,7 +794,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -875,7 +875,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -956,7 +956,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -1044,7 +1044,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 	contractId := "contract-id-1"
 
 	// Prepare Neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -1141,7 +1141,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 	contractId := "contract-id-1"
 
 	// Prepare Neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -1238,7 +1238,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 	contractId := "contract-id-1"
 
 	// Prepare Neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -1335,7 +1335,7 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 	contractId := "contract-id-1"
 
 	// Prepare Neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -1430,7 +1430,7 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 	contractId := "contract-id-1"
 
 	// Prepare Neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -1525,7 +1525,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 	contractId := "contract-id-1"
 
 	// Prepare Neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -1625,7 +1625,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	contractId := "contract-id-1"
 
 	// Prepare Neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -1725,7 +1725,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	contractId := "contract-id-1"
 
 	// Prepare Neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -1830,7 +1830,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 	contractId := "contract-id-1"
 
 	// Prepare Neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -1938,7 +1938,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 	contractId := "contract-id-1"
 
 	// Prepare Neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",

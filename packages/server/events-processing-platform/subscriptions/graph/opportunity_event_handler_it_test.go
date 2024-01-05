@@ -30,7 +30,7 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	userIdOwner := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
 	userIdCreator := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
@@ -121,7 +121,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
@@ -203,7 +203,7 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		InternalStage: string(model.OpportunityInternalStageStringOpen),
 	})
@@ -245,7 +245,7 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		Name:      "test opportunity",
 		Amount:    10000,
@@ -298,7 +298,7 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		Name:   "test opportunity",
 		Amount: 10000,
@@ -348,7 +348,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		Name:         "test opportunity",
 		Amount:       10000,
@@ -439,7 +439,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		Name:         "test opportunity",
 		Amount:       10000,
@@ -502,7 +502,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		RenewalCycle: string(contractmodel.MonthlyRenewalCycleString),
 	})
@@ -604,7 +604,7 @@ func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		InternalStage: string(model.OpportunityInternalStageStringOpen),
 	})
@@ -641,7 +641,7 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		InternalStage: string(model.OpportunityInternalStageStringOpen),
 	})
@@ -678,7 +678,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	userIdOwner := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
 	userIdCreator := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})

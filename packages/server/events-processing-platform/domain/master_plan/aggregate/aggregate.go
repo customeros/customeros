@@ -35,6 +35,8 @@ func (a *MasterPlanAggregate) When(evt eventstore.Event) error {
 		return a.onMasterPlanUpdate(evt)
 	case event.MasterPlanMilestoneCreateV1:
 		return a.onMasterPlanMilestoneCreate(evt)
+	case event.MasterPlanMilestoneUpdateV1:
+		return a.onMasterPlanMilestoneUpdate(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -76,6 +78,45 @@ func (a *MasterPlanAggregate) onMasterPlanMilestoneCreate(evt eventstore.Event) 
 	if a.MasterPlan.Milestones == nil {
 		a.MasterPlan.Milestones = make(map[string]model.MasterPlanMilestone)
 	}
+	a.MasterPlan.Milestones[milestone.ID] = milestone
+
+	return nil
+}
+
+func (a *MasterPlanAggregate) onMasterPlanMilestoneUpdate(evt eventstore.Event) error {
+	var eventData event.MasterPlanMilestoneUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.MasterPlan.Milestones == nil {
+		a.MasterPlan.Milestones = make(map[string]model.MasterPlanMilestone)
+	}
+	if _, ok := a.MasterPlan.Milestones[eventData.MilestoneId]; !ok {
+		a.MasterPlan.Milestones[eventData.MilestoneId] = model.MasterPlanMilestone{
+			ID: eventData.MilestoneId,
+		}
+	}
+	milestone := a.MasterPlan.Milestones[eventData.MilestoneId]
+	if eventData.UpdateName() {
+		milestone.Name = eventData.Name
+	}
+	if eventData.UpdateOrder() {
+		milestone.Order = eventData.Order
+	}
+	if eventData.UpdateDurationHours() {
+		milestone.DurationHours = eventData.DurationHours
+	}
+	if eventData.UpdateItems() {
+		milestone.Items = eventData.Items
+	}
+	if eventData.UpdateOptional() {
+		milestone.Optional = eventData.Optional
+	}
+	if eventData.UpdateRetired() {
+		milestone.Retired = eventData.Retired
+	}
+
 	a.MasterPlan.Milestones[milestone.ID] = milestone
 
 	return nil

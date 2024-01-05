@@ -31,7 +31,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
@@ -126,7 +126,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: "test org",
 		Hide: false,
@@ -158,7 +158,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: "test org",
 		Hide: true,
@@ -196,7 +196,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	socialUrl := "https://www.facebook.com/organization"
 	platformName := "facebook"
 	now := utils.Now()
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: "test org",
 	})
@@ -240,7 +240,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	socialUrl := "https://www.facebook.com/organization"
 	platformName := "facebook"
 	now := utils.Now()
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: "test org",
 	})
@@ -277,7 +277,7 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	organizationName := "test_org_name"
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
@@ -323,7 +323,7 @@ func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
 	aggregateStore := eventstore.NewTestAggregateStore()
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	contractId1 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
 	contractId2 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
@@ -390,7 +390,7 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 	afterTomorrow := utils.Now().Add(time.Duration(48) * time.Hour)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	contractId1 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
 	contractId2 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
@@ -460,7 +460,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "Olivia",
 		LastName:  "Rhye",
@@ -518,7 +518,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: "test org",
 	})
