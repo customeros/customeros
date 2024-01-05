@@ -656,6 +656,7 @@ export type DashboardGrossRevenueRetentionPerMonth = {
   __typename?: 'DashboardGrossRevenueRetentionPerMonth';
   month: Scalars['Int'];
   percentage: Scalars['Float'];
+  year: Scalars['Int'];
 };
 
 export type DashboardMrrPerCustomer = {
@@ -1376,6 +1377,47 @@ export enum Market {
   Marketplace = 'MARKETPLACE',
 }
 
+export type MasterPlan = Node &
+  SourceFields & {
+    __typename?: 'MasterPlan';
+    appSource: Scalars['String'];
+    createdAt: Scalars['Time'];
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    updatedAt: Scalars['Time'];
+  };
+
+export type MasterPlanInput = {
+  name?: InputMaybe<Scalars['String']>;
+};
+
+export type MasterPlanMilestone = Node &
+  SourceFields & {
+    __typename?: 'MasterPlanMilestone';
+    appSource: Scalars['String'];
+    createdAt: Scalars['Time'];
+    durationHours: Scalars['Int64'];
+    id: Scalars['ID'];
+    items: Array<Scalars['String']>;
+    name: Scalars['String'];
+    optional: Scalars['Boolean'];
+    order: Scalars['Int64'];
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    updatedAt: Scalars['Time'];
+  };
+
+export type MasterPlanMilestoneInput = {
+  durationHours: Scalars['Int64'];
+  items: Array<Scalars['String']>;
+  masterPlanId: Scalars['ID'];
+  name?: InputMaybe<Scalars['String']>;
+  optional: Scalars['Boolean'];
+  order: Scalars['Int64'];
+};
+
 export type Meeting = Node & {
   __typename?: 'Meeting';
   agenda?: Maybe<Scalars['String']>;
@@ -1536,6 +1578,8 @@ export type Mutation = {
   logEntry_RemoveTag: Scalars['ID'];
   logEntry_ResetTags: Scalars['ID'];
   logEntry_Update: Scalars['ID'];
+  masterPlanMilestone_Create: MasterPlanMilestone;
+  masterPlan_Create: MasterPlan;
   meeting_AddNewLocation: Location;
   meeting_AddNote: Meeting;
   meeting_Create: Meeting;
@@ -1886,6 +1930,14 @@ export type MutationLogEntry_ResetTagsArgs = {
 export type MutationLogEntry_UpdateArgs = {
   id: Scalars['ID'];
   input: LogEntryUpdateInput;
+};
+
+export type MutationMasterPlanMilestone_CreateArgs = {
+  input: MasterPlanMilestoneInput;
+};
+
+export type MutationMasterPlan_CreateArgs = {
+  input: MasterPlanInput;
 };
 
 export type MutationMeeting_AddNewLocationArgs = {

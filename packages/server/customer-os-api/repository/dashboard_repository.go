@@ -52,6 +52,7 @@ type DashboardRepository interface {
 	GetDashboardRetentionRateContractsChurnedData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardAverageTimeToOnboardPerMonth(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardOnboardingCompletionPerMonth(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
+	GetDashboardGRRData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 }
 
 type dashboardRepository struct {
@@ -1531,4 +1532,123 @@ func getCorrectValueType(valueToExtract any) float64 {
 	}
 
 	return v
+}
+
+func (r *dashboardRepository) GetDashboardGRRData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardRetentionRateContractsRenewalsData")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			`
+					WITH $startDate AS startDate, $endDate AS endDate
+					WITH startDate.year AS startYear, startDate.month AS startMonth, endDate.year AS endYear, endDate.month AS endMonth
+					WITH RANGE(startYear * 12 + startMonth - 1, endYear * 12 + endMonth - 1) AS monthsRange
+					UNWIND monthsRange AS monthsSinceEpoch
+					WITH datetime({
+						year: monthsSinceEpoch / 12,
+						month: monthsSinceEpoch %s,
+						day: 1
+					}) AS currentDate
+					WITH currentDate,
+											 datetime({
+												 year: currentDate.year,
+												 month: currentDate.month,
+												 day: 1,
+												 hour: 0,
+												 minute: 0,
+												 second: 0,
+												 nanosecond: 0o00000000
+											 }) as beginOfMonth,
+						 currentDate + duration({months: 1}) - duration({nanoseconds: 1}) as endOfMonth,
+						 currentDate + duration({months: 1}) AS startOfNextMonth
+					WITH currentDate.year AS year, currentDate.month AS month, beginOfMonth, endOfMonth, startOfNextMonth
+										OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
+					WITH year, month, beginOfMonth, endOfMonth, startOfNextMonth, c.id as cid, c.endedAt as cEndedAt, sli.parentId as sp, sli
+					ORDER BY sli.startedAt ASC
+					WHERE c.serviceStartedAt IS NOT NULL
+					  AND sli.startedAt < startOfNextMonth
+					  AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					WITH year, month, beginOfMonth, endOfMonth, startOfNextMonth, cid, cEndedAt,
+						 COLLECT({
+							 sliId: sli.id,
+							 sliV1: CASE WHEN sli.id = sli.parentId THEN TRUE ELSE FALSE END,
+							 sliStartedAt: sli.startedAt,
+							 sliEndedAt: sli.endedAt,
+							 amount: CASE 
+											   WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity 
+											   ELSE CASE 
+													  WHEN sli.billed = 'QUARTERLY' THEN  sli.price * sli.quantity / 3 
+													  ELSE CASE 
+															 WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity / 12 
+															 ELSE 0 
+														   END 
+													END 
+											 END
+						 }) as sliPerContract
+					WITH year, month, beginOfMonth, endOfMonth, cid, cEndedAt, startOfNextMonth,
+						 REDUCE(s = [], sliItem in sliPerContract | [
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 10}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 9}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 8}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 7}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 6}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 5}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 4}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 3}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 2}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 1}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth - duration({months: 0}) THEN sliItem.amount ELSE 0 END,
+											CASE WHEN sliItem.sliV1 = true AND sliItem.sliStartedAt < beginOfMonth + duration({months: 1}) - duration({nanoseconds: 1}) THEN sliItem.amount ELSE 0 END
+						 ]) as sliActivePerContract,
+						 REDUCE(s = [], sliItem in sliPerContract | 
+							 CASE WHEN sliItem.sliStartedAt < startOfNextMonth  AND (sliItem.sliEndedAt IS NULL or sliItem.sliEndedAt > endOfMonth) AND (cEndedAt IS NULL OR cEndedAt >= beginOfMonth ) THEN s + sliItem ELSE s END
+						 ) as sliActiveInCurrentMonth
+					WITH year, month, beginOfMonth, endOfMonth, cid, sliActivePerContract, sliActiveInCurrentMonth, 
+					REDUCE(acc = null, i IN RANGE(0, 11) |
+						CASE WHEN sliActivePerContract[i] > 0 AND acc IS NULL THEN sliActivePerContract[i] ELSE acc END
+					) AS baseline, 
+					REDUCE(acc = 0, i IN sliActiveInCurrentMonth | acc + i.amount ) AS currentAmount
+					WITH year, month, cid, baseline, currentAmount
+					with year, month, SUM(baseline) as baselineValue, SUM(currentAmount) as currentValue
+					return year, month, CASE WHEN baselineValue <> 0 THEN (currentValue / baselineValue) * 100 ELSE 0 END AS grossRevenueRetentionRate
+					`, "% 12 + 1", tenant, tenant),
+			map[string]any{
+				"tenant":    tenant,
+				"startDate": startDate,
+				"endDate":   endDate,
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	if dbRecords != nil {
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			year := v.Values[0].(int64)
+			month := v.Values[1].(int64)
+			value := getCorrectValueType(v.Values[2])
+			record := map[string]interface{}{
+				"year":  year,
+				"month": month,
+				"value": value,
+			}
+
+			results = append(results, record)
+		}
+	}
+
+	return results, nil
 }

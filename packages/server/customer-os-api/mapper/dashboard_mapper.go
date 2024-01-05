@@ -101,6 +101,7 @@ func MapDashboardGrossRevenueRetentionPerMonthData(months []*entityDashboard.Das
 	var result []*model.DashboardGrossRevenueRetentionPerMonth
 	for _, month := range months {
 		result = append(result, &model.DashboardGrossRevenueRetentionPerMonth{
+			Year:       month.Year,
 			Month:      month.Month,
 			Percentage: month.Percentage,
 		})
