@@ -189,7 +189,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
 
-	opportunityDbNode, err := h.repositories.OpportunityRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
@@ -255,7 +255,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	opportunityDbNode, err := h.repositories.OpportunityRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())

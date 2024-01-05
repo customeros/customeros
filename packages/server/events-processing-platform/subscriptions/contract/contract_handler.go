@@ -95,7 +95,7 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("contractId", contractId))
 
-	opportunityDbNode, err := h.repositories.OpportunityRepository.GetOpenRenewalOpportunityForContract(ctx, tenant, contractId)
+	opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpenRenewalOpportunityForContract(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
@@ -361,7 +361,7 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 		return nil, nil, true
 	}
 
-	currentRenewalOpportunityDbNode, err := h.repositories.OpportunityRepository.GetOpenRenewalOpportunityForContract(ctx, tenant, contractId)
+	currentRenewalOpportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpenRenewalOpportunityForContract(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())

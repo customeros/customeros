@@ -250,7 +250,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
 
 	if model.IsFrequencyBasedRenewalCycle(contractEntity.RenewalCycle) {
-		currentRenewalOpportunityDbNode, err := h.repositories.OpportunityRepository.GetOpenRenewalOpportunityForContract(ctx, eventData.Tenant, contractId)
+		currentRenewalOpportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpenRenewalOpportunityForContract(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
