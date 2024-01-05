@@ -31,7 +31,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare Neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -110,7 +110,7 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -183,7 +183,7 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -276,7 +276,7 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -452,7 +452,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -536,7 +536,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -622,7 +622,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -709,7 +709,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -795,7 +795,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -876,7 +876,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -957,7 +957,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -1045,7 +1045,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 
 	// Prepare Neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -1142,7 +1142,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 
 	// Prepare Neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -1239,7 +1239,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 
 	// Prepare Neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -1336,7 +1336,7 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 
 	// Prepare Neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -1431,7 +1431,7 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 
 	// Prepare Neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -1526,7 +1526,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 
 	// Prepare Neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -1626,7 +1626,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 
 	// Prepare Neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -1726,7 +1726,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 
 	// Prepare Neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -1831,7 +1831,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 
 	// Prepare Neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})
@@ -1939,7 +1939,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 
 	// Prepare Neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "logged-in",
 		LastName:  "user",
 	})

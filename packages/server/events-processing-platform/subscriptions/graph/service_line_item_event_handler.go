@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
@@ -14,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -85,7 +85,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 	var user *dbtype.Node
-	var userEntity *entity.UserEntity
+	var userEntity *neo4jentity.UserEntity
 	var message string
 	var name string
 	var priceChanged bool
@@ -185,7 +185,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
 			}
 		}
-		userEntity = graph_db.MapDbNodeToUserEntity(*user)
+		userEntity = neo4jmapper.MapDbNodeToUserEntity(user)
 	}
 	if eventData.Name == "" {
 		name = serviceLineItemEntity.Name
@@ -350,7 +350,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	setEventSpanTagsAndLogFields(span, evt)
 	var contractId string
 	var user *dbtype.Node
-	var userEntity *entity.UserEntity
+	var userEntity *neo4jentity.UserEntity
 	var name string
 	var message string
 	var eventData event.ServiceLineItemUpdateEvent
@@ -425,7 +425,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
 			}
 		}
-		userEntity = graph_db.MapDbNodeToUserEntity(*user)
+		userEntity = neo4jmapper.MapDbNodeToUserEntity(user)
 	}
 
 	metadataPrice, err := utils.ToJson(ActionPriceMetadata{
@@ -549,7 +549,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 	var user *dbtype.Node
-	var userEntity *entity.UserEntity
+	var userEntity *neo4jentity.UserEntity
 	var serviceLineItemName string
 	var contractName string
 
@@ -584,7 +584,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
 			}
 		}
-		userEntity = graph_db.MapDbNodeToUserEntity(*user)
+		userEntity = neo4jmapper.MapDbNodeToUserEntity(user)
 	}
 
 	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)

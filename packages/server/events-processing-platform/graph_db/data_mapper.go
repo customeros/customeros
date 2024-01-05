@@ -70,27 +70,6 @@ func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity 
 }
 
 // Deprecated
-func MapDbNodeToUserEntity(node dbtype.Node) *entity.UserEntity {
-	props := utils.GetPropsFromNode(node)
-	return &entity.UserEntity{
-		Id:              utils.GetStringPropOrEmpty(props, "id"),
-		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
-		Name:            utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
-		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
-		Internal:        utils.GetBoolPropOrFalse(props, "internal"),
-		Bot:             utils.GetBoolPropOrFalse(props, "bot"),
-		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
-		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
-	}
-}
-
-// Deprecated
 func MapDbNodeToActionEntity(node dbtype.Node) *entity.ActionEntity {
 	props := utils.GetPropsFromNode(node)
 	action := entity.ActionEntity{

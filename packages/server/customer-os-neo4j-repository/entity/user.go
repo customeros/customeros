@@ -18,4 +18,21 @@ type UserEntity struct {
 	ProfilePhotoUrl string     `neo4jDb:"property:profilePhotoUrl;lookupName:PROFILE_PHOTO_URL;supportCaseSensitive:true"`
 	Internal        bool
 	Bot             bool
+
+	// Indirect properties
+	DefaultForPlayer bool
+	Tenant           string
+}
+
+type UserEntities []UserEntity
+
+func (u UserEntity) GetFullName() string {
+	fullName := u.FirstName
+	if u.LastName != "" {
+		fullName += " " + u.LastName
+	}
+	if fullName == "" {
+		fullName = u.Name
+	}
+	return fullName
 }

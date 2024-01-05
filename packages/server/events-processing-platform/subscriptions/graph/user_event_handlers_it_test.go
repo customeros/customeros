@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -324,7 +325,7 @@ func TestGraphUserEventHandler_OnUserUpdate(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
 		LastName:         "UserLastNameCreate",
 		CreatedAt:        userCreateTime,
@@ -400,7 +401,7 @@ func TestGraphUserEventHandler_OnPhoneNumberLinkedToUser(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
 		LastName:         "UserLastNameCreate",
 		CreatedAt:        userCreateTime,
@@ -472,7 +473,7 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
 		LastName:         "UserLastNameCreate",
 		CreatedAt:        userCreateTime,
@@ -548,7 +549,7 @@ func TestGraphUserEventHandler_OnJobRoleLinkedToUser(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
 		LastName:         "UserLastNameCreate",
 		CreatedAt:        userCreateTime,
@@ -606,7 +607,7 @@ func TestGraphUserEventHandler_OnAddPlayer(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
 		LastName:         "UserLastNameCreate",
 		CreatedAt:        userCreateTime,
@@ -678,7 +679,7 @@ func TestGraphUserEventHandler_OnAddRole(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
 		LastName:         "UserLastNameCreate",
 		CreatedAt:        userCreateTime,
@@ -729,7 +730,7 @@ func TestGraphUserEventHandler_OnRemoveRole(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userCreateTime := utils.Now()
-	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName:        "UserFirstNameCreate",
 		LastName:         "UserLastNameCreate",
 		CreatedAt:        userCreateTime,

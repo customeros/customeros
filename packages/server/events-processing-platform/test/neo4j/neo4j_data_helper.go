@@ -31,30 +31,6 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 	return orgId
 }
 
-// Deprecated: use neo4jtest.CreateUser instead
-func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, user entity.UserEntity) string {
-	userId := user.Id
-	if userId == "" {
-		userId = uuid.New().String()
-	}
-	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
-			  MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$id})
-				SET u:User_%s,
-					u.firstName=$firstName,
-					u.lastName=$lastName,
-					u.roles=$roles
-				`, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":    tenant,
-		"id":        userId,
-		"firstName": user.FirstName,
-		"lastName":  user.LastName,
-		"roles":     user.Roles,
-	})
-	return userId
-}
-
 func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social entity.SocialEntity) string {
 	socialId := utils.NewUUIDIfEmpty(social.Id)
 	query := fmt.Sprintf(`MERGE (s:Social:Social_%s {id: $id})
