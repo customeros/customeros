@@ -134,3 +134,49 @@ func TestMasterPlanEventHandler_OnCreateMilestone(t *testing.T) {
 	require.Equal(t, []string{"item1", "item2"}, milestone.Items)
 	require.Equal(t, true, milestone.Optional)
 }
+
+func TestMasterPlanEventHandler_OnUpdate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	masterPlanId := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{})
+
+	// Prepare the event handler
+	masterPlanEventHandler := &MasterPlanEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	// Create an MasterPlanUpdateEvent
+	masterPlanAggregate := aggregate.NewMasterPlanAggregateWithTenantAndID(tenantName, masterPlanId)
+	timeNow := utils.Now()
+	updateEvent, err := event.NewMasterPlanUpdateEvent(
+		masterPlanAggregate,
+		"master plan updated name",
+		true,
+		timeNow,
+		[]string{event.FieldMaskName, event.FieldMaskRetired},
+	)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = masterPlanEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jentity.NodeLabel_MasterPlan:                    1,
+		neo4jentity.NodeLabel_MasterPlan + "_" + tenantName: 1})
+
+	masterPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabel_MasterPlan, masterPlanId)
+	require.Nil(t, err)
+	require.NotNil(t, masterPlanDbNode)
+
+	// verify master plan node
+	masterPlan := neo4jmapper.MapDbNodeToMasterPlanEntity(masterPlanDbNode)
+	require.Equal(t, masterPlanId, masterPlan.Id)
+	require.Equal(t, timeNow, masterPlan.UpdatedAt)
+	require.Equal(t, "master plan updated name", masterPlan.Name)
+	require.Equal(t, true, masterPlan.Retired)
+}

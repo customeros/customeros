@@ -11,8 +11,17 @@ import (
 	"time"
 )
 
+type MasterPlanUpdateFields struct {
+	Name          string
+	Retired       bool
+	UpdatedAt     time.Time
+	UpdateName    bool
+	UpdateRetired bool
+}
+
 type MasterPlanWriteRepository interface {
 	Create(ctx context.Context, tenant, masterPlanId, name, source, appSource string, createdAt time.Time) error
+	Update(ctx context.Context, tenant, masterPlanId string, data MasterPlanUpdateFields) error
 	CreateMilestone(ctx context.Context, tenant, masterPlanId, milestoneId, name, source, appSource string, order, durationHours int64, items []string, optional bool, createdAt time.Time) error
 }
 
@@ -101,6 +110,38 @@ func (r *masterPlanWriteRepository) CreateMilestone(ctx context.Context, tenant,
 		"optional":      optional,
 		"items":         items,
 	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *masterPlanWriteRepository) Update(ctx context.Context, tenant, masterPlanId string, data MasterPlanUpdateFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanWriteRepository.Update")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, masterPlanId)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(mp:MasterPlan {id:$masterPlanId}) 
+							SET mp.updatedAt=$updatedAt`
+	params := map[string]any{
+		"tenant":       tenant,
+		"masterPlanId": masterPlanId,
+		"updatedAt":    data.UpdatedAt,
+	}
+	if data.UpdateName {
+		cypher += ", mp.name=$name"
+		params["name"] = data.Name
+	}
+	if data.UpdateRetired {
+		cypher += ", mp.retired=$retired"
+		params["retired"] = data.Retired
+	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 

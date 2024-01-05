@@ -341,6 +341,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	case masterplanevent.MasterPlanCreateV1:
 		return s.masterPlanEventHandler.OnCreate(ctx, evt)
+	case masterplanevent.MasterPlanUpdateV1:
+		return s.masterPlanEventHandler.OnUpdate(ctx, evt)
 	case masterplanevent.MasterPlanMilestoneCreateV1:
 		return s.masterPlanEventHandler.OnCreateMilestone(ctx, evt)
 
