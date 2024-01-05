@@ -391,7 +391,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 	var timelineEventNode *dbtype.Node
 	var err error
 
-	lastTouchpointAt, lastTouchpointId, err = h.repositories.TimelineEventRepository.CalculateAndGetLastTouchpoint(ctx, eventData.Tenant, organizationId)
+	lastTouchpointAt, lastTouchpointId, err = h.repositories.Neo4jRepositories.TimelineEventReadRepository.CalculateAndGetLastTouchPoint(ctx, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to calculate last touchpoint: %v", err.Error())
@@ -412,7 +412,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 			lastTouchpointAt = utils.GetTimePropOrNil(propsFromNode, "createdAt")
 		}
 	} else {
-		timelineEventNode, err = h.repositories.TimelineEventRepository.GetTimelineEvent(ctx, eventData.Tenant, lastTouchpointId)
+		timelineEventNode, err = h.repositories.Neo4jRepositories.TimelineEventReadRepository.GetTimelineEvent(ctx, eventData.Tenant, lastTouchpointId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to get last touchpoint: %v", err.Error())
@@ -435,13 +435,13 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 
 	var timelineEventType string
 	switch timelineEvent.TimelineEventLabel() {
-	case entity.NodeLabel_PageView:
+	case neo4jentity.NodeLabelPageView:
 		timelineEventType = "PAGE_VIEW"
-	case entity.NodeLabel_InteractionSession:
+	case neo4jentity.NodeLabelInteractionSession:
 		timelineEventType = "INTERACTION_SESSION"
-	case entity.NodeLabel_Note:
+	case neo4jentity.NodeLabelNote:
 		timelineEventType = "NOTE"
-	case entity.NodeLabel_InteractionEvent:
+	case neo4jentity.NodeLabelInteractionEvent:
 		timelineEventInteractionEvent := timelineEvent.(*entity.InteractionEventEntity)
 		if timelineEventInteractionEvent.Channel == "EMAIL" {
 			timelineEventType = "INTERACTION_EVENT_EMAIL_SENT"
@@ -452,20 +452,20 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 		} else if timelineEventInteractionEvent.EventType == "meeting" {
 			timelineEventType = "MEETING"
 		}
-	case entity.NodeLabel_Analysis:
+	case neo4jentity.NodeLabelAnalysis:
 		timelineEventType = "ANALYSIS"
-	case entity.NodeLabel_Meeting:
+	case neo4jentity.NodeLabelMeeting:
 		timelineEventType = "MEETING"
-	case entity.NodeLabel_Action:
+	case neo4jentity.NodeLabelAction:
 		timelineEventAction := timelineEvent.(*entity.ActionEntity)
 		if timelineEventAction.Type == neo4jentity.ActionCreated {
 			timelineEventType = "ACTION_CREATED"
 		} else {
 			timelineEventType = "ACTION"
 		}
-	case entity.NodeLabel_LogEntry:
+	case neo4jentity.NodeLabelLogEntry:
 		timelineEventType = "LOG_ENTRY"
-	case entity.NodeLabel_Issue:
+	case neo4jentity.NodeLabelIssue:
 		timelineEventIssue := timelineEvent.(*entity.IssueEntity)
 		if timelineEventIssue.CreatedAt.Equal(timelineEventIssue.UpdatedAt) {
 			timelineEventType = "ISSUE_CREATED"

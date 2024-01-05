@@ -20,5 +20,5 @@ func (ActionEntity) IsTimelineEvent() {
 }
 
 func (ActionEntity) TimelineEventLabel() string {
-	return NodeLabel_Action
+	return neo4jentity.NodeLabelAction
 }

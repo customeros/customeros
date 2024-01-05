@@ -348,23 +348,23 @@ func MigrateStartedAt(props map[string]any) time.Time {
 
 // Deprecated
 func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
-	if slices.Contains(dbNode.Labels, entity.NodeLabel_PageView) {
+	if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelPageView) {
 		return MapDbNodeToPageView(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_InteractionSession) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelInteractionSession) {
 		return MapDbNodeToInteractionSessionEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Issue) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelIssue) {
 		return MapDbNodeToIssueEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Note) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelNote) {
 		return MapDbNodeToNoteEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_InteractionEvent) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelInteractionEvent) {
 		return MapDbNodeToInteractionEventEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Analysis) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelAnalysis) {
 		return MapDbNodeToAnalysisEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Meeting) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelMeeting) {
 		return MapDbNodeToMeetingEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Action) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelAction) {
 		return MapDbNodeToActionEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_LogEntry) {
+	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelLogEntry) {
 		return MapDbNodeToLogEntryEntity(*dbNode)
 	}
 	return nil

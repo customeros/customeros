@@ -233,9 +233,9 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 		}
 		if parentId != "" {
 			switch parentLabel {
-			case entity.NodeLabel_Issue:
+			case neo4jentity.NodeLabelIssue:
 				interactionEventGrpcRequest.BelongsToIssueId = &parentId
-			case entity.NodeLabel_InteractionSession:
+			case neo4jentity.NodeLabelInteractionSession:
 				interactionEventGrpcRequest.BelongsToSessionId = &parentId
 			}
 		}
@@ -382,11 +382,11 @@ func (s *interactionEventService) getReceiversIdAndLabel(ctx context.Context, in
 func (s *interactionEventService) checkRequiredContact(interactionEventInput model.InteractionEventData, senderLabel string, receiversIdAndLabel map[string]string, tenant string, span opentracing.Span) (SyncStatus, bool) {
 	if interactionEventInput.ContactRequired {
 		found := false
-		if senderLabel == entity.NodeLabel_Contact {
+		if senderLabel == neo4jentity.NodeLabelContact {
 			found = true
 		}
 		for _, receiverLabel := range receiversIdAndLabel {
-			if receiverLabel == entity.NodeLabel_Contact {
+			if receiverLabel == neo4jentity.NodeLabelContact {
 				found = true
 				break
 			}
@@ -413,15 +413,15 @@ func (s *interactionEventService) checkRequiredParent(interactionEventInput mode
 
 func (s *interactionEventService) setParticipantTypeForGrpcRequest(participantLabel string, participant *interactioneventpb.Participant) {
 	switch participantLabel {
-	case entity.NodeLabel_Contact:
+	case neo4jentity.NodeLabelContact:
 		participant.ParticipantType = &interactioneventpb.Participant_Contact{
 			Contact: &interactioneventpb.Contact{},
 		}
-	case entity.NodeLabel_Organization:
+	case neo4jentity.NodeLabelOrganization:
 		participant.ParticipantType = &interactioneventpb.Participant_Organization{
 			Organization: &interactioneventpb.Organization{},
 		}
-	case entity.NodeLabel_User:
+	case neo4jentity.NodeLabelUser:
 		participant.ParticipantType = &interactioneventpb.Participant_User{
 			User: &interactioneventpb.User{},
 		}
