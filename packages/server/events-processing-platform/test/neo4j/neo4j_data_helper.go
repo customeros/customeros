@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 )
 
+// Deprecated
 func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
 	orgId := organization.ID
 	if orgId == "" {
@@ -81,6 +82,7 @@ func CreateJobRole(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 
 }
 
+// Deprecated
 func CreateLogEntryForOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry entity.LogEntryEntity) string {
 	logEntryId := logEntry.Id
 	if logEntryId == "" {

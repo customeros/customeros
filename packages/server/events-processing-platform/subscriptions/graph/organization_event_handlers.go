@@ -768,19 +768,19 @@ func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.
 
 func onboardingStatusReadableStringForActionMessage(status string) string {
 	switch status {
-	case string(entity.OnboardingStatusNotApplicable):
+	case string(neo4jentity.OnboardingStatusNotApplicable):
 		return "Not applicable"
-	case string(entity.OnboardingStatusNotStarted):
+	case string(neo4jentity.OnboardingStatusNotStarted):
 		return "Not started"
-	case string(entity.OnboardingStatusOnTrack):
+	case string(neo4jentity.OnboardingStatusOnTrack):
 		return "On track"
-	case string(entity.OnboardingStatusLate):
+	case string(neo4jentity.OnboardingStatusLate):
 		return "Late"
-	case string(entity.OnboardingStatusStuck):
+	case string(neo4jentity.OnboardingStatusStuck):
 		return "Stuck"
-	case string(entity.OnboardingStatusDone):
+	case string(neo4jentity.OnboardingStatusDone):
 		return "Done"
-	case string(entity.OnboardingStatusSuccessful):
+	case string(neo4jentity.OnboardingStatusSuccessful):
 		return "Successful"
 	default:
 		return status

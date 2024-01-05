@@ -115,3 +115,61 @@ func CreateMasterPlanMilestone(ctx context.Context, driver *neo4j.DriverWithCont
 	})
 	return masterPlanMilestoneId
 }
+
+func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
+	orgId := utils.NewUUIDIfEmpty(organization.ID)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
+			  MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$id})
+				SET o:Organization_%s,
+					o.name=$name,
+					o.hide=$hide
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant": tenant,
+		"name":   organization.Name,
+		"hide":   organization.Hide,
+		"id":     orgId,
+	})
+	return orgId
+}
+
+func CreateLogEntry(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, logEntry entity.LogEntryEntity) string {
+	logEntryId := utils.NewUUIDIfEmpty(logEntry.Id)
+	query := fmt.Sprintf(`
+			  MERGE (l:LogEntry {id:$id})
+				SET l:LogEntry_%s,
+					l:TimelineEvent,
+					l:TimelineEvent_%s,
+					l.content=$content,
+					l.contentType=$contentType,
+					l.startedAt=$startedAt
+				`, tenant, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":      tenant,
+		"id":          logEntryId,
+		"content":     logEntry.Content,
+		"contentType": logEntry.ContentType,
+		"startedAt":   logEntry.StartedAt,
+	})
+	return logEntryId
+}
+
+func CreateLogEntryForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry entity.LogEntryEntity) string {
+	logEntryId := CreateLogEntry(ctx, driver, tenant, logEntry)
+	LinkNodes(ctx, driver, orgId, logEntryId, "LOGGED")
+	return logEntryId
+}
+
+func LinkNodes(ctx context.Context, driver *neo4j.DriverWithContext, fromId, toId string, relation string) {
+	query := fmt.Sprintf(`
+			  MATCH (from {id: $fromId})
+			  MATCH (to {id: $toId})
+			  MERGE (from)-[:%s]->(to)`, relation)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"fromId": fromId,
+		"toId":   toId,
+	})
+}

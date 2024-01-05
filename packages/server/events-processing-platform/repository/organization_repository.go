@@ -6,9 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -152,7 +152,7 @@ func (r *organizationRepository) CreateOrganizationInTx(ctx context.Context, tx 
 		"appSource":          helper.GetSource(event.AppSource),
 		"createdAt":          event.CreatedAt,
 		"updatedAt":          event.UpdatedAt,
-		"onboardingStatus":   string(entity.OnboardingStatusNotApplicable),
+		"onboardingStatus":   string(neo4jentity.OnboardingStatusNotApplicable),
 		"overwrite":          helper.GetSource(event.Source) == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
