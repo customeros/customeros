@@ -279,7 +279,16 @@ func (h *OrganizationEventHandler) parseOrgOwnerUpdateEmail(actor, target *entit
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", response.Status)
+		var badResponse struct {
+			Message   string `json:"message"`
+			RequestID string `json:"request_id"`
+			StartedAt string `json:"started_at"`
+		}
+		err = json.NewDecoder(response.Body).Decode(&badResponse)
+		if err != nil {
+			return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
+		}
+		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s: %s", response.Status, badResponse.Message)
 	}
 
 	err = json.NewDecoder(response.Body).Decode(&result)
