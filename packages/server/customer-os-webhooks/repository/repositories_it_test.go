@@ -50,10 +50,3 @@ func TestMain(m *testing.M) {
 
 	os.Exit(m.Run())
 }
-
-func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
-	return func(tb testing.TB) {
-		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())
-		neo4jt.CleanupAllData(ctx, driver)
-	}
-}

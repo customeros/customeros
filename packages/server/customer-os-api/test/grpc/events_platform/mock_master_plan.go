@@ -9,6 +9,7 @@ type MockMasterPlanServiceCallbacks struct {
 	CreateMasterPlan          func(context.Context, *masterplanpb.CreateMasterPlanGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error)
 	UpdateMasterPlan          func(context.Context, *masterplanpb.UpdateMasterPlanGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error)
 	CreateMasterPlanMilestone func(context.Context, *masterplanpb.CreateMasterPlanMilestoneGrpcRequest) (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error)
+	UpdateMasterPlanMilestone func(context.Context, *masterplanpb.UpdateMasterPlanMilestoneGrpcRequest) (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error)
 }
 
 var masterPlanCallbacks = &MockMasterPlanServiceCallbacks{}
@@ -40,4 +41,11 @@ func (MockMasterPlanService) CreateMasterPlanMilestone(context context.Context, 
 		panic("masterPlanCallbacks.CreateMasterPlanMilestone is not set")
 	}
 	return masterPlanCallbacks.CreateMasterPlanMilestone(context, proto)
+}
+
+func (MockMasterPlanService) UpdateMasterPlanMilestone(context context.Context, proto *masterplanpb.UpdateMasterPlanMilestoneGrpcRequest) (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+	if masterPlanCallbacks.UpdateMasterPlanMilestone == nil {
+		panic("masterPlanCallbacks.UpdateMasterPlanMilestone is not set")
+	}
+	return masterPlanCallbacks.UpdateMasterPlanMilestone(context, proto)
 }

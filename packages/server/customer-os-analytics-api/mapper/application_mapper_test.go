@@ -57,7 +57,7 @@ func TestMapApplications(t *testing.T) {
 	if len(applications) != 2 {
 		t.Errorf("Expecting applications with 2 elements, received: %d elements", len(applications))
 	}
-	for i, _ := range []int{1, 2} {
+	for i := range []int{1, 2} {
 		if !reflect.DeepEqual(applications[i], &expectedApplication) {
 			t.Errorf("Expecting: %+v, received: %+v", expectedApplication, applications[i])
 		}

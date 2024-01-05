@@ -314,50 +314,50 @@ func markdownUserName(name string) string {
 	return formattedName
 }
 
-func addUserNameInBlocks(blocks []any, userNamesById map[string]string) []any {
-	for _, block := range blocks {
-		blockMap, ok := block.(map[string]any)
-		if !ok {
-			continue
-		}
-
-		if elements, exists := blockMap["elements"]; exists {
-			elementsSlice, ok := elements.([]any)
-			if !ok {
-				continue
-			}
-
-			for _, element := range elementsSlice {
-				elementMap, ok := element.(map[string]any)
-				if !ok {
-					continue
-				}
-
-				if innerElements, exists := elementMap["elements"]; exists {
-					innerElementsSlice, ok := innerElements.([]any)
-					if !ok {
-						continue
-					}
-					for _, innerElement := range innerElementsSlice {
-						innerElementMap, ok := innerElement.(map[string]any)
-						if !ok {
-							continue
-						}
-						if innerElementMap["type"] == "user" {
-							userID := innerElementMap["user_id"].(string)
-							if userName, exists := userNamesById[userID]; exists {
-								innerElementMap["user_name"] = userName
-							} else {
-								innerElementMap["user_name"] = unknownUserName
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return blocks
-}
+//func addUserNameInBlocks(blocks []any, userNamesById map[string]string) []any {
+//	for _, block := range blocks {
+//		blockMap, ok := block.(map[string]any)
+//		if !ok {
+//			continue
+//		}
+//
+//		if elements, exists := blockMap["elements"]; exists {
+//			elementsSlice, ok := elements.([]any)
+//			if !ok {
+//				continue
+//			}
+//
+//			for _, element := range elementsSlice {
+//				elementMap, ok := element.(map[string]any)
+//				if !ok {
+//					continue
+//				}
+//
+//				if innerElements, exists := elementMap["elements"]; exists {
+//					innerElementsSlice, ok := innerElements.([]any)
+//					if !ok {
+//						continue
+//					}
+//					for _, innerElement := range innerElementsSlice {
+//						innerElementMap, ok := innerElement.(map[string]any)
+//						if !ok {
+//							continue
+//						}
+//						if innerElementMap["type"] == "user" {
+//							userID := innerElementMap["user_id"].(string)
+//							if userName, exists := userNamesById[userID]; exists {
+//								innerElementMap["user_name"] = userName
+//							} else {
+//								innerElementMap["user_name"] = unknownUserName
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
+//	return blocks
+//}
 
 func slackUserIsTenantUser(email, userTeamId, tenantDomain, tenantTeamId string) bool {
 	if tenantTeamId != "" && userTeamId == tenantTeamId {

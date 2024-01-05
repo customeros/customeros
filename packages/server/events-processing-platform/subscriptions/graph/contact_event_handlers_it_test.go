@@ -184,12 +184,11 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 	propsAfterContactCreate := utils.GetPropsFromNode(*dbNodeAfterContactCreate)
 	require.Equal(t, contactId, utils.GetStringPropOrEmpty(propsAfterContactCreate, "id"))
 
-	primary := true
 	email := "email@website.com"
 	emailId := neo4jt.CreateEmail(ctx, testDatabase.Driver, tenantName, entity.EmailEntity{
 		Email:         email,
 		RawEmail:      email,
-		Primary:       primary,
+		Primary:       true,
 		Source:        constants.SourceOpenline,
 		SourceOfTruth: constants.SourceOpenline,
 		AppSource:     constants.SourceOpenline,

@@ -1175,6 +1175,17 @@ type MasterPlanMilestoneInput struct {
 	Items         []string `json:"items"`
 }
 
+type MasterPlanMilestoneUpdateInput struct {
+	MasterPlanID  string   `json:"masterPlanId"`
+	ID            string   `json:"id"`
+	Name          *string  `json:"name,omitempty"`
+	Order         *int64   `json:"order,omitempty"`
+	DurationHours *int64   `json:"durationHours,omitempty"`
+	Optional      *bool    `json:"optional,omitempty"`
+	Retired       *bool    `json:"retired,omitempty"`
+	Items         []string `json:"items,omitempty"`
+}
+
 type MasterPlanUpdateInput struct {
 	ID      string  `json:"id"`
 	Name    *string `json:"name,omitempty"`

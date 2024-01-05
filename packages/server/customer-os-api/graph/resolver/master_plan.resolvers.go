@@ -142,6 +142,31 @@ func (r *mutationResolver) MasterPlanMilestoneCreate(ctx context.Context, input 
 	return mapper.MapEntityToMasterPlanMilestone(createdMasterPlanMilestoneEntity), nil
 }
 
+// MasterPlanMilestoneUpdate is the resolver for the masterPlanMilestone_Update field.
+func (r *mutationResolver) MasterPlanMilestoneUpdate(ctx context.Context, input model.MasterPlanMilestoneUpdateInput) (*model.MasterPlanMilestone, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanMilestoneUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	// TODO alexb check if items present
+	err := r.Services.MasterPlanService.UpdateMasterPlanMilestone(ctx, input.MasterPlanID, input.ID, input.Name,
+		input.Order, input.DurationHours, input.Items, input.Optional, input.Retired)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update master plan milestone")
+		return nil, err
+	}
+
+	updatedMasterPlanMilestoneEntity, err := r.Services.MasterPlanService.GetMasterPlanMilestoneById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get master plan milestone with id %s", input.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToMasterPlanMilestone(updatedMasterPlanMilestoneEntity), nil
+}
+
 // MasterPlan is the resolver for the masterPlan field.
 func (r *queryResolver) MasterPlan(ctx context.Context, id string) (*model.MasterPlan, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MasterPlan", graphql.GetOperationContext(ctx))

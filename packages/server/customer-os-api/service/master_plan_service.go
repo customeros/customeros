@@ -25,8 +25,8 @@ type MasterPlanService interface {
 	UpdateMasterPlan(ctx context.Context, id string, name *string, retired *bool) error
 	GetMasterPlanById(ctx context.Context, masterPlanId string) (*neo4jentity.MasterPlanEntity, error)
 	GetMasterPlans(ctx context.Context, returnRetired *bool) (*neo4jentity.MasterPlanEntities, error)
-
 	CreateMasterPlanMilestone(ctx context.Context, masterPlanId, name string, order, durationHours int64, optional bool, items []string) (string, error)
+	UpdateMasterPlanMilestone(ctx context.Context, masterPlanId, masterPlanMilestoneId string, name *string, order, hours *int64, items []string, optional *bool, retired *bool) error
 	GetMasterPlanMilestoneById(ctx context.Context, masterPlanMilestoneId string) (*neo4jentity.MasterPlanMilestoneEntity, error)
 	GetMasterPlanMilestonesForMasterPlans(ctx context.Context, masterPlanIds []string) (*neo4jentity.MasterPlanMilestoneEntities, error)
 }
@@ -250,4 +250,71 @@ func (s *masterPlanService) GetMasterPlanMilestonesForMasterPlans(ctx context.Co
 		masterPlanMilestoneEntities = append(masterPlanMilestoneEntities, *masterPlanMilestoneEntity)
 	}
 	return &masterPlanMilestoneEntities, nil
+}
+
+func (s *masterPlanService) UpdateMasterPlanMilestone(ctx context.Context, masterPlanId, masterPlanMilestoneId string, name *string, order, durationHours *int64, items []string, optional *bool, retired *bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanService.UpdateMasterPlanMilestone")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, masterPlanMilestoneId)
+	span.LogFields(log.Object("name", name), log.Object("order", order), log.Object("durationHours", durationHours), log.Object("items", items), log.Object("optional", optional), log.Object("retired", retired))
+
+	if name == nil && retired == nil && order == nil && durationHours == nil && optional == nil && items == nil {
+		// nothing to update
+		return nil
+	}
+
+	masterPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanMilestoneId, neo4jentity.NodeLabel_MasterPlanMilestone)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !masterPlanMilestoneExists {
+		err = errors.New(fmt.Sprintf("Master plan milestone with id {%s} not found", masterPlanId))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	grpcRequest := masterplanpb.UpdateMasterPlanMilestoneGrpcRequest{
+		Tenant:                common.GetTenantFromContext(ctx),
+		MasterPlanId:          masterPlanId,
+		MasterPlanMilestoneId: masterPlanMilestoneId,
+		LoggedInUserId:        common.GetUserIdFromContext(ctx),
+		AppSource:             constants.AppSourceCustomerOsApi,
+	}
+	fieldsMask := make([]masterplanpb.MasterPlanMilestoneFieldMask, 0)
+	if name != nil {
+		grpcRequest.Name = utils.IfNotNilString(name)
+		fieldsMask = append(fieldsMask, masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_NAME)
+	}
+	if retired != nil {
+		grpcRequest.Retired = utils.IfNotNilBool(retired)
+		fieldsMask = append(fieldsMask, masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_RETIRED)
+	}
+	if order != nil {
+		grpcRequest.Order = utils.IfNotNilInt64(order)
+		fieldsMask = append(fieldsMask, masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_ORDER)
+	}
+	if durationHours != nil {
+		grpcRequest.DurationHours = utils.IfNotNilInt64(durationHours)
+		fieldsMask = append(fieldsMask, masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_DURATION_HOURS)
+	}
+	if optional != nil {
+		grpcRequest.Optional = utils.IfNotNilBool(optional)
+		fieldsMask = append(fieldsMask, masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_OPTIONAL)
+	}
+	if items != nil {
+		grpcRequest.Items = items
+		fieldsMask = append(fieldsMask, masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_ITEMS)
+	}
+	grpcRequest.FieldsMask = fieldsMask
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = s.grpcClients.MasterPlanClient.UpdateMasterPlanMilestone(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+	return nil
 }
