@@ -7,6 +7,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -14,9 +15,9 @@ import (
 func TestQueryResolver_Dashboard_Retention_Rate_No_Period_No_Data_In_DB(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate_no_period",
 		map[string]interface{}{})
@@ -41,9 +42,9 @@ func TestQueryResolver_Dashboard_Retention_Rate_No_Period_No_Data_In_DB(t *testi
 func TestQueryResolver_Dashboard_Retention_Rate_InvalidPeriod(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	response := callGraphQLExpectError(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -57,9 +58,9 @@ func TestQueryResolver_Dashboard_Retention_Rate_InvalidPeriod(t *testing.T) {
 func TestQueryResolver_Dashboard_Retention_Rate_PeriodIntervals(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	assert_Dashboard_Retention_Rate_PeriodIntervals(t, "2020-01-01T00:00:00.000Z", "2020-01-31T00:00:00.000Z", 1)
 	assert_Dashboard_Retention_Rate_PeriodIntervals(t, "2020-01-01T00:00:00.000Z", "2020-01-01T00:00:00.000Z", 1)
@@ -90,7 +91,7 @@ func assert_Dashboard_Retention_Rate_PeriodIntervals(t *testing.T, start, end st
 func TestQueryResolver_Dashboard_Retention_Rate_Hidden_Organization(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -102,11 +103,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Hidden_Organization(t *testing.T
 	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -136,7 +137,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Hidden_Organization(t *testing.T
 func TestQueryResolver_Dashboard_Retention_Rate_Prospect_Organization(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -147,11 +148,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Prospect_Organization(t *testing
 	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, orgId, entity.ContractEntity{}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -181,7 +182,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Prospect_Organization(t *testing
 func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V1(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -196,11 +197,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V1(t *testing.T)
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -230,7 +231,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V1(t *testing.T)
 func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V2(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -247,11 +248,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V2(t *testing.T)
 	sliId := insertServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 1, sli1StartedAt, sli1EndedAt)
 	insertServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeMonthly, 2, 1, entity.BilledTypeMonthly, 1, 1, sli1EndedAt, sliId)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -281,7 +282,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_SLI_V2(t *testing.T)
 func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V1(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -298,11 +299,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V1(t *testing.T)
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 1, sli1StartedAt)
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -332,7 +333,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V1(t *testing.T)
 func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V2(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -353,11 +354,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V2(t *testing.T)
 	sli2Id := insertServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 1, sli1StartedAt, sli1EndedAt)
 	insertServiceLineItemWithParent(ctx, driver, contractId, entity.BilledTypeMonthly, 2, 1, entity.BilledTypeMonthly, 1, 1, sli1EndedAt, sli2Id)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 4})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 4})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -387,7 +388,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_2_SLI_V2(t *testing.T)
 func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V1(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -410,11 +411,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V1(t *testing.T
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeMonthly, 1, 1, sli2StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -444,7 +445,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V1(t *testing.T
 func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V2(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -471,11 +472,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V2(t *testing.T
 	sli2Id := insertServiceLineItemEnded(ctx, driver, contract2Id, entity.BilledTypeMonthly, 1, 1, sli2StartedAt, sli2EndedAt)
 	insertServiceLineItemWithParent(ctx, driver, contract2Id, entity.BilledTypeMonthly, 2, 1, entity.BilledTypeMonthly, 1, 1, sli2StartedAt, sli2Id)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 4})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 4})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -505,7 +506,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_2_Renewals_1_SLI_V2(t *testing.T
 func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Monthly_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -520,11 +521,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Monthl
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -554,7 +555,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Monthl
 func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Quarterly_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -569,11 +570,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Quarte
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeQuarterly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
 	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
@@ -606,7 +607,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Quarte
 func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Annually_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -621,11 +622,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Annual
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
 	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
@@ -665,7 +666,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Monthly_Contract_Annual
 func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Monthly_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -680,11 +681,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Mont
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
 	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
@@ -724,7 +725,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Mont
 func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Quarterly_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -739,11 +740,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Quar
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeQuarterly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
 	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
@@ -783,7 +784,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Quar
 func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Annually_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -798,11 +799,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Annu
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
 	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
@@ -842,7 +843,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Quarterly_Contract_Annu
 func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Monthly_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -857,11 +858,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Month
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
 	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
@@ -901,7 +902,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Month
 func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Quarterly_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -916,11 +917,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Quart
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeQuarterly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
 	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
@@ -960,7 +961,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Quart
 func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Annually_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -975,11 +976,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Annua
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeAnnually, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
 	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
@@ -1019,7 +1020,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_Annually_Contract_Annua
 func TestQueryResolver_Dashboard_Retention_Rate_Renewals_1_Multi_Year_Contract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -1035,11 +1036,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_1_Multi_Year_Contract(t
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
 	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
@@ -1091,7 +1092,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_1_Multi_Year_Contract(t
 func TestQueryResolver_Dashboard_Retention_Rate_Renewals_2_Multi_Year_Contract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -1107,11 +1108,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_2_Multi_Year_Contract(t
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contract1Id, entity.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	format := "2006-01-02T15:04:05.000Z"
 	startTime := neo4jt.FirstTimeOfMonth(2023, 7)
@@ -1163,7 +1164,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Renewals_2_Multi_Year_Contract(t
 func TestQueryResolver_Dashboard_Retention_Rate_Churned_Before_Month(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -1180,11 +1181,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_Before_Month(t *testing.
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -1214,7 +1215,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_Before_Month(t *testing.
 func TestQueryResolver_Dashboard_Retention_Rate_Churned_After_Month(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -1231,11 +1232,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_After_Month(t *testing.T
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -1265,7 +1266,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_After_Month(t *testing.T
 func TestQueryResolver_Dashboard_Retention_Rate_Churned_In_Month(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -1282,11 +1283,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_In_Month(t *testing.T) {
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 1, sli1StartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{
@@ -1313,7 +1314,7 @@ func TestQueryResolver_Dashboard_Retention_Rate_Churned_In_Month(t *testing.T) {
 func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_Churned_In_Month(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -1337,11 +1338,11 @@ func TestQueryResolver_Dashboard_Retention_Rate_1_Renewal_1_Churned_In_Month(t *
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 1, 1, sliStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_retention_rate",
 		map[string]interface{}{

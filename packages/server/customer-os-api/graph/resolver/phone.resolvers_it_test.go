@@ -19,7 +19,7 @@ import (
 func TestMutationResolver_PhoneNumberMergeToContact(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -62,12 +62,12 @@ func TestMutationResolver_PhoneNumberMergeToContact(t *testing.T) {
 	require.Equal(t, "1", createdPhoneNumber.Country.PhoneCode)
 
 	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Country"), "Incorrect number of Country nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"), "Incorrect number of Contact nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName), "Incorrect number of PhoneNumber_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Country"), "Incorrect number of Country nodes in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"), "Incorrect number of Contact nodes in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName), "Incorrect number of PhoneNumber_%s nodes in Neo4j", tenantName)
 	require.Equal(t, 4, neo4jt.GetTotalCountOfNodes(ctx, driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Country", "Contact", "Contact_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
@@ -78,7 +78,7 @@ func TestMutationResolver_PhoneNumberUpdateInContact(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact and phone number
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -111,8 +111,8 @@ func TestMutationResolver_PhoneNumberUpdateInContact(t *testing.T) {
 		require.Equal(t, model.PhoneNumberLabelHome, *phoneNumber.Label, "Phone number label field is not expected value")
 	}
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 }
 
 func TestMutationResolver_PhoneNumberUpdateInContact_ReplacePhoneNumber(t *testing.T) {
@@ -120,7 +120,7 @@ func TestMutationResolver_PhoneNumberUpdateInContact_ReplacePhoneNumber(t *testi
 	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact and phone number
 	neo4jt.CreateCountry(ctx, driver, "US", "USA", "United States", "1")
@@ -161,10 +161,10 @@ func TestMutationResolver_PhoneNumberUpdateInContact_ReplacePhoneNumber(t *testi
 	require.Equal(t, "United States", phoneNumber.Country.Name)
 	require.Equal(t, "1", phoneNumber.Country.PhoneCode)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Country"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Expected 2 PhoneNumber nodes, original one and new")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "LINKED_TO"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Country"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Expected 2 PhoneNumber nodes, original one and new")
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "LINKED_TO"))
 
 	// Check the labels on the nodes in the Neo4j database
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Country", "Contact", "Contact_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
@@ -174,16 +174,16 @@ func TestMutationResolver_PhoneNumberRemoveFromContact(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234567890", false, "WORK")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("phone_number/remove_phone_number_from_contact"),
@@ -200,18 +200,18 @@ func TestMutationResolver_PhoneNumberRemoveFromContact(t *testing.T) {
 
 	require.Equal(t, true, phoneNumberStruct.PhoneNumberRemoveFromContactByE164.Result)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "PhoneNumber", "PhoneNumber_" + tenantName, "Contact", "Contact_" + tenantName})
 }
 
 func TestMutationResolver_PhoneNumberMergeToOrganization(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
 
@@ -256,11 +256,11 @@ func TestMutationResolver_PhoneNumberMergeToOrganization(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, createdPhoneNumber.Source, "PhoneNumber Source field is not expected value")
 
 	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"), "Incorrect number of Contact nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName), "Incorrect number of PhoneNumber_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"), "Incorrect number of Contact nodes in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName), "Incorrect number of PhoneNumber_%s nodes in Neo4j", tenantName)
 	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
@@ -270,7 +270,7 @@ func TestMutationResolver_PhoneNumberUpdateInOrganization(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId, "+1234567890", false, "WORK")
@@ -302,15 +302,15 @@ func TestMutationResolver_PhoneNumberUpdateInOrganization(t *testing.T) {
 		require.Equal(t, model.PhoneNumberLabelHome, *phoneNumber.Label, "Phone number label field is not expected value")
 	}
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 }
 
 func TestMutationResolver_PhoneNumberUpdateInOrganization_ReplacePhoneNumber(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId, "+1234567890", false, "WORK")
@@ -344,8 +344,8 @@ func TestMutationResolver_PhoneNumberUpdateInOrganization_ReplacePhoneNumber(t *
 		require.Equal(t, model.PhoneNumberLabelHome, *phoneNumber.Label, "Phone number label field is not expected value")
 	}
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Expected 2 PhoneNumber nodes, original one and new")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Expected 2 PhoneNumber nodes, original one and new")
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
@@ -355,16 +355,16 @@ func TestMutationResolver_PhoneNumberRemoveFromOrganizationByID(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId, "+1234567890", false, "WORK")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("phone_number/remove_phone_number_from_organization_by_id"),
@@ -381,18 +381,18 @@ func TestMutationResolver_PhoneNumberRemoveFromOrganizationByID(t *testing.T) {
 
 	require.Equal(t, true, phoneNumberStruct.PhoneNumberRemoveFromOrganizationById.Result)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "PhoneNumber", "PhoneNumber_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestMutationResolver_PhoneNumberMergeToUser(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 
@@ -428,11 +428,11 @@ func TestMutationResolver_PhoneNumberMergeToUser(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, createdPhoneNumber.Source, "PhoneNumber Source field is not expected value")
 
 	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"), "Incorrect number of Contact nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName), "Incorrect number of PhoneNumber_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"), "Incorrect number of Contact nodes in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName), "Incorrect number of PhoneNumber_%s nodes in Neo4j", tenantName)
 	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
@@ -442,7 +442,7 @@ func TestMutationResolver_PhoneNumberUpdateInUser(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId, "+1234567890", false, "WORK")
@@ -474,15 +474,15 @@ func TestMutationResolver_PhoneNumberUpdateInUser(t *testing.T) {
 		require.Equal(t, model.PhoneNumberLabelHome, *phoneNumber.Label, "Phone number label field is not expected value")
 	}
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 }
 
 func TestMutationResolver_PhoneNumberUpdateInUser_ReplacePhoneNumber(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId, "+1234567890", false, "WORK")
@@ -516,8 +516,8 @@ func TestMutationResolver_PhoneNumberUpdateInUser_ReplacePhoneNumber(t *testing.
 		require.Equal(t, model.PhoneNumberLabelHome, *phoneNumber.Label, "Phone number label field is not expected value")
 	}
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Expected 2 PhoneNumber nodes, original one and new")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Expected 2 PhoneNumber nodes, original one and new")
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
@@ -527,7 +527,7 @@ func TestQueryResolver_GetPhoneNumber_WithParentOwners(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
 		FirstName: "a",
 		LastName:  "b",
@@ -554,10 +554,10 @@ func TestQueryResolver_GetPhoneNumber_WithParentOwners(t *testing.T) {
 	neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId1, "+12345", false, "WORK")
 	neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId2, "+12345", false, "WORK")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
 
 	rawResponse, err := c.RawPost(getQuery("phone_number/get_phone_number_with_parent_owners_via_organization_query"),
 		client.Var("organizationId", organizationId1))
@@ -589,7 +589,7 @@ func TestQueryResolver_GetPhoneNumber_ById(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	phoneNumberId := neo4jt.CreatePhoneNumber(ctx, driver, tenantName, entity.PhoneNumberEntity{
 		E164:           "+123456789",
@@ -598,7 +598,7 @@ func TestQueryResolver_GetPhoneNumber_ById(t *testing.T) {
 		UpdatedAt:      utils.Now(),
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"PhoneNumber": 1, "PhoneNumber_" + tenantName: 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"PhoneNumber": 1, "PhoneNumber_" + tenantName: 1})
 	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"PHONE_NUMBER_BELONGS_TO_TENANT": 1})
 
 	// Make the RawPost request and check for errors

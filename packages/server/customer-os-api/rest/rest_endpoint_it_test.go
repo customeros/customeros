@@ -11,6 +11,7 @@ import (
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
 	"log"
@@ -55,7 +56,7 @@ func TestMain(m *testing.M) {
 func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
 	return func(tb testing.TB) {
 		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())
-		neo4jt.CleanupAllData(ctx, driver)
+		neo4jtest.CleanupAllData(ctx, driver)
 	}
 }
 

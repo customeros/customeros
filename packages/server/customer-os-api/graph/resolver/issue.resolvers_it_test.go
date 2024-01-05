@@ -8,6 +8,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -15,7 +16,7 @@ import (
 func TestQueryResolver_Issue(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	issueId := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
 		Subject:     "testSubject",
@@ -44,7 +45,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 	todayCommentId := neo4jt.CreateCommentForIssue(ctx, driver, tenantName, issueId, entity.CommentEntity{CreatedAt: today})
 	yesterdayCommentId := neo4jt.CreateCommentForIssue(ctx, driver, tenantName, issueId, entity.CommentEntity{CreatedAt: yesterday})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Issue":            1,
 		"Tag":              2,
 		"InteractionEvent": 1,
@@ -92,7 +93,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 func TestQueryResolver_Issue_WithParticipants(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	issueId := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
 		Subject:     "testSubject",
@@ -113,7 +114,7 @@ func TestQueryResolver_Issue_WithParticipants(t *testing.T) {
 	neo4jt.IssueFollowedBy(ctx, driver, issueId, contactId)
 	neo4jt.IssueFollowedBy(ctx, driver, issueId, orgId)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Issue":        1,
 		"User":         1,
 		"Organization": 1,

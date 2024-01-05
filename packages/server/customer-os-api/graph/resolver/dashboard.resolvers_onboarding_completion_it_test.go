@@ -7,6 +7,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -15,9 +16,9 @@ import (
 func TestQueryResolver_Dashboard_OnboardingCompletion_No_Period_No_Data_In_DB(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_onboarding_completion_no_period",
 		map[string]interface{}{})
@@ -37,9 +38,9 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_No_Period_No_Data_In_DB(t 
 func TestQueryResolver_Dashboard_OnboardingCompletion_InvalidPeriod(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	response := callGraphQLExpectError(t, "dashboard_view/dashboard_onboarding_completion",
 		map[string]interface{}{
@@ -53,7 +54,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_InvalidPeriod(t *testing.T
 func TestQueryResolver_Dashboard_OnboardingCompletion_SingleMonth_OneCompleted_OneNotCompleted(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo2 := now.Add(-2 * time.Hour)
@@ -63,7 +64,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_SingleMonth_OneCompleted_O
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo2, map[string]string{"status": "LATE"})
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, in1Minute, map[string]string{"status": "STUCK"})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 3})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 3})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_onboarding_completion",
 		map[string]interface{}{
@@ -87,7 +88,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_SingleMonth_OneCompleted_O
 func TestQueryResolver_Dashboard_OnboardingCompletion_PreviousMonthNoData(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo4 := now.Add(-4 * time.Hour)
@@ -96,7 +97,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_PreviousMonthNoData(t *tes
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo4, map[string]string{"status": "LATE"})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_onboarding_completion",
 		map[string]interface{}{
@@ -121,7 +122,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_PreviousMonthNoData(t *tes
 func TestQueryResolver_Dashboard_OnboardingCompletion_PreviousMonthHasDataCurrentMonthNoData(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo12 := now.Add(-12 * time.Hour)
@@ -130,7 +131,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_PreviousMonthHasDataCurren
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo12, map[string]string{"status": "LATE"})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_onboarding_completion",
 		map[string]interface{}{
@@ -155,7 +156,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_PreviousMonthHasDataCurren
 func TestQueryResolver_Dashboard_OnboardingCompletion_PercentageIncrease(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo1 := now.Add(-1 * time.Hour)
@@ -169,7 +170,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_PercentageIncrease(t *test
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, monthAgo, map[string]string{"status": "DONE"})
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, monthAgoPlus1Hour, map[string]string{"status": "STUCK"})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 5})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 5})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_onboarding_completion",
 		map[string]interface{}{
@@ -194,7 +195,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_PercentageIncrease(t *test
 func TestQueryResolver_Dashboard_OnboardingCompletion_PercentageDecrease(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo1 := now.Add(-1 * time.Hour)
@@ -208,7 +209,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_PercentageDecrease(t *test
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, monthAgo, map[string]string{"status": "DONE"})
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, monthAgoMinus1Hour, map[string]string{"status": "LATE"})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 5})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 5})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_onboarding_completion",
 		map[string]interface{}{
@@ -233,7 +234,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_PercentageDecrease(t *test
 func TestQueryResolver_Dashboard_OnboardingCompletion_DoneIsFirstStatus(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	now := inCurrentMonthExceptFirstAndLastDays()
 	monthAgo := now.Add(-30 * 24 * time.Hour)
@@ -241,7 +242,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_DoneIsFirstStatus(t *testi
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, monthAgo, map[string]string{"status": "DONE"})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_onboarding_completion",
 		map[string]interface{}{
@@ -266,7 +267,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_DoneIsFirstStatus(t *testi
 func TestQueryResolver_Dashboard_OnboardingCompletion_MultipleOrgs(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo4 := now.Add(-4 * time.Hour)
@@ -280,7 +281,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_MultipleOrgs(t *testing.T)
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId2, entity.ActionOnboardingStatusChanged, now, map[string]string{"status": "DONE"})
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId2, entity.ActionOnboardingStatusChanged, in4Hours, map[string]string{"status": "NOT_STARTED"})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 2, "Action": 5})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 2, "Action": 5})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_onboarding_completion",
 		map[string]interface{}{
@@ -302,7 +303,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_MultipleOrgs(t *testing.T)
 func TestQueryResolver_Dashboard_OnboardingCompletion_NoDoneOnboardings(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo1 := now.Add(-1 * time.Hour)
@@ -312,7 +313,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_NoDoneOnboardings(t *testi
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo1, map[string]string{"status": "LATE"})
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo2, map[string]string{"status": "STUCK"})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 3})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 3})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_onboarding_completion",
 		map[string]interface{}{
@@ -336,7 +337,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_NoDoneOnboardings(t *testi
 func TestQueryResolver_Dashboard_OnboardingCompletion_MultipleDonesInAMonth(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	now := inCurrentMonthExceptFirstAndLastDays()
 	hoursAgo1 := now.Add(-1 * time.Hour)
@@ -350,7 +351,7 @@ func TestQueryResolver_Dashboard_OnboardingCompletion_MultipleDonesInAMonth(t *t
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo3, map[string]string{"status": "DONE"})
 	neo4jt.CreateActionForOrganizationWithProperties(ctx, driver, tenantName, orgId, entity.ActionOnboardingStatusChanged, hoursAgo4, map[string]string{"status": "STUCK"})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 5})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1, "Organization": 1, "Action": 5})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_onboarding_completion",
 		map[string]interface{}{

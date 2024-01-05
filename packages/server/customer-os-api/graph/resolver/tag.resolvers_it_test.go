@@ -15,8 +15,8 @@ import (
 func TestMutationResolver_TagCreate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, "otherTenant")
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, "otherTenant")
 
 	rawResponse, err := c.RawPost(getQuery("tag/create_tag"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -39,9 +39,9 @@ func TestMutationResolver_TagCreate(t *testing.T) {
 	require.Equal(t, "test", createdTag.AppSource)
 	require.Equal(t, model.DataSourceOpenline, createdTag.Source)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tag_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "TAG_BELONGS_TO_TENANT"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tag_"+tenantName))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "TAG_BELONGS_TO_TENANT"))
 
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Tag", "Tag_" + tenantName})
 }
@@ -49,7 +49,7 @@ func TestMutationResolver_TagCreate(t *testing.T) {
 func TestMutationResolver_TagUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	tagId := neo4jt.CreateTag(ctx, driver, tenantName, "original tag")
 
 	rawResponse, err := c.RawPost(getQuery("tag/update_tag"),
@@ -72,21 +72,21 @@ func TestMutationResolver_TagUpdate(t *testing.T) {
 	require.Equal(t, tagId, updatedTag.ID)
 	require.Equal(t, "new tag name", updatedTag.Name)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
 }
 
 func TestMutationResolver_TagDelete(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	tagId := neo4jt.CreateTag(ctx, driver, tenantName, "original tag")
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	neo4jt.TagContact(ctx, driver, contactId, tagId)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "TAGGED"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "TAG_BELONGS_TO_TENANT"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "TAGGED"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "TAG_BELONGS_TO_TENANT"))
 
 	rawResponse, err := c.RawPost(getQuery("tag/delete_tag"),
 		client.Var("tagId", tagId),
@@ -102,22 +102,22 @@ func TestMutationResolver_TagDelete(t *testing.T) {
 	require.NotNil(t, result)
 	require.Equal(t, true, result.Tag_Delete.Result)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "TAGGED"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "TAG_BELONGS_TO_TENANT"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 0, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
+	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "TAGGED"))
+	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "TAG_BELONGS_TO_TENANT"))
 }
 
 func TestQueryResolver_Tags(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, "other")
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, "other")
 	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag B")
 	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag A")
 	neo4jt.CreateTag(ctx, driver, "other", "contact type for other tenant")
 
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
 
 	rawResponse, err := c.RawPost(getQuery("tag/get_tags"))
 	assertRawResponseSuccess(t, rawResponse, err)

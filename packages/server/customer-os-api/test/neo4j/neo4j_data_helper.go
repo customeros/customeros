@@ -17,11 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-// Deprecated, use neo4jtest.CleanupAllData instead
-func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
-	neo4jtest.ExecuteWriteQuery(ctx, driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
-}
-
 func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := fmt.Sprintf("DROP INDEX basicSearchStandard_location_terms IF EXISTS")
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{})
@@ -31,14 +26,6 @@ func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverW
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{})
-}
-
-// Deprecated, use neo4jtest.CreateTenant instead
-func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
-	query := `MERGE (t:Tenant {name:$tenant})`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant": tenant,
-	})
 }
 
 // Deprecated
@@ -1787,18 +1774,6 @@ func OpportunityOwnedBy(ctx context.Context, driver *neo4j.DriverWithContext, op
 		"opportunityId": opportunityId,
 		"entityId":      entityId,
 	})
-}
-
-func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {
-	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
-	result := neo4jtest.ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
-	return int(result.(*db.Record).Values[0].(int64))
-}
-
-func GetCountOfRelationships(ctx context.Context, driver *neo4j.DriverWithContext, relationship string) int {
-	query := fmt.Sprintf(`MATCH (a)-[r:%s]-(b) RETURN count(distinct r)`, relationship)
-	result := neo4jtest.ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
-	return int(result.(*db.Record).Values[0].(int64))
 }
 
 func GetRelationship(ctx context.Context, driver *neo4j.DriverWithContext, fromNodeId, toNodeId string) (*dbtype.Relationship, error) {

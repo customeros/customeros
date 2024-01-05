@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -13,9 +14,9 @@ import (
 func TestQueryResolver_Dashboard_Customer_Map_No_Data_In_DB(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -33,7 +34,7 @@ func TestQueryResolver_Dashboard_Customer_Map_No_Data_In_DB(t *testing.T) {
 func TestQueryResolver_Dashboard_Customer_Map_Empty_Contract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -41,9 +42,9 @@ func TestQueryResolver_Dashboard_Customer_Map_Empty_Contract(t *testing.T) {
 
 	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -61,7 +62,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Empty_Contract(t *testing.T) {
 func TestQueryResolver_Dashboard_Customer_Map_Draft_Contract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -77,11 +78,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Draft_Contract(t *testing.T) {
 	})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -99,7 +100,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Draft_Contract(t *testing.T) {
 func TestQueryResolver_Dashboard_Customer_Map_Hidden_Organization_With_Contract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -118,11 +119,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Hidden_Organization_With_Contract(
 	})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -140,7 +141,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Hidden_Organization_With_Contract(
 func TestQueryResolver_Dashboard_Customer_Map_Prospect_Organization_With_Contract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -159,12 +160,12 @@ func TestQueryResolver_Dashboard_Customer_Map_Prospect_Organization_With_Contrac
 	})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -182,7 +183,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Prospect_Organization_With_Contrac
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_High_Should_Be_OK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -201,11 +202,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 	})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -229,7 +230,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Medium_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -248,11 +249,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 	})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -276,7 +277,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Low_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -295,11 +296,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 	})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -323,7 +324,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Zero_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -342,11 +343,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 	})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -370,7 +371,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_No_Recurring_Revenue(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -388,10 +389,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 		RenewalLikelihood: entity.OpportunityRenewalLikelihoodZero,
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -409,7 +410,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_Closed_SLI_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -431,11 +432,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 	sliEndedAt := neo4jt.FirstTimeOfMonth(2023, 8)
 	insertServiceLineItemEnded(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, sliStartedAt, sliEndedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -453,7 +454,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Live_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Closed_Contract_Should_Be_CHURNED_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -474,11 +475,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Closed_Contrac
 	})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -502,7 +503,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_1_Closed_Contrac
 func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportunities_Should_Be_OK(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -529,11 +530,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -557,7 +558,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_3_Opportunities_Should_Be_OK(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -589,11 +590,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_3_Opportun
 
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 3})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 3})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -617,7 +618,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_3_Opportun
 func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportunities_Should_Be_At_Risk(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -644,11 +645,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -672,7 +673,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportunities_Should_Be_Churned(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -701,11 +702,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -729,7 +730,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_1_Contract_2_Opportun
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_High_Should_Be_OK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -760,11 +761,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 	})
 	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -788,7 +789,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_HIGH_One_MEDIUM_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -820,10 +821,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 	})
 	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 1, contract2ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -847,7 +848,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_HIGH_One_LOW_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -877,10 +878,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 	})
 	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -904,7 +905,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_HIGH_One_ZERO_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -934,10 +935,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 	})
 	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -961,7 +962,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts_One_MEDIUM_One_LOW_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -989,10 +990,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 	})
 	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1016,7 +1017,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_2_Live_Contracts
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Second_Closed_Contract_Live_HIGH_Should_Be_OK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -1047,10 +1048,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 	})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract2ServiceEndedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1074,7 +1075,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Closed_Second_Live_Contract_Live_HIGH_Should_Be_OK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -1106,10 +1107,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Closed_Sec
 	})
 	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 100, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1133,7 +1134,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Closed_Sec
 func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Second_Closed_Contract_Live_MEDIUM_Should_Be_AT_RISK_State(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -1165,10 +1166,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 	})
 	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 100, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1192,7 +1193,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Organization_With_First_Live_Secon
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Contracts_Should_Be_CHURNED_1(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -1226,10 +1227,10 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 	})
 	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 100, 1, contract2ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1253,7 +1254,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Contracts_Should_Be_CHURNED_2(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -1287,10 +1288,10 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 	})
 	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 100, 1, contract2ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1314,7 +1315,7 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Con
 func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_Each(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -1350,11 +1351,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 	})
 	insertServiceLineItem(ctx, driver, contract2Id, entity.BilledTypeAnnually, 10, 1, contract2ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1385,7 +1386,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts_Each(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -1443,11 +1444,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 	})
 	insertServiceLineItem(ctx, driver, contract4Id, entity.BilledTypeAnnually, 10, 1, contract2ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 4})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 4})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 4})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 4})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 4})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 4})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1478,7 +1479,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_2_Contracts
 func TestQueryResolver_Dashboard_Customer_Map_Annually_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -1497,11 +1498,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Annually_SLI(t *testing.T) {
 	})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1525,7 +1526,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Annually_SLI(t *testing.T) {
 func TestQueryResolver_Dashboard_Customer_Map_Quarterly_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -1544,11 +1545,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Quarterly_SLI(t *testing.T) {
 	})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeQuarterly, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})
@@ -1572,7 +1573,7 @@ func TestQueryResolver_Dashboard_Customer_Map_Quarterly_SLI(t *testing.T) {
 func TestQueryResolver_Dashboard_Customer_Map_Monthly_SLI(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
@@ -1591,11 +1592,11 @@ func TestQueryResolver_Dashboard_Customer_Map_Monthly_SLI(t *testing.T) {
 	})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeMonthly, 12, 1, contract1ServiceStartedAt)
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"ServiceLineItem": 1})
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
 		map[string]interface{}{})

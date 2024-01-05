@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	jobRoleProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	userProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/stretchr/testify/require"
@@ -19,8 +20,8 @@ func TestQueryResolver_UserByEmail(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	otherTenant := "other"
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, otherTenant)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, otherTenant)
 	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
@@ -51,8 +52,8 @@ func TestQueryResolver_Users(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	otherTenant := "other"
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, otherTenant)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, otherTenant)
 	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
@@ -89,7 +90,7 @@ func TestQueryResolver_Users(t *testing.T) {
 func TestQueryResolver_Users_FilteredAndSorted(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "first_f_internal",
@@ -113,7 +114,7 @@ func TestQueryResolver_Users_FilteredAndSorted(t *testing.T) {
 		LastName:  "fourth_l",
 	})
 
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"User": 5})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"User": 5})
 
 	rawResponse, err := c.RawPost(getQuery("user/get_users_filtered_and_sorted"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -135,7 +136,7 @@ func TestQueryResolver_Users_FilteredAndSorted(t *testing.T) {
 func TestQueryResolver_User(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName:       "first",
@@ -149,7 +150,7 @@ func TestQueryResolver_User(t *testing.T) {
 
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "test@openline.com", true, "MAIN")
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
 
 	rawResponse := callGraphQL(t, "user/get_user_by_id", map[string]interface{}{"userId": userId})
 
@@ -170,15 +171,15 @@ func TestQueryResolver_User(t *testing.T) {
 func TestQueryResolver_User_WithPhoneNumbers(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	phoneNumberId1 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId, "+1111", true, "MAIN")
 	phoneNumberId2 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId, "+2222", false, "WORK")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
 
 	rawResponse, err := c.RawPost(getQuery("user/get_user_with_phone_numbers"),
 		client.Var("userId", userId))
@@ -221,7 +222,7 @@ func TestQueryResolver_User_WithPhoneNumbers(t *testing.T) {
 func TestMutationResolver_AddJobRoleInTenant(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
@@ -288,7 +289,7 @@ func TestMutationResolver_AddJobRoleInTenant(t *testing.T) {
 func TestMutationResolver_GetUserJobRoleInTenant(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
@@ -312,7 +313,7 @@ func TestMutationResolver_GetUserJobRoleInTenant(t *testing.T) {
 func TestMutationResolver_GetUserCalendarInTenant(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",

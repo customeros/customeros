@@ -8,6 +8,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -16,8 +17,8 @@ func TestQueryResolver_PlayerByAuthIdProvider(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	otherTenant := "other"
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, otherTenant)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, otherTenant)
 	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
@@ -100,7 +101,7 @@ func TestQueryResolver_PlayerByAuthIdProvider(t *testing.T) {
 //	require.Equal(t, true, createdPlayer.Result)
 //
 //	// Check the number of nodes and relationships in the Neo4j database
-//	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Player"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Player"))
 //}
 
 func TestMutationResolver_PlayerMergeAccessControlled(t *testing.T) {
