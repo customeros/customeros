@@ -49,7 +49,7 @@ func (b *countryBatcher) getCountriesForPhoneNumbers(ctx context.Context, keys d
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for phoneNumberId, _ := range countryEntityByPhoneNumberId {
+	for phoneNumberId := range countryEntityByPhoneNumberId {
 		if ix, ok := keyOrder[phoneNumberId]; ok {
 			val := countryEntityByPhoneNumberId[phoneNumberId]
 			results[ix] = &dataloader.Result{Data: &val, Error: nil}

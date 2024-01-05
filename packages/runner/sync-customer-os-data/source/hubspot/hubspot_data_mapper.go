@@ -375,11 +375,6 @@ func MapContact(inputJSON string) (string, error) {
 	return string(outputJSON), nil
 }
 
-func isCustomerTag(hubspotLifecycleStage string) bool {
-	customerLifecycleStages := map[string]bool{"customer": true}
-	return customerLifecycleStages[hubspotLifecycleStage]
-}
-
 func convertToStandardTimezoneFormat(input string) string {
 	if input == "" {
 		return ""

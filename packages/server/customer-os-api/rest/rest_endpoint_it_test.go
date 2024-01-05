@@ -2,7 +2,6 @@ package rest
 
 import (
 	"context"
-	"database/sql"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -25,7 +24,6 @@ var (
 
 	postgresContainer testcontainers.Container
 	postgresGormDB    *gorm.DB
-	postgresSqlDB     *sql.DB
 	serviceContainer  *service.Services
 )
 
@@ -41,7 +39,7 @@ func TestMain(m *testing.M) {
 		neo4jt.Terminate(dbContainer, ctx)
 	}(neo4jContainer, *driver, context.Background())
 
-	postgresContainer, postgresGormDB, postgresSqlDB = postgres.InitTestDB()
+	postgresContainer, postgresGormDB, _ = postgres.InitTestDB()
 	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
 		err := postgresContainer.Terminate(ctx)
 		if err != nil {

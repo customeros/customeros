@@ -339,3 +339,55 @@ func TestMutationResolver_MasterPlanUpdate(t *testing.T) {
 
 	require.True(t, calledUpdateMasterPlan)
 }
+
+func TestMutationResolver_MasterPlanMilestoneUpdate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	masterPlanId := neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{})
+	milestoneId := neo4jtest.CreateMasterPlanMilestone(ctx, driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{})
+	calledUpdateMasterPlanMilestone := false
+
+	masterPlanServiceCallbacks := events_platform.MockMasterPlanServiceCallbacks{
+		UpdateMasterPlanMilestone: func(context context.Context, milestone *masterplanpb.UpdateMasterPlanMilestoneGrpcRequest) (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+			require.Equal(t, tenantName, milestone.Tenant)
+			require.Equal(t, masterPlanId, milestone.MasterPlanId)
+			require.Equal(t, milestoneId, milestone.MasterPlanMilestoneId)
+			require.Equal(t, testUserId, milestone.LoggedInUserId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, milestone.AppSource)
+			require.Equal(t, "Updated milestone", milestone.Name)
+			require.Equal(t, true, milestone.Optional)
+			require.Equal(t, false, milestone.Retired)
+			require.Nil(t, milestone.Items)
+			require.Equal(t, int64(10), milestone.Order)
+			require.Equal(t, int64(0), milestone.DurationHours)
+			require.ElementsMatch(t, []masterplanpb.MasterPlanMilestoneFieldMask{
+				masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_NAME,
+				masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_OPTIONAL,
+				masterplanpb.MasterPlanMilestoneFieldMask_MASTER_PLAN_MILESTONE_PROPERTY_ORDER,
+			}, milestone.FieldsMask)
+			calledUpdateMasterPlanMilestone = true
+			return &masterplanpb.MasterPlanMilestoneIdGrpcResponse{
+				Id: masterPlanId,
+			}, nil
+		},
+	}
+	events_platform.SetMasterPlanCallbacks(&masterPlanServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "master_plan/update_master_plan_milestone", map[string]interface{}{"masterPlanId": masterPlanId, "id": milestoneId})
+	require.Nil(t, rawResponse.Errors)
+
+	var masterPlanMilestoneStruct struct {
+		MasterPlanMilestone_Update model.MasterPlanMilestone
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &masterPlanMilestoneStruct)
+	require.Nil(t, err)
+
+	masterPlanMilestone := masterPlanMilestoneStruct.MasterPlanMilestone_Update
+	require.Equal(t, milestoneId, masterPlanMilestone.ID)
+
+	require.True(t, calledUpdateMasterPlanMilestone)
+}
