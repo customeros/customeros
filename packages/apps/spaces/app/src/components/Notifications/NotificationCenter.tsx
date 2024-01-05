@@ -6,6 +6,7 @@ import { IMessage, PopoverNotificationCenter } from '@novu/notification-center';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
+// import { Tooltip } from '@ui/overlay/Tooltip';
 import { Badge } from '@ui/presentation/Badge';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Avatar, AvatarBadge } from '@ui/media/Avatar';
@@ -17,10 +18,15 @@ interface NotificationCenterProps {}
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
   const router = useRouter();
+  const isProduction = process.env.NEXT_PUBLIC_PRODUCTION === 'true';
+  if (isProduction) {
+    // todo remove after feature is released to production
+    return null;
+  }
 
   function handlerOnNotificationClick(message: IMessage) {
     if (message?.cta?.data?.url) {
-      router.push(message.cta.data.url);
+      router.push(message?.cta?.data?.url as string);
     }
   }
 
@@ -42,7 +48,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
       }}
       onNotificationClick={handlerOnNotificationClick}
       listItem={(message, _, onNotificationClick) => (
+        // <Tooltip label={message.archived ? '' : ''}> uncomment when BE is ready
         <Flex
+          opacity={message.seen ? 0.5 : 1}
           px={4}
           mb={5}
           role='button'
@@ -70,6 +78,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
             </Text>
           </Flex>
         </Flex>
+        // </Tooltip>
       )}
     >
       {({ unseenCount }) => (

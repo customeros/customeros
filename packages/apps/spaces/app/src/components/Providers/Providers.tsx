@@ -51,7 +51,7 @@ export const Providers = ({
       <RecoilRoot>
         <NextAuthProvider>
           <GrowthbookProvider>
-            <NotificationsProvider>
+            <NotificationsProvider isProduction={isProduction}>
               <AnalyticsProvider isProduction={isProduction}>
                 {children}
               </AnalyticsProvider>
