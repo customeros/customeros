@@ -221,7 +221,7 @@ func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Con
 
 		for _, monthData := range response.Months {
 			if monthData.Year == int(year) && monthData.Month == int(month) {
-				if monthData.Percentage > 100 {
+				if value > 100 {
 					monthData.Percentage = 100
 				} else {
 					monthData.Percentage = roundToTwoDecimalPlaces(value)
