@@ -36,6 +36,7 @@ export type ArrBreakdownQuery = {
     increasePercentage: string;
     perMonth: Array<{
       __typename?: 'DashboardARRBreakdownPerMonth';
+      year: number;
       month: number;
       newlyContracted: number;
       renewals: number;
@@ -53,6 +54,7 @@ export const ArrBreakdownDocument = `
     arrBreakdown
     increasePercentage
     perMonth {
+      year
       month
       newlyContracted
       renewals
