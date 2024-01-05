@@ -119,3 +119,59 @@ func TestMasterPlanService_CreateMasterPlanMilestone(t *testing.T) {
 	require.Equal(t, []string{"item1", "item2"}, eventData.Items)
 	require.Equal(t, true, eventData.Optional)
 }
+
+func TestMasterPlanService_UpdateMasterPlan(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// setup test environment
+	tenant := "ziggy"
+	masterPlanId := "master-plan-id"
+
+	// prepare master plan aggregate
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	masterPlanAggregate := aggregate.NewMasterPlanAggregateWithTenantAndID(tenant, masterPlanId)
+	createEvent, _ := event.NewMasterPlanCreateEvent(masterPlanAggregate, "", commonmodel.Source{}, utils.Now())
+	masterPlanAggregate.UncommittedEvents = append(masterPlanAggregate.UncommittedEvents, createEvent)
+	aggregateStore.Save(ctx, masterPlanAggregate)
+
+	// prepare connection to grpc server
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	masterPlanClient := masterplanpb.NewMasterPlanGrpcServiceClient(grpcConnection)
+
+	// Execute the command
+	response, err := masterPlanClient.UpdateMasterPlan(ctx, &masterplanpb.UpdateMasterPlanGrpcRequest{
+		Tenant:         tenant,
+		MasterPlanId:   masterPlanId,
+		Name:           "New Plan Name",
+		Retired:        true,
+		AppSource:      "app",
+		LoggedInUserId: "user-id",
+		FieldsMask:     []masterplanpb.MasterPlanMaskField{masterplanpb.MasterPlanMaskField_MASTER_PLAN_PROPERTY_NAME, masterplanpb.MasterPlanMaskField_MASTER_PLAN_PROPERTY_RETIRED},
+	})
+	require.Nil(t, err)
+	require.NotNil(t, response)
+
+	// verify
+	require.Equal(t, masterPlanId, response.Id)
+
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[masterPlanAggregate.ID]
+	require.Equal(t, 2, len(eventList))
+	require.Equal(t, event.MasterPlanCreateV1, eventList[0].GetEventType())
+	require.Equal(t, event.MasterPlanUpdateV1, eventList[1].GetEventType())
+	require.Equal(t, string(aggregate.MasterPlanAggregateType)+"-"+tenant+"-"+masterPlanId, eventList[1].GetAggregateID())
+
+	var eventData event.MasterPlanUpdateEvent
+	err = eventList[1].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	// Assertions to validate the contract create event data
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, "New Plan Name", eventData.Name)
+	require.Equal(t, true, eventData.Retired)
+	test.AssertRecentTime(t, eventData.UpdatedAt)
+	require.ElementsMatch(t, []string{event.FieldMaskName, event.FieldMaskRetired}, eventData.FieldsMask)
+}

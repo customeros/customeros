@@ -31,6 +31,8 @@ func (a *MasterPlanAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.MasterPlanCreateV1:
 		return a.onMasterPlanCreate(evt)
+	case event.MasterPlanUpdateV1:
+		return a.onMasterPlanUpdate(evt)
 	case event.MasterPlanMilestoneCreateV1:
 		return a.onMasterPlanMilestoneCreate(evt)
 	default:
@@ -75,6 +77,23 @@ func (a *MasterPlanAggregate) onMasterPlanMilestoneCreate(evt eventstore.Event) 
 		a.MasterPlan.Milestones = make(map[string]model.MasterPlanMilestone)
 	}
 	a.MasterPlan.Milestones[milestone.ID] = milestone
+
+	return nil
+}
+
+func (a *MasterPlanAggregate) onMasterPlanUpdate(evt eventstore.Event) error {
+	var eventData event.MasterPlanUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if eventData.UpdateName() {
+		a.MasterPlan.Name = eventData.Name
+	}
+
+	if eventData.UpdateRetired() {
+		a.MasterPlan.Retired = eventData.Retired
+	}
 
 	return nil
 }

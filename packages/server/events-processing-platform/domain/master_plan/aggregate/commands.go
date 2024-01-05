@@ -21,6 +21,8 @@ func (a *MasterPlanAggregate) HandleCommand(ctx context.Context, cmd eventstore.
 	switch c := cmd.(type) {
 	case *command.CreateMasterPlanCommand:
 		return a.createMasterPlan(ctx, c)
+	case *command.UpdateMasterPlanCommand:
+		return a.updateMasterPlan(ctx, c)
 	case *command.CreateMasterPlanMilestoneCommand:
 		return a.createMasterPlanMilestone(ctx, c)
 	default:
@@ -51,6 +53,30 @@ func (a *MasterPlanAggregate) createMasterPlan(ctx context.Context, cmd *command
 	})
 
 	return a.Apply(createEvent)
+}
+
+func (a *MasterPlanAggregate) updateMasterPlan(ctx context.Context, cmd *command.UpdateMasterPlanCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MasterPlanAggregate.updateMasterPlan")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
+
+	updateEvent, err := event.NewMasterPlanUpdateEvent(a, cmd.Name, cmd.Retired, updatedAtNotNil, cmd.FieldsMask)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewMasterPlanUpdateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.GetAppSource(),
+	})
+
+	return a.Apply(updateEvent)
 }
 
 func (a *MasterPlanAggregate) createMasterPlanMilestone(ctx context.Context, cmd *command.CreateMasterPlanMilestoneCommand) error {

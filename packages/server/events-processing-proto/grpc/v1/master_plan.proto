@@ -26,6 +26,24 @@ message CreateMasterPlanMilestoneGrpcRequest {
   int64 order = 10;
 }
 
+enum MasterPlanMaskField {
+  MASTER_PLAN_PROPERTY_NONE = 0; // No property, ignored by the server
+  MASTER_PLAN_PROPERTY_ALL = 1; // All properties, if present in the list all other properties are ignored
+  MASTER_PLAN_PROPERTY_NAME = 2;
+  MASTER_PLAN_PROPERTY_RETIRED = 3;
+}
+
+message UpdateMasterPlanGrpcRequest {
+  string masterPlanId = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string name = 4;
+  bool retired = 5;
+  repeated MasterPlanMaskField fieldsMask = 6;
+  google.protobuf.Timestamp updatedAt = 7;
+  string appSource = 8;
+}
+
 message MasterPlanIdGrpcResponse {
   string id = 1;
 }
@@ -37,5 +55,6 @@ message MasterPlanMilestoneIdGrpcResponse {
 // Service definition
 service MasterPlanGrpcService {
   rpc CreateMasterPlan(CreateMasterPlanGrpcRequest) returns (MasterPlanIdGrpcResponse);
+  rpc UpdateMasterPlan(UpdateMasterPlanGrpcRequest) returns (MasterPlanIdGrpcResponse);
   rpc CreateMasterPlanMilestone(CreateMasterPlanMilestoneGrpcRequest) returns (MasterPlanMilestoneIdGrpcResponse);
 }
