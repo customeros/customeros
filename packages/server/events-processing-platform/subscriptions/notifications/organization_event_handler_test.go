@@ -69,7 +69,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 		cfg: &config.Config{Services: config.Services{MJML: struct {
 			ApplicationId string "env:\"MJML_APPLICATION_ID,required\" envDefault:\"\""
 			SecretKey     string "env:\"MJML_SECRET_KEY,required\" envDefault:\"\""
-		}{ApplicationId: "", SecretKey: ""}}, Subscriptions: config.Subscriptions{NotificationsSubscription: config.NotificationsSubscription{RedirectUrl: "https://app.openline.dev"}}},
+		}{ApplicationId: "", SecretKey: ""}}, Subscriptions: config.Subscriptions{NotificationsSubscription: config.NotificationsSubscription{RedirectUrl: "https://app.openline.dev", EmailTemplatePath: "./email_templates"}}},
 	}
 
 	require.Equal(t, "", orgEventHandler.cfg.Services.MJML.ApplicationId)
