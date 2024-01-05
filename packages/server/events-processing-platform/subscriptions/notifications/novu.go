@@ -19,15 +19,19 @@ func NewNovuProvider(log logger.Logger, apiKey string) *NovuProvider {
 	}
 }
 
-func (np *NovuProvider) SendNotification(ctx context.Context, u *NotifiableUser, payload map[string]interface{}, workflowId string) error {
+func (np *NovuProvider) SendNotification(ctx context.Context, u *NotifiableUser, payload, overrides map[string]interface{}, workflowId string) error {
 	to := map[string]interface{}{
 		"lastName":     u.LastName,
 		"firstName":    u.FirstName,
 		"subscriberId": u.SubscriberID,
 		"email":        u.Email,
 	}
-
 	data := novu.ITriggerPayloadOptions{To: to, Payload: payload}
+	if len(overrides) > 0 {
+		if containsKey(overrides, "email") {
+			data.Overrides = overrides
+		}
+	}
 
 	_, err := np.NovuClient.EventApi.Trigger(ctx, workflowId, data)
 
@@ -37,4 +41,9 @@ func (np *NovuProvider) SendNotification(ctx context.Context, u *NotifiableUser,
 	}
 
 	return nil
+}
+
+func containsKey[M ~map[K]V, K comparable, V any](m M, k K) bool {
+	_, ok := m[k]
+	return ok
 }

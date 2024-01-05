@@ -25,7 +25,7 @@ type MockNotificationProvider struct {
 	notificationText string
 }
 
-func (m *MockNotificationProvider) SendNotification(ctx context.Context, u *NotifiableUser, payload map[string]interface{}, workflowId string) error {
+func (m *MockNotificationProvider) SendNotification(ctx context.Context, u *NotifiableUser, payload, overrides map[string]interface{}, workflowId string) error {
 	m.called = true
 	switch workflowId {
 	case WorkflowIdOrgOwnerUpdateEmail:
