@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
@@ -747,7 +748,7 @@ func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.
 			h.log.Errorf("Failed to get user %s: %s", eventData.UpdatedByUserId, err.Error())
 		}
 		if userDbNode != nil {
-			user := graph_db.MapDbNodeToUserEntity(*userDbNode)
+			user := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
 			userName = user.GetFullName()
 		}
 	}

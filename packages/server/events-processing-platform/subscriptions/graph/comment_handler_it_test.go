@@ -27,7 +27,7 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, externalSystemId)
 	commentedIssueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
-	authorUserId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	authorUserId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "ExternalSystem": 1, "Comment": 0, "TimelineEvent": 1})
 

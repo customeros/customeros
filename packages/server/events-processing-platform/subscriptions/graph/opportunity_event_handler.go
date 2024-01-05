@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
@@ -408,7 +409,7 @@ func (h *OpportunityEventHandler) saveLikelihoodChangeAction(ctx context.Context
 			h.log.Errorf("Failed to get user %s: %s", eventData.UpdatedByUserId, err.Error())
 		}
 		if userDbNode != nil {
-			user := graph_db.MapDbNodeToUserEntity(*userDbNode)
+			user := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
 			userName = user.GetFullName()
 		}
 	}
