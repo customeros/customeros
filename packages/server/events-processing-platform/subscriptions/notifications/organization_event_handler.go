@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"net/http"
 	"os"
 	"strings"
@@ -105,9 +107,9 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
 	}
-	var user *entity.UserEntity
+	var user *neo4jentity.UserEntity
 	if userDbNode != nil {
-		user = graph_db.MapDbNodeToUserEntity(*userDbNode)
+		user = neo4jmapper.MapDbNodeToUserEntity(userDbNode)
 	}
 
 	// actor user
@@ -117,9 +119,9 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
 	}
-	var actor *entity.UserEntity
+	var actor *neo4jentity.UserEntity
 	if userDbNode != nil {
-		actor = graph_db.MapDbNodeToUserEntity(*actorDbNode)
+		actor = neo4jmapper.MapDbNodeToUserEntity(actorDbNode)
 	}
 
 	// Organization
@@ -184,9 +186,9 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
 	}
-	var user *entity.UserEntity
+	var user *neo4jentity.UserEntity
 	if userDbNode != nil {
-		user = graph_db.MapDbNodeToUserEntity(*userDbNode)
+		user = neo4jmapper.MapDbNodeToUserEntity(userDbNode)
 	}
 
 	// actor user
@@ -196,9 +198,9 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
 	}
-	var actor *entity.UserEntity
+	var actor *neo4jentity.UserEntity
 	if userDbNode != nil {
-		actor = graph_db.MapDbNodeToUserEntity(*actorDbNode)
+		actor = neo4jmapper.MapDbNodeToUserEntity(actorDbNode)
 	}
 
 	// Organization
@@ -231,7 +233,7 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	return err
 }
 
-func (h *OrganizationEventHandler) parseOrgOwnerUpdateEmail(actor, target *entity.UserEntity, orgId, orgName string) (string, error) {
+func (h *OrganizationEventHandler) parseOrgOwnerUpdateEmail(actor, target *neo4jentity.UserEntity, orgId, orgName string) (string, error) {
 	if _, err := os.Stat(h.cfg.Subscriptions.NotificationsSubscription.EmailTemplatePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
 	}
