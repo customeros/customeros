@@ -4,11 +4,11 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
-	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	postgrest "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/postgres"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -37,15 +37,15 @@ func SetupTestDatabase() (TestDatabase, func()) {
 
 	testDBs := TestDatabase{}
 
-	testDBs.Neo4jContainer, testDBs.Driver = neo4jt.InitTestNeo4jDB()
+	testDBs.Neo4jContainer, testDBs.Driver = neo4jtest.InitTestNeo4jDB()
 
 	postgresContainer, postgresGormDB, _ := postgrest.InitTestDB()
 	testDBs.GormDB = postgresGormDB
 	testDBs.Repositories = repository.InitRepos(testDBs.Driver, "neo4j", postgresGormDB, log)
 
 	shutdown := func() {
-		neo4jt.CloseDriver(*testDBs.Driver)
-		neo4jt.Terminate(testDBs.Neo4jContainer, context.Background())
+		neo4jtest.CloseDriver(*testDBs.Driver)
+		neo4jtest.Terminate(testDBs.Neo4jContainer, context.Background())
 		postgrest.Terminate(postgresContainer, context.Background())
 	}
 	return testDBs, shutdown

@@ -162,7 +162,7 @@ func (h *OpportunityEventHandler) sendEventToUpdateOrganizationRenewalSummary(ct
 	if organizationDbNode == nil {
 		return
 	}
-	organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = h.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.OrganizationIdGrpcRequest{
@@ -226,7 +226,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		if organizationDbNode == nil {
 			return nil
 		}
-		organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
@@ -313,7 +313,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		if organizationDbNode == nil {
 			return nil
 		}
-		organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{

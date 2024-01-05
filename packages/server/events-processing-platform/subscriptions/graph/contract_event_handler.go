@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -177,7 +178,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 			h.log.Errorf("Organization not found for contract %s", contractId)
 			return nil
 		}
-		organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = h.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.OrganizationIdGrpcRequest{
@@ -397,7 +398,7 @@ func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, te
 		if organizationDbNode == nil {
 			return
 		}
-		organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = h.grpcClients.OrganizationClient.UpdateOnboardingStatus(ctx, &organizationpb.UpdateOnboardingStatusGrpcRequest{
 			Tenant:             tenant,

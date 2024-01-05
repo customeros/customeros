@@ -244,7 +244,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	require.Equal(t, contactId, utils.GetStringPropOrEmpty(propsAfterContactCreate, "id"))
 
 	organizationName := "Test Organization"
-	organizationId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: organizationName,
 	})
 
