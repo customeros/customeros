@@ -6,9 +6,8 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -22,56 +21,66 @@ var (
 	relationshipsWithContactProperties      = []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
 )
 
-type TimelineEventRepository interface {
-	GetTimelineEvent(ctx context.Context, tenant string, id string) (*dbtype.Node, error)
-	CalculateAndGetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error)
+type TimelineEventReadRepository interface {
+	GetTimelineEvent(ctx context.Context, tenant, id string) (*dbtype.Node, error)
+	CalculateAndGetLastTouchPoint(ctx context.Context, tenant, organizationId string) (*time.Time, string, error)
 }
 
-type timelineEventRepository struct {
-	driver *neo4j.DriverWithContext
-	log    logger.Logger
+type timelineEventReadRepository struct {
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewTimelineEventRepository(driver *neo4j.DriverWithContext, log logger.Logger) TimelineEventRepository {
-	return &timelineEventRepository{
-		driver: driver,
-		log:    log,
+func NewTimelineEventReadRepository(driver *neo4j.DriverWithContext, database string) TimelineEventReadRepository {
+	return &timelineEventReadRepository{
+		driver:   driver,
+		database: database,
 	}
 }
 
-func (r *timelineEventRepository) GetTimelineEvent(ctx context.Context, tenant string, id string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsWithIds")
+func (r *timelineEventReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
+	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+}
+
+func (r *timelineEventReadRepository) GetTimelineEvent(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventReadRepository.GetTimelineEventsWithIds")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("id", id))
 
 	cypher := fmt.Sprintf(`MATCH (a:TimelineEvent{id: $id}) WHERE a:TimelineEvent_%s RETURN a`, tenant)
 	params := map[string]any{
 		"id": id,
 	}
-	span.LogFields(log.String("query", cypher), log.Object("params", params))
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
-	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, params)
-		if err != nil {
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 		}
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
-	return records.(*dbtype.Node), err
+	if err != nil {
+		return nil, err
+	}
+	span.LogFields(log.Bool("result.found", result != nil))
+	return result.(*dbtype.Node), nil
 }
 
-func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.CalculateAndGetLastTouchpoint")
+func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.Context, tenant, organizationId string) (*time.Time, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventReadRepository.CalculateAndGetLastTouchPoint")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId))
 
 	params := map[string]any{
 		"tenant":                                  tenant,
 		"organizationId":                          organizationId,
-		"nodeLabels":                              []string{entity.NodeLabel_InteractionSession, entity.NodeLabel_Issue, entity.NodeLabel_InteractionEvent, entity.NodeLabel_Meeting, entity.NodeLabel_LogEntry},
+		"nodeLabels":                              []string{entity.NodeLabelInteractionSession, entity.NodeLabelIssue, entity.NodeLabelInteractionEvent, entity.NodeLabelMeeting, entity.NodeLabelLogEntry},
 		"excludeInteractionEventContentType":      []string{"x-openline-transcript-element"},
 		"relationshipsWithOrganization":           relationshipsWithOrganization,
 		"relationshipsWithContact":                relationshipsWithContact,
@@ -80,7 +89,7 @@ func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Cont
 		"now": utils.Now(),
 	}
 
-	query := `MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
+	cypher := `MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
 		CALL { ` +
 		// get all timeline events for the organization contacts
 		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), 
@@ -118,19 +127,21 @@ func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Cont
 		} 
 		RETURN coalesce(timelineEvent.startedAt, timelineEvent.createdAt), timelineEvent.id ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT 1`
 
-	span.LogFields(log.String("query", query))
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query, params)
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, "", err
 	}
 
@@ -142,7 +153,6 @@ func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Cont
 		} else {
 			err = errors.New(fmt.Sprintf("Value %v associated to timeline event id %s is not of type time.Time", records.([]*neo4j.Record)[0].Values[0], records.([]*neo4j.Record)[0].Values[1].(string)))
 			tracing.TraceErr(span, err)
-			r.log.Warnf("Failed to get last touchpoint. Skip setting it to organization: %v", err.Error())
 			return nil, "", nil
 		}
 	}

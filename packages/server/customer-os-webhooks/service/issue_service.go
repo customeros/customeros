@@ -169,7 +169,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		return NewFailedSyncStatus(reason)
 	}
 
-	if issueInput.OrganizationRequired && reporterLabel != entity.NodeLabel_Organization {
+	if issueInput.OrganizationRequired && reporterLabel != neo4jentity.NodeLabelOrganization {
 		reason = fmt.Sprintf("organization(s) not found for issue %s for tenant %s", issueInput.ExternalId, tenant)
 		s.log.Warnf("Skip issue sync: %v", reason)
 		span.LogFields(log.String("output", "skipped"))
@@ -219,14 +219,14 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
 			},
 		}
-		if reporterId != "" && reporterLabel == entity.NodeLabel_Organization {
+		if reporterId != "" && reporterLabel == neo4jentity.NodeLabelOrganization {
 			issueGrpcRequest.ReportedByOrganizationId = &reporterId
 		}
 		if submitterId != "" {
 			switch submitterLabel {
-			case entity.NodeLabel_Organization:
+			case neo4jentity.NodeLabelOrganization:
 				issueGrpcRequest.SubmittedByOrganizationId = &submitterId
-			case entity.NodeLabel_User:
+			case neo4jentity.NodeLabelUser:
 				issueGrpcRequest.SubmittedByUserId = &submitterId
 			}
 		}
@@ -261,7 +261,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				reason = fmt.Sprintf("failed finding follower for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 				s.log.Error(reason)
 			}
-			if followerId != "" && followerLabel == entity.NodeLabel_User && !utils.Contains(processedFollowerUserIds, followerId) {
+			if followerId != "" && followerLabel == neo4jentity.NodeLabelUser && !utils.Contains(processedFollowerUserIds, followerId) {
 				_, err = s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
 					Tenant:    common.GetTenantFromContext(ctx),
 					IssueId:   issueId,
@@ -288,7 +288,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				reason = fmt.Sprintf("failed finding collaborator for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 				s.log.Error(reason)
 			}
-			if collaboratorId != "" && collaboratorLabel == entity.NodeLabel_User && !utils.Contains(processedFollowerUserIds, collaboratorId) {
+			if collaboratorId != "" && collaboratorLabel == neo4jentity.NodeLabelUser && !utils.Contains(processedFollowerUserIds, collaboratorId) {
 				_, err = s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
 					Tenant:    common.GetTenantFromContext(ctx),
 					IssueId:   issueId,

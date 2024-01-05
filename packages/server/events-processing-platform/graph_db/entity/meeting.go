@@ -28,5 +28,5 @@ func (MeetingEntity) IsTimelineEvent() {
 }
 
 func (MeetingEntity) TimelineEventLabel() string {
-	return NodeLabel_Meeting
+	return neo4jentity.NodeLabelMeeting
 }

@@ -94,20 +94,20 @@ func (organization OrganizationEntity) ToString() string {
 func (OrganizationEntity) IsNotedEntity() {}
 
 func (OrganizationEntity) NotedEntityLabel() string {
-	return NodeLabel_Organization
+	return neo4jentity.NodeLabelOrganization
 }
 
 func (OrganizationEntity) IsInteractionEventParticipant() {}
 
 func (OrganizationEntity) ParticipantLabel() string {
-	return NodeLabel_Organization
+	return neo4jentity.NodeLabelOrganization
 }
 
 type OrganizationEntities []OrganizationEntity
 
 func (organization OrganizationEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_Organization,
-		NodeLabel_Organization + "_" + tenant,
+		neo4jentity.NodeLabelOrganization,
+		neo4jentity.NodeLabelOrganization + "_" + tenant,
 	}
 }

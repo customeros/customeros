@@ -27,5 +27,5 @@ func (PageViewEntity) IsTimelineEvent() {
 }
 
 func (PageViewEntity) TimelineEventLabel() string {
-	return NodeLabel_PageView
+	return neo4jentity.NodeLabelPageView
 }

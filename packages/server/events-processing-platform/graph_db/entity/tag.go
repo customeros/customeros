@@ -26,7 +26,7 @@ type TagEntities []TagEntity
 
 func (TagEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_Tag,
-		NodeLabel_Tag + "_" + tenant,
+		neo4jentity.NodeLabelTag,
+		neo4jentity.NodeLabelTag + "_" + tenant,
 	}
 }

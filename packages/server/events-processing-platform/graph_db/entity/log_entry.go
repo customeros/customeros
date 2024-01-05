@@ -21,5 +21,5 @@ func (LogEntryEntity) IsTimelineEvent() {
 }
 
 func (LogEntryEntity) TimelineEventLabel() string {
-	return NodeLabel_LogEntry
+	return neo4jentity.NodeLabelLogEntry
 }
