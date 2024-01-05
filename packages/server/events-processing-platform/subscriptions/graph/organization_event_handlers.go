@@ -518,7 +518,7 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummary(ctx context.Context, 
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	openRenewalOpportunityDbNodes, err := h.repositories.OpportunityRepository.GetOpenRenewalOpportunitiesForOrganization(ctx, eventData.Tenant, organizationId)
+	openRenewalOpportunityDbNodes, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpenRenewalOpportunitiesForOrganization(ctx, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to get open renewal opportunities for organization %s: %s", organizationId, err.Error())
