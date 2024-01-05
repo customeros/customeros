@@ -232,7 +232,14 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 }
 
 func (h *OrganizationEventHandler) parseOrgOwnerUpdateEmail(actor, target *entity.UserEntity, orgId, orgName string) (string, error) {
-	rawMjml, _ := os.ReadFile("./email_templates/ownership.single.mjml")
+	if _, err := os.Stat(h.cfg.Subscriptions.NotificationsSubscription.EmailTemplatePath); os.IsNotExist(err) {
+		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
+	}
+	emailPath := fmt.Sprintf("%s/ownership.single.mjml", h.cfg.Subscriptions.NotificationsSubscription.EmailTemplatePath)
+	if _, err := os.Stat(emailPath); err != nil {
+		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
+	}
+	rawMjml, _ := os.ReadFile(emailPath)
 	mjmlf := strings.Replace(string(rawMjml[:]), "{{userFirstName}}", target.FirstName, -1)
 	mjmlf = strings.Replace(mjmlf, "{{actorFirstName}}", actor.FirstName, -1)
 	mjmlf = strings.Replace(mjmlf, "{{actorLastName}}", actor.LastName, -1)
