@@ -665,7 +665,7 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount1(t *testing.T) {
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
-			"start": "2023-01-15T00:00:00.000Z",
+			"start": "2023-01-01T00:00:00.000Z",
 			"end":   "2023-12-01T00:00:00.000Z",
 		})
 
@@ -718,7 +718,7 @@ func TestQueryResolver_Dashboard_New_Customers_GeneralCount2(t *testing.T) {
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_new_customers",
 		map[string]interface{}{
-			"start": "2023-01-15T00:00:00.000Z",
+			"start": "2023-01-01T00:00:00.000Z",
 			"end":   "2023-12-01T00:00:00.000Z",
 		})
 
