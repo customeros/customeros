@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
@@ -96,7 +97,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	require.NotNil(t, orgDbNode)
 
 	// verify organization
-	organization := graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, "test org", organization.Name)
 	require.Equal(t, now, organization.CreatedAt)
@@ -127,7 +128,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
 		Hide: false,
 	})
@@ -149,7 +150,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
-	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(dbNode)
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, true, organization.Hide)
 }
@@ -159,7 +160,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
 		Hide: true,
 	})
@@ -181,7 +182,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
-	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(dbNode)
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, false, organization.Hide)
 	require.NotEqual(t, "", organization.CustomerOsId)
@@ -197,7 +198,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	platformName := "facebook"
 	now := utils.Now()
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
 	})
 	neo4jt.CreateSocial(ctx, testDatabase.Driver, tenantName, entity.SocialEntity{
@@ -241,7 +242,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	platformName := "facebook"
 	now := utils.Now()
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
 	})
 	existingSocialId := neo4jt.CreateSocial(ctx, testDatabase.Driver, tenantName, entity.SocialEntity{
@@ -280,7 +281,7 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	organizationName := "test_org_name"
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: organizationName,
 	})
 
@@ -324,7 +325,7 @@ func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId1 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
 	contractId2 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
 	opportunityIdRenewal1_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
@@ -370,7 +371,7 @@ func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
 	require.NotNil(t, orgDbNode)
 
 	// verify organization
-	organization := graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, float64(1110), *organization.RenewalSummary.ArrForecast)
 	require.Equal(t, float64(2220), *organization.RenewalSummary.MaxArrForecast)
@@ -391,7 +392,7 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId1 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
 	contractId2 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
 	opportunityIdRenewal1_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
@@ -445,7 +446,7 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 	require.NotNil(t, orgDbNode)
 
 	// verify organization
-	organization := graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, int64(20), *organization.RenewalSummary.RenewalLikelihoodOrder)
 	require.Equal(t, "LOW", organization.RenewalSummary.RenewalLikelihood)
@@ -465,7 +466,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 		FirstName: "Olivia",
 		LastName:  "Rhye",
 	})
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
 	})
 	orgEventHandler := &OrganizationEventHandler{
@@ -494,7 +495,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
-	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(dbNode)
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, "DONE", organization.OnboardingDetails.Status)
 	require.Equal(t, int64(constants.OnboardingStatus_Order_Done), *organization.OnboardingDetails.SortingOrder)
@@ -519,7 +520,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
 	})
 	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
@@ -549,7 +550,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
-	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(dbNode)
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, "NOT_STARTED", organization.OnboardingDetails.Status)
 	require.Equal(t, "Some comments", organization.OnboardingDetails.Comments)

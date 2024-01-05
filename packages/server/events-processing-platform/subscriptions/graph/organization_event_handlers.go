@@ -142,7 +142,7 @@ func (h *OrganizationEventHandler) setCustomerOsId(ctx context.Context, tenant, 
 		tracing.TraceErr(span, err)
 		return err
 	}
-	organizationEntity := graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
+	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 
 	if organizationEntity.CustomerOsId != "" {
 		return nil
@@ -678,7 +678,7 @@ func (h *OrganizationEventHandler) OnUpdateOnboardingStatus(ctx context.Context,
 		tracing.TraceErr(span, err)
 		return nil
 	}
-	organizationEntity := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 	err = h.repositories.OrganizationRepository.UpdateOnboardingStatus(ctx, eventData.Tenant, organizationId, eventData.Status, eventData.Comments, getOrderForOnboardingStatus(eventData.Status), eventData.UpdatedAt)
 	if err != nil {

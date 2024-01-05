@@ -28,7 +28,7 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{})
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, "sf")
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
@@ -114,8 +114,8 @@ func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
-	logEntryId := neo4jt.CreateLogEntryForOrg(ctx, testDatabase.Driver, tenantName, orgId, entity.LogEntryEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	logEntryId := neo4jtest.CreateLogEntryForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.LogEntryEntity{})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "LogEntry": 1, "TimelineEvent": 1})
 
@@ -157,8 +157,8 @@ func TestGraphLogEntryEventHandler_OnAddTag(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
-	logEntryId := neo4jt.CreateLogEntryForOrg(ctx, testDatabase.Driver, tenantName, orgId, entity.LogEntryEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	logEntryId := neo4jtest.CreateLogEntryForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.LogEntryEntity{})
 	tagId := neo4jt.CreateTag(ctx, testDatabase.Driver, tenantName, entity.TagEntity{})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "LogEntry": 1, "TimelineEvent": 1, "Tag": 1})
@@ -197,8 +197,8 @@ func TestGraphLogEntryEventHandler_OnRemoveTag(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
-	logEntryId := neo4jt.CreateLogEntryForOrg(ctx, testDatabase.Driver, tenantName, orgId, entity.LogEntryEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	logEntryId := neo4jtest.CreateLogEntryForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.LogEntryEntity{})
 	tagId := neo4jt.CreateTag(ctx, testDatabase.Driver, tenantName, entity.TagEntity{})
 	neo4jt.LinkTag(ctx, testDatabase.Driver, tagId, logEntryId)
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{

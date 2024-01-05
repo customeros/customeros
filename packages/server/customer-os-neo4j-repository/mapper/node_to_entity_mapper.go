@@ -69,3 +69,63 @@ func MapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
 	}
 	return &userEntity
 }
+
+func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	organizationEntity := entity.OrganizationEntity{
+		ID:                 utils.GetStringPropOrEmpty(props, "id"),
+		CustomerOsId:       utils.GetStringPropOrEmpty(props, "customerOsId"),
+		Name:               utils.GetStringPropOrEmpty(props, "name"),
+		Description:        utils.GetStringPropOrEmpty(props, "description"),
+		Website:            utils.GetStringPropOrEmpty(props, "website"),
+		Industry:           utils.GetStringPropOrEmpty(props, "industry"),
+		IndustryGroup:      utils.GetStringPropOrEmpty(props, "industryGroup"),
+		SubIndustry:        utils.GetStringPropOrEmpty(props, "subIndustry"),
+		TargetAudience:     utils.GetStringPropOrEmpty(props, "targetAudience"),
+		ValueProposition:   utils.GetStringPropOrEmpty(props, "valueProposition"),
+		LastFundingRound:   utils.GetStringPropOrEmpty(props, "lastFundingRound"),
+		LastFundingAmount:  utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
+		ReferenceId:        utils.GetStringPropOrEmpty(props, "referenceId"),
+		Note:               utils.GetStringPropOrEmpty(props, "note"),
+		IsPublic:           utils.GetBoolPropOrFalse(props, "isPublic"),
+		IsCustomer:         utils.GetBoolPropOrFalse(props, "isCustomer"),
+		Hide:               utils.GetBoolPropOrFalse(props, "hide"),
+		Employees:          utils.GetInt64PropOrZero(props, "employees"),
+		Market:             utils.GetStringPropOrEmpty(props, "market"),
+		CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
+		LastTouchpointAt:   utils.GetTimePropOrNil(props, "lastTouchpointAt"),
+		LastTouchpointId:   utils.GetStringPropOrNil(props, "lastTouchpointId"),
+		YearFounded:        utils.GetInt64PropOrNil(props, "yearFounded"),
+		Headquarters:       utils.GetStringPropOrEmpty(props, "headquarters"),
+		EmployeeGrowthRate: utils.GetStringPropOrEmpty(props, "employeeGrowthRate"),
+		LogoUrl:            utils.GetStringPropOrEmpty(props, "logoUrl"),
+		RenewalSummary: entity.RenewalSummary{
+			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
+			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
+			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, "derivedRenewalLikelihood"),
+			RenewalLikelihoodOrder: utils.GetInt64PropOrNil(props, "derivedRenewalLikelihoodOrder"),
+			NextRenewalAt:          utils.GetTimePropOrNil(props, "derivedNextRenewalAt"),
+		},
+		WebScrapeDetails: entity.WebScrapeDetails{
+			WebScrapedUrl:             utils.GetStringPropOrEmpty(props, "webScrapedUrl"),
+			WebScrapedAt:              utils.GetTimePropOrNil(props, "webScrapedAt"),
+			WebScrapeLastRequestedAt:  utils.GetTimePropOrNil(props, "webScrapeLastRequestedAt"),
+			WebScrapeLastRequestedUrl: utils.GetStringPropOrEmpty(props, "webScrapeLastRequestedUrl"),
+			WebScrapeAttempts:         utils.GetInt64PropOrZero(props, "webScrapeAttempts"),
+		},
+		OnboardingDetails: entity.OnboardingDetails{
+			Status:       utils.GetStringPropOrEmpty(props, "onboardingStatus"),
+			SortingOrder: utils.GetInt64PropOrNil(props, "onboardingStatusOrder"),
+			UpdatedAt:    utils.GetTimePropOrNil(props, "onboardingUpdatedAt"),
+			Comments:     utils.GetStringPropOrEmpty(props, "onboardingComments"),
+		},
+	}
+	return &organizationEntity
+}

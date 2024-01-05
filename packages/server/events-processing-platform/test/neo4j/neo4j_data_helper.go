@@ -10,28 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 )
 
-// Deprecated
-func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
-	orgId := organization.ID
-	if orgId == "" {
-		orgId = uuid.New().String()
-	}
-	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
-			  MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$id})
-				SET o:Organization_%s,
-					o.name=$name,
-					o.hide=$hide
-				`, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant": tenant,
-		"name":   organization.Name,
-		"hide":   organization.Hide,
-		"id":     orgId,
-	})
-	return orgId
-}
-
 func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social entity.SocialEntity) string {
 	socialId := utils.NewUUIDIfEmpty(social.Id)
 	query := fmt.Sprintf(`MERGE (s:Social:Social_%s {id: $id})
@@ -80,33 +58,6 @@ func CreateJobRole(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	})
 	return jobRoleId
 
-}
-
-// Deprecated
-func CreateLogEntryForOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry entity.LogEntryEntity) string {
-	logEntryId := logEntry.Id
-	if logEntryId == "" {
-		logEntryId = uuid.New().String()
-	}
-	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$orgId})
-			  MERGE (o)-[:LOGGED]->(l:LogEntry {id:$id})
-				SET l:LogEntry_%s,
-					l:TimelineEvent,
-					l:TimelineEvent_%s,
-					l.content=$content,
-					l.contentType=$contentType,
-					l.startedAt=$startedAt
-				`, tenant, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":      tenant,
-		"orgId":       orgId,
-		"id":          logEntryId,
-		"content":     logEntry.Content,
-		"contentType": logEntry.ContentType,
-		"startedAt":   logEntry.StartedAt,
-	})
-	return logEntryId
 }
 
 func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, issue entity.IssueEntity) string {
