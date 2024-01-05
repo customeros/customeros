@@ -28,8 +28,6 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"os"
-	"reflect"
-	"sort"
 	"testing"
 )
 
@@ -164,16 +162,6 @@ func assertRawResponseError(t *testing.T, response *client.Response, err error) 
 	}
 	require.NotNil(t, response.Data)
 	require.NotNil(t, response.Errors)
-}
-
-// Deprecated, use neo4jtest.AssertNeo4jLabels instead
-func assertNeo4jLabels(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, expectedLabels []string) {
-	actualLabels := neo4jtest.GetAllLabels(ctx, driver)
-	sort.Strings(expectedLabels)
-	sort.Strings(actualLabels)
-	if !reflect.DeepEqual(actualLabels, expectedLabels) {
-		t.Errorf("Expected labels: %v, \nActual labels: %v", expectedLabels, actualLabels)
-	}
 }
 
 // Deprecated, use neo4jtest.AssertNeo4jNodeCount instead

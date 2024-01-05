@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -94,7 +95,7 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 		checkCustomField(t, *updatedContact.FieldSets[1].CustomFields[0], "field4", "value4", &fieldInSetTemplateId)
 	}
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "EntityTemplate", "CustomFieldTemplate",
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "EntityTemplate", "CustomFieldTemplate",
 		"FieldSetTemplate", "TextField", "CustomField", "CustomField_" + tenantName, "FieldSet", "FieldSet_" + tenantName})
 }
 
@@ -365,7 +366,7 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "CustomFieldTemplate"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "CustomFieldTemplate_"+tenantName))
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "EntityTemplate", "EntityTemplate_" + tenantName,
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "EntityTemplate", "EntityTemplate_" + tenantName,
 		"FieldSetTemplate", "FieldSetTemplate_" + tenantName, "CustomFieldTemplate", "CustomFieldTemplate_" + tenantName})
 }
 

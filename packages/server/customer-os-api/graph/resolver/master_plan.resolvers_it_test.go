@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
-	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -22,7 +21,7 @@ func TestMutationResolver_MasterPlanCreate(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	masterPlanId := uuid.New().String()
 	calledCreateMasterPlan := false
 
@@ -63,7 +62,7 @@ func TestMutationResolver_MasterPlanMilestoneCreate(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	masterPlanId := neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{})
 	masterPlanMilestoneId := uuid.New().String()
 
@@ -297,4 +296,46 @@ func TestQueryResolver_MasterPlans_OnlyNonRetired(t *testing.T) {
 	masterPlans := masterPlansStruct.MasterPlans
 	require.Equal(t, 1, len(masterPlans))
 	require.Equal(t, masterPlanId_today, masterPlans[0].ID)
+}
+
+func TestMutationResolver_MasterPlanUpdate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	masterPlanId := neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{})
+	calledUpdateMasterPlan := false
+
+	masterPlanServiceCallbacks := events_platform.MockMasterPlanServiceCallbacks{
+		UpdateMasterPlan: func(context context.Context, masterPlan *masterplanpb.UpdateMasterPlanGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+			require.Equal(t, tenantName, masterPlan.Tenant)
+			require.Equal(t, masterPlanId, masterPlan.MasterPlanId)
+			require.Equal(t, testUserId, masterPlan.LoggedInUserId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, masterPlan.AppSource)
+			require.Equal(t, "Updated plan", masterPlan.Name)
+			require.Equal(t, false, masterPlan.Retired)
+			require.Equal(t, []masterplanpb.MasterPlanFieldMask{masterplanpb.MasterPlanFieldMask_MASTER_PLAN_PROPERTY_NAME}, masterPlan.FieldsMask)
+			calledUpdateMasterPlan = true
+			return &masterplanpb.MasterPlanIdGrpcResponse{
+				Id: masterPlanId,
+			}, nil
+		},
+	}
+	events_platform.SetMasterPlanCallbacks(&masterPlanServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "master_plan/update_master_plan", map[string]interface{}{"id": masterPlanId})
+	require.Nil(t, rawResponse.Errors)
+
+	var masterPlanStruct struct {
+		MasterPlan_Update model.MasterPlan
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &masterPlanStruct)
+	require.Nil(t, err)
+
+	masterPlan := masterPlanStruct.MasterPlan_Update
+	require.Equal(t, masterPlanId, masterPlan.ID)
+
+	require.True(t, calledUpdateMasterPlan)
 }

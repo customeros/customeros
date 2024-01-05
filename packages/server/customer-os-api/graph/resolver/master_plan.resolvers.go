@@ -6,15 +6,15 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -92,6 +92,29 @@ func (r *mutationResolver) MasterPlanCreate(ctx context.Context, input model.Mas
 	}
 	span.LogFields(log.String("response.masterPlanId", masterPlanId))
 	return mapper.MapEntityToMasterPlan(createdMasterPlanEntity), nil
+}
+
+// MasterPlanUpdate is the resolver for the masterPlan_Update field.
+func (r *mutationResolver) MasterPlanUpdate(ctx context.Context, input model.MasterPlanUpdateInput) (*model.MasterPlan, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	err := r.Services.MasterPlanService.UpdateMasterPlan(ctx, input.ID, input.Name, input.Retired)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update master plan")
+		return nil, err
+	}
+
+	updatedMasterPlanEntity, err := r.Services.MasterPlanService.GetMasterPlanById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get Master plan with id %s", input.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToMasterPlan(updatedMasterPlanEntity), nil
 }
 
 // MasterPlanMilestoneCreate is the resolver for the masterPlanMilestone_Create field.

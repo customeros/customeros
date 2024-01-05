@@ -8,6 +8,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
@@ -17,8 +18,8 @@ import (
 func TestMutationResolver_AnalysisCreate_Session(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	now := utils.Now()
 	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "INACTIVE", "VOICE", now, false)
@@ -60,8 +61,8 @@ func TestMutationResolver_AnalysisCreate_Session(t *testing.T) {
 func TestMutationResolver_AnalysisCreate_Meeting(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	now := utils.Now()
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "meeting-name", now)
@@ -102,8 +103,8 @@ func TestMutationResolver_AnalysisCreate_Meeting(t *testing.T) {
 func TestMutationResolver_AnalysisCreate_Event(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	now := utils.Now()
 	channel := "VOICE"
@@ -154,7 +155,7 @@ func TestMutationResolver_AnalysisCreate_Event(t *testing.T) {
 func TestQueryResolver_Analysis(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	now := time.Now().UTC()
 

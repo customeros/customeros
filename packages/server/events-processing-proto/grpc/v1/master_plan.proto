@@ -26,7 +26,7 @@ message CreateMasterPlanMilestoneGrpcRequest {
   int64 order = 10;
 }
 
-enum MasterPlanMaskField {
+enum MasterPlanFieldMask {
   MASTER_PLAN_PROPERTY_NONE = 0; // No property, ignored by the server
   MASTER_PLAN_PROPERTY_ALL = 1; // All properties, if present in the list all other properties are ignored
   MASTER_PLAN_PROPERTY_NAME = 2;
@@ -39,7 +39,7 @@ message UpdateMasterPlanGrpcRequest {
   string loggedInUserId = 3;
   string name = 4;
   bool retired = 5;
-  repeated MasterPlanMaskField fieldsMask = 6;
+  repeated MasterPlanFieldMask fieldsMask = 6;
   google.protobuf.Timestamp updatedAt = 7;
   string appSource = 8;
 }

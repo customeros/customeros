@@ -22,24 +22,24 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type MasterPlanMaskField int32
+type MasterPlanFieldMask int32
 
 const (
-	MasterPlanMaskField_MASTER_PLAN_PROPERTY_NONE    MasterPlanMaskField = 0 // No property, ignored by the server
-	MasterPlanMaskField_MASTER_PLAN_PROPERTY_ALL     MasterPlanMaskField = 1 // All properties, if present in the list all other properties are ignored
-	MasterPlanMaskField_MASTER_PLAN_PROPERTY_NAME    MasterPlanMaskField = 2
-	MasterPlanMaskField_MASTER_PLAN_PROPERTY_RETIRED MasterPlanMaskField = 3
+	MasterPlanFieldMask_MASTER_PLAN_PROPERTY_NONE    MasterPlanFieldMask = 0 // No property, ignored by the server
+	MasterPlanFieldMask_MASTER_PLAN_PROPERTY_ALL     MasterPlanFieldMask = 1 // All properties, if present in the list all other properties are ignored
+	MasterPlanFieldMask_MASTER_PLAN_PROPERTY_NAME    MasterPlanFieldMask = 2
+	MasterPlanFieldMask_MASTER_PLAN_PROPERTY_RETIRED MasterPlanFieldMask = 3
 )
 
-// Enum value maps for MasterPlanMaskField.
+// Enum value maps for MasterPlanFieldMask.
 var (
-	MasterPlanMaskField_name = map[int32]string{
+	MasterPlanFieldMask_name = map[int32]string{
 		0: "MASTER_PLAN_PROPERTY_NONE",
 		1: "MASTER_PLAN_PROPERTY_ALL",
 		2: "MASTER_PLAN_PROPERTY_NAME",
 		3: "MASTER_PLAN_PROPERTY_RETIRED",
 	}
-	MasterPlanMaskField_value = map[string]int32{
+	MasterPlanFieldMask_value = map[string]int32{
 		"MASTER_PLAN_PROPERTY_NONE":    0,
 		"MASTER_PLAN_PROPERTY_ALL":     1,
 		"MASTER_PLAN_PROPERTY_NAME":    2,
@@ -47,30 +47,30 @@ var (
 	}
 )
 
-func (x MasterPlanMaskField) Enum() *MasterPlanMaskField {
-	p := new(MasterPlanMaskField)
+func (x MasterPlanFieldMask) Enum() *MasterPlanFieldMask {
+	p := new(MasterPlanFieldMask)
 	*p = x
 	return p
 }
 
-func (x MasterPlanMaskField) String() string {
+func (x MasterPlanFieldMask) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (MasterPlanMaskField) Descriptor() protoreflect.EnumDescriptor {
+func (MasterPlanFieldMask) Descriptor() protoreflect.EnumDescriptor {
 	return file_master_plan_proto_enumTypes[0].Descriptor()
 }
 
-func (MasterPlanMaskField) Type() protoreflect.EnumType {
+func (MasterPlanFieldMask) Type() protoreflect.EnumType {
 	return &file_master_plan_proto_enumTypes[0]
 }
 
-func (x MasterPlanMaskField) Number() protoreflect.EnumNumber {
+func (x MasterPlanFieldMask) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use MasterPlanMaskField.Descriptor instead.
-func (MasterPlanMaskField) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use MasterPlanFieldMask.Descriptor instead.
+func (MasterPlanFieldMask) EnumDescriptor() ([]byte, []int) {
 	return file_master_plan_proto_rawDescGZIP(), []int{0}
 }
 
@@ -282,7 +282,7 @@ type UpdateMasterPlanGrpcRequest struct {
 	LoggedInUserId string                 `protobuf:"bytes,3,opt,name=loggedInUserId,proto3" json:"loggedInUserId,omitempty"`
 	Name           string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
 	Retired        bool                   `protobuf:"varint,5,opt,name=retired,proto3" json:"retired,omitempty"`
-	FieldsMask     []MasterPlanMaskField  `protobuf:"varint,6,rep,packed,name=fieldsMask,proto3,enum=MasterPlanMaskField" json:"fieldsMask,omitempty"`
+	FieldsMask     []MasterPlanFieldMask  `protobuf:"varint,6,rep,packed,name=fieldsMask,proto3,enum=MasterPlanFieldMask" json:"fieldsMask,omitempty"`
 	UpdatedAt      *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updatedAt,proto3" json:"updatedAt,omitempty"`
 	AppSource      string                 `protobuf:"bytes,8,opt,name=appSource,proto3" json:"appSource,omitempty"`
 }
@@ -354,7 +354,7 @@ func (x *UpdateMasterPlanGrpcRequest) GetRetired() bool {
 	return false
 }
 
-func (x *UpdateMasterPlanGrpcRequest) GetFieldsMask() []MasterPlanMaskField {
+func (x *UpdateMasterPlanGrpcRequest) GetFieldsMask() []MasterPlanFieldMask {
 	if x != nil {
 		return x.FieldsMask
 	}
@@ -527,8 +527,8 @@ var file_master_plan_proto_rawDesc = []byte{
 	0x0a, 0x07, 0x72, 0x65, 0x74, 0x69, 0x72, 0x65, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52,
 	0x07, 0x72, 0x65, 0x74, 0x69, 0x72, 0x65, 0x64, 0x12, 0x34, 0x0a, 0x0a, 0x66, 0x69, 0x65, 0x6c,
 	0x64, 0x73, 0x4d, 0x61, 0x73, 0x6b, 0x18, 0x06, 0x20, 0x03, 0x28, 0x0e, 0x32, 0x14, 0x2e, 0x4d,
-	0x61, 0x73, 0x74, 0x65, 0x72, 0x50, 0x6c, 0x61, 0x6e, 0x4d, 0x61, 0x73, 0x6b, 0x46, 0x69, 0x65,
-	0x6c, 0x64, 0x52, 0x0a, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x73, 0x4d, 0x61, 0x73, 0x6b, 0x12, 0x38,
+	0x61, 0x73, 0x74, 0x65, 0x72, 0x50, 0x6c, 0x61, 0x6e, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4d, 0x61,
+	0x73, 0x6b, 0x52, 0x0a, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x73, 0x4d, 0x61, 0x73, 0x6b, 0x12, 0x38,
 	0x0a, 0x09, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x18, 0x07, 0x20, 0x01, 0x28,
 	0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x09, 0x75,
@@ -541,7 +541,7 @@ var file_master_plan_proto_rawDesc = []byte{
 	0x4d, 0x69, 0x6c, 0x65, 0x73, 0x74, 0x6f, 0x6e, 0x65, 0x49, 0x64, 0x47, 0x72, 0x70, 0x63, 0x52,
 	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20,
 	0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x2a, 0x93, 0x01, 0x0a, 0x13, 0x4d, 0x61, 0x73, 0x74,
-	0x65, 0x72, 0x50, 0x6c, 0x61, 0x6e, 0x4d, 0x61, 0x73, 0x6b, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x12,
+	0x65, 0x72, 0x50, 0x6c, 0x61, 0x6e, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4d, 0x61, 0x73, 0x6b, 0x12,
 	0x1d, 0x0a, 0x19, 0x4d, 0x41, 0x53, 0x54, 0x45, 0x52, 0x5f, 0x50, 0x4c, 0x41, 0x4e, 0x5f, 0x50,
 	0x52, 0x4f, 0x50, 0x45, 0x52, 0x54, 0x59, 0x5f, 0x4e, 0x4f, 0x4e, 0x45, 0x10, 0x00, 0x12, 0x1c,
 	0x0a, 0x18, 0x4d, 0x41, 0x53, 0x54, 0x45, 0x52, 0x5f, 0x50, 0x4c, 0x41, 0x4e, 0x5f, 0x50, 0x52,
@@ -590,7 +590,7 @@ func file_master_plan_proto_rawDescGZIP() []byte {
 var file_master_plan_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_master_plan_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_master_plan_proto_goTypes = []interface{}{
-	(MasterPlanMaskField)(0),                     // 0: MasterPlanMaskField
+	(MasterPlanFieldMask)(0),                     // 0: MasterPlanFieldMask
 	(*CreateMasterPlanGrpcRequest)(nil),          // 1: CreateMasterPlanGrpcRequest
 	(*CreateMasterPlanMilestoneGrpcRequest)(nil), // 2: CreateMasterPlanMilestoneGrpcRequest
 	(*UpdateMasterPlanGrpcRequest)(nil),          // 3: UpdateMasterPlanGrpcRequest
@@ -604,7 +604,7 @@ var file_master_plan_proto_depIdxs = []int32{
 	7, // 1: CreateMasterPlanGrpcRequest.sourceFields:type_name -> SourceFields
 	6, // 2: CreateMasterPlanMilestoneGrpcRequest.createdAt:type_name -> google.protobuf.Timestamp
 	7, // 3: CreateMasterPlanMilestoneGrpcRequest.sourceFields:type_name -> SourceFields
-	0, // 4: UpdateMasterPlanGrpcRequest.fieldsMask:type_name -> MasterPlanMaskField
+	0, // 4: UpdateMasterPlanGrpcRequest.fieldsMask:type_name -> MasterPlanFieldMask
 	6, // 5: UpdateMasterPlanGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
 	1, // 6: MasterPlanGrpcService.CreateMasterPlan:input_type -> CreateMasterPlanGrpcRequest
 	3, // 7: MasterPlanGrpcService.UpdateMasterPlan:input_type -> UpdateMasterPlanGrpcRequest

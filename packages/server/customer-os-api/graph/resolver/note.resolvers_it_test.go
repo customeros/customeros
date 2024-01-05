@@ -9,6 +9,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -54,7 +55,7 @@ func TestMutationResolver_NoteCreateForContact(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "CREATED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "User_" + tenantName,
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "User_" + tenantName,
 		"Note", "Note_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName})
 }
 
@@ -98,7 +99,7 @@ func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "NOTED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "User", "User_" + tenantName,
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "User", "User_" + tenantName,
 		"Note", "Note_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName})
 }
 
@@ -224,7 +225,7 @@ func TestMutationResolver_NoteUpdate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "NOTED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
 		"Note", "Note_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName})
 }
 
@@ -262,7 +263,7 @@ func TestMutationResolver_NoteDelete(t *testing.T) {
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "NOTED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName})
 }
 
 func TestQueryResolver_GetNote_WithNotedEntities(t *testing.T) {
@@ -318,7 +319,7 @@ func TestQueryResolver_GetNote_WithNotedEntities(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "NOTED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
 		"Organization", "Organization_" + tenantName, "Note", "Note_" + tenantName,
 		"TimelineEvent", "TimelineEvent_" + tenantName})
 }
