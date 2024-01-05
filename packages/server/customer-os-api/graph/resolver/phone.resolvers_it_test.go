@@ -10,6 +10,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -69,7 +70,7 @@ func TestMutationResolver_PhoneNumberMergeToContact(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Country", "Contact", "Contact_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Country", "Contact", "Contact_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
 }
 
 func TestMutationResolver_PhoneNumberUpdateInContact(t *testing.T) {
@@ -166,7 +167,7 @@ func TestMutationResolver_PhoneNumberUpdateInContact_ReplacePhoneNumber(t *testi
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "LINKED_TO"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Country", "Contact", "Contact_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Country", "Contact", "Contact_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
 }
 
 func TestMutationResolver_PhoneNumberRemoveFromContact(t *testing.T) {
@@ -204,7 +205,7 @@ func TestMutationResolver_PhoneNumberRemoveFromContact(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "PhoneNumber", "PhoneNumber_" + tenantName, "Contact", "Contact_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "PhoneNumber", "PhoneNumber_" + tenantName, "Contact", "Contact_" + tenantName})
 }
 
 func TestMutationResolver_PhoneNumberMergeToOrganization(t *testing.T) {
@@ -262,7 +263,7 @@ func TestMutationResolver_PhoneNumberMergeToOrganization(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
 }
 
 func TestMutationResolver_PhoneNumberUpdateInOrganization(t *testing.T) {
@@ -347,7 +348,7 @@ func TestMutationResolver_PhoneNumberUpdateInOrganization_ReplacePhoneNumber(t *
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
 }
 
 func TestMutationResolver_PhoneNumberRemoveFromOrganizationByID(t *testing.T) {
@@ -385,7 +386,7 @@ func TestMutationResolver_PhoneNumberRemoveFromOrganizationByID(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "PhoneNumber", "PhoneNumber_" + tenantName, "Organization", "Organization_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "PhoneNumber", "PhoneNumber_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestMutationResolver_PhoneNumberMergeToUser(t *testing.T) {
@@ -434,7 +435,7 @@ func TestMutationResolver_PhoneNumberMergeToUser(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
 }
 
 func TestMutationResolver_PhoneNumberUpdateInUser(t *testing.T) {
@@ -519,7 +520,7 @@ func TestMutationResolver_PhoneNumberUpdateInUser_ReplacePhoneNumber(t *testing.
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
 }
 
 func TestQueryResolver_GetPhoneNumber_WithParentOwners(t *testing.T) {
@@ -618,5 +619,5 @@ func TestQueryResolver_GetPhoneNumber_ById(t *testing.T) {
 	require.Equal(t, "+123456789", *phoneNumber.E164)
 	require.Equal(t, "+ 123 456 789", *phoneNumber.RawPhoneNumber)
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "PhoneNumber", "PhoneNumber_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "PhoneNumber", "PhoneNumber_" + tenantName})
 }

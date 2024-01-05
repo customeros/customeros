@@ -41,6 +41,7 @@ func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	})
 }
 
+// Deprecated
 func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, workspace string, provider string, tenant string) {
 	query := `MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)-[:HAS_WORKSPACE]->(w:Workspace {name:$workspace, provider:$provider})`
@@ -408,6 +409,7 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	return emailId
 }
 
+// Deprecated
 func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType entity.EntityType, tenant, entityId, email string, primary bool, label string) string {
 	query := ""
 

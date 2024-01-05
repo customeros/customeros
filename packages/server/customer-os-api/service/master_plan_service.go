@@ -22,6 +22,7 @@ import (
 
 type MasterPlanService interface {
 	CreateMasterPlan(ctx context.Context, name string) (string, error)
+	UpdateMasterPlan(ctx context.Context, id string, name *string, retired *bool) error
 	GetMasterPlanById(ctx context.Context, masterPlanId string) (*neo4jentity.MasterPlanEntity, error)
 	GetMasterPlans(ctx context.Context, returnRetired *bool) (*neo4jentity.MasterPlanEntities, error)
 
@@ -78,6 +79,56 @@ func (s *masterPlanService) CreateMasterPlan(ctx context.Context, name string) (
 
 	span.LogFields(log.String("response - created masterPlanId", response.Id))
 	return response.Id, nil
+}
+
+func (s *masterPlanService) UpdateMasterPlan(ctx context.Context, masterPlanId string, name *string, retired *bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanService.UpdateMasterPlan")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, masterPlanId)
+	span.LogFields(log.Object("name", name), log.Object("retired", retired))
+
+	if name == nil && retired == nil {
+		// nothing to update
+		return nil
+	}
+
+	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jentity.NodeLabel_MasterPlan)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !masterPlanExists {
+		err = errors.New(fmt.Sprintf("Master plan with id {%s} not found", masterPlanId))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	grpcRequest := masterplanpb.UpdateMasterPlanGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		MasterPlanId:   masterPlanId,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		Name:           utils.IfNotNilString(name),
+		Retired:        utils.IfNotNilBool(retired),
+		AppSource:      constants.AppSourceCustomerOsApi,
+	}
+	fieldsMask := make([]masterplanpb.MasterPlanFieldMask, 0)
+	if name != nil {
+		fieldsMask = append(fieldsMask, masterplanpb.MasterPlanFieldMask_MASTER_PLAN_PROPERTY_NAME)
+	}
+	if retired != nil {
+		fieldsMask = append(fieldsMask, masterplanpb.MasterPlanFieldMask_MASTER_PLAN_PROPERTY_RETIRED)
+	}
+	grpcRequest.FieldsMask = fieldsMask
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = s.grpcClients.MasterPlanClient.UpdateMasterPlan(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+	return nil
 }
 
 func (s *masterPlanService) GetMasterPlanById(ctx context.Context, masterPlanId string) (*neo4jentity.MasterPlanEntity, error) {

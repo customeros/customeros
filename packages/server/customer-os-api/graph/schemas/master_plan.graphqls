@@ -1,5 +1,6 @@
 extend type Mutation {
     masterPlan_Create(input: MasterPlanInput!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    masterPlan_Update(input: MasterPlanUpdateInput!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Create(input: MasterPlanMilestoneInput!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -38,6 +39,12 @@ type MasterPlanMilestone implements SourceFields & Node {
 
 input MasterPlanInput {
     name: String
+}
+
+input MasterPlanUpdateInput {
+    id: ID!
+    name: String
+    retired: Boolean
 }
 
 input MasterPlanMilestoneInput {

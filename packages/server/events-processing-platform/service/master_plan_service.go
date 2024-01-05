@@ -133,7 +133,7 @@ func (s *masterPlanService) UpdateMasterPlan(ctx context.Context, request *maste
 	return &masterplanpb.MasterPlanIdGrpcResponse{Id: request.MasterPlanId}, nil
 }
 
-func extractMasterPlanFieldsMask(fields []masterplanpb.MasterPlanMaskField) []string {
+func extractMasterPlanFieldsMask(fields []masterplanpb.MasterPlanFieldMask) []string {
 	fieldsMask := make([]string, 0)
 	if fields == nil || len(fields) == 0 {
 		return fieldsMask
@@ -143,18 +143,18 @@ func extractMasterPlanFieldsMask(fields []masterplanpb.MasterPlanMaskField) []st
 	}
 	for _, field := range fields {
 		switch field {
-		case masterplanpb.MasterPlanMaskField_MASTER_PLAN_PROPERTY_NAME:
+		case masterplanpb.MasterPlanFieldMask_MASTER_PLAN_PROPERTY_NAME:
 			fieldsMask = append(fieldsMask, event.FieldMaskName)
-		case masterplanpb.MasterPlanMaskField_MASTER_PLAN_PROPERTY_RETIRED:
+		case masterplanpb.MasterPlanFieldMask_MASTER_PLAN_PROPERTY_RETIRED:
 			fieldsMask = append(fieldsMask, event.FieldMaskRetired)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)
 }
 
-func containsMasterPlanMaskFieldAll(fields []masterplanpb.MasterPlanMaskField) bool {
+func containsMasterPlanMaskFieldAll(fields []masterplanpb.MasterPlanFieldMask) bool {
 	for _, field := range fields {
-		if field == masterplanpb.MasterPlanMaskField_MASTER_PLAN_PROPERTY_ALL {
+		if field == masterplanpb.MasterPlanFieldMask_MASTER_PLAN_PROPERTY_ALL {
 			return true
 		}
 	}

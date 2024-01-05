@@ -6,6 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
@@ -14,8 +16,8 @@ import (
 func TestMutationResolver_TenantMerge(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, "other")
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, "other")
 
 	rawResponse, err := cAdmin.RawPost(getQuery("tenant/merge_tenant"),
 		client.Var("name", "testtenant"),
@@ -83,8 +85,8 @@ func TestMutationResolver_TenantMerge_CheckDefaultData(t *testing.T) {
 func TestMutationResolver_GetByWorkspace(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, "other")
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, "other")
 	neo4jt.CreateWorkspace(ctx, driver, "testworkspace", "testprovider", tenantName)
 
 	rawResponse, err := cAdmin.RawPost(getQuery("tenant/get_by_workspace"),
@@ -124,8 +126,8 @@ func TestMutationResolver_GetByWorkspace(t *testing.T) {
 func TestMutationResolver_GetByEmail(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "test@openline.ai", false, "test")
 
 	rawResponse, err := cAdmin.RawPost(getQuery("tenant/get_by_email"),

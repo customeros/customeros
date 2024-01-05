@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
@@ -188,7 +189,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent_"+tenantName))
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Meeting", "Meeting_" + tenantName,
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Meeting", "Meeting_" + tenantName,
 		"Note", "Note_" + tenantName, "Analysis", "Analysis_" + tenantName,
 		"Contact", "Contact_" + tenantName, "ExternalSystem", "ExternalSystem_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName,
 		"User", "User_" + tenantName, "Organization", "Organization_" + tenantName,

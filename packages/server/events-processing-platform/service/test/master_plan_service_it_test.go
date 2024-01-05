@@ -148,7 +148,7 @@ func TestMasterPlanService_UpdateMasterPlan(t *testing.T) {
 		Retired:        true,
 		AppSource:      "app",
 		LoggedInUserId: "user-id",
-		FieldsMask:     []masterplanpb.MasterPlanMaskField{masterplanpb.MasterPlanMaskField_MASTER_PLAN_PROPERTY_NAME, masterplanpb.MasterPlanMaskField_MASTER_PLAN_PROPERTY_RETIRED},
+		FieldsMask:     []masterplanpb.MasterPlanFieldMask{masterplanpb.MasterPlanFieldMask_MASTER_PLAN_PROPERTY_NAME, masterplanpb.MasterPlanFieldMask_MASTER_PLAN_PROPERTY_RETIRED},
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)

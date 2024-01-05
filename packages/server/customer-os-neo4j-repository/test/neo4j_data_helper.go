@@ -20,6 +20,46 @@ func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	})
 }
 
+func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, user entity.UserEntity) string {
+	userId := utils.NewUUIDIfEmpty(user.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+			MERGE (u:User {id: $userId})-[:USER_BELONGS_TO_TENANT]->(t)
+			SET u:User_%s, 
+				u.roles=$roles,
+				u.internal=$internal,
+				u.bot=$bot,
+				u.firstName=$firstName,
+				u.lastName=$lastName,
+				u.profilePhotoUrl=$profilePhotoUrl,
+				u.createdAt=$createdAt,
+				u.updatedAt=$updatedAt,
+				u.source=$source,
+				u.sourceOfTruth=$sourceOfTruth,
+				u.appSource=$appSource`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":          tenant,
+		"userId":          userId,
+		"firstName":       user.FirstName,
+		"lastName":        user.LastName,
+		"source":          user.Source,
+		"sourceOfTruth":   user.SourceOfTruth,
+		"appSource":       user.AppSource,
+		"roles":           user.Roles,
+		"internal":        user.Internal,
+		"bot":             user.Bot,
+		"profilePhotoUrl": user.ProfilePhotoUrl,
+		"createdAt":       user.CreatedAt,
+		"updatedAt":       user.UpdatedAt,
+	})
+	return userId
+}
+
+func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string) {
+	CreateUser(ctx, driver, tenant, entity.UserEntity{
+		Id: userId,
+	})
+}
+
 func CreateMasterPlan(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, masterPlan entity.MasterPlanEntity) string {
 	masterPlanId := utils.NewUUIDIfEmpty(masterPlan.Id)
 

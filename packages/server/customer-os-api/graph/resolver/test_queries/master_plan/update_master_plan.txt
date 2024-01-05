@@ -1,0 +1,10 @@
+mutation UpdateMasterPlan($id: ID!) {
+masterPlan_Update(
+    input: {
+        id: $id
+        name: "Updated plan"
+    }) {
+    id
+    name
+  }
+}

@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"testing"
 	"time"
 
@@ -341,7 +342,7 @@ func TestMutationResolver_OrganizationArchive(t *testing.T) {
 		"ORGANIZATION_BELONGS_TO_TENANT": 0,
 	})
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "ArchivedOrganization_" + tenantName, "Location", "Location_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "ArchivedOrganization_" + tenantName, "Location", "Location_" + tenantName})
 }
 
 func TestQueryResolver_Organization_WithRoles_ById(t *testing.T) {
@@ -1223,7 +1224,7 @@ func TestMutationResolver_OrganizationAddNewLocation(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Location"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Location", "Location_" + tenantName, "Organization", "Organization_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Location", "Location_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestQueryResolver_Organization_WithSocials(t *testing.T) {
@@ -1317,7 +1318,7 @@ func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
@@ -1364,7 +1365,7 @@ func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
@@ -1399,7 +1400,7 @@ func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestQueryResolver_Organization_WithOwner(t *testing.T) {
@@ -1431,7 +1432,7 @@ func TestQueryResolver_Organization_WithOwner(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestQueryResolver_Organization_WithExternalLinks(t *testing.T) {

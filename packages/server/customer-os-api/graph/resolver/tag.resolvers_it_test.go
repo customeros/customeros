@@ -7,6 +7,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -42,7 +43,7 @@ func TestMutationResolver_TagCreate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tag_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "TAG_BELONGS_TO_TENANT"))
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Tag", "Tag_" + tenantName})
+	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Tag", "Tag_" + tenantName})
 }
 
 func TestMutationResolver_TagUpdate(t *testing.T) {
