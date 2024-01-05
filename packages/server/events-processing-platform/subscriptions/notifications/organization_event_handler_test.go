@@ -40,7 +40,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	newOwnerUserId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
 		FirstName: "owner",
 		LastName:  "user",

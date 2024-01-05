@@ -11,6 +11,7 @@ type CommandHandlers struct {
 	CreateMasterPlan          CreateMasterPlanCommandHandler
 	UpdateMasterPlan          UpdateMasterPlanCommandHandler
 	CreateMasterPlanMilestone CreateMasterPlanMilestoneCommandHandler
+	UpdateMasterPlanMilestone UpdateMasterPlanMilestoneCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
@@ -18,5 +19,6 @@ func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.Agg
 		CreateMasterPlan:          NewCreateMasterPlanCommandHandler(log, es),
 		UpdateMasterPlan:          NewUpdateMasterPlanCommandHandler(log, es, cfg.Utils),
 		CreateMasterPlanMilestone: NewCreateMasterPlanMilestoneCommandHandler(log, es, cfg.Utils),
+		UpdateMasterPlanMilestone: NewUpdateMasterPlanMilestoneCommandHandler(log, es, cfg.Utils),
 	}
 }

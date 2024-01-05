@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 func tearDownTestCase(ctx context.Context, database *test.TestDatabase) func(tb testing.TB) {
 	return func(tb testing.TB) {
 		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())
-		neo4jt.CleanupAllData(ctx, database.Driver)
+		neo4jtest.CleanupAllData(ctx, database.Driver)
 	}
 }
 
@@ -48,7 +48,7 @@ func TestWebScraping(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 	//_, driver := neo4jt.InitTestNeo4jDB()
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{Name: "org 1"})
 	_ = neo4jt.CreateLogEntryForOrg(ctx, testDatabase.Driver, tenantName, organizationId, entity.LogEntryEntity{Content: "test content", StartedAt: utils.Now()})

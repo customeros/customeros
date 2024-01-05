@@ -23,7 +23,7 @@ func TestGraphInteractionSessionEventHandler_OnCreate(t *testing.T) {
 
 	// prepare neo4j data
 	externalSystemId := "sf"
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, externalSystemId)
 
 	// prepare event handler

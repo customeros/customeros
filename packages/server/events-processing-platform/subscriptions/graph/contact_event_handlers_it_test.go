@@ -22,7 +22,7 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
@@ -65,7 +65,7 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	contactName := "test_contact_name"
 	contactId := neo4jt.CreateContact(ctx, testDatabase.Driver, tenantName, entity.ContactEntity{
@@ -108,7 +108,7 @@ func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	contactName := "test_contact_name"
 	now := utils.Now()
@@ -168,7 +168,7 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	contactName := "test_contact_name"
 	now := utils.Now()
@@ -228,7 +228,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	contactName := "test_contact_name"
 	now := utils.Now()
@@ -304,7 +304,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	contactNameCreate := "Contact Name Create"
 	contactFirstNameCreate := "Contact FirstName Create"

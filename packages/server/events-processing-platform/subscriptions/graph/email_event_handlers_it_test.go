@@ -20,7 +20,7 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	emailEventHandler := &EmailEventHandler{
 		Repositories: testDatabase.Repositories,
 	}
@@ -55,7 +55,7 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	emailCreate := "email@create.com"
 	rawEmailCreate := "email@create.com"
@@ -108,7 +108,7 @@ func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	emailCreate := "email@create.com"
 	rawEmailCreate := "email@create.com"
@@ -160,7 +160,7 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	emailCreate := "email@create.com"
 	rawEmailCreate := "email@create.com"
