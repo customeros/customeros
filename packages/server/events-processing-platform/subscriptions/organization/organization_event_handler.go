@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"strings"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
@@ -151,7 +149,7 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 		h.log.Errorf("Organization with id %s not found", organizationId)
 		return nil
 	}
-	organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 	// if already web scraped for this url, skip
 	if organization.WebScrapeDetails.WebScrapedUrl == url {
@@ -260,7 +258,7 @@ func (h *organizationEventHandler) addFieldMasks(orgFields *model.OrganizationDa
 	return fieldMasks
 }
 
-func (h *organizationEventHandler) updateOrganizationNameIfEmpty(ctx context.Context, tenant, url string, organization *entity.OrganizationEntity, span opentracing.Span) {
+func (h *organizationEventHandler) updateOrganizationNameIfEmpty(ctx context.Context, tenant, url string, organization *neo4jentity.OrganizationEntity, span opentracing.Span) {
 	if organization.Name == "" && strings.Contains(url, ".") {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err := h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{

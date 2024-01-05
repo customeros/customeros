@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"strings"
 	"testing"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
@@ -97,7 +97,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 	require.NotNil(t, orgDbNode)
 
 	// verify organization
-	organization := graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, "test org", organization.Name)
 	require.NotNil(t, organization.CreatedAt)
