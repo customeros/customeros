@@ -6,7 +6,7 @@ import { IMessage, PopoverNotificationCenter } from '@novu/notification-center';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
-// import { Tooltip } from '@ui/overlay/Tooltip';
+import { Tooltip } from '@ui/overlay/Tooltip';
 import { Badge } from '@ui/presentation/Badge';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Avatar, AvatarBadge } from '@ui/media/Avatar';
@@ -47,39 +47,58 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
         },
       }}
       onNotificationClick={handlerOnNotificationClick}
-      listItem={(message, _, onNotificationClick) => (
-        // <Tooltip label={message.archived ? '' : ''}> uncomment when BE is ready
-        <Flex
-          opacity={message.seen ? 0.5 : 1}
-          px={4}
-          mb={5}
-          role='button'
-          cursor='pointer'
-          tabIndex={0}
-          onClick={onNotificationClick}
-        >
-          <Avatar
-            size='sm'
-            name={'UN'}
-            variant='roundedSquareSmall'
-            src={undefined}
+      listItem={(message, _, onNotificationClick) => {
+        const content: false | string[] =
+          typeof message.content === 'string' &&
+          message.content.split('owner of ');
+
+        return (
+          <Tooltip
+            hasArrow
+            placement='bottom-start'
+            label={
+              message.payload.isArchived
+                ? 'This organization has been archived'
+                : ''
+            }
           >
-            {!message.read && <AvatarBadge boxSize='10px' bg='#0BA5EC' />}
-          </Avatar>
-          <Flex direction='column' ml={3} gap={1}>
-            <Text fontSize='sm' lineHeight='1' noOfLines={2}>
-              {message?.content as string}
-            </Text>
-            <Text fontSize='xs' lineHeight='1' color='gray.500'>
-              {DateTimeUtils.timeAgo(message?.createdAt as string, {
-                includeMin: true,
-                addSuffix: true,
-              })}
-            </Text>
-          </Flex>
-        </Flex>
-        // </Tooltip>
-      )}
+            <Flex
+              opacity={message.read ? 0.5 : 1}
+              px={4}
+              mb={5}
+              role='button'
+              cursor={message.payload.isArchived ? 'default' : 'pointer'}
+              tabIndex={message.payload.isArchived ? -1 : 0}
+              onClick={
+                message.payload.isArchived ? undefined : onNotificationClick
+              }
+            >
+              <Avatar
+                size='sm'
+                name={'UN'}
+                variant='roundedSquareSmall'
+                src={undefined}
+              >
+                {!message.seen && <AvatarBadge boxSize='10px' bg='#0BA5EC' />}
+              </Avatar>
+              <Flex direction='column' ml={3} gap={1}>
+                <Text fontSize='sm' lineHeight='1' noOfLines={2}>
+                  {content && content[0]}
+                  <Text as='span' fontWeight='medium'>
+                    {content && content[1]}
+                  </Text>
+                </Text>
+                <Text fontSize='xs' lineHeight='1' color='gray.500'>
+                  {DateTimeUtils.timeAgo(message?.createdAt as string, {
+                    includeMin: true,
+                    addSuffix: true,
+                  })}
+                </Text>
+              </Flex>
+            </Flex>
+          </Tooltip>
+        );
+      }}
     >
       {({ unseenCount }) => (
         <Button
@@ -98,11 +117,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
             boxShadow: 'sidenavItemFocus',
           }}
         >
-          <Flex justifyContent='space-between' flex={1}>
+          <Flex justifyContent='space-between' flex={1} alignItems='center'>
             <span>Up next</span>
             {!!unseenCount && (
               <Badge
-                px={5}
+                w={5}
+                h={5}
+                display='flex'
+                alignItems='center'
+                justifyContent='center'
                 variant='outline'
                 borderRadius='xl'
                 boxShadow='none'
