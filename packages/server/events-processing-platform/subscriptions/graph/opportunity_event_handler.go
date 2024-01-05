@@ -71,7 +71,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, neo4jentity.NodeLabel_Opportunity, eventData.ExternalSystem)
+		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, neo4jentity.NodeLabelOpportunity, eventData.ExternalSystem)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while linking opportunity %s with external system %s: %s", opportunityId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -207,7 +207,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, neo4jentity.NodeLabel_Opportunity, eventData.ExternalSystem)
+		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, neo4jentity.NodeLabelOpportunity, eventData.ExternalSystem)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while linking opportunity %s with external system %s: %s", opportunityId, eventData.ExternalSystem.ExternalSystemId, err.Error())

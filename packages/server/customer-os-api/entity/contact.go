@@ -41,19 +41,19 @@ func (ContactEntity) IsInteractionSessionParticipant() {}
 func (ContactEntity) IsIssueParticipant() {}
 
 func (ContactEntity) ParticipantLabel() string {
-	return neo4jentity.NodeLabel_Contact
+	return neo4jentity.NodeLabelContact
 }
 
 func (ContactEntity) IsMeetingParticipant() {}
 
 func (ContactEntity) MeetingParticipantLabel() string {
-	return neo4jentity.NodeLabel_Contact
+	return neo4jentity.NodeLabelContact
 }
 
 func (ContactEntity) IsNotedEntity() {}
 
 func (ContactEntity) NotedEntityLabel() string {
-	return neo4jentity.NodeLabel_Contact
+	return neo4jentity.NodeLabelContact
 }
 
 func (contact ContactEntity) GetDataloaderKey() string {
@@ -62,7 +62,7 @@ func (contact ContactEntity) GetDataloaderKey() string {
 
 func (ContactEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jentity.NodeLabel_Contact,
-		neo4jentity.NodeLabel_Contact + "_" + tenant,
+		neo4jentity.NodeLabelContact,
+		neo4jentity.NodeLabelContact + "_" + tenant,
 	}
 }

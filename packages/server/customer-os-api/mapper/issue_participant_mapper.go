@@ -13,17 +13,17 @@ func MapEntityToIssueParticipant(issueParticipantEntity *entity.IssueParticipant
 		return nil
 	}
 	switch (*issueParticipantEntity).ParticipantLabel() {
-	case neo4jentity.NodeLabel_User:
+	case neo4jentity.NodeLabelUser:
 		userEntity := (*issueParticipantEntity).(*entity.UserEntity)
 		return model.UserParticipant{
 			UserParticipant: MapEntityToUser(userEntity),
 		}
-	case neo4jentity.NodeLabel_Contact:
+	case neo4jentity.NodeLabelContact:
 		contactEntity := (*issueParticipantEntity).(*entity.ContactEntity)
 		return model.ContactParticipant{
 			ContactParticipant: MapEntityToContact(contactEntity),
 		}
-	case neo4jentity.NodeLabel_Organization:
+	case neo4jentity.NodeLabelOrganization:
 		organizationEntity := (*issueParticipantEntity).(*entity.OrganizationEntity)
 		return model.OrganizationParticipant{
 			OrganizationParticipant: MapEntityToOrganization(organizationEntity),

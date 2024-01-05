@@ -10,9 +10,9 @@ import (
 
 func MapEntityToNotedEntity(notedEntity *entity.NotedEntity) any {
 	switch (*notedEntity).NotedEntityLabel() {
-	case neo4jentity.NodeLabel_Organization:
+	case neo4jentity.NodeLabelOrganization:
 		return MapEntityToOrganization((*notedEntity).(*entity.OrganizationEntity))
-	case neo4jentity.NodeLabel_Contact:
+	case neo4jentity.NodeLabelContact:
 		return MapEntityToContact((*notedEntity).(*entity.ContactEntity))
 	}
 	fmt.Errorf("noted entity of type %s not identified", reflect.TypeOf(notedEntity))

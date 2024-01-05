@@ -25,7 +25,7 @@ type SocialEntities []SocialEntity
 
 func (social SocialEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jentity.NodeLabel_Social,
-		neo4jentity.NodeLabel_Social + "_" + tenant,
+		neo4jentity.NodeLabelSocial,
+		neo4jentity.NodeLabelSocial + "_" + tenant,
 	}
 }

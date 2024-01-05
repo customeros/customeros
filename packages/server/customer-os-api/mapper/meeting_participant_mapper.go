@@ -10,22 +10,22 @@ import (
 
 func MapEntityToMeetingParticipant(meetingParticipantEntity *entity.MeetingParticipant) any {
 	switch (*meetingParticipantEntity).MeetingParticipantLabel() {
-	case neo4jentity.NodeLabel_User:
+	case neo4jentity.NodeLabelUser:
 		userEntity := (*meetingParticipantEntity).(*entity.UserEntity)
 		return model.UserParticipant{
 			UserParticipant: MapEntityToUser(userEntity),
 		}
-	case neo4jentity.NodeLabel_Contact:
+	case neo4jentity.NodeLabelContact:
 		contactEntity := (*meetingParticipantEntity).(*entity.ContactEntity)
 		return model.ContactParticipant{
 			ContactParticipant: MapEntityToContact(contactEntity),
 		}
-	case neo4jentity.NodeLabel_Organization:
+	case neo4jentity.NodeLabelOrganization:
 		organizationEntity := (*meetingParticipantEntity).(*entity.OrganizationEntity)
 		return model.OrganizationParticipant{
 			OrganizationParticipant: MapEntityToOrganization(organizationEntity),
 		}
-	case neo4jentity.NodeLabel_Email:
+	case neo4jentity.NodeLabelEmail:
 		emailEntity := (*meetingParticipantEntity).(*entity.EmailEntity)
 		return model.EmailParticipant{
 			EmailParticipant: MapEntityToEmail(emailEntity),

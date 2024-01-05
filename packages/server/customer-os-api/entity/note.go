@@ -29,7 +29,7 @@ func (NoteEntity) IsTimelineEvent() {
 }
 
 func (NoteEntity) TimelineEventLabel() string {
-	return neo4jentity.NodeLabel_Note
+	return neo4jentity.NodeLabelNote
 }
 
 func (note *NoteEntity) SetDataloaderKey(key string) {

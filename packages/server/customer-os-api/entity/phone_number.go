@@ -35,7 +35,7 @@ func (PhoneNumberEntity) IsInteractionEventParticipant() {}
 func (PhoneNumberEntity) IsInteractionSessionParticipant() {}
 
 func (PhoneNumberEntity) ParticipantLabel() string {
-	return neo4jentity.NodeLabel_PhoneNumber
+	return neo4jentity.NodeLabelPhoneNumber
 }
 
 func (phoneNumber PhoneNumberEntity) GetDataloaderKey() string {
@@ -44,7 +44,7 @@ func (phoneNumber PhoneNumberEntity) GetDataloaderKey() string {
 
 func (PhoneNumberEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jentity.NodeLabel_PhoneNumber,
-		neo4jentity.NodeLabel_PhoneNumber + "_" + tenant,
+		neo4jentity.NodeLabelPhoneNumber,
+		neo4jentity.NodeLabelPhoneNumber + "_" + tenant,
 	}
 }

@@ -75,7 +75,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 			return nil, err
 		}
 		if eventData.ExternalSystem.Available() {
-			err = h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jentity.NodeLabel_Organization, eventData.ExternalSystem)
+			err = h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jentity.NodeLabelOrganization, eventData.ExternalSystem)
 			if err != nil {
 				h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, err
@@ -198,7 +198,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 
 		_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 			if eventData.ExternalSystem.Available() {
-				innerErr := h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jentity.NodeLabel_Organization, eventData.ExternalSystem)
+				innerErr := h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jentity.NodeLabelOrganization, eventData.ExternalSystem)
 				if innerErr != nil {
 					h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 					return nil, innerErr
@@ -320,7 +320,7 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 			AppSource:     helper.GetSource(eventData.AppSource),
 		},
 	}
-	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialFor(ctx, eventData.Tenant, organizationId, neo4jentity.NodeLabel_Organization, data)
+	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialFor(ctx, eventData.Tenant, organizationId, neo4jentity.NodeLabelOrganization, data)
 
 	return err
 }
@@ -589,7 +589,7 @@ func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt 
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	customFieldExists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CustomFieldId, neo4jentity.NodeLabel_CustomField)
+	customFieldExists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CustomFieldId, neo4jentity.NodeLabelCustomField)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to check if custom field exists: %s", err.Error())

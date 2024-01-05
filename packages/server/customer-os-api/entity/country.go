@@ -15,6 +15,6 @@ type CountryEntities []CountryEntity
 
 func (CountryEntity) Labels(string) []string {
 	return []string{
-		neo4jentity.NodeLabel_Country,
+		neo4jentity.NodeLabelCountry,
 	}
 }

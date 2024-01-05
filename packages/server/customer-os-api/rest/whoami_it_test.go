@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
@@ -28,8 +29,8 @@ func TestGet_Whoami(t *testing.T) {
 
 	setup()
 	otherTenant := "other"
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, otherTenant)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, otherTenant)
 	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",

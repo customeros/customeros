@@ -41,7 +41,7 @@ func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event
 	}
 
 	if eventData.CommentedIssueId != "" {
-		issueExists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CommentedIssueId, neo4jentity.NodeLabel_Issue)
+		issueExists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CommentedIssueId, neo4jentity.NodeLabelIssue)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while checking if issue %s exists: %s", eventData.CommentedIssueId, err.Error())
@@ -77,7 +77,7 @@ func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, commentId, neo4jentity.NodeLabel_Comment, eventData.ExternalSystem)
+		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, commentId, neo4jentity.NodeLabelComment, eventData.ExternalSystem)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link comment %s with external system %s: %s", commentId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -114,7 +114,7 @@ func (h *CommentEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, commentId, neo4jentity.NodeLabel_Comment, eventData.ExternalSystem)
+		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, commentId, neo4jentity.NodeLabelComment, eventData.ExternalSystem)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link comment %s with external system %s: %s", commentId, eventData.ExternalSystem.ExternalSystemId, err.Error())

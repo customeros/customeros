@@ -10,13 +10,13 @@ import (
 
 func MapEntityToActionDescribes(analysisDescribe *entity.AnalysisDescribe) any {
 	switch (*analysisDescribe).AnalysisDescribeLabel() {
-	case neo4jentity.NodeLabel_InteractionSession:
+	case neo4jentity.NodeLabelInteractionSession:
 		sessionEntity := (*analysisDescribe).(*entity.InteractionSessionEntity)
 		return MapEntityToInteractionSession(sessionEntity)
-	case neo4jentity.NodeLabel_InteractionEvent:
+	case neo4jentity.NodeLabelInteractionEvent:
 		eventEntity := (*analysisDescribe).(*entity.InteractionEventEntity)
 		return MapEntityToInteractionEvent(eventEntity)
-	case neo4jentity.NodeLabel_Meeting:
+	case neo4jentity.NodeLabelMeeting:
 		meetingEntity := (*analysisDescribe).(*entity.MeetingEntity)
 		return MapEntityToMeeting(meetingEntity)
 	}

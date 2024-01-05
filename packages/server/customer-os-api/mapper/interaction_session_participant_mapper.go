@@ -11,25 +11,25 @@ import (
 
 func MapEntityToInteractionSessionParticipant(interactionSessionParticipantEntity *entity.InteractionSessionParticipant) any {
 	switch (*interactionSessionParticipantEntity).ParticipantLabel() {
-	case neo4jentity.NodeLabel_Email:
+	case neo4jentity.NodeLabelEmail:
 		emailEntity := (*interactionSessionParticipantEntity).(*entity.EmailEntity)
 		return model.EmailParticipant{
 			EmailParticipant: MapEntityToEmail(emailEntity),
 			Type:             utils.StringPtrNillable(emailEntity.InteractionEventParticipantDetails.Type),
 		}
-	case neo4jentity.NodeLabel_PhoneNumber:
+	case neo4jentity.NodeLabelPhoneNumber:
 		phoneNumberEntity := (*interactionSessionParticipantEntity).(*entity.PhoneNumberEntity)
 		return model.PhoneNumberParticipant{
 			PhoneNumberParticipant: MapEntityToPhoneNumber(phoneNumberEntity),
 			Type:                   utils.StringPtrNillable(phoneNumberEntity.InteractionEventParticipantDetails.Type),
 		}
-	case neo4jentity.NodeLabel_User:
+	case neo4jentity.NodeLabelUser:
 		userEntity := (*interactionSessionParticipantEntity).(*entity.UserEntity)
 		return model.UserParticipant{
 			UserParticipant: MapEntityToUser(userEntity),
 			Type:            utils.StringPtrNillable(userEntity.InteractionEventParticipantDetails.Type),
 		}
-	case neo4jentity.NodeLabel_Contact:
+	case neo4jentity.NodeLabelContact:
 		contactEntity := (*interactionSessionParticipantEntity).(*entity.ContactEntity)
 		return model.ContactParticipant{
 			ContactParticipant: MapEntityToContact(contactEntity),

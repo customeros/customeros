@@ -202,7 +202,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		// Wait for user to be created in neo4j
 		if !failedSync && !matchingUserExists {
 			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				found, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, neo4jentity.NodeLabel_User)
+				found, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, neo4jentity.NodeLabelUser)
 				if found && findErr == nil {
 					break
 				}

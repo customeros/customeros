@@ -94,7 +94,7 @@ func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, e
 		PromptType:     constants.PromptType_EmailSummary,
 		Tenant:         &eventData.Tenant,
 		NodeId:         &interactionEventId,
-		NodeLabel:      utils.StringPtr(neo4jentity.NodeLabel_InteractionEvent),
+		NodeLabel:      utils.StringPtr(neo4jentity.NodeLabelInteractionEvent),
 		PromptTemplate: &h.cfg.Services.Anthropic.EmailSummaryPrompt,
 		Prompt:         summaryPrompt,
 	}
@@ -179,7 +179,7 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 		PromptType:     constants.PromptType_EmailActionItems,
 		Tenant:         &eventData.Tenant,
 		NodeId:         &interactionEventId,
-		NodeLabel:      utils.StringPtr(neo4jentity.NodeLabel_InteractionEvent),
+		NodeLabel:      utils.StringPtr(neo4jentity.NodeLabelInteractionEvent),
 		PromptTemplate: &h.cfg.Services.Anthropic.EmailActionsItemsPrompt,
 		Prompt:         actionItemsPrompt,
 	}
