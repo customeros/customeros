@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 import { RecoilRoot } from 'recoil';
 import { QueryClient } from '@tanstack/react-query';
@@ -12,6 +12,7 @@ import { AnalyticsProvider } from '@shared/components/Providers/AnalyticsProvide
 
 import { NextAuthProvider } from './SessionProvider';
 import { GrowthbookProvider } from './GrowthbookProvider';
+import { NotificationsProvider } from './NotificationsProvider';
 interface ProvidersProps {
   isProduction?: boolean;
   children: React.ReactNode;
@@ -29,6 +30,7 @@ export const Providers = ({
   const [persister] = useState(() =>
     createIDBPersister(`${sessionEmail ?? 'cos'}-${hostname}`),
   );
+
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -49,9 +51,11 @@ export const Providers = ({
       <RecoilRoot>
         <NextAuthProvider>
           <GrowthbookProvider>
-            <AnalyticsProvider isProduction={isProduction}>
-              {children}
-            </AnalyticsProvider>
+            <NotificationsProvider isProduction={isProduction}>
+              <AnalyticsProvider isProduction={isProduction}>
+                {children}
+              </AnalyticsProvider>
+            </NotificationsProvider>
           </GrowthbookProvider>
         </NextAuthProvider>
       </RecoilRoot>

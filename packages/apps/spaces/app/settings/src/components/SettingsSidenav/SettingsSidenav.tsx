@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useLocalStorage } from 'usehooks-ts';
@@ -11,6 +12,7 @@ import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { Receipt } from '@ui/media/icons/Receipt';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
+import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
 export const SettingsSidenav = () => {
   const router = useRouter();
@@ -98,6 +100,21 @@ export const SettingsSidenav = () => {
           }
         />
       </VStack>
+      <VStack
+        spacing='1'
+        flexDir='column'
+        flexWrap='initial'
+        flexGrow='1'
+        justifyContent='flex-end'
+        sx={{
+          '& > span': {
+            width: '100%',
+          },
+        }}
+      >
+        <NotificationCenter />
+      </VStack>
+      <Flex h='64px' />
     </GridItem>
   );
 };

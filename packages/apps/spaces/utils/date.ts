@@ -49,10 +49,14 @@ export class DateTimeUtils {
 
   public static timeAgo(
     date: string | number,
-    options?: { addSuffix?: boolean; includeSeconds?: boolean },
+    options?: {
+      addSuffix?: boolean;
+      includeMin?: boolean;
+      includeSeconds?: boolean;
+    },
   ): string {
     const isToday = this.isToday(this.getDate(date).toISOString());
-    if (isToday) {
+    if (isToday && !options?.includeMin) {
       return 'today';
     }
 
