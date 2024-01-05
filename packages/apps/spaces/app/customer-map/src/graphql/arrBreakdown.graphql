@@ -3,6 +3,7 @@ query ArrBreakdown($period: DashboardPeriodInput) {
     arrBreakdown
     increasePercentage
     perMonth {
+      year
       month
       newlyContracted
       renewals

@@ -1383,7 +1383,10 @@ export type MasterPlan = Node &
     appSource: Scalars['String'];
     createdAt: Scalars['Time'];
     id: Scalars['ID'];
+    milestones: Array<MasterPlanMilestone>;
     name: Scalars['String'];
+    retired: Scalars['Boolean'];
+    retiredMilestones: Array<MasterPlanMilestone>;
     source: DataSource;
     sourceOfTruth: DataSource;
     updatedAt: Scalars['Time'];
@@ -1404,6 +1407,7 @@ export type MasterPlanMilestone = Node &
     name: Scalars['String'];
     optional: Scalars['Boolean'];
     order: Scalars['Int64'];
+    retired: Scalars['Boolean'];
     source: DataSource;
     sourceOfTruth: DataSource;
     updatedAt: Scalars['Time'];
@@ -1416,6 +1420,12 @@ export type MasterPlanMilestoneInput = {
   name?: InputMaybe<Scalars['String']>;
   optional: Scalars['Boolean'];
   order: Scalars['Int64'];
+};
+
+export type MasterPlanUpdateInput = {
+  id: Scalars['ID'];
+  name?: InputMaybe<Scalars['String']>;
+  retired?: InputMaybe<Scalars['Boolean']>;
 };
 
 export type Meeting = Node & {
@@ -1580,6 +1590,7 @@ export type Mutation = {
   logEntry_Update: Scalars['ID'];
   masterPlanMilestone_Create: MasterPlanMilestone;
   masterPlan_Create: MasterPlan;
+  masterPlan_Update: MasterPlan;
   meeting_AddNewLocation: Location;
   meeting_AddNote: Meeting;
   meeting_Create: Meeting;
@@ -1938,6 +1949,10 @@ export type MutationMasterPlanMilestone_CreateArgs = {
 
 export type MutationMasterPlan_CreateArgs = {
   input: MasterPlanInput;
+};
+
+export type MutationMasterPlan_UpdateArgs = {
+  input: MasterPlanUpdateInput;
 };
 
 export type MutationMeeting_AddNewLocationArgs = {
@@ -2751,6 +2766,8 @@ export type Query = {
   interactionSession_BySessionIdentifier: InteractionSession;
   issue: Issue;
   logEntry: LogEntry;
+  masterPlan: MasterPlan;
+  masterPlans: Array<MasterPlan>;
   meeting: Meeting;
   opportunity?: Maybe<Opportunity>;
   organization?: Maybe<Organization>;
@@ -2880,6 +2897,14 @@ export type QueryIssueArgs = {
 
 export type QueryLogEntryArgs = {
   id: Scalars['ID'];
+};
+
+export type QueryMasterPlanArgs = {
+  id: Scalars['ID'];
+};
+
+export type QueryMasterPlansArgs = {
+  retired?: InputMaybe<Scalars['Boolean']>;
 };
 
 export type QueryMeetingArgs = {
