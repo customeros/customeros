@@ -4,6 +4,7 @@ import (
 	"context"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -80,7 +81,14 @@ func (e *PhoneNumberEventHandler) OnPhoneNumberValidated(ctx context.Context, ev
 	}
 
 	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
-	err := e.Repositories.PhoneNumberRepository.PhoneNumberValidated(ctx, phoneNumberId, eventData)
+	data := neo4jrepository.PhoneNumberValidateFields{
+		E164:          eventData.E164,
+		CountryCodeA2: eventData.CountryCodeA2,
+		ValidatedAt:   eventData.ValidatedAt,
+		Source:        constants.SourceOpenline,
+		AppSource:     "validation-api",
+	}
+	err := e.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.PhoneNumberValidated(ctx, eventData.Tenant, phoneNumberId, data)
 
 	return err
 }

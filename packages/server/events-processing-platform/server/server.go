@@ -113,7 +113,7 @@ func (server *server) Start(parentCtx context.Context) error {
 		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
-	server.repositories = repository.InitRepos(&neo4jDriver, server.cfg.Neo4j.Database, postgresDb.GormDB, server.log)
+	server.repositories = repository.InitRepos(&neo4jDriver, server.cfg.Neo4j.Database, postgresDb.GormDB)
 
 	aggregateStore := store.NewAggregateStore(server.log, esdb)
 	server.aggregateStore = aggregateStore

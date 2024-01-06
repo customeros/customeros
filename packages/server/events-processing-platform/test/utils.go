@@ -33,15 +33,13 @@ func SetupTestLogger() logger.Logger {
 }
 
 func SetupTestDatabase() (TestDatabase, func()) {
-	log := SetupTestLogger()
-
 	testDBs := TestDatabase{}
 
 	testDBs.Neo4jContainer, testDBs.Driver = neo4jtest.InitTestNeo4jDB()
 
 	postgresContainer, postgresGormDB, _ := postgrest.InitTestDB()
 	testDBs.GormDB = postgresGormDB
-	testDBs.Repositories = repository.InitRepos(testDBs.Driver, "neo4j", postgresGormDB, log)
+	testDBs.Repositories = repository.InitRepos(testDBs.Driver, "neo4j", postgresGormDB)
 
 	shutdown := func() {
 		neo4jtest.CloseDriver(*testDBs.Driver)
