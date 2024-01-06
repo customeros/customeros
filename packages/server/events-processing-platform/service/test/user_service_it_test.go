@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
-	"time"
 )
 
 func TestUserService_UpsertUser(t *testing.T) {
@@ -26,7 +25,7 @@ func TestUserService_UpsertUser(t *testing.T) {
 		t.Fatalf("Failed to connect to events processing platform: %v", err)
 	}
 	userClient := userpb.NewUserGrpcServiceClient(grpcConnection)
-	timeNow := time.Now().UTC()
+	timeNow := utils.Now()
 	userId, _ := uuid.NewUUID()
 
 	response, err := userClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
@@ -88,7 +87,7 @@ func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
 	userClient := userpb.NewUserGrpcServiceClient(grpcConnection)
 	jobRoleClient := jobrolepb.NewJobRoleGrpcServiceClient(grpcConnection)
 
-	timeNow := time.Now().UTC()
+	timeNow := utils.Now()
 	userId, _ := uuid.NewUUID()
 
 	createUserResponse, err := userClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
@@ -109,8 +108,8 @@ func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
 	require.NotNil(t, createUserResponse)
 	require.Equal(t, userId.String(), createUserResponse.Id)
 
-	timeStarted := time.Now().UTC().AddDate(0, -6, 0)
-	timeEnded := time.Now().UTC().AddDate(0, 6, 0)
+	timeStarted := utils.Now().AddDate(0, -6, 0)
+	timeEnded := utils.Now().AddDate(0, 6, 0)
 	description := "I clean things"
 	createJobRoleResponse, err := jobRoleClient.CreateJobRole(ctx, &jobrolepb.CreateJobRoleGrpcRequest{
 		Tenant:        "ziggy",

@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
-	"time"
 )
 
 func TestContactService_CreateContact(t *testing.T) {
@@ -26,7 +25,7 @@ func TestContactService_CreateContact(t *testing.T) {
 		t.Fatalf("Failed to connect to emailEvents processing platform: %v", err)
 	}
 	contactClient := contactpb.NewContactGrpcServiceClient(grpcConnection)
-	timeNow := time.Now().UTC()
+	timeNow := utils.Now()
 	response, err := contactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
 		Tenant:          "ziggy",
 		FirstName:       "Bob",
@@ -79,7 +78,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	contactClient := contactpb.NewContactGrpcServiceClient(grpcConnection)
 	emailClient := emailpb.NewEmailGrpcServiceClient(grpcConnection)
 
-	timeNow := time.Now().UTC()
+	timeNow := utils.Now()
 	responseContact, err := contactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
 		Tenant:          "ziggy",
 		FirstName:       "Bob",

@@ -23,6 +23,7 @@ type PhoneNumberCreateFields struct {
 type PhoneNumberWriteRepository interface {
 	CreatePhoneNumber(ctx context.Context, tenant, phoneNumberId string, data PhoneNumberCreateFields) error
 	UpdatePhoneNumber(ctx context.Context, tenant, phoneNumberId, source string, updatedAt time.Time) error
+	FailPhoneNumberValidation(ctx context.Context, tenant, phoneNumberId, validationError string, validatedAt time.Time) error
 }
 
 type phoneNumberWriteRepository struct {
@@ -93,6 +94,33 @@ func (r *phoneNumberWriteRepository) UpdatePhoneNumber(ctx context.Context, tena
 		"sourceOfTruth": source,
 		"updatedAt":     updatedAt,
 		"overwrite":     source == constants.SourceOpenline,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *phoneNumberWriteRepository) FailPhoneNumberValidation(ctx context.Context, tenant, phoneNumberId, validationError string, validatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.FailPhoneNumberValidation")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$id})
+				WHERE p:PhoneNumber_%s
+		 		SET p.validationError = $validationError,
+		     		p.validated = false,
+					p.updatedAt = $validatedAt`, tenant)
+	params := map[string]any{
+		"id":              phoneNumberId,
+		"tenant":          tenant,
+		"validationError": validationError,
+		"validatedAt":     validatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

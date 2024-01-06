@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
-	"time"
 )
 
 func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
@@ -27,7 +26,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 		t.Fatalf("Failed to connect to processing platform: %v", err)
 	}
 	organizationClient := organizationpb.NewOrganizationGrpcServiceClient(grpcConnection)
-	timeNow := time.Now().UTC()
+	timeNow := utils.Now()
 	organizationId := uuid.New().String()
 	tenant := "ziggy"
 	response, err := organizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{

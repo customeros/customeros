@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
-	"time"
 )
 
 func TestEmailService_UpsertEmail(t *testing.T) {
@@ -24,7 +23,7 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 		t.Fatalf("Failed to connect to events processing platform: %v", err)
 	}
 	emailClient := emailpb.NewEmailGrpcServiceClient(grpcConnection)
-	timeNow := time.Now().UTC()
+	timeNow := utils.Now()
 	emailId, _ := uuid.NewUUID()
 	response, err := emailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
 		Tenant:   "ziggy",

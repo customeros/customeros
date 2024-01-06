@@ -97,7 +97,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberValidationFailed(ctx context.Cont
 	}
 
 	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.PhoneNumberRepository.FailPhoneNumberValidation(ctx, phoneNumberId, eventData)
+	err := h.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.FailPhoneNumberValidation(ctx, eventData.Tenant, phoneNumberId, eventData.ValidationError, eventData.ValidatedAt)
 
 	return err
 }
