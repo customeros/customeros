@@ -67,7 +67,7 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	rawPhoneNumber := eventData.RawPhoneNumber
 	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, tenant)
 
-	countryCodeA2, err := h.repositories.PhoneNumberRepository.GetCountryCodeA2ForPhoneNumber(ctx, tenant, phoneNumberId)
+	countryCodeA2, err := h.repositories.Neo4jRepositories.PhoneNumberReadRepository.GetCountryCodeA2ForPhoneNumber(ctx, tenant, phoneNumberId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error(), span)

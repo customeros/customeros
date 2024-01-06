@@ -141,7 +141,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 
 	// Organization
-	orgDbNode, err := h.repositories.OrganizationRepository.GetOrganization(ctx, tenant, orgId)
+	orgDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, orgId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -226,7 +226,7 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	}
 
 	// Organization
-	orgDbNode, err := h.repositories.OrganizationRepository.GetOrganization(ctx, tenant, orgId)
+	orgDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, orgId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)

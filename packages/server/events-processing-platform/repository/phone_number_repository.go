@@ -23,7 +23,6 @@ type PhoneNumberRepository interface {
 	LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
 	LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
-	GetCountryCodeA2ForPhoneNumber(ctx context.Context, tenant, phoneNumberId string) (string, error)
 }
 
 type phoneNumberRepository struct {
@@ -279,37 +278,6 @@ func (r *phoneNumberRepository) PhoneNumberValidated(ctx context.Context, phoneN
 		return nil, err
 	})
 	return err
-}
-
-func (r *phoneNumberRepository) GetCountryCodeA2ForPhoneNumber(ctx context.Context, tenant, phoneNumberId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.GetCountryCodeA2ForPhoneNumber")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("phoneNumberId", phoneNumberId))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-				OPTIONAL MATCH (p)-[:LINKED_TO]->(c:Country)
-				OPTIONAL MATCH (tenant)-[:DEFAULT_COUNTRY]->(dc:Country)
-				RETURN COALESCE(c.codeA2, dc.codeA2, '') AS countryCodeA2 LIMIT 1`
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":        tenant,
-				"phoneNumberId": phoneNumberId,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractSingleRecordFirstValueAsString(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return "", err
-	}
-	return result.(string), nil
 }
 
 func (r *phoneNumberRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {

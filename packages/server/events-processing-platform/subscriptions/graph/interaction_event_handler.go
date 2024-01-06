@@ -79,7 +79,7 @@ func (h *InteractionEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 		}
 	}
 
-	organizationIds, orgsErr := h.repositories.OrganizationRepository.GetOrganizationIdsConnectedToInteractionEvent(ctx, eventData.Tenant, interactionEventId)
+	organizationIds, orgsErr := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationIdsConnectedToInteractionEvent(ctx, eventData.Tenant, interactionEventId)
 	if orgsErr != nil {
 		tracing.TraceErr(span, orgsErr)
 		h.log.Errorf("Error while getting organization ids connected to interaction event %s: %s", interactionEventId, orgsErr.Error())
