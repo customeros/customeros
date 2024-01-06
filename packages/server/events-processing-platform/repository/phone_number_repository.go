@@ -6,9 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -16,8 +14,6 @@ import (
 )
 
 type PhoneNumberRepository interface {
-	CreatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberCreateEvent) error
-	UpdatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberUpdatedEvent) error
 	FailPhoneNumberValidation(ctx context.Context, phoneNumberId string, event events.PhoneNumberFailedValidationEvent) error
 	PhoneNumberValidated(ctx context.Context, phoneNumberId string, event events.PhoneNumberValidatedEvent) error
 	LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
@@ -63,65 +59,6 @@ func (r *phoneNumberRepository) GetIdIfExists(ctx context.Context, tenant, phone
 		return "", nil
 	}
 	return result.([]*db.Record)[0].Values[0].(string), err
-}
-
-func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberCreateEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.CreatePhoneNumber")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
-	span.LogFields(log.String("phoneNumberId", phoneNumberId))
-	tracing.LogObjectAsJson(span, "phoneNumberCreateEvent", event)
-
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
-		 MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id}) 
-		 ON CREATE SET p.rawPhoneNumber = $rawPhoneNumber, 
-						p.validated = null,
-						p.source = $source,
-						p.sourceOfTruth = $sourceOfTruth,
-						p.appSource = $appSource,
-						p.createdAt = $createdAt,
-						p.updatedAt = $updatedAt,
-						p.syncedWithEventStore = true 
-		 ON MATCH SET 	p.syncedWithEventStore = true`, event.Tenant)
-	params := map[string]any{
-		"id":             phoneNumberId,
-		"rawPhoneNumber": event.RawPhoneNumber,
-		"tenant":         event.Tenant,
-		"source":         helper.GetSource(utils.StringFirstNonEmpty(event.SourceFields.Source, event.Source)),
-		"sourceOfTruth":  helper.GetSourceOfTruth(utils.StringFirstNonEmpty(event.SourceFields.SourceOfTruth, event.SourceOfTruth)),
-		"appSource":      helper.GetAppSource(utils.StringFirstNonEmpty(event.SourceFields.AppSource, event.AppSource)),
-		"createdAt":      event.CreatedAt,
-		"updatedAt":      event.UpdatedAt,
-	}
-
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	return r.executeQuery(ctx, cypher, params)
-}
-
-func (r *phoneNumberRepository) UpdatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberUpdatedEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.UpdatePhoneNumber")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
-	span.LogFields(log.String("phoneNumberId", phoneNumberId))
-
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id})
-		 SET 	p.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE p.sourceOfTruth END,
-				p.updatedAt = $updatedAt,
-				p.syncedWithEventStore = true`, event.Tenant)
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	return r.executeQuery(ctx, query, map[string]any{
-		"id":            phoneNumberId,
-		"tenant":        event.Tenant,
-		"sourceOfTruth": event.Source,
-		"updatedAt":     event.UpdatedAt,
-		"overwrite":     event.Source == constants.SourceOpenline,
-	})
 }
 
 func (r *phoneNumberRepository) LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool, updatedAt time.Time) error {
