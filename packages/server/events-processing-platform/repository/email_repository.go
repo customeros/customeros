@@ -10,14 +10,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type EmailRepository interface {
-	CreateEmail(ctx context.Context, emailId string, event events.EmailCreateEvent) error
 	UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdateEvent) error
 	FailEmailValidation(ctx context.Context, emailId string, event events.EmailFailedValidationEvent) error
 	EmailValidated(ctx context.Context, emailId string, event events.EmailValidatedEvent) error
@@ -34,40 +32,6 @@ func NewEmailRepository(driver *neo4j.DriverWithContext) EmailRepository {
 	return &emailRepository{
 		driver: driver,
 	}
-}
-
-func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event events.EmailCreateEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.CreateEmail")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
-	span.LogFields(log.String("emailId", emailId))
-
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
-              MERGE (e:Email:Email_%s {id:$id})
-				 SET e.rawEmail = $rawEmail, 
-					e.validated = null,
-					e.source = $source,
-					e.sourceOfTruth = $sourceOfTruth,
-					e.appSource = $appSource,
-					e.createdAt = $createdAt,
-					e.updatedAt = $updatedAt,
-					e.syncedWithEventStore = true 
-		 MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e)`, event.Tenant)
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	return r.executeQuery(ctx, query, map[string]any{
-		"id":            emailId,
-		"rawEmail":      event.RawEmail,
-		"tenant":        event.Tenant,
-		"source":        helper.GetSource(utils.StringFirstNonEmpty(event.SourceFields.Source, event.Source)),
-		"sourceOfTruth": helper.GetSourceOfTruth(utils.StringFirstNonEmpty(event.SourceFields.SourceOfTruth, event.SourceOfTruth)),
-		"appSource":     helper.GetAppSource(utils.StringFirstNonEmpty(event.SourceFields.AppSource, event.AppSource)),
-		"createdAt":     event.CreatedAt,
-		"updatedAt":     event.UpdatedAt,
-	})
 }
 
 func (r *emailRepository) UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdateEvent) error {
