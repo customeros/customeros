@@ -85,7 +85,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Context, span opentracing.Span, workflowId, userId, actorUserId, orgId, tenant string) error {
 	///////////////////////////////////       Get User, Actor, Org Content       ///////////////////////////////////
 	// target user email
-	emailDbNode, err := h.repositories.EmailRepository.GetEmailForUser(ctx, tenant, userId)
+	emailDbNode, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -101,7 +101,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	email = graph_db.MapDbNodeToEmailEntity(*emailDbNode)
 
 	// actor user email
-	actorEmailDbNode, err := h.repositories.EmailRepository.GetEmailForUser(ctx, tenant, userId)
+	actorEmailDbNode, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -186,7 +186,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx context.Context, span opentracing.Span, workflowId, userId, actorUserId, orgId, tenant string) error {
 	///////////////////////////////////       Get User, Actor, Org Content       ///////////////////////////////////
 	// target user email
-	emailDbNode, err := h.repositories.EmailRepository.GetEmailForUser(ctx, tenant, userId)
+	emailDbNode, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)

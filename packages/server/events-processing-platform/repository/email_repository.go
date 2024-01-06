@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
@@ -25,7 +24,6 @@ type EmailRepository interface {
 	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error
 	LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool, updatedAt time.Time) error
-	GetEmailForUser(ctx context.Context, tenant string, userId string) (*dbtype.Node, error)
 }
 
 type emailRepository struct {
@@ -263,39 +261,6 @@ func (r *emailRepository) LinkWithUser(ctx context.Context, tenant, userId, emai
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 	return r.executeQuery(ctx, query, params)
-}
-
-func (r *emailRepository) GetEmailForUser(ctx context.Context, tenant string, userId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetEmailForUser")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("userId", userId), log.String("tenant", tenant))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	q := fmt.Sprintf("match (e:Email_%s)<-[:HAS]-(u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WHERE u:User_%s return e", tenant, tenant)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, q,
-			map[string]any{
-				"userId": userId,
-				"tenant": tenant,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if result == nil {
-		return nil, nil
-	}
-
-	return result.(*dbtype.Node), nil
 }
 
 func (r *emailRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
