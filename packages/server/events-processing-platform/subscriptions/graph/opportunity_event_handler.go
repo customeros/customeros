@@ -153,7 +153,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 }
 
 func (h *OpportunityEventHandler) sendEventToUpdateOrganizationRenewalSummary(ctx context.Context, tenant, opportunityId string, span opentracing.Span) {
-	organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
+	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
@@ -217,7 +217,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 
 	// if amount changed, recalculate organization combined ARR forecast
 	if amountChanged {
-		organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
@@ -304,7 +304,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		}
 	} else if amountChanged {
 		// if amount changed, recalculate organization combined ARR forecast
-		organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())

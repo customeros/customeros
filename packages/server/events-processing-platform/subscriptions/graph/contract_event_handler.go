@@ -168,7 +168,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while suspending renewal opportunity for contract %s: %s", contractId, err.Error())
 		}
-		organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganizationByContractId(ctx, eventData.Tenant, contractId)
+		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
@@ -389,7 +389,7 @@ func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, te
 	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
 
 	if contractEntity.IsEligibleToStartOnboarding() {
-		organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganizationByContractId(ctx, tenant, contractEntity.Id)
+		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractEntity.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while getting organization for contract %s: %s", contractEntity.Id, err.Error())

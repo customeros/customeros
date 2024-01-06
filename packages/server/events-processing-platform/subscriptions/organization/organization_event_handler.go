@@ -138,7 +138,7 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant), log.String("organizationId", organizationId), log.String("url", url))
 
-	organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganization(ctx, tenant, organizationId)
+	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting organization with id %s: %v", organizationId, err)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -22,18 +21,14 @@ type OrganizationRepository interface {
 	CreateOrganizationInTx(ctx context.Context, tx neo4j.ManagedTransaction, organizationId string, event events.OrganizationCreateEvent) error
 	UpdateOrganization(ctx context.Context, organizationId string, event events.OrganizationUpdateEvent) error
 	LinkWithDomain(ctx context.Context, tenant, organizationId, domain string) error
-	GetOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 	ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId, touchpointType string) error
 	SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error
 	LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error
 	UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error
-	GetOrganizationIdsConnectedToInteractionEvent(ctx context.Context, tenant, interactionEventId string) ([]string, error)
 	UpdateArr(ctx context.Context, tenant, organizationId string) error
 	UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error
-	GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
-	GetOrganizationByContractId(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error
 	UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error
 }
@@ -316,35 +311,6 @@ func (r *organizationRepository) LinkWithDomain(ctx context.Context, tenant, org
 	return err
 }
 
-func (r *organizationRepository) GetOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganization")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("organizationId", organizationId))
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id}) RETURN org`
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant": tenant,
-				"id":     organizationId,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
-}
-
 func (r *organizationRepository) ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.ReplaceOwner")
 	defer span.Finish()
@@ -472,46 +438,6 @@ func (r *organizationRepository) UnlinkParentOrganization(ctx context.Context, t
 	})
 }
 
-func (r *organizationRepository) GetOrganizationIdsConnectedToInteractionEvent(ctx context.Context, tenant, interactionEventId string) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationIdsConnectedToInteractionEvent")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("interactionEventId", interactionEventId))
-
-	query := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}),
-				(t:Tenant {name:$tenant})
-				CALL {
-					WITH ie, t 
-					MATCH (ie)-[:PART_OF]->(is:Issue)-[:REPORTED_BY]->(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
-					RETURN org.id as orgId
-				UNION 
-					WITH ie, t 
-					MATCH (ie)-[:PART_OF]->(is:Issue)-[:SUBMITTED_BY]->(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
-					RETURN org.id as orgId
-				}
-				RETURN distinct orgId`, tenant)
-	params := map[string]any{
-		"tenant":             tenant,
-		"interactionEventId": interactionEventId,
-	}
-	span.LogFields(log.String("query", query), log.Object("params", params))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]string), err
-}
-
 func (r *organizationRepository) UpdateArr(ctx context.Context, tenant, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateArr")
 	defer span.Finish()
@@ -556,80 +482,6 @@ func (r *organizationRepository) UpdateRenewalSummary(ctx context.Context, tenan
 	span.LogFields(log.String("query", cypher), log.Object("params", params))
 
 	return r.executeQuery(ctx, cypher, params)
-}
-
-func (r *organizationRepository) GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationByOpportunityId")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("opportunityId", opportunityId))
-
-	cypher := `MATCH (op:Opportunity {id:$id})
-				MATCH (t:Tenant {name:$tenant})
-				OPTIONAL MATCH (op)<-[:HAS_OPPORTUNITY]-(:Contract)<-[:HAS_CONTRACT]-(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
-				OPTIONAL MATCH (op)<-[:HAS_OPPORTUNITY]-(directOrg:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
-			WITH COALESCE(org, directOrg) as organization 
-			WHERE organization IS NOT NULL RETURN organization`
-	params := map[string]any{
-		"tenant": tenant,
-		"id":     opportunityId,
-	}
-	span.LogFields(log.String("query", cypher), log.Object("params", params))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	records := result.([]*dbtype.Node)
-	if len(records) == 0 {
-		return nil, nil
-	} else {
-		return records[0], nil
-	}
-}
-
-func (r *organizationRepository) GetOrganizationByContractId(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationByContractId")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("contractId", contractId))
-
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]->(c:Contract {id:$id})
-			RETURN org limit 1`
-	params := map[string]any{
-		"tenant": tenant,
-		"id":     contractId,
-	}
-	span.LogFields(log.String("query", cypher), log.Object("params", params))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	records := result.([]*dbtype.Node)
-	if len(records) == 0 {
-		return nil, nil
-	} else {
-		return records[0], nil
-	}
 }
 
 func (r *organizationRepository) WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error {
