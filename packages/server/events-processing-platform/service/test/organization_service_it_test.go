@@ -17,7 +17,7 @@ import (
 )
 
 func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -112,7 +112,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 }
 
 func TestOrganizationsService_LinkDomain(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -149,7 +149,7 @@ func TestOrganizationsService_LinkDomain(t *testing.T) {
 }
 
 func TestOrganizationService_UpdateOnboardingStatus(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	tenant := "ziggy"

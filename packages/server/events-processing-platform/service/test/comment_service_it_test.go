@@ -16,7 +16,7 @@ import (
 )
 
 func TestCommentService_UpsertComment_CreateComment(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
@@ -66,7 +66,7 @@ func TestCommentService_UpsertComment_CreateComment(t *testing.T) {
 }
 
 func TestCommentService_UpsertComment_UpdateComment(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstoret.NewTestAggregateStore()

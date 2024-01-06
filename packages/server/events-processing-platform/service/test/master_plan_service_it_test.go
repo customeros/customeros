@@ -15,7 +15,7 @@ import (
 )
 
 func TestMasterPlanService_CreateMasterPlan(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// setup test environment
@@ -60,7 +60,7 @@ func TestMasterPlanService_CreateMasterPlan(t *testing.T) {
 }
 
 func TestMasterPlanService_CreateMasterPlanMilestone(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// setup test environment
@@ -121,7 +121,7 @@ func TestMasterPlanService_CreateMasterPlanMilestone(t *testing.T) {
 }
 
 func TestMasterPlanService_UpdateMasterPlan(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// setup test environment
@@ -177,7 +177,7 @@ func TestMasterPlanService_UpdateMasterPlan(t *testing.T) {
 }
 
 func TestMasterPlanService_UpdateMasterPlanMilestone(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// setup test environment

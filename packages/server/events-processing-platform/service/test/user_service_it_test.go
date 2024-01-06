@@ -17,7 +17,7 @@ import (
 )
 
 func TestUserService_UpsertUser(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -77,7 +77,7 @@ func TestUserService_UpsertUser(t *testing.T) {
 }
 
 func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()

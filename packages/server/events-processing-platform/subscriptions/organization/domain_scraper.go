@@ -136,7 +136,7 @@ func (ds *DomainScraperV1) getHtml(domainUrl string, directGet bool, httpClient 
 func (ds *DomainScraperV1) runCompanyPrompt(text *string, tenant, organizationId string) (*string, error) {
 	p := strings.ReplaceAll(ds.cfg.Services.OpenAi.ScrapeCompanyPrompt, "{{jsonschema}}", ds.cfg.Services.PromptJsonSchema)
 	prompt := strings.ReplaceAll(p, "{{text}}", *text)
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	promptLog := commonEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
@@ -287,7 +287,7 @@ func (ds *DomainScraperV1) runDataPrompt(analysis, domainUrl, socials, jsonStruc
 	}
 	promptStoreLogId, _ := ds.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
 
-	cleaned, err := ds.aiModel.Inference(context.TODO(), prompt)
+	cleaned, err := ds.aiModel.Inference(context.Background(), prompt)
 
 	if err != nil {
 		_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())

@@ -42,7 +42,7 @@ func (m *mockAiModel) Inference(ctx context.Context, text string) (string, error
 }
 
 func TestWebScraping(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	defer tearDownTestCase(ctx, testDatabase)(t)
 	//_, driver := neo4jt.InitTestNeo4jDB()

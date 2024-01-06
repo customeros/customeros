@@ -105,7 +105,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 }
 
 func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
@@ -178,7 +178,7 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 }
 
 func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
@@ -271,7 +271,7 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 }
 
 func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
@@ -366,7 +366,7 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 }
 
 func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
@@ -447,7 +447,7 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 }
 
 func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_TimelineEvent(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
@@ -531,7 +531,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 }
 
 func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_TimelineEvent(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
@@ -617,7 +617,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 }
 
 func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_TimelineEvent(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
@@ -704,7 +704,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 }
 
 func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_TimelineEvent(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
@@ -790,7 +790,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 }
 
 func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_TimelineEvent(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
@@ -871,7 +871,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 }
 
 func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_TimelineEvent(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
@@ -952,7 +952,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 }
 
 func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j

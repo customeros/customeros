@@ -22,7 +22,7 @@ import (
 )
 
 func TestContractService_CreateContract(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// setup test environment
@@ -89,7 +89,7 @@ func TestContractService_CreateContract(t *testing.T) {
 }
 
 func TestContractService_CreateContract_ServiceStartedInFuture(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Setup
@@ -124,7 +124,7 @@ func TestContractService_CreateContract_ServiceStartedInFuture(t *testing.T) {
 }
 
 func TestContractService_CreateContract_ServiceStartedNil(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Setup
@@ -155,7 +155,7 @@ func TestContractService_CreateContract_ServiceStartedNil(t *testing.T) {
 }
 
 func TestContractService_CreateContract_MissingOrganizationId(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	tenant := "ziggy"
@@ -179,7 +179,7 @@ func TestContractService_CreateContract_MissingOrganizationId(t *testing.T) {
 }
 
 func TestContractService_CreateContract_OrganizationAggregateDoesNotExists(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	tenant := "ziggy"
@@ -204,7 +204,7 @@ func TestContractService_CreateContract_OrganizationAggregateDoesNotExists(t *te
 }
 
 func TestContractService_UpdateContract(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Setup test environment

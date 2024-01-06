@@ -18,7 +18,7 @@ import (
 )
 
 func TestLogEntryService_UpsertLogEntry_CreateLogEntry(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
@@ -73,7 +73,7 @@ func TestLogEntryService_UpsertLogEntry_CreateLogEntry(t *testing.T) {
 }
 
 func TestLogEntryService_UpsertLogEntry_UpdateLogEntry(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
@@ -139,7 +139,7 @@ func TestLogEntryService_UpsertLogEntry_UpdateLogEntry(t *testing.T) {
 }
 
 func TestLogEntryService_AddTag(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
@@ -196,7 +196,7 @@ func TestLogEntryService_AddTag(t *testing.T) {
 }
 
 func TestLogEntryService_RemoveTag(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
