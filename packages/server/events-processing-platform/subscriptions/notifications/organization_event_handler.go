@@ -147,9 +147,9 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.repositories.OrganizationRepository.GetOrganization")
 	}
-	var org *entity.OrganizationEntity
+	var org *neo4jentity.OrganizationEntity
 	if orgDbNode != nil {
-		org = graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
+		org = neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	}
 	///////////////////////////////////       Get Email Content       ///////////////////////////////////
 	html, err := h.parseOrgOwnerUpdateEmail(actor, user, orgId, org.Name)
@@ -232,9 +232,9 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.repositories.OrganizationRepository.GetOrganization")
 	}
-	var org *entity.OrganizationEntity
+	var org *neo4jentity.OrganizationEntity
 	if orgDbNode != nil {
-		org = graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
+		org = neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	}
 	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
 
