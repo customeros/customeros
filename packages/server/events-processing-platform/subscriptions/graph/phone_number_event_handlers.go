@@ -2,9 +2,12 @@ package graph
 
 import (
 	"context"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -33,7 +36,17 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	}
 
 	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.PhoneNumberRepository.CreatePhoneNumber(ctx, phoneNumberId, eventData)
+	data := neo4jrepository.PhoneNumberCreateFields{
+		RawPhoneNumber: eventData.RawPhoneNumber,
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSource(eventData.SourceFields.Source),
+			SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
+			AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),
+		},
+		CreatedAt: eventData.CreatedAt,
+		UpdatedAt: eventData.UpdatedAt,
+	}
+	err := h.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.CreatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, data)
 
 	return err
 }
@@ -50,7 +63,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberUpdate(ctx context.Context, evt e
 	}
 
 	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.PhoneNumberRepository.UpdatePhoneNumber(ctx, phoneNumberId, eventData)
+	err := h.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.UpdatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, eventData.Source, eventData.UpdatedAt)
 
 	return err
 }
