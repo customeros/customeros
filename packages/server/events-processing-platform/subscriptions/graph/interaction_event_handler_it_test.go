@@ -270,7 +270,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 }
 
 func TestGraphInteractionEventEventHandler_OnSummaryReplace_Create(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
@@ -326,7 +326,7 @@ func TestGraphInteractionEventEventHandler_OnSummaryReplace_Create(t *testing.T)
 }
 
 func TestGraphInteractionEventEventHandler_OnActionItemsReplace(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data

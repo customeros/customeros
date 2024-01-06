@@ -14,7 +14,7 @@ import (
 )
 
 func TestInteractionSessionService_UpsertInteractionSession_Create(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// setup test environment

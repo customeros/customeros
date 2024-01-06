@@ -199,7 +199,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 }
 
 func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
@@ -600,7 +600,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 }
 
 func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j
@@ -637,7 +637,7 @@ func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 }
 
 func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Prepare test data in Neo4j

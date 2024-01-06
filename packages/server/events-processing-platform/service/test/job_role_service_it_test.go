@@ -13,7 +13,7 @@ import (
 )
 
 func TestJobRoleService_CreateJobRole(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()

@@ -16,7 +16,7 @@ import (
 )
 
 func TestContactService_CreateContact(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -68,7 +68,7 @@ func TestContactService_CreateContact(t *testing.T) {
 }
 
 func TestContactService_CreateContactWithEmail(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()

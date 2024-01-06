@@ -19,7 +19,7 @@ import (
 )
 
 func TestServiceLineItemService_CreateServiceLineItem(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	// Setup test environment
 	tenant := "tenant1"
@@ -83,7 +83,7 @@ func TestServiceLineItemService_CreateServiceLineItem(t *testing.T) {
 }
 
 func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Setup test environment
@@ -145,7 +145,7 @@ func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
 }
 
 func TestServiceLineItemService_DeleteServiceLineItem(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Setup test environment
@@ -193,7 +193,7 @@ func TestServiceLineItemService_DeleteServiceLineItem(t *testing.T) {
 func TestServiceLineItemService_UpdateServiceLineItemCreateNewVersion(t *testing.T) {
 	//test if the update service line item creates a new version of the service line item
 	//and if we provide comments in the update request, it should be added to the new version of the service line item
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Setup test environment

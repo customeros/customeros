@@ -22,7 +22,7 @@ import (
 )
 
 func TestOpportunityService_CreateOpportunity(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	tenant := "ziggy"
@@ -106,7 +106,7 @@ func TestOpportunityService_CreateOpportunity(t *testing.T) {
 }
 
 func TestOpportunityService_CreateOpportunity_MissingOrganizationId(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	tenant := "ziggy"
@@ -130,7 +130,7 @@ func TestOpportunityService_CreateOpportunity_MissingOrganizationId(t *testing.T
 }
 
 func TestOpportunityService_CreateOpportunity_OrganizationAggregateDoesNotExists(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	tenant := "ziggy"
@@ -155,7 +155,7 @@ func TestOpportunityService_CreateOpportunity_OrganizationAggregateDoesNotExists
 }
 
 func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	tenant := "ziggy"
@@ -219,7 +219,7 @@ func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
 }
 
 func TestOpportunityService_CloseLooseOpportunity(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	tenant := "ziggy"

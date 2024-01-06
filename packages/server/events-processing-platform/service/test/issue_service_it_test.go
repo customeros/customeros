@@ -16,7 +16,7 @@ import (
 )
 
 func TestIssueService_UpsertIssue_CreateIssue(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
@@ -74,7 +74,7 @@ func TestIssueService_UpsertIssue_CreateIssue(t *testing.T) {
 }
 
 func TestIssueService_UpsertIssue_UpdateIssue(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstoret.NewTestAggregateStore()

@@ -12,7 +12,7 @@ import (
 )
 
 func TestInteractionEventService_RequestSummary(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
