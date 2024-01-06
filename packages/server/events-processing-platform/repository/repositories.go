@@ -23,7 +23,6 @@ type Repositories struct {
 	EmailRepository            EmailRepository
 	ExternalSystemRepository   ExternalSystemRepository
 	InteractionEventRepository InteractionEventRepository
-	JobRoleRepository          JobRoleRepository
 	LocationRepository         LocationRepository
 	OpportunityRepository      OpportunityRepository
 	OrganizationRepository     OrganizationRepository
@@ -40,7 +39,6 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		EmailRepository:            NewEmailRepository(driver),
 		OrganizationRepository:     NewOrganizationRepository(driver, neo4jDatabase),
 		LocationRepository:         NewLocationRepository(driver),
-		JobRoleRepository:          NewJobRoleRepository(driver),
 		InteractionEventRepository: NewInteractionEventRepository(driver, neo4jDatabase),
 		ExternalSystemRepository:   NewExternalSystemRepository(driver),
 		OpportunityRepository:      NewOpportunityRepository(driver, neo4jDatabase),
