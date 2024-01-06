@@ -204,7 +204,21 @@ func (h *ContactEventHandler) OnContactLinkToOrganization(ctx context.Context, e
 	}
 
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.JobRoleRepository.LinkContactWithOrganization(ctx, eventData.Tenant, contactId, eventData)
+	data := neo4jrepository.JobRoleCreateFields{
+		Description: eventData.Description,
+		JobTitle:    eventData.JobTitle,
+		Primary:     eventData.Primary,
+		CreatedAt:   eventData.CreatedAt,
+		UpdatedAt:   eventData.UpdatedAt,
+		StartedAt:   eventData.StartedAt,
+		EndedAt:     eventData.EndedAt,
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSource(eventData.SourceFields.Source),
+			SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
+			AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),
+		},
+	}
+	err := h.repositories.Neo4jRepositories.JobRoleWriteRepository.LinkContactWithOrganization(ctx, eventData.Tenant, contactId, eventData.OrganizationId, data)
 
 	return err
 }

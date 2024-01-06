@@ -152,7 +152,7 @@ func (h *UserEventHandler) OnJobRoleLinkedToUser(ctx context.Context, evt events
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.JobRoleRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.JobRoleId, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.JobRoleWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.JobRoleId, eventData.UpdatedAt)
 
 	return err
 }

@@ -2,6 +2,9 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	common_aggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
@@ -32,6 +35,19 @@ func (h *JobRoleEventHandler) OnJobRoleCreate(ctx context.Context, evt eventstor
 	}
 
 	eventId := common_aggregate.GetAggregateWithTenantAndIdObjectID(evt.AggregateID, aggregate.JobRoleAggregateType, eventData.Tenant)
-	err := h.Repositories.JobRoleRepository.CreateJobRole(ctx, eventData.Tenant, eventId, eventData)
+	data := neo4jrepository.JobRoleCreateFields{
+		Description: utils.IfNotNilString(eventData.Description),
+		JobTitle:    eventData.JobTitle,
+		StartedAt:   eventData.StartedAt,
+		EndedAt:     eventData.EndedAt,
+		SourceFields: neo4jmodel.Source{
+			Source:        eventData.Source,
+			SourceOfTruth: eventData.SourceOfTruth,
+			AppSource:     eventData.AppSource,
+		},
+		CreatedAt: eventData.CreatedAt,
+		UpdatedAt: eventData.UpdatedAt,
+	}
+	err := h.Repositories.Neo4jRepositories.JobRoleWriteRepository.CreateJobRole(ctx, eventData.Tenant, eventId, data)
 	return err
 }
