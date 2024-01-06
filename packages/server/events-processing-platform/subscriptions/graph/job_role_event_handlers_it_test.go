@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	"github.com/stretchr/testify/require"
 	"testing"
-	"time"
 )
 
 func TestGraphJobRoleEventHandler_OnJobRoleCreate(t *testing.T) {
@@ -22,7 +21,7 @@ func TestGraphJobRoleEventHandler_OnJobRoleCreate(t *testing.T) {
 		Repositories: testDatabase.Repositories,
 	}
 	myJobRoleId, _ := uuid.NewUUID()
-	curTime := time.Now().UTC()
+	curTime := utils.Now()
 
 	description := "I clean things"
 	jobRoleAggregate := aggregate.NewJobRoleAggregateWithTenantAndID(tenantName, myJobRoleId.String())

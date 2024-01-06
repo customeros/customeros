@@ -28,7 +28,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberCreate(t *testing.T) {
 	phoneNumberId, _ := uuid.NewUUID()
 	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(tenantName, phoneNumberId.String())
 	phoneNumber := "+0123456789"
-	curTime := time.Now().UTC()
+	curTime := utils.Now()
 	event, err := events.NewPhoneNumberCreateEvent(phoneNumberAggregate, tenantName, phoneNumber, cmnmod.Source{
 		Source:        constants.SourceOpenline,
 		SourceOfTruth: constants.SourceOpenline,
@@ -179,7 +179,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberUpdate(t *testing.T) {
 
 	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(tenantName, phoneNumberId)
 	neo4jt.CreateCountry(ctx, testDatabase.Driver, "US", "USA", "United States", "1")
-	updatedAtUpdate := time.Now().UTC()
+	updatedAtUpdate := utils.Now()
 	event, err := events.NewPhoneNumberUpdateEvent(phoneNumberAggregate, tenantName, constants.SourceWebscrape, updatedAtUpdate)
 	require.Nil(t, err)
 

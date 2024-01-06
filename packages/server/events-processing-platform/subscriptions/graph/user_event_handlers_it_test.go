@@ -32,7 +32,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	}
 	myUserId, _ := uuid.NewUUID()
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, myUserId.String())
-	curTime := time.Now().UTC()
+	curTime := utils.Now()
 
 	event, err := user_events.NewUserCreateEvent(userAggregate, user_models.UserDataFields{
 		FirstName:       "Bob",
@@ -161,7 +161,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, myUserId.String())
 	jobRoleAggregate := job_role_aggregate.NewJobRoleAggregateWithTenantAndID(tenantName, myJobRoleId.String())
 
-	curTime := time.Now().UTC()
+	curTime := utils.Now()
 
 	description := "I clean things"
 
@@ -252,7 +252,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, myUserId.String())
 	jobRoleAggregate := job_role_aggregate.NewJobRoleAggregateWithTenantAndID(tenantName, myJobRoleId.String())
 
-	curTime := time.Now().UTC()
+	curTime := utils.Now()
 
 	description := "I clean things"
 

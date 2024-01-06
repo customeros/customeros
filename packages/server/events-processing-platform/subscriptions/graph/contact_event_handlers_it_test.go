@@ -28,7 +28,7 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	}
 	myContactId, _ := uuid.NewUUID()
 	contactAggregate := contactAggregate.NewContactAggregateWithTenantAndID(tenantName, myContactId.String())
-	curTime := time.Now().UTC()
+	curTime := utils.Now()
 
 	dataFields := contactModels.ContactDataFields{
 		FirstName:   "Bob",

@@ -14,7 +14,6 @@ import (
 )
 
 type PhoneNumberRepository interface {
-	FailPhoneNumberValidation(ctx context.Context, phoneNumberId string, event events.PhoneNumberFailedValidationEvent) error
 	PhoneNumberValidated(ctx context.Context, phoneNumberId string, event events.PhoneNumberValidatedEvent) error
 	LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
@@ -137,35 +136,6 @@ func (r *phoneNumberRepository) LinkWithUser(ctx context.Context, tenant, userId
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 	return r.executeQuery(ctx, query, params)
-}
-
-func (r *phoneNumberRepository) FailPhoneNumberValidation(ctx context.Context, phoneNumberId string, event events.PhoneNumberFailedValidationEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.FailPhoneNumberValidation")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
-	span.LogFields(log.String("phoneNumberId", phoneNumberId))
-
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$id})
-				WHERE p:PhoneNumber_%s
-		 		SET p.validationError = $validationError,
-		     		p.validated = false,
-					p.updatedAt = $validatedAt`, event.Tenant)
-	params := map[string]any{
-		"id":              phoneNumberId,
-		"tenant":          event.Tenant,
-		"validationError": event.ValidationError,
-		"validatedAt":     event.ValidatedAt,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, cypher, params)
-		return nil, err
-	})
-	return err
 }
 
 func (r *phoneNumberRepository) PhoneNumberValidated(ctx context.Context, phoneNumberId string, event events.PhoneNumberValidatedEvent) error {

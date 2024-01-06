@@ -13,7 +13,6 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"testing"
-	"time"
 )
 
 func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
@@ -27,7 +26,7 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 	myMailId, _ := uuid.NewUUID()
 	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
 	email := "test@test.com"
-	curTime := time.Now().UTC()
+	curTime := utils.Now()
 	event, err := emailEvents.NewEmailCreateEvent(emailAggregate, tenantName, email, cmnmod.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",

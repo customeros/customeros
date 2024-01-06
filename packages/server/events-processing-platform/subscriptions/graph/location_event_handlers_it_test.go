@@ -27,8 +27,8 @@ func TestGraphLocationEventHandler_OnLocationCreate(t *testing.T) {
 	locationAggregate := aggregate.NewLocationAggregateWithTenantAndID(tenantName, locationId.String())
 	name := "test_location_name"
 	rawAddress := "test_location_raw_address"
-	createdAt := time.Now().UTC()
-	updatedAt := time.Now().UTC()
+	createdAt := utils.Now()
+	updatedAt := utils.Now()
 	country := "US"
 	region := "test_region"
 	district := "test_district"
@@ -127,7 +127,7 @@ func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	name := "test_location_name"
-	updatedAt := time.Now().UTC()
+	updatedAt := utils.Now()
 	country := "US"
 	region := "test_region"
 	locality := "test_locality"
@@ -268,7 +268,7 @@ func TestGraphLocationEventHandler_OnLocationValidationFailed(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	name := "test_location_name"
-	updatedAt := time.Now().UTC()
+	updatedAt := utils.Now()
 	country := "US"
 	region := "test_region"
 	locality := "test_locality"
@@ -373,7 +373,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	name := "test_location_name"
-	updatedAt := time.Now().UTC()
+	updatedAt := utils.Now()
 	country := "US"
 	region := "test_region"
 	locality := "test_locality"
@@ -452,7 +452,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 
 	locationAggregate := aggregate.NewLocationAggregateWithTenantAndID(tenantName, locationId)
 	neo4jt.CreateCountry(ctx, testDatabase.Driver, "US", "USA", "United States", "1")
-	updatedAtUpdate := time.Now().UTC()
+	updatedAtUpdate := utils.Now()
 	locationAddressLatitudeUpdate := 1.1
 	locationAddressLongitudeUpdate := 2.2
 	locationAddressCountryUpdate := "locationAddressCountryUpdate"
