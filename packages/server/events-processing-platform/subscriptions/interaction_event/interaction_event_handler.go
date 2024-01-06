@@ -63,7 +63,7 @@ func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, e
 	interactionEventId := aggregate.GetInteractionEventObjectID(evt.AggregateID, eventData.Tenant)
 	span.LogFields(log.String("interactionEventId", interactionEventId))
 
-	interactionEvent, err := h.repositories.InteractionEventRepository.GetInteractionEvent(ctx, eventData.Tenant, interactionEventId)
+	interactionEvent, err := h.repositories.Neo4jRepositories.InteractionEventReadRepository.GetInteractionEvent(ctx, eventData.Tenant, interactionEventId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting interaction event with id %s: %v", interactionEvent, err)
@@ -148,7 +148,7 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 	interactionEventId := aggregate.GetInteractionEventObjectID(evt.AggregateID, eventData.Tenant)
 	span.LogFields(log.String("interactionEventId", interactionEventId))
 
-	interactionEvent, err := h.repositories.InteractionEventRepository.GetInteractionEvent(ctx, eventData.Tenant, interactionEventId)
+	interactionEvent, err := h.repositories.Neo4jRepositories.InteractionEventReadRepository.GetInteractionEvent(ctx, eventData.Tenant, interactionEventId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting interaction event with id %s: %v", interactionEvent, err)

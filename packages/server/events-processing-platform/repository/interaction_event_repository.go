@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
@@ -21,7 +20,6 @@ type InteractionEventRepository interface {
 	SetAnalysisForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, contentType, analysisType, source, appSource string, updatedAt time.Time) error
 	RemoveAllActionItemsForInteractionEvent(ctx context.Context, tenant, interactionEventId string) error
 	AddActionItemForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, source, appSource string, updatedAt time.Time) error
-	GetInteractionEvent(ctx context.Context, tenant, interactionEventId string) (*dbtype.Node, error)
 	LinkInteractionEventWithSenderById(ctx context.Context, tenant, interactionEventId, entityId, label, relationType string) error
 	LinkInteractionEventWithReceiverById(ctx context.Context, tenant, interactionEventId, entityId, label, relationType string) error
 }
@@ -190,34 +188,6 @@ func (r *interactionEventRepository) SetAnalysisForInteractionEvent(ctx context.
 		return err
 	}
 	return nil
-}
-
-func (r *interactionEventRepository) GetInteractionEvent(ctx context.Context, tenant, interactionEventId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetInteractionEvent")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("interactionEventId", interactionEventId))
-
-	query := fmt.Sprintf(`MATCH (i:InteractionEvent_%s {id:$id}) RETURN i`, tenant)
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	params := map[string]any{
-		"id": interactionEventId,
-	}
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
 }
 
 func (r *interactionEventRepository) AddActionItemForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, source, appSource string, updatedAt time.Time) error {
