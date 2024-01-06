@@ -16,7 +16,6 @@ import (
 )
 
 type EmailRepository interface {
-	UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdateEvent) error
 	FailEmailValidation(ctx context.Context, emailId string, event events.EmailFailedValidationEvent) error
 	EmailValidated(ctx context.Context, emailId string, event events.EmailValidatedEvent) error
 	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error
@@ -32,30 +31,6 @@ func NewEmailRepository(driver *neo4j.DriverWithContext) EmailRepository {
 	return &emailRepository{
 		driver: driver,
 	}
-}
-
-func (r *emailRepository) UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdateEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.UpdateEmail")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
-	span.LogFields(log.String("emailId", emailId))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
-		 SET 	e.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE e.sourceOfTruth END,
-				e.updatedAt = $updatedAt,
-				e.syncedWithEventStore = true`, event.Tenant)
-	span.LogFields(log.String("query", query))
-
-	return r.executeQuery(ctx, query, map[string]any{
-		"id":            emailId,
-		"tenant":        event.Tenant,
-		"sourceOfTruth": event.Source,
-		"updatedAt":     event.UpdatedAt,
-		"overwrite":     event.Source == constants.SourceOpenline,
-	})
 }
 
 func (r *emailRepository) FailEmailValidation(ctx context.Context, emailId string, event events.EmailFailedValidationEvent) error {

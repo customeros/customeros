@@ -64,7 +64,7 @@ func (h *EmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Ev
 	}
 
 	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.EmailRepository.UpdateEmail(ctx, emailId, eventData)
+	err := h.Repositories.Neo4jRepositories.EmailWriteRepository.UpdateEmail(ctx, eventData.Tenant, emailId, eventData.Source, eventData.UpdatedAt)
 
 	return err
 }
