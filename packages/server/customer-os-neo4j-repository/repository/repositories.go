@@ -15,6 +15,7 @@ type Repositories struct {
 	CountryReadRepository             CountryReadRepository
 	CustomFieldWriteRepository        CustomFieldWriteRepository
 	EmailReadRepository               EmailReadRepository
+	InteractionEventReadRepository    InteractionEventReadRepository
 	InteractionSessionWriteRepository InteractionSessionWriteRepository
 	IssueWriteRepository              IssueWriteRepository
 	LogEntryWriteRepository           LogEntryWriteRepository
@@ -44,6 +45,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		CountryReadRepository:             NewCountryReadRepository(driver, neo4jDatabase),
 		CustomFieldWriteRepository:        NewCustomFieldWriteRepository(driver, neo4jDatabase),
 		EmailReadRepository:               NewEmailReadRepository(driver, neo4jDatabase),
+		InteractionEventReadRepository:    NewInteractionEventReadRepository(driver, neo4jDatabase),
 		InteractionSessionWriteRepository: NewInteractionSessionWriteRepository(driver, neo4jDatabase),
 		IssueWriteRepository:              NewIssueWriteRepository(driver, neo4jDatabase),
 		LogEntryWriteRepository:           NewLogEntryWriteRepository(driver, neo4jDatabase),
