@@ -781,6 +781,11 @@ type FieldSetUpdateInput struct {
 	Name string `json:"name"`
 }
 
+type FileGeneratorResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
 type Filter struct {
 	Not    *Filter     `json:"NOT,omitempty"`
 	And    []*Filter   `json:"AND,omitempty"`
@@ -1690,6 +1695,11 @@ type Result struct {
 	// The result of the GraphQL call.
 	// **Required.**
 	Result bool `json:"result"`
+}
+
+type RevenueReportMonthInput struct {
+	Year  int `json:"year"`
+	Month int `json:"month"`
 }
 
 type ServiceLineItem struct {

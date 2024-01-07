@@ -1,0 +1,13 @@
+extend type Query {
+    report_MonthlyRevenuePerCustomer(period: RevenueReportMonthInput): FileGeneratorResponse
+}
+
+input RevenueReportMonthInput {
+    year: Int!
+    month: Int!
+}
+
+type FileGeneratorResponse {
+    success: Boolean!
+    message: String!
+}

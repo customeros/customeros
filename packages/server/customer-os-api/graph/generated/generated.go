@@ -439,6 +439,11 @@ type ComplexityRoot struct {
 		UpdatedAt            func(childComplexity int) int
 	}
 
+	FileGeneratorResponse struct {
+		Message func(childComplexity int) int
+		Success func(childComplexity int) int
+	}
+
 	GCliAttributeKeyValuePair struct {
 		Display func(childComplexity int) int
 		Key     func(childComplexity int) int
@@ -1019,6 +1024,7 @@ type ComplexityRoot struct {
 		Organizations                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		PhoneNumber                           func(childComplexity int, id string) int
 		PlayerByAuthIDProvider                func(childComplexity int, authID string, provider string) int
+		ReportMonthlyRevenuePerCustomer       func(childComplexity int, period *model.RevenueReportMonthInput) int
 		ServiceLineItem                       func(childComplexity int, id string) int
 		Tags                                  func(childComplexity int) int
 		Tenant                                func(childComplexity int) int
@@ -1466,6 +1472,7 @@ type QueryResolver interface {
 	MasterPlans(ctx context.Context, retired *bool) ([]*model.MasterPlan, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.MeetingsPage, error)
+	ReportMonthlyRevenuePerCustomer(ctx context.Context, period *model.RevenueReportMonthInput) (*model.FileGeneratorResponse, error)
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
 	Organization(ctx context.Context, id string) (*model.Organization, error)
@@ -3236,6 +3243,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FieldSetTemplate.UpdatedAt(childComplexity), true
+
+	case "FileGeneratorResponse.message":
+		if e.complexity.FileGeneratorResponse.Message == nil {
+			break
+		}
+
+		return e.complexity.FileGeneratorResponse.Message(childComplexity), true
+
+	case "FileGeneratorResponse.success":
+		if e.complexity.FileGeneratorResponse.Success == nil {
+			break
+		}
+
+		return e.complexity.FileGeneratorResponse.Success(childComplexity), true
 
 	case "GCliAttributeKeyValuePair.display":
 		if e.complexity.GCliAttributeKeyValuePair.Display == nil {
@@ -7505,6 +7526,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.PlayerByAuthIDProvider(childComplexity, args["authId"].(string), args["provider"].(string)), true
 
+	case "Query.report_MonthlyRevenuePerCustomer":
+		if e.complexity.Query.ReportMonthlyRevenuePerCustomer == nil {
+			break
+		}
+
+		args, err := ec.field_Query_report_MonthlyRevenuePerCustomer_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ReportMonthlyRevenuePerCustomer(childComplexity, args["period"].(*model.RevenueReportMonthInput)), true
+
 	case "Query.serviceLineItem":
 		if e.complexity.Query.ServiceLineItem == nil {
 			break
@@ -8217,6 +8250,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputPhoneNumberUpdateInput,
 		ec.unmarshalInputPlayerInput,
 		ec.unmarshalInputPlayerUpdate,
+		ec.unmarshalInputRevenueReportMonthInput,
 		ec.unmarshalInputServiceLineItemCloseInput,
 		ec.unmarshalInputServiceLineItemInput,
 		ec.unmarshalInputServiceLineItemUpdateInput,
@@ -10065,6 +10099,20 @@ type Meeting implements Node {
     externalSystem:  [ExternalSystem!]! @goField(forceResolver: true)
     status: MeetingStatus!
 }`, BuiltIn: false},
+	{Name: "../schemas/monthly_revenue_report.graphqls", Input: `extend type Query {
+    report_MonthlyRevenuePerCustomer(period: RevenueReportMonthInput): FileGeneratorResponse
+}
+
+input RevenueReportMonthInput {
+    year: Int!
+    month: Int!
+}
+
+type FileGeneratorResponse {
+    success: Boolean!
+    message: String!
+}
+`, BuiltIn: false},
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation
 
 `, BuiltIn: false},
@@ -14591,6 +14639,21 @@ func (ec *executionContext) field_Query_player_ByAuthIdProvider_args(ctx context
 		}
 	}
 	args["provider"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_report_MonthlyRevenuePerCustomer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.RevenueReportMonthInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalORevenueReportMonthInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRevenueReportMonthInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["period"] = arg0
 	return args, nil
 }
 
@@ -26536,6 +26599,94 @@ func (ec *executionContext) fieldContext_FieldSetTemplate_customFieldTemplates(c
 				return ec.fieldContext_CustomFieldTemplate_max(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type CustomFieldTemplate", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileGeneratorResponse_success(ctx context.Context, field graphql.CollectedField, obj *model.FileGeneratorResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileGeneratorResponse_success(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Success, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileGeneratorResponse_success(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileGeneratorResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileGeneratorResponse_message(ctx context.Context, field graphql.CollectedField, obj *model.FileGeneratorResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FileGeneratorResponse_message(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FileGeneratorResponse_message(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileGeneratorResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -58381,6 +58532,64 @@ func (ec *executionContext) fieldContext_Query_externalMeetings(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_report_MonthlyRevenuePerCustomer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_report_MonthlyRevenuePerCustomer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ReportMonthlyRevenuePerCustomer(rctx, fc.Args["period"].(*model.RevenueReportMonthInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.FileGeneratorResponse)
+	fc.Result = res
+	return ec.marshalOFileGeneratorResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFileGeneratorResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_report_MonthlyRevenuePerCustomer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "success":
+				return ec.fieldContext_FileGeneratorResponse_success(ctx, field)
+			case "message":
+				return ec.fieldContext_FileGeneratorResponse_message(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FileGeneratorResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_report_MonthlyRevenuePerCustomer_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_opportunity(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_opportunity(ctx, field)
 	if err != nil {
@@ -69112,6 +69321,40 @@ func (ec *executionContext) unmarshalInputPlayerUpdate(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputRevenueReportMonthInput(ctx context.Context, obj interface{}) (model.RevenueReportMonthInput, error) {
+	var it model.RevenueReportMonthInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"year", "month"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "year":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Year = data
+		case "month":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("month"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Month = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputServiceLineItemCloseInput(ctx context.Context, obj interface{}) (model.ServiceLineItemCloseInput, error) {
 	var it model.ServiceLineItemCloseInput
 	asMap := map[string]interface{}{}
@@ -73783,6 +74026,50 @@ func (ec *executionContext) _FieldSetTemplate(ctx context.Context, sel ast.Selec
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var fileGeneratorResponseImplementors = []string{"FileGeneratorResponse"}
+
+func (ec *executionContext) _FileGeneratorResponse(ctx context.Context, sel ast.SelectionSet, obj *model.FileGeneratorResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fileGeneratorResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FileGeneratorResponse")
+		case "success":
+			out.Values[i] = ec._FileGeneratorResponse_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "message":
+			out.Values[i] = ec._FileGeneratorResponse_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -79807,6 +80094,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "report_MonthlyRevenuePerCustomer":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_report_MonthlyRevenuePerCustomer(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "opportunity":
 			field := field
 
@@ -85804,6 +86110,13 @@ func (ec *executionContext) unmarshalOFieldSetTemplateInput2ᚕᚖgithubᚗcom�
 	return res, nil
 }
 
+func (ec *executionContext) marshalOFileGeneratorResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFileGeneratorResponse(ctx context.Context, sel ast.SelectionSet, v *model.FileGeneratorResponse) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._FileGeneratorResponse(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilterᚄ(ctx context.Context, v interface{}) ([]*model.Filter, error) {
 	if v == nil {
 		return nil, nil
@@ -86268,6 +86581,14 @@ func (ec *executionContext) marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 		return graphql.Null
 	}
 	return ec._Result(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalORevenueReportMonthInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRevenueReportMonthInput(ctx context.Context, v interface{}) (*model.RevenueReportMonthInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputRevenueReportMonthInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ServiceLineItem) graphql.Marshaler {
