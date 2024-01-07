@@ -39,6 +39,9 @@ type CustomerOsClient interface {
 	CreateLogEntry(tenant, username string, organizationId, author, content, contentType string, startedAt time.Time) (*string, error)
 
 	AddContactToOrganization(tenant, username, contactId, organizationId, jobTitle, description string) error
+
+	CreateMasterPlan(tenant, username, name string) (string, error)
+	CreateMasterPlanMilestone(tenant, username string, masterPlanMilestoneInput model.MasterPlanMilestoneInput) (string, error)
 }
 
 type customerOsClient struct {
@@ -781,7 +784,7 @@ func (s *customerOsClient) CreateLogEntry(tenant, username string, organizationI
 	graphqlRequest.Var("contentType", contentType)
 	graphqlRequest.Var("startedAt", startedAt)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &author)
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
 
 	if err != nil {
 		return nil, fmt.Errorf("error while adding headers to graph request: %w", err)
@@ -798,6 +801,64 @@ func (s *customerOsClient) CreateLogEntry(tenant, username string, organizationI
 	}
 	id := graphqlResponse["logEntry_CreateForOrganization"]
 	return &id, nil
+}
+
+func (s *customerOsClient) CreateMasterPlan(tenant, username, masterPlanName string) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation CreateMasterPlan($masterPlanName: String!) {
+				masterPlan_Create(input: {
+						name: $masterPlanName
+					}) {
+					id
+					name
+			}
+		}`)
+
+	graphqlRequest.Var("masterPlanName", masterPlanName)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.CreateMasterPlanResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("masterPlan_Create: %w", err)
+	}
+
+	return graphqlResponse.MasterPlanCreate.Id, nil
+}
+
+func (s *customerOsClient) CreateMasterPlanMilestone(tenant, username string, masterPlanMilestoneInput model.MasterPlanMilestoneInput) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation CreateMasterPlanMilestone($input: MasterPlanMilestoneInput!) {
+				masterPlanMilestone_Create(input: $input) {
+					id
+				  }
+				}`)
+	graphqlRequest.Var("input", masterPlanMilestoneInput)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.CreateMasterPlanMilestoneResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("masterPlanMilestone_Create: %w", err)
+	}
+
+	return graphqlResponse.MasterPlanMilestoneCreate.Id, nil
 }
 
 func (s *customerOsClient) addHeadersToGraphRequest(req *graphql.Request, tenant, username *string) error {

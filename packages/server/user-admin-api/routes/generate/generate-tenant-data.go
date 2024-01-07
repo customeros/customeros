@@ -624,8 +624,47 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 				}
 
 			}
-
 		}
+
+		for _, masterPlan := range sourceData.MasterPlans {
+			masterPlanId, err := services.CustomerOsClient.CreateMasterPlan(tenant, username, masterPlan.Name)
+			if err != nil {
+				context.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+			if masterPlanId == "" {
+				context.JSON(500, gin.H{
+					"error": "masterPlanId is nil",
+				})
+				return
+			}
+			for _, milestone := range masterPlan.Milestones {
+				masterPlanMilestoneInput := cosModel.MasterPlanMilestoneInput{
+					MasterPlanId:  masterPlanId,
+					Name:          milestone.Name,
+					Order:         milestone.Order,
+					DurationHours: milestone.DurationHours,
+					Optional:      milestone.Optional,
+					Items:         milestone.Items,
+				}
+				masterPlanMilestoneId, err := services.CustomerOsClient.CreateMasterPlanMilestone(tenant, username, masterPlanMilestoneInput)
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+				if masterPlanMilestoneId == "" {
+					context.JSON(500, gin.H{
+						"error": "masterPlanMilestoneId is nil",
+					})
+					return
+				}
+			}
+		}
+
 		context.JSON(200, gin.H{
 			"tenant": "tenant initiated",
 		})
