@@ -858,7 +858,7 @@ func (s *customerOsClient) CreateMasterPlanMilestone(tenant, username string, ma
 		return "", fmt.Errorf("masterPlanMilestone_Create: %w", err)
 	}
 
-	return graphqlResponse.MasterPlanCreate.Id, nil
+	return graphqlResponse.MasterPlanMilestoneCreate.Id, nil
 }
 
 func (s *customerOsClient) addHeadersToGraphRequest(req *graphql.Request, tenant, username *string) error {

@@ -71,7 +71,7 @@ type CreateMasterPlanResponse struct {
 	} `json:"masterPlan_Create"`
 }
 type CreateMasterPlanMilestoneResponse struct {
-	MasterPlanCreate struct {
+	MasterPlanMilestoneCreate struct {
 		Id string `json:"id"`
 	} `json:"masterPlanMilestone_Create"`
 }
