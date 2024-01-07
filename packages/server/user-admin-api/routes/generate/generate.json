@@ -26,7 +26,6 @@
       "lastName": "Coscotin",
       "email": "vasi@openline.ai",
       "profilePhotoUrl": "https://avatars.slack-edge.com/2022-10-19/4270750360112_7bfedcf03f1d0f092a68_192.png"
-
     }
   ],
   "contacts": [
@@ -364,6 +363,27 @@
           "status": "closed",
           "priority": "urgent",
           "description": "Detected an unexpected downtime in a service module affecting Kron. Immediately notified Kron, isolated the issue, and deployed a fix within an hour. Conducted a follow-up call to confirm resolution and provided a detailed report on the incident."
+        }
+      ]
+    }
+  ],
+  "masterPlans": [
+    {
+      "name": "Cohort 1 Onboarding",
+      "milestones": [
+        {
+        "name": "Milestone_001",
+        "order": 2,
+        "durationHours": 4,
+        "optional": true,
+        "items": ["milestone_001_item_001", "milestone_001_item_002"]
+        },
+        {
+        "name": "Milestone_002",
+        "order": 4,
+        "durationHours": 8,
+        "optional": false,
+        "items": ["milestone_002_item_001", "milestone_002_item_002"]
         }
       ]
     }

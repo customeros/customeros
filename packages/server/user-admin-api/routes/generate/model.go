@@ -87,4 +87,14 @@ type SourceData struct {
 			Message   string    `json:"message"`
 		} `json:"intercom"`
 	} `json:"organizations"`
+	MasterPlans []struct {
+		Name       string `json:"name"`
+		Milestones []struct {
+			Name          string   `json:"name"`
+			Order         int64    `json:"order"`
+			DurationHours int64    `json:"durationHours"`
+			Optional      bool     `json:"optional"`
+			Items         []string `json:"items"`
+		} `json:"milestones"`
+	} `json:"masterPlans"`
 }
