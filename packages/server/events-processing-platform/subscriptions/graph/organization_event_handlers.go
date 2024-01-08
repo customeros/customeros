@@ -277,7 +277,7 @@ func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Co
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.LocationRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.LocationId, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.LocationWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.LocationId, eventData.UpdatedAt)
 
 	return err
 }

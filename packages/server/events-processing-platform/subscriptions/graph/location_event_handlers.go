@@ -2,9 +2,13 @@ package graph
 
 import (
 	"context"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -33,7 +37,19 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 	}
 
 	LocationId := aggregate.GetLocationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.LocationRepository.CreateLocation(ctx, LocationId, eventData)
+	data := neo4jrepository.LocationCreateFields{
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSource(eventData.SourceFields.Source),
+			SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
+			AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),
+		},
+		CreatedAt:      eventData.CreatedAt,
+		UpdatedAt:      eventData.UpdatedAt,
+		RawAddress:     eventData.RawAddress,
+		Name:           eventData.Name,
+		AddressDetails: locationAddressToAddressDetails(eventData.LocationAddress),
+	}
+	err := h.Repositories.Neo4jRepositories.LocationWriteRepository.CreateLocation(ctx, eventData.Tenant, LocationId, data)
 
 	return err
 }
@@ -49,8 +65,15 @@ func (h *LocationEventHandler) OnLocationUpdate(ctx context.Context, evt eventst
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	LocationId := aggregate.GetLocationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.LocationRepository.UpdateLocation(ctx, LocationId, eventData)
+	locationId := aggregate.GetLocationObjectID(evt.AggregateID, eventData.Tenant)
+	data := neo4jrepository.LocationUpdateFields{
+		UpdatedAt:      eventData.UpdatedAt,
+		Source:         helper.GetSource(eventData.Source),
+		Name:           eventData.Name,
+		RawAddress:     eventData.RawAddress,
+		AddressDetails: locationAddressToAddressDetails(eventData.LocationAddress),
+	}
+	err := h.Repositories.Neo4jRepositories.LocationWriteRepository.UpdateLocation(ctx, eventData.Tenant, locationId, data)
 
 	return err
 }
@@ -66,8 +89,9 @@ func (e *LocationEventHandler) OnLocationValidated(ctx context.Context, evt even
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	LocationId := aggregate.GetLocationObjectID(evt.AggregateID, eventData.Tenant)
-	err := e.Repositories.LocationRepository.LocationValidated(ctx, LocationId, eventData)
+	locationId := aggregate.GetLocationObjectID(evt.AggregateID, eventData.Tenant)
+	data := locationAddressToAddressDetails(eventData.LocationAddress)
+	err := e.Repositories.Neo4jRepositories.LocationWriteRepository.LocationValidated(ctx, eventData.Tenant, locationId, data, eventData.ValidatedAt)
 
 	return err
 }
@@ -83,8 +107,32 @@ func (h *LocationEventHandler) OnLocationValidationFailed(ctx context.Context, e
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	LocationId := aggregate.GetLocationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.LocationRepository.FailLocationValidation(ctx, LocationId, eventData)
+	locationId := aggregate.GetLocationObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.Repositories.Neo4jRepositories.LocationWriteRepository.FailLocationValidation(ctx, eventData.Tenant, locationId, eventData.ValidationError, eventData.ValidatedAt)
 
 	return err
+}
+
+func locationAddressToAddressDetails(locationAddress models.LocationAddress) neo4jrepository.AddressDetails {
+	return neo4jrepository.AddressDetails{
+		Latitude:     locationAddress.Latitude,
+		Longitude:    locationAddress.Longitude,
+		Country:      locationAddress.Country,
+		Region:       locationAddress.Region,
+		District:     locationAddress.District,
+		Locality:     locationAddress.Locality,
+		Street:       locationAddress.Street,
+		Address:      locationAddress.Address1,
+		Address2:     locationAddress.Address2,
+		Zip:          locationAddress.Zip,
+		AddressType:  locationAddress.AddressType,
+		HouseNumber:  locationAddress.HouseNumber,
+		PostalCode:   locationAddress.PostalCode,
+		PlusFour:     locationAddress.PlusFour,
+		Commercial:   locationAddress.Commercial,
+		Predirection: locationAddress.Predirection,
+		TimeZone:     locationAddress.TimeZone,
+		UtcOffset:    locationAddress.UtcOffset,
+	}
+
 }
