@@ -81,7 +81,7 @@ func (h *EmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eve
 	}
 
 	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.EmailRepository.FailEmailValidation(ctx, emailId, eventData)
+	err := h.Repositories.Neo4jRepositories.EmailWriteRepository.FailEmailValidation(ctx, eventData.Tenant, emailId, eventData.ValidationError, eventData.ValidatedAt)
 
 	return err
 }
@@ -98,7 +98,22 @@ func (h *EmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore
 	}
 
 	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.EmailRepository.EmailValidated(ctx, emailId, eventData)
+	data := neo4jrepository.EmailValidatedFields{
+		ValidationError: eventData.ValidationError,
+		EmailAddress:    eventData.EmailAddress,
+		Domain:          eventData.Domain,
+		AcceptsMail:     eventData.AcceptsMail,
+		CanConnectSmtp:  eventData.CanConnectSmtp,
+		HasFullInbox:    eventData.HasFullInbox,
+		IsCatchAll:      eventData.IsCatchAll,
+		IsDeliverable:   eventData.IsDeliverable,
+		IsDisabled:      eventData.IsDisabled,
+		IsValidSyntax:   eventData.IsValidSyntax,
+		Username:        eventData.Username,
+		ValidatedAt:     eventData.ValidatedAt,
+		IsReachable:     eventData.IsReachable,
+	}
+	err := h.Repositories.Neo4jRepositories.EmailWriteRepository.EmailValidated(ctx, eventData.Tenant, emailId, data)
 
 	return err
 }
