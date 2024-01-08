@@ -129,10 +129,11 @@ func (r *emailWriteRepository) FailEmailValidation(ctx context.Context, tenant, 
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, emailId)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$id})
+				WHERE e:Email_%s
 		 		SET e.validationError = $validationError,
 		     		e.validated = false,
-					e.updatedAt = $validatedAt`
+					e.updatedAt = $validatedAt`, tenant)
 	params := map[string]any{
 		"id":              emailId,
 		"tenant":          tenant,
