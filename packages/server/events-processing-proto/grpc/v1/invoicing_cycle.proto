@@ -23,7 +23,7 @@ message UpdateInvoicingCycleTypeRequest {
   string loggedInUserId = 3;
   InvoicingDateType type = 4;
   google.protobuf.Timestamp updatedAt = 5;
-  SourceFields appSource = 6;
+  SourceFields sourceFields = 6;
 }
 
 
