@@ -18,6 +18,7 @@ type Repositories struct {
 	EmailWriteRepository              EmailWriteRepository
 	ExternalSystemWriteRepository     ExternalSystemWriteRepository
 	InteractionEventReadRepository    InteractionEventReadRepository
+	InteractionEventWriteRepository   InteractionEventWriteRepository
 	InteractionSessionWriteRepository InteractionSessionWriteRepository
 	IssueWriteRepository              IssueWriteRepository
 	JobRoleWriteRepository            JobRoleWriteRepository
@@ -53,6 +54,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		EmailWriteRepository:              NewEmailWriteRepository(driver, neo4jDatabase),
 		ExternalSystemWriteRepository:     NewExternalSystemWriteRepository(driver, neo4jDatabase),
 		InteractionEventReadRepository:    NewInteractionEventReadRepository(driver, neo4jDatabase),
+		InteractionEventWriteRepository:   NewInteractionEventWriteRepository(driver, neo4jDatabase),
 		InteractionSessionWriteRepository: NewInteractionSessionWriteRepository(driver, neo4jDatabase),
 		IssueWriteRepository:              NewIssueWriteRepository(driver, neo4jDatabase),
 		JobRoleWriteRepository:            NewJobRoleWriteRepository(driver, neo4jDatabase),
