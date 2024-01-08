@@ -52,11 +52,11 @@ export const mockData = [
   {
     month: 11,
     value: 1100,
-    index: 10,
+    index: 1,
   },
   {
     month: 12,
     value: 1200,
-    index: 11,
+    index: 1,
   },
 ];

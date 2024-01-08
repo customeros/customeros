@@ -52,13 +52,7 @@ export const EmptyState = () => {
       };
 
   return (
-    <Center
-      h='100%'
-      bg='white'
-      borderRadius='2xl'
-      border='1px solid'
-      borderColor='gray.200'
-    >
+    <Center h='100%' bg='white'>
       <Flex direction='column' height={500} width={500}>
         <Flex position='relative'>
           <EmptyTable
