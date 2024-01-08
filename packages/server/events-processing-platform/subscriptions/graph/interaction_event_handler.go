@@ -5,11 +5,13 @@ import (
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -47,7 +49,25 @@ func (h *InteractionEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	interactionEventId := aggregate.GetInteractionEventObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.InteractionEventRepository.Create(ctx, eventData.Tenant, interactionEventId, eventData)
+	data := neo4jrepository.InteractionEventCreateFields{
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSourceOfTruth(eventData.Source),
+			SourceOfTruth: helper.GetSource(eventData.Source),
+			AppSource:     helper.GetAppSource(eventData.AppSource),
+		},
+		CreatedAt:          eventData.CreatedAt,
+		UpdatedAt:          eventData.UpdatedAt,
+		Content:            eventData.Content,
+		ContentType:        eventData.ContentType,
+		Channel:            eventData.Channel,
+		ChannelData:        eventData.ChannelData,
+		Identifier:         eventData.Identifier,
+		EventType:          eventData.EventType,
+		BelongsToIssueId:   eventData.BelongsToIssueId,
+		BelongsToSessionId: eventData.BelongsToSessionId,
+		Hide:               eventData.Hide,
+	}
+	err := h.repositories.Neo4jRepositories.InteractionEventWriteRepository.Create(ctx, eventData.Tenant, interactionEventId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving interaction event %s: %s", interactionEventId, err.Error())
@@ -72,7 +92,7 @@ func (h *InteractionEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	}
 
 	if eventData.Sender.Available() {
-		err = h.repositories.InteractionEventRepository.LinkInteractionEventWithSenderById(ctx, eventData.Tenant, interactionEventId, eventData.Sender.Participant.ID, eventData.Sender.Participant.NodeLabel(), eventData.Sender.RelationType)
+		err = h.repositories.Neo4jRepositories.InteractionEventWriteRepository.LinkInteractionEventWithSenderById(ctx, eventData.Tenant, interactionEventId, eventData.Sender.Participant.ID, eventData.Sender.Participant.NodeLabel(), eventData.Sender.RelationType)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link interaction event %s with sender %s: %s", interactionEventId, eventData.Sender.Participant.ID, err.Error())
@@ -80,7 +100,7 @@ func (h *InteractionEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	}
 	for _, receiver := range eventData.Receivers {
 		if receiver.Available() {
-			err = h.repositories.InteractionEventRepository.LinkInteractionEventWithReceiverById(ctx, eventData.Tenant, interactionEventId, receiver.Participant.ID, receiver.Participant.NodeLabel(), receiver.RelationType)
+			err = h.repositories.Neo4jRepositories.InteractionEventWriteRepository.LinkInteractionEventWithReceiverById(ctx, eventData.Tenant, interactionEventId, receiver.Participant.ID, receiver.Participant.NodeLabel(), receiver.RelationType)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Error while link interaction event %s with receiver %s: %s", interactionEventId, eventData.Sender.Participant.ID, err.Error())
@@ -124,7 +144,18 @@ func (h *InteractionEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	ieId := aggregate.GetInteractionEventObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.InteractionEventRepository.Update(ctx, eventData.Tenant, ieId, eventData)
+	data := neo4jrepository.InteractionEventUpdateFields{
+		UpdatedAt:   eventData.UpdatedAt,
+		Content:     eventData.Content,
+		ContentType: eventData.ContentType,
+		Channel:     eventData.Channel,
+		ChannelData: eventData.ChannelData,
+		Identifier:  eventData.Identifier,
+		EventType:   eventData.EventType,
+		Hide:        eventData.Hide,
+		Source:      helper.GetSourceOfTruth(eventData.Source),
+	}
+	err := h.repositories.Neo4jRepositories.InteractionEventWriteRepository.Update(ctx, eventData.Tenant, ieId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving interaction event %s: %s", ieId, err.Error())
@@ -162,7 +193,7 @@ func (h *InteractionEventHandler) OnSummaryReplace(ctx context.Context, evt even
 	}
 
 	interactionEventId := aggregate.GetInteractionEventObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.InteractionEventRepository.SetAnalysisForInteractionEvent(ctx, eventData.Tenant, interactionEventId, eventData.Summary,
+	err := h.repositories.Neo4jRepositories.InteractionEventWriteRepository.SetAnalysisForInteractionEvent(ctx, eventData.Tenant, interactionEventId, eventData.Summary,
 		eventData.ContentType, "summary", constants.SourceOpenline, constants.AppSourceEventProcessingPlatform, eventData.UpdatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -187,7 +218,7 @@ func (h *InteractionEventHandler) OnActionItemsReplace(ctx context.Context, evt 
 	interactionEventId := aggregate.GetInteractionEventObjectID(evt.AggregateID, eventData.Tenant)
 
 	if len(eventData.ActionItems) > 0 {
-		err := h.repositories.InteractionEventRepository.RemoveAllActionItemsForInteractionEvent(ctx, eventData.Tenant, interactionEventId)
+		err := h.repositories.Neo4jRepositories.InteractionEventWriteRepository.RemoveAllActionItemsForInteractionEvent(ctx, eventData.Tenant, interactionEventId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -196,7 +227,7 @@ func (h *InteractionEventHandler) OnActionItemsReplace(ctx context.Context, evt 
 
 	var repoError error = nil
 	for _, actionItem := range eventData.ActionItems {
-		err := h.repositories.InteractionEventRepository.AddActionItemForInteractionEvent(ctx, eventData.Tenant, interactionEventId, actionItem,
+		err := h.repositories.Neo4jRepositories.InteractionEventWriteRepository.AddActionItemForInteractionEvent(ctx, eventData.Tenant, interactionEventId, actionItem,
 			constants.SourceOpenline, constants.AppSourceEventProcessingPlatform, eventData.UpdatedAt)
 		if err != nil {
 			repoError = err
