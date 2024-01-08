@@ -38,6 +38,7 @@
     "@tanstack/react-virtual": "^3.0.1",
     "@visx/visx": "^3.5.1",
     "axios": "^1.6.3",
+    "bufferutil": "^4.0.8",
     "chakra-react-select": "^4.7.6",
     "d3": "^7.8.5",
     "date-fns": "^2.29.3",
@@ -76,6 +77,7 @@
     "slack-to-html": "^1.0.0",
     "ts-pattern": "^5.0.5",
     "usehooks-ts": "^2.9.1",
+    "utf-8-validate": "^6.0.3",
     "webpack": "^5.76.0"
   },
   "devDependencies": {
