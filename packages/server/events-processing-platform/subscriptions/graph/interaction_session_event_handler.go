@@ -68,7 +68,15 @@ func (h *InteractionSessionEventHandler) OnCreate(ctx context.Context, evt event
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, interactionSessionId, neo4jentity.NodeLabelInteractionSession, eventData.ExternalSystem)
+		externalSystemData := neo4jmodel.ExternalSystem{
+			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+			ExternalId:       eventData.ExternalSystem.ExternalId,
+			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+			ExternalSource:   eventData.ExternalSystem.ExternalSource,
+			SyncDate:         eventData.ExternalSystem.SyncDate,
+		}
+		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, interactionSessionId, neo4jentity.NodeLabelInteractionSession, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link interaction session %s with external system %s: %s", interactionSessionId, eventData.ExternalSystem.ExternalSystemId, err.Error())
