@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
@@ -78,7 +79,7 @@ func (r *locationRepository) CreateLocation(ctx context.Context, tenant, locatio
 	span.SetTag(tracing.SpanTagEntityId, locationId)
 	tracing.LogObjectAsJson(span, "data", data)
 
-	cypher := `MATCH (t:Tenant {name:$tenant}) 
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id}) 
 		 ON CREATE SET l.rawAddress = $rawAddress,
 						l.name = $name,
@@ -107,7 +108,7 @@ func (r *locationRepository) CreateLocation(ctx context.Context, tenant, locatio
 						l.createdAt = $createdAt,
 						l.updatedAt = $updatedAt,
 						l.syncedWithEventStore = true 
-		 ON MATCH SET 	l.syncedWithEventStore = true`
+		 ON MATCH SET 	l.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
 		"id":            locationId,
 		"tenant":        tenant,
@@ -154,7 +155,8 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, tenant, locatio
 	span.SetTag(tracing.SpanTagEntityId, locationId)
 	tracing.LogObjectAsJson(span, "data", data)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id})
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location {id:$id})
+			WHERE l:Location_%s
 		 SET l.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE l.sourceOfTruth END,
 			l.updatedAt = $updatedAt,
 			l.syncedWithEventStore = true,
@@ -177,7 +179,7 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, tenant, locatio
 			l.latitude = $latitude,
 			l.longitude = $longitude,
 			l.timeZone = $timeZone,
-			l.utcOffset = $utcOffset`
+			l.utcOffset = $utcOffset`, tenant)
 	params := map[string]any{
 		"id":            locationId,
 		"tenant":        tenant,
@@ -221,10 +223,10 @@ func (r *locationRepository) FailLocationValidation(ctx context.Context, tenant,
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, locationId)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id})
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id})
 		 		SET l.validationError = $validationError,
 		     		l.validated = false,
-					l.updatedAt = $validatedAt`
+					l.updatedAt = $validatedAt`, tenant)
 	params := map[string]any{
 		"id":              locationId,
 		"tenant":          tenant,
@@ -250,7 +252,7 @@ func (r *locationRepository) LocationValidated(ctx context.Context, tenant, loca
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id})
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id})
 		 		SET l.validationError = $validationError,
 		     		l.validated = true,
 					l.updatedAt = $validatedAt,
@@ -271,7 +273,7 @@ func (r *locationRepository) LocationValidated(ctx context.Context, tenant, loca
 					l.latitude = CASE WHEN $latitude is not null or l.latitude is null THEN $latitude ELSE l.latitude END,
 					l.longitude = CASE WHEN $longitude is not null or l.longitude is null THEN $longitude ELSE l.longitude END,
 					l.timeZone = CASE WHEN $timeZone <> '' or l.timeZone is null or l.timeZone = '' THEN $timeZone ELSE l.timeZone END,
-					l.utcOffset = CASE WHEN $utcOffset <> '' or l.utcOffset is null THEN $utcOffset ELSE l.utcOffset END`
+					l.utcOffset = CASE WHEN $utcOffset <> '' or l.utcOffset is null THEN $utcOffset ELSE l.utcOffset END`, tenant)
 	params := map[string]any{
 		"id":              locationId,
 		"tenant":          tenant,
