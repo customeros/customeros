@@ -170,7 +170,7 @@ func (h *ContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt even
 	}
 
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.EmailRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
 
 	return err
 }

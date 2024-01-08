@@ -42,6 +42,9 @@ type EmailWriteRepository interface {
 	UpdateEmail(ctx context.Context, tenant, emailId, source string, updatedAt time.Time) error
 	FailEmailValidation(ctx context.Context, tenant, emailId, validationError string, validatedAt time.Time) error
 	EmailValidated(ctx context.Context, tenant, emailId string, data EmailValidatedFields) error
+	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error
+	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error
+	LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool, updatedAt time.Time) error
 }
 
 type emailWriteRepository struct {
@@ -196,6 +199,101 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 		"now":             utils.Now(),
 		"source":          constants.SourceOpenline,
 		"appSource":       constants.AppSourceEventProcessingPlatform,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithContact")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, emailId)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}),
+				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
+		MERGE (c)-[rel:HAS]->(e)
+		SET	rel.primary = $primary,
+			rel.label = $label,	
+			c.updatedAt = $updatedAt,
+			rel.syncedWithEventStore = true`
+	params := map[string]any{
+		"tenant":    tenant,
+		"contactId": contactId,
+		"emailId":   emailId,
+		"label":     label,
+		"primary":   primary,
+		"updatedAt": updatedAt,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithOrganization")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, emailId)
+
+	cypher := `
+		MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}),
+				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
+		MERGE (org)-[rel:HAS]->(e)
+		SET	rel.primary = $primary,
+			rel.label = $label,	
+			org.updatedAt = $updatedAt,
+			rel.syncedWithEventStore = true`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"emailId":        emailId,
+		"label":          label,
+		"primary":        primary,
+		"updatedAt":      updatedAt,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithUser")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, emailId)
+
+	cypher := `
+		MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
+				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
+		MERGE (u)-[rel:HAS]->(e)
+		SET	rel.primary = $primary,
+			rel.label = $label,	
+			u.updatedAt = $updatedAt,
+			rel.syncedWithEventStore = true`
+	params := map[string]any{
+		"tenant":    tenant,
+		"userId":    userId,
+		"emailId":   emailId,
+		"label":     label,
+		"primary":   primary,
+		"updatedAt": updatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

@@ -20,7 +20,6 @@ type Repositories struct {
 	CommonRepositories      *cmn_repository.Repositories
 	CustomerOsIdsRepository repository.CustomerOsIdsRepository
 
-	EmailRepository            EmailRepository
 	ExternalSystemRepository   ExternalSystemRepository
 	InteractionEventRepository InteractionEventRepository
 	LocationRepository         LocationRepository
@@ -36,7 +35,6 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		Neo4jRepositories:          neo4jrepository.InitNeo4jRepositories(driver, neo4jDatabase),
 		CommonRepositories:         cmn_repository.InitRepositories(gormDb, driver),
 		CustomerOsIdsRepository:    repository.NewCustomerOsIdsRepository(gormDb),
-		EmailRepository:            NewEmailRepository(driver),
 		OrganizationRepository:     NewOrganizationRepository(driver, neo4jDatabase),
 		LocationRepository:         NewLocationRepository(driver),
 		InteractionEventRepository: NewInteractionEventRepository(driver, neo4jDatabase),
