@@ -203,7 +203,7 @@ func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt e
 	}
 
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.LocationRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.LocationId, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.LocationWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.LocationId, eventData.UpdatedAt)
 
 	return err
 }
