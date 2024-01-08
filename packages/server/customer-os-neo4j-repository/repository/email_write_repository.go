@@ -10,6 +10,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
+	"strings"
 	"time"
 )
 
@@ -20,9 +21,27 @@ type EmailCreateFields struct {
 	UpdatedAt    time.Time    `json:"updatedAt"`
 }
 
+type EmailValidatedFields struct {
+	ValidationError string    `json:"validationError"`
+	EmailAddress    string    `json:"emailAddress"`
+	Domain          string    `json:"domain"`
+	AcceptsMail     bool      `json:"acceptsMail"`
+	CanConnectSmtp  bool      `json:"canConnectSmtp"`
+	HasFullInbox    bool      `json:"hasFullInbox"`
+	IsCatchAll      bool      `json:"isCatchAll"`
+	IsDeliverable   bool      `json:"isDeliverable"`
+	IsDisabled      bool      `json:"isDisabled"`
+	IsValidSyntax   bool      `json:"isValidSyntax"`
+	Username        string    `json:"username"`
+	ValidatedAt     time.Time `json:"validatedAt"`
+	IsReachable     string    `json:"isReachable"`
+}
+
 type EmailWriteRepository interface {
 	CreateEmail(ctx context.Context, tenant, emailId string, data EmailCreateFields) error
 	UpdateEmail(ctx context.Context, tenant, emailId, source string, updatedAt time.Time) error
+	FailEmailValidation(ctx context.Context, tenant, emailId, validationError string, validatedAt time.Time) error
+	EmailValidated(ctx context.Context, tenant, emailId string, data EmailValidatedFields) error
 }
 
 type emailWriteRepository struct {
@@ -93,6 +112,93 @@ func (r *emailWriteRepository) UpdateEmail(ctx context.Context, tenant, emailId,
 		"overwrite":     source == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *emailWriteRepository) FailEmailValidation(ctx context.Context, tenant, emailId, validationError string, validatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.FailEmailValidation")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, emailId)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
+		 		SET e.validationError = $validationError,
+		     		e.validated = false,
+					e.updatedAt = $validatedAt`
+	params := map[string]any{
+		"id":              emailId,
+		"tenant":          tenant,
+		"validationError": validationError,
+		"validatedAt":     validatedAt,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, emailId string, data EmailValidatedFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.EmailValidated")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, emailId)
+	tracing.LogObjectAsJson(span, "data", data)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
+		 		SET e.validationError = $validationError,
+					e.email = $email,
+		     		e.validated = true,
+					e.acceptsMail = $acceptsMail,
+					e.canConnectSmtp = $canConnectSmtp,
+					e.hasFullInbox = $hasFullInbox,
+					e.isCatchAll = $isCatchAll,
+					e.isDeliverable = $isDeliverable,
+					e.isDisabled = $isDisabled,
+					e.isValidSyntax = $isValidSyntax,
+					e.username = $username,
+					e.updatedAt = $validatedAt,
+					e.isReachable = $isReachable
+				WITH e, CASE WHEN $domain <> '' THEN true ELSE false END AS shouldMergeDomain
+				WHERE shouldMergeDomain
+				MERGE (d:Domain {domain:$domain})
+				ON CREATE SET 	d.id=randomUUID(), 
+								d.createdAt=$now, 
+								d.updatedAt=$now,
+								d.appSource=$source,
+								d.source=$appSource
+				WITH d, e
+				MERGE (e)-[:HAS_DOMAIN]->(d)`, tenant)
+	params := map[string]any{
+		"id":              emailId,
+		"tenant":          tenant,
+		"validationError": data.ValidationError,
+		"email":           data.EmailAddress,
+		"domain":          strings.ToLower(data.Domain),
+		"acceptsMail":     data.AcceptsMail,
+		"canConnectSmtp":  data.CanConnectSmtp,
+		"hasFullInbox":    data.HasFullInbox,
+		"isCatchAll":      data.IsCatchAll,
+		"isDeliverable":   data.IsDeliverable,
+		"isDisabled":      data.IsDisabled,
+		"isValidSyntax":   data.IsValidSyntax,
+		"username":        data.Username,
+		"validatedAt":     data.ValidatedAt,
+		"isReachable":     data.IsReachable,
+		"now":             utils.Now(),
+		"source":          constants.SourceOpenline,
+		"appSource":       constants.AppSourceEventProcessingPlatform,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
