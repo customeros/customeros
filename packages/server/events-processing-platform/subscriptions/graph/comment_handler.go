@@ -77,7 +77,15 @@ func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, commentId, neo4jentity.NodeLabelComment, eventData.ExternalSystem)
+		externalSystemData := neo4jmodel.ExternalSystem{
+			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+			ExternalId:       eventData.ExternalSystem.ExternalId,
+			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+			ExternalSource:   eventData.ExternalSystem.ExternalSource,
+			SyncDate:         eventData.ExternalSystem.SyncDate,
+		}
+		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, commentId, neo4jentity.NodeLabelComment, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link comment %s with external system %s: %s", commentId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -114,7 +122,15 @@ func (h *CommentEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, commentId, neo4jentity.NodeLabelComment, eventData.ExternalSystem)
+		externalSystemData := neo4jmodel.ExternalSystem{
+			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+			ExternalId:       eventData.ExternalSystem.ExternalId,
+			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+			ExternalSource:   eventData.ExternalSystem.ExternalSource,
+			SyncDate:         eventData.ExternalSystem.SyncDate,
+		}
+		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, commentId, neo4jentity.NodeLabelComment, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link comment %s with external system %s: %s", commentId, eventData.ExternalSystem.ExternalSystemId, err.Error())

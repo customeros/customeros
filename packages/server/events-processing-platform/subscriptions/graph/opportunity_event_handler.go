@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
@@ -71,7 +72,15 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, neo4jentity.NodeLabelOpportunity, eventData.ExternalSystem)
+		externalSystemData := neo4jmodel.ExternalSystem{
+			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+			ExternalId:       eventData.ExternalSystem.ExternalId,
+			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+			ExternalSource:   eventData.ExternalSystem.ExternalSource,
+			SyncDate:         eventData.ExternalSystem.SyncDate,
+		}
+		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, neo4jentity.NodeLabelOpportunity, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while linking opportunity %s with external system %s: %s", opportunityId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -207,7 +216,15 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, neo4jentity.NodeLabelOpportunity, eventData.ExternalSystem)
+		externalSystemData := neo4jmodel.ExternalSystem{
+			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+			ExternalId:       eventData.ExternalSystem.ExternalId,
+			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+			ExternalSource:   eventData.ExternalSystem.ExternalSource,
+			SyncDate:         eventData.ExternalSystem.SyncDate,
+		}
+		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, neo4jentity.NodeLabelOpportunity, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while linking opportunity %s with external system %s: %s", opportunityId, eventData.ExternalSystem.ExternalSystemId, err.Error())

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
@@ -54,7 +55,15 @@ func (h *InteractionEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, interactionEventId, neo4jentity.NodeLabelInteractionEvent, eventData.ExternalSystem)
+		externalSystemData := neo4jmodel.ExternalSystem{
+			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+			ExternalId:       eventData.ExternalSystem.ExternalId,
+			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+			ExternalSource:   eventData.ExternalSystem.ExternalSource,
+			SyncDate:         eventData.ExternalSystem.SyncDate,
+		}
+		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, interactionEventId, neo4jentity.NodeLabelInteractionEvent, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link interaction event %s with external system %s: %s", interactionEventId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -122,7 +131,15 @@ func (h *InteractionEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, ieId, neo4jentity.NodeLabelInteractionEvent, eventData.ExternalSystem)
+		externalSystemData := neo4jmodel.ExternalSystem{
+			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+			ExternalId:       eventData.ExternalSystem.ExternalId,
+			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+			ExternalSource:   eventData.ExternalSystem.ExternalSource,
+			SyncDate:         eventData.ExternalSystem.SyncDate,
+		}
+		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, ieId, neo4jentity.NodeLabelInteractionEvent, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link interaction event %s with external system %s: %s", ieId, eventData.ExternalSystem.ExternalSystemId, err.Error())

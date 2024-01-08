@@ -85,7 +85,15 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, contractId, neo4jentity.NodeLabelContract, eventData.ExternalSystem)
+		externalSystemData := neo4jmodel.ExternalSystem{
+			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+			ExternalId:       eventData.ExternalSystem.ExternalId,
+			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+			ExternalSource:   eventData.ExternalSystem.ExternalSource,
+			SyncDate:         eventData.ExternalSystem.SyncDate,
+		}
+		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, contractId, neo4jentity.NodeLabelContract, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while linking contract %s with external system %s: %s", contractId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -154,7 +162,15 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	afterUpdateContractEntity := graph_db.MapDbNodeToContractEntity(updatedContractDbNode)
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, contractId, neo4jentity.NodeLabelContract, eventData.ExternalSystem)
+		externalSystemData := neo4jmodel.ExternalSystem{
+			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+			ExternalId:       eventData.ExternalSystem.ExternalId,
+			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+			ExternalSource:   eventData.ExternalSystem.ExternalSource,
+			SyncDate:         eventData.ExternalSystem.SyncDate,
+		}
+		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, contractId, neo4jentity.NodeLabelContract, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link contract %s with external system %s: %s", contractId, eventData.ExternalSystem.ExternalSystemId, err.Error())

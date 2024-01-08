@@ -71,7 +71,15 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 			return nil, err
 		}
 		if eventData.ExternalSystem.Available() {
-			err = h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, contactId, neo4jentity.NodeLabelContact, eventData.ExternalSystem)
+			externalSystemData := neo4jmodel.ExternalSystem{
+				ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+				ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+				ExternalId:       eventData.ExternalSystem.ExternalId,
+				ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+				ExternalSource:   eventData.ExternalSystem.ExternalSource,
+				SyncDate:         eventData.ExternalSystem.SyncDate,
+			}
+			err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, contactId, neo4jentity.NodeLabelContact, externalSystemData)
 			if err != nil {
 				h.log.Errorf("Error while link contact %s with external system %s: %s", contactId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, err
@@ -124,7 +132,15 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 		_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 			//var err error
 			if eventData.ExternalSystem.Available() {
-				innerErr := h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, contactId, neo4jentity.NodeLabelContact, eventData.ExternalSystem)
+				externalSystemData := neo4jmodel.ExternalSystem{
+					ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+					ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+					ExternalId:       eventData.ExternalSystem.ExternalId,
+					ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+					ExternalSource:   eventData.ExternalSystem.ExternalSource,
+					SyncDate:         eventData.ExternalSystem.SyncDate,
+				}
+				innerErr := h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, contactId, neo4jentity.NodeLabelContact, externalSystemData)
 				if innerErr != nil {
 					h.log.Errorf("Error while link contact %s with external system %s: %s", contactId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 					return nil, innerErr

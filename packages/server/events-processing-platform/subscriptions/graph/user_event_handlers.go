@@ -70,7 +70,15 @@ func (h *UserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Even
 			return nil, err
 		}
 		if eventData.ExternalSystem.Available() {
-			err = h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, neo4jentity.NodeLabelUser, eventData.ExternalSystem)
+			externalSystemData := neo4jmodel.ExternalSystem{
+				ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+				ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+				ExternalId:       eventData.ExternalSystem.ExternalId,
+				ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+				ExternalSource:   eventData.ExternalSystem.ExternalSource,
+				SyncDate:         eventData.ExternalSystem.SyncDate,
+			}
+			err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, neo4jentity.NodeLabelUser, externalSystemData)
 			if err != nil {
 				h.log.Errorf("Error while link user %s with external system %s: %s", userId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, err
@@ -123,7 +131,15 @@ func (h *UserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Even
 		_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 			//var err error
 			if eventData.ExternalSystem.Available() {
-				innerErr := h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, neo4jentity.NodeLabelUser, eventData.ExternalSystem)
+				externalSystemData := neo4jmodel.ExternalSystem{
+					ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+					ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+					ExternalId:       eventData.ExternalSystem.ExternalId,
+					ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+					ExternalSource:   eventData.ExternalSystem.ExternalSource,
+					SyncDate:         eventData.ExternalSystem.SyncDate,
+				}
+				innerErr := h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, neo4jentity.NodeLabelUser, externalSystemData)
 				if innerErr != nil {
 					h.log.Errorf("Error while link user %s with external system %s: %s", userId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 					return nil, innerErr
