@@ -175,8 +175,8 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		"Contract":        1,
 		"ServiceLineItem": 2,
 	})
-	assertRelationship(ctx, t, driver, contractId, "HAS_SERVICE", serviceLineItemId1)
-	assertRelationship(ctx, t, driver, contractId, "HAS_SERVICE", serviceLineItemId2)
+	neo4jtest.AssertRelationship(ctx, t, driver, contractId, "HAS_SERVICE", serviceLineItemId1)
+	neo4jtest.AssertRelationship(ctx, t, driver, contractId, "HAS_SERVICE", serviceLineItemId2)
 
 	rawResponse := callGraphQL(t, "contract/get_contract_with_service_line_items",
 		map[string]interface{}{"contractId": contractId})
@@ -255,7 +255,7 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 		"Contract":     1,
 		"Opportunity":  2,
 	})
-	assertRelationship(ctx, t, driver, contractId, "HAS_OPPORTUNITY", opportunityId1)
+	neo4jtest.AssertRelationship(ctx, t, driver, contractId, "HAS_OPPORTUNITY", opportunityId1)
 
 	rawResponse := callGraphQL(t, "contract/get_contract_with_opportunities",
 		map[string]interface{}{"contractId": contractId})

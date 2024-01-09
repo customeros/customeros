@@ -72,7 +72,7 @@ func TestMutationResolver_LocationRemoveFromOrganization_UniqueRelation(t *testi
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId, locationId)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Location": 1, "Organization": 1, "Location_" + tenantName: 1, "Organization_" + tenantName: 1})
-	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 1})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 1})
 
 	rawResponse := callGraphQL(t, "location/remove_location_from_organization", map[string]interface{}{
 		"locationId":     locationId,
@@ -91,7 +91,7 @@ func TestMutationResolver_LocationRemoveFromOrganization_UniqueRelation(t *testi
 	require.Equal(t, "org", org.Name)
 
 	// Check the number of nodes in the Neo4j database
-	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 0})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 0})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Location":                   0,
 		"Location_" + tenantName:     0,
@@ -115,7 +115,7 @@ func TestMutationResolver_LocationRemoveFromOrganization_SharedLocation(t *testi
 		"Location_" + tenantName:     1,
 		"Organization":               2,
 		"Organization_" + tenantName: 2})
-	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 2})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 2})
 
 	rawResponse := callGraphQL(t, "location/remove_location_from_organization", map[string]interface{}{
 		"locationId":     locationId,
@@ -134,7 +134,7 @@ func TestMutationResolver_LocationRemoveFromOrganization_SharedLocation(t *testi
 	require.Equal(t, "org1", org.Name)
 
 	// Check the number of nodes in the Neo4j database
-	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 1})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 1})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Location":                   1,
 		"Location_" + tenantName:     1,

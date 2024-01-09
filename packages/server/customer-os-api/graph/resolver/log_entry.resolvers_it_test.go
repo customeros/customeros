@@ -42,7 +42,7 @@ func TestQueryResolver_LogEntry(t *testing.T) {
 		"Tag":          2,
 		"User":         1,
 	})
-	assertNeo4jRelationCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{
 		"TAGGED":     2,
 		"LOGGED":     1,
 		"CREATED_BY": 1,
