@@ -242,3 +242,57 @@ func TestMasterPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 	require.Equal(t, true, milestone.Optional)
 	require.Equal(t, false, milestone.Retired)
 }
+
+func TestMasterPlanEventHandler_OnReorderMilestones(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	masterPlanId := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{})
+	milestoneId1 := neo4jtest.CreateMasterPlanMilestone(ctx, testDatabase.Driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{Order: 0})
+	milestoneId2 := neo4jtest.CreateMasterPlanMilestone(ctx, testDatabase.Driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{Order: 1})
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jentity.NodeLabelMasterPlan:          1,
+		neo4jentity.NodeLabelMasterPlanMilestone: 2,
+	})
+
+	// Prepare the event handler
+	masterPlanEventHandler := &MasterPlanEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	// Create an MasterPlanMilestoneCreateEvent
+	masterPlanAggregate := aggregate.NewMasterPlanAggregateWithTenantAndID(tenantName, masterPlanId)
+	timeNow := utils.Now()
+	reorderEvent, err := event.NewMasterPlanMilestoneReorderEvent(
+		masterPlanAggregate,
+		[]string{milestoneId2, milestoneId1},
+		timeNow,
+	)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = masterPlanEventHandler.OnReorderMilestones(context.Background(), reorderEvent)
+	require.Nil(t, err)
+
+	// verify nodes and relationships
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jentity.NodeLabelMasterPlan:          1,
+		neo4jentity.NodeLabelMasterPlanMilestone: 2})
+
+	// verify master plan milestone nodes
+	masterPlanMilestoneDbNode1, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelMasterPlanMilestone, milestoneId1)
+	require.Nil(t, err)
+	require.NotNil(t, masterPlanMilestoneDbNode1)
+	milestone1 := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneDbNode1)
+	require.Equal(t, int64(1), milestone1.Order)
+
+	masterPlanMilestoneDbNode2, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelMasterPlanMilestone, milestoneId2)
+	require.Nil(t, err)
+	require.NotNil(t, masterPlanMilestoneDbNode2)
+	milestone2 := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneDbNode2)
+	require.Equal(t, int64(0), milestone2.Order)
+}

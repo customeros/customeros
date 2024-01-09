@@ -142,3 +142,33 @@ func (h *MasterPlanEventHandler) OnUpdateMilestone(ctx context.Context, evt even
 	}
 	return err
 }
+
+func (h *MasterPlanEventHandler) OnReorderMilestones(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanEventHandler.OnReorderMilestones")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.MasterPlanMilestoneReorderEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	masterPlanId := aggregate.GetMasterPlanObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, masterPlanId)
+
+	for i, milestoneId := range eventData.MilestoneIds {
+		data := neo4jrepository.MasterPlanMilestoneUpdateFields{
+			Order:       int64(i),
+			UpdatedAt:   eventData.UpdatedAt,
+			UpdateOrder: true,
+		}
+		err := h.repositories.Neo4jRepositories.MasterPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, masterPlanId, milestoneId, data)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while updating master plan milestone order %s: %s", milestoneId, err.Error())
+			return err
+		}
+	}
+	return nil
+}
