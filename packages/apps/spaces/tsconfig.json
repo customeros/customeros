@@ -29,6 +29,7 @@
       "@organization/*": ["app/organization/[id]/*"],
       "@organizations/*": ["app/organizations/src/*"],
       "@customerMap/*": ["app/customer-map/src/*"],
+      "@settings/*": ["app/settings/src/*"]
     },
     "plugins": [
       {
