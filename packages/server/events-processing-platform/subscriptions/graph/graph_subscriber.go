@@ -347,6 +347,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.masterPlanEventHandler.OnCreateMilestone(ctx, evt)
 	case masterplanevent.MasterPlanMilestoneUpdateV1:
 		return s.masterPlanEventHandler.OnUpdateMilestone(ctx, evt)
+	case masterplanevent.MasterPlanMilestoneReorderV1:
+		return s.masterPlanEventHandler.OnReorderMilestones(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
