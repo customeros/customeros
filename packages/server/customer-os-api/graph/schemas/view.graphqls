@@ -10,7 +10,6 @@ type TableViewDef implements Node {
     name:               String!
     order:              Int
     type:               ViewType
-    icon:               String
     columns:            [ColumnDef]
     createdAt:          Time!
     updatedAt:          Time!
@@ -29,6 +28,7 @@ type NavigationDef implements Node {
     id:                 ID!
     tenantViewIds:      [String]
     myViewIds:          [String]
+    icon:               String
     createdAt:          Time!
     updatedAt:          Time!
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
