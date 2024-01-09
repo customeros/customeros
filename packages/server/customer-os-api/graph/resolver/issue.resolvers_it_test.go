@@ -52,7 +52,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 		"ExternalSystem":   1,
 		"Comment":          2,
 	})
-	assertRelationship(ctx, t, driver, issueId, "IS_LINKED_WITH", string(entity.Hubspot))
+	neo4jtest.AssertRelationship(ctx, t, driver, issueId, "IS_LINKED_WITH", string(entity.Hubspot))
 
 	rawResponse, err := c.RawPost(getQuery("issue/get_issue"),
 		client.Var("issueId", issueId))

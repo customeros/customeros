@@ -639,7 +639,7 @@ func TestQueryResolver_GetEmail_ById(t *testing.T) {
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Email": 1, "Email_" + tenantName: 1})
-	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"EMAIL_ADDRESS_BELONGS_TO_TENANT": 1})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{"EMAIL_ADDRESS_BELONGS_TO_TENANT": 1})
 
 	// Make the RawPost request and check for errors
 	rawResponse := callGraphQL(t, "email/get_email", map[string]interface{}{"emailId": emailId})

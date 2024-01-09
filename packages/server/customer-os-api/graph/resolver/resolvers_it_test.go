@@ -164,22 +164,6 @@ func assertRawResponseError(t *testing.T, response *client.Response, err error) 
 	require.NotNil(t, response.Errors)
 }
 
-// Deprecated, use neo4jtest.AssertNeo4jRelationCount instead
-func assertNeo4jRelationCount(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, relations map[string]int) {
-	for name, expectedCount := range relations {
-		actualCount := neo4jtest.GetCountOfRelationships(ctx, driver, name)
-		require.Equal(t, expectedCount, actualCount, "Unexpected count for relationship: "+name)
-	}
-}
-
-// Deprecated, use neo4jtest.AssertRelationship instead
-func assertRelationship(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, fromNodeId, relationshipType, toNodeId string) {
-	rel, err := neo4jt.GetRelationship(ctx, driver, fromNodeId, toNodeId)
-	require.Nil(t, err)
-	require.NotNil(t, rel)
-	require.Equal(t, relationshipType, rel.Type)
-}
-
 func callGraphQL(t *testing.T, queryLocation string, vars map[string]interface{}) (rawResponse *client.Response) {
 	// Transform map into var args of options
 	options := make([]client.Option, 0, len(vars))

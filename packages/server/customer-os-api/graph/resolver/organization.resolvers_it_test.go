@@ -337,7 +337,7 @@ func TestMutationResolver_OrganizationArchive(t *testing.T) {
 		"ArchivedOrganization":               0,
 		"ArchivedOrganization_" + tenantName: 1,
 	})
-	assertNeo4jRelationCount(ctx, t, driver, map[string]int{
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{
 		"ARCHIVED":                       1,
 		"ORGANIZATION_BELONGS_TO_TENANT": 0,
 	})
@@ -1148,7 +1148,7 @@ func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
 	require.Equal(t, subOrgId, organization.Subsidiaries[0].Organization.ID)
 	require.Equal(t, "shop", *organization.Subsidiaries[0].Type)
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
-	assertRelationship(ctx, t, driver, subOrgId, "SUBSIDIARY_OF", parentOrgId)
+	neo4jtest.AssertRelationship(ctx, t, driver, subOrgId, "SUBSIDIARY_OF", parentOrgId)
 }
 
 func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
@@ -1555,9 +1555,9 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 		"Contract":               3,
 		"Contract_" + tenantName: 3,
 	})
-	assertRelationship(ctx, t, driver, orgId, "HAS_CONTRACT", contractId1)
-	assertRelationship(ctx, t, driver, orgId, "HAS_CONTRACT", contractId2)
-	assertRelationship(ctx, t, driver, orgId2, "HAS_CONTRACT", contractId3)
+	neo4jtest.AssertRelationship(ctx, t, driver, orgId, "HAS_CONTRACT", contractId1)
+	neo4jtest.AssertRelationship(ctx, t, driver, orgId, "HAS_CONTRACT", contractId2)
+	neo4jtest.AssertRelationship(ctx, t, driver, orgId2, "HAS_CONTRACT", contractId3)
 
 	rawResponse := callGraphQL(t, "organization/get_organization_with_contracts",
 		map[string]interface{}{"organizationId": orgId})
