@@ -6,6 +6,7 @@ import { FeaturedIcon } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Card, CardHeader } from '@ui/presentation/Card';
+import { getDifferenceFromNow } from '@shared/util/date';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
@@ -55,6 +56,7 @@ export const RenewalARRCard = ({
   const hasRewenewChanged = formattedMaxAmount !== formattedAmount;
   const hasRenewalLikelihoodZero =
     opportunity?.renewalLikelihood === OpportunityRenewalLikelihood.ZeroRenewal;
+  const timeToRenewal = getDifferenceFromNow(opportunity.renewedAt).join(' ');
 
   return (
     <>
@@ -116,9 +118,7 @@ export const RenewalARRCard = ({
 
                 {!hasEnded && opportunity.renewedAt && startedAt && (
                   <Text color='gray.500' ml={1} fontSize='sm'>
-                    {DateTimeUtils.timeAgo(opportunity.renewedAt, {
-                      addSuffix: true,
-                    })}
+                    {timeToRenewal}
                   </Text>
                 )}
               </Flex>
