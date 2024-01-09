@@ -2,6 +2,7 @@ package invoicing_cycle
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -37,7 +38,7 @@ func (h *createInvoicingCycleHandler) Handle(ctx context.Context, baseRequest ev
 		return err
 	}
 
-	createEvent, err := NewInvoicingCycleCreateEvent(invoicingCycleAggregate, InvoicingCycleType(request.Type), baseRequest.SourceFields)
+	createEvent, err := NewInvoicingCycleCreateEvent(invoicingCycleAggregate, string(InvoicingCycleType(request.Type).StringValue()), utils.TimestampProtoToTimePtr(request.CreatedAt), baseRequest.SourceFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewInvoicingCycleCreateEvent")

@@ -31,9 +31,9 @@ func (t InvoicingCycleType) StringValue() InvoicingCycleTypeString {
 }
 
 type InvoicingCycle struct {
-	ID           string                   `json:"id"`
-	Type         InvoicingCycleTypeString `json:"type"`
-	CreatedAt    time.Time                `json:"createdAt"`
-	UpdatedAt    time.Time                `json:"updatedAt"`
-	SourceFields commonmodel.Source       `json:"source"`
+	ID           string             `json:"id"`
+	Type         string             `json:"type"`
+	CreatedAt    time.Time          `json:"createdAt"`
+	UpdatedAt    time.Time          `json:"updatedAt"`
+	SourceFields commonmodel.Source `json:"source"`
 }
