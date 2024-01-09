@@ -30,6 +30,7 @@ type MasterPlanService interface {
 	GetMasterPlanMilestoneById(ctx context.Context, masterPlanMilestoneId string) (*neo4jentity.MasterPlanMilestoneEntity, error)
 	GetMasterPlanMilestonesForMasterPlans(ctx context.Context, masterPlanIds []string) (*neo4jentity.MasterPlanMilestoneEntities, error)
 	ReorderMasterPlanMilestones(ctx context.Context, masterPlanId string, masterPlanMilestoneIds []string) error
+	DuplicateMasterPlanMilestone(ctx context.Context, masterPlanId, sourceMasterPlanMilestoneId string) (string, error)
 }
 type masterPlanService struct {
 	log          logger.Logger
@@ -352,4 +353,63 @@ func (s *masterPlanService) ReorderMasterPlanMilestones(ctx context.Context, mas
 		return err
 	}
 	return nil
+}
+
+func (s *masterPlanService) DuplicateMasterPlanMilestone(ctx context.Context, masterPlanId, sourceMasterPlanMilestoneId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanService.DuplicateMasterPlanMilestone")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("masterPlanId", masterPlanId), log.String("sourceMasterPlanMilestoneId", sourceMasterPlanMilestoneId))
+
+	masterPlanMilestoneDbNode, err := s.repositories.Neo4jRepositories.MasterPlanReadRepository.GetMasterPlanMilestoneByPlanAndId(ctx, common.GetContext(ctx).Tenant, masterPlanId, sourceMasterPlanMilestoneId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if masterPlanMilestoneDbNode == nil {
+		err = errors.New(fmt.Sprintf("Master plan milestone with id {%s} not found", sourceMasterPlanMilestoneId))
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	souceMasterPlanMilestoneEntity := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneDbNode)
+	maxOrder, err := s.repositories.Neo4jRepositories.MasterPlanReadRepository.GetMaxOrderForMasterPlanMilestones(ctx, common.GetContext(ctx).Tenant, masterPlanId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	grpcRequest := masterplanpb.CreateMasterPlanMilestoneGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		MasterPlanId:   masterPlanId,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		Name:           souceMasterPlanMilestoneEntity.Name,
+		Order:          int64(maxOrder + 1),
+		DurationHours:  souceMasterPlanMilestoneEntity.DurationHours,
+		Optional:       souceMasterPlanMilestoneEntity.Optional,
+		Items:          souceMasterPlanMilestoneEntity.Items,
+		SourceFields: &commonpb.SourceFields{
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		},
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return "", err
+	}
+
+	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
+		contractFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, neo4jentity.NodeLabelMasterPlanMilestone)
+		if contractFound && findErr == nil {
+			span.LogFields(log.Bool("response - master plan milestone saved in db", true))
+			break
+		}
+		time.Sleep(utils.BackOffIncrementalDelay(i))
+	}
+
+	span.LogFields(log.String("response - created masterPlanMilestoneId", response.Id))
+	return response.Id, nil
 }
