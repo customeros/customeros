@@ -391,3 +391,45 @@ func TestMutationResolver_MasterPlanMilestoneUpdate(t *testing.T) {
 
 	require.True(t, calledUpdateMasterPlanMilestone)
 }
+
+func TestMutationResolver_MasterPlanMilestoneReorder(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	masterPlanId := neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{})
+	calledReorderMasterPlanMilestones := false
+	milestoneIds := []string{"1", "2", "3"}
+
+	masterPlanServiceCallbacks := events_platform.MockMasterPlanServiceCallbacks{
+		ReorderMasterPlanMilestones: func(context context.Context, request *masterplanpb.ReorderMasterPlanMilestonesGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+			require.Equal(t, tenantName, request.Tenant)
+			require.Equal(t, masterPlanId, request.MasterPlanId)
+			require.Equal(t, testUserId, request.LoggedInUserId)
+			require.Equal(t, milestoneIds, request.MasterPlanMilestoneIds)
+			require.Equal(t, constants.AppSourceCustomerOsApi, request.AppSource)
+			calledReorderMasterPlanMilestones = true
+			return &masterplanpb.MasterPlanIdGrpcResponse{
+				Id: masterPlanId,
+			}, nil
+		},
+	}
+	events_platform.SetMasterPlanCallbacks(&masterPlanServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "master_plan/reorder_master_plan_milestones", map[string]interface{}{"masterPlanId": masterPlanId, "milestoneIds": milestoneIds})
+	require.Nil(t, rawResponse.Errors)
+
+	// GraphQL response
+	var masterPlanStruct struct {
+		MasterPlanMilestone_Reorder string
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &masterPlanStruct)
+	require.Nil(t, err)
+
+	// Verify
+	require.Equal(t, masterPlanId, masterPlanStruct.MasterPlanMilestone_Reorder)
+
+	require.True(t, calledReorderMasterPlanMilestones)
+}

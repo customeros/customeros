@@ -727,6 +727,7 @@ type ComplexityRoot struct {
 		LogEntryUpdate                          func(childComplexity int, id string, input model.LogEntryUpdateInput) int
 		MasterPlanCreate                        func(childComplexity int, input model.MasterPlanInput) int
 		MasterPlanMilestoneCreate               func(childComplexity int, input model.MasterPlanMilestoneInput) int
+		MasterPlanMilestoneReorder              func(childComplexity int, input model.MasterPlanMilestoneReorderInput) int
 		MasterPlanMilestoneUpdate               func(childComplexity int, input model.MasterPlanMilestoneUpdateInput) int
 		MasterPlanUpdate                        func(childComplexity int, input model.MasterPlanUpdateInput) int
 		MeetingAddNewLocation                   func(childComplexity int, meetingID string) int
@@ -1319,6 +1320,7 @@ type MutationResolver interface {
 	MasterPlanUpdate(ctx context.Context, input model.MasterPlanUpdateInput) (*model.MasterPlan, error)
 	MasterPlanMilestoneCreate(ctx context.Context, input model.MasterPlanMilestoneInput) (*model.MasterPlanMilestone, error)
 	MasterPlanMilestoneUpdate(ctx context.Context, input model.MasterPlanMilestoneUpdateInput) (*model.MasterPlanMilestone, error)
+	MasterPlanMilestoneReorder(ctx context.Context, input model.MasterPlanMilestoneReorderInput) (string, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
 	MeetingLinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error)
@@ -5220,6 +5222,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.MasterPlanMilestoneCreate(childComplexity, args["input"].(model.MasterPlanMilestoneInput)), true
 
+	case "Mutation.masterPlanMilestone_Reorder":
+		if e.complexity.Mutation.MasterPlanMilestoneReorder == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_masterPlanMilestone_Reorder_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MasterPlanMilestoneReorder(childComplexity, args["input"].(model.MasterPlanMilestoneReorderInput)), true
+
 	case "Mutation.masterPlanMilestone_Update":
 		if e.complexity.Mutation.MasterPlanMilestoneUpdate == nil {
 			break
@@ -8200,6 +8214,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputLogEntryUpdateInput,
 		ec.unmarshalInputMasterPlanInput,
 		ec.unmarshalInputMasterPlanMilestoneInput,
+		ec.unmarshalInputMasterPlanMilestoneReorderInput,
 		ec.unmarshalInputMasterPlanMilestoneUpdateInput,
 		ec.unmarshalInputMasterPlanUpdateInput,
 		ec.unmarshalInputMeetingInput,
@@ -9889,6 +9904,7 @@ input LogEntryUpdateInput {
     masterPlan_Update(input: MasterPlanUpdateInput!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Create(input: MasterPlanMilestoneInput!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Update(input: MasterPlanMilestoneUpdateInput!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    masterPlanMilestone_Reorder(input: MasterPlanMilestoneReorderInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Query {
@@ -9952,6 +9968,11 @@ input MasterPlanMilestoneUpdateInput {
     optional: Boolean
     retired: Boolean
     items: [String!]
+}
+
+input MasterPlanMilestoneReorderInput {
+    masterPlanId: ID!
+    orderedIds: [ID!]!
 }`, BuiltIn: false},
 	{Name: "../schemas/meeting.graphqls", Input: `"""
 Specifies how many pages of meeting information has been returned in the query response.
@@ -12465,6 +12486,21 @@ func (ec *executionContext) field_Mutation_masterPlanMilestone_Create_args(ctx c
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNMasterPlanMilestoneInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlanMilestoneInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_masterPlanMilestone_Reorder_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.MasterPlanMilestoneReorderInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNMasterPlanMilestoneReorderInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlanMilestoneReorderInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -41163,6 +41199,91 @@ func (ec *executionContext) fieldContext_Mutation_masterPlanMilestone_Update(ctx
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_masterPlanMilestone_Reorder(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_masterPlanMilestone_Reorder(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().MasterPlanMilestoneReorder(rctx, fc.Args["input"].(model.MasterPlanMilestoneReorderInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_masterPlanMilestone_Reorder(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_masterPlanMilestone_Reorder_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_meeting_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_meeting_Create(ctx, field)
 	if err != nil {
@@ -67890,6 +68011,40 @@ func (ec *executionContext) unmarshalInputMasterPlanMilestoneInput(ctx context.C
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputMasterPlanMilestoneReorderInput(ctx context.Context, obj interface{}) (model.MasterPlanMilestoneReorderInput, error) {
+	var it model.MasterPlanMilestoneReorderInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"masterPlanId", "orderedIds"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "masterPlanId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("masterPlanId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MasterPlanID = data
+		case "orderedIds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderedIds"))
+			data, err := ec.unmarshalNID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrderedIds = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputMasterPlanMilestoneUpdateInput(ctx context.Context, obj interface{}) (model.MasterPlanMilestoneUpdateInput, error) {
 	var it model.MasterPlanMilestoneUpdateInput
 	asMap := map[string]interface{}{}
@@ -76641,6 +76796,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "masterPlanMilestone_Reorder":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_masterPlanMilestone_Reorder(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "meeting_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_meeting_Create(ctx, field)
@@ -83858,6 +84020,11 @@ func (ec *executionContext) marshalNMasterPlanMilestone2ᚖgithubᚗcomᚋopenli
 
 func (ec *executionContext) unmarshalNMasterPlanMilestoneInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlanMilestoneInput(ctx context.Context, v interface{}) (model.MasterPlanMilestoneInput, error) {
 	res, err := ec.unmarshalInputMasterPlanMilestoneInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNMasterPlanMilestoneReorderInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlanMilestoneReorderInput(ctx context.Context, v interface{}) (model.MasterPlanMilestoneReorderInput, error) {
+	res, err := ec.unmarshalInputMasterPlanMilestoneReorderInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
