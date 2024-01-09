@@ -116,6 +116,30 @@ func (r *mutationResolver) MasterPlanUpdate(ctx context.Context, input model.Mas
 	return mapper.MapEntityToMasterPlan(updatedMasterPlanEntity), nil
 }
 
+// MasterPlanDuplicate is the resolver for the masterPlan_Duplicate field.
+func (r *mutationResolver) MasterPlanDuplicate(ctx context.Context, id string) (*model.MasterPlan, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanDuplicate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "id", id)
+
+	masterPlanId, err := r.Services.MasterPlanService.DuplicateMasterPlan(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to duplicate master plan")
+		return nil, err
+	}
+
+	createdMasterPlanEntity, err := r.Services.MasterPlanService.GetMasterPlanById(ctx, masterPlanId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Master plan details not yet available. Master plan id: %s", masterPlanId)
+		return &model.MasterPlan{ID: masterPlanId}, nil
+	}
+	span.LogFields(log.String("response.masterPlanId", masterPlanId))
+	return mapper.MapEntityToMasterPlan(createdMasterPlanEntity), nil
+}
+
 // MasterPlanMilestoneCreate is the resolver for the masterPlanMilestone_Create field.
 func (r *mutationResolver) MasterPlanMilestoneCreate(ctx context.Context, input model.MasterPlanMilestoneInput) (*model.MasterPlanMilestone, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanMilestoneCreate", graphql.GetOperationContext(ctx))
