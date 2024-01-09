@@ -71,6 +71,15 @@ message UpdateMasterPlanMilestoneGrpcRequest {
   repeated MasterPlanMilestoneFieldMask fieldsMask = 13;
 }
 
+message ReorderMasterPlanMilestonesGrpcRequest {
+  string masterPlanId = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+  google.protobuf.Timestamp updatedAt = 5;
+  repeated string masterPlanMilestoneIds = 6;
+}
+
 message MasterPlanIdGrpcResponse {
   string id = 1;
 }
@@ -85,4 +94,5 @@ service MasterPlanGrpcService {
   rpc UpdateMasterPlan(UpdateMasterPlanGrpcRequest) returns (MasterPlanIdGrpcResponse);
   rpc CreateMasterPlanMilestone(CreateMasterPlanMilestoneGrpcRequest) returns (MasterPlanMilestoneIdGrpcResponse);
   rpc UpdateMasterPlanMilestone(UpdateMasterPlanMilestoneGrpcRequest) returns (MasterPlanMilestoneIdGrpcResponse);
+  rpc ReorderMasterPlanMilestones(ReorderMasterPlanMilestonesGrpcRequest) returns (MasterPlanIdGrpcResponse);
 }

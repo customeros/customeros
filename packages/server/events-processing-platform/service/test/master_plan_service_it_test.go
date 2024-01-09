@@ -242,3 +242,55 @@ func TestMasterPlanService_UpdateMasterPlanMilestone(t *testing.T) {
 	test.AssertRecentTime(t, eventData.UpdatedAt)
 	require.ElementsMatch(t, []string{event.FieldMaskName, event.FieldMaskItems}, eventData.FieldsMask)
 }
+
+func TestMasterPlanService_ReorderMasterPlanMilestones(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// setup test environment
+	tenant := "ziggy"
+	masterPlanId := "master-plan-id"
+	milestoneIds := []string{"milestone-id-1", "milestone-id-2"}
+
+	// prepare master plan aggregate
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	masterPlanAggregate := aggregate.NewMasterPlanAggregateWithTenantAndID(tenant, masterPlanId)
+	createEvent, _ := event.NewMasterPlanCreateEvent(masterPlanAggregate, "", commonmodel.Source{}, utils.Now())
+	masterPlanAggregate.UncommittedEvents = append(masterPlanAggregate.UncommittedEvents, createEvent)
+	aggregateStore.Save(ctx, masterPlanAggregate)
+
+	// prepare connection to grpc server
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	masterPlanClient := masterplanpb.NewMasterPlanGrpcServiceClient(grpcConnection)
+
+	// execute the command
+	response, err := masterPlanClient.ReorderMasterPlanMilestones(ctx, &masterplanpb.ReorderMasterPlanMilestonesGrpcRequest{
+		Tenant:                 tenant,
+		MasterPlanId:           masterPlanId,
+		MasterPlanMilestoneIds: milestoneIds,
+		AppSource:              "app",
+	})
+	require.Nil(t, err)
+	require.NotNil(t, response)
+
+	// verify
+	require.Equal(t, masterPlanId, response.Id)
+
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[masterPlanAggregate.ID]
+	require.Equal(t, 2, len(eventList))
+	require.Equal(t, event.MasterPlanCreateV1, eventList[0].GetEventType())
+	require.Equal(t, event.MasterPlanMilestoneReorderV1, eventList[1].GetEventType())
+	require.Equal(t, string(aggregate.MasterPlanAggregateType)+"-"+tenant+"-"+masterPlanId, eventList[1].GetAggregateID())
+
+	var eventData event.MasterPlanMilestoneReorderEvent
+	err = eventList[1].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	// Assertions to validate the contract create event data
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, milestoneIds, eventData.MilestoneIds)
+	test.AssertRecentTime(t, eventData.UpdatedAt)
+}

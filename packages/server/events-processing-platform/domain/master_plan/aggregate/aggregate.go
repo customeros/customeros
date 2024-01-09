@@ -37,6 +37,8 @@ func (a *MasterPlanAggregate) When(evt eventstore.Event) error {
 		return a.onMasterPlanMilestoneCreate(evt)
 	case event.MasterPlanMilestoneUpdateV1:
 		return a.onMasterPlanMilestoneUpdate(evt)
+	case event.MasterPlanMilestoneReorderV1:
+		return a.onMasterPlanMilestoneReorder(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -136,5 +138,23 @@ func (a *MasterPlanAggregate) onMasterPlanUpdate(evt eventstore.Event) error {
 		a.MasterPlan.Retired = eventData.Retired
 	}
 
+	return nil
+}
+
+func (a *MasterPlanAggregate) onMasterPlanMilestoneReorder(evt eventstore.Event) error {
+	var eventData event.MasterPlanMilestoneReorderEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.MasterPlan.Milestones == nil {
+		a.MasterPlan.Milestones = make(map[string]model.MasterPlanMilestone)
+	}
+	for i, milestoneId := range eventData.MilestoneIds {
+		if milestone, ok := a.MasterPlan.Milestones[milestoneId]; ok {
+			milestone.Order = int64(i)
+			a.MasterPlan.Milestones[milestoneId] = milestone
+		}
+	}
 	return nil
 }
