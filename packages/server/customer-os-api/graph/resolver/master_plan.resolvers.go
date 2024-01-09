@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -180,6 +179,30 @@ func (r *mutationResolver) MasterPlanMilestoneReorder(ctx context.Context, input
 		return "", err
 	}
 	return input.MasterPlanID, nil
+}
+
+// MasterPlanMilestoneDuplicate is the resolver for the masterPlanMilestone_Duplicate field.
+func (r *mutationResolver) MasterPlanMilestoneDuplicate(ctx context.Context, masterPlanID string, id string) (*model.MasterPlanMilestone, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanMilestoneDuplicate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("masterPlanID", masterPlanID), log.String("id", id))
+
+	masterPlanMilestoneId, err := r.Services.MasterPlanService.DuplicateMasterPlanMilestone(ctx, masterPlanID, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to duplicate master plan milestone")
+		return &model.MasterPlanMilestone{ID: masterPlanMilestoneId}, err
+	}
+
+	createdMasterPlanMilestoneEntity, err := r.Services.MasterPlanService.GetMasterPlanMilestoneById(ctx, masterPlanMilestoneId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Master plan milestone details not yet available. Master plan milestone id: %s", masterPlanMilestoneId)
+		return &model.MasterPlanMilestone{ID: masterPlanMilestoneId}, nil
+	}
+	span.LogFields(log.String("response.masterPlanMilestoneId", masterPlanMilestoneId))
+	return mapper.MapEntityToMasterPlanMilestone(createdMasterPlanMilestoneEntity), nil
 }
 
 // MasterPlan is the resolver for the masterPlan field.

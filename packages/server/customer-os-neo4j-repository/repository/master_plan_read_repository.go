@@ -13,9 +13,10 @@ import (
 type MasterPlanReadRepository interface {
 	GetMasterPlanById(ctx context.Context, tenant, masterPlanId string) (*dbtype.Node, error)
 	GetMasterPlanMilestoneById(ctx context.Context, tenant, masterPlanMilestoneId string) (*dbtype.Node, error)
+	GetMasterPlanMilestoneByPlanAndId(ctx context.Context, tenant, masterPlanId, masterPlanMilestoneId string) (*dbtype.Node, error)
 	GetMasterPlansOrderByCreatedAt(ctx context.Context, tenant string, returnRetired *bool) ([]*dbtype.Node, error)
 	GetMasterPlanMilestonesForMasterPlans(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
-	GetMaxOrderForMasterPlanMilestones(ctx context.Context, tenant, masterPlanId string) (int, error)
+	GetMaxOrderForMasterPlanMilestones(ctx context.Context, tenant, masterPlanId string) (int64, error)
 }
 
 type masterPlanReadRepository struct {
@@ -164,7 +165,7 @@ func (r *masterPlanReadRepository) GetMasterPlanMilestonesForMasterPlans(ctx con
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *masterPlanReadRepository) GetMaxOrderForMasterPlanMilestones(ctx context.Context, tenant, masterPlanId string) (int, error) {
+func (r *masterPlanReadRepository) GetMaxOrderForMasterPlanMilestones(ctx context.Context, tenant, masterPlanId string) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanReadRepository.GetMaxOrderForMasterPlanMilestones")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -192,8 +193,39 @@ func (r *masterPlanReadRepository) GetMaxOrderForMasterPlanMilestones(ctx contex
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return 0, err
+		return int64(0), err
 	}
 	span.LogFields(log.Int64("result.maxOrder", result.(int64)))
-	return int(result.(int64)), err
+	return result.(int64), err
+}
+
+func (r *masterPlanReadRepository) GetMasterPlanMilestoneByPlanAndId(ctx context.Context, tenant, masterPlanId, masterPlanMilestoneId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanReadRepository.GetMasterPlanMilestoneByPlanAndId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, masterPlanMilestoneId)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(:MasterPlan {id:$masterPlanId})-[:HAS_MILESTONE]->(m:MasterPlanMilestone {id:$id}) RETURN m`
+	params := map[string]any{
+		"tenant":       tenant,
+		"id":           masterPlanMilestoneId,
+		"masterPlanId": masterPlanId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Bool("result.found", result != nil))
+	return result.(*dbtype.Node), nil
 }
