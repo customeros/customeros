@@ -753,6 +753,7 @@ type ComplexityRoot struct {
 		LogEntryResetTags                       func(childComplexity int, id string, input []*model.TagIDOrNameInput) int
 		LogEntryUpdate                          func(childComplexity int, id string, input model.LogEntryUpdateInput) int
 		MasterPlanCreate                        func(childComplexity int, input model.MasterPlanInput) int
+		MasterPlanDuplicate                     func(childComplexity int, id string) int
 		MasterPlanMilestoneCreate               func(childComplexity int, input model.MasterPlanMilestoneInput) int
 		MasterPlanMilestoneDuplicate            func(childComplexity int, masterPlanID string, id string) int
 		MasterPlanMilestoneReorder              func(childComplexity int, input model.MasterPlanMilestoneReorderInput) int
@@ -1391,6 +1392,7 @@ type MutationResolver interface {
 	LogEntryResetTags(ctx context.Context, id string, input []*model.TagIDOrNameInput) (string, error)
 	MasterPlanCreate(ctx context.Context, input model.MasterPlanInput) (*model.MasterPlan, error)
 	MasterPlanUpdate(ctx context.Context, input model.MasterPlanUpdateInput) (*model.MasterPlan, error)
+	MasterPlanDuplicate(ctx context.Context, id string) (*model.MasterPlan, error)
 	MasterPlanMilestoneCreate(ctx context.Context, input model.MasterPlanMilestoneInput) (*model.MasterPlanMilestone, error)
 	MasterPlanMilestoneUpdate(ctx context.Context, input model.MasterPlanMilestoneUpdateInput) (*model.MasterPlanMilestone, error)
 	MasterPlanMilestoneReorder(ctx context.Context, input model.MasterPlanMilestoneReorderInput) (string, error)
@@ -5407,6 +5409,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.MasterPlanCreate(childComplexity, args["input"].(model.MasterPlanInput)), true
+
+	case "Mutation.masterPlan_Duplicate":
+		if e.complexity.Mutation.MasterPlanDuplicate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_masterPlan_Duplicate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MasterPlanDuplicate(childComplexity, args["id"].(string)), true
 
 	case "Mutation.masterPlanMilestone_Create":
 		if e.complexity.Mutation.MasterPlanMilestoneCreate == nil {
@@ -10311,6 +10325,7 @@ input LogEntryUpdateInput {
 	{Name: "../schemas/master_plan.graphqls", Input: `extend type Mutation {
     masterPlan_Create(input: MasterPlanInput!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlan_Update(input: MasterPlanUpdateInput!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    masterPlan_Duplicate(id: ID!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Create(input: MasterPlanMilestoneInput!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Update(input: MasterPlanMilestoneUpdateInput!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Reorder(input: MasterPlanMilestoneReorderInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -13036,6 +13051,21 @@ func (ec *executionContext) field_Mutation_masterPlan_Create_args(ctx context.Co
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_masterPlan_Duplicate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -42347,6 +42377,113 @@ func (ec *executionContext) fieldContext_Mutation_masterPlan_Update(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_masterPlan_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_masterPlan_Duplicate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_masterPlan_Duplicate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().MasterPlanDuplicate(rctx, fc.Args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.MasterPlan); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.MasterPlan`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.MasterPlan)
+	fc.Result = res
+	return ec.marshalNMasterPlan2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMasterPlan(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_masterPlan_Duplicate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MasterPlan_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_MasterPlan_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_MasterPlan_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_MasterPlan_name(ctx, field)
+			case "source":
+				return ec.fieldContext_MasterPlan_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_MasterPlan_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_MasterPlan_appSource(ctx, field)
+			case "retired":
+				return ec.fieldContext_MasterPlan_retired(ctx, field)
+			case "milestones":
+				return ec.fieldContext_MasterPlan_milestones(ctx, field)
+			case "retiredMilestones":
+				return ec.fieldContext_MasterPlan_retiredMilestones(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MasterPlan", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_masterPlan_Duplicate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -80007,6 +80144,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "masterPlan_Update":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_masterPlan_Update(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "masterPlan_Duplicate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_masterPlan_Duplicate(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

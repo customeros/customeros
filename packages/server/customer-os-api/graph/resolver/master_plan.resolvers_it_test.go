@@ -487,3 +487,79 @@ func TestMutationResolver_MasterPlanMilestoneDuplicate(t *testing.T) {
 
 	require.True(t, calledCreateMasterPlanMilestone)
 }
+
+func TestMutationResolver_MasterPlanDuplicate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	masterPlanId := neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{
+		Name: "Original plan",
+	})
+	neo4jtest.CreateMasterPlanMilestone(ctx, driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{
+		Name:          "Original milestone",
+		Order:         1,
+		Optional:      true,
+		DurationHours: 24,
+		Items:         []string{"A", "B"},
+	})
+	neo4jtest.CreateMasterPlanMilestone(ctx, driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{
+		Name:          "Retired milestone",
+		Order:         2,
+		Optional:      false,
+		DurationHours: 10,
+		Items:         []string{"C", "D"},
+		Retired:       true,
+	})
+	copyMasterPlanId := uuid.New().String()
+
+	calledCreateMasterPlan, calledCreateMasterPlanMilestone := false, false
+
+	masterPlanServiceCallbacks := events_platform.MockMasterPlanServiceCallbacks{
+		CreateMasterPlan: func(context context.Context, masterPlan *masterplanpb.CreateMasterPlanGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+			require.Equal(t, tenantName, masterPlan.Tenant)
+			require.Equal(t, testUserId, masterPlan.LoggedInUserId)
+			require.Equal(t, neo4jentity.DataSourceOpenline.String(), masterPlan.SourceFields.Source)
+			require.Equal(t, constants.AppSourceCustomerOsApi, masterPlan.SourceFields.AppSource)
+			require.Equal(t, "Original plan", masterPlan.Name)
+			calledCreateMasterPlan = true
+			neo4jtest.CreateMasterPlan(ctx, driver, tenantName, neo4jentity.MasterPlanEntity{Id: copyMasterPlanId})
+			return &masterplanpb.MasterPlanIdGrpcResponse{
+				Id: copyMasterPlanId,
+			}, nil
+		},
+		CreateMasterPlanMilestone: func(context context.Context, masterPlanMilestone *masterplanpb.CreateMasterPlanMilestoneGrpcRequest) (*masterplanpb.MasterPlanMilestoneIdGrpcResponse, error) {
+			require.Equal(t, tenantName, masterPlanMilestone.Tenant)
+			require.Equal(t, testUserId, masterPlanMilestone.LoggedInUserId)
+			require.Equal(t, neo4jentity.DataSourceOpenline.String(), masterPlanMilestone.SourceFields.Source)
+			require.Equal(t, constants.AppSourceCustomerOsApi, masterPlanMilestone.SourceFields.AppSource)
+			require.Equal(t, "Original milestone", masterPlanMilestone.Name)
+			require.Equal(t, int64(1), masterPlanMilestone.Order)
+			require.Equal(t, int64(24), masterPlanMilestone.DurationHours)
+			require.Equal(t, []string{"A", "B"}, masterPlanMilestone.Items)
+			require.Equal(t, true, masterPlanMilestone.Optional)
+			calledCreateMasterPlanMilestone = true
+			return &masterplanpb.MasterPlanMilestoneIdGrpcResponse{
+				Id: uuid.New().String(),
+			}, nil
+		},
+	}
+	events_platform.SetMasterPlanCallbacks(&masterPlanServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "master_plan/duplicate_master_plan", map[string]interface{}{"id": masterPlanId})
+	require.Nil(t, rawResponse.Errors)
+
+	var masterPlanStruct struct {
+		MasterPlan_Duplicate model.MasterPlan
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &masterPlanStruct)
+	require.Nil(t, err)
+
+	masterPlan := masterPlanStruct.MasterPlan_Duplicate
+	require.Equal(t, copyMasterPlanId, masterPlan.ID)
+
+	require.True(t, calledCreateMasterPlan)
+	require.True(t, calledCreateMasterPlanMilestone)
+}
