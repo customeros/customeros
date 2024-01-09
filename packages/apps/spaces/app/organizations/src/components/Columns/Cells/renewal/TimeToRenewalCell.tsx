@@ -14,8 +14,8 @@ export const TimeToRenewalCell = ({
         Unknown
       </Text>
     );
-
   const [value, unit] = getDifferenceFromNow(nextRenewalDate);
+  // console.log(nextRenewalDate, value, unit);
 
   return (
     <Text fontSize='sm' color='gray.700'>
