@@ -1325,6 +1325,7 @@ type NavigationDef struct {
 	ID            string    `json:"id"`
 	TenantViewIds []*string `json:"tenantViewIds,omitempty"`
 	MyViewIds     []*string `json:"myViewIds,omitempty"`
+	Icon          *string   `json:"icon,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 	CreatedBy     *User     `json:"createdBy,omitempty"`
@@ -1844,7 +1845,6 @@ type TableViewDef struct {
 	Name      string       `json:"name"`
 	Order     *int         `json:"order,omitempty"`
 	Type      *ViewType    `json:"type,omitempty"`
-	Icon      *string      `json:"icon,omitempty"`
 	Columns   []*ColumnDef `json:"columns,omitempty"`
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`

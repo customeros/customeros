@@ -830,6 +830,7 @@ type ComplexityRoot struct {
 		CreatedAt     func(childComplexity int) int
 		CreatedBy     func(childComplexity int) int
 		ID            func(childComplexity int) int
+		Icon          func(childComplexity int) int
 		MyViewIds     func(childComplexity int) int
 		TenantViewIds func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
@@ -1130,7 +1131,6 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		CreatedBy func(childComplexity int) int
 		ID        func(childComplexity int) int
-		Icon      func(childComplexity int) int
 		Name      func(childComplexity int) int
 		Order     func(childComplexity int) int
 		Type      func(childComplexity int) int
@@ -6279,6 +6279,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NavigationDef.ID(childComplexity), true
 
+	case "NavigationDef.icon":
+		if e.complexity.NavigationDef.Icon == nil {
+			break
+		}
+
+		return e.complexity.NavigationDef.Icon(childComplexity), true
+
 	case "NavigationDef.myViewIds":
 		if e.complexity.NavigationDef.MyViewIds == nil {
 			break
@@ -8172,13 +8179,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TableViewDef.ID(childComplexity), true
-
-	case "TableViewDef.icon":
-		if e.complexity.TableViewDef.Icon == nil {
-			break
-		}
-
-		return e.complexity.TableViewDef.Icon(childComplexity), true
 
 	case "TableViewDef.name":
 		if e.complexity.TableViewDef.Name == nil {
@@ -11444,7 +11444,6 @@ type TableViewDef implements Node {
     name:               String!
     order:              Int
     type:               ViewType
-    icon:               String
     columns:            [ColumnDef]
     createdAt:          Time!
     updatedAt:          Time!
@@ -11463,6 +11462,7 @@ type NavigationDef implements Node {
     id:                 ID!
     tenantViewIds:      [String]
     myViewIds:          [String]
+    icon:               String
     createdAt:          Time!
     updatedAt:          Time!
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -50074,6 +50074,47 @@ func (ec *executionContext) fieldContext_NavigationDef_myViewIds(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _NavigationDef_icon(ctx context.Context, field graphql.CollectedField, obj *model.NavigationDef) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NavigationDef_icon(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Icon, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NavigationDef_icon(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NavigationDef",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _NavigationDef_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.NavigationDef) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_NavigationDef_createdAt(ctx, field)
 	if err != nil {
@@ -61798,8 +61839,6 @@ func (ec *executionContext) fieldContext_Query_tableViewDef(ctx context.Context,
 				return ec.fieldContext_TableViewDef_order(ctx, field)
 			case "type":
 				return ec.fieldContext_TableViewDef_type(ctx, field)
-			case "icon":
-				return ec.fieldContext_TableViewDef_icon(ctx, field)
 			case "columns":
 				return ec.fieldContext_TableViewDef_columns(ctx, field)
 			case "createdAt":
@@ -61953,6 +61992,8 @@ func (ec *executionContext) fieldContext_Query_navigationDef(ctx context.Context
 				return ec.fieldContext_NavigationDef_tenantViewIds(ctx, field)
 			case "myViewIds":
 				return ec.fieldContext_NavigationDef_myViewIds(ctx, field)
+			case "icon":
+				return ec.fieldContext_NavigationDef_icon(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_NavigationDef_createdAt(ctx, field)
 			case "updatedAt":
@@ -64047,47 +64088,6 @@ func (ec *executionContext) fieldContext_TableViewDef_type(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _TableViewDef_icon(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TableViewDef_icon(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Icon, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TableViewDef_icon(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TableViewDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _TableViewDef_columns(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDef) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_TableViewDef_columns(ctx, field)
 	if err != nil {
@@ -64397,8 +64397,6 @@ func (ec *executionContext) fieldContext_TableViewDefPage_content(ctx context.Co
 				return ec.fieldContext_TableViewDef_order(ctx, field)
 			case "type":
 				return ec.fieldContext_TableViewDef_type(ctx, field)
-			case "icon":
-				return ec.fieldContext_TableViewDef_icon(ctx, field)
 			case "columns":
 				return ec.fieldContext_TableViewDef_columns(ctx, field)
 			case "createdAt":
@@ -80384,6 +80382,8 @@ func (ec *executionContext) _NavigationDef(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._NavigationDef_tenantViewIds(ctx, field, obj)
 		case "myViewIds":
 			out.Values[i] = ec._NavigationDef_myViewIds(ctx, field, obj)
+		case "icon":
+			out.Values[i] = ec._NavigationDef_icon(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._NavigationDef_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -84034,8 +84034,6 @@ func (ec *executionContext) _TableViewDef(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._TableViewDef_order(ctx, field, obj)
 		case "type":
 			out.Values[i] = ec._TableViewDef_type(ctx, field, obj)
-		case "icon":
-			out.Values[i] = ec._TableViewDef_icon(ctx, field, obj)
 		case "columns":
 			out.Values[i] = ec._TableViewDef_columns(ctx, field, obj)
 		case "createdAt":
