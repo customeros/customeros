@@ -2,6 +2,7 @@ package servicet
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	invoicingcycle "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
@@ -18,6 +19,7 @@ func TestInvoicingCycleService_CreateInvoicingCycle(t *testing.T) {
 
 	// setup test environment
 	tenant := "ziggy"
+	now := utils.Now()
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
@@ -31,6 +33,7 @@ func TestInvoicingCycleService_CreateInvoicingCycle(t *testing.T) {
 			AppSource: "app",
 			Source:    "source",
 		},
+		CreatedAt: utils.ConvertTimeToTimestampPtr(&now),
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -51,7 +54,7 @@ func TestInvoicingCycleService_CreateInvoicingCycle(t *testing.T) {
 
 	// Assertions to validate the contract create event data
 	require.Equal(t, tenant, eventData.Tenant)
-	require.Equal(t, invoicingcycle.InvoicingCycleTypeAnniversary, eventData.Type)
+	require.Equal(t, string(invoicingcycle.InvoicingCycleTypeAnniversary), eventData.Type)
 	test.AssertRecentTime(t, eventData.CreatedAt)
 	require.Equal(t, "app", eventData.SourceFields.AppSource)
 	require.Equal(t, "source", eventData.SourceFields.Source)
@@ -65,10 +68,11 @@ func TestInvoicingCycleService_UpdateInvoicingCycle(t *testing.T) {
 	// setup test environment
 	tenant := "ziggy"
 	invoicingCycleId := "invoicing-cycle-id"
+	now := utils.Now()
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	invoicingCycleAggregate := invoicingcycle.NewInvoicingCycleAggregateWithTenantAndID(tenant, invoicingCycleId)
-	createEvent, _ := invoicingcycle.NewInvoicingCycleCreateEvent(invoicingCycleAggregate, invoicingcycle.DATE, commonmodel.Source{})
+	createEvent, _ := invoicingcycle.NewInvoicingCycleCreateEvent(invoicingCycleAggregate, string(invoicingcycle.InvoicingCycleTypeAnniversary), &now, commonmodel.Source{})
 	invoicingCycleAggregate.UncommittedEvents = append(invoicingCycleAggregate.UncommittedEvents, createEvent)
 	aggregateStore.Save(ctx, invoicingCycleAggregate)
 
@@ -86,6 +90,7 @@ func TestInvoicingCycleService_UpdateInvoicingCycle(t *testing.T) {
 		SourceFields: &commonpb.SourceFields{
 			AppSource: "app",
 		},
+		UpdatedAt: utils.ConvertTimeToTimestampPtr(&now),
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -107,6 +112,6 @@ func TestInvoicingCycleService_UpdateInvoicingCycle(t *testing.T) {
 
 	// Assertions to validate the contract create event data
 	require.Equal(t, tenant, eventData.Tenant)
-	require.Equal(t, invoicingcycle.InvoicingCycleTypeAnniversary, eventData.Type)
+	require.Equal(t, string(invoicingcycle.InvoicingCycleTypeAnniversary), eventData.Type)
 	test.AssertRecentTime(t, eventData.UpdatedAt)
 }

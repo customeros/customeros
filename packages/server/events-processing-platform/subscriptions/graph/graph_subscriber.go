@@ -12,6 +12,7 @@ import (
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	ieevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	isevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
+	invoicingcycleevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle"
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
@@ -54,6 +55,7 @@ type GraphSubscriber struct {
 	contractEventHandler           *ContractEventHandler
 	serviceLineItemEventHandler    *ServiceLineItemEventHandler
 	masterPlanEventHandler         *MasterPlanEventHandler
+	invoicingCycleEventHandler     *InvoicingCycleEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphSubscriber {
@@ -77,6 +79,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		contractEventHandler:           NewContractEventHandler(log, repositories, grpcClients),
 		serviceLineItemEventHandler:    NewServiceLineItemEventHandler(log, repositories, grpcClients),
 		masterPlanEventHandler:         NewMasterPlanEventHandler(log, repositories),
+		invoicingCycleEventHandler:     NewInvoicingCycleEventHandler(log, repositories),
 	}
 }
 
@@ -349,6 +352,11 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.masterPlanEventHandler.OnUpdateMilestone(ctx, evt)
 	case masterplanevent.MasterPlanMilestoneReorderV1:
 		return s.masterPlanEventHandler.OnReorderMilestones(ctx, evt)
+
+	case invoicingcycleevent.InvoicingCycleCreateV1:
+		return s.invoicingCycleEventHandler.OnCreate(ctx, evt)
+	case invoicingcycleevent.InvoicingCycleUpdateV1:
+		return s.invoicingCycleEventHandler.OnUpdate(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)

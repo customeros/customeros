@@ -30,4 +30,5 @@ const (
 	NodeLabelContract            = "Contract"
 	NodeLabelServiceLineItem     = "ServiceLineItem"
 	NodeLabelOpportunity         = "Opportunity"
+	NodeLabelInvoicingCycle      = "InvoicingCycle"
 )

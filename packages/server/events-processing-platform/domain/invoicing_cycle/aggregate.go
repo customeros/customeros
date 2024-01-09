@@ -8,6 +8,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 const (
@@ -17,6 +18,19 @@ const (
 type InvoicingCycleAggregate struct {
 	*aggregate.CommonTenantIdAggregate
 	InvoicingCycle *InvoicingCycle
+}
+
+func GetInvoicingCycleObjectID(aggregateID string, tenant string) string {
+	if tenant == "" {
+		return getInvoicingCycleObjectUUID(aggregateID)
+	}
+	return strings.ReplaceAll(aggregateID, string(InvoicingCycleAggregateType)+"-"+tenant+"-", "")
+}
+
+func getInvoicingCycleObjectUUID(aggregateID string) string {
+	parts := strings.Split(aggregateID, "-")
+	fullUUID := parts[len(parts)-5] + "-" + parts[len(parts)-4] + "-" + parts[len(parts)-3] + "-" + parts[len(parts)-2] + "-" + parts[len(parts)-1]
+	return fullUUID
 }
 
 func LoadInvoicingCycleAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*InvoicingCycleAggregate, error) {
