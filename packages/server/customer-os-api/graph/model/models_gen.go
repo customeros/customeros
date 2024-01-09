@@ -159,6 +159,34 @@ type Calendar struct {
 	AppSource     string       `json:"appSource"`
 }
 
+type ColumnDef struct {
+	ID            string      `json:"id"`
+	ViewTypeID    *string     `json:"viewTypeId,omitempty"`
+	ColumnType    *ColumnType `json:"columnType,omitempty"`
+	IsFilterable  *bool       `json:"isFilterable,omitempty"`
+	IsSortable    *bool       `json:"isSortable,omitempty"`
+	IsDefaultSort *bool       `json:"isDefaultSort,omitempty"`
+	IsVisible     *bool       `json:"isVisible,omitempty"`
+	CreatedAt     time.Time   `json:"createdAt"`
+	UpdatedAt     time.Time   `json:"updatedAt"`
+	CreatedBy     *User       `json:"createdBy,omitempty"`
+}
+
+func (ColumnDef) IsNode()            {}
+func (this ColumnDef) GetID() string { return this.ID }
+
+type ColumnType struct {
+	ID         string    `json:"id"`
+	Name       *string   `json:"name,omitempty"`
+	ViewTypeID *string   `json:"viewTypeId,omitempty"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+	CreatedBy  *User     `json:"createdBy,omitempty"`
+}
+
+func (ColumnType) IsNode()            {}
+func (this ColumnType) GetID() string { return this.ID }
+
 type Comment struct {
 	ID            string            `json:"id"`
 	Content       *string           `json:"content,omitempty"`
@@ -1288,6 +1316,18 @@ func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
 type Mutation struct {
 }
 
+type NavigationDef struct {
+	ID            string    `json:"id"`
+	TenantViewIds []*string `json:"tenantViewIds,omitempty"`
+	MyViewIds     []*string `json:"myViewIds,omitempty"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+	CreatedBy     *User     `json:"createdBy,omitempty"`
+}
+
+func (NavigationDef) IsNode()            {}
+func (this NavigationDef) GetID() string { return this.ID }
+
 type Note struct {
 	ID            string        `json:"id"`
 	Content       *string       `json:"content,omitempty"`
@@ -1794,6 +1834,38 @@ type SuggestedMergeOrganization struct {
 	SuggestedBy  *string       `json:"suggestedBy,omitempty"`
 }
 
+type TableViewDef struct {
+	ID        string       `json:"id"`
+	Name      string       `json:"name"`
+	Order     *int         `json:"order,omitempty"`
+	Type      *ViewType    `json:"type,omitempty"`
+	Icon      *string      `json:"icon,omitempty"`
+	Columns   []*ColumnDef `json:"columns,omitempty"`
+	CreatedAt time.Time    `json:"createdAt"`
+	UpdatedAt time.Time    `json:"updatedAt"`
+	CreatedBy *User        `json:"createdBy,omitempty"`
+}
+
+func (TableViewDef) IsNode()            {}
+func (this TableViewDef) GetID() string { return this.ID }
+
+type TableViewDefPage struct {
+	Content        []*TableViewDef `json:"content"`
+	TotalPages     int             `json:"totalPages"`
+	TotalElements  int64           `json:"totalElements"`
+	TotalAvailable int64           `json:"totalAvailable"`
+}
+
+func (TableViewDefPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this TableViewDefPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this TableViewDefPage) GetTotalElements() int64 { return this.TotalElements }
+
 type Tag struct {
 	ID        string     `json:"id"`
 	Name      string     `json:"name"`
@@ -1948,6 +2020,17 @@ type UserUpdateInput struct {
 	Timezone        *string `json:"timezone,omitempty"`
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 }
+
+type ViewType struct {
+	ID        string    `json:"id"`
+	Name      *string   `json:"name,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	CreatedBy *User     `json:"createdBy,omitempty"`
+}
+
+func (ViewType) IsNode()            {}
+func (this ViewType) GetID() string { return this.ID }
 
 type Workspace struct {
 	ID            string     `json:"id"`
