@@ -1,10 +1,12 @@
-package aggregate
+package invoicing_cycle
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
@@ -14,14 +16,40 @@ const (
 
 type InvoicingCycleAggregate struct {
 	*aggregate.CommonTenantIdAggregate
-	InvoicingCycle *model.InvoicingCycle
+	InvoicingCycle *InvoicingCycle
+}
+
+func LoadInvoicingCycleAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*InvoicingCycleAggregate, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadInvoicingCycleAggregate")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("ObjectID", objectID))
+
+	invoicingCycleAggregate := NewInvoicingCycleAggregateWithTenantAndID(tenant, objectID)
+
+	err := eventStore.Exists(ctx, invoicingCycleAggregate.GetID())
+	if err != nil {
+		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
+			tracing.TraceErr(span, err)
+			return nil, err
+		} else {
+			return invoicingCycleAggregate, nil
+		}
+	}
+
+	if err = eventStore.Load(ctx, invoicingCycleAggregate); err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return invoicingCycleAggregate, nil
 }
 
 func NewInvoicingCycleAggregateWithTenantAndID(tenant, id string) *InvoicingCycleAggregate {
 	invoicingCycleAggregate := InvoicingCycleAggregate{}
 	invoicingCycleAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(InvoicingCycleAggregateType, tenant, id)
 	invoicingCycleAggregate.SetWhen(invoicingCycleAggregate.When)
-	invoicingCycleAggregate.InvoicingCycle = &model.InvoicingCycle{}
+	invoicingCycleAggregate.InvoicingCycle = &InvoicingCycle{}
 	invoicingCycleAggregate.Tenant = tenant
 
 	return &invoicingCycleAggregate
@@ -29,9 +57,9 @@ func NewInvoicingCycleAggregateWithTenantAndID(tenant, id string) *InvoicingCycl
 
 func (a *InvoicingCycleAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
-	case event.InvoicingCycleCreateV1:
+	case InvoicingCycleCreateV1:
 		return a.onInvoicingCycleCreate(evt)
-	case event.InvoicingCycleUpdateV1:
+	case InvoicingCycleUpdateV1:
 		return a.onInvoicingCycleUpdate(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
@@ -41,7 +69,7 @@ func (a *InvoicingCycleAggregate) When(evt eventstore.Event) error {
 }
 
 func (a *InvoicingCycleAggregate) onInvoicingCycleCreate(evt eventstore.Event) error {
-	var eventData event.InvoicingCycleCreateEvent
+	var eventData InvoicingCycleCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -55,7 +83,7 @@ func (a *InvoicingCycleAggregate) onInvoicingCycleCreate(evt eventstore.Event) e
 }
 
 func (a *InvoicingCycleAggregate) onInvoicingCycleUpdate(evt eventstore.Event) error {
-	var eventData event.InvoicingCycleUpdateEvent
+	var eventData InvoicingCycleUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
