@@ -29,6 +29,7 @@ type MasterPlanService interface {
 	UpdateMasterPlanMilestone(ctx context.Context, masterPlanId, masterPlanMilestoneId string, name *string, order, hours *int64, items []string, optional *bool, retired *bool) error
 	GetMasterPlanMilestoneById(ctx context.Context, masterPlanMilestoneId string) (*neo4jentity.MasterPlanMilestoneEntity, error)
 	GetMasterPlanMilestonesForMasterPlans(ctx context.Context, masterPlanIds []string) (*neo4jentity.MasterPlanMilestoneEntities, error)
+	ReorderMasterPlanMilestones(ctx context.Context, masterPlanId string, masterPlanMilestoneIds []string) error
 }
 type masterPlanService struct {
 	log          logger.Logger
@@ -311,6 +312,40 @@ func (s *masterPlanService) UpdateMasterPlanMilestone(ctx context.Context, maste
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = s.grpcClients.MasterPlanClient.UpdateMasterPlanMilestone(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *masterPlanService) ReorderMasterPlanMilestones(ctx context.Context, masterPlanId string, masterPlanMilestoneIds []string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanService.ReorderMasterPlanMilestones")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("masterPlanId", masterPlanId), log.Object("masterPlanMilestoneIds", masterPlanMilestoneIds))
+
+	masterPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jentity.NodeLabelMasterPlan)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !masterPlanMilestoneExists {
+		err = errors.New(fmt.Sprintf("Master plan with id {%s} not found", masterPlanId))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	grpcRequest := masterplanpb.ReorderMasterPlanMilestonesGrpcRequest{
+		Tenant:                 common.GetTenantFromContext(ctx),
+		MasterPlanId:           masterPlanId,
+		LoggedInUserId:         common.GetUserIdFromContext(ctx),
+		AppSource:              constants.AppSourceCustomerOsApi,
+		MasterPlanMilestoneIds: masterPlanMilestoneIds,
+	}
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = s.grpcClients.MasterPlanClient.ReorderMasterPlanMilestones(ctx, &grpcRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())

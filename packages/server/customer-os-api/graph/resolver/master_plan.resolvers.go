@@ -149,7 +149,6 @@ func (r *mutationResolver) MasterPlanMilestoneUpdate(ctx context.Context, input 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	// TODO alexb check if items present
 	err := r.Services.MasterPlanService.UpdateMasterPlanMilestone(ctx, input.MasterPlanID, input.ID, input.Name,
 		input.Order, input.DurationHours, input.Items, input.Optional, input.Retired)
 	if err != nil {
@@ -165,6 +164,22 @@ func (r *mutationResolver) MasterPlanMilestoneUpdate(ctx context.Context, input 
 		return nil, nil
 	}
 	return mapper.MapEntityToMasterPlanMilestone(updatedMasterPlanMilestoneEntity), nil
+}
+
+// MasterPlanMilestoneReorder is the resolver for the masterPlanMilestone_Reorder field.
+func (r *mutationResolver) MasterPlanMilestoneReorder(ctx context.Context, input model.MasterPlanMilestoneReorderInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanMilestoneReorder", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	err := r.Services.MasterPlanService.ReorderMasterPlanMilestones(ctx, input.MasterPlanID, input.OrderedIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to reorder master plan milestones")
+		return "", err
+	}
+	return input.MasterPlanID, nil
 }
 
 // MasterPlan is the resolver for the masterPlan field.

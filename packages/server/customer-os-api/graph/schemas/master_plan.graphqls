@@ -3,6 +3,7 @@ extend type Mutation {
     masterPlan_Update(input: MasterPlanUpdateInput!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Create(input: MasterPlanMilestoneInput!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Update(input: MasterPlanMilestoneUpdateInput!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    masterPlanMilestone_Reorder(input: MasterPlanMilestoneReorderInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Query {
@@ -66,4 +67,9 @@ input MasterPlanMilestoneUpdateInput {
     optional: Boolean
     retired: Boolean
     items: [String!]
+}
+
+input MasterPlanMilestoneReorderInput {
+    masterPlanId: ID!
+    orderedIds: [ID!]!
 }

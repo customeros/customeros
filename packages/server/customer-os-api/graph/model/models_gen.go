@@ -1175,6 +1175,11 @@ type MasterPlanMilestoneInput struct {
 	Items         []string `json:"items"`
 }
 
+type MasterPlanMilestoneReorderInput struct {
+	MasterPlanID string   `json:"masterPlanId"`
+	OrderedIds   []string `json:"orderedIds"`
+}
+
 type MasterPlanMilestoneUpdateInput struct {
 	MasterPlanID  string   `json:"masterPlanId"`
 	ID            string   `json:"id"`
