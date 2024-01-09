@@ -2,11 +2,8 @@ package servicet
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle/model"
+	invoicingcycle "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -42,19 +39,19 @@ func TestInvoicingCycleService_CreateInvoicingCycle(t *testing.T) {
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
 
-	invoicingCycleAggregate := aggregate.NewInvoicingCycleAggregateWithTenantAndID(tenant, response.Id)
+	invoicingCycleAggregate := invoicingcycle.NewInvoicingCycleAggregateWithTenantAndID(tenant, response.Id)
 	eventList := eventsMap[invoicingCycleAggregate.ID]
 	require.Equal(t, 1, len(eventList))
-	require.Equal(t, event.InvoicingCycleCreateV1, eventList[0].GetEventType())
-	require.Equal(t, string(aggregate.InvoicingCycleAggregateType)+"-"+tenant+"-"+invoicingCycleId, eventList[0].GetAggregateID())
+	require.Equal(t, invoicingcycle.InvoicingCycleCreateV1, eventList[0].GetEventType())
+	require.Equal(t, string(invoicingcycle.InvoicingCycleAggregateType)+"-"+tenant+"-"+invoicingCycleId, eventList[0].GetAggregateID())
 
-	var eventData event.InvoicingCycleCreateEvent
+	var eventData invoicingcycle.InvoicingCycleCreateEvent
 	err = eventList[0].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 
 	// Assertions to validate the contract create event data
 	require.Equal(t, tenant, eventData.Tenant)
-	require.Equal(t, model.InvoicingCycleTypeAnniversary, eventData.Type)
+	require.Equal(t, invoicingcycle.InvoicingCycleTypeAnniversary, eventData.Type)
 	test.AssertRecentTime(t, eventData.CreatedAt)
 	require.Equal(t, "app", eventData.SourceFields.AppSource)
 	require.Equal(t, "source", eventData.SourceFields.Source)
@@ -70,8 +67,8 @@ func TestInvoicingCycleService_UpdateInvoicingCycle(t *testing.T) {
 	invoicingCycleId := "invoicing-cycle-id"
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
-	invoicingCycleAggregate := aggregate.NewInvoicingCycleAggregateWithTenantAndID(tenant, invoicingCycleId)
-	createEvent, _ := event.NewInvoicingCycleCreateEvent(invoicingCycleAggregate, model.DATE, commonmodel.Source{}, utils.Now())
+	invoicingCycleAggregate := invoicingcycle.NewInvoicingCycleAggregateWithTenantAndID(tenant, invoicingCycleId)
+	createEvent, _ := invoicingcycle.NewInvoicingCycleCreateEvent(invoicingCycleAggregate, invoicingcycle.DATE, commonmodel.Source{})
 	invoicingCycleAggregate.UncommittedEvents = append(invoicingCycleAggregate.UncommittedEvents, createEvent)
 	aggregateStore.Save(ctx, invoicingCycleAggregate)
 
@@ -86,6 +83,9 @@ func TestInvoicingCycleService_UpdateInvoicingCycle(t *testing.T) {
 		InvoicingCycleTypeId: invoicingCycleId,
 		Type:                 invoicingcyclepb.InvoicingDateType_ANNIVERSARY,
 		LoggedInUserId:       "user-id",
+		SourceFields: &commonpb.SourceFields{
+			AppSource: "app",
+		},
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -97,16 +97,16 @@ func TestInvoicingCycleService_UpdateInvoicingCycle(t *testing.T) {
 	require.Equal(t, 1, len(eventsMap))
 	eventList := eventsMap[invoicingCycleAggregate.ID]
 	require.Equal(t, 2, len(eventList))
-	require.Equal(t, event.InvoicingCycleCreateV1, eventList[0].GetEventType())
-	require.Equal(t, event.InvoicingCycleUpdateV1, eventList[1].GetEventType())
-	require.Equal(t, string(aggregate.InvoicingCycleAggregateType)+"-"+tenant+"-"+invoicingCycleId, eventList[1].GetAggregateID())
+	require.Equal(t, invoicingcycle.InvoicingCycleCreateV1, eventList[0].GetEventType())
+	require.Equal(t, invoicingcycle.InvoicingCycleUpdateV1, eventList[1].GetEventType())
+	require.Equal(t, string(invoicingcycle.InvoicingCycleAggregateType)+"-"+tenant+"-"+invoicingCycleId, eventList[1].GetAggregateID())
 
-	var eventData event.InvoicingCycleUpdateEvent
+	var eventData invoicingcycle.InvoicingCycleUpdateEvent
 	err = eventList[1].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 
 	// Assertions to validate the contract create event data
 	require.Equal(t, tenant, eventData.Tenant)
-	require.Equal(t, model.InvoicingCycleTypeAnniversary, eventData.Type)
+	require.Equal(t, invoicingcycle.InvoicingCycleTypeAnniversary, eventData.Type)
 	test.AssertRecentTime(t, eventData.UpdatedAt)
 }
