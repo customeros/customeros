@@ -383,7 +383,7 @@ func (s *masterPlanService) DuplicateMasterPlanMilestone(ctx context.Context, ma
 		MasterPlanId:   masterPlanId,
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		Name:           souceMasterPlanMilestoneEntity.Name,
-		Order:          int64(maxOrder + 1),
+		Order:          maxOrder + 1,
 		DurationHours:  souceMasterPlanMilestoneEntity.DurationHours,
 		Optional:       souceMasterPlanMilestoneEntity.Optional,
 		Items:          souceMasterPlanMilestoneEntity.Items,
