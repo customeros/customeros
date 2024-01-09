@@ -27,6 +27,8 @@ func (a *MasterPlanAggregate) HandleCommand(ctx context.Context, cmd eventstore.
 		return a.createMasterPlanMilestone(ctx, c)
 	case *command.UpdateMasterPlanMilestoneCommand:
 		return a.updateMasterPlanMilestone(ctx, c)
+	case *command.ReorderMasterPlanMilestonesCommand:
+		return a.reorderMasterPlanMilestones(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -128,4 +130,28 @@ func (a *MasterPlanAggregate) updateMasterPlanMilestone(ctx context.Context, cmd
 	})
 
 	return a.Apply(updateEvent)
+}
+
+func (a *MasterPlanAggregate) reorderMasterPlanMilestones(ctx context.Context, cmd *command.ReorderMasterPlanMilestonesCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MasterPlanAggregate.reorderMasterPlanMilestones")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
+
+	reorderEvent, err := event.NewMasterPlanMilestoneReorderEvent(a, cmd.MilestoneIds, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewMasterPlanMilestoneReorderEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&reorderEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.GetAppSource(),
+	})
+
+	return a.Apply(reorderEvent)
 }
