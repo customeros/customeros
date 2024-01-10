@@ -1,0 +1,25 @@
+query tableViewDefs($pagination: Pagination, $where: Filter, $sort: [SortBy!]) {
+  tableViewDefs(pagination: $pagination, where: $where, sort: $sort) {
+    content {
+      id
+      name
+      order
+      type {
+        id
+        name
+      }
+      columns {
+        id
+        viewTypeId
+        columnType {
+          id
+          name
+        }
+        isFilterable
+        isSortable
+        isDefaultSort
+        isVisible
+      }
+    }
+  }
+}

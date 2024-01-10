@@ -137,6 +137,30 @@ export enum CalendarType {
   Google = 'GOOGLE',
 }
 
+export type ColumnDef = Node & {
+  __typename?: 'ColumnDef';
+  columnType?: Maybe<ColumnType>;
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  id: Scalars['ID'];
+  isDefaultSort?: Maybe<Scalars['Boolean']>;
+  isFilterable?: Maybe<Scalars['Boolean']>;
+  isSortable?: Maybe<Scalars['Boolean']>;
+  isVisible?: Maybe<Scalars['Boolean']>;
+  updatedAt: Scalars['Time'];
+  viewTypeId?: Maybe<Scalars['String']>;
+};
+
+export type ColumnType = Node & {
+  __typename?: 'ColumnType';
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  id: Scalars['ID'];
+  name?: Maybe<Scalars['String']>;
+  updatedAt: Scalars['Time'];
+  viewTypeId?: Maybe<Scalars['String']>;
+};
+
 export type Comment = {
   __typename?: 'Comment';
   appSource: Scalars['String'];
@@ -1422,6 +1446,22 @@ export type MasterPlanMilestoneInput = {
   order: Scalars['Int64'];
 };
 
+export type MasterPlanMilestoneReorderInput = {
+  masterPlanId: Scalars['ID'];
+  orderedIds: Array<Scalars['ID']>;
+};
+
+export type MasterPlanMilestoneUpdateInput = {
+  durationHours?: InputMaybe<Scalars['Int64']>;
+  id: Scalars['ID'];
+  items?: InputMaybe<Array<Scalars['String']>>;
+  masterPlanId: Scalars['ID'];
+  name?: InputMaybe<Scalars['String']>;
+  optional?: InputMaybe<Scalars['Boolean']>;
+  order?: InputMaybe<Scalars['Int64']>;
+  retired?: InputMaybe<Scalars['Boolean']>;
+};
+
 export type MasterPlanUpdateInput = {
   id: Scalars['ID'];
   name?: InputMaybe<Scalars['String']>;
@@ -1589,6 +1629,9 @@ export type Mutation = {
   logEntry_ResetTags: Scalars['ID'];
   logEntry_Update: Scalars['ID'];
   masterPlanMilestone_Create: MasterPlanMilestone;
+  masterPlanMilestone_Duplicate: MasterPlanMilestone;
+  masterPlanMilestone_Reorder: Scalars['ID'];
+  masterPlanMilestone_Update: MasterPlanMilestone;
   masterPlan_Create: MasterPlan;
   masterPlan_Update: MasterPlan;
   meeting_AddNewLocation: Location;
@@ -1947,6 +1990,19 @@ export type MutationMasterPlanMilestone_CreateArgs = {
   input: MasterPlanMilestoneInput;
 };
 
+export type MutationMasterPlanMilestone_DuplicateArgs = {
+  id: Scalars['ID'];
+  masterPlanId: Scalars['ID'];
+};
+
+export type MutationMasterPlanMilestone_ReorderArgs = {
+  input: MasterPlanMilestoneReorderInput;
+};
+
+export type MutationMasterPlanMilestone_UpdateArgs = {
+  input: MasterPlanMilestoneUpdateInput;
+};
+
 export type MutationMasterPlan_CreateArgs = {
   input: MasterPlanInput;
 };
@@ -2259,6 +2315,17 @@ export type MutationWorkspace_MergeArgs = {
 export type MutationWorkspace_MergeToTenantArgs = {
   tenant: Scalars['String'];
   workspace: WorkspaceInput;
+};
+
+export type NavigationDef = Node & {
+  __typename?: 'NavigationDef';
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  icon?: Maybe<Scalars['String']>;
+  id: Scalars['ID'];
+  myViewIds?: Maybe<Array<Maybe<Scalars['String']>>>;
+  tenantViewIds?: Maybe<Array<Maybe<Scalars['String']>>>;
+  updatedAt: Scalars['Time'];
 };
 
 export type Node = {
@@ -2769,6 +2836,7 @@ export type Query = {
   masterPlan: MasterPlan;
   masterPlans: Array<MasterPlan>;
   meeting: Meeting;
+  navigationDef?: Maybe<NavigationDef>;
   opportunity?: Maybe<Opportunity>;
   organization?: Maybe<Organization>;
   organization_DistinctOwners: Array<User>;
@@ -2776,6 +2844,8 @@ export type Query = {
   phoneNumber: PhoneNumber;
   player_ByAuthIdProvider: Player;
   serviceLineItem: ServiceLineItem;
+  tableViewDef?: Maybe<TableViewDef>;
+  tableViewDefs: TableViewDefPage;
   tags: Array<Tag>;
   tenant: Scalars['String'];
   tenant_ByEmail?: Maybe<Scalars['String']>;
@@ -2938,6 +3008,16 @@ export type QueryServiceLineItemArgs = {
   id: Scalars['ID'];
 };
 
+export type QueryTableViewDefArgs = {
+  id: Scalars['ID'];
+};
+
+export type QueryTableViewDefsArgs = {
+  pagination?: InputMaybe<Pagination>;
+  sort?: InputMaybe<Array<SortBy>>;
+  where?: InputMaybe<Filter>;
+};
+
 export type QueryTenant_ByEmailArgs = {
   email: Scalars['String'];
 };
@@ -3098,6 +3178,26 @@ export type SuggestedMergeOrganization = {
   organization: Organization;
   suggestedAt?: Maybe<Scalars['Time']>;
   suggestedBy?: Maybe<Scalars['String']>;
+};
+
+export type TableViewDef = Node & {
+  __typename?: 'TableViewDef';
+  columns?: Maybe<Array<Maybe<ColumnDef>>>;
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  order?: Maybe<Scalars['Int']>;
+  type?: Maybe<ViewType>;
+  updatedAt: Scalars['Time'];
+};
+
+export type TableViewDefPage = Pages & {
+  __typename?: 'TableViewDefPage';
+  content: Array<TableViewDef>;
+  totalAvailable: Scalars['Int64'];
+  totalElements: Scalars['Int64'];
+  totalPages: Scalars['Int'];
 };
 
 export type Tag = {
@@ -3305,6 +3405,15 @@ export type UserUpdateInput = {
   name?: InputMaybe<Scalars['String']>;
   profilePhotoUrl?: InputMaybe<Scalars['String']>;
   timezone?: InputMaybe<Scalars['String']>;
+};
+
+export type ViewType = Node & {
+  __typename?: 'ViewType';
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  id: Scalars['ID'];
+  name?: Maybe<Scalars['String']>;
+  updatedAt: Scalars['Time'];
 };
 
 export type Workspace = {
