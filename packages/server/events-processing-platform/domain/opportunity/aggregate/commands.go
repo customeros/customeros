@@ -106,11 +106,11 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
 	// if opportunity is not renewal or status is closed, return error
-	if a.Opportunity.InternalType != model.OpportunityInternalTypeStringRenewal {
+	if a.Opportunity.InternalType != string(model.OpportunityInternalTypeStringRenewal) {
 		err := errors.New(constants.Validate + ": Opportunity is not renewal")
 		tracing.TraceErr(span, err)
 		return err
-	} else if a.Opportunity.InternalStage != model.OpportunityInternalStageStringOpen {
+	} else if a.Opportunity.InternalStage != string(model.OpportunityInternalStageStringOpen) {
 		err := errors.New(constants.Validate + ": Opportunity is closed")
 		tracing.TraceErr(span, err)
 		return err

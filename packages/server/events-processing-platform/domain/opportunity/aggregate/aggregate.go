@@ -91,8 +91,8 @@ func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) 
 	a.Opportunity.ID = a.ID
 	a.Opportunity.Tenant = a.Tenant
 	a.Opportunity.ContractId = eventData.ContractId
-	a.Opportunity.InternalType = model.OpportunityInternalTypeStringRenewal
-	a.Opportunity.InternalStage = model.OpportunityInternalStageStringDecode(eventData.InternalStage)
+	a.Opportunity.InternalType = string(model.OpportunityInternalTypeStringRenewal)
+	a.Opportunity.InternalStage = string(model.OpportunityInternalStageStringDecode(eventData.InternalStage))
 	a.Opportunity.CreatedAt = eventData.CreatedAt
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	a.Opportunity.Source = eventData.Source
@@ -197,7 +197,7 @@ func (a *OpportunityAggregate) onOpportunityCloseWin(evt eventstore.Event) error
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.Opportunity.InternalStage = model.OpportunityInternalStageStringClosedWon
+	a.Opportunity.InternalStage = string(model.OpportunityInternalStageStringClosedWon)
 	a.Opportunity.ClosedAt = &eventData.ClosedAt
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	return nil
@@ -208,7 +208,7 @@ func (a *OpportunityAggregate) onOpportunityCloseLoose(evt eventstore.Event) err
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.Opportunity.InternalStage = model.OpportunityInternalStageStringClosedLost
+	a.Opportunity.InternalStage = string(model.OpportunityInternalStageStringClosedLost)
 	a.Opportunity.ClosedAt = &eventData.ClosedAt
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	return nil

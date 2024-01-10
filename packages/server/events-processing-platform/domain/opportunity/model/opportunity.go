@@ -23,29 +23,29 @@ type RenewalDetails struct {
 
 // Opportunity represents the state of an opportunity aggregate.
 type Opportunity struct {
-	ID                string                         `json:"id"`
-	OrganizationId    string                         `json:"organizationId"`
-	ContractId        string                         `json:"contractId"`
-	Tenant            string                         `json:"tenant"`
-	Name              string                         `json:"name"`
-	Amount            float64                        `json:"amount"`
-	MaxAmount         float64                        `json:"maxAmount"`
-	InternalType      OpportunityInternalTypeString  `json:"internalType"`
-	ExternalType      string                         `json:"externalType"`
-	InternalStage     OpportunityInternalStageString `json:"internalStage"`
-	ExternalStage     string                         `json:"externalStage"`
-	EstimatedClosedAt *time.Time                     `json:"estimatedClosedAt,omitempty"`
-	ClosedAt          *time.Time                     `json:"closedAt,omitempty"`
-	OwnerUserId       string                         `json:"ownerUserId"`
-	CreatedByUserId   string                         `json:"createdByUserId"`
-	Source            commonmodel.Source             `json:"source"`
-	ExternalSystems   []commonmodel.ExternalSystem   `json:"externalSystems"`
-	GeneralNotes      string                         `json:"generalNotes"`
-	NextSteps         string                         `json:"nextSteps"`
-	CreatedAt         time.Time                      `json:"createdAt"`
-	UpdatedAt         time.Time                      `json:"updatedAt"`
-	RenewalDetails    RenewalDetails                 `json:"renewal,omitempty"`
-	Comments          string                         `json:"comments,omitempty"`
+	ID                string                       `json:"id"`
+	OrganizationId    string                       `json:"organizationId"`
+	ContractId        string                       `json:"contractId"`
+	Tenant            string                       `json:"tenant"`
+	Name              string                       `json:"name"`
+	Amount            float64                      `json:"amount"`
+	MaxAmount         float64                      `json:"maxAmount"`
+	InternalType      string                       `json:"internalType"`
+	ExternalType      string                       `json:"externalType"`
+	InternalStage     string                       `json:"internalStage"`
+	ExternalStage     string                       `json:"externalStage"`
+	EstimatedClosedAt *time.Time                   `json:"estimatedClosedAt,omitempty"`
+	ClosedAt          *time.Time                   `json:"closedAt,omitempty"`
+	OwnerUserId       string                       `json:"ownerUserId"`
+	CreatedByUserId   string                       `json:"createdByUserId"`
+	Source            commonmodel.Source           `json:"source"`
+	ExternalSystems   []commonmodel.ExternalSystem `json:"externalSystems"`
+	GeneralNotes      string                       `json:"generalNotes"`
+	NextSteps         string                       `json:"nextSteps"`
+	CreatedAt         time.Time                    `json:"createdAt"`
+	UpdatedAt         time.Time                    `json:"updatedAt"`
+	RenewalDetails    RenewalDetails               `json:"renewal,omitempty"`
+	Comments          string                       `json:"comments,omitempty"`
 }
 
 // OpportunityDataFields contains all the fields that may be used to create or update an opportunity.

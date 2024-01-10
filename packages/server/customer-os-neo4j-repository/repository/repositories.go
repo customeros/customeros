@@ -27,6 +27,7 @@ type Repositories struct {
 	MasterPlanReadRepository          MasterPlanReadRepository
 	MasterPlanWriteRepository         MasterPlanWriteRepository
 	OpportunityReadRepository         OpportunityReadRepository
+	OpportunityWriteRepository        OpportunityWriteRepository
 	OrganizationReadRepository        OrganizationReadRepository
 	PhoneNumberReadRepository         PhoneNumberReadRepository
 	PhoneNumberWriteRepository        PhoneNumberWriteRepository
@@ -65,6 +66,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		MasterPlanReadRepository:          NewMasterPlanReadRepository(driver, neo4jDatabase),
 		MasterPlanWriteRepository:         NewMasterPlanWriteRepository(driver, neo4jDatabase),
 		OpportunityReadRepository:         NewOpportunityReadRepository(driver, neo4jDatabase),
+		OpportunityWriteRepository:        NewOpportunityWriteRepository(driver, neo4jDatabase),
 		OrganizationReadRepository:        NewOrganizationReadRepository(driver, neo4jDatabase),
 		PhoneNumberReadRepository:         NewPhoneNumberReadRepository(driver, neo4jDatabase),
 		PhoneNumberWriteRepository:        NewPhoneNumberWriteRepository(driver, neo4jDatabase),
