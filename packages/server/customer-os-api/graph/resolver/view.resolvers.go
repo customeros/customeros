@@ -7,9 +7,13 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 // CreatedBy is the resolver for the createdBy field.
@@ -22,24 +26,37 @@ func (r *columnTypeResolver) CreatedBy(ctx context.Context, obj *model.ColumnTyp
 	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))
 }
 
-// CreatedBy is the resolver for the createdBy field.
-func (r *navigationDefResolver) CreatedBy(ctx context.Context, obj *model.NavigationDef) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))
-}
-
-// TableViewDef is the resolver for the tableViewDef field.
-func (r *queryResolver) TableViewDef(ctx context.Context, id string) (*model.TableViewDef, error) {
-	panic(fmt.Errorf("not implemented: TableViewDef - tableViewDef"))
-}
-
 // TableViewDefs is the resolver for the tableViewDefs field.
 func (r *queryResolver) TableViewDefs(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.TableViewDefPage, error) {
-	panic(fmt.Errorf("not implemented: TableViewDefs - tableViewDefs"))
-}
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Organizations", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-// NavigationDef is the resolver for the navigationDef field.
-func (r *queryResolver) NavigationDef(ctx context.Context) (*model.NavigationDef, error) {
-	panic(fmt.Errorf("not implemented: NavigationDef - navigationDef"))
+	if pagination == nil {
+		pagination = &model.Pagination{Page: 0, Limit: 0}
+	}
+	span.LogFields(log.Int("request.pagination.page", pagination.Page), log.Int("request.pagination.limit", pagination.Limit))
+
+	mockTableViewDef := model.TableViewDef{
+		ID:        "MockID",
+		Name:      "MockName",
+		Order:     nil,
+		Type:      nil,
+		Icon:      nil,
+		Columns:   nil,
+		Filters:   nil,
+		CreatedAt: time.Time{},
+		UpdatedAt: time.Time{},
+		CreatedBy: nil,
+	}
+	var mockTableViewDefs []*model.TableViewDef
+	mockTableViewDefs = append(mockTableViewDefs, &mockTableViewDef)
+
+	return &model.TableViewDefPage{
+		Content:       mockTableViewDefs,
+		TotalPages:    1,
+		TotalElements: 1,
+	}, nil
 }
 
 // CreatedBy is the resolver for the createdBy field.
@@ -58,9 +75,6 @@ func (r *Resolver) ColumnDef() generated.ColumnDefResolver { return &columnDefRe
 // ColumnType returns generated.ColumnTypeResolver implementation.
 func (r *Resolver) ColumnType() generated.ColumnTypeResolver { return &columnTypeResolver{r} }
 
-// NavigationDef returns generated.NavigationDefResolver implementation.
-func (r *Resolver) NavigationDef() generated.NavigationDefResolver { return &navigationDefResolver{r} }
-
 // TableViewDef returns generated.TableViewDefResolver implementation.
 func (r *Resolver) TableViewDef() generated.TableViewDefResolver { return &tableViewDefResolver{r} }
 
@@ -69,6 +83,5 @@ func (r *Resolver) ViewType() generated.ViewTypeResolver { return &viewTypeResol
 
 type columnDefResolver struct{ *Resolver }
 type columnTypeResolver struct{ *Resolver }
-type navigationDefResolver struct{ *Resolver }
 type tableViewDefResolver struct{ *Resolver }
 type viewTypeResolver struct{ *Resolver }

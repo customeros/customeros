@@ -1,37 +1,25 @@
 extend type Query {
-    tableViewDef(id: ID!): TableViewDef @hasTenant
     tableViewDefs(pagination: Pagination, where: Filter, sort: [SortBy!]): TableViewDefPage! @hasTenant
-    navigationDef: NavigationDef
 }
-
 
 type TableViewDef implements Node {
     id:                 ID!
     name:               String!
     order:              Int
     type:               ViewType
+    icon:               String
     columns:            [ColumnDef]
+    filters:            [String]
     createdAt:          Time!
     updatedAt:          Time!
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
-
 
 type TableViewDefPage implements Pages {
     content: [TableViewDef!]!
     totalPages: Int!
     totalElements: Int64!
     totalAvailable: Int64!
-}
-
-type NavigationDef implements Node {
-    id:                 ID!
-    tenantViewIds:      [String]
-    myViewIds:          [String]
-    icon:               String
-    createdAt:          Time!
-    updatedAt:          Time!
-    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type ViewType implements Node {
@@ -44,7 +32,7 @@ type ViewType implements Node {
 
 type ColumnDef implements Node {
     id:                 ID!
-    viewTypeId:         String
+    type:               ViewType
     columnType:         ColumnType
     isFilterable:       Boolean
     isSortable:         Boolean
