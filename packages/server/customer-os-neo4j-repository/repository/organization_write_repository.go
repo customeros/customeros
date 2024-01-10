@@ -11,6 +11,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
+	"strings"
 	"time"
 )
 
@@ -93,6 +94,17 @@ type OrganizationWriteRepository interface {
 	CreateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationCreateFields) error
 	CreateOrganizationInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, data OrganizationCreateFields) error
 	UpdateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationUpdateFields) error
+	LinkWithDomain(ctx context.Context, tenant, organizationId, domain string) error
+	ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error
+	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
+	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId, touchpointType string) error
+	SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error
+	LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error
+	UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error
+	UpdateArr(ctx context.Context, tenant, organizationId string) error
+	UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error
+	WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error
+	UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error
 }
 
 type organizationWriteRepository struct {
@@ -336,6 +348,309 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 				org.updatedAt = $updatedAt,
 				org.syncedWithEventStore = true`
 
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tenant, organizationId, domain string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.MergeOrganizationDomain")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	cypher := `MERGE (d:Domain {domain:$domain}) 
+				ON CREATE SET 	d.id=randomUUID(), 
+								d.createdAt=$now, 
+								d.updatedAt=$now,
+								d.appSource=$appSource
+				WITH d
+				MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+				MERGE (org)-[rel:HAS_DOMAIN]->(d)
+				SET rel.syncedWithEventStore = true`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"domain":         strings.ToLower(domain),
+		"appSource":      constants.AppSourceEventProcessingPlatform,
+		"now":            utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.ReplaceOwner")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("organizationId", organizationId), log.String("userId", userId))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			OPTIONAL MATCH (:User)-[rel:OWNS]->(org)
+			DELETE rel
+			WITH org, t
+			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
+			WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null)
+			MERGE (u)-[:OWNS]->(org)
+			SET org.updatedAt=$now, org.sourceOfTruth=$source`
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"userId":         userId,
+		"source":         constants.SourceOpenline,
+		"now":            utils.Now(),
+	})
+}
+
+func (r *organizationWriteRepository) SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.SetVisibility")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.LogFields(log.Bool("hide", hide))
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
+		 SET	org.hide = $hide,
+				org.updatedAt = $now`, tenant)
+	params := map[string]any{
+		"id":     organizationId,
+		"tenant": tenant,
+		"hide":   hide,
+		"now":    utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *organizationWriteRepository) UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId, touchpointType string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.SetVisibility")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("organizationId", organizationId), log.String("touchpointId", touchpointId), log.Object("touchpointAt", touchpointAt))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+		 SET org.lastTouchpointAt=$touchpointAt, org.lastTouchpointId=$touchpointId, org.lastTouchpointType=$touchpointType`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"touchpointAt":   touchpointAt,
+		"touchpointId":   touchpointId,
+		"touchpointType": touchpointType,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *organizationWriteRepository) SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.SetCustomerOsIdIfMissing")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.LogFields(log.String("customerOsId", customerOsId))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+		 SET org.customerOsId = CASE WHEN (org.customerOsId IS NULL OR org.customerOsId = '') AND $customerOsId <> '' THEN $customerOsId ELSE org.customerOsId END`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"customerOsId":   customerOsId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *organizationWriteRepository) LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.LinkWithParentOrganization")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationType", subOrganizationType))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$parentOrganizationId}),
+		 			(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(sub:Organization {id:$subOrganizationId}) 
+		 	MERGE (sub)-[rel:SUBSIDIARY_OF]->(parent) 
+		 		ON CREATE SET rel.type=$type 
+		 		ON MATCH SET rel.type=$type`
+	params := map[string]any{
+		"tenant":               tenant,
+		"subOrganizationId":    organizationId,
+		"parentOrganizationId": parentOrganizationId,
+		"type":                 subOrganizationType,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *organizationWriteRepository) UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UnlinkParentOrganization")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.LogFields(log.String("parentOrganizationId", parentOrganizationId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$parentOrganizationId})<-[rel:SUBSIDIARY_OF]-(sub:Organization {id:$subOrganizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+		 		DELETE rel`
+	params := map[string]any{
+		"tenant":               tenant,
+		"subOrganizationId":    organizationId,
+		"parentOrganizationId": parentOrganizationId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *organizationWriteRepository) UpdateArr(ctx context.Context, tenant, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateArr")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	cypher := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
+				OPTIONAL MATCH (org)-[:HAS_CONTRACT]->(c:Contract)
+				OPTIONAL MATCH (c)-[:ACTIVE_RENEWAL]->(op:Opportunity)
+				WITH org, COALESCE(sum(op.amount), 0) as arr, COALESCE(sum(op.maxAmount), 0) as maxArr
+				SET org.renewalForecastArr = arr, org.renewalForecastMaxArr = maxArr, org.updatedAt = $now`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"now":            utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *organizationWriteRepository) UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateRenewalSummary")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.LogFields(log.Object("likelihood", likelihood), log.Object("likelihoodOrder", likelihoodOrder), log.Object("nextRenewalDate", nextRenewalDate))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+				SET org.derivedRenewalLikelihood = $derivedRenewalLikelihood,
+					org.derivedRenewalLikelihoodOrder = $derivedRenewalLikelihoodOrder,
+					org.derivedNextRenewalAt = $derivedNextRenewalAt,
+					org.updatedAt = $now`
+	params := map[string]any{
+		"tenant":                        tenant,
+		"organizationId":                organizationId,
+		"derivedRenewalLikelihood":      likelihood,
+		"derivedRenewalLikelihoodOrder": likelihoodOrder,
+		"derivedNextRenewalAt":          utils.TimePtrFirstNonNilNillableAsAny(nextRenewalDate),
+		"now":                           utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *organizationWriteRepository) WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.WebScrapeRequested")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.LogFields(log.String("url", url))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+		 	SET org.webScrapeLastRequestedAt=$requestedAt, 
+				org.webScrapeLastRequestedUrl=$url, 
+				org.webScrapeAttempts=$attempt`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"url":            url,
+		"attempt":        attempt,
+		"requestedAt":    requestedAt,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *organizationWriteRepository) UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateOnboardingStatus")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+				SET org.onboardingUpdatedAt = CASE WHEN org.onboardingStatus IS NULL OR org.onboardingStatus <> $status THEN $updatedAt ELSE org.onboardingUpdatedAt END,
+					org.onboardingStatus=$status,
+					org.onboardingStatusOrder=$statusOrder,
+					org.onboardingComments=$comments,
+					org.onboardingUpdatedAt=$updatedAt,
+					org.updatedAt=$now`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"status":         status,
+		"statusOrder":    statusOrder,
+		"comments":       comments,
+		"updatedAt":      updatedAt,
+		"now":            utils.Now(),
+	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
