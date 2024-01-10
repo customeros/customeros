@@ -69,7 +69,37 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	defer session.Close(ctx)
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var err error
-		err = h.repositories.OrganizationRepository.CreateOrganizationInTx(ctx, tx, organizationId, eventData)
+		data := neo4jrepository.OrganizationCreateFields{
+			CreatedAt: eventData.CreatedAt,
+			UpdatedAt: eventData.UpdatedAt,
+			SourceFields: neo4jmodel.Source{
+				Source:        helper.GetSource(eventData.Source),
+				SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
+				AppSource:     helper.GetSource(eventData.AppSource),
+			},
+			Name:               eventData.Name,
+			Hide:               eventData.Hide,
+			Description:        eventData.Description,
+			Website:            eventData.Website,
+			Industry:           eventData.Industry,
+			SubIndustry:        eventData.SubIndustry,
+			IndustryGroup:      eventData.IndustryGroup,
+			TargetAudience:     eventData.TargetAudience,
+			ValueProposition:   eventData.ValueProposition,
+			IsPublic:           eventData.IsPublic,
+			IsCustomer:         eventData.IsCustomer,
+			Employees:          eventData.Employees,
+			Market:             eventData.Market,
+			LastFundingRound:   eventData.LastFundingRound,
+			LastFundingAmount:  eventData.LastFundingAmount,
+			ReferenceId:        eventData.ReferenceId,
+			Note:               eventData.Note,
+			LogoUrl:            eventData.LogoUrl,
+			Headquarters:       eventData.Headquarters,
+			YearFounded:        eventData.YearFounded,
+			EmployeeGrowthRate: eventData.EmployeeGrowthRate,
+		}
+		err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.CreateOrganizationInTx(ctx, tx, eventData.Tenant, organizationId, data)
 		if err != nil {
 			h.log.Errorf("Error while saving organization %s: %s", organizationId, err.Error())
 			return nil, err
