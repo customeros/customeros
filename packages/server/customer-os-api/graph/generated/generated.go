@@ -59,7 +59,6 @@ type ResolverRoot interface {
 	MasterPlan() MasterPlanResolver
 	Meeting() MeetingResolver
 	Mutation() MutationResolver
-	NavigationDef() NavigationDefResolver
 	Note() NoteResolver
 	Opportunity() OpportunityResolver
 	Organization() OrganizationResolver
@@ -143,8 +142,8 @@ type ComplexityRoot struct {
 		IsFilterable  func(childComplexity int) int
 		IsSortable    func(childComplexity int) int
 		IsVisible     func(childComplexity int) int
+		Type          func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
-		ViewTypeID    func(childComplexity int) int
 	}
 
 	ColumnType struct {
@@ -828,16 +827,6 @@ type ComplexityRoot struct {
 		WorkspaceMergeToTenant                  func(childComplexity int, workspace model.WorkspaceInput, tenant string) int
 	}
 
-	NavigationDef struct {
-		CreatedAt     func(childComplexity int) int
-		CreatedBy     func(childComplexity int) int
-		ID            func(childComplexity int) int
-		Icon          func(childComplexity int) int
-		MyViewIds     func(childComplexity int) int
-		TenantViewIds func(childComplexity int) int
-		UpdatedAt     func(childComplexity int) int
-	}
-
 	Note struct {
 		AppSource     func(childComplexity int) int
 		Content       func(childComplexity int) int
@@ -1053,7 +1042,6 @@ type ComplexityRoot struct {
 		MasterPlan                            func(childComplexity int, id string) int
 		MasterPlans                           func(childComplexity int, retired *bool) int
 		Meeting                               func(childComplexity int, id string) int
-		NavigationDef                         func(childComplexity int) int
 		Opportunity                           func(childComplexity int, id string) int
 		Organization                          func(childComplexity int, id string) int
 		OrganizationDistinctOwners            func(childComplexity int) int
@@ -1061,7 +1049,6 @@ type ComplexityRoot struct {
 		PhoneNumber                           func(childComplexity int, id string) int
 		PlayerByAuthIDProvider                func(childComplexity int, authID string, provider string) int
 		ServiceLineItem                       func(childComplexity int, id string) int
-		TableViewDef                          func(childComplexity int, id string) int
 		TableViewDefs                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Tags                                  func(childComplexity int) int
 		Tenant                                func(childComplexity int) int
@@ -1132,7 +1119,9 @@ type ComplexityRoot struct {
 		Columns   func(childComplexity int) int
 		CreatedAt func(childComplexity int) int
 		CreatedBy func(childComplexity int) int
+		Filters   func(childComplexity int) int
 		ID        func(childComplexity int) int
+		Icon      func(childComplexity int) int
 		Name      func(childComplexity int) int
 		Order     func(childComplexity int) int
 		Type      func(childComplexity int) int
@@ -1466,9 +1455,6 @@ type MutationResolver interface {
 	WorkspaceMergeToTenant(ctx context.Context, workspace model.WorkspaceInput, tenant string) (*model.Result, error)
 	WorkspaceMerge(ctx context.Context, workspace model.WorkspaceInput) (*model.Result, error)
 }
-type NavigationDefResolver interface {
-	CreatedBy(ctx context.Context, obj *model.NavigationDef) (*model.User, error)
-}
 type NoteResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error)
 	Noted(ctx context.Context, obj *model.Note) ([]model.NotedEntity, error)
@@ -1564,9 +1550,7 @@ type QueryResolver interface {
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
-	TableViewDef(ctx context.Context, id string) (*model.TableViewDef, error)
 	TableViewDefs(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.TableViewDefPage, error)
-	NavigationDef(ctx context.Context) (*model.NavigationDef, error)
 }
 type ServiceLineItemResolver interface {
 	CreatedBy(ctx context.Context, obj *model.ServiceLineItem) (*model.User, error)
@@ -1944,19 +1928,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ColumnDef.IsVisible(childComplexity), true
 
+	case "ColumnDef.type":
+		if e.complexity.ColumnDef.Type == nil {
+			break
+		}
+
+		return e.complexity.ColumnDef.Type(childComplexity), true
+
 	case "ColumnDef.updatedAt":
 		if e.complexity.ColumnDef.UpdatedAt == nil {
 			break
 		}
 
 		return e.complexity.ColumnDef.UpdatedAt(childComplexity), true
-
-	case "ColumnDef.viewTypeId":
-		if e.complexity.ColumnDef.ViewTypeID == nil {
-			break
-		}
-
-		return e.complexity.ColumnDef.ViewTypeID(childComplexity), true
 
 	case "ColumnType.createdAt":
 		if e.complexity.ColumnType.CreatedAt == nil {
@@ -6286,55 +6270,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.WorkspaceMergeToTenant(childComplexity, args["workspace"].(model.WorkspaceInput), args["tenant"].(string)), true
 
-	case "NavigationDef.createdAt":
-		if e.complexity.NavigationDef.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.NavigationDef.CreatedAt(childComplexity), true
-
-	case "NavigationDef.createdBy":
-		if e.complexity.NavigationDef.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.NavigationDef.CreatedBy(childComplexity), true
-
-	case "NavigationDef.id":
-		if e.complexity.NavigationDef.ID == nil {
-			break
-		}
-
-		return e.complexity.NavigationDef.ID(childComplexity), true
-
-	case "NavigationDef.icon":
-		if e.complexity.NavigationDef.Icon == nil {
-			break
-		}
-
-		return e.complexity.NavigationDef.Icon(childComplexity), true
-
-	case "NavigationDef.myViewIds":
-		if e.complexity.NavigationDef.MyViewIds == nil {
-			break
-		}
-
-		return e.complexity.NavigationDef.MyViewIds(childComplexity), true
-
-	case "NavigationDef.tenantViewIds":
-		if e.complexity.NavigationDef.TenantViewIds == nil {
-			break
-		}
-
-		return e.complexity.NavigationDef.TenantViewIds(childComplexity), true
-
-	case "NavigationDef.updatedAt":
-		if e.complexity.NavigationDef.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.NavigationDef.UpdatedAt(childComplexity), true
-
 	case "Note.appSource":
 		if e.complexity.Note.AppSource == nil {
 			break
@@ -7725,13 +7660,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Meeting(childComplexity, args["id"].(string)), true
 
-	case "Query.navigationDef":
-		if e.complexity.Query.NavigationDef == nil {
-			break
-		}
-
-		return e.complexity.Query.NavigationDef(childComplexity), true
-
 	case "Query.opportunity":
 		if e.complexity.Query.Opportunity == nil {
 			break
@@ -7810,18 +7738,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.ServiceLineItem(childComplexity, args["id"].(string)), true
-
-	case "Query.tableViewDef":
-		if e.complexity.Query.TableViewDef == nil {
-			break
-		}
-
-		args, err := ec.field_Query_tableViewDef_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.TableViewDef(childComplexity, args["id"].(string)), true
 
 	case "Query.tableViewDefs":
 		if e.complexity.Query.TableViewDefs == nil {
@@ -8201,12 +8117,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TableViewDef.CreatedBy(childComplexity), true
 
+	case "TableViewDef.filters":
+		if e.complexity.TableViewDef.Filters == nil {
+			break
+		}
+
+		return e.complexity.TableViewDef.Filters(childComplexity), true
+
 	case "TableViewDef.id":
 		if e.complexity.TableViewDef.ID == nil {
 			break
 		}
 
 		return e.complexity.TableViewDef.ID(childComplexity), true
+
+	case "TableViewDef.icon":
+		if e.complexity.TableViewDef.Icon == nil {
+			break
+		}
+
+		return e.complexity.TableViewDef.Icon(childComplexity), true
 
 	case "TableViewDef.name":
 		if e.complexity.TableViewDef.Name == nil {
@@ -11464,39 +11394,27 @@ type CustomerUser {
 }
 `, BuiltIn: false},
 	{Name: "../schemas/view.graphqls", Input: `extend type Query {
-    tableViewDef(id: ID!): TableViewDef @hasTenant
     tableViewDefs(pagination: Pagination, where: Filter, sort: [SortBy!]): TableViewDefPage! @hasTenant
-    navigationDef: NavigationDef
 }
-
 
 type TableViewDef implements Node {
     id:                 ID!
     name:               String!
     order:              Int
     type:               ViewType
+    icon:               String
     columns:            [ColumnDef]
+    filters:            [String]
     createdAt:          Time!
     updatedAt:          Time!
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
-
 
 type TableViewDefPage implements Pages {
     content: [TableViewDef!]!
     totalPages: Int!
     totalElements: Int64!
     totalAvailable: Int64!
-}
-
-type NavigationDef implements Node {
-    id:                 ID!
-    tenantViewIds:      [String]
-    myViewIds:          [String]
-    icon:               String
-    createdAt:          Time!
-    updatedAt:          Time!
-    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type ViewType implements Node {
@@ -11509,7 +11427,7 @@ type ViewType implements Node {
 
 type ColumnDef implements Node {
     id:                 ID!
-    viewTypeId:         String
+    type:               ViewType
     columnType:         ColumnType
     isFilterable:       Boolean
     isSortable:         Boolean
@@ -15175,21 +15093,6 @@ func (ec *executionContext) field_Query_serviceLineItem_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_tableViewDef_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Query_tableViewDefs_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -17192,8 +17095,8 @@ func (ec *executionContext) fieldContext_ColumnDef_id(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _ColumnDef_viewTypeId(ctx context.Context, field graphql.CollectedField, obj *model.ColumnDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ColumnDef_viewTypeId(ctx, field)
+func (ec *executionContext) _ColumnDef_type(ctx context.Context, field graphql.CollectedField, obj *model.ColumnDef) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ColumnDef_type(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -17206,7 +17109,7 @@ func (ec *executionContext) _ColumnDef_viewTypeId(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ViewTypeID, nil
+		return obj.Type, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -17215,19 +17118,31 @@ func (ec *executionContext) _ColumnDef_viewTypeId(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*model.ViewType)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOViewType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐViewType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ColumnDef_viewTypeId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ColumnDef_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ColumnDef",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ViewType_id(ctx, field)
+			case "name":
+				return ec.fieldContext_ViewType_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ViewType_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ViewType_updatedAt(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_ViewType_createdBy(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ViewType", field.Name)
 		},
 	}
 	return fc, nil
@@ -50236,372 +50151,6 @@ func (ec *executionContext) fieldContext_Mutation_workspace_Merge(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _NavigationDef_id(ctx context.Context, field graphql.CollectedField, obj *model.NavigationDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_NavigationDef_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_NavigationDef_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "NavigationDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _NavigationDef_tenantViewIds(ctx context.Context, field graphql.CollectedField, obj *model.NavigationDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_NavigationDef_tenantViewIds(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TenantViewIds, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*string)
-	fc.Result = res
-	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_NavigationDef_tenantViewIds(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "NavigationDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _NavigationDef_myViewIds(ctx context.Context, field graphql.CollectedField, obj *model.NavigationDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_NavigationDef_myViewIds(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.MyViewIds, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*string)
-	fc.Result = res
-	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_NavigationDef_myViewIds(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "NavigationDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _NavigationDef_icon(ctx context.Context, field graphql.CollectedField, obj *model.NavigationDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_NavigationDef_icon(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Icon, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_NavigationDef_icon(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "NavigationDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _NavigationDef_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.NavigationDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_NavigationDef_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_NavigationDef_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "NavigationDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _NavigationDef_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.NavigationDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_NavigationDef_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_NavigationDef_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "NavigationDef",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _NavigationDef_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.NavigationDef) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_NavigationDef_createdBy(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.NavigationDef().CreatedBy(rctx, obj)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, obj, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, obj, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.User`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_NavigationDef_createdBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "NavigationDef",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "firstName":
-				return ec.fieldContext_User_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_User_lastName(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "internal":
-				return ec.fieldContext_User_internal(ctx, field)
-			case "bot":
-				return ec.fieldContext_User_bot(ctx, field)
-			case "timezone":
-				return ec.fieldContext_User_timezone(ctx, field)
-			case "profilePhotoUrl":
-				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
-			case "player":
-				return ec.fieldContext_User_player(ctx, field)
-			case "roles":
-				return ec.fieldContext_User_roles(ctx, field)
-			case "emails":
-				return ec.fieldContext_User_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_User_phoneNumbers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_User_jobRoles(ctx, field)
-			case "calendars":
-				return ec.fieldContext_User_calendars(ctx, field)
-			case "source":
-				return ec.fieldContext_User_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_User_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_User_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Note_id(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Note_id(ctx, field)
 	if err != nil {
@@ -62063,96 +61612,6 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_tableViewDef(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_tableViewDef(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().TableViewDef(rctx, fc.Args["id"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.TableViewDef); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.TableViewDef`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.TableViewDef)
-	fc.Result = res
-	return ec.marshalOTableViewDef2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDef(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_tableViewDef(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_TableViewDef_id(ctx, field)
-			case "name":
-				return ec.fieldContext_TableViewDef_name(ctx, field)
-			case "order":
-				return ec.fieldContext_TableViewDef_order(ctx, field)
-			case "type":
-				return ec.fieldContext_TableViewDef_type(ctx, field)
-			case "columns":
-				return ec.fieldContext_TableViewDef_columns(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_TableViewDef_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_TableViewDef_updatedAt(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_TableViewDef_createdBy(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type TableViewDef", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_tableViewDef_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_tableViewDefs(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_tableViewDefs(ctx, field)
 	if err != nil {
@@ -62234,63 +61693,6 @@ func (ec *executionContext) fieldContext_Query_tableViewDefs(ctx context.Context
 	if fc.Args, err = ec.field_Query_tableViewDefs_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_navigationDef(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_navigationDef(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().NavigationDef(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.NavigationDef)
-	fc.Result = res
-	return ec.marshalONavigationDef2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNavigationDef(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_navigationDef(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_NavigationDef_id(ctx, field)
-			case "tenantViewIds":
-				return ec.fieldContext_NavigationDef_tenantViewIds(ctx, field)
-			case "myViewIds":
-				return ec.fieldContext_NavigationDef_myViewIds(ctx, field)
-			case "icon":
-				return ec.fieldContext_NavigationDef_icon(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_NavigationDef_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_NavigationDef_updatedAt(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_NavigationDef_createdBy(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type NavigationDef", field.Name)
-		},
 	}
 	return fc, nil
 }
@@ -64376,6 +63778,47 @@ func (ec *executionContext) fieldContext_TableViewDef_type(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _TableViewDef_icon(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDef) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TableViewDef_icon(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Icon, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TableViewDef_icon(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TableViewDef",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _TableViewDef_columns(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDef) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_TableViewDef_columns(ctx, field)
 	if err != nil {
@@ -64414,8 +63857,8 @@ func (ec *executionContext) fieldContext_TableViewDef_columns(ctx context.Contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ColumnDef_id(ctx, field)
-			case "viewTypeId":
-				return ec.fieldContext_ColumnDef_viewTypeId(ctx, field)
+			case "type":
+				return ec.fieldContext_ColumnDef_type(ctx, field)
 			case "columnType":
 				return ec.fieldContext_ColumnDef_columnType(ctx, field)
 			case "isFilterable":
@@ -64434,6 +63877,47 @@ func (ec *executionContext) fieldContext_TableViewDef_columns(ctx context.Contex
 				return ec.fieldContext_ColumnDef_createdBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ColumnDef", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TableViewDef_filters(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDef) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TableViewDef_filters(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Filters, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TableViewDef_filters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TableViewDef",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -64685,8 +64169,12 @@ func (ec *executionContext) fieldContext_TableViewDefPage_content(ctx context.Co
 				return ec.fieldContext_TableViewDef_order(ctx, field)
 			case "type":
 				return ec.fieldContext_TableViewDef_type(ctx, field)
+			case "icon":
+				return ec.fieldContext_TableViewDef_icon(ctx, field)
 			case "columns":
 				return ec.fieldContext_TableViewDef_columns(ctx, field)
+			case "filters":
+				return ec.fieldContext_TableViewDef_filters(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_TableViewDef_createdAt(ctx, field)
 			case "updatedAt":
@@ -73463,13 +72951,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._TableViewDef(ctx, sel, obj)
-	case model.NavigationDef:
-		return ec._NavigationDef(ctx, sel, &obj)
-	case *model.NavigationDef:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._NavigationDef(ctx, sel, obj)
 	case model.ViewType:
 		return ec._ViewType(ctx, sel, &obj)
 	case *model.ViewType:
@@ -74093,8 +73574,8 @@ func (ec *executionContext) _ColumnDef(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "viewTypeId":
-			out.Values[i] = ec._ColumnDef_viewTypeId(ctx, field, obj)
+		case "type":
+			out.Values[i] = ec._ColumnDef_type(ctx, field, obj)
 		case "columnType":
 			out.Values[i] = ec._ColumnDef_columnType(ctx, field, obj)
 		case "isFilterable":
@@ -80664,94 +80145,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
-var navigationDefImplementors = []string{"NavigationDef", "Node"}
-
-func (ec *executionContext) _NavigationDef(ctx context.Context, sel ast.SelectionSet, obj *model.NavigationDef) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, navigationDefImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("NavigationDef")
-		case "id":
-			out.Values[i] = ec._NavigationDef_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "tenantViewIds":
-			out.Values[i] = ec._NavigationDef_tenantViewIds(ctx, field, obj)
-		case "myViewIds":
-			out.Values[i] = ec._NavigationDef_myViewIds(ctx, field, obj)
-		case "icon":
-			out.Values[i] = ec._NavigationDef_icon(ctx, field, obj)
-		case "createdAt":
-			out.Values[i] = ec._NavigationDef_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "updatedAt":
-			out.Values[i] = ec._NavigationDef_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "createdBy":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._NavigationDef_createdBy(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
 var noteImplementors = []string{"Note", "TimelineEvent"}
 
 func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj *model.Note) graphql.Marshaler {
@@ -83799,25 +83192,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "tableViewDef":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_tableViewDef(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "tableViewDefs":
 			field := field
 
@@ -83831,25 +83205,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "navigationDef":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_navigationDef(ctx, field)
 				return res
 			}
 
@@ -84336,8 +83691,12 @@ func (ec *executionContext) _TableViewDef(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._TableViewDef_order(ctx, field, obj)
 		case "type":
 			out.Values[i] = ec._TableViewDef_type(ctx, field, obj)
+		case "icon":
+			out.Values[i] = ec._TableViewDef_icon(ctx, field, obj)
 		case "columns":
 			out.Values[i] = ec._TableViewDef_columns(ctx, field, obj)
+		case "filters":
+			out.Values[i] = ec._TableViewDef_filters(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._TableViewDef_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -90159,13 +89518,6 @@ func (ec *executionContext) marshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑa
 	return v
 }
 
-func (ec *executionContext) marshalONavigationDef2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNavigationDef(ctx context.Context, sel ast.SelectionSet, v *model.NavigationDef) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._NavigationDef(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteInput(ctx context.Context, v interface{}) (*model.NoteInput, error) {
 	if v == nil {
 		return nil, nil
@@ -90485,13 +89837,6 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
-}
-
-func (ec *executionContext) marshalOTableViewDef2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDef(ctx context.Context, sel ast.SelectionSet, v *model.TableViewDef) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._TableViewDef(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {

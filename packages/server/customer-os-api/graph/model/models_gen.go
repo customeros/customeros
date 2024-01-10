@@ -161,7 +161,7 @@ type Calendar struct {
 
 type ColumnDef struct {
 	ID            string      `json:"id"`
-	ViewTypeID    *string     `json:"viewTypeId,omitempty"`
+	Type          *ViewType   `json:"type,omitempty"`
 	ColumnType    *ColumnType `json:"columnType,omitempty"`
 	IsFilterable  *bool       `json:"isFilterable,omitempty"`
 	IsSortable    *bool       `json:"isSortable,omitempty"`
@@ -1321,19 +1321,6 @@ func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
 type Mutation struct {
 }
 
-type NavigationDef struct {
-	ID            string    `json:"id"`
-	TenantViewIds []*string `json:"tenantViewIds,omitempty"`
-	MyViewIds     []*string `json:"myViewIds,omitempty"`
-	Icon          *string   `json:"icon,omitempty"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
-	CreatedBy     *User     `json:"createdBy,omitempty"`
-}
-
-func (NavigationDef) IsNode()            {}
-func (this NavigationDef) GetID() string { return this.ID }
-
 type Note struct {
 	ID            string        `json:"id"`
 	Content       *string       `json:"content,omitempty"`
@@ -1845,7 +1832,9 @@ type TableViewDef struct {
 	Name      string       `json:"name"`
 	Order     *int         `json:"order,omitempty"`
 	Type      *ViewType    `json:"type,omitempty"`
+	Icon      *string      `json:"icon,omitempty"`
 	Columns   []*ColumnDef `json:"columns,omitempty"`
+	Filters   []*string    `json:"filters,omitempty"`
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 	CreatedBy *User        `json:"createdBy,omitempty"`
