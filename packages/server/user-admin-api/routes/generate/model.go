@@ -19,7 +19,7 @@ type SourceData struct {
 		Id                    string `json:"id"`
 		Name                  string `json:"name"`
 		Domain                string `json:"domain"`
-		OnboardingStatusInput struct {
+		OnboardingStatusInput []struct {
 			Status   string `json:"status"`
 			Comments string `json:"comments"`
 		} `json:"onboardingStatusInput"`

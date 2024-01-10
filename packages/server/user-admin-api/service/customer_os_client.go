@@ -784,7 +784,7 @@ func (s *customerOsClient) CreateLogEntry(tenant, username string, organizationI
 	graphqlRequest.Var("contentType", contentType)
 	graphqlRequest.Var("startedAt", startedAt)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &author)
 
 	if err != nil {
 		return nil, fmt.Errorf("error while adding headers to graph request: %w", err)

@@ -247,10 +247,32 @@
       "id": "",
       "name": "Acme",
       "domain": "acme.com",
-      "onboardingStatusInput": {
-        "status": "LATE",
-        "comments": "There must be a reason for status change - embrace the change"
-      },
+      "onboardingStatusInput": [
+        {
+          "status": "NOT_STARTED",
+          "comments": "This is the comment for status change to NOT_STARTED"
+        },
+        {
+          "status": "LATE",
+          "comments": "This is the comment for status change to LATE"
+        },
+        {
+          "status": "ON_TRACK",
+          "comments": "This is the comment for status change to ON_TRACK"
+        },
+        {
+          "status": "STUCK",
+          "comments": "This is the comment for status change to STUCK"
+        },
+        {
+          "status": "DONE",
+          "comments": "This is the comment for status change to DONE"
+        },
+        {
+          "status": "SUCCESSFUL",
+          "comments": "This is the comment for status change to SUCCESSFUL"
+        }
+      ],
       "people": [
         {
           "email": "daniel.kim@acme.com"
