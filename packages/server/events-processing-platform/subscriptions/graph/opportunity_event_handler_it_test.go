@@ -111,7 +111,7 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, opportunityData.Amount, opportunity.Amount)
 	require.Equal(t, string(opportunityData.InternalType.StringEnumValue()), opportunity.InternalType)
 	require.Equal(t, opportunityData.ExternalType, opportunity.ExternalType)
-	require.Equal(t, string(opportunityData.InternalStage.StringValue()), opportunity.InternalStage)
+	require.Equal(t, string(opportunityData.InternalStage.StringEnumValue()), opportunity.InternalStage)
 	require.Equal(t, opportunityData.ExternalStage, opportunity.ExternalStage)
 	require.Equal(t, opportunityData.GeneralNotes, opportunity.GeneralNotes)
 	require.Equal(t, opportunityData.NextSteps, opportunity.NextSteps)
@@ -157,7 +157,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	createEvent, err := event.NewOpportunityCreateRenewalEvent(
 		opportunityAggregate,
 		contractId,
-		string(model.RenewalLikelihoodStringLow),
+		neo4jenum.RenewalLikelihoodLow.String(),
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatform,
@@ -192,9 +192,9 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	require.Equal(t, "", opportunity.Name)
 	require.Equal(t, "", opportunity.ExternalType)
 	require.Equal(t, "", opportunity.ExternalStage)
-	require.Equal(t, string(model.OpportunityInternalTypeStringRenewal), opportunity.InternalType)
-	require.Equal(t, string(model.OpportunityInternalStageStringOpen), opportunity.InternalStage)
-	require.Equal(t, string(model.RenewalLikelihoodStringLow), opportunity.RenewalDetails.RenewalLikelihood)
+	require.Equal(t, neo4jenum.OpportunityInternalTypeRenewal.String(), opportunity.InternalType)
+	require.Equal(t, neo4jenum.OpportunityInternalStageOpen.String(), opportunity.InternalStage)
+	require.Equal(t, neo4jenum.RenewalLikelihoodLow.String(), opportunity.RenewalDetails.RenewalLikelihood)
 
 	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
 }
@@ -206,7 +206,7 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalStage: string(model.OpportunityInternalStageStringOpen),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 	})
 	updatedAt := utils.Now()
 	renewedAt := updatedAt.AddDate(0, 6, 0) // 6 months later
@@ -353,7 +353,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		Name:         "test opportunity",
 		Amount:       10000,
-		InternalType: string(model.OpportunityInternalTypeStringRenewal),
+		InternalType: neo4jenum.OpportunityInternalTypeRenewal.String(),
 		RenewalDetails: entity.RenewalDetails{
 			RenewalLikelihood: "HIGH",
 		},
@@ -445,7 +445,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 		Name:         "test opportunity",
 		Amount:       10000,
 		Comments:     "no comments",
-		InternalType: string(model.OpportunityInternalTypeStringRenewal),
+		InternalType: string(neo4jenum.OpportunityInternalTypeRenewal),
 		RenewalDetails: entity.RenewalDetails{
 			RenewalLikelihood:      "HIGH",
 			RenewalUpdatedByUserId: "orig-user",
@@ -509,8 +509,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		Amount:        10000,
-		InternalType:  string(model.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(model.OpportunityInternalStageStringOpen),
+		InternalType:  string(neo4jenum.OpportunityInternalTypeRenewal),
+		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
 		RenewalDetails: entity.RenewalDetails{
 			RenewalLikelihood:      "HIGH",
 			RenewalUpdatedByUserId: "orig-user",
@@ -607,7 +607,7 @@ func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalStage: string(model.OpportunityInternalStageStringOpen),
+		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
 	})
 	now := utils.Now()
 
@@ -634,7 +634,7 @@ func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, now, *opportunity.ClosedAt)
-	require.Equal(t, string(model.OpportunityInternalStageStringClosedWon), opportunity.InternalStage)
+	require.Equal(t, string(neo4jenum.OpportunityInternalStageClosedWon), opportunity.InternalStage)
 }
 
 func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
@@ -644,7 +644,7 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 	// Prepare test data in Neo4j
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalStage: string(model.OpportunityInternalStageStringOpen),
+		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
 	})
 	now := utils.Now()
 
@@ -671,7 +671,7 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, now, *opportunity.ClosedAt)
-	require.Equal(t, string(model.OpportunityInternalStageStringClosedLost), opportunity.InternalStage)
+	require.Equal(t, string(neo4jenum.OpportunityInternalStageClosedLost), opportunity.InternalStage)
 }
 
 func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
@@ -775,7 +775,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	require.Equal(t, opportunityData.Amount, opportunity.Amount)
 	require.Equal(t, string(opportunityData.InternalType.StringEnumValue()), opportunity.InternalType)
 	require.Equal(t, opportunityData.ExternalType, opportunity.ExternalType)
-	require.Equal(t, string(opportunityData.InternalStage.StringValue()), opportunity.InternalStage)
+	require.Equal(t, string(opportunityData.InternalStage.StringEnumValue()), opportunity.InternalStage)
 	require.Equal(t, opportunityData.ExternalStage, opportunity.ExternalStage)
 	require.Equal(t, opportunityData.GeneralNotes, opportunity.GeneralNotes)
 	require.Equal(t, opportunityData.NextSteps, opportunity.NextSteps)
