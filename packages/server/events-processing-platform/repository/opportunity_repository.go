@@ -15,7 +15,6 @@ import (
 )
 
 type OpportunityRepository interface {
-	CreateForOrganization(ctx context.Context, tenant, opportunityId string, evt event.OpportunityCreateEvent) error
 	Update(ctx context.Context, tenant, opportunityId string, evt event.OpportunityUpdateEvent) error
 	ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error
 
@@ -37,61 +36,6 @@ func NewOpportunityRepository(driver *neo4j.DriverWithContext, database string) 
 		driver:   driver,
 		database: database,
 	}
-}
-
-func (r *opportunityRepository) CreateForOrganization(ctx context.Context, tenant, opportunityId string, evt event.OpportunityCreateEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.CreateForOrganization")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("opportunityId", opportunityId), log.Object("event", evt))
-
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId})
-							MERGE (t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity {id:$opportunityId})<-[:HAS_OPPORTUNITY]-(org)
-							ON CREATE SET 
-								op:Opportunity_%s,
-								op.createdAt=$createdAt,
-								op.updatedAt=$updatedAt,
-								op.source=$source,
-								op.sourceOfTruth=$sourceOfTruth,
-								op.appSource=$appSource,
-								op.name=$name,
-								op.amount=$amount,
-								op.internalType=$internalType,
-								op.externalType=$externalType,
-								op.internalStage=$internalStage,
-								op.externalStage=$externalStage,
-								op.estimatedClosedAt=$estimatedClosedAt,
-								op.generalNotes=$generalNotes,
-								op.nextSteps=$nextSteps
-							WITH op, t
-							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
-							WHERE $createdByUserId <> ""
-							FOREACH (ignore IN CASE WHEN u IS NOT NULL THEN [1] ELSE [] END |
-    							MERGE (op)-[:CREATED_BY]->(u))
-							`, tenant)
-	params := map[string]any{
-		"tenant":            tenant,
-		"opportunityId":     opportunityId,
-		"orgId":             evt.OrganizationId,
-		"createdAt":         evt.CreatedAt,
-		"updatedAt":         evt.UpdatedAt,
-		"source":            helper.GetSource(evt.Source.Source),
-		"sourceOfTruth":     helper.GetSourceOfTruth(evt.Source.Source),
-		"appSource":         helper.GetAppSource(evt.Source.AppSource),
-		"name":              evt.Name,
-		"amount":            evt.Amount,
-		"internalType":      evt.InternalType,
-		"externalType":      evt.ExternalType,
-		"internalStage":     evt.InternalStage,
-		"externalStage":     evt.ExternalStage,
-		"estimatedClosedAt": utils.TimePtrFirstNonNilNillableAsAny(evt.EstimatedClosedAt),
-		"generalNotes":      evt.GeneralNotes,
-		"nextSteps":         evt.NextSteps,
-		"createdByUserId":   evt.CreatedByUserId,
-	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
-
-	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 }
 
 func (r *opportunityRepository) CreateRenewal(ctx context.Context, tenant, opportunityId string, evt event.OpportunityCreateRenewalEvent) error {

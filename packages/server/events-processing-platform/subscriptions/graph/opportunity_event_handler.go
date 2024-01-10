@@ -7,12 +7,14 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/contract"
@@ -55,7 +57,27 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.OpportunityRepository.CreateForOrganization(ctx, eventData.Tenant, opportunityId, eventData)
+	data := neo4jrepository.OpportunityCreateFields{
+		OrganizationId: eventData.OrganizationId,
+		CreatedAt:      eventData.CreatedAt,
+		UpdatedAt:      eventData.UpdatedAt,
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSource(eventData.Source.Source),
+			SourceOfTruth: helper.GetSource(eventData.Source.Source),
+			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
+		},
+		Name:              eventData.Name,
+		Amount:            eventData.Amount,
+		InternalType:      eventData.InternalType,
+		ExternalType:      eventData.ExternalType,
+		InternalStage:     eventData.InternalStage,
+		ExternalStage:     eventData.ExternalStage,
+		EstimatedClosedAt: eventData.EstimatedClosedAt,
+		GeneralNotes:      eventData.GeneralNotes,
+		NextSteps:         eventData.NextSteps,
+		CreatedByUserId:   eventData.CreatedByUserId,
+	}
+	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CreateForOrganization(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving opportunity %s: %s", opportunityId, err.Error())
