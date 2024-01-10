@@ -145,15 +145,17 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 					})
 					return
 				}
-				if organization.OnboardingStatusInput.Status != "" {
-					organizationOnboardingStatus := cosModel.OrganizationUpdateOnboardingStatus{
-						OrganizationId: organizationId,
-						Status:         organization.OnboardingStatusInput.Status,
-						Comments:       organization.OnboardingStatusInput.Comments,
-					}
-					_, err := services.CustomerOsClient.UpdateOrganizationOnboardingStatus(tenant, username, organizationOnboardingStatus)
-					if err != nil {
-						return
+				for _, onboardingStatusInput := range organization.OnboardingStatusInput {
+					if onboardingStatusInput.Status != "" {
+						organizationOnboardingStatus := cosModel.OrganizationUpdateOnboardingStatus{
+							OrganizationId: organizationId,
+							Status:         onboardingStatusInput.Status,
+							Comments:       onboardingStatusInput.Comments,
+						}
+						_, err := services.CustomerOsClient.UpdateOrganizationOnboardingStatus(tenant, username, organizationOnboardingStatus)
+						if err != nil {
+							return
+						}
 					}
 				}
 			}
