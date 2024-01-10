@@ -21,9 +21,13 @@ ENV NEXT_PUBLIC_NOTIFICATION_PROD_APP_IDENTIFIER ${NEXT_PUBLIC_NOTIFICATION_PROD
 ARG NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER
 ENV NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER ${NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER}
 
+RUN test -e /app/.env && echo "Found .env file" || (>&2 echo -e "\e[93mWARNING: Before setting the variables: Missing .env file in the working directory: app\e[0m")
+RUN test -e /.env && echo "Found .env file" || (>&2 echo -e "\e[93mWARNING: Before setting the variables: Missing .env file in the root\e[0m")
 RUN echo "NEXT_PUBLIC_NOTIFICATION_URL=${NEXT_PUBLIC_NOTIFICATION_URL}" >> .env
 RUN echo "NEXT_PUBLIC_NOTIFICATION_PROD_APP_IDENTIFIER=${NEXT_PUBLIC_NOTIFICATION_PROD_APP_IDENTIFIER}" >> .env
 RUN echo "NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER=${NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER}" >> .env
+RUN test -e /app/.env && echo "Found .env file" || (>&2 echo -e "\e[93mWARNING: After setting the variables: Missing .env file in the working directory: app\e[0m")
+RUN test -e /.env && echo "Found .env file" || (>&2 echo -e "\e[93mWARNING: After setting the variables: Missing .env file in the root\e[0m")
 
 RUN yarn install --frozen-lockfile
 
