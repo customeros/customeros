@@ -3,10 +3,10 @@ package contract
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
-	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	servicelineitemmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
@@ -71,8 +71,8 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract(t *test
 		RenewalCycle:     string(model.MonthlyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
@@ -114,8 +114,8 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 		RenewalCycle:     string(model.QuarterlyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
@@ -158,8 +158,8 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testi
 		RenewalCycle:     string(model.AnnuallyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
@@ -203,8 +203,8 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *
 		RenewalPeriods:   utils.Int64Ptr(10),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
@@ -265,10 +265,10 @@ func TestContractEventHandler_UpdateRenewalArrForecast_OnlyOnceBilled(t *testing
 		RenewalCycle:     string(model.AnnuallyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalDetails: entity.RenewalDetails{
-			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringHigh),
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh.String(),
 		},
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
@@ -321,10 +321,10 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MultipleServices(t *testi
 		RenewalCycle:     string(model.MonthlyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalDetails: entity.RenewalDetails{
-			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringHigh),
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh.String(),
 		},
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
@@ -389,10 +389,10 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MediumLikelihood(t *testi
 		RenewalCycle:     string(model.MonthlyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalDetails: entity.RenewalDetails{
-			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringMedium),
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium.String(),
 		},
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
@@ -450,10 +450,10 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsBeforeNextRen
 		EndedAt:          utils.TimePtr(in5Minutes),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalDetails: entity.RenewalDetails{
-			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringMedium),
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium.String(),
 			RenewedAt:         utils.TimePtr(in10Minutes),
 		},
 	})
@@ -512,10 +512,10 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsIn6Months_Pro
 		EndedAt:          utils.TimePtr(in6Months),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalDetails: entity.RenewalDetails{
-			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringHigh),
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh.String(),
 			RenewedAt:         utils.TimePtr(in1Month),
 		},
 	})
@@ -574,10 +574,10 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsInMoreThan12M
 		EndedAt:          utils.TimePtr(in13Months),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalDetails: entity.RenewalDetails{
-			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringHigh),
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh.String(),
 			RenewedAt:         utils.TimePtr(in12Months),
 		},
 	})
@@ -633,10 +633,10 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 		RenewalCycle: string(model.AnnuallyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalDetails: entity.RenewalDetails{
-			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringLow),
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodLow.String(),
 			RenewedAt:         &afterTomorrow,
 		},
 	})
@@ -683,10 +683,10 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 		RenewalCycle: string(model.AnnuallyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalDetails: entity.RenewalDetails{
-			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringZero),
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodZero.String(),
 			RenewedAt:         &afterTomorrow,
 		},
 	})
@@ -711,10 +711,10 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 		RenewalCycle: string(model.AnnuallyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalDetails: entity.RenewalDetails{
-			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringZero),
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodZero.String(),
 			RenewedAt:         &afterTomorrow,
 		},
 	})
@@ -759,10 +759,10 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 		RenewalCycle: string(model.AnnuallyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalDetails: entity.RenewalDetails{
-			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringHigh),
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh.String(),
 			RenewedAt:         &afterTomorrow,
 		},
 	})

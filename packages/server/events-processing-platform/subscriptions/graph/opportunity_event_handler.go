@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -85,7 +86,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	}
 
 	if eventData.OwnerUserId != "" {
-		err = h.repositories.OpportunityRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
+		err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
@@ -125,7 +126,20 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.OpportunityRepository.CreateRenewal(ctx, eventData.Tenant, opportunityId, eventData)
+	data := neo4jrepository.RenewalOpportunityCreateFields{
+		ContractId: eventData.ContractId,
+		CreatedAt:  eventData.CreatedAt,
+		UpdatedAt:  eventData.UpdatedAt,
+		SourceFields: neo4jmodel.Source{
+			Source:        helper.GetSource(eventData.Source.Source),
+			SourceOfTruth: helper.GetSource(eventData.Source.Source),
+			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
+		},
+		InternalType:      eventData.InternalType,
+		InternalStage:     eventData.InternalStage,
+		RenewalLikelihood: eventData.RenewalLikelihood,
+	}
+	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CreateRenewal(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while saving renewal opportunity %s: %s", opportunityId, err.Error())
@@ -157,7 +171,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.OpportunityRepository.UpdateNextCycleDate(ctx, eventData.Tenant, opportunityId, eventData)
+	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateNextCycleDate(ctx, eventData.Tenant, opportunityId, eventData.UpdatedAt, eventData.RenewedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating next cycle date for opportunity %s: %s", opportunityId, err.Error())
@@ -230,7 +244,17 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	amountChanged := ((opportunity.Amount != eventData.Amount) && eventData.UpdateAmount()) ||
 		((opportunity.MaxAmount != eventData.MaxAmount) && eventData.UpdateMaxAmount())
 
-	err = h.repositories.OpportunityRepository.Update(ctx, eventData.Tenant, opportunityId, eventData)
+	data := neo4jrepository.OpportunityUpdateFields{
+		UpdatedAt:       eventData.UpdatedAt,
+		Source:          eventData.Source,
+		Name:            eventData.Name,
+		Amount:          eventData.Amount,
+		MaxAmount:       eventData.MaxAmount,
+		UpdateName:      eventData.UpdateName(),
+		UpdateAmount:    eventData.UpdateAmount(),
+		UpdateMaxAmount: eventData.UpdateMaxAmount(),
+	}
+	err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.Update(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving opportunity %s: %s", opportunityId, err.Error())
@@ -305,14 +329,26 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 	likelihoodChanged := eventData.UpdateRenewalLikelihood() && opportunity.RenewalDetails.RenewalLikelihood != eventData.RenewalLikelihood
 	setUpdatedByUserId := (amountChanged || likelihoodChanged) && eventData.UpdatedByUserId != ""
 	if eventData.OwnerUserId != "" {
-		err = h.repositories.OpportunityRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
+		err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
 			return err
 		}
 	}
-	err = h.repositories.OpportunityRepository.UpdateRenewal(ctx, eventData.Tenant, opportunityId, eventData, setUpdatedByUserId)
+	data := neo4jrepository.RenewalOpportunityUpdateFields{
+		UpdatedAt:               eventData.UpdatedAt,
+		Source:                  helper.GetSource(eventData.Source),
+		UpdatedByUserId:         eventData.UpdatedByUserId,
+		SetUpdatedByUserId:      setUpdatedByUserId,
+		Comments:                eventData.Comments,
+		Amount:                  eventData.Amount,
+		RenewalLikelihood:       eventData.RenewalLikelihood,
+		UpdateComments:          eventData.UpdateComments(),
+		UpdateAmount:            eventData.UpdateAmount(),
+		UpdateRenewalLikelihood: eventData.UpdateRenewalLikelihood(),
+	}
+	err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateRenewal(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving opportunity %s: %s", opportunityId, err.Error())
@@ -401,7 +437,7 @@ func (h *OpportunityEventHandler) OnCloseWin(ctx context.Context, evt eventstore
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.OpportunityRepository.CloseWin(ctx, eventData.Tenant, opportunityId, eventData)
+	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CloseWin(ctx, eventData.Tenant, opportunityId, eventData.UpdatedAt, eventData.ClosedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())
@@ -423,7 +459,7 @@ func (h *OpportunityEventHandler) OnCloseLoose(ctx context.Context, evt eventsto
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.OpportunityRepository.CloseLoose(ctx, eventData.Tenant, opportunityId, eventData)
+	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CloseLoose(ctx, eventData.Tenant, opportunityId, eventData.UpdatedAt, eventData.ClosedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())
@@ -460,6 +496,6 @@ func (h *OpportunityEventHandler) saveLikelihoodChangeAction(ctx context.Context
 	extraActionProperties := map[string]interface{}{
 		"comments": eventData.Comments,
 	}
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, neo4jentity.CONTRACT, neo4jentity.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt, extraActionProperties)
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt, extraActionProperties)
 	return err
 }

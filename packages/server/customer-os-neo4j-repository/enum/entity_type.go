@@ -1,4 +1,6 @@
-package entity
+package enum
+
+import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 
 type EntityType string
 
@@ -17,15 +19,15 @@ func (entityType EntityType) String() string {
 func (entityType EntityType) Neo4jLabel() string {
 	switch entityType {
 	case CONTACT:
-		return NodeLabelContact
+		return entity.NodeLabelContact
 	case USER:
-		return NodeLabelUser
+		return entity.NodeLabelUser
 	case ORGANIZATION:
-		return NodeLabelOrganization
+		return entity.NodeLabelOrganization
 	case MEETING:
-		return NodeLabelMeeting
+		return entity.NodeLabelMeeting
 	case CONTRACT:
-		return NodeLabelContract
+		return entity.NodeLabelContract
 	}
 	return "Unknown"
 }

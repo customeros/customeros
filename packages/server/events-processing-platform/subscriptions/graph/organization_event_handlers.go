@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -16,7 +17,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
@@ -119,7 +119,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	}
 
 	// Set create action
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, eventData.Tenant, organizationId, neo4jentity.ORGANIZATION, neo4jentity.ActionCreated, "", "", eventData.CreatedAt)
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, eventData.Tenant, organizationId, neo4jenum.ORGANIZATION, neo4jenum.ActionCreated, "", "", eventData.CreatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating likelihood update action for organization %s: %s", organizationId, err.Error())
@@ -416,7 +416,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 	}
 
 	if lastTouchpointAt == nil {
-		timelineEventNode, err = h.repositories.Neo4jRepositories.ActionReadRepository.GetSingleAction(ctx, eventData.Tenant, organizationId, neo4jentity.ORGANIZATION, neo4jentity.ActionCreated)
+		timelineEventNode, err = h.repositories.Neo4jRepositories.ActionReadRepository.GetSingleAction(ctx, eventData.Tenant, organizationId, neo4jenum.ORGANIZATION, neo4jenum.ActionCreated)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to get created action: %v", err.Error())
@@ -474,7 +474,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 		timelineEventType = "MEETING"
 	case neo4jentity.NodeLabelAction:
 		timelineEventAction := timelineEvent.(*entity.ActionEntity)
-		if timelineEventAction.Type == neo4jentity.ActionCreated {
+		if timelineEventAction.Type == neo4jenum.ActionCreated {
 			timelineEventType = "ACTION_CREATED"
 		} else {
 			timelineEventType = "ACTION"
@@ -579,13 +579,13 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummary(ctx context.Context, 
 
 func getOrderForRenewalLikelihood(likelihood string) int64 {
 	switch likelihood {
-	case string(opportunitymodel.RenewalLikelihoodStringHigh):
+	case string(neo4jenum.RenewalLikelihoodHigh):
 		return constants.RenewalLikelihood_Order_High
-	case string(opportunitymodel.RenewalLikelihoodStringMedium):
+	case string(neo4jenum.RenewalLikelihoodMedium):
 		return constants.RenewalLikelihood_Order_Medium
-	case string(opportunitymodel.RenewalLikelihoodStringLow):
+	case string(neo4jenum.RenewalLikelihoodLow):
 		return constants.RenewalLikelihood_Order_Low
-	case string(opportunitymodel.RenewalLikelihoodStringZero):
+	case string(neo4jenum.RenewalLikelihoodZero):
 		return constants.RenewalLikelihood_Order_Zero
 	default:
 		return 0
@@ -778,25 +778,25 @@ func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.
 		"status":   eventData.Status,
 		"comments": eventData.Comments,
 	}
-	_, err := h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, neo4jentity.ORGANIZATION, neo4jentity.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, extraActionProperties)
+	_, err := h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, neo4jenum.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, extraActionProperties)
 	return err
 }
 
 func onboardingStatusReadableStringForActionMessage(status string) string {
 	switch status {
-	case string(neo4jentity.OnboardingStatusNotApplicable):
+	case string(neo4jenum.OnboardingStatusNotApplicable):
 		return "Not applicable"
-	case string(neo4jentity.OnboardingStatusNotStarted):
+	case string(neo4jenum.OnboardingStatusNotStarted):
 		return "Not started"
-	case string(neo4jentity.OnboardingStatusOnTrack):
+	case string(neo4jenum.OnboardingStatusOnTrack):
 		return "On track"
-	case string(neo4jentity.OnboardingStatusLate):
+	case string(neo4jenum.OnboardingStatusLate):
 		return "Late"
-	case string(neo4jentity.OnboardingStatusStuck):
+	case string(neo4jenum.OnboardingStatusStuck):
 		return "Stuck"
-	case string(neo4jentity.OnboardingStatusDone):
+	case string(neo4jenum.OnboardingStatusDone):
 		return "Done"
-	case string(neo4jentity.OnboardingStatusSuccessful):
+	case string(neo4jenum.OnboardingStatusSuccessful):
 		return "Successful"
 	default:
 		return status

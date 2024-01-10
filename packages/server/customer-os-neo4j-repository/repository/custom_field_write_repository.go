@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -48,8 +48,8 @@ func (r *customFieldWriteRepository) AddCustomFieldToOrganization(ctx context.Co
 	span.LogFields(log.String("organizationId", organizationId))
 	tracing.LogObjectAsJson(span, "data", data)
 
-	nodeLabel := entity.NodeLabelForCustomFieldDataType(data.CustomFieldDataType)
-	propertyName := entity.PropertyNameForCustomFieldDataType(data.CustomFieldDataType)
+	nodeLabel := enum.NodeLabelForCustomFieldDataType(data.CustomFieldDataType)
+	propertyName := enum.PropertyNameForCustomFieldDataType(data.CustomFieldDataType)
 
 	cypher := fmt.Sprintf(`
 		MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})

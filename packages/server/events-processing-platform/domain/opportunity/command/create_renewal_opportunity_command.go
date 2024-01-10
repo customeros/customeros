@@ -1,8 +1,8 @@
 package command
 
 import (
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"time"
 )
@@ -11,12 +11,12 @@ type CreateRenewalOpportunityCommand struct {
 	eventstore.BaseCommand
 	Source            commonmodel.Source
 	ContractId        string
-	RenewalLikelihood model.RenewalLikelihoodString
+	RenewalLikelihood neo4jenum.RenewalLikelihood
 	CreatedAt         *time.Time
 	UpdatedAt         *time.Time
 }
 
-func NewCreateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, contractId string, renewalLikelihood model.RenewalLikelihoodString, source commonmodel.Source, createdAt, updatedAt *time.Time) *CreateRenewalOpportunityCommand {
+func NewCreateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, contractId string, renewalLikelihood neo4jenum.RenewalLikelihood, source commonmodel.Source, createdAt, updatedAt *time.Time) *CreateRenewalOpportunityCommand {
 	return &CreateRenewalOpportunityCommand{
 		BaseCommand:       eventstore.NewBaseCommand(opportunityId, tenant, loggedInUserId),
 		Source:            source,

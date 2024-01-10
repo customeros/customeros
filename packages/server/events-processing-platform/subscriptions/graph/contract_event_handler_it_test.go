@@ -5,13 +5,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
-	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
@@ -235,8 +235,8 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 		RenewalCycle: string(model.MonthlyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
@@ -295,8 +295,8 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 		RenewalCycle: string(model.MonthlyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
@@ -356,8 +356,8 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 		RenewalCycle: string(model.MonthlyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
@@ -439,8 +439,8 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 		ServiceStartedAt: &yesterday,
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
@@ -514,11 +514,11 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 		RenewalCycle: string(model.MonthlyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
+		InternalStage: neo4jenum.OpportunityInternalStageOpen.String(),
 		RenewalDetails: entity.RenewalDetails{
 			RenewedAt:         utils.Ptr(utils.Now().AddDate(0, 0, 20)),
-			RenewalLikelihood: string(opportunitymodel.RenewalLikelihoodStringHigh),
+			RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh.String(),
 		},
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
@@ -762,7 +762,7 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
-	require.Equal(t, neo4jentity.ActionContractStatusUpdated, action.Type)
+	require.Equal(t, neo4jenum.ActionContractStatusUpdated, action.Type)
 	require.Equal(t, "test contract has ended", action.Content)
 	require.Equal(t, `{"status":"ENDED","contract-name":"test contract","comment":"test contract is now ENDED"}`, action.Metadata)
 }
@@ -839,7 +839,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
-	require.Equal(t, neo4jentity.ActionContractStatusUpdated, action.Type)
+	require.Equal(t, neo4jenum.ActionContractStatusUpdated, action.Type)
 	require.Equal(t, "test contract is now live", action.Content)
 	require.Equal(t, `{"status":"LIVE","contract-name":"test contract","comment":"test contract is now LIVE"}`, action.Metadata)
 }

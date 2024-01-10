@@ -2,6 +2,7 @@ package graph_db
 
 import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -15,7 +16,7 @@ func MapDbNodeToActionEntity(node dbtype.Node) *entity.ActionEntity {
 	props := utils.GetPropsFromNode(node)
 	action := entity.ActionEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Type:          neo4jentity.GetActionType(utils.GetStringPropOrEmpty(props, "type")),
+		Type:          neo4jenum.GetActionType(utils.GetStringPropOrEmpty(props, "type")),
 		Content:       utils.GetStringPropOrEmpty(props, "content"),
 		Metadata:      utils.GetStringPropOrEmpty(props, "metadata"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),

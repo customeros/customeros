@@ -3,9 +3,9 @@ package contract
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
-	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	servicelineitemmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -114,18 +114,18 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
 	opportunityEntity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 
-	var renewalLikelihood opportunitymodel.RenewalLikelihoodString
+	var renewalLikelihood neo4jenum.RenewalLikelihood
 	if contractEntity.EndedAt != nil &&
-		opportunityEntity.RenewalDetails.RenewalLikelihood != string(opportunitymodel.RenewalLikelihoodStringZero) &&
+		opportunityEntity.RenewalDetails.RenewalLikelihood != string(neo4jenum.RenewalLikelihoodZero) &&
 		opportunityEntity.RenewalDetails.RenewedAt != nil &&
 		contractEntity.EndedAt.Before(*opportunityEntity.RenewalDetails.RenewedAt) {
 		// check if likelihood should be set to Zero
-		renewalLikelihood = opportunitymodel.RenewalLikelihoodStringZero
-	} else if opportunityEntity.RenewalDetails.RenewalLikelihood == string(opportunitymodel.RenewalLikelihoodStringZero) &&
+		renewalLikelihood = neo4jenum.RenewalLikelihoodZero
+	} else if opportunityEntity.RenewalDetails.RenewalLikelihood == string(neo4jenum.RenewalLikelihoodZero) &&
 		opportunityEntity.RenewalDetails.RenewedAt != nil &&
 		(contractEntity.EndedAt == nil || contractEntity.EndedAt.After(*opportunityEntity.RenewalDetails.RenewedAt)) {
 		// check if likelihood should be set to Medium
-		renewalLikelihood = opportunitymodel.RenewalLikelihoodStringMedium
+		renewalLikelihood = neo4jenum.RenewalLikelihoodMedium
 	}
 
 	if renewalLikelihood != "" {
@@ -326,14 +326,14 @@ func prorateArr(arr float64, monthsRemaining int) float64 {
 
 func (h *contractHandler) calculateCurrentArrByLikelihood(amount float64, likelihood string) float64 {
 	var likelihoodFactor float64
-	switch opportunitymodel.RenewalLikelihoodString(likelihood) {
-	case opportunitymodel.RenewalLikelihoodStringHigh:
+	switch neo4jenum.RenewalLikelihood(likelihood) {
+	case neo4jenum.RenewalLikelihoodHigh:
 		likelihoodFactor = 1
-	case opportunitymodel.RenewalLikelihoodStringMedium:
+	case neo4jenum.RenewalLikelihoodMedium:
 		likelihoodFactor = 0.5
-	case opportunitymodel.RenewalLikelihoodStringLow:
+	case neo4jenum.RenewalLikelihoodLow:
 		likelihoodFactor = 0.25
-	case opportunitymodel.RenewalLikelihoodStringZero:
+	case neo4jenum.RenewalLikelihoodZero:
 		likelihoodFactor = 0
 	default:
 		likelihoodFactor = 1
@@ -394,15 +394,15 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 	return contract, currentRenewalOpportunity, false
 }
 
-func renewalLikelihoodForGrpcRequest(renewalLikelihood opportunitymodel.RenewalLikelihoodString) opportunitypb.RenewalLikelihood {
+func renewalLikelihoodForGrpcRequest(renewalLikelihood neo4jenum.RenewalLikelihood) opportunitypb.RenewalLikelihood {
 	switch renewalLikelihood {
-	case opportunitymodel.RenewalLikelihoodStringHigh:
+	case neo4jenum.RenewalLikelihoodHigh:
 		return opportunitypb.RenewalLikelihood_HIGH_RENEWAL
-	case opportunitymodel.RenewalLikelihoodStringMedium:
+	case neo4jenum.RenewalLikelihoodMedium:
 		return opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL
-	case opportunitymodel.RenewalLikelihoodStringLow:
+	case neo4jenum.RenewalLikelihoodLow:
 		return opportunitypb.RenewalLikelihood_LOW_RENEWAL
-	case opportunitymodel.RenewalLikelihoodStringZero:
+	case neo4jenum.RenewalLikelihoodZero:
 		return opportunitypb.RenewalLikelihood_ZERO_RENEWAL
 	default:
 		return opportunitypb.RenewalLikelihood_HIGH_RENEWAL

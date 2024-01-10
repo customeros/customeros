@@ -3,11 +3,11 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -79,7 +79,7 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, cmd
 
 	renewalLikelihood := cmd.RenewalLikelihood
 	if string(renewalLikelihood) == "" {
-		renewalLikelihood = model.RenewalLikelihoodStringHigh
+		renewalLikelihood = neo4jenum.RenewalLikelihoodHigh
 	}
 
 	createRenewalEvent, err := event.NewOpportunityCreateRenewalEvent(a, cmd.ContractId, string(renewalLikelihood), cmd.Source, createdAtNotNil, updatedAtNotNil)
@@ -106,11 +106,11 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
 	// if opportunity is not renewal or status is closed, return error
-	if a.Opportunity.InternalType != string(model.OpportunityInternalTypeStringRenewal) {
+	if a.Opportunity.InternalType != neo4jenum.OpportunityInternalTypeRenewal.String() {
 		err := errors.New(constants.Validate + ": Opportunity is not renewal")
 		tracing.TraceErr(span, err)
 		return err
-	} else if a.Opportunity.InternalStage != string(model.OpportunityInternalStageStringOpen) {
+	} else if a.Opportunity.InternalStage != neo4jenum.OpportunityInternalStageOpen.String() {
 		err := errors.New(constants.Validate + ": Opportunity is closed")
 		tracing.TraceErr(span, err)
 		return err
@@ -166,7 +166,7 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, cmd
 
 	renewalLikelihood := cmd.RenewalLikelihood
 	if string(renewalLikelihood) == "" {
-		renewalLikelihood = model.RenewalLikelihoodStringHigh
+		renewalLikelihood = neo4jenum.RenewalLikelihoodHigh
 	}
 
 	updateRenewalEvent, err := event.NewOpportunityUpdateRenewalEvent(a, string(renewalLikelihood), cmd.Comments, cmd.LoggedInUserId, cmd.Source.Source, cmd.Amount, updatedAtNotNil, cmd.MaskFields, cmd.OwnerUserId)

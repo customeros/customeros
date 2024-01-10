@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -306,7 +307,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 	})
 	message := contractEntity.Name + " renewed"
 
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, eventData.Tenant, contractId, neo4jentity.CONTRACT, neo4jentity.ActionContractRenewed, message, metadata, utils.Now())
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, eventData.Tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionContractRenewed, message, metadata, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())
@@ -386,7 +387,7 @@ func (h *ContractEventHandler) createActionForStatusChange(ctx context.Context, 
 	case string(model.ContractStatusStringEnded):
 		message = contractName + " has ended"
 	}
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractId, neo4jentity.CONTRACT, neo4jentity.ActionContractStatusUpdated, message, metadata, utils.Now())
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionContractStatusUpdated, message, metadata, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating status update action for contract %s: %s", contractId, err.Error())
