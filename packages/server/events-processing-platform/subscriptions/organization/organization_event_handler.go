@@ -162,7 +162,7 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 	if organization.WebScrapeDetails.WebScrapeLastRequestedUrl == url {
 		attempt = organization.WebScrapeDetails.WebScrapeAttempts + 1
 	}
-	err = h.repositories.OrganizationRepository.WebScrapeRequested(ctx, tenant, organizationId, url, attempt, utils.Now())
+	err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.WebScrapeRequested(ctx, tenant, organizationId, url, attempt, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error registering web scrape request: %v", err)
