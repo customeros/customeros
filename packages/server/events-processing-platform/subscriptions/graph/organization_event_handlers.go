@@ -217,7 +217,54 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	err := h.repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
+	data := neo4jrepository.OrganizationUpdateFields{
+		UpdatedAt:                eventData.UpdatedAt,
+		Name:                     eventData.Name,
+		Hide:                     eventData.Hide,
+		Description:              eventData.Description,
+		Website:                  eventData.Website,
+		Industry:                 eventData.Industry,
+		SubIndustry:              eventData.SubIndustry,
+		IndustryGroup:            eventData.IndustryGroup,
+		TargetAudience:           eventData.TargetAudience,
+		ValueProposition:         eventData.ValueProposition,
+		IsPublic:                 eventData.IsPublic,
+		IsCustomer:               eventData.IsCustomer,
+		Employees:                eventData.Employees,
+		Market:                   eventData.Market,
+		LastFundingRound:         eventData.LastFundingRound,
+		LastFundingAmount:        eventData.LastFundingAmount,
+		ReferenceId:              eventData.ReferenceId,
+		Note:                     eventData.Note,
+		LogoUrl:                  eventData.LogoUrl,
+		Headquarters:             eventData.Headquarters,
+		YearFounded:              eventData.YearFounded,
+		EmployeeGrowthRate:       eventData.EmployeeGrowthRate,
+		WebScrapedUrl:            eventData.WebScrapedUrl,
+		Source:                   helper.GetSource(eventData.Source),
+		UpdateName:               eventData.UpdateName(),
+		UpdateDescription:        eventData.UpdateDescription(),
+		UpdateHide:               eventData.UpdateHide(),
+		UpdateIsCustomer:         eventData.UpdateIsCustomer(),
+		UpdateWebsite:            eventData.UpdateWebsite(),
+		UpdateIndustry:           eventData.UpdateIndustry(),
+		UpdateSubIndustry:        eventData.UpdateSubIndustry(),
+		UpdateIndustryGroup:      eventData.UpdateIndustryGroup(),
+		UpdateTargetAudience:     eventData.UpdateTargetAudience(),
+		UpdateValueProposition:   eventData.UpdateValueProposition(),
+		UpdateLastFundingRound:   eventData.UpdateLastFundingRound(),
+		UpdateLastFundingAmount:  eventData.UpdateLastFundingAmount(),
+		UpdateReferenceId:        eventData.UpdateReferenceId(),
+		UpdateNote:               eventData.UpdateNote(),
+		UpdateIsPublic:           eventData.UpdateIsPublic(),
+		UpdateEmployees:          eventData.UpdateEmployees(),
+		UpdateMarket:             eventData.UpdateMarket(),
+		UpdateYearFounded:        eventData.UpdateYearFounded(),
+		UpdateHeadquarters:       eventData.UpdateHeadquarters(),
+		UpdateLogoUrl:            eventData.UpdateLogoUrl(),
+		UpdateEmployeeGrowthRate: eventData.UpdateEmployeeGrowthRate(),
+	}
+	err := h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateOrganization(ctx, eventData.Tenant, organizationId, data)
 	// set customer os id
 	customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
 	if customerOsErr != nil {
