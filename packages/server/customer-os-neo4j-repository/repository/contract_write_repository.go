@@ -7,7 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -248,7 +248,7 @@ func (r *contractWriteRepository) ActivateSuspendedRenewalOpportunity(ctx contex
 	params := map[string]any{
 		"tenant":        tenant,
 		"contractId":    contractId,
-		"internalStage": neo4jentity.OpportunityInternalStageOpen.String(),
+		"internalStage": neo4jenum.OpportunityInternalStageOpen.String(),
 		"updatedAt":     utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))

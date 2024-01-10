@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -108,7 +109,7 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, timeNow, *opportunity.EstimatedClosedAt)
 	require.Equal(t, opportunityData.Name, opportunity.Name)
 	require.Equal(t, opportunityData.Amount, opportunity.Amount)
-	require.Equal(t, string(opportunityData.InternalType.StringValue()), opportunity.InternalType)
+	require.Equal(t, string(opportunityData.InternalType.StringEnumValue()), opportunity.InternalType)
 	require.Equal(t, opportunityData.ExternalType, opportunity.ExternalType)
 	require.Equal(t, string(opportunityData.InternalStage.StringValue()), opportunity.InternalStage)
 	require.Equal(t, opportunityData.ExternalStage, opportunity.ExternalStage)
@@ -588,7 +589,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
-	require.Equal(t, neo4jentity.ActionRenewalLikelihoodUpdated, action.Type)
+	require.Equal(t, neo4jenum.ActionRenewalLikelihoodUpdated, action.Type)
 	require.Equal(t, "Renewal likelihood set to Medium", action.Content)
 	require.Equal(t, fmt.Sprintf(`{"likelihood":"%s","reason":"%s"}`, "MEDIUM", "Updated likelihood"), action.Metadata)
 	// Check extra properties
@@ -772,7 +773,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	require.Equal(t, timeNow, *opportunity.EstimatedClosedAt)
 	require.Equal(t, opportunityData.Name, opportunity.Name)
 	require.Equal(t, opportunityData.Amount, opportunity.Amount)
-	require.Equal(t, string(opportunityData.InternalType.StringValue()), opportunity.InternalType)
+	require.Equal(t, string(opportunityData.InternalType.StringEnumValue()), opportunity.InternalType)
 	require.Equal(t, opportunityData.ExternalType, opportunity.ExternalType)
 	require.Equal(t, string(opportunityData.InternalStage.StringValue()), opportunity.InternalStage)
 	require.Equal(t, opportunityData.ExternalStage, opportunity.ExternalStage)

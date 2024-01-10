@@ -20,7 +20,6 @@ type Repositories struct {
 	CommonRepositories      *cmn_repository.Repositories
 	CustomerOsIdsRepository repository.CustomerOsIdsRepository
 
-	OpportunityRepository  OpportunityRepository
 	OrganizationRepository OrganizationRepository
 }
 
@@ -33,7 +32,6 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		CommonRepositories:      cmn_repository.InitRepositories(gormDb, driver),
 		CustomerOsIdsRepository: repository.NewCustomerOsIdsRepository(gormDb),
 		OrganizationRepository:  NewOrganizationRepository(driver, neo4jDatabase),
-		OpportunityRepository:   NewOpportunityRepository(driver, neo4jDatabase),
 	}
 
 	err := gormDb.AutoMigrate(&entity.CustomerOsIds{})

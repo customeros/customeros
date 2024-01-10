@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
@@ -84,9 +85,9 @@ func TestOpportunityService_CreateOpportunity(t *testing.T) {
 	require.Equal(t, tenant, eventData.Tenant)
 	require.Equal(t, "New Opportunity", eventData.Name)
 	require.Equal(t, 10000.0, eventData.Amount)
-	require.Equal(t, string(model.OpportunityInternalTypeStringNBO), eventData.InternalType)
+	require.Equal(t, neo4jenum.OpportunityInternalTypeNBO.String(), eventData.InternalType)
 	require.Equal(t, "TypeA", eventData.ExternalType)
-	require.Equal(t, string(model.OpportunityInternalStageStringOpen), eventData.InternalStage)
+	require.Equal(t, neo4jenum.OpportunityInternalStageOpen.String(), eventData.InternalStage)
 	require.Equal(t, "Stage1", eventData.ExternalStage)
 	require.Equal(t, timeNow, eventData.EstimatedClosedAt.UTC())
 	require.Equal(t, "OwnerUser123", eventData.OwnerUserId)
@@ -214,7 +215,7 @@ func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
 	require.Equal(t, "user-id-123", eventData.UpdatedByUserId)
 	require.Equal(t, "user-id-123", eventData.OwnerUserId)
 	require.Equal(t, "Some comments", eventData.Comments)
-	require.Equal(t, string(model.RenewalLikelihoodStringMedium), eventData.RenewalLikelihood)
+	require.Equal(t, neo4jenum.RenewalLikelihoodMedium.String(), eventData.RenewalLikelihood)
 	require.Equal(t, "openline", eventData.Source)
 }
 

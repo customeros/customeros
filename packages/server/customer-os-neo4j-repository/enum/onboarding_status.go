@@ -1,4 +1,4 @@
-package entity
+package enum
 
 type OnboardingStatus string
 
