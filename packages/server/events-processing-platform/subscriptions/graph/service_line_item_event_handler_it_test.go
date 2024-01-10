@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	contractmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
-	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
@@ -195,8 +194,8 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 		Billed: model.MonthlyBilled.String(),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
+		InternalType:  string(neo4jenum.OpportunityInternalTypeRenewal),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
@@ -290,8 +289,8 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 		Billed: model.MonthlyBilled.String(),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
+		InternalType:  string(neo4jenum.OpportunityInternalTypeRenewal),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 
@@ -379,8 +378,8 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 		Billed: model.MonthlyBilled.String(),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
+		InternalType:  string(neo4jenum.OpportunityInternalTypeRenewal),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 

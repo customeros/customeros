@@ -10,7 +10,6 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
@@ -332,22 +331,22 @@ func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
 	opportunityIdRenewal1_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		Amount:       float64(10),
 		MaxAmount:    float64(20),
-		InternalType: string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalType: string(neo4jenum.OpportunityInternalTypeRenewal),
 	})
 	opportunityIdRenewal2_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		Amount:       float64(100),
 		MaxAmount:    float64(200),
-		InternalType: string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalType: string(neo4jenum.OpportunityInternalTypeRenewal),
 	})
 	opportunityIdRenewal2_2 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		Amount:       float64(1000),
 		MaxAmount:    float64(2000),
-		InternalType: string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalType: string(neo4jenum.OpportunityInternalTypeRenewal),
 	})
 	opportunityIdNbo2_3 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		Amount:       float64(10000),
 		MaxAmount:    float64(20000),
-		InternalType: string(opportunitymodel.OpportunityInternalTypeStringNBO),
+		InternalType: string(neo4jenum.OpportunityInternalTypeNBO),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId1, opportunityIdRenewal1_1, true)
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdRenewal2_1, true)
@@ -401,27 +400,27 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 			RenewedAt:         &tomorrow,
 			RenewalLikelihood: "HIGH",
 		},
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  string(neo4jenum.OpportunityInternalTypeRenewal),
+		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
 	})
 	opportunityIdRenewal2_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		RenewalDetails: entity.RenewalDetails{
 			RenewedAt:         &afterTomorrow,
 			RenewalLikelihood: "LOW",
 		},
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  string(neo4jenum.OpportunityInternalTypeRenewal),
+		InternalStage: string(neo4jenum.OpportunityInternalStageOpen),
 	})
 	opportunityIdRenewal2_2 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		RenewalDetails: entity.RenewalDetails{
 			RenewedAt:         &afterTomorrow,
 			RenewalLikelihood: "ZERO",
 		},
-		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(opportunitymodel.OpportunityInternalStageStringClosedWon),
+		InternalType:  string(neo4jenum.OpportunityInternalTypeRenewal),
+		InternalStage: string(neo4jenum.OpportunityInternalStageClosedWon),
 	})
 	opportunityIdNbo2_3 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
-		InternalType: string(opportunitymodel.OpportunityInternalTypeStringNBO),
+		InternalType: string(neo4jenum.OpportunityInternalTypeNBO),
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId1, opportunityIdRenewal1_1, true)
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdRenewal2_1, true)
