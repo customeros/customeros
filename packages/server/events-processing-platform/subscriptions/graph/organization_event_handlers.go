@@ -899,7 +899,7 @@ func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, e
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.CreateBillingProfileEvent
+	var eventData events.BillingProfileCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

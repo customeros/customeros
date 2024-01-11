@@ -594,7 +594,7 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 
 	now := utils.Now()
 	billingProfileId := uuid.New().String()
-	event, err := events.NewCreateBillingProfileEvent(orgAggregate, billingProfileId, "Billing profile", "Tax id",
+	event, err := events.NewBillingProfileCreateEvent(orgAggregate, billingProfileId, "Billing profile", "Tax id",
 		cmnmod.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatform,

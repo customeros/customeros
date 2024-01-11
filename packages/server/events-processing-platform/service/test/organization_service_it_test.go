@@ -239,7 +239,7 @@ func TestOrganizationService_CreateBillingProfile(t *testing.T) {
 	require.Equal(t, orgevents.OrganizationCreateBillingProfileV1, eventList[0].GetEventType())
 	require.Equal(t, string(orgaggregate.OrganizationAggregateType)+"-"+tenant+"-"+organizationId, eventList[0].GetAggregateID())
 
-	var eventData orgevents.CreateBillingProfileEvent
+	var eventData orgevents.BillingProfileCreateEvent
 	err = eventList[0].GetJsonData(&eventData)
 	require.Nil(t, err)
 

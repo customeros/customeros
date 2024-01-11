@@ -41,6 +41,7 @@ type OrganizationGrpcServiceClient interface {
 	AddSocial(ctx context.Context, in *AddSocialGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner(ctx context.Context, in *UpdateOrganizationOwnerGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	CreateBillingProfile(ctx context.Context, in *CreateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
+	UpdateBillingProfile(ctx context.Context, in *UpdateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	LinkEmailToBillingProfile(ctx context.Context, in *LinkEmailToBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	UnlinkEmailFromBillingProfile(ctx context.Context, in *UnlinkEmailFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	LinkLocationToBillingProfile(ctx context.Context, in *LinkLocationToBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
@@ -226,6 +227,15 @@ func (c *organizationGrpcServiceClient) CreateBillingProfile(ctx context.Context
 	return out, nil
 }
 
+func (c *organizationGrpcServiceClient) UpdateBillingProfile(ctx context.Context, in *UpdateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error) {
+	out := new(BillingProfileIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/UpdateBillingProfile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *organizationGrpcServiceClient) LinkEmailToBillingProfile(ctx context.Context, in *LinkEmailToBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error) {
 	out := new(BillingProfileIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/LinkEmailToBillingProfile", in, out, opts...)
@@ -285,6 +295,7 @@ type OrganizationGrpcServiceServer interface {
 	AddSocial(context.Context, *AddSocialGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner(context.Context, *UpdateOrganizationOwnerGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	CreateBillingProfile(context.Context, *CreateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
+	UpdateBillingProfile(context.Context, *UpdateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	LinkEmailToBillingProfile(context.Context, *LinkEmailToBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	UnlinkEmailFromBillingProfile(context.Context, *UnlinkEmailFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	LinkLocationToBillingProfile(context.Context, *LinkLocationToBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
@@ -351,6 +362,9 @@ func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganizationOwner(contex
 }
 func (UnimplementedOrganizationGrpcServiceServer) CreateBillingProfile(context.Context, *CreateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBillingProfile not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) UpdateBillingProfile(context.Context, *UpdateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateBillingProfile not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) LinkEmailToBillingProfile(context.Context, *LinkEmailToBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkEmailToBillingProfile not implemented")
@@ -718,6 +732,24 @@ func _OrganizationGrpcService_CreateBillingProfile_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrganizationGrpcService_UpdateBillingProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateBillingProfileGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).UpdateBillingProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/UpdateBillingProfile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).UpdateBillingProfile(ctx, req.(*UpdateBillingProfileGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _OrganizationGrpcService_LinkEmailToBillingProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LinkEmailToBillingProfileGrpcRequest)
 	if err := dec(in); err != nil {
@@ -872,6 +904,10 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateBillingProfile",
 			Handler:    _OrganizationGrpcService_CreateBillingProfile_Handler,
+		},
+		{
+			MethodName: "UpdateBillingProfile",
+			Handler:    _OrganizationGrpcService_UpdateBillingProfile_Handler,
 		},
 		{
 			MethodName: "LinkEmailToBillingProfile",

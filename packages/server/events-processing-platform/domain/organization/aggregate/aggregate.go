@@ -65,6 +65,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onOrganizationOwnerUpdate(event)
 	case events.OrganizationCreateBillingProfileV1:
 		return a.onCreateBillingProfile(event)
+	case events.OrganizationUpdateBillingProfileV1:
+		return a.onUpdateBillingProfile(event)
 	case events.OrganizationEmailLinkToBillingProfileV1:
 		return a.onEmailLinkToBillingProfile(event)
 	case events.OrganizationEmailUnlinkFromBillingProfileV1:
@@ -517,7 +519,7 @@ func (a *OrganizationAggregate) onOrganizationOwnerUpdate(event eventstore.Event
 }
 
 func (a *OrganizationAggregate) onCreateBillingProfile(event eventstore.Event) error {
-	var eventData events.CreateBillingProfileEvent
+	var eventData events.BillingProfileCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -534,6 +536,33 @@ func (a *OrganizationAggregate) onCreateBillingProfile(event eventstore.Event) e
 		UpdatedAt:    eventData.UpdatedAt,
 		SourceFields: eventData.SourceFields,
 	}
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onUpdateBillingProfile(event eventstore.Event) error {
+	var eventData events.BillingProfileUpdateEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+
+	if eventData.UpdateLegalName() {
+		billingProfile.LegalName = eventData.LegalName
+	}
+	if eventData.UpdateTaxId() {
+		billingProfile.TaxId = eventData.TaxId
+	}
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
 
 	return nil
 }
