@@ -25,6 +25,7 @@ type OpportunityService interface {
 	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, ownerUserId *string, appSource string) error
 	GetById(ctx context.Context, id string) (*entity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*entity.OpportunityEntities, error)
+	mapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity
 }
 type opportunityService struct {
 	log          logger.Logger

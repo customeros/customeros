@@ -26,6 +26,7 @@ type ContractService interface {
 	GetById(ctx context.Context, id string) (*entity.ContractEntity, error)
 	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*entity.ContractEntities, error)
 	ContractsExistForTenant(ctx context.Context) (bool, error)
+	mapDbNodeToContractEntity(node dbtype.Node) *entity.ContractEntity
 }
 type contractService struct {
 	log          logger.Logger

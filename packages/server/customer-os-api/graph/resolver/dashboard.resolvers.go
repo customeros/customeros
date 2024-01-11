@@ -82,9 +82,9 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 	}, err
 }
 
-// DashboardViewContracts is the resolver for the dashboardView_Contracts field.
-func (r *queryResolver) DashboardViewContracts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContractPage, error) {
-	panic(fmt.Errorf("not implemented: DashboardViewContracts - dashboardView_Contracts"))
+// DashboardViewRenewals is the resolver for the dashboardView_Renewals field.
+func (r *queryResolver) DashboardViewRenewals(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.RenewalsPage, error) {
+	panic(fmt.Errorf("not implemented: DashboardViewRenewals - dashboardView_Renewals"))
 }
 
 // DashboardCustomerMap is the resolver for the dashboard_CustomerMap field.

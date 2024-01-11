@@ -25,8 +25,16 @@ type DashboardViewOrganizationsRequest struct {
 	Limit int
 }
 
+type DashboardViewRenewalsRequest struct {
+	Where *model.Filter
+	Sort  *model.SortBy
+	Page  int
+	Limit int
+}
+
 type DashboardService interface {
 	GetDashboardViewOrganizationsData(ctx context.Context, requestDetails DashboardViewOrganizationsRequest) (*utils.Pagination, error)
+	GetDashboardViewRenewalsData(ctx context.Context, requestDetails DashboardViewRenewalsRequest) (*utils.Pagination, error)
 
 	GetDashboardCustomerMapData(ctx context.Context) ([]*entityDashboard.DashboardCustomerMapData, error)
 	GetDashboardMRRPerCustomerData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardDashboardMRRPerCustomerData, error)
@@ -87,6 +95,39 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 	}
 
 	paginatedResult.SetRows(&organizationEntities)
+	return &paginatedResult, nil
+}
+
+func (s *dashboardService) GetDashboardViewRenewalsData(ctx context.Context, requestDetails DashboardViewRenewalsRequest) (*utils.Pagination, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardViewRenewalsData")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("page", requestDetails.Page), log.Int("limit", requestDetails.Limit))
+	if requestDetails.Where != nil {
+		span.LogFields(log.Object("filter", *requestDetails.Where))
+	}
+	if requestDetails.Sort != nil {
+		span.LogFields(log.Object("sort", *requestDetails.Sort))
+	}
+
+	var paginatedResult = utils.Pagination{
+		Limit: requestDetails.Limit,
+		Page:  requestDetails.Page,
+	}
+
+	dbNodes, err := s.repositories.DashboardRepository.GetDashboardViewRenewalData(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), requestDetails.Where, requestDetails.Sort)
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbNodes.Count)
+
+	contractEntities := entity.ContractEntities{}
+
+	for _, v := range dbNodes.Nodes {
+		contractEntities = append(contractEntities, *s.services.ContractService.mapDbNodeToContractEntity(*v))
+	}
+
+	paginatedResult.SetRows(&contractEntities)
 	return &paginatedResult, nil
 }
 
