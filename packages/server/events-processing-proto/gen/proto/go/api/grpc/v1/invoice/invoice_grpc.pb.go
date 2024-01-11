@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type InvoiceServiceClient interface {
 	NewInvoice(ctx context.Context, in *NewInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	FillInvoice(ctx context.Context, in *FillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
+	PayInvoice(ctx context.Context, in *PayInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 }
 
 type invoiceServiceClient struct {
@@ -52,12 +53,22 @@ func (c *invoiceServiceClient) FillInvoice(ctx context.Context, in *FillInvoiceR
 	return out, nil
 }
 
+func (c *invoiceServiceClient) PayInvoice(ctx context.Context, in *PayInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
+	out := new(InvoiceIdResponse)
+	err := c.cc.Invoke(ctx, "/InvoiceService/PayInvoice", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InvoiceServiceServer is the server API for InvoiceService service.
 // All implementations should embed UnimplementedInvoiceServiceServer
 // for forward compatibility
 type InvoiceServiceServer interface {
 	NewInvoice(context.Context, *NewInvoiceRequest) (*InvoiceIdResponse, error)
 	FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error)
+	PayInvoice(context.Context, *PayInvoiceRequest) (*InvoiceIdResponse, error)
 }
 
 // UnimplementedInvoiceServiceServer should be embedded to have forward compatible implementations.
@@ -69,6 +80,9 @@ func (UnimplementedInvoiceServiceServer) NewInvoice(context.Context, *NewInvoice
 }
 func (UnimplementedInvoiceServiceServer) FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FillInvoice not implemented")
+}
+func (UnimplementedInvoiceServiceServer) PayInvoice(context.Context, *PayInvoiceRequest) (*InvoiceIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PayInvoice not implemented")
 }
 
 // UnsafeInvoiceServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -118,6 +132,24 @@ func _InvoiceService_FillInvoice_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InvoiceService_PayInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PayInvoiceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvoiceServiceServer).PayInvoice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/InvoiceService/PayInvoice",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvoiceServiceServer).PayInvoice(ctx, req.(*PayInvoiceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InvoiceService_ServiceDesc is the grpc.ServiceDesc for InvoiceService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -132,6 +164,10 @@ var InvoiceService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FillInvoice",
 			Handler:    _InvoiceService_FillInvoice_Handler,
+		},
+		{
+			MethodName: "PayInvoice",
+			Handler:    _InvoiceService_PayInvoice_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

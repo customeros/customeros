@@ -44,7 +44,6 @@ func NewInvoiceNewEvent(aggregate eventstore.Aggregate, organizationId string, c
 }
 
 type InvoiceFillEvent struct {
-	Tenant       string             `json:"tenant" validate:"required"`
 	UpdatedAt    time.Time          `json:"createdAt"`
 	SourceFields commonmodel.Source `json:"sourceFields"`
 
@@ -66,7 +65,6 @@ type InvoiceLineFillEvent struct {
 
 func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, sourceFields commonmodel.Source, request *invoicepb.FillInvoiceRequest) (eventstore.Event, error) {
 	eventData := InvoiceFillEvent{
-		Tenant:       aggregate.GetTenant(),
 		UpdatedAt:    *updatedAt,
 		SourceFields: sourceFields,
 
@@ -99,14 +97,39 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, s
 	return event, nil
 }
 
+type InvoicePayEvent struct {
+	UpdatedAt    time.Time          `json:"createdAt"`
+	SourceFields commonmodel.Source `json:"sourceFields"`
+}
+
+func NewInvoicePayEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, sourceFields commonmodel.Source, request *invoicepb.PayInvoiceRequest) (eventstore.Event, error) {
+	eventData := InvoicePayEvent{
+		UpdatedAt:    *updatedAt,
+		SourceFields: sourceFields,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate InvoicePayEvent")
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, InvoicePayV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InvoicePayEvent")
+	}
+
+	return event, nil
+}
+
 type EventHandlers struct {
 	InvoiceNew  InvoiceNewHandler
 	InvoiceFill InvoiceFillHandler
+	InvoicePay  InvoicePayHandler
 }
 
 func NewEventHandlers(log logger.Logger, es eventstore.AggregateStore) *EventHandlers {
 	return &EventHandlers{
 		InvoiceNew:  NewInvoiceNewHandler(log, es),
 		InvoiceFill: NewInvoiceFillHandler(log, es),
+		InvoicePay:  NewInvoicePayHandler(log, es),
 	}
 }

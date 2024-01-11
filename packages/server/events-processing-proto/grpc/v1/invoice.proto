@@ -35,6 +35,14 @@ message InvoiceLine {
   double total = 7;
 }
 
+message PayInvoiceRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string invoiceId = 3;
+  google.protobuf.Timestamp updatedAt = 4;
+  SourceFields sourceFields = 5;
+}
+
 message InvoiceIdResponse {
   string id = 1;
 }
@@ -42,4 +50,5 @@ message InvoiceIdResponse {
 service InvoiceService {
   rpc NewInvoice(NewInvoiceRequest) returns (InvoiceIdResponse);
   rpc FillInvoice(FillInvoiceRequest) returns (InvoiceIdResponse);
+  rpc PayInvoice(PayInvoiceRequest) returns (InvoiceIdResponse);
 }

@@ -93,6 +93,7 @@ func (a *InvoiceAggregate) onNewInvoice(evt eventstore.Event) error {
 	a.Invoice.ID = a.ID
 	a.Invoice.CreatedAt = eventData.CreatedAt
 	a.Invoice.UpdatedAt = eventData.CreatedAt
+	a.Invoice.OrganizationId = eventData.OrganizationId
 	a.Invoice.Date = eventData.CreatedAt
 	a.Invoice.SourceFields = eventData.SourceFields
 
@@ -100,6 +101,27 @@ func (a *InvoiceAggregate) onNewInvoice(evt eventstore.Event) error {
 }
 
 func (a *InvoiceAggregate) onFillInvoice(evt eventstore.Event) error {
+	var eventData InvoiceFillEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Invoice.Amount = eventData.Amount
+	a.Invoice.VAT = eventData.VAT
+	a.Invoice.Total = eventData.Total
+	a.Invoice.Lines = make([]InvoiceLine, len(eventData.Lines))
+	for i, line := range eventData.Lines {
+		a.Invoice.Lines[i] = InvoiceLine{
+			Index:    line.Index,
+			Name:     line.Name,
+			Price:    line.Price,
+			Quantity: line.Quantity,
+			Amount:   line.Amount,
+			VAT:      line.VAT,
+			Total:    line.Total,
+		}
+	}
+
 	return nil
 }
 
