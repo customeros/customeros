@@ -66,3 +66,24 @@ func (s *invoiceService) FillInvoice(ctx context.Context, request *invoicepb.Fil
 
 	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
 }
+
+func (s *invoiceService) PayInvoice(ctx context.Context, request *invoicepb.PayInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.PayInvoiceRequest")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.InvoiceId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
+	}
+
+	baseRequest := eventstore.NewBaseRequest(request.InvoiceId, request.Tenant, request.LoggedInUserId, commonmodel.SourceFromGrpc(request.SourceFields))
+
+	if err := s.eventHandlers.InvoicePay.Handle(ctx, baseRequest, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(InvoicePay.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
+}

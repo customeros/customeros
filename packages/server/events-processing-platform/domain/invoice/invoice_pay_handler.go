@@ -12,21 +12,21 @@ import (
 	"github.com/pkg/errors"
 )
 
-type InvoiceFillHandler interface {
-	Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *invoicepb.FillInvoiceRequest) error
+type InvoicePayHandler interface {
+	Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *invoicepb.PayInvoiceRequest) error
 }
 
-type invoiceFillHandler struct {
+type invoicePayHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 }
 
-func NewInvoiceFillHandler(log logger.Logger, es eventstore.AggregateStore) InvoiceFillHandler {
-	return &invoiceFillHandler{log: log, es: es}
+func NewInvoicePayHandler(log logger.Logger, es eventstore.AggregateStore) InvoicePayHandler {
+	return &invoicePayHandler{log: log, es: es}
 }
 
-func (h *invoiceFillHandler) Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *invoicepb.FillInvoiceRequest) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceFillHandler.Handle")
+func (h *invoicePayHandler) Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *invoicepb.PayInvoiceRequest) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoicePayHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, baseRequest.Tenant, baseRequest.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "common", baseRequest)
@@ -43,10 +43,10 @@ func (h *invoiceFillHandler) Handle(ctx context.Context, baseRequest eventstore.
 		return eventstore.ErrAggregateNotFound
 	}
 
-	fillEvent, err := NewInvoiceFillEvent(invoiceAggregate, utils.TimestampProtoToTimePtr(request.UpdatedAt), baseRequest.SourceFields, request)
+	fillEvent, err := NewInvoicePayEvent(invoiceAggregate, utils.TimestampProtoToTimePtr(request.UpdatedAt), baseRequest.SourceFields, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "InvoiceFillEvent")
+		return errors.Wrap(err, "InvoicePayEvent")
 	}
 	commonAggregate.EnrichEventWithMetadataExtended(&fillEvent, span, commonAggregate.EventMetadata{
 		Tenant: request.Tenant,
