@@ -9,11 +9,11 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/service"
@@ -202,6 +202,6 @@ func healthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
 }
 
-func MapFileEntityToDTO(cfg *config.Config, fileEntity *model.File) *dto.File {
+func MapFileEntityToDTO(cfg *config.Config, fileEntity *model.File) *fsc.FileDTO {
 	return mapper.MapFileEntityToDTO(fileEntity, cfg.ApiServiceUrl)
 }

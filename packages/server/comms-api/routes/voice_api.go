@@ -225,7 +225,7 @@ func addVoiceApiRoutes(conf *c.Config, rg *gin.RouterGroup, hub *ContactHub.Cont
 			return
 		}
 
-		fileObject, err := services.FileStoreApiService.UploadSingleFile(*tenant, multipartFileHeader)
+		fileObject, err := services.FileStoreApiService.UploadSingleMultipartFile(*tenant, multipartFileHeader)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("unable to upload file: %v", err.Error()),
