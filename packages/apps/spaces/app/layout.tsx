@@ -37,7 +37,15 @@ export default async function RootLayout({
 }) {
   const session = await getServerSession();
 
-  const isProduction = process.env.NEXT_PUBLIC_PRODUCTION === 'true';
+  const env = {
+    PRODUCTION: process.env.NEXT_PUBLIC_PRODUCTION ?? '',
+    NOTIFICATION_PROD_APP_IDENTIFIER:
+      process.env.NEXT_PUBLIC_NOTIFICATION_PROD_APP_IDENTIFIER ?? '',
+    NOTIFICATION_TEST_APP_IDENTIFIER:
+      process.env.NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER ?? '',
+  };
+
+  const isProduction = env.PRODUCTION === 'true';
 
   return (
     <>
@@ -129,7 +137,7 @@ export default async function RootLayout({
 
         <body className='scrollbar'>
           <ThemeProvider>
-            <Providers isProduction={isProduction}>
+            <Providers isProduction={isProduction} env={env}>
               {children}
               <ToastContainer
                 position='bottom-right'

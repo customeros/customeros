@@ -4,6 +4,7 @@ import React from 'react';
 
 import { NovuProvider } from '@novu/notification-center';
 
+import { useEnv } from '@shared/hooks/useEnv';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
@@ -16,20 +17,20 @@ export const NotificationsProvider = ({
   children,
   isProduction,
 }: ProvidersProps) => {
+  const env = useEnv();
   const client = getGraphQLClient();
 
   const { data: globalCacheQuery } = useGlobalCacheQuery(client);
 
   const id = globalCacheQuery?.global_Cache?.user.id;
+  const applicationIdentifier = isProduction
+    ? env.NOTIFICATION_PROD_APP_IDENTIFIER
+    : env.NOTIFICATION_TEST_APP_IDENTIFIER;
 
   return (
     <NovuProvider
       subscriberId={id}
-      applicationIdentifier={
-        isProduction
-          ? (process.env.NEXT_PUBLIC_NOTIFICATION_PROD_APP_IDENTIFIER as string)
-          : (process.env.NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER as string)
-      }
+      applicationIdentifier={applicationIdentifier}
     >
       {children}
     </NovuProvider>

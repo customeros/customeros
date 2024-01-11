@@ -10,10 +10,12 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createIDBPersister } from '@shared/util/indexedDBPersister';
 import { AnalyticsProvider } from '@shared/components/Providers/AnalyticsProvider';
 
+import { Env, EnvProvider } from './EnvProvider';
 import { NextAuthProvider } from './SessionProvider';
 import { GrowthbookProvider } from './GrowthbookProvider';
 import { NotificationsProvider } from './NotificationsProvider';
 interface ProvidersProps {
+  env: Env;
   isProduction?: boolean;
   children: React.ReactNode;
   sessionEmail?: string | null;
@@ -23,6 +25,7 @@ const hostname =
   typeof window !== 'undefined' ? window?.location?.hostname : 'platform';
 
 export const Providers = ({
+  env,
   children,
   sessionEmail,
   isProduction,
@@ -43,22 +46,24 @@ export const Providers = ({
   );
 
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{ persister }}
-    >
-      <ReactQueryDevtools initialIsOpen={false} position='bottom-right' />
-      <RecoilRoot>
-        <NextAuthProvider>
-          <GrowthbookProvider>
-            <NotificationsProvider isProduction={isProduction}>
-              <AnalyticsProvider isProduction={isProduction}>
-                {children}
-              </AnalyticsProvider>
-            </NotificationsProvider>
-          </GrowthbookProvider>
-        </NextAuthProvider>
-      </RecoilRoot>
-    </PersistQueryClientProvider>
+    <EnvProvider env={env}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{ persister }}
+      >
+        <ReactQueryDevtools initialIsOpen={false} position='bottom-right' />
+        <RecoilRoot>
+          <NextAuthProvider>
+            <GrowthbookProvider>
+              <NotificationsProvider isProduction={isProduction}>
+                <AnalyticsProvider isProduction={isProduction}>
+                  {children}
+                </AnalyticsProvider>
+              </NotificationsProvider>
+            </GrowthbookProvider>
+          </NextAuthProvider>
+        </RecoilRoot>
+      </PersistQueryClientProvider>
+    </EnvProvider>
   );
 };
