@@ -1,7 +1,6 @@
 package entity
 
 import (
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"time"
 )
 
@@ -29,8 +28,8 @@ type LocationEntity struct {
 	Longitude     *float64
 	TimeZone      string
 	UtcOffset     int64
-	SourceOfTruth neo4jentity.DataSource
-	Source        neo4jentity.DataSource
+	SourceOfTruth DataSource
+	Source        DataSource
 	AppSource     string
 }
 

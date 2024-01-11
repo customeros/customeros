@@ -626,7 +626,7 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 	require.Equal(t, now, billingProfile.UpdatedAt)
 }
 
-func TestGraphOrganizationEventHandler_OnEmailLinkToBillingProfile(t *testing.T) {
+func TestGraphOrganizationEventHandler_OnEmailLinkedToBillingProfile(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -645,7 +645,7 @@ func TestGraphOrganizationEventHandler_OnEmailLinkToBillingProfile(t *testing.T)
 
 	now := utils.Now()
 	event, _ := events.NewLinkEmailToBillingProfileEvent(orgAggregate, billingProfileId, newEmailId, true, now)
-	err := orgEventHandler.OnEmailLinkToBillingProfile(context.Background(), event)
+	err := orgEventHandler.OnEmailLinkedToBillingProfile(context.Background(), event)
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
@@ -664,7 +664,7 @@ func TestGraphOrganizationEventHandler_OnEmailLinkToBillingProfile(t *testing.T)
 	require.Equal(t, now, billingProfile.UpdatedAt)
 }
 
-func TestGraphOrganizationEventHandler_OnEmailUnlinkFromBillingProfile(t *testing.T) {
+func TestGraphOrganizationEventHandler_OnEmailUnlinkedFromBillingProfile(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -682,13 +682,86 @@ func TestGraphOrganizationEventHandler_OnEmailUnlinkFromBillingProfile(t *testin
 
 	now := utils.Now()
 	event, _ := events.NewUnlinkEmailFromBillingProfileEvent(orgAggregate, billingProfileId, existingEmailId, now)
-	err := orgEventHandler.OnEmailUnlinkFromBillingProfile(context.Background(), event)
+	err := orgEventHandler.OnEmailUnlinkedFromBillingProfile(context.Background(), event)
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		neo4jentity.NodeLabelOrganization:   1,
 		neo4jentity.NodeLabelBillingProfile: 1,
 		neo4jentity.NodeLabelEmail:          1,
+	})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+		"HAS": 0,
+	})
+
+	// Check billing profile
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelBillingProfile, billingProfileId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
+	require.Equal(t, now, billingProfile.UpdatedAt)
+}
+
+func TestGraphOrganizationEventHandler_OnLocationLinkedToBillingProfile(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	billingProfileId := neo4jtest.CreateBillingProfileForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.BillingProfileEntity{})
+	locationId := neo4jtest.CreateLocation(ctx, testDatabase.Driver, tenantName, neo4jentity.LocationEntity{})
+
+	orgEventHandler := &OrganizationEventHandler{
+		repositories: testDatabase.Repositories,
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	now := utils.Now()
+	event, _ := events.NewLinkLocationToBillingProfileEvent(orgAggregate, billingProfileId, locationId, now)
+	err := orgEventHandler.OnLocationLinkedToBillingProfile(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jentity.NodeLabelOrganization:   1,
+		neo4jentity.NodeLabelBillingProfile: 1,
+		neo4jentity.NodeLabelLocation:       1,
+	})
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, billingProfileId, "HAS", locationId)
+
+	// Check billing profile
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelBillingProfile, billingProfileId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
+	require.Equal(t, now, billingProfile.UpdatedAt)
+}
+
+func TestGraphOrganizationEventHandler_OnLocationUnlinkedFromBillingProfile(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	billingProfileId := neo4jtest.CreateBillingProfileForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.BillingProfileEntity{})
+	existingLocationId := neo4jtest.CreateLocation(ctx, testDatabase.Driver, tenantName, neo4jentity.LocationEntity{})
+	neo4jtest.LinkNodes(ctx, testDatabase.Driver, billingProfileId, existingLocationId, "HAS")
+
+	orgEventHandler := &OrganizationEventHandler{
+		repositories: testDatabase.Repositories,
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	now := utils.Now()
+	event, _ := events.NewUnlinkLocationFromBillingProfileEvent(orgAggregate, billingProfileId, existingLocationId, now)
+	err := orgEventHandler.OnLocationUnlinkedFromBillingProfile(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jentity.NodeLabelOrganization:   1,
+		neo4jentity.NodeLabelBillingProfile: 1,
+		neo4jentity.NodeLabelLocation:       1,
 	})
 	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"HAS": 0,
