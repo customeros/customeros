@@ -624,3 +624,79 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 	require.Equal(t, now, billingProfile.CreatedAt)
 	require.Equal(t, now, billingProfile.UpdatedAt)
 }
+
+func TestGraphOrganizationEventHandler_OnEmailLinkToBillingProfile(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	billingProfileId := neo4jtest.CreateBillingProfileForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.BillingProfileEntity{})
+	existingEmailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{})
+	neo4jtest.LinkNodes(ctx, testDatabase.Driver, billingProfileId, existingEmailId, "HAS", map[string]interface{}{"primary": true})
+	newEmailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{})
+
+	orgEventHandler := &OrganizationEventHandler{
+		repositories: testDatabase.Repositories,
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	now := utils.Now()
+	event, _ := events.NewLinkEmailToBillingProfileEvent(orgAggregate, billingProfileId, newEmailId, true, now)
+	err := orgEventHandler.OnEmailLinkToBillingProfile(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jentity.NodeLabelOrganization:   1,
+		neo4jentity.NodeLabelBillingProfile: 1,
+		neo4jentity.NodeLabelEmail:          2,
+	})
+	neo4jtest.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, billingProfileId, "HAS", existingEmailId, map[string]interface{}{"primary": false})
+	neo4jtest.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, billingProfileId, "HAS", newEmailId, map[string]interface{}{"primary": true})
+
+	// Check billing profile
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelBillingProfile, billingProfileId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
+	require.Equal(t, now, billingProfile.UpdatedAt)
+}
+
+func TestGraphOrganizationEventHandler_OnEmailUnlinkFromBillingProfile(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	billingProfileId := neo4jtest.CreateBillingProfileForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.BillingProfileEntity{})
+	existingEmailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{})
+	neo4jtest.LinkNodes(ctx, testDatabase.Driver, billingProfileId, existingEmailId, "HAS", map[string]interface{}{"primary": true})
+
+	orgEventHandler := &OrganizationEventHandler{
+		repositories: testDatabase.Repositories,
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	now := utils.Now()
+	event, _ := events.NewUnlinkEmailFromBillingProfileEvent(orgAggregate, billingProfileId, existingEmailId, now)
+	err := orgEventHandler.OnEmailUnlinkFromBillingProfile(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jentity.NodeLabelOrganization:   1,
+		neo4jentity.NodeLabelBillingProfile: 1,
+		neo4jentity.NodeLabelEmail:          1,
+	})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+		"HAS": 0,
+	})
+
+	// Check billing profile
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelBillingProfile, billingProfileId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
+	require.Equal(t, now, billingProfile.UpdatedAt)
+}

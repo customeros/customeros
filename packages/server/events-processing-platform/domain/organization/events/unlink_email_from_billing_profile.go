@@ -7,15 +7,15 @@ import (
 	"time"
 )
 
-type UnlinkEmailToBillingProfileEvent struct {
+type UnlinkEmailFromBillingProfileEvent struct {
 	Tenant           string    `json:"tenant" validate:"required"`
 	UpdatedAt        time.Time `json:"updatedAt"`
 	BillingProfileId string    `json:"billingProfileId" validate:"required"`
 	EmailId          string    `json:"emailId" validate:"required"`
 }
 
-func NewUnlinkEmailToBillingProfileEvent(aggregate eventstore.Aggregate, billingProfileId, emailId string, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := UnlinkEmailToBillingProfileEvent{
+func NewUnlinkEmailFromBillingProfileEvent(aggregate eventstore.Aggregate, billingProfileId, emailId string, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := UnlinkEmailFromBillingProfileEvent{
 		Tenant:           aggregate.GetTenant(),
 		UpdatedAt:        updatedAt,
 		BillingProfileId: billingProfileId,
@@ -23,12 +23,12 @@ func NewUnlinkEmailToBillingProfileEvent(aggregate eventstore.Aggregate, billing
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate UnlinkEmailToBillingProfileEvent")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate UnlinkEmailFromBillingProfileEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationEmailUnlinkFromBillingProfileV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UnlinkEmailToBillingProfileEvent")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UnlinkEmailFromBillingProfileEvent")
 	}
 	return event, nil
 }

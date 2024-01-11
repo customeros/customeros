@@ -94,10 +94,10 @@ func (a *OrganizationAggregate) UnlinkEmailFromBillingProfile(ctx context.Contex
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	event, err := events.NewUnlinkEmailToBillingProfileEvent(a, request.BillingProfileId, request.EmailId, utils.Now())
+	event, err := events.NewUnlinkEmailFromBillingProfileEvent(a, request.BillingProfileId, request.EmailId, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewUnlinkEmailToBillingProfileEvent")
+		return errors.Wrap(err, "NewUnlinkEmailFromBillingProfileEvent")
 	}
 
 	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{

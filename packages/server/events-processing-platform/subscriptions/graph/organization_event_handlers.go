@@ -918,3 +918,32 @@ func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, e
 	}
 	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.Create(ctx, eventData.Tenant, eventData.BillingProfileId, data)
 }
+
+func (h *OrganizationEventHandler) OnEmailLinkToBillingProfile(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnEmailLinkToBillingProfile")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData events.LinkEmailToBillingProfileEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.LinkEmailToBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.EmailId, eventData.Primary, eventData.UpdatedAt)
+}
+
+func (h *OrganizationEventHandler) OnEmailUnlinkFromBillingProfile(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnEmailUnlinkFromBillingProfile")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData events.UnlinkEmailFromBillingProfileEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.UnlinkEmailFromBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.EmailId, eventData.UpdatedAt)
+}

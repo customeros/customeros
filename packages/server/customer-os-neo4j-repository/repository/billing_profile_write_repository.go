@@ -22,6 +22,8 @@ type BillingProfileCreateFields struct {
 
 type BillingProfileWriteRepository interface {
 	Create(ctx context.Context, tenant, billingProfileId string, data BillingProfileCreateFields) error
+	LinkEmailToBillingProfile(ctx context.Context, tenant, organizationId, billingProfileId, emailId string, primary bool, updatedAt time.Time) error
+	UnlinkEmailFromBillingProfile(ctx context.Context, tenant, organizationId, billingProfileId, emailId string, updatedAt time.Time) error
 }
 
 type billingProfileWriteRepository struct {
@@ -63,6 +65,68 @@ func (r *billingProfileWriteRepository) Create(ctx context.Context, tenant, bill
 		"sourceOfTruth":    data.SourceFields.Source,
 		"appSource":        data.SourceFields.AppSource,
 		"name":             data.Name,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *billingProfileWriteRepository) LinkEmailToBillingProfile(ctx context.Context, tenant, organizationId, billingProfileId, emailId string, primary bool, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileWriteRepository.LinkEmailToBillingProfile")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId})-[:HAS_BILLING_PROFILE]->(bp:BillingProfile {id:$billingProfileId}),
+					(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(e:Email {id:$emailId})
+				MERGE (e)<-[rel:HAS]-(bp)
+				SET
+					bp.updatedAt=$updatedAt,
+					rel.primary=$primary
+				WITH bp
+				OPTIONAL MATCH (bp)-[rel2:HAS]->(oe:Email)
+				WHERE oe.id <> $emailId AND $primary = true
+				SET rel2.primary=false`
+	params := map[string]any{
+		"tenant":           tenant,
+		"billingProfileId": billingProfileId,
+		"orgId":            organizationId,
+		"emailId":          emailId,
+		"createdAt":        updatedAt,
+		"updatedAt":        updatedAt,
+		"primary":          primary,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *billingProfileWriteRepository) UnlinkEmailFromBillingProfile(ctx context.Context, tenant, organizationId, billingProfileId, emailId string, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileWriteRepository.UnlinkEmailFromBillingProfile")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(:Organization {id:$orgId})-[:HAS_BILLING_PROFILE]->(bp:BillingProfile {id:$billingProfileId})-[rel:HAS]->(e:Email {id:$emailId})
+				SET bp.updatedAt=$updatedAt
+				DELETE rel`
+	params := map[string]any{
+		"tenant":           tenant,
+		"billingProfileId": billingProfileId,
+		"orgId":            organizationId,
+		"emailId":          emailId,
+		"createdAt":        updatedAt,
+		"updatedAt":        updatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

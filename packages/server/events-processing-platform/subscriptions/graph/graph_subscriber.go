@@ -238,6 +238,10 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case orgevents.OrganizationCreateBillingProfileV1:
 		return s.organizationEventHandler.OnCreateBillingProfile(ctx, evt)
+	case orgevents.OrganizationEmailLinkToBillingProfileV1:
+		return s.organizationEventHandler.OnEmailLinkToBillingProfile(ctx, evt)
+	case orgevents.OrganizationEmailUnlinkFromBillingProfileV1:
+		return s.organizationEventHandler.OnEmailUnlinkFromBillingProfile(ctx, evt)
 
 	case userevents.UserCreateV1:
 		return s.userEventHandler.OnUserCreate(ctx, evt)

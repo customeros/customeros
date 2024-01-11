@@ -563,7 +563,7 @@ func (a *OrganizationAggregate) onEmailLinkToBillingProfile(event eventstore.Eve
 }
 
 func (a *OrganizationAggregate) onEmailUnlinkFromBillingProfile(event eventstore.Event) error {
-	var eventData events.UnlinkEmailToBillingProfileEvent
+	var eventData events.UnlinkEmailFromBillingProfileEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}

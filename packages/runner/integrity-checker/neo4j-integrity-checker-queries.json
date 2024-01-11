@@ -22,7 +22,7 @@
     },
     {
       "name": "Check email nodes labels",
-      "query": "MATCH (t:Tenant)<-[:EMAIL_BELONGS_TO_TENANT]-(n:Email) WHERE size(labels(n)) <> 2 OR NOT 'Email_'+t.name in labels(n) return count(n)"
+      "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(n:Email) WHERE size(labels(n)) <> 2 OR NOT 'Email_'+t.name in labels(n) return count(n)"
     },
     {
       "name": "Check phone number nodes labels",
