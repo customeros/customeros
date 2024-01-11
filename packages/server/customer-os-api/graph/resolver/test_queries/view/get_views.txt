@@ -1,7 +1,7 @@
 query GetViews($page: Int!, $limit: Int!){
   tableViewDefs(pagination: {page: $page, limit: $limit}
             where:{filter: {property:"NAME" value:"oPeN" operation:CONTAINS}}
-            sort:[{by: "NAME" direction:ASC }]) {
+            sort:{by: "NAME" direction:ASC }) {
     totalPages
     totalElements
     content {

@@ -65,3 +65,10 @@ enum ContractStatus {
     LIVE
     ENDED
 }
+
+type ContractPage implements Pages {
+    content: [Contract!]!
+    totalPages: Int!
+    totalElements: Int64!
+    totalAvailable: Int64!
+}

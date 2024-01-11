@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -79,6 +80,11 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 		TotalElements:  paginatedResult.TotalRows,
 		TotalAvailable: countOrganizations,
 	}, err
+}
+
+// DashboardViewContracts is the resolver for the dashboardView_Contracts field.
+func (r *queryResolver) DashboardViewContracts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContractPage, error) {
+	panic(fmt.Errorf("not implemented: DashboardViewContracts - dashboardView_Contracts"))
 }
 
 // DashboardCustomerMap is the resolver for the dashboard_CustomerMap field.
