@@ -149,7 +149,8 @@ type BillingProfile struct {
 	ID            string     `json:"id"`
 	CreatedAt     time.Time  `json:"createdAt"`
 	UpdatedAt     time.Time  `json:"updatedAt"`
-	Name          string     `json:"name"`
+	LegalName     string     `json:"legalName"`
+	TaxID         string     `json:"taxId"`
 	Source        DataSource `json:"source"`
 	SourceOfTruth DataSource `json:"sourceOfTruth"`
 	AppSource     string     `json:"appSource"`
@@ -165,7 +166,8 @@ func (BillingProfile) IsNode() {}
 
 type BillingProfileInput struct {
 	OrganizationID string     `json:"organizationId"`
-	Name           *string    `json:"name,omitempty"`
+	LegalName      *string    `json:"legalName,omitempty"`
+	TaxID          *string    `json:"taxId,omitempty"`
 	CreatedAt      *time.Time `json:"createdAt,omitempty"`
 }
 

@@ -13,15 +13,17 @@ type CreateBillingProfileEvent struct {
 	BillingProfileId string        `json:"billingProfileId" validate:"required"`
 	CreatedAt        time.Time     `json:"createdAt"`
 	UpdatedAt        time.Time     `json:"updatedAt"`
-	Name             string        `json:"name" `
+	LegalName        string        `json:"legalName"`
+	TaxId            string        `json:"taxId"`
 	SourceFields     cmnmod.Source `json:"sourceFields" validate:"required"`
 }
 
-func NewCreateBillingProfileEvent(aggregate eventstore.Aggregate, billingProfileId, name string, sourceFields cmnmod.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewCreateBillingProfileEvent(aggregate eventstore.Aggregate, billingProfileId, legalName, taxId string, sourceFields cmnmod.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := CreateBillingProfileEvent{
 		Tenant:           aggregate.GetTenant(),
 		BillingProfileId: billingProfileId,
-		Name:             name,
+		LegalName:        legalName,
+		TaxId:            taxId,
 		CreatedAt:        createdAt,
 		UpdatedAt:        updatedAt,
 		SourceFields:     sourceFields,

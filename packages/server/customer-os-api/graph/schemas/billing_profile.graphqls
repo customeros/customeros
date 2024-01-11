@@ -6,7 +6,8 @@ type BillingProfile implements SourceFields & Node {
     id:                 ID!
     createdAt:          Time!
     updatedAt:          Time!
-    name:               String!
+    legalName:          String!
+    taxId:              String!
     source:             DataSource!
     sourceOfTruth:      DataSource!
     appSource:          String!
@@ -14,6 +15,7 @@ type BillingProfile implements SourceFields & Node {
 
 input BillingProfileInput {
     organizationId: ID!
-    name: String
+    legalName: String
+    taxId: String
     createdAt: Time
 }

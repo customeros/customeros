@@ -154,7 +154,8 @@ func MapDbNodeToBillingProfileEntity(dbNode *dbtype.Node) *entity.BillingProfile
 	props := utils.GetPropsFromNode(*dbNode)
 	billingProfileEntity := entity.BillingProfileEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		LegalName:     utils.GetStringPropOrEmpty(props, "legalName"),
+		TaxId:         utils.GetStringPropOrEmpty(props, "taxId"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),

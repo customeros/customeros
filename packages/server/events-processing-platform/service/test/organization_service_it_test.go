@@ -220,7 +220,8 @@ func TestOrganizationService_CreateBillingProfile(t *testing.T) {
 			AppSource: "unit-test",
 			Source:    "N/A",
 		},
-		Name: "Test Billing Profile",
+		LegalName: "Test Billing Profile",
+		TaxId:     "123456789",
 	})
 	require.Nil(t, err)
 
@@ -243,7 +244,8 @@ func TestOrganizationService_CreateBillingProfile(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, tenant, eventData.Tenant)
-	require.Equal(t, "Test Billing Profile", eventData.Name)
+	require.Equal(t, "Test Billing Profile", eventData.LegalName)
+	require.Equal(t, "123456789", eventData.TaxId)
 	test.AssertRecentTime(t, eventData.CreatedAt)
 	test.AssertRecentTime(t, eventData.UpdatedAt)
 	require.Equal(t, "N/A", eventData.SourceFields.Source)

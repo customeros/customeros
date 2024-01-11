@@ -8,7 +8,8 @@ type BillingProfileEntity struct {
 	Id            string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
-	Name          string
+	LegalName     string
+	TaxId         string
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string

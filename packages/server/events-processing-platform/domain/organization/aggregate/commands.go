@@ -50,7 +50,7 @@ func (a *OrganizationAggregate) CreateBillingProfile(ctx context.Context, reques
 	sourceFields.FromGrpc(request.SourceFields)
 	billingProfileId = utils.NewUUIDIfEmpty(request.BillingProfileId)
 
-	event, err := events.NewCreateBillingProfileEvent(a, billingProfileId, request.Name, sourceFields, createdAtNotNil, updatedAtNotNil)
+	event, err := events.NewCreateBillingProfileEvent(a, billingProfileId, request.LegalName, request.TaxId, sourceFields, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "NewCreateBillingProfileEvent")

@@ -20,7 +20,7 @@ import (
 )
 
 type BillingProfileService interface {
-	CreateBillingProfile(ctx context.Context, organizationId, name string, createdAt *time.Time) (string, error)
+	CreateBillingProfile(ctx context.Context, organizationId, legalName, taxId string, createdAt *time.Time) (string, error)
 }
 type billingProfileService struct {
 	log          logger.Logger
@@ -36,11 +36,11 @@ func NewBillingProfileService(log logger.Logger, repositories *repository.Reposi
 	}
 }
 
-func (s *billingProfileService) CreateBillingProfile(ctx context.Context, organizationId, name string, createdAt *time.Time) (string, error) {
+func (s *billingProfileService) CreateBillingProfile(ctx context.Context, organizationId, legalName, taxId string, createdAt *time.Time) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileService.CreateBillingProfile")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("name", name), log.String("organizationId", organizationId), log.Object("createdAt", createdAt))
+	span.LogFields(log.String("legalName", legalName), log.String("taxId", taxId), log.String("organizationId", organizationId), log.Object("createdAt", createdAt))
 
 	organizationExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, neo4jentity.NodeLabelOrganization)
 	if err != nil {
@@ -56,7 +56,8 @@ func (s *billingProfileService) CreateBillingProfile(ctx context.Context, organi
 	grpcRequest := organizationpb.CreateBillingProfileGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: organizationId,
-		Name:           name,
+		LegalName:      legalName,
+		TaxId:          taxId,
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		CreatedAt:      utils.ConvertTimeToTimestampPtr(createdAt),
 		SourceFields: &commonpb.SourceFields{
