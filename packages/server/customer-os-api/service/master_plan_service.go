@@ -38,75 +38,6 @@ type masterPlanService struct {
 	grpcClients  *grpc_client.Clients
 }
 
-func (s *masterPlanService) DuplicateMasterPlan(ctx context.Context, sourceMasterPlanId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanService.DuplicateMasterPlan")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("sourceMasterPlanId", sourceMasterPlanId))
-
-	sourceMasterPlanEntity, err := s.GetMasterPlanById(ctx, sourceMasterPlanId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	if sourceMasterPlanEntity == nil {
-		err = errors.New(fmt.Sprintf("Master plan with id {%s} not found", sourceMasterPlanId))
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	masterPlanMilestoneEntities, err := s.GetMasterPlanMilestonesForMasterPlans(ctx, []string{sourceMasterPlanId})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	grpcRequest := masterplanpb.CreateMasterPlanGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Name:           sourceMasterPlanEntity.Name,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		SourceFields: &commonpb.SourceFields{
-			Source:    neo4jentity.DataSourceOpenline.String(),
-			AppSource: constants.AppSourceCustomerOsApi,
-		},
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.MasterPlanClient.CreateMasterPlan(ctx, &grpcRequest)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
-		return "", err
-	}
-
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelMasterPlan, span)
-
-	for _, masterPlanMilestoneEntity := range *masterPlanMilestoneEntities {
-		if !masterPlanMilestoneEntity.Retired {
-			grpcRequestCreateMilestone := masterplanpb.CreateMasterPlanMilestoneGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				MasterPlanId:   response.Id,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				Name:           masterPlanMilestoneEntity.Name,
-				Order:          masterPlanMilestoneEntity.Order,
-				DurationHours:  masterPlanMilestoneEntity.DurationHours,
-				Optional:       masterPlanMilestoneEntity.Optional,
-				Items:          masterPlanMilestoneEntity.Items,
-				SourceFields: &commonpb.SourceFields{
-					Source:    neo4jentity.DataSourceOpenline.String(),
-					AppSource: constants.AppSourceCustomerOsApi,
-				},
-			}
-			_, err = s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequestCreateMilestone)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error from events processing: %s", err.Error())
-			}
-		}
-	}
-
-	return response.Id, nil
-}
-
 func NewMasterPlanService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) MasterPlanService {
 	return &masterPlanService{
 		log:          log,
@@ -456,5 +387,74 @@ func (s *masterPlanService) DuplicateMasterPlanMilestone(ctx context.Context, ma
 	}
 
 	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelMasterPlanMilestone, span)
+	return response.Id, nil
+}
+
+func (s *masterPlanService) DuplicateMasterPlan(ctx context.Context, sourceMasterPlanId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanService.DuplicateMasterPlan")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("sourceMasterPlanId", sourceMasterPlanId))
+
+	sourceMasterPlanEntity, err := s.GetMasterPlanById(ctx, sourceMasterPlanId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if sourceMasterPlanEntity == nil {
+		err = errors.New(fmt.Sprintf("Master plan with id {%s} not found", sourceMasterPlanId))
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	masterPlanMilestoneEntities, err := s.GetMasterPlanMilestonesForMasterPlans(ctx, []string{sourceMasterPlanId})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	grpcRequest := masterplanpb.CreateMasterPlanGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		Name:           sourceMasterPlanEntity.Name,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		SourceFields: &commonpb.SourceFields{
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		},
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := s.grpcClients.MasterPlanClient.CreateMasterPlan(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return "", err
+	}
+
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelMasterPlan, span)
+
+	for _, masterPlanMilestoneEntity := range *masterPlanMilestoneEntities {
+		if !masterPlanMilestoneEntity.Retired {
+			grpcRequestCreateMilestone := masterplanpb.CreateMasterPlanMilestoneGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				MasterPlanId:   response.Id,
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				Name:           masterPlanMilestoneEntity.Name,
+				Order:          masterPlanMilestoneEntity.Order,
+				DurationHours:  masterPlanMilestoneEntity.DurationHours,
+				Optional:       masterPlanMilestoneEntity.Optional,
+				Items:          masterPlanMilestoneEntity.Items,
+				SourceFields: &commonpb.SourceFields{
+					Source:    neo4jentity.DataSourceOpenline.String(),
+					AppSource: constants.AppSourceCustomerOsApi,
+				},
+			}
+			_, err = s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequestCreateMilestone)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error from events processing: %s", err.Error())
+			}
+		}
+	}
+
 	return response.Id, nil
 }
