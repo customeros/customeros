@@ -533,3 +533,35 @@ func (s *organizationService) CreateBillingProfile(ctx context.Context, request 
 
 	return &organizationpb.BillingProfileIdGrpcResponse{Id: billingProfileId}, nil
 }
+
+func (s *organizationService) LinkEmailToBillingProfile(ctx context.Context, request *organizationpb.LinkEmailToBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkEmailToOrganization")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	_, err := s.organizationRequestHandler.HandleWithRetry(ctx, request.Tenant, request.OrganizationId, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(LinkEmailToBillingProfile) tenant:{%s}, organization id: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, s.errResponse(err)
+	}
+
+	return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, nil
+}
+
+func (s *organizationService) UnlinkEmailFromBillingProfile(ctx context.Context, request *organizationpb.UnlinkEmailFromBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkEmailToOrganization")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	_, err := s.organizationRequestHandler.HandleWithRetry(ctx, request.Tenant, request.OrganizationId, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UnlinkEmailFromBillingProfile) tenant:{%s}, organization id: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, s.errResponse(err)
+	}
+
+	return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, nil
+}

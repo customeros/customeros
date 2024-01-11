@@ -97,11 +97,13 @@ type Organization struct {
 }
 
 type BillingProfile struct {
-	Id           string        `json:"id"`
-	Name         string        `json:"name"`
-	CreatedAt    time.Time     `json:"createdAt"`
-	UpdatedAt    time.Time     `json:"updatedAt"`
-	SourceFields cmnmod.Source `json:"sourceFields"`
+	Id             string        `json:"id"`
+	Name           string        `json:"name"`
+	CreatedAt      time.Time     `json:"createdAt"`
+	UpdatedAt      time.Time     `json:"updatedAt"`
+	SourceFields   cmnmod.Source `json:"sourceFields"`
+	PrimaryEmailId string        `json:"primaryEmailId"`
+	EmailIds       []string      `json:"emailIds"`
 }
 
 type OnboardingDetails struct {
@@ -118,6 +120,9 @@ type OrganizationPhoneNumber struct {
 type OrganizationEmail struct {
 	Primary bool   `json:"primary"`
 	Label   string `json:"label"`
+}
+
+type BillingProfileEmail struct {
 }
 
 type ParentOrganization struct {
