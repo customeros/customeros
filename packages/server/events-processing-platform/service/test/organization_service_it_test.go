@@ -196,3 +196,57 @@ func TestOrganizationService_UpdateOnboardingStatus(t *testing.T) {
 	require.Equal(t, string(model.OnboardingStatusDone), eventData.Status)
 	require.Equal(t, "Some comments", eventData.Comments)
 }
+
+func TestOrganizationService_CreateBillingProfile(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	tenant := "ziggy"
+	organizationId := uuid.New().String()
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	organizationClient := organizationpb.NewOrganizationGrpcServiceClient(grpcConnection)
+
+	// Grpc call
+	response, err := organizationClient.CreateBillingProfile(ctx, &organizationpb.CreateBillingProfileGrpcRequest{
+		Tenant:           tenant,
+		OrganizationId:   organizationId,
+		LoggedInUserId:   "user-id-123",
+		BillingProfileId: "",
+		SourceFields: &commonpb.SourceFields{
+			AppSource: "unit-test",
+			Source:    "N/A",
+		},
+		Name: "Test Billing Profile",
+	})
+	require.Nil(t, err)
+
+	// Assert response
+	require.NotNil(t, response)
+	require.NotEmpty(t, response.Id)
+
+	// Retrieve and assert events
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	organizationAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenant, organizationId)
+	eventList := eventsMap[organizationAggregate.ID]
+	require.Equal(t, 1, len(eventList))
+
+	require.Equal(t, orgevents.OrganizationCreateBillingProfileV1, eventList[0].GetEventType())
+	require.Equal(t, string(orgaggregate.OrganizationAggregateType)+"-"+tenant+"-"+organizationId, eventList[0].GetAggregateID())
+
+	var eventData orgevents.CreateBillingProfileEvent
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err)
+
+	require.Equal(t, tenant, eventData.Tenant)
+	test.AssertRecentTime(t, eventData.UpdatedAt)
+	require.Equal(t, "Test Billing Profile", eventData.Name)
+	test.AssertRecentTime(t, eventData.CreatedAt)
+	test.AssertRecentTime(t, eventData.UpdatedAt)
+	require.Equal(t, "N/A", eventData.SourceFields.Source)
+	require.Equal(t, "unit-test", eventData.SourceFields.AppSource)
+}

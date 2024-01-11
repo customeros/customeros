@@ -17,7 +17,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type MasterPlanService interface {
@@ -79,15 +78,7 @@ func (s *masterPlanService) DuplicateMasterPlan(ctx context.Context, sourceMaste
 		return "", err
 	}
 
-	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		contractFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, neo4jentity.NodeLabelMasterPlan)
-		if contractFound && findErr == nil {
-			span.LogFields(log.Bool("response - master plan saved in db", true))
-			break
-		}
-		time.Sleep(utils.BackOffIncrementalDelay(i))
-	}
-	span.LogFields(log.String("response - created masterPlanId", response.Id))
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelMasterPlan, span)
 
 	for _, masterPlanMilestoneEntity := range *masterPlanMilestoneEntities {
 		if !masterPlanMilestoneEntity.Retired {
@@ -148,16 +139,8 @@ func (s *masterPlanService) CreateMasterPlan(ctx context.Context, name string) (
 		return "", err
 	}
 
-	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		contractFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, neo4jentity.NodeLabelMasterPlan)
-		if contractFound && findErr == nil {
-			span.LogFields(log.Bool("response - master plan saved in db", true))
-			break
-		}
-		time.Sleep(utils.BackOffIncrementalDelay(i))
-	}
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelMasterPlan, span)
 
-	span.LogFields(log.String("response - created masterPlanId", response.Id))
 	return response.Id, nil
 }
 
@@ -266,14 +249,7 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, maste
 		return "", err
 	}
 
-	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		contractFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, neo4jentity.NodeLabelMasterPlanMilestone)
-		if contractFound && findErr == nil {
-			span.LogFields(log.Bool("response - master plan milestone saved in db", true))
-			break
-		}
-		time.Sleep(utils.BackOffIncrementalDelay(i))
-	}
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelMasterPlanMilestone, span)
 
 	span.LogFields(log.String("response - created masterPlanMilestoneId", response.Id))
 	return response.Id, nil
@@ -479,15 +455,6 @@ func (s *masterPlanService) DuplicateMasterPlanMilestone(ctx context.Context, ma
 		return "", err
 	}
 
-	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		contractFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, neo4jentity.NodeLabelMasterPlanMilestone)
-		if contractFound && findErr == nil {
-			span.LogFields(log.Bool("response - master plan milestone saved in db", true))
-			break
-		}
-		time.Sleep(utils.BackOffIncrementalDelay(i))
-	}
-
-	span.LogFields(log.String("response - created masterPlanMilestoneId", response.Id))
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelMasterPlanMilestone, span)
 	return response.Id, nil
 }

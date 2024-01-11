@@ -4,6 +4,7 @@ import (
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	contract_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	invoicing_cycle_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoicing_cycle"
 	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	log_entry_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
 	master_plan_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
@@ -27,6 +28,7 @@ type Clients struct {
 	ServiceLineItemClient service_line_item_grpc_service.ServiceLineItemGrpcServiceClient
 	OpportunityClient     opportunity_grpc_service.OpportunityGrpcServiceClient
 	MasterPlanClient      master_plan_grpc_service.MasterPlanGrpcServiceClient
+	InvoicingCycleClient  invoicing_cycle_grpc_service.InvoicingCycleServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Clients {
@@ -45,6 +47,7 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		ServiceLineItemClient: service_line_item_grpc_service.NewServiceLineItemGrpcServiceClient(conn),
 		OpportunityClient:     opportunity_grpc_service.NewOpportunityGrpcServiceClient(conn),
 		MasterPlanClient:      master_plan_grpc_service.NewMasterPlanGrpcServiceClient(conn),
+		InvoicingCycleClient:  invoicing_cycle_grpc_service.NewInvoicingCycleServiceClient(conn),
 	}
 	return &clients
 }

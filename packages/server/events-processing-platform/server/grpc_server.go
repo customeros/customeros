@@ -75,7 +75,7 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 	contactService := service.NewContactService(server.log, server.commandHandlers.Contact)
 	contactpb.RegisterContactGrpcServiceServer(grpcServer, contactService)
 
-	organizationService := service.NewOrganizationService(server.log, server.commandHandlers.Organization)
+	organizationService := service.NewOrganizationService(server.log, server.commandHandlers.Organization, server.aggregateStore, server.cfg)
 	organizationpb.RegisterOrganizationGrpcServiceServer(grpcServer, organizationService)
 
 	phoneNumberService := service.NewPhoneNumberService(server.log, server.repositories.Neo4jRepositories, server.commandHandlers.PhoneNumber)

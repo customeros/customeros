@@ -2,6 +2,8 @@ package aggregate
 
 import (
 	"context"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -17,6 +19,47 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
+
+func (a *OrganizationAggregate) HandleRequest(ctx context.Context, request any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.HandleRequest")
+	defer span.Finish()
+
+	switch r := request.(type) {
+	case *organizationpb.CreateBillingProfileGrpcRequest:
+		return a.CreateBillingProfile(ctx, r)
+	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
+		return nil, eventstore.ErrInvalidRequestType
+	}
+}
+
+func (a *OrganizationAggregate) CreateBillingProfile(ctx context.Context, request *organizationpb.CreateBillingProfileGrpcRequest) (billingProfileId string, err error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.CreateBillingProfile")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
+	sourceFields := commonmodel.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+	billingProfileId = utils.NewUUIDIfEmpty(request.BillingProfileId)
+
+	event, err := events.NewCreateBillingProfileEvent(a, billingProfileId, request.Name, sourceFields, createdAtNotNil, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", errors.Wrap(err, "NewCreateBillingProfileEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    sourceFields.AppSource,
+	})
+
+	return billingProfileId, a.Apply(event)
+}
 
 func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.HandleCommand")

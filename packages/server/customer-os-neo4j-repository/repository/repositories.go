@@ -7,6 +7,7 @@ import (
 type Repositories struct {
 	ActionReadRepository              ActionReadRepository
 	ActionWriteRepository             ActionWriteRepository
+	BillingProfileWriteRepository     BillingProfileWriteRepository
 	CommentWriteRepository            CommentWriteRepository
 	CommonReadRepository              CommonReadRepository
 	ContactWriteRepository            ContactWriteRepository
@@ -41,12 +42,14 @@ type Repositories struct {
 	UserReadRepository                UserReadRepository
 	UserWriteRepository               UserWriteRepository
 	InvoicingCycleWriteRepository     InvoicingCycleWriteRepository
+	InvoicingCycleReadRepository      InvoicingCycleReadRepository
 }
 
 func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string) *Repositories {
 	repositories := Repositories{
 		ActionReadRepository:              NewActionReadRepository(driver, neo4jDatabase),
 		ActionWriteRepository:             NewActionWriteRepository(driver, neo4jDatabase),
+		BillingProfileWriteRepository:     NewBillingProfileWriteRepository(driver, neo4jDatabase),
 		CommentWriteRepository:            NewCommentWriteRepository(driver, neo4jDatabase),
 		CommonReadRepository:              NewCommonReadRepository(driver, neo4jDatabase),
 		ContactWriteRepository:            NewContactWriteRepository(driver, neo4jDatabase),
@@ -81,6 +84,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		UserReadRepository:                NewUserReadRepository(driver, neo4jDatabase),
 		UserWriteRepository:               NewUserWriteRepository(driver, neo4jDatabase),
 		InvoicingCycleWriteRepository:     NewInvoicingCycleWriteRepository(driver, neo4jDatabase),
+		InvoicingCycleReadRepository:      NewInvoicingCycleReadRepository(driver, neo4jDatabase),
 	}
 	return &repositories
 }

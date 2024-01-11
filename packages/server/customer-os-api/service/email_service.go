@@ -18,7 +18,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
-	"time"
 )
 
 type EmailService interface {
@@ -321,15 +320,8 @@ func (s *emailService) CreateEmailAddressByEvents(ctx context.Context, email, ap
 			s.log.Errorf("Error from events processing %s", err.Error())
 			return "", err
 		}
-		for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-			emailEntity, findEmailErr := s.GetById(ctx, response.Id)
-			if emailEntity != nil && findEmailErr == nil {
-				span.LogFields(log.Bool("emailSavedInGraphDb", true))
-				break
-			}
-			time.Sleep(utils.BackOffIncrementalDelay(i))
-		}
-		span.LogFields(log.String("createdEmailId", response.Id))
+
+		WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelEmail, span)
 		return response.Id, nil
 	} else {
 		return emailEntity.Id, nil

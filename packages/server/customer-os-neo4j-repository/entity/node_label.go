@@ -11,6 +11,7 @@ const (
 	NodeLabelNote                = "Note"
 	NodeLabelLogEntry            = "LogEntry"
 	NodeLabelOrganization        = "Organization"
+	NodeLabelBillingProfile      = "BillingProfile"
 	NodeLabelMasterPlan          = "MasterPlan"
 	NodeLabelMasterPlanMilestone = "MasterPlanMilestone"
 	NodeLabelAction              = "Action"

@@ -893,3 +893,28 @@ func (h *OrganizationEventHandler) OnUpdateOwner(ctx context.Context, evt events
 
 	return h.repositories.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, eventData.Tenant, eventData.OrganizationId, eventData.OwnerUserId)
 }
+
+func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnCreateBillingProfile")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData events.CreateBillingProfileEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	data := neo4jrepository.BillingProfileCreateFields{
+		OrganizationId: organizationId,
+		Name:           eventData.Name,
+		CreatedAt:      eventData.CreatedAt,
+		UpdatedAt:      eventData.UpdatedAt,
+		SourceFields: neo4jmodel.Source{
+			Source:    helper.GetSource(eventData.SourceFields.Source),
+			AppSource: helper.GetSource(eventData.SourceFields.AppSource),
+		},
+	}
+	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.Create(ctx, eventData.Tenant, eventData.BillingProfileId, data)
+}

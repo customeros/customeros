@@ -3625,6 +3625,17 @@ span.slack_code {
   content: '¶';
 }
 
+a {
+  color: var(--chakra-colors-primary-600);
+  text-decoration: underline;
+  word-break: break-all;
+  display: inline-block;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 /**
  * Styles extracted from: packages/remirror__theme/src/theme.ts
  */
@@ -3700,6 +3711,9 @@ span.slack_code {
 
   & > div {
     background: transparent !important;
+  }
+  a {
+    cursor: text;
   }
 }
 
@@ -3829,18 +3843,6 @@ span.slack_code {
 
 .chakra-portal div:has(> .customeros-remirror-tooltip){
   z-index: 10
-}
-
-a {
-  color: var(--chakra-colors-primary-600);
-  text-decoration: underline;
-  cursor: pointer;
-  word-break: break-all;
-  display: inline-block;
-
-  &:hover {
-    text-decoration: underline;
-  }
 }
 
 .slack_strikethrough{

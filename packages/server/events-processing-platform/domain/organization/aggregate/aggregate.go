@@ -63,6 +63,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onOnboardingStatusUpdate(event)
 	case events.OrganizationUpdateOwnerV1:
 		return a.onOrganizationOwnerUpdate(event)
+	case events.OrganizationCreateBillingProfileV1:
+		return a.onCreateBillingProfile(event)
 	case events.OrganizationUpdateRenewalLikelihoodV1,
 		events.OrganizationUpdateRenewalForecastV1,
 		events.OrganizationUpdateBillingDetailsV1,
@@ -503,5 +505,26 @@ func (a *OrganizationAggregate) onOrganizationOwnerUpdate(event eventstore.Event
 	}
 
 	// do nothing
+	return nil
+}
+
+func (a *OrganizationAggregate) onCreateBillingProfile(event eventstore.Event) error {
+	var eventData events.CreateBillingProfileEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{
+		Id:           eventData.BillingProfileId,
+		Name:         eventData.Name,
+		CreatedAt:    eventData.CreatedAt,
+		UpdatedAt:    eventData.UpdatedAt,
+		SourceFields: eventData.SourceFields,
+	}
+
 	return nil
 }

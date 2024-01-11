@@ -93,6 +93,15 @@ type Organization struct {
 	Headquarters        string                             `json:"headquarters,omitempty"`
 	EmployeeGrowthRate  string                             `json:"employeeGrowthRate,omitempty"`
 	OnboardingDetails   OnboardingDetails                  `json:"onboardingDetails,omitempty"`
+	BillingProfiles     map[string]BillingProfile          `json:"billingProfiles,omitempty"`
+}
+
+type BillingProfile struct {
+	Id           string        `json:"id"`
+	Name         string        `json:"name"`
+	CreatedAt    time.Time     `json:"createdAt"`
+	UpdatedAt    time.Time     `json:"updatedAt"`
+	SourceFields cmnmod.Source `json:"sourceFields"`
 }
 
 type OnboardingDetails struct {

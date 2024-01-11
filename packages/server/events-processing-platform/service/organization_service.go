@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -21,14 +24,16 @@ import (
 
 type organizationService struct {
 	organizationpb.UnimplementedOrganizationGrpcServiceServer
-	log                  logger.Logger
-	organizationCommands *command_handler.CommandHandlers
+	log                        logger.Logger
+	organizationCommands       *command_handler.CommandHandlers
+	organizationRequestHandler organization.OrganizationRequestHandler
 }
 
-func NewOrganizationService(log logger.Logger, organizationCommands *command_handler.CommandHandlers) *organizationService {
+func NewOrganizationService(log logger.Logger, organizationCommands *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config) *organizationService {
 	return &organizationService{
-		log:                  log,
-		organizationCommands: organizationCommands,
+		log:                        log,
+		organizationCommands:       organizationCommands,
+		organizationRequestHandler: organization.NewOrganizationRequestHandler(log, aggregateStore, cfg.Utils),
 	}
 }
 
@@ -506,4 +511,25 @@ func containsOrganizationMaskFieldAll(fields []organizationpb.OrganizationMaskFi
 		}
 	}
 	return false
+}
+
+func (s *organizationService) CreateBillingProfile(ctx context.Context, request *organizationpb.CreateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.CreateBillingProfile")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
+
+	result, err := s.organizationRequestHandler.HandleWithRetry(ctx, request.Tenant, request.OrganizationId, request)
+	billingProfileId := ""
+	if result != nil {
+		billingProfileId = result.(string)
+	}
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(CreateBillingProfile) tenant:{%s}, organization id: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return &organizationpb.BillingProfileIdGrpcResponse{Id: billingProfileId}, s.errResponse(err)
+	}
+
+	return &organizationpb.BillingProfileIdGrpcResponse{Id: billingProfileId}, nil
 }

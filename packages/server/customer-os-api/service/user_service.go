@@ -23,7 +23,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
-	"time"
 )
 
 type UserService interface {
@@ -669,15 +668,8 @@ func (s *userService) Create(ctx context.Context, userEntity entity.UserEntity) 
 		s.log.Errorf("Error from events processing %s", err.Error())
 		return "", err
 	}
-	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		user, findErr := s.GetById(ctx, response.Id)
-		if user != nil && findErr == nil {
-			span.LogFields(log.Bool("userSavedInGraphDb", true))
-			break
-		}
-		time.Sleep(utils.BackOffIncrementalDelay(i))
-	}
-	span.LogFields(log.String("createdUserId", response.Id))
+
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelUser, span)
 	return response.Id, nil
 }
 

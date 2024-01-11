@@ -10,6 +10,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
@@ -578,4 +579,48 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	props := utils.GetPropsFromNode(*actionDbNode)
 	require.Equal(t, "Some comments", utils.GetStringPropOrEmpty(props, "comments"))
 	require.Equal(t, "NOT_STARTED", utils.GetStringPropOrEmpty(props, "status"))
+}
+
+func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	orgEventHandler := &OrganizationEventHandler{
+		repositories: testDatabase.Repositories,
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	now := utils.Now()
+	billingProfileId := uuid.New().String()
+	event, err := events.NewCreateBillingProfileEvent(orgAggregate, billingProfileId, "Billing profile",
+		cmnmod.Source{
+			Source:    constants.SourceOpenline,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		}, now, now)
+	require.Nil(t, err)
+	err = orgEventHandler.OnCreateBillingProfile(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jentity.NodeLabelOrganization:                      1,
+		neo4jentity.NodeLabelOrganization + "_" + tenantName:   1,
+		neo4jentity.NodeLabelBillingProfile:                    1,
+		neo4jentity.NodeLabelBillingProfile + "_" + tenantName: 1,
+	})
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "HAS_BILLING_PROFILE", billingProfileId)
+
+	// Check billing profile
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelBillingProfile, billingProfileId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
+	require.Equal(t, billingProfileId, billingProfile.Id)
+	require.Equal(t, "Billing profile", billingProfile.Name)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), billingProfile.Source)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), billingProfile.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, billingProfile.AppSource)
+	require.Equal(t, now, billingProfile.CreatedAt)
+	require.Equal(t, now, billingProfile.UpdatedAt)
 }

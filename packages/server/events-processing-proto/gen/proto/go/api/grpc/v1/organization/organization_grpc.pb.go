@@ -40,6 +40,7 @@ type OrganizationGrpcServiceClient interface {
 	UpdateOrganization(ctx context.Context, in *UpdateOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	AddSocial(ctx context.Context, in *AddSocialGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner(ctx context.Context, in *UpdateOrganizationOwnerGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	CreateBillingProfile(ctx context.Context, in *CreateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 }
 
 type organizationGrpcServiceClient struct {
@@ -212,6 +213,15 @@ func (c *organizationGrpcServiceClient) UpdateOrganizationOwner(ctx context.Cont
 	return out, nil
 }
 
+func (c *organizationGrpcServiceClient) CreateBillingProfile(ctx context.Context, in *CreateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error) {
+	out := new(BillingProfileIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/CreateBillingProfile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrganizationGrpcServiceServer is the server API for OrganizationGrpcService service.
 // All implementations should embed UnimplementedOrganizationGrpcServiceServer
 // for forward compatibility
@@ -234,6 +244,7 @@ type OrganizationGrpcServiceServer interface {
 	UpdateOrganization(context.Context, *UpdateOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	AddSocial(context.Context, *AddSocialGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner(context.Context, *UpdateOrganizationOwnerGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	CreateBillingProfile(context.Context, *CreateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 }
 
 // UnimplementedOrganizationGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -293,6 +304,9 @@ func (UnimplementedOrganizationGrpcServiceServer) AddSocial(context.Context, *Ad
 }
 func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganizationOwner(context.Context, *UpdateOrganizationOwnerGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationOwner not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) CreateBillingProfile(context.Context, *CreateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateBillingProfile not implemented")
 }
 
 // UnsafeOrganizationGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -630,6 +644,24 @@ func _OrganizationGrpcService_UpdateOrganizationOwner_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrganizationGrpcService_CreateBillingProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateBillingProfileGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).CreateBillingProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/CreateBillingProfile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).CreateBillingProfile(ctx, req.(*CreateBillingProfileGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrganizationGrpcService_ServiceDesc is the grpc.ServiceDesc for OrganizationGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -708,6 +740,10 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateOrganizationOwner",
 			Handler:    _OrganizationGrpcService_UpdateOrganizationOwner_Handler,
+		},
+		{
+			MethodName: "CreateBillingProfile",
+			Handler:    _OrganizationGrpcService_CreateBillingProfile_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
