@@ -181,20 +181,69 @@ func CreateLogEntry(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return logEntryId
 }
 
+func CreateBillingProfileForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, billingProfile entity.BillingProfileEntity) string {
+	billingProfileId := CreateBillingProfile(ctx, driver, tenant, billingProfile)
+	LinkNodes(ctx, driver, orgId, billingProfileId, "HAS_BILLING_PROFILE")
+	return billingProfileId
+}
+
+func CreateBillingProfile(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, billingProfile entity.BillingProfileEntity) string {
+	billingProfileId := utils.NewUUIDIfEmpty(billingProfile.Id)
+	query := fmt.Sprintf(`
+			  MERGE (bp:BillingProfile {id:$id})
+				SET bp:BillingProfile_%s
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant": tenant,
+		"id":     billingProfileId,
+	})
+	return billingProfileId
+}
+
 func CreateLogEntryForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry entity.LogEntryEntity) string {
 	logEntryId := CreateLogEntry(ctx, driver, tenant, logEntry)
 	LinkNodes(ctx, driver, orgId, logEntryId, "LOGGED")
 	return logEntryId
 }
 
-func LinkNodes(ctx context.Context, driver *neo4j.DriverWithContext, fromId, toId string, relation string) {
+func LinkNodes(ctx context.Context, driver *neo4j.DriverWithContext, fromId, toId string, relation string, properties ...map[string]any) {
 	query := fmt.Sprintf(`
 			  MATCH (from {id: $fromId})
 			  MATCH (to {id: $toId})
-			  MERGE (from)-[:%s]->(to)`, relation)
-
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+			  MERGE (from)-[rel:%s]->(to)`, relation)
+	params := map[string]any{
 		"fromId": fromId,
 		"toId":   toId,
+	}
+	if len(properties) > 0 {
+		params["properties"] = properties[0]
+		query += " SET rel += $properties"
+	}
+
+	ExecuteWriteQuery(ctx, driver, query, params)
+}
+
+func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, entity entity.EmailEntity) string {
+	emailId := utils.NewUUIDIfEmpty(entity.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+								MERGE (e:Email {id:$emailId})
+								MERGE (e)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+								ON CREATE SET e:Email_%s,
+									e.email=$email,
+									e.rawEmail=$rawEmail,
+									e.isReachable=$isReachable,
+									e.createdAt=$createdAt,
+									e.updatedAt=$updatedAt
+							`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":      tenant,
+		"emailId":     emailId,
+		"email":       entity.Email,
+		"rawEmail":    entity.RawEmail,
+		"isReachable": entity.IsReachable,
+		"createdAt":   entity.CreatedAt,
+		"updatedAt":   entity.UpdatedAt,
 	})
+	return emailId
 }

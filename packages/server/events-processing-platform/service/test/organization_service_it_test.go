@@ -336,7 +336,7 @@ func TestOrganizationService_UnlinkEmailFromBillingProfile(t *testing.T) {
 	require.Equal(t, orgevents.OrganizationEmailUnlinkFromBillingProfileV1, eventList[0].GetEventType())
 	require.Equal(t, string(orgaggregate.OrganizationAggregateType)+"-"+tenant+"-"+organizationId, eventList[0].GetAggregateID())
 
-	var eventData orgevents.UnlinkEmailToBillingProfileEvent
+	var eventData orgevents.UnlinkEmailFromBillingProfileEvent
 	err = eventList[0].GetJsonData(&eventData)
 	require.Nil(t, err)
 
