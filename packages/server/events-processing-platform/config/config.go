@@ -27,6 +27,7 @@ type Subscriptions struct {
 	InteractionEventSubscription      InteractionEventSubscription
 	ContractSubscription              ContractSubscription
 	NotificationsSubscription         NotificationsSubscription
+	InvoiceSubscription               InvoiceSubscription
 }
 
 type GraphSubscription struct {
@@ -110,6 +111,15 @@ type NotificationsSubscription struct {
 	IgnoreEvents      bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"true"`
 	RedirectUrl       string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_REDIRECT_URL" envDefault:"https://app.openline.dev"`
 	EmailTemplatePath string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_EMAIL_TEMPLATE_PATH" envDefault:"./email_templates"`
+}
+
+type InvoiceSubscription struct {
+	Enabled          bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_ENABLED" envDefault:"true"`
+	GroupName        string `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_GROUP_NAME" envDefault:"invoice-v1" validate:"required"`
+	PoolSize         int    `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
+	BufferSizeClient uint32 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
+	StartPosition    uint64 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_START_POSITION" envDefault:"0"`
+	IgnoreEvents     bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"true"`
 }
 
 type Services struct {

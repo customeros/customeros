@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/invoice"
 	"os"
 	"os/signal"
 	"syscall"
@@ -211,6 +212,17 @@ func (server *server) Start(parentCtx context.Context) error {
 			err := notificationsSubscriber.Connect(ctx, notificationsSubscriber.ProcessEvents)
 			if err != nil {
 				server.log.Errorf("(notificationsSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.cfg.Subscriptions.InvoiceSubscription.Enabled {
+		invoiceSubscriber := invoice.NewInvoiceSubscriber(server.log, esdb, server.repositories, grpcClients, server.cfg)
+		go func() {
+			err := invoiceSubscriber.Connect(ctx, invoiceSubscriber.ProcessEvents)
+			if err != nil {
+				server.log.Errorf("(invoiceSubscriber.Connect) err: {%v}", err)
 				cancel()
 			}
 		}()
