@@ -94,9 +94,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
                   noOfLines={2}
                   color='inherit'
                 >
-                  {content && `${content[0]} owner of`}
+                  {content && `${content[0]} owner of `}
                   <Text as='span' fontWeight='medium' color='inherit'>
-                    {content ? content[1] : 'Unnamed'}
+                    {content &&
+                      (content[1]?.trim()?.length ? content[1] : 'Unnamed')}
                   </Text>
                 </Text>
                 <Text
