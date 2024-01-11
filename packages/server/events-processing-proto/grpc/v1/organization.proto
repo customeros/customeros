@@ -115,6 +115,25 @@ message LinkEmailToOrganizationGrpcRequest {
   string loggedInUserId = 6;
 }
 
+message LinkEmailToBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string emailId = 4;
+  string loggedInUserId = 5;
+  string appSource = 6;
+  bool primary = 7;
+}
+
+message UnlinkEmailFromBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string emailId = 4;
+  string loggedInUserId = 5;
+  string appSource = 6;
+}
+
 message LinkLocationToOrganizationGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -271,4 +290,6 @@ service organizationGrpcService {
   rpc AddSocial(AddSocialGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationOwner(UpdateOrganizationOwnerGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc LinkEmailToBillingProfile(LinkEmailToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc UnlinkEmailFromBillingProfile(UnlinkEmailFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
 }

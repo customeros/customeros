@@ -243,10 +243,105 @@ func TestOrganizationService_CreateBillingProfile(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, tenant, eventData.Tenant)
-	test.AssertRecentTime(t, eventData.UpdatedAt)
 	require.Equal(t, "Test Billing Profile", eventData.Name)
 	test.AssertRecentTime(t, eventData.CreatedAt)
 	test.AssertRecentTime(t, eventData.UpdatedAt)
 	require.Equal(t, "N/A", eventData.SourceFields.Source)
 	require.Equal(t, "unit-test", eventData.SourceFields.AppSource)
+}
+
+func TestOrganizationService_LinkEmailToBillingProfile(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	tenant := "ziggy"
+	organizationId := uuid.New().String()
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	organizationClient := organizationpb.NewOrganizationGrpcServiceClient(grpcConnection)
+
+	// Grpc call
+	response, err := organizationClient.LinkEmailToBillingProfile(ctx, &organizationpb.LinkEmailToBillingProfileGrpcRequest{
+		Tenant:           tenant,
+		OrganizationId:   organizationId,
+		LoggedInUserId:   "user-id-123",
+		BillingProfileId: "profile-123",
+		EmailId:          "email-123",
+		Primary:          true,
+	})
+	require.Nil(t, err)
+
+	// Assert response
+	require.NotNil(t, response)
+	require.NotEmpty(t, response.Id)
+
+	// Retrieve and assert events
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	organizationAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenant, organizationId)
+	eventList := eventsMap[organizationAggregate.ID]
+	require.Equal(t, 1, len(eventList))
+
+	require.Equal(t, orgevents.OrganizationEmailLinkToBillingProfileV1, eventList[0].GetEventType())
+	require.Equal(t, string(orgaggregate.OrganizationAggregateType)+"-"+tenant+"-"+organizationId, eventList[0].GetAggregateID())
+
+	var eventData orgevents.LinkEmailToBillingProfileEvent
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err)
+
+	require.Equal(t, tenant, eventData.Tenant)
+	test.AssertRecentTime(t, eventData.UpdatedAt)
+	require.Equal(t, true, eventData.Primary)
+	require.Equal(t, "profile-123", eventData.BillingProfileId)
+	require.Equal(t, "email-123", eventData.EmailId)
+}
+
+func TestOrganizationService_UnlinkEmailFromBillingProfile(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	tenant := "ziggy"
+	organizationId := uuid.New().String()
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	organizationClient := organizationpb.NewOrganizationGrpcServiceClient(grpcConnection)
+
+	// Grpc call
+	response, err := organizationClient.UnlinkEmailFromBillingProfile(ctx, &organizationpb.UnlinkEmailFromBillingProfileGrpcRequest{
+		Tenant:           tenant,
+		OrganizationId:   organizationId,
+		LoggedInUserId:   "user-id-123",
+		BillingProfileId: "profile-123",
+		EmailId:          "email-123",
+	})
+	require.Nil(t, err)
+
+	// Assert response
+	require.NotNil(t, response)
+	require.NotEmpty(t, response.Id)
+
+	// Retrieve and assert events
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	organizationAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenant, organizationId)
+	eventList := eventsMap[organizationAggregate.ID]
+	require.Equal(t, 1, len(eventList))
+
+	require.Equal(t, orgevents.OrganizationEmailUnlinkFromBillingProfileV1, eventList[0].GetEventType())
+	require.Equal(t, string(orgaggregate.OrganizationAggregateType)+"-"+tenant+"-"+organizationId, eventList[0].GetAggregateID())
+
+	var eventData orgevents.UnlinkEmailToBillingProfileEvent
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err)
+
+	require.Equal(t, tenant, eventData.Tenant)
+	test.AssertRecentTime(t, eventData.UpdatedAt)
+	require.Equal(t, "profile-123", eventData.BillingProfileId)
+	require.Equal(t, "email-123", eventData.EmailId)
 }
