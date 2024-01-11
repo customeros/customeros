@@ -1231,6 +1231,180 @@ func (x *LinkLocationToOrganizationGrpcRequest) GetLoggedInUserId() string {
 	return ""
 }
 
+type LinkLocationToBillingProfileGrpcRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Tenant           string `protobuf:"bytes,1,opt,name=tenant,proto3" json:"tenant,omitempty"`
+	OrganizationId   string `protobuf:"bytes,2,opt,name=organizationId,proto3" json:"organizationId,omitempty"`
+	BillingProfileId string `protobuf:"bytes,3,opt,name=billingProfileId,proto3" json:"billingProfileId,omitempty"`
+	LocationId       string `protobuf:"bytes,4,opt,name=locationId,proto3" json:"locationId,omitempty"`
+	LoggedInUserId   string `protobuf:"bytes,5,opt,name=loggedInUserId,proto3" json:"loggedInUserId,omitempty"`
+	AppSource        string `protobuf:"bytes,6,opt,name=appSource,proto3" json:"appSource,omitempty"`
+}
+
+func (x *LinkLocationToBillingProfileGrpcRequest) Reset() {
+	*x = LinkLocationToBillingProfileGrpcRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_organization_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LinkLocationToBillingProfileGrpcRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LinkLocationToBillingProfileGrpcRequest) ProtoMessage() {}
+
+func (x *LinkLocationToBillingProfileGrpcRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_organization_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LinkLocationToBillingProfileGrpcRequest.ProtoReflect.Descriptor instead.
+func (*LinkLocationToBillingProfileGrpcRequest) Descriptor() ([]byte, []int) {
+	return file_organization_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *LinkLocationToBillingProfileGrpcRequest) GetTenant() string {
+	if x != nil {
+		return x.Tenant
+	}
+	return ""
+}
+
+func (x *LinkLocationToBillingProfileGrpcRequest) GetOrganizationId() string {
+	if x != nil {
+		return x.OrganizationId
+	}
+	return ""
+}
+
+func (x *LinkLocationToBillingProfileGrpcRequest) GetBillingProfileId() string {
+	if x != nil {
+		return x.BillingProfileId
+	}
+	return ""
+}
+
+func (x *LinkLocationToBillingProfileGrpcRequest) GetLocationId() string {
+	if x != nil {
+		return x.LocationId
+	}
+	return ""
+}
+
+func (x *LinkLocationToBillingProfileGrpcRequest) GetLoggedInUserId() string {
+	if x != nil {
+		return x.LoggedInUserId
+	}
+	return ""
+}
+
+func (x *LinkLocationToBillingProfileGrpcRequest) GetAppSource() string {
+	if x != nil {
+		return x.AppSource
+	}
+	return ""
+}
+
+type UnlinkLocationFromBillingProfileGrpcRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Tenant           string `protobuf:"bytes,1,opt,name=tenant,proto3" json:"tenant,omitempty"`
+	OrganizationId   string `protobuf:"bytes,2,opt,name=organizationId,proto3" json:"organizationId,omitempty"`
+	BillingProfileId string `protobuf:"bytes,3,opt,name=billingProfileId,proto3" json:"billingProfileId,omitempty"`
+	LocationId       string `protobuf:"bytes,4,opt,name=locationId,proto3" json:"locationId,omitempty"`
+	LoggedInUserId   string `protobuf:"bytes,5,opt,name=loggedInUserId,proto3" json:"loggedInUserId,omitempty"`
+	AppSource        string `protobuf:"bytes,6,opt,name=appSource,proto3" json:"appSource,omitempty"`
+}
+
+func (x *UnlinkLocationFromBillingProfileGrpcRequest) Reset() {
+	*x = UnlinkLocationFromBillingProfileGrpcRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_organization_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UnlinkLocationFromBillingProfileGrpcRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnlinkLocationFromBillingProfileGrpcRequest) ProtoMessage() {}
+
+func (x *UnlinkLocationFromBillingProfileGrpcRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_organization_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnlinkLocationFromBillingProfileGrpcRequest.ProtoReflect.Descriptor instead.
+func (*UnlinkLocationFromBillingProfileGrpcRequest) Descriptor() ([]byte, []int) {
+	return file_organization_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *UnlinkLocationFromBillingProfileGrpcRequest) GetTenant() string {
+	if x != nil {
+		return x.Tenant
+	}
+	return ""
+}
+
+func (x *UnlinkLocationFromBillingProfileGrpcRequest) GetOrganizationId() string {
+	if x != nil {
+		return x.OrganizationId
+	}
+	return ""
+}
+
+func (x *UnlinkLocationFromBillingProfileGrpcRequest) GetBillingProfileId() string {
+	if x != nil {
+		return x.BillingProfileId
+	}
+	return ""
+}
+
+func (x *UnlinkLocationFromBillingProfileGrpcRequest) GetLocationId() string {
+	if x != nil {
+		return x.LocationId
+	}
+	return ""
+}
+
+func (x *UnlinkLocationFromBillingProfileGrpcRequest) GetLoggedInUserId() string {
+	if x != nil {
+		return x.LoggedInUserId
+	}
+	return ""
+}
+
+func (x *UnlinkLocationFromBillingProfileGrpcRequest) GetAppSource() string {
+	if x != nil {
+		return x.AppSource
+	}
+	return ""
+}
+
 type LinkDomainToOrganizationGrpcRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1248,7 +1422,7 @@ type LinkDomainToOrganizationGrpcRequest struct {
 func (x *LinkDomainToOrganizationGrpcRequest) Reset() {
 	*x = LinkDomainToOrganizationGrpcRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[8]
+		mi := &file_organization_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1261,7 +1435,7 @@ func (x *LinkDomainToOrganizationGrpcRequest) String() string {
 func (*LinkDomainToOrganizationGrpcRequest) ProtoMessage() {}
 
 func (x *LinkDomainToOrganizationGrpcRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[8]
+	mi := &file_organization_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1274,7 +1448,7 @@ func (x *LinkDomainToOrganizationGrpcRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use LinkDomainToOrganizationGrpcRequest.ProtoReflect.Descriptor instead.
 func (*LinkDomainToOrganizationGrpcRequest) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{8}
+	return file_organization_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *LinkDomainToOrganizationGrpcRequest) GetTenant() string {
@@ -1335,7 +1509,7 @@ type CustomFieldValue struct {
 func (x *CustomFieldValue) Reset() {
 	*x = CustomFieldValue{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[9]
+		mi := &file_organization_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1348,7 +1522,7 @@ func (x *CustomFieldValue) String() string {
 func (*CustomFieldValue) ProtoMessage() {}
 
 func (x *CustomFieldValue) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[9]
+	mi := &file_organization_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1361,7 +1535,7 @@ func (x *CustomFieldValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CustomFieldValue.ProtoReflect.Descriptor instead.
 func (*CustomFieldValue) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{9}
+	return file_organization_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *CustomFieldValue) GetStringValue() string {
@@ -1422,7 +1596,7 @@ type CustomFieldForOrganizationGrpcRequest struct {
 func (x *CustomFieldForOrganizationGrpcRequest) Reset() {
 	*x = CustomFieldForOrganizationGrpcRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[10]
+		mi := &file_organization_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1435,7 +1609,7 @@ func (x *CustomFieldForOrganizationGrpcRequest) String() string {
 func (*CustomFieldForOrganizationGrpcRequest) ProtoMessage() {}
 
 func (x *CustomFieldForOrganizationGrpcRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[10]
+	mi := &file_organization_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1448,7 +1622,7 @@ func (x *CustomFieldForOrganizationGrpcRequest) ProtoReflect() protoreflect.Mess
 
 // Deprecated: Use CustomFieldForOrganizationGrpcRequest.ProtoReflect.Descriptor instead.
 func (*CustomFieldForOrganizationGrpcRequest) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{10}
+	return file_organization_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CustomFieldForOrganizationGrpcRequest) GetTenant() string {
@@ -1552,7 +1726,7 @@ type AddParentOrganizationGrpcRequest struct {
 func (x *AddParentOrganizationGrpcRequest) Reset() {
 	*x = AddParentOrganizationGrpcRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[11]
+		mi := &file_organization_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1565,7 +1739,7 @@ func (x *AddParentOrganizationGrpcRequest) String() string {
 func (*AddParentOrganizationGrpcRequest) ProtoMessage() {}
 
 func (x *AddParentOrganizationGrpcRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[11]
+	mi := &file_organization_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1578,7 +1752,7 @@ func (x *AddParentOrganizationGrpcRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddParentOrganizationGrpcRequest.ProtoReflect.Descriptor instead.
 func (*AddParentOrganizationGrpcRequest) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{11}
+	return file_organization_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *AddParentOrganizationGrpcRequest) GetTenant() string {
@@ -1638,7 +1812,7 @@ type RemoveParentOrganizationGrpcRequest struct {
 func (x *RemoveParentOrganizationGrpcRequest) Reset() {
 	*x = RemoveParentOrganizationGrpcRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[12]
+		mi := &file_organization_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1651,7 +1825,7 @@ func (x *RemoveParentOrganizationGrpcRequest) String() string {
 func (*RemoveParentOrganizationGrpcRequest) ProtoMessage() {}
 
 func (x *RemoveParentOrganizationGrpcRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[12]
+	mi := &file_organization_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1664,7 +1838,7 @@ func (x *RemoveParentOrganizationGrpcRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use RemoveParentOrganizationGrpcRequest.ProtoReflect.Descriptor instead.
 func (*RemoveParentOrganizationGrpcRequest) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{12}
+	return file_organization_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *RemoveParentOrganizationGrpcRequest) GetTenant() string {
@@ -1717,7 +1891,7 @@ type WebScrapeOrganizationGrpcRequest struct {
 func (x *WebScrapeOrganizationGrpcRequest) Reset() {
 	*x = WebScrapeOrganizationGrpcRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[13]
+		mi := &file_organization_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1730,7 +1904,7 @@ func (x *WebScrapeOrganizationGrpcRequest) String() string {
 func (*WebScrapeOrganizationGrpcRequest) ProtoMessage() {}
 
 func (x *WebScrapeOrganizationGrpcRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[13]
+	mi := &file_organization_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1743,7 +1917,7 @@ func (x *WebScrapeOrganizationGrpcRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WebScrapeOrganizationGrpcRequest.ProtoReflect.Descriptor instead.
 func (*WebScrapeOrganizationGrpcRequest) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{13}
+	return file_organization_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *WebScrapeOrganizationGrpcRequest) GetTenant() string {
@@ -1799,7 +1973,7 @@ type UpdateOnboardingStatusGrpcRequest struct {
 func (x *UpdateOnboardingStatusGrpcRequest) Reset() {
 	*x = UpdateOnboardingStatusGrpcRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[14]
+		mi := &file_organization_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1812,7 +1986,7 @@ func (x *UpdateOnboardingStatusGrpcRequest) String() string {
 func (*UpdateOnboardingStatusGrpcRequest) ProtoMessage() {}
 
 func (x *UpdateOnboardingStatusGrpcRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[14]
+	mi := &file_organization_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1825,7 +1999,7 @@ func (x *UpdateOnboardingStatusGrpcRequest) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use UpdateOnboardingStatusGrpcRequest.ProtoReflect.Descriptor instead.
 func (*UpdateOnboardingStatusGrpcRequest) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{14}
+	return file_organization_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *UpdateOnboardingStatusGrpcRequest) GetTenant() string {
@@ -1903,7 +2077,7 @@ type AddSocialGrpcRequest struct {
 func (x *AddSocialGrpcRequest) Reset() {
 	*x = AddSocialGrpcRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[15]
+		mi := &file_organization_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1916,7 +2090,7 @@ func (x *AddSocialGrpcRequest) String() string {
 func (*AddSocialGrpcRequest) ProtoMessage() {}
 
 func (x *AddSocialGrpcRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[15]
+	mi := &file_organization_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1929,7 +2103,7 @@ func (x *AddSocialGrpcRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddSocialGrpcRequest.ProtoReflect.Descriptor instead.
 func (*AddSocialGrpcRequest) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{15}
+	return file_organization_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *AddSocialGrpcRequest) GetTenant() string {
@@ -2010,7 +2184,7 @@ type UpdateOrganizationOwnerGrpcRequest struct {
 func (x *UpdateOrganizationOwnerGrpcRequest) Reset() {
 	*x = UpdateOrganizationOwnerGrpcRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[16]
+		mi := &file_organization_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2023,7 +2197,7 @@ func (x *UpdateOrganizationOwnerGrpcRequest) String() string {
 func (*UpdateOrganizationOwnerGrpcRequest) ProtoMessage() {}
 
 func (x *UpdateOrganizationOwnerGrpcRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[16]
+	mi := &file_organization_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2036,7 +2210,7 @@ func (x *UpdateOrganizationOwnerGrpcRequest) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use UpdateOrganizationOwnerGrpcRequest.ProtoReflect.Descriptor instead.
 func (*UpdateOrganizationOwnerGrpcRequest) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{16}
+	return file_organization_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *UpdateOrganizationOwnerGrpcRequest) GetTenant() string {
@@ -2093,7 +2267,7 @@ type CreateBillingProfileGrpcRequest struct {
 func (x *CreateBillingProfileGrpcRequest) Reset() {
 	*x = CreateBillingProfileGrpcRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[17]
+		mi := &file_organization_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2106,7 +2280,7 @@ func (x *CreateBillingProfileGrpcRequest) String() string {
 func (*CreateBillingProfileGrpcRequest) ProtoMessage() {}
 
 func (x *CreateBillingProfileGrpcRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[17]
+	mi := &file_organization_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2119,7 +2293,7 @@ func (x *CreateBillingProfileGrpcRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateBillingProfileGrpcRequest.ProtoReflect.Descriptor instead.
 func (*CreateBillingProfileGrpcRequest) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{17}
+	return file_organization_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *CreateBillingProfileGrpcRequest) GetTenant() string {
@@ -2196,7 +2370,7 @@ type OrganizationIdGrpcResponse struct {
 func (x *OrganizationIdGrpcResponse) Reset() {
 	*x = OrganizationIdGrpcResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[18]
+		mi := &file_organization_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2209,7 +2383,7 @@ func (x *OrganizationIdGrpcResponse) String() string {
 func (*OrganizationIdGrpcResponse) ProtoMessage() {}
 
 func (x *OrganizationIdGrpcResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[18]
+	mi := &file_organization_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2222,7 +2396,7 @@ func (x *OrganizationIdGrpcResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OrganizationIdGrpcResponse.ProtoReflect.Descriptor instead.
 func (*OrganizationIdGrpcResponse) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{18}
+	return file_organization_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *OrganizationIdGrpcResponse) GetId() string {
@@ -2243,7 +2417,7 @@ type CustomFieldIdGrpcResponse struct {
 func (x *CustomFieldIdGrpcResponse) Reset() {
 	*x = CustomFieldIdGrpcResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[19]
+		mi := &file_organization_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2256,7 +2430,7 @@ func (x *CustomFieldIdGrpcResponse) String() string {
 func (*CustomFieldIdGrpcResponse) ProtoMessage() {}
 
 func (x *CustomFieldIdGrpcResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[19]
+	mi := &file_organization_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2269,7 +2443,7 @@ func (x *CustomFieldIdGrpcResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CustomFieldIdGrpcResponse.ProtoReflect.Descriptor instead.
 func (*CustomFieldIdGrpcResponse) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{19}
+	return file_organization_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *CustomFieldIdGrpcResponse) GetId() string {
@@ -2290,7 +2464,7 @@ type BillingProfileIdGrpcResponse struct {
 func (x *BillingProfileIdGrpcResponse) Reset() {
 	*x = BillingProfileIdGrpcResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_organization_proto_msgTypes[20]
+		mi := &file_organization_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2303,7 +2477,7 @@ func (x *BillingProfileIdGrpcResponse) String() string {
 func (*BillingProfileIdGrpcResponse) ProtoMessage() {}
 
 func (x *BillingProfileIdGrpcResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_organization_proto_msgTypes[20]
+	mi := &file_organization_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2316,7 +2490,7 @@ func (x *BillingProfileIdGrpcResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BillingProfileIdGrpcResponse.ProtoReflect.Descriptor instead.
 func (*BillingProfileIdGrpcResponse) Descriptor() ([]byte, []int) {
-	return file_organization_proto_rawDescGZIP(), []int{20}
+	return file_organization_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *BillingProfileIdGrpcResponse) GetId() string {
@@ -2543,7 +2717,39 @@ var file_organization_proto_rawDesc = []byte{
 	0x52, 0x0a, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x12, 0x26, 0x0a, 0x0e,
 	0x6c, 0x6f, 0x67, 0x67, 0x65, 0x64, 0x49, 0x6e, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x18, 0x04,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x6c, 0x6f, 0x67, 0x67, 0x65, 0x64, 0x49, 0x6e, 0x55, 0x73,
-	0x65, 0x72, 0x49, 0x64, 0x22, 0xdf, 0x01, 0x0a, 0x23, 0x4c, 0x69, 0x6e, 0x6b, 0x44, 0x6f, 0x6d,
+	0x65, 0x72, 0x49, 0x64, 0x22, 0xfb, 0x01, 0x0a, 0x27, 0x4c, 0x69, 0x6e, 0x6b, 0x4c, 0x6f, 0x63,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x54, 0x6f, 0x42, 0x69, 0x6c, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x72,
+	0x6f, 0x66, 0x69, 0x6c, 0x65, 0x47, 0x72, 0x70, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x16, 0x0a, 0x06, 0x74, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x06, 0x74, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x12, 0x26, 0x0a, 0x0e, 0x6f, 0x72, 0x67, 0x61,
+	0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x0e, 0x6f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x49, 0x64,
+	0x12, 0x2a, 0x0a, 0x10, 0x62, 0x69, 0x6c, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x66, 0x69,
+	0x6c, 0x65, 0x49, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x62, 0x69, 0x6c, 0x6c,
+	0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x49, 0x64, 0x12, 0x1e, 0x0a, 0x0a,
+	0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x0a, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x12, 0x26, 0x0a, 0x0e,
+	0x6c, 0x6f, 0x67, 0x67, 0x65, 0x64, 0x49, 0x6e, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x6c, 0x6f, 0x67, 0x67, 0x65, 0x64, 0x49, 0x6e, 0x55, 0x73,
+	0x65, 0x72, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x61, 0x70, 0x70, 0x53, 0x6f, 0x75, 0x72, 0x63,
+	0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x61, 0x70, 0x70, 0x53, 0x6f, 0x75, 0x72,
+	0x63, 0x65, 0x22, 0xff, 0x01, 0x0a, 0x2b, 0x55, 0x6e, 0x6c, 0x69, 0x6e, 0x6b, 0x4c, 0x6f, 0x63,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x46, 0x72, 0x6f, 0x6d, 0x42, 0x69, 0x6c, 0x6c, 0x69, 0x6e, 0x67,
+	0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x47, 0x72, 0x70, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x74, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x06, 0x74, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x12, 0x26, 0x0a, 0x0e, 0x6f, 0x72,
+	0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x0e, 0x6f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x49, 0x64, 0x12, 0x2a, 0x0a, 0x10, 0x62, 0x69, 0x6c, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f,
+	0x66, 0x69, 0x6c, 0x65, 0x49, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x62, 0x69,
+	0x6c, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x49, 0x64, 0x12, 0x1e,
+	0x0a, 0x0a, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x0a, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x12, 0x26,
+	0x0a, 0x0e, 0x6c, 0x6f, 0x67, 0x67, 0x65, 0x64, 0x49, 0x6e, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64,
+	0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x6c, 0x6f, 0x67, 0x67, 0x65, 0x64, 0x49, 0x6e,
+	0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x61, 0x70, 0x70, 0x53, 0x6f, 0x75,
+	0x72, 0x63, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x61, 0x70, 0x70, 0x53, 0x6f,
+	0x75, 0x72, 0x63, 0x65, 0x22, 0xdf, 0x01, 0x0a, 0x23, 0x4c, 0x69, 0x6e, 0x6b, 0x44, 0x6f, 0x6d,
 	0x61, 0x69, 0x6e, 0x54, 0x6f, 0x4f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f,
 	0x6e, 0x47, 0x72, 0x70, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16, 0x0a, 0x06,
 	0x74, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x74, 0x65,
@@ -2829,7 +3035,7 @@ var file_organization_proto_rawDesc = []byte{
 	0x42, 0x4f, 0x41, 0x52, 0x44, 0x49, 0x4e, 0x47, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f,
 	0x44, 0x4f, 0x4e, 0x45, 0x10, 0x05, 0x12, 0x20, 0x0a, 0x1c, 0x4f, 0x4e, 0x42, 0x4f, 0x41, 0x52,
 	0x44, 0x49, 0x4e, 0x47, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x53, 0x55, 0x43, 0x43,
-	0x45, 0x53, 0x53, 0x46, 0x55, 0x4c, 0x10, 0x06, 0x32, 0xe4, 0x0e, 0x0a, 0x17, 0x6f, 0x72, 0x67,
+	0x45, 0x53, 0x53, 0x46, 0x55, 0x4c, 0x10, 0x06, 0x32, 0xbe, 0x10, 0x0a, 0x17, 0x6f, 0x72, 0x67,
 	0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x47, 0x72, 0x70, 0x63, 0x53, 0x65, 0x72,
 	0x76, 0x69, 0x63, 0x65, 0x12, 0x51, 0x0a, 0x12, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x4f, 0x72,
 	0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1e, 0x2e, 0x55, 0x70, 0x73,
@@ -2947,13 +3153,26 @@ var file_organization_proto_rawDesc = []byte{
 	0x61, 0x69, 0x6c, 0x46, 0x72, 0x6f, 0x6d, 0x42, 0x69, 0x6c, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x72,
 	0x6f, 0x66, 0x69, 0x6c, 0x65, 0x47, 0x72, 0x70, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
 	0x1a, 0x1d, 0x2e, 0x42, 0x69, 0x6c, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c,
-	0x65, 0x49, 0x64, 0x47, 0x72, 0x70, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42,
-	0x49, 0x42, 0x11, 0x4f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x32, 0x61, 0x70, 0x69, 0x2f, 0x67, 0x72, 0x70, 0x63,
-	0x2f, 0x76, 0x31, 0x2f, 0x6f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x3b, 0x6f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x67, 0x72,
-	0x70, 0x63, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x65, 0x49, 0x64, 0x47, 0x72, 0x70, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x67, 0x0a, 0x1c, 0x4c, 0x69, 0x6e, 0x6b, 0x4c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x54,
+	0x6f, 0x42, 0x69, 0x6c, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x12,
+	0x28, 0x2e, 0x4c, 0x69, 0x6e, 0x6b, 0x4c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x54, 0x6f,
+	0x42, 0x69, 0x6c, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x47, 0x72,
+	0x70, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x42, 0x69, 0x6c, 0x6c,
+	0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x49, 0x64, 0x47, 0x72, 0x70, 0x63,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6f, 0x0a, 0x20, 0x55, 0x6e, 0x6c, 0x69,
+	0x6e, 0x6b, 0x4c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x46, 0x72, 0x6f, 0x6d, 0x42, 0x69,
+	0x6c, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x12, 0x2c, 0x2e, 0x55,
+	0x6e, 0x6c, 0x69, 0x6e, 0x6b, 0x4c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x46, 0x72, 0x6f,
+	0x6d, 0x42, 0x69, 0x6c, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x47,
+	0x72, 0x70, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x42, 0x69, 0x6c,
+	0x6c, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x49, 0x64, 0x47, 0x72, 0x70,
+	0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x49, 0x42, 0x11, 0x4f, 0x72, 0x67,
+	0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x32, 0x61, 0x70, 0x69, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x76, 0x31, 0x2f, 0x6f, 0x72,
+	0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x3b, 0x6f, 0x72, 0x67, 0x61, 0x6e,
+	0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x67, 0x72, 0x70, 0x63, 0x5f, 0x73, 0x65, 0x72,
+	0x76, 0x69, 0x63, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2969,103 +3188,109 @@ func file_organization_proto_rawDescGZIP() []byte {
 }
 
 var file_organization_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_organization_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_organization_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_organization_proto_goTypes = []interface{}{
-	(OrganizationMaskField)(0),                       // 0: OrganizationMaskField
-	(CustomFieldDataType)(0),                         // 1: CustomFieldDataType
-	(OnboardingStatus)(0),                            // 2: OnboardingStatus
-	(*UpsertOrganizationGrpcRequest)(nil),            // 3: UpsertOrganizationGrpcRequest
-	(*UpdateOrganizationGrpcRequest)(nil),            // 4: UpdateOrganizationGrpcRequest
-	(*OrganizationIdGrpcRequest)(nil),                // 5: OrganizationIdGrpcRequest
-	(*LinkPhoneNumberToOrganizationGrpcRequest)(nil), // 6: LinkPhoneNumberToOrganizationGrpcRequest
-	(*LinkEmailToOrganizationGrpcRequest)(nil),       // 7: LinkEmailToOrganizationGrpcRequest
-	(*LinkEmailToBillingProfileGrpcRequest)(nil),     // 8: LinkEmailToBillingProfileGrpcRequest
-	(*UnlinkEmailFromBillingProfileGrpcRequest)(nil), // 9: UnlinkEmailFromBillingProfileGrpcRequest
-	(*LinkLocationToOrganizationGrpcRequest)(nil),    // 10: LinkLocationToOrganizationGrpcRequest
-	(*LinkDomainToOrganizationGrpcRequest)(nil),      // 11: LinkDomainToOrganizationGrpcRequest
-	(*CustomFieldValue)(nil),                         // 12: CustomFieldValue
-	(*CustomFieldForOrganizationGrpcRequest)(nil),    // 13: CustomFieldForOrganizationGrpcRequest
-	(*AddParentOrganizationGrpcRequest)(nil),         // 14: AddParentOrganizationGrpcRequest
-	(*RemoveParentOrganizationGrpcRequest)(nil),      // 15: RemoveParentOrganizationGrpcRequest
-	(*WebScrapeOrganizationGrpcRequest)(nil),         // 16: WebScrapeOrganizationGrpcRequest
-	(*UpdateOnboardingStatusGrpcRequest)(nil),        // 17: UpdateOnboardingStatusGrpcRequest
-	(*AddSocialGrpcRequest)(nil),                     // 18: AddSocialGrpcRequest
-	(*UpdateOrganizationOwnerGrpcRequest)(nil),       // 19: UpdateOrganizationOwnerGrpcRequest
-	(*CreateBillingProfileGrpcRequest)(nil),          // 20: CreateBillingProfileGrpcRequest
-	(*OrganizationIdGrpcResponse)(nil),               // 21: OrganizationIdGrpcResponse
-	(*CustomFieldIdGrpcResponse)(nil),                // 22: CustomFieldIdGrpcResponse
-	(*BillingProfileIdGrpcResponse)(nil),             // 23: BillingProfileIdGrpcResponse
-	(*timestamppb.Timestamp)(nil),                    // 24: google.protobuf.Timestamp
-	(*common.SourceFields)(nil),                      // 25: SourceFields
-	(*common.ExternalSystemFields)(nil),              // 26: ExternalSystemFields
+	(OrganizationMaskField)(0),                          // 0: OrganizationMaskField
+	(CustomFieldDataType)(0),                            // 1: CustomFieldDataType
+	(OnboardingStatus)(0),                               // 2: OnboardingStatus
+	(*UpsertOrganizationGrpcRequest)(nil),               // 3: UpsertOrganizationGrpcRequest
+	(*UpdateOrganizationGrpcRequest)(nil),               // 4: UpdateOrganizationGrpcRequest
+	(*OrganizationIdGrpcRequest)(nil),                   // 5: OrganizationIdGrpcRequest
+	(*LinkPhoneNumberToOrganizationGrpcRequest)(nil),    // 6: LinkPhoneNumberToOrganizationGrpcRequest
+	(*LinkEmailToOrganizationGrpcRequest)(nil),          // 7: LinkEmailToOrganizationGrpcRequest
+	(*LinkEmailToBillingProfileGrpcRequest)(nil),        // 8: LinkEmailToBillingProfileGrpcRequest
+	(*UnlinkEmailFromBillingProfileGrpcRequest)(nil),    // 9: UnlinkEmailFromBillingProfileGrpcRequest
+	(*LinkLocationToOrganizationGrpcRequest)(nil),       // 10: LinkLocationToOrganizationGrpcRequest
+	(*LinkLocationToBillingProfileGrpcRequest)(nil),     // 11: LinkLocationToBillingProfileGrpcRequest
+	(*UnlinkLocationFromBillingProfileGrpcRequest)(nil), // 12: UnlinkLocationFromBillingProfileGrpcRequest
+	(*LinkDomainToOrganizationGrpcRequest)(nil),         // 13: LinkDomainToOrganizationGrpcRequest
+	(*CustomFieldValue)(nil),                            // 14: CustomFieldValue
+	(*CustomFieldForOrganizationGrpcRequest)(nil),       // 15: CustomFieldForOrganizationGrpcRequest
+	(*AddParentOrganizationGrpcRequest)(nil),            // 16: AddParentOrganizationGrpcRequest
+	(*RemoveParentOrganizationGrpcRequest)(nil),         // 17: RemoveParentOrganizationGrpcRequest
+	(*WebScrapeOrganizationGrpcRequest)(nil),            // 18: WebScrapeOrganizationGrpcRequest
+	(*UpdateOnboardingStatusGrpcRequest)(nil),           // 19: UpdateOnboardingStatusGrpcRequest
+	(*AddSocialGrpcRequest)(nil),                        // 20: AddSocialGrpcRequest
+	(*UpdateOrganizationOwnerGrpcRequest)(nil),          // 21: UpdateOrganizationOwnerGrpcRequest
+	(*CreateBillingProfileGrpcRequest)(nil),             // 22: CreateBillingProfileGrpcRequest
+	(*OrganizationIdGrpcResponse)(nil),                  // 23: OrganizationIdGrpcResponse
+	(*CustomFieldIdGrpcResponse)(nil),                   // 24: CustomFieldIdGrpcResponse
+	(*BillingProfileIdGrpcResponse)(nil),                // 25: BillingProfileIdGrpcResponse
+	(*timestamppb.Timestamp)(nil),                       // 26: google.protobuf.Timestamp
+	(*common.SourceFields)(nil),                         // 27: SourceFields
+	(*common.ExternalSystemFields)(nil),                 // 28: ExternalSystemFields
 }
 var file_organization_proto_depIdxs = []int32{
-	24, // 0: UpsertOrganizationGrpcRequest.createdAt:type_name -> google.protobuf.Timestamp
-	24, // 1: UpsertOrganizationGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
-	25, // 2: UpsertOrganizationGrpcRequest.sourceFields:type_name -> SourceFields
-	26, // 3: UpsertOrganizationGrpcRequest.externalSystemFields:type_name -> ExternalSystemFields
+	26, // 0: UpsertOrganizationGrpcRequest.createdAt:type_name -> google.protobuf.Timestamp
+	26, // 1: UpsertOrganizationGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
+	27, // 2: UpsertOrganizationGrpcRequest.sourceFields:type_name -> SourceFields
+	28, // 3: UpsertOrganizationGrpcRequest.externalSystemFields:type_name -> ExternalSystemFields
 	0,  // 4: UpsertOrganizationGrpcRequest.fieldsMask:type_name -> OrganizationMaskField
-	24, // 5: UpdateOrganizationGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
+	26, // 5: UpdateOrganizationGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
 	0,  // 6: UpdateOrganizationGrpcRequest.fieldsMask:type_name -> OrganizationMaskField
-	25, // 7: UpdateOrganizationGrpcRequest.sourceFields:type_name -> SourceFields
-	24, // 8: CustomFieldValue.datetimeValue:type_name -> google.protobuf.Timestamp
-	12, // 9: CustomFieldForOrganizationGrpcRequest.customFieldValue:type_name -> CustomFieldValue
+	27, // 7: UpdateOrganizationGrpcRequest.sourceFields:type_name -> SourceFields
+	26, // 8: CustomFieldValue.datetimeValue:type_name -> google.protobuf.Timestamp
+	14, // 9: CustomFieldForOrganizationGrpcRequest.customFieldValue:type_name -> CustomFieldValue
 	1,  // 10: CustomFieldForOrganizationGrpcRequest.customFieldDataType:type_name -> CustomFieldDataType
-	25, // 11: CustomFieldForOrganizationGrpcRequest.sourceFields:type_name -> SourceFields
-	24, // 12: CustomFieldForOrganizationGrpcRequest.createdAt:type_name -> google.protobuf.Timestamp
-	24, // 13: CustomFieldForOrganizationGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
+	27, // 11: CustomFieldForOrganizationGrpcRequest.sourceFields:type_name -> SourceFields
+	26, // 12: CustomFieldForOrganizationGrpcRequest.createdAt:type_name -> google.protobuf.Timestamp
+	26, // 13: CustomFieldForOrganizationGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
 	2,  // 14: UpdateOnboardingStatusGrpcRequest.onboardingStatus:type_name -> OnboardingStatus
-	24, // 15: UpdateOnboardingStatusGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
-	25, // 16: AddSocialGrpcRequest.sourceFields:type_name -> SourceFields
-	24, // 17: AddSocialGrpcRequest.createdAt:type_name -> google.protobuf.Timestamp
-	24, // 18: AddSocialGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
-	25, // 19: CreateBillingProfileGrpcRequest.sourceFields:type_name -> SourceFields
-	24, // 20: CreateBillingProfileGrpcRequest.createdAt:type_name -> google.protobuf.Timestamp
-	24, // 21: CreateBillingProfileGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
+	26, // 15: UpdateOnboardingStatusGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
+	27, // 16: AddSocialGrpcRequest.sourceFields:type_name -> SourceFields
+	26, // 17: AddSocialGrpcRequest.createdAt:type_name -> google.protobuf.Timestamp
+	26, // 18: AddSocialGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
+	27, // 19: CreateBillingProfileGrpcRequest.sourceFields:type_name -> SourceFields
+	26, // 20: CreateBillingProfileGrpcRequest.createdAt:type_name -> google.protobuf.Timestamp
+	26, // 21: CreateBillingProfileGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
 	3,  // 22: organizationGrpcService.UpsertOrganization:input_type -> UpsertOrganizationGrpcRequest
-	16, // 23: organizationGrpcService.WebScrapeOrganization:input_type -> WebScrapeOrganizationGrpcRequest
+	18, // 23: organizationGrpcService.WebScrapeOrganization:input_type -> WebScrapeOrganizationGrpcRequest
 	6,  // 24: organizationGrpcService.LinkPhoneNumberToOrganization:input_type -> LinkPhoneNumberToOrganizationGrpcRequest
 	7,  // 25: organizationGrpcService.LinkEmailToOrganization:input_type -> LinkEmailToOrganizationGrpcRequest
 	10, // 26: organizationGrpcService.LinkLocationToOrganization:input_type -> LinkLocationToOrganizationGrpcRequest
-	11, // 27: organizationGrpcService.LinkDomainToOrganization:input_type -> LinkDomainToOrganizationGrpcRequest
-	13, // 28: organizationGrpcService.UpsertCustomFieldToOrganization:input_type -> CustomFieldForOrganizationGrpcRequest
+	13, // 27: organizationGrpcService.LinkDomainToOrganization:input_type -> LinkDomainToOrganizationGrpcRequest
+	15, // 28: organizationGrpcService.UpsertCustomFieldToOrganization:input_type -> CustomFieldForOrganizationGrpcRequest
 	5,  // 29: organizationGrpcService.HideOrganization:input_type -> OrganizationIdGrpcRequest
 	5,  // 30: organizationGrpcService.ShowOrganization:input_type -> OrganizationIdGrpcRequest
 	5,  // 31: organizationGrpcService.RefreshLastTouchpoint:input_type -> OrganizationIdGrpcRequest
 	5,  // 32: organizationGrpcService.RefreshRenewalSummary:input_type -> OrganizationIdGrpcRequest
 	5,  // 33: organizationGrpcService.RefreshArr:input_type -> OrganizationIdGrpcRequest
-	14, // 34: organizationGrpcService.AddParentOrganization:input_type -> AddParentOrganizationGrpcRequest
-	15, // 35: organizationGrpcService.RemoveParentOrganization:input_type -> RemoveParentOrganizationGrpcRequest
-	17, // 36: organizationGrpcService.UpdateOnboardingStatus:input_type -> UpdateOnboardingStatusGrpcRequest
+	16, // 34: organizationGrpcService.AddParentOrganization:input_type -> AddParentOrganizationGrpcRequest
+	17, // 35: organizationGrpcService.RemoveParentOrganization:input_type -> RemoveParentOrganizationGrpcRequest
+	19, // 36: organizationGrpcService.UpdateOnboardingStatus:input_type -> UpdateOnboardingStatusGrpcRequest
 	4,  // 37: organizationGrpcService.UpdateOrganization:input_type -> UpdateOrganizationGrpcRequest
-	18, // 38: organizationGrpcService.AddSocial:input_type -> AddSocialGrpcRequest
-	19, // 39: organizationGrpcService.UpdateOrganizationOwner:input_type -> UpdateOrganizationOwnerGrpcRequest
-	20, // 40: organizationGrpcService.CreateBillingProfile:input_type -> CreateBillingProfileGrpcRequest
+	20, // 38: organizationGrpcService.AddSocial:input_type -> AddSocialGrpcRequest
+	21, // 39: organizationGrpcService.UpdateOrganizationOwner:input_type -> UpdateOrganizationOwnerGrpcRequest
+	22, // 40: organizationGrpcService.CreateBillingProfile:input_type -> CreateBillingProfileGrpcRequest
 	8,  // 41: organizationGrpcService.LinkEmailToBillingProfile:input_type -> LinkEmailToBillingProfileGrpcRequest
 	9,  // 42: organizationGrpcService.UnlinkEmailFromBillingProfile:input_type -> UnlinkEmailFromBillingProfileGrpcRequest
-	21, // 43: organizationGrpcService.UpsertOrganization:output_type -> OrganizationIdGrpcResponse
-	21, // 44: organizationGrpcService.WebScrapeOrganization:output_type -> OrganizationIdGrpcResponse
-	21, // 45: organizationGrpcService.LinkPhoneNumberToOrganization:output_type -> OrganizationIdGrpcResponse
-	21, // 46: organizationGrpcService.LinkEmailToOrganization:output_type -> OrganizationIdGrpcResponse
-	21, // 47: organizationGrpcService.LinkLocationToOrganization:output_type -> OrganizationIdGrpcResponse
-	21, // 48: organizationGrpcService.LinkDomainToOrganization:output_type -> OrganizationIdGrpcResponse
-	22, // 49: organizationGrpcService.UpsertCustomFieldToOrganization:output_type -> CustomFieldIdGrpcResponse
-	21, // 50: organizationGrpcService.HideOrganization:output_type -> OrganizationIdGrpcResponse
-	21, // 51: organizationGrpcService.ShowOrganization:output_type -> OrganizationIdGrpcResponse
-	21, // 52: organizationGrpcService.RefreshLastTouchpoint:output_type -> OrganizationIdGrpcResponse
-	21, // 53: organizationGrpcService.RefreshRenewalSummary:output_type -> OrganizationIdGrpcResponse
-	21, // 54: organizationGrpcService.RefreshArr:output_type -> OrganizationIdGrpcResponse
-	21, // 55: organizationGrpcService.AddParentOrganization:output_type -> OrganizationIdGrpcResponse
-	21, // 56: organizationGrpcService.RemoveParentOrganization:output_type -> OrganizationIdGrpcResponse
-	21, // 57: organizationGrpcService.UpdateOnboardingStatus:output_type -> OrganizationIdGrpcResponse
-	21, // 58: organizationGrpcService.UpdateOrganization:output_type -> OrganizationIdGrpcResponse
-	21, // 59: organizationGrpcService.AddSocial:output_type -> OrganizationIdGrpcResponse
-	21, // 60: organizationGrpcService.UpdateOrganizationOwner:output_type -> OrganizationIdGrpcResponse
-	23, // 61: organizationGrpcService.CreateBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	23, // 62: organizationGrpcService.LinkEmailToBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	23, // 63: organizationGrpcService.UnlinkEmailFromBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	43, // [43:64] is the sub-list for method output_type
-	22, // [22:43] is the sub-list for method input_type
+	11, // 43: organizationGrpcService.LinkLocationToBillingProfile:input_type -> LinkLocationToBillingProfileGrpcRequest
+	12, // 44: organizationGrpcService.UnlinkLocationFromBillingProfile:input_type -> UnlinkLocationFromBillingProfileGrpcRequest
+	23, // 45: organizationGrpcService.UpsertOrganization:output_type -> OrganizationIdGrpcResponse
+	23, // 46: organizationGrpcService.WebScrapeOrganization:output_type -> OrganizationIdGrpcResponse
+	23, // 47: organizationGrpcService.LinkPhoneNumberToOrganization:output_type -> OrganizationIdGrpcResponse
+	23, // 48: organizationGrpcService.LinkEmailToOrganization:output_type -> OrganizationIdGrpcResponse
+	23, // 49: organizationGrpcService.LinkLocationToOrganization:output_type -> OrganizationIdGrpcResponse
+	23, // 50: organizationGrpcService.LinkDomainToOrganization:output_type -> OrganizationIdGrpcResponse
+	24, // 51: organizationGrpcService.UpsertCustomFieldToOrganization:output_type -> CustomFieldIdGrpcResponse
+	23, // 52: organizationGrpcService.HideOrganization:output_type -> OrganizationIdGrpcResponse
+	23, // 53: organizationGrpcService.ShowOrganization:output_type -> OrganizationIdGrpcResponse
+	23, // 54: organizationGrpcService.RefreshLastTouchpoint:output_type -> OrganizationIdGrpcResponse
+	23, // 55: organizationGrpcService.RefreshRenewalSummary:output_type -> OrganizationIdGrpcResponse
+	23, // 56: organizationGrpcService.RefreshArr:output_type -> OrganizationIdGrpcResponse
+	23, // 57: organizationGrpcService.AddParentOrganization:output_type -> OrganizationIdGrpcResponse
+	23, // 58: organizationGrpcService.RemoveParentOrganization:output_type -> OrganizationIdGrpcResponse
+	23, // 59: organizationGrpcService.UpdateOnboardingStatus:output_type -> OrganizationIdGrpcResponse
+	23, // 60: organizationGrpcService.UpdateOrganization:output_type -> OrganizationIdGrpcResponse
+	23, // 61: organizationGrpcService.AddSocial:output_type -> OrganizationIdGrpcResponse
+	23, // 62: organizationGrpcService.UpdateOrganizationOwner:output_type -> OrganizationIdGrpcResponse
+	25, // 63: organizationGrpcService.CreateBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	25, // 64: organizationGrpcService.LinkEmailToBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	25, // 65: organizationGrpcService.UnlinkEmailFromBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	25, // 66: organizationGrpcService.LinkLocationToBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	25, // 67: organizationGrpcService.UnlinkLocationFromBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	45, // [45:68] is the sub-list for method output_type
+	22, // [22:45] is the sub-list for method input_type
 	22, // [22:22] is the sub-list for extension type_name
 	22, // [22:22] is the sub-list for extension extendee
 	0,  // [0:22] is the sub-list for field type_name
@@ -3174,7 +3399,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*LinkDomainToOrganizationGrpcRequest); i {
+			switch v := v.(*LinkLocationToBillingProfileGrpcRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3186,7 +3411,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CustomFieldValue); i {
+			switch v := v.(*UnlinkLocationFromBillingProfileGrpcRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3198,7 +3423,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CustomFieldForOrganizationGrpcRequest); i {
+			switch v := v.(*LinkDomainToOrganizationGrpcRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3210,7 +3435,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddParentOrganizationGrpcRequest); i {
+			switch v := v.(*CustomFieldValue); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3222,7 +3447,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RemoveParentOrganizationGrpcRequest); i {
+			switch v := v.(*CustomFieldForOrganizationGrpcRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3234,7 +3459,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*WebScrapeOrganizationGrpcRequest); i {
+			switch v := v.(*AddParentOrganizationGrpcRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3246,7 +3471,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateOnboardingStatusGrpcRequest); i {
+			switch v := v.(*RemoveParentOrganizationGrpcRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3258,7 +3483,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddSocialGrpcRequest); i {
+			switch v := v.(*WebScrapeOrganizationGrpcRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3270,7 +3495,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateOrganizationOwnerGrpcRequest); i {
+			switch v := v.(*UpdateOnboardingStatusGrpcRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3282,7 +3507,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateBillingProfileGrpcRequest); i {
+			switch v := v.(*AddSocialGrpcRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3294,7 +3519,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OrganizationIdGrpcResponse); i {
+			switch v := v.(*UpdateOrganizationOwnerGrpcRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3306,7 +3531,7 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CustomFieldIdGrpcResponse); i {
+			switch v := v.(*CreateBillingProfileGrpcRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3318,6 +3543,30 @@ func file_organization_proto_init() {
 			}
 		}
 		file_organization_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*OrganizationIdGrpcResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_organization_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CustomFieldIdGrpcResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_organization_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*BillingProfileIdGrpcResponse); i {
 			case 0:
 				return &v.state
@@ -3332,15 +3581,15 @@ func file_organization_proto_init() {
 	}
 	file_organization_proto_msgTypes[0].OneofWrappers = []interface{}{}
 	file_organization_proto_msgTypes[1].OneofWrappers = []interface{}{}
-	file_organization_proto_msgTypes[9].OneofWrappers = []interface{}{}
-	file_organization_proto_msgTypes[10].OneofWrappers = []interface{}{}
+	file_organization_proto_msgTypes[11].OneofWrappers = []interface{}{}
+	file_organization_proto_msgTypes[12].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_organization_proto_rawDesc,
 			NumEnums:      3,
-			NumMessages:   21,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

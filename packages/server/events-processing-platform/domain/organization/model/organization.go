@@ -105,6 +105,7 @@ type BillingProfile struct {
 	SourceFields   cmnmod.Source `json:"sourceFields"`
 	PrimaryEmailId string        `json:"primaryEmailId"`
 	EmailIds       []string      `json:"emailIds"`
+	LocationIds    []string      `json:"locationIds"`
 }
 
 type OnboardingDetails struct {
@@ -121,9 +122,6 @@ type OrganizationPhoneNumber struct {
 type OrganizationEmail struct {
 	Primary bool   `json:"primary"`
 	Label   string `json:"label"`
-}
-
-type BillingProfileEmail struct {
 }
 
 type ParentOrganization struct {

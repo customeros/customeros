@@ -69,6 +69,10 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onEmailLinkToBillingProfile(event)
 	case events.OrganizationEmailUnlinkFromBillingProfileV1:
 		return a.onEmailUnlinkFromBillingProfile(event)
+	case events.OrganizationLocationLinkToBillingProfileV1:
+		return a.onLocationLinkToBillingProfile(event)
+	case events.OrganizationLocationUnlinkFromBillingProfileV1:
+		return a.onLocationUnlinkFromBillingProfile(event)
 	case events.OrganizationUpdateRenewalLikelihoodV1,
 		events.OrganizationUpdateRenewalForecastV1,
 		events.OrganizationUpdateBillingDetailsV1,
@@ -580,6 +584,47 @@ func (a *OrganizationAggregate) onEmailUnlinkFromBillingProfile(event eventstore
 		billingProfile.PrimaryEmailId = ""
 	}
 	billingProfile.EmailIds = utils.RemoveFromList(billingProfile.EmailIds, eventData.EmailId)
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onLocationLinkToBillingProfile(event eventstore.Event) error {
+	var eventData events.LinkLocationToBillingProfileEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+
+	billingProfile.LocationIds = utils.AddToListIfNotExists(billingProfile.LocationIds, eventData.LocationId)
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onLocationUnlinkFromBillingProfile(event eventstore.Event) error {
+	var eventData events.UnlinkLocationFromBillingProfileEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+	billingProfile.LocationIds = utils.RemoveFromList(billingProfile.LocationIds, eventData.LocationId)
 	billingProfile.UpdatedAt = eventData.UpdatedAt
 	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
 

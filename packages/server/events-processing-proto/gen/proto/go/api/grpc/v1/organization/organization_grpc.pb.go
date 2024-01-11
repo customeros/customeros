@@ -43,6 +43,8 @@ type OrganizationGrpcServiceClient interface {
 	CreateBillingProfile(ctx context.Context, in *CreateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	LinkEmailToBillingProfile(ctx context.Context, in *LinkEmailToBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	UnlinkEmailFromBillingProfile(ctx context.Context, in *UnlinkEmailFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
+	LinkLocationToBillingProfile(ctx context.Context, in *LinkLocationToBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
+	UnlinkLocationFromBillingProfile(ctx context.Context, in *UnlinkLocationFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 }
 
 type organizationGrpcServiceClient struct {
@@ -242,6 +244,24 @@ func (c *organizationGrpcServiceClient) UnlinkEmailFromBillingProfile(ctx contex
 	return out, nil
 }
 
+func (c *organizationGrpcServiceClient) LinkLocationToBillingProfile(ctx context.Context, in *LinkLocationToBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error) {
+	out := new(BillingProfileIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/LinkLocationToBillingProfile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *organizationGrpcServiceClient) UnlinkLocationFromBillingProfile(ctx context.Context, in *UnlinkLocationFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error) {
+	out := new(BillingProfileIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/UnlinkLocationFromBillingProfile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrganizationGrpcServiceServer is the server API for OrganizationGrpcService service.
 // All implementations should embed UnimplementedOrganizationGrpcServiceServer
 // for forward compatibility
@@ -267,6 +287,8 @@ type OrganizationGrpcServiceServer interface {
 	CreateBillingProfile(context.Context, *CreateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	LinkEmailToBillingProfile(context.Context, *LinkEmailToBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	UnlinkEmailFromBillingProfile(context.Context, *UnlinkEmailFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
+	LinkLocationToBillingProfile(context.Context, *LinkLocationToBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
+	UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 }
 
 // UnimplementedOrganizationGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -335,6 +357,12 @@ func (UnimplementedOrganizationGrpcServiceServer) LinkEmailToBillingProfile(cont
 }
 func (UnimplementedOrganizationGrpcServiceServer) UnlinkEmailFromBillingProfile(context.Context, *UnlinkEmailFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnlinkEmailFromBillingProfile not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) LinkLocationToBillingProfile(context.Context, *LinkLocationToBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LinkLocationToBillingProfile not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnlinkLocationFromBillingProfile not implemented")
 }
 
 // UnsafeOrganizationGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -726,6 +754,42 @@ func _OrganizationGrpcService_UnlinkEmailFromBillingProfile_Handler(srv interfac
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrganizationGrpcService_LinkLocationToBillingProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinkLocationToBillingProfileGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).LinkLocationToBillingProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/LinkLocationToBillingProfile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).LinkLocationToBillingProfile(ctx, req.(*LinkLocationToBillingProfileGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrganizationGrpcService_UnlinkLocationFromBillingProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnlinkLocationFromBillingProfileGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).UnlinkLocationFromBillingProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/UnlinkLocationFromBillingProfile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).UnlinkLocationFromBillingProfile(ctx, req.(*UnlinkLocationFromBillingProfileGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrganizationGrpcService_ServiceDesc is the grpc.ServiceDesc for OrganizationGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -816,6 +880,14 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnlinkEmailFromBillingProfile",
 			Handler:    _OrganizationGrpcService_UnlinkEmailFromBillingProfile_Handler,
+		},
+		{
+			MethodName: "LinkLocationToBillingProfile",
+			Handler:    _OrganizationGrpcService_LinkLocationToBillingProfile_Handler,
+		},
+		{
+			MethodName: "UnlinkLocationFromBillingProfile",
+			Handler:    _OrganizationGrpcService_UnlinkLocationFromBillingProfile_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -347,3 +347,97 @@ func TestOrganizationService_UnlinkEmailFromBillingProfile(t *testing.T) {
 	require.Equal(t, "profile-123", eventData.BillingProfileId)
 	require.Equal(t, "email-123", eventData.EmailId)
 }
+
+func TestOrganizationService_LinkLocationToBillingProfile(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	tenant := "ziggy"
+	organizationId := uuid.New().String()
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	organizationClient := organizationpb.NewOrganizationGrpcServiceClient(grpcConnection)
+
+	// Grpc call
+	response, err := organizationClient.LinkLocationToBillingProfile(ctx, &organizationpb.LinkLocationToBillingProfileGrpcRequest{
+		Tenant:           tenant,
+		OrganizationId:   organizationId,
+		LoggedInUserId:   "user-id-123",
+		BillingProfileId: "profile-123",
+		LocationId:       "location-123",
+	})
+	require.Nil(t, err)
+
+	// Assert response
+	require.NotNil(t, response)
+	require.NotEmpty(t, response.Id)
+
+	// Retrieve and assert events
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	organizationAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenant, organizationId)
+	eventList := eventsMap[organizationAggregate.ID]
+	require.Equal(t, 1, len(eventList))
+
+	require.Equal(t, orgevents.OrganizationLocationLinkToBillingProfileV1, eventList[0].GetEventType())
+	require.Equal(t, string(orgaggregate.OrganizationAggregateType)+"-"+tenant+"-"+organizationId, eventList[0].GetAggregateID())
+
+	var eventData orgevents.LinkLocationToBillingProfileEvent
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err)
+
+	require.Equal(t, tenant, eventData.Tenant)
+	test.AssertRecentTime(t, eventData.UpdatedAt)
+	require.Equal(t, "profile-123", eventData.BillingProfileId)
+	require.Equal(t, "location-123", eventData.LocationId)
+}
+
+func TestOrganizationService_UnlinkLocationFromBillingProfile(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	tenant := "ziggy"
+	organizationId := uuid.New().String()
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	organizationClient := organizationpb.NewOrganizationGrpcServiceClient(grpcConnection)
+
+	// Grpc call
+	response, err := organizationClient.UnlinkLocationFromBillingProfile(ctx, &organizationpb.UnlinkLocationFromBillingProfileGrpcRequest{
+		Tenant:           tenant,
+		OrganizationId:   organizationId,
+		LoggedInUserId:   "user-id-123",
+		BillingProfileId: "profile-123",
+		LocationId:       "location-123",
+	})
+	require.Nil(t, err)
+
+	// Assert response
+	require.NotNil(t, response)
+	require.NotEmpty(t, response.Id)
+
+	// Retrieve and assert events
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	organizationAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenant, organizationId)
+	eventList := eventsMap[organizationAggregate.ID]
+	require.Equal(t, 1, len(eventList))
+
+	require.Equal(t, orgevents.OrganizationLocationUnlinkFromBillingProfileV1, eventList[0].GetEventType())
+	require.Equal(t, string(orgaggregate.OrganizationAggregateType)+"-"+tenant+"-"+organizationId, eventList[0].GetAggregateID())
+
+	var eventData orgevents.UnlinkLocationFromBillingProfileEvent
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err)
+
+	require.Equal(t, tenant, eventData.Tenant)
+	test.AssertRecentTime(t, eventData.UpdatedAt)
+	require.Equal(t, "profile-123", eventData.BillingProfileId)
+	require.Equal(t, "location-123", eventData.LocationId)
+}
