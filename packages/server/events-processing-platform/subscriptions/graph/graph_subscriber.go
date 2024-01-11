@@ -236,6 +236,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		orgevents.OrganizationUpdateBillingDetailsV1,
 		orgevents.OrganizationRequestScrapeByWebsiteV1:
 		return nil
+	case orgevents.OrganizationCreateBillingProfileV1:
+		return s.organizationEventHandler.OnCreateBillingProfile(ctx, evt)
 
 	case userevents.UserCreateV1:
 		return s.userEventHandler.OnUserCreate(ctx, evt)
