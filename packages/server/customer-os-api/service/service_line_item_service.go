@@ -119,14 +119,8 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		tracing.TraceErr(span, err)
 		return "", err
 	}
-	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		serviceLineItemFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, neo4jentity.NodeLabelServiceLineItem)
-		if serviceLineItemFound && findErr == nil {
-			span.LogFields(log.Bool("serviceLineItemSavedInGraphDb", true))
-			break
-		}
-		time.Sleep(utils.BackOffIncrementalDelay(i))
-	}
+
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelServiceLineItem, span)
 	return response.Id, err
 }
 

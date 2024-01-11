@@ -18,7 +18,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type ContractService interface {
@@ -181,14 +180,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
 
-	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		contractFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, neo4jentity.NodeLabelContract)
-		if contractFound && findErr == nil {
-			span.LogFields(log.Bool("contractSavedInGraphDb", true))
-			break
-		}
-		time.Sleep(utils.BackOffIncrementalDelay(i))
-	}
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelContact, span)
 	return response.Id, err
 }
 

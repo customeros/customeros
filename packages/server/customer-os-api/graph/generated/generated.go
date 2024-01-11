@@ -534,6 +534,16 @@ type ComplexityRoot struct {
 		UpdatedAt         func(childComplexity int) int
 	}
 
+	InvoicingCycle struct {
+		AppSource     func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Source        func(childComplexity int) int
+		SourceOfTruth func(childComplexity int) int
+		Type          func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
+	}
+
 	Issue struct {
 		AppSource         func(childComplexity int) int
 		AssignedTo        func(childComplexity int) int
@@ -740,6 +750,8 @@ type ComplexityRoot struct {
 		InteractionEventLinkAttachment          func(childComplexity int, eventID string, attachmentID string) int
 		InteractionSessionCreate                func(childComplexity int, session model.InteractionSessionInput) int
 		InteractionSessionLinkAttachment        func(childComplexity int, sessionID string, attachmentID string) int
+		InvoicingCycleCreate                    func(childComplexity int, input model.InvoicingCycleInput) int
+		InvoicingCycleUpdate                    func(childComplexity int, input model.InvoicingCycleUpdateInput) int
 		JobRoleCreate                           func(childComplexity int, contactID string, input model.JobRoleInput) int
 		JobRoleDelete                           func(childComplexity int, contactID string, roleID string) int
 		JobRoleUpdate                           func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
@@ -1037,6 +1049,7 @@ type ComplexityRoot struct {
 		InteractionEventByEventIdentifier     func(childComplexity int, eventIdentifier string) int
 		InteractionSession                    func(childComplexity int, id string) int
 		InteractionSessionBySessionIdentifier func(childComplexity int, sessionIdentifier string) int
+		InvoicingCycle                        func(childComplexity int) int
 		Issue                                 func(childComplexity int, id string) int
 		LogEntry                              func(childComplexity int, id string) int
 		MasterPlan                            func(childComplexity int, id string) int
@@ -1368,6 +1381,8 @@ type MutationResolver interface {
 	InteractionSessionLinkAttachment(ctx context.Context, sessionID string, attachmentID string) (*model.InteractionSession, error)
 	InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error)
 	InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.InteractionEvent, error)
+	InvoicingCycleCreate(ctx context.Context, input model.InvoicingCycleInput) (*model.InvoicingCycle, error)
+	InvoicingCycleUpdate(ctx context.Context, input model.InvoicingCycleUpdateInput) (*model.InvoicingCycle, error)
 	JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error)
 	JobRoleCreate(ctx context.Context, contactID string, input model.JobRoleInput) (*model.JobRole, error)
 	JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error)
@@ -1527,6 +1542,7 @@ type QueryResolver interface {
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
 	InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error)
+	InvoicingCycle(ctx context.Context) (*model.InvoicingCycle, error)
 	Issue(ctx context.Context, id string) (*model.Issue, error)
 	LogEntry(ctx context.Context, id string) (*model.LogEntry, error)
 	MasterPlan(ctx context.Context, id string) (*model.MasterPlan, error)
@@ -3801,6 +3817,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InteractionSession.UpdatedAt(childComplexity), true
 
+	case "InvoicingCycle.appSource":
+		if e.complexity.InvoicingCycle.AppSource == nil {
+			break
+		}
+
+		return e.complexity.InvoicingCycle.AppSource(childComplexity), true
+
+	case "InvoicingCycle.createdAt":
+		if e.complexity.InvoicingCycle.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.InvoicingCycle.CreatedAt(childComplexity), true
+
+	case "InvoicingCycle.id":
+		if e.complexity.InvoicingCycle.ID == nil {
+			break
+		}
+
+		return e.complexity.InvoicingCycle.ID(childComplexity), true
+
+	case "InvoicingCycle.source":
+		if e.complexity.InvoicingCycle.Source == nil {
+			break
+		}
+
+		return e.complexity.InvoicingCycle.Source(childComplexity), true
+
+	case "InvoicingCycle.sourceOfTruth":
+		if e.complexity.InvoicingCycle.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.InvoicingCycle.SourceOfTruth(childComplexity), true
+
+	case "InvoicingCycle.type":
+		if e.complexity.InvoicingCycle.Type == nil {
+			break
+		}
+
+		return e.complexity.InvoicingCycle.Type(childComplexity), true
+
+	case "InvoicingCycle.updatedAt":
+		if e.complexity.InvoicingCycle.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.InvoicingCycle.UpdatedAt(childComplexity), true
+
 	case "Issue.appSource":
 		if e.complexity.Issue.AppSource == nil {
 			break
@@ -5249,6 +5314,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.InteractionSessionLinkAttachment(childComplexity, args["sessionId"].(string), args["attachmentId"].(string)), true
+
+	case "Mutation.invoicingCycle_Create":
+		if e.complexity.Mutation.InvoicingCycleCreate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_invoicingCycle_Create_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.InvoicingCycleCreate(childComplexity, args["input"].(model.InvoicingCycleInput)), true
+
+	case "Mutation.invoicingCycle_Update":
+		if e.complexity.Mutation.InvoicingCycleUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_invoicingCycle_Update_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.InvoicingCycleUpdate(childComplexity, args["input"].(model.InvoicingCycleUpdateInput)), true
 
 	case "Mutation.jobRole_Create":
 		if e.complexity.Mutation.JobRoleCreate == nil {
@@ -7600,6 +7689,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.InteractionSessionBySessionIdentifier(childComplexity, args["sessionIdentifier"].(string)), true
 
+	case "Query.invoicingCycle":
+		if e.complexity.Query.InvoicingCycle == nil {
+			break
+		}
+
+		return e.complexity.Query.InvoicingCycle(childComplexity), true
+
 	case "Query.issue":
 		if e.complexity.Query.Issue == nil {
 			break
@@ -8559,6 +8655,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputInteractionEventParticipantInput,
 		ec.unmarshalInputInteractionSessionInput,
 		ec.unmarshalInputInteractionSessionParticipantInput,
+		ec.unmarshalInputInvoicingCycleInput,
+		ec.unmarshalInputInvoicingCycleUpdateInput,
 		ec.unmarshalInputJobRoleInput,
 		ec.unmarshalInputJobRoleUpdateInput,
 		ec.unmarshalInputLinkOrganizationsInput,
@@ -10046,6 +10144,38 @@ interface SourceFields implements Node {
 interface ExtensibleEntity implements Node {
     id: ID!
     template: EntityTemplate
+}`, BuiltIn: false},
+	{Name: "../schemas/invoicing_cycle.graphqls", Input: `extend type Mutation {
+    invoicingCycle_Create(input: InvoicingCycleInput!): InvoicingCycle!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    invoicingCycle_Update(input: InvoicingCycleUpdateInput!): InvoicingCycle!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Query {
+    invoicingCycle: InvoicingCycle! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+enum InvoicingCycleType {
+    DATE
+    ANNIVERSARY
+}
+
+type InvoicingCycle implements SourceFields & Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    type:               InvoicingCycleType!
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+}
+
+input InvoicingCycleInput {
+    type: InvoicingCycleType!
+}
+
+input InvoicingCycleUpdateInput {
+    id: ID!
+    type: InvoicingCycleType!
 }`, BuiltIn: false},
 	{Name: "../schemas/issue.graphqls", Input: `extend type Query {
     issue(id: ID!): Issue! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -12630,6 +12760,36 @@ func (ec *executionContext) field_Mutation_interactionSession_LinkAttachment_arg
 		}
 	}
 	args["attachmentId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_invoicingCycle_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.InvoicingCycleInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNInvoicingCycleInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycleInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_invoicingCycle_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.InvoicingCycleUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNInvoicingCycleUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycleUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -30589,6 +30749,314 @@ func (ec *executionContext) fieldContext_InteractionSession_describedBy(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _InvoicingCycle_id(ctx context.Context, field graphql.CollectedField, obj *model.InvoicingCycle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoicingCycle_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoicingCycle_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoicingCycle",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoicingCycle_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.InvoicingCycle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoicingCycle_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoicingCycle_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoicingCycle",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoicingCycle_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.InvoicingCycle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoicingCycle_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoicingCycle_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoicingCycle",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoicingCycle_type(ctx context.Context, field graphql.CollectedField, obj *model.InvoicingCycle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoicingCycle_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.InvoicingCycleType)
+	fc.Result = res
+	return ec.marshalNInvoicingCycleType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycleType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoicingCycle_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoicingCycle",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type InvoicingCycleType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoicingCycle_source(ctx context.Context, field graphql.CollectedField, obj *model.InvoicingCycle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoicingCycle_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoicingCycle_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoicingCycle",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoicingCycle_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.InvoicingCycle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoicingCycle_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoicingCycle_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoicingCycle",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoicingCycle_appSource(ctx context.Context, field graphql.CollectedField, obj *model.InvoicingCycle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoicingCycle_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoicingCycle_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoicingCycle",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Issue_id(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Issue_id(ctx, field)
 	if err != nil {
@@ -40975,6 +41443,208 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_LinkAttachmen
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_interactionEvent_LinkAttachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_invoicingCycle_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_invoicingCycle_Create(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().InvoicingCycleCreate(rctx, fc.Args["input"].(model.InvoicingCycleInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.InvoicingCycle); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.InvoicingCycle`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InvoicingCycle)
+	fc.Result = res
+	return ec.marshalNInvoicingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_invoicingCycle_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InvoicingCycle_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InvoicingCycle_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_InvoicingCycle_updatedAt(ctx, field)
+			case "type":
+				return ec.fieldContext_InvoicingCycle_type(ctx, field)
+			case "source":
+				return ec.fieldContext_InvoicingCycle_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InvoicingCycle_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InvoicingCycle_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InvoicingCycle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_invoicingCycle_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_invoicingCycle_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_invoicingCycle_Update(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().InvoicingCycleUpdate(rctx, fc.Args["input"].(model.InvoicingCycleUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.InvoicingCycle); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.InvoicingCycle`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InvoicingCycle)
+	fc.Result = res
+	return ec.marshalNInvoicingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_invoicingCycle_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InvoicingCycle_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InvoicingCycle_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_InvoicingCycle_updatedAt(ctx, field)
+			case "type":
+				return ec.fieldContext_InvoicingCycle_type(ctx, field)
+			case "source":
+				return ec.fieldContext_InvoicingCycle_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InvoicingCycle_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InvoicingCycle_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InvoicingCycle", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_invoicingCycle_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -59429,6 +60099,96 @@ func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifie
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_invoicingCycle(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_invoicingCycle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().InvoicingCycle(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.InvoicingCycle); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.InvoicingCycle`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InvoicingCycle)
+	fc.Result = res
+	return ec.marshalNInvoicingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_invoicingCycle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InvoicingCycle_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InvoicingCycle_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_InvoicingCycle_updatedAt(ctx, field)
+			case "type":
+				return ec.fieldContext_InvoicingCycle_type(ctx, field)
+			case "source":
+				return ec.fieldContext_InvoicingCycle_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InvoicingCycle_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InvoicingCycle_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InvoicingCycle", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_issue(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_issue(ctx, field)
 	if err != nil {
@@ -70098,6 +70858,67 @@ func (ec *executionContext) unmarshalInputInteractionSessionParticipantInput(ctx
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputInvoicingCycleInput(ctx context.Context, obj interface{}) (model.InvoicingCycleInput, error) {
+	var it model.InvoicingCycleInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"type"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalNInvoicingCycleType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycleType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputInvoicingCycleUpdateInput(ctx context.Context, obj interface{}) (model.InvoicingCycleUpdateInput, error) {
+	var it model.InvoicingCycleUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "type"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalNInvoicingCycleType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycleType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj interface{}) (model.JobRoleInput, error) {
 	var it model.JobRoleInput
 	asMap := map[string]interface{}{}
@@ -72794,13 +73615,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case model.Issue:
-		return ec._Issue(ctx, sel, &obj)
-	case *model.Issue:
+	case model.InvoicingCycle:
+		return ec._InvoicingCycle(ctx, sel, &obj)
+	case *model.InvoicingCycle:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._Issue(ctx, sel, obj)
+		return ec._InvoicingCycle(ctx, sel, obj)
 	case model.Social:
 		return ec._Social(ctx, sel, &obj)
 	case *model.Social:
@@ -72843,6 +73664,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Location(ctx, sel, obj)
+	case model.Issue:
+		return ec._Issue(ctx, sel, &obj)
+	case *model.Issue:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Issue(ctx, sel, obj)
 	case model.EntityTemplate:
 		return ec._EntityTemplate(ctx, sel, &obj)
 	case *model.EntityTemplate:
@@ -72857,13 +73685,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Meeting(ctx, sel, obj)
-	case model.InteractionEvent:
-		return ec._InteractionEvent(ctx, sel, &obj)
-	case *model.InteractionEvent:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InteractionEvent(ctx, sel, obj)
 	case model.SourceFields:
 		if obj == nil {
 			return graphql.Null
@@ -72874,6 +73695,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._ExtensibleEntity(ctx, sel, obj)
+	case model.InteractionSession:
+		return ec._InteractionSession(ctx, sel, &obj)
+	case *model.InteractionSession:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InteractionSession(ctx, sel, obj)
 	case model.FieldSetTemplate:
 		return ec._FieldSetTemplate(ctx, sel, &obj)
 	case *model.FieldSetTemplate:
@@ -72902,13 +73730,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._CustomField(ctx, sel, obj)
-	case model.InteractionSession:
-		return ec._InteractionSession(ctx, sel, &obj)
-	case *model.InteractionSession:
+	case model.InteractionEvent:
+		return ec._InteractionEvent(ctx, sel, &obj)
+	case *model.InteractionEvent:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._InteractionSession(ctx, sel, obj)
+		return ec._InteractionEvent(ctx, sel, obj)
 	case model.Opportunity:
 		return ec._Opportunity(ctx, sel, &obj)
 	case *model.Opportunity:
@@ -73055,6 +73883,13 @@ func (ec *executionContext) _SourceFields(ctx context.Context, sel ast.Selection
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
+	case model.InvoicingCycle:
+		return ec._InvoicingCycle(ctx, sel, &obj)
+	case *model.InvoicingCycle:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InvoicingCycle(ctx, sel, obj)
 	case model.Issue:
 		return ec._Issue(ctx, sel, &obj)
 	case *model.Issue:
@@ -77625,6 +78460,75 @@ func (ec *executionContext) _InteractionSession(ctx context.Context, sel ast.Sel
 	return out
 }
 
+var invoicingCycleImplementors = []string{"InvoicingCycle", "SourceFields", "Node"}
+
+func (ec *executionContext) _InvoicingCycle(ctx context.Context, sel ast.SelectionSet, obj *model.InvoicingCycle) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, invoicingCycleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("InvoicingCycle")
+		case "id":
+			out.Values[i] = ec._InvoicingCycle_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._InvoicingCycle_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._InvoicingCycle_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._InvoicingCycle_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._InvoicingCycle_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sourceOfTruth":
+			out.Values[i] = ec._InvoicingCycle_sourceOfTruth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "appSource":
+			out.Values[i] = ec._InvoicingCycle_appSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var issueImplementors = []string{"Issue", "SourceFields", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _Issue(ctx context.Context, sel ast.SelectionSet, obj *model.Issue) graphql.Marshaler {
@@ -79534,6 +80438,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "interactionEvent_LinkAttachment":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_interactionEvent_LinkAttachment(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "invoicingCycle_Create":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_invoicingCycle_Create(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "invoicingCycle_Update":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_invoicingCycle_Update(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -82686,6 +83604,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_interactionEvent_ByEventIdentifier(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "invoicingCycle":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_invoicingCycle(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -86672,6 +87612,40 @@ func (ec *executionContext) unmarshalNInternalType2githubᚗcomᚋopenlineᚑai�
 
 func (ec *executionContext) marshalNInternalType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInternalType(ctx context.Context, sel ast.SelectionSet, v model.InternalType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNInvoicingCycle2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycle(ctx context.Context, sel ast.SelectionSet, v model.InvoicingCycle) graphql.Marshaler {
+	return ec._InvoicingCycle(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNInvoicingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycle(ctx context.Context, sel ast.SelectionSet, v *model.InvoicingCycle) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._InvoicingCycle(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNInvoicingCycleInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycleInput(ctx context.Context, v interface{}) (model.InvoicingCycleInput, error) {
+	res, err := ec.unmarshalInputInvoicingCycleInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNInvoicingCycleType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycleType(ctx context.Context, v interface{}) (model.InvoicingCycleType, error) {
+	var res model.InvoicingCycleType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInvoicingCycleType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycleType(ctx context.Context, sel ast.SelectionSet, v model.InvoicingCycleType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNInvoicingCycleUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicingCycleUpdateInput(ctx context.Context, v interface{}) (model.InvoicingCycleUpdateInput, error) {
+	res, err := ec.unmarshalInputInvoicingCycleUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNIssue2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssue(ctx context.Context, sel ast.SelectionSet, v model.Issue) graphql.Marshaler {
