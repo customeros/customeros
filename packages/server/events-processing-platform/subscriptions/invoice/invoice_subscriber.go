@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"strings"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
@@ -113,11 +114,13 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 		return nil
 	}
 
-	//switch evt.GetEventType() {
-	//
-	//default:
-	//	return nil
-	//}
+	switch evt.GetEventType() {
+
+	case invoice.InvoiceFillV1:
+
+	default:
+		return nil
+	}
 
 	return nil
 }
