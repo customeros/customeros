@@ -27,8 +27,8 @@ func (r *columnTypeResolver) CreatedBy(ctx context.Context, obj *model.ColumnTyp
 }
 
 // TableViewDefs is the resolver for the tableViewDefs field.
-func (r *queryResolver) TableViewDefs(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.TableViewDefPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Organizations", graphql.GetOperationContext(ctx))
+func (r *queryResolver) TableViewDefs(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort *model.SortBy) (*model.TableViewDefPage, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TableViewDefs", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
@@ -45,6 +45,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context, pagination *model.Pag
 		Icon:      nil,
 		Columns:   nil,
 		Filters:   nil,
+		Sorting:   nil,
 		CreatedAt: time.Time{},
 		UpdatedAt: time.Time{},
 		CreatedBy: nil,

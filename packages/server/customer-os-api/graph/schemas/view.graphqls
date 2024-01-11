@@ -1,5 +1,5 @@
 extend type Query {
-    tableViewDefs(pagination: Pagination, where: Filter, sort: [SortBy!]): TableViewDefPage! @hasTenant
+    tableViewDefs(pagination: Pagination, where: Filter, sort: SortBy): TableViewDefPage! @hasTenant
 }
 
 type TableViewDef implements Node {
@@ -9,7 +9,8 @@ type TableViewDef implements Node {
     type:               ViewType
     icon:               String
     columns:            [ColumnDef]
-    filters:            [String]
+    filters:            String
+    sorting:            String
     createdAt:          Time!
     updatedAt:          Time!
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant

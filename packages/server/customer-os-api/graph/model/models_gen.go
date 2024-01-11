@@ -400,6 +400,23 @@ type ContractInput struct {
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 }
 
+type ContractPage struct {
+	Content        []*Contract `json:"content"`
+	TotalPages     int         `json:"totalPages"`
+	TotalElements  int64       `json:"totalElements"`
+	TotalAvailable int64       `json:"totalAvailable"`
+}
+
+func (ContractPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this ContractPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this ContractPage) GetTotalElements() int64 { return this.TotalElements }
+
 type ContractUpdateInput struct {
 	ContractID       string                `json:"contractId"`
 	Name             *string               `json:"name,omitempty"`
@@ -1834,7 +1851,8 @@ type TableViewDef struct {
 	Type      *ViewType    `json:"type,omitempty"`
 	Icon      *string      `json:"icon,omitempty"`
 	Columns   []*ColumnDef `json:"columns,omitempty"`
-	Filters   []*string    `json:"filters,omitempty"`
+	Filters   *string      `json:"filters,omitempty"`
+	Sorting   *string      `json:"sorting,omitempty"`
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 	CreatedBy *User        `json:"createdBy,omitempty"`
