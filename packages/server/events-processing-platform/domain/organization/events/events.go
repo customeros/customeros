@@ -41,6 +41,7 @@ const (
 	OrganizationRefreshRenewalSummaryV1  = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
 	OrganizationUpdateOnboardingStatusV1 = "V1_ORGANIZATION_UPDATE_ONBOARDING_STATUS"
 	OrganizationUpdateOwnerV1            = "V1_ORGANIZATION_UPDATE_OWNER"
+	OrganizationCreateBillingProfileV1   = "V1_ORGANIZATION_CREATE_BILLING_PROFILE"
 )
 
 type OrganizationCreateEvent struct {

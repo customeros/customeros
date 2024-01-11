@@ -10,6 +10,7 @@ var (
 	ErrInvalidEventType    = InvalidEventTypeError{}
 	ErrAggregateNotFound   = errors.New("aggregate not found")
 	ErrInvalidCommandType  = errors.New("invalid command type")
+	ErrInvalidRequestType  = errors.New("invalid request type")
 	ErrInvalidAggregate    = errors.New("invalid aggregate")
 	ErrInvalidAggregateID  = errors.New("invalid aggregate id")
 	ErrInvalidEventVersion = errors.New("invalid event version")
