@@ -29,7 +29,8 @@ func TestMutationResolver_BillingProfileCreate(t *testing.T) {
 			require.Equal(t, testUserId, billingProfile.LoggedInUserId)
 			require.Equal(t, neo4jentity.DataSourceOpenline.String(), billingProfile.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, billingProfile.SourceFields.AppSource)
-			require.Equal(t, "New profile", billingProfile.Name)
+			require.Equal(t, "New profile", billingProfile.LegalName)
+			require.Equal(t, "123456789", billingProfile.TaxId)
 			require.Nil(t, billingProfile.CreatedAt)
 			require.Equal(t, orgId, billingProfile.OrganizationId)
 			calledCreateBillingProfile = true

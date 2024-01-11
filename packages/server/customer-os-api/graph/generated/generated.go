@@ -125,9 +125,10 @@ type ComplexityRoot struct {
 		AppSource     func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		ID            func(childComplexity int) int
-		Name          func(childComplexity int) int
+		LegalName     func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
+		TaxID         func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 	}
 
@@ -1868,12 +1869,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.BillingProfile.ID(childComplexity), true
 
-	case "BillingProfile.name":
-		if e.complexity.BillingProfile.Name == nil {
+	case "BillingProfile.legalName":
+		if e.complexity.BillingProfile.LegalName == nil {
 			break
 		}
 
-		return e.complexity.BillingProfile.Name(childComplexity), true
+		return e.complexity.BillingProfile.LegalName(childComplexity), true
 
 	case "BillingProfile.source":
 		if e.complexity.BillingProfile.Source == nil {
@@ -1888,6 +1889,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BillingProfile.SourceOfTruth(childComplexity), true
+
+	case "BillingProfile.taxId":
+		if e.complexity.BillingProfile.TaxID == nil {
+			break
+		}
+
+		return e.complexity.BillingProfile.TaxID(childComplexity), true
 
 	case "BillingProfile.updatedAt":
 		if e.complexity.BillingProfile.UpdatedAt == nil {
@@ -9035,7 +9043,8 @@ type BillingProfile implements SourceFields & Node {
     id:                 ID!
     createdAt:          Time!
     updatedAt:          Time!
-    name:               String!
+    legalName:          String!
+    taxId:              String!
     source:             DataSource!
     sourceOfTruth:      DataSource!
     appSource:          String!
@@ -9043,7 +9052,8 @@ type BillingProfile implements SourceFields & Node {
 
 input BillingProfileInput {
     organizationId: ID!
-    name: String
+    legalName: String
+    taxId: String
     createdAt: Time
 }
 `, BuiltIn: false},
@@ -17158,8 +17168,8 @@ func (ec *executionContext) fieldContext_BillingProfile_updatedAt(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _BillingProfile_name(ctx context.Context, field graphql.CollectedField, obj *model.BillingProfile) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_BillingProfile_name(ctx, field)
+func (ec *executionContext) _BillingProfile_legalName(ctx context.Context, field graphql.CollectedField, obj *model.BillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BillingProfile_legalName(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -17172,7 +17182,7 @@ func (ec *executionContext) _BillingProfile_name(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
+		return obj.LegalName, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -17189,7 +17199,51 @@ func (ec *executionContext) _BillingProfile_name(ctx context.Context, field grap
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_BillingProfile_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_BillingProfile_legalName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BillingProfile_taxId(ctx context.Context, field graphql.CollectedField, obj *model.BillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BillingProfile_taxId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TaxID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BillingProfile_taxId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BillingProfile",
 		Field:      field,
@@ -70262,7 +70316,7 @@ func (ec *executionContext) unmarshalInputBillingProfileInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "name", "createdAt"}
+	fieldsInOrder := [...]string{"organizationId", "legalName", "taxId", "createdAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -70276,13 +70330,20 @@ func (ec *executionContext) unmarshalInputBillingProfileInput(ctx context.Contex
 				return it, err
 			}
 			it.OrganizationID = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		case "legalName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("legalName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Name = data
+			it.LegalName = data
+		case "taxId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("taxId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TaxID = data
 		case "createdAt":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
@@ -75327,8 +75388,13 @@ func (ec *executionContext) _BillingProfile(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "name":
-			out.Values[i] = ec._BillingProfile_name(ctx, field, obj)
+		case "legalName":
+			out.Values[i] = ec._BillingProfile_legalName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "taxId":
+			out.Values[i] = ec._BillingProfile_taxId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

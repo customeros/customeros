@@ -20,7 +20,7 @@ func (r *mutationResolver) BillingProfileCreate(ctx context.Context, input model
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	billingProfileId, err := r.Services.BillingProfileService.CreateBillingProfile(ctx, input.OrganizationID, utils.IfNotNilString(input.Name), input.CreatedAt)
+	billingProfileId, err := r.Services.BillingProfileService.CreateBillingProfile(ctx, input.OrganizationID, utils.IfNotNilString(input.LegalName), utils.IfNotNilString(input.TaxID), input.CreatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create master plan")

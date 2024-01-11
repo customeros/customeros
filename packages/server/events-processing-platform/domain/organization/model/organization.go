@@ -98,7 +98,8 @@ type Organization struct {
 
 type BillingProfile struct {
 	Id             string        `json:"id"`
-	Name           string        `json:"name"`
+	LegalName      string        `json:"legalName"`
+	TaxId          string        `json:"taxId"`
 	CreatedAt      time.Time     `json:"createdAt"`
 	UpdatedAt      time.Time     `json:"updatedAt"`
 	SourceFields   cmnmod.Source `json:"sourceFields"`

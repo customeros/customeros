@@ -524,7 +524,8 @@ func (a *OrganizationAggregate) onCreateBillingProfile(event eventstore.Event) e
 
 	a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{
 		Id:           eventData.BillingProfileId,
-		Name:         eventData.Name,
+		LegalName:    eventData.LegalName,
+		TaxId:        eventData.TaxId,
 		CreatedAt:    eventData.CreatedAt,
 		UpdatedAt:    eventData.UpdatedAt,
 		SourceFields: eventData.SourceFields,

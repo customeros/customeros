@@ -594,7 +594,7 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 
 	now := utils.Now()
 	billingProfileId := uuid.New().String()
-	event, err := events.NewCreateBillingProfileEvent(orgAggregate, billingProfileId, "Billing profile",
+	event, err := events.NewCreateBillingProfileEvent(orgAggregate, billingProfileId, "Billing profile", "Tax id",
 		cmnmod.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatform,
@@ -617,7 +617,8 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 	require.NotNil(t, dbNode)
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
 	require.Equal(t, billingProfileId, billingProfile.Id)
-	require.Equal(t, "Billing profile", billingProfile.Name)
+	require.Equal(t, "Billing profile", billingProfile.LegalName)
+	require.Equal(t, "Tax id", billingProfile.TaxId)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), billingProfile.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), billingProfile.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, billingProfile.AppSource)

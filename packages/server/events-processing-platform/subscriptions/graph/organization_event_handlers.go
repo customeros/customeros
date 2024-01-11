@@ -908,7 +908,8 @@ func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, e
 
 	data := neo4jrepository.BillingProfileCreateFields{
 		OrganizationId: organizationId,
-		Name:           eventData.Name,
+		LegalName:      eventData.LegalName,
+		TaxId:          eventData.TaxId,
 		CreatedAt:      eventData.CreatedAt,
 		UpdatedAt:      eventData.UpdatedAt,
 		SourceFields: neo4jmodel.Source{

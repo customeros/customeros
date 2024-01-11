@@ -255,7 +255,8 @@ message CreateBillingProfileGrpcRequest {
   SourceFields sourceFields = 5;
   google.protobuf.Timestamp createdAt = 6;
   google.protobuf.Timestamp updatedAt = 7;
-  string name = 8;
+  string legalName = 8;
+  string taxId = 9;
 }
 
 message OrganizationIdGrpcResponse {

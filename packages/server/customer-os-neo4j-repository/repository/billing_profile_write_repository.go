@@ -14,7 +14,8 @@ import (
 
 type BillingProfileCreateFields struct {
 	OrganizationId string       `json:"organizationId"`
-	Name           string       `json:"name"`
+	LegalName      string       `json:"legalName"`
+	TaxId          string       `json:"taxId"`
 	CreatedAt      time.Time    `json:"createdAt"`
 	UpdatedAt      time.Time    `json:"updatedAt"`
 	SourceFields   model.Source `json:"sourceFields"`
@@ -54,7 +55,8 @@ func (r *billingProfileWriteRepository) Create(ctx context.Context, tenant, bill
 								bp.source=$source,
 								bp.sourceOfTruth=$sourceOfTruth,
 								bp.appSource=$appSource,
-								bp.name=$name`, tenant)
+								bp.legalName=$legalName,
+								bp.taxId=$taxId`, tenant)
 	params := map[string]any{
 		"tenant":           tenant,
 		"billingProfileId": billingProfileId,
@@ -64,7 +66,8 @@ func (r *billingProfileWriteRepository) Create(ctx context.Context, tenant, bill
 		"source":           data.SourceFields.Source,
 		"sourceOfTruth":    data.SourceFields.Source,
 		"appSource":        data.SourceFields.AppSource,
-		"name":             data.Name,
+		"legalName":        data.LegalName,
+		"taxId":            data.TaxId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
