@@ -22,7 +22,7 @@ export const NotificationsProvider = ({
 
   const { data: globalCacheQuery } = useGlobalCacheQuery(client);
 
-  const id = globalCacheQuery?.global_Cache?.user.id;
+  const id = globalCacheQuery?.global_Cache?.user.id ?? 'temp-id';
   const applicationIdentifier = isProduction
     ? env.NOTIFICATION_PROD_APP_IDENTIFIER
     : env.NOTIFICATION_TEST_APP_IDENTIFIER;
