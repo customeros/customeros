@@ -10,6 +10,7 @@ import (
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	ispb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_session"
+	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	invoicingcyclepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoicing_cycle"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
@@ -122,4 +123,7 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 
 	invoicingCycleService := service.NewInvoicingCycleService(server.log, server.commandHandlers.InvoicingCycle, server.aggregateStore)
 	invoicingcyclepb.RegisterInvoicingCycleServiceServer(grpcServer, invoicingCycleService)
+
+	invoiceService := service.NewInvoiceService(server.log, server.commandHandlers.Invoice, server.aggregateStore)
+	invoicepb.RegisterInvoiceServiceServer(grpcServer, invoiceService)
 }

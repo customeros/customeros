@@ -131,6 +131,21 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
+	invoiceEventSubSettings := esdb.SubscriptionSettingsDefault()
+	if err := s.subscribeToAll(ctx,
+		s.cfg.Subscriptions.InvoiceSubscription.GroupName,
+		nil,
+		&invoiceEventSubSettings,
+		false,
+		false,
+		esdb.Position{
+			Commit:  s.cfg.Subscriptions.InvoiceSubscription.StartPosition,
+			Prepare: s.cfg.Subscriptions.InvoiceSubscription.StartPosition,
+		},
+	); err != nil {
+		return err
+	}
+
 	return nil
 }
 
