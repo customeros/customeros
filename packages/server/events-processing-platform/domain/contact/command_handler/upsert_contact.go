@@ -48,7 +48,7 @@ func (h *upsertContactCommandHandler) Handle(ctx context.Context, cmd *command.U
 		}
 	}
 
-	if aggregate.IsAggregateNotFound(contactAggregate) {
+	if eventstore.IsAggregateNotFound(contactAggregate) {
 		cmd.IsCreateCommand = true
 	}
 

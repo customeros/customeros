@@ -44,7 +44,7 @@ func (c *addPlayerInfoCommandHandler) Handle(ctx context.Context, cmd *command.A
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(userAggregate) {
+	if eventstore.IsAggregateNotFound(userAggregate) {
 		tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 		return eventstore.ErrAggregateNotFound
 	} else {

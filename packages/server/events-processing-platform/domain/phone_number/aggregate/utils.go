@@ -14,10 +14,6 @@ func GetPhoneNumberObjectID(aggregateID string, tenant string) string {
 	return strings.ReplaceAll(aggregateID, string(PhoneNumberAggregateType)+"-"+tenant+"-", "")
 }
 
-func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() < 0
-}
-
 func LoadPhoneNumberAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*PhoneNumberAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadPhoneNumberAggregate")
 	defer span.Finish()

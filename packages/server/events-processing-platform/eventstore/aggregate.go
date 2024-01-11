@@ -247,3 +247,7 @@ func (a *AggregateBase) String() string {
 		len(a.GetUncommittedEvents()),
 	)
 }
+
+func IsAggregateNotFound(aggregate Aggregate) bool {
+	return aggregate.GetVersion() < 0
+}

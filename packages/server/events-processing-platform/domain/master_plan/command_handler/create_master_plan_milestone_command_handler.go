@@ -43,7 +43,7 @@ func (h *createMasterPlanMilestoneCommandHandler) Handle(ctx context.Context, cm
 			return err
 		}
 
-		if aggregate.IsAggregateNotFound(masterPlanAggregate) {
+		if eventstore.IsAggregateNotFound(masterPlanAggregate) {
 			tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 			return eventstore.ErrAggregateNotFound
 		}

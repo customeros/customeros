@@ -14,10 +14,6 @@ func GetContactObjectID(aggregateID string, tenant string) string {
 	return strings.ReplaceAll(aggregateID, string(ContactAggregateType)+"-"+tenant+"-", "")
 }
 
-func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() < 0
-}
-
 func LoadContactAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*ContactAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadContactAggregate")
 	defer span.Finish()

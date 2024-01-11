@@ -39,9 +39,30 @@ func (s *invoiceService) NewInvoice(ctx context.Context, request *invoicepb.NewI
 
 	if err := s.eventHandlers.InvoiceNew.Handle(ctx, baseRequest, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(InvoiceService.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(InvoiceNew.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
 	return &invoicepb.InvoiceIdResponse{Id: invoiceId}, nil
+}
+
+func (s *invoiceService) FillInvoice(ctx context.Context, request *invoicepb.FillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.FillInvoiceRequest")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.InvoiceId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
+	}
+
+	baseRequest := eventstore.NewBaseRequest(request.InvoiceId, request.Tenant, request.LoggedInUserId, commonmodel.SourceFromGrpc(request.SourceFields))
+
+	if err := s.eventHandlers.InvoiceFill.Handle(ctx, baseRequest, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(InvoiceFill.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
 }

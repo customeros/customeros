@@ -9,20 +9,27 @@ type Invoice struct {
 	ID           string             `json:"id"`
 	CreatedAt    time.Time          `json:"createdAt"`
 	UpdatedAt    time.Time          `json:"updatedAt"`
-	Date         time.Time          `json:"date"`
-	DueDate      time.Time          `json:"dueDate"`
-	Lines        []InvoiceLine      `json:"invoiceLines"`
-	TotalAmount  float64            `json:"amount"`
 	SourceFields commonmodel.Source `json:"source"`
+
+	Date    time.Time     `json:"date"`
+	DueDate time.Time     `json:"dueDate"`
+	Amount  float64       `json:"amount"`
+	VAT     float64       `json:"vat"`
+	Total   float64       `json:"total"`
+	Lines   []InvoiceLine `json:"invoiceLines"`
 }
 
 type InvoiceLine struct {
 	ID           string             `json:"id"`
 	CreatedAt    time.Time          `json:"createdAt"`
 	UpdatedAt    time.Time          `json:"updatedAt"`
-	Name         string             `json:"name"`
-	Price        float64            `json:"price"`
-	Quantity     int                `json:"quantity"`
-	Total        float64            `json:"amount"`
 	SourceFields commonmodel.Source `json:"source"`
+
+	Index    int64   `json:"index"`
+	Name     string  `json:"name"`
+	Price    float64 `json:"price"`
+	Quantity int64   `json:"quantity"`
+	Amount   float64 `json:"amount"`
+	VAT      float64 `json:"vat"`
+	Total    float64 `json:"total"`
 }

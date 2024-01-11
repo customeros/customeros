@@ -14,10 +14,6 @@ func GetEmailObjectID(aggregateID string, tenant string) string {
 	return strings.ReplaceAll(aggregateID, string(EmailAggregateType)+"-"+tenant+"-", "")
 }
 
-func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() < 0
-}
-
 func LoadEmailAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*EmailAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadEmailAggregate")
 	defer span.Finish()

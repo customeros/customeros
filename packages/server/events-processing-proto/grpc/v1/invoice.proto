@@ -13,10 +13,33 @@ message NewInvoiceRequest {
   SourceFields sourceFields = 5;
 }
 
+message FillInvoiceRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string invoiceId = 3;
+  double amount = 4;
+  double vat = 5;
+  double total = 6;
+  repeated InvoiceLine lines = 7;
+  google.protobuf.Timestamp updatedAt = 8;
+  SourceFields sourceFields = 9;
+}
+
+message InvoiceLine {
+  int64 index = 1;
+  string name = 2;
+  double price = 3;
+  int64 quantity = 4;
+  double amount = 5;
+  double vat = 6;
+  double total = 7;
+}
+
 message InvoiceIdResponse {
   string id = 1;
 }
 
 service InvoiceService {
   rpc NewInvoice(NewInvoiceRequest) returns (InvoiceIdResponse);
+  rpc FillInvoice(FillInvoiceRequest) returns (InvoiceIdResponse);
 }

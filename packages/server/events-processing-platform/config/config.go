@@ -128,7 +128,7 @@ type Services struct {
 	EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL" validate:"required"`
 	EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY" validate:"required"`
 	ScrapingBeeApiKey              string `env:"SCRAPING_BEE_API_KEY" validate:"required"`
-	CoreSignalApiKey               string `env:"CORE_SIGNAL_API_KEY" validate:"required"`
+	CoreSignalApiKey               string `env:"CORE_SIGNAL_API_KEY" validate:"required" envDefault:"{}"`
 	PromptJsonSchema               string `env:"PROMPT_JSON_SCHEMA" validate:"required" envDefault:"{
 		"$schema": "http://json-schema.org/draft-07/schema#",
 		"type": "object",

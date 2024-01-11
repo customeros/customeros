@@ -40,7 +40,7 @@ func (c *upsertCustomFieldCommandHandler) Handle(ctx context.Context, cmd *comma
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(organizationAggregate) {
+	if eventstore.IsAggregateNotFound(organizationAggregate) {
 		tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 		return eventstore.ErrAggregateNotFound
 	} else {

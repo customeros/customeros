@@ -15,10 +15,6 @@ func GetLocationObjectID(aggregateID string, tenant string) string {
 	return strings.ReplaceAll(aggregateID, string(LocationAggregateType)+"-"+tenant+"-", "")
 }
 
-func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() < 0
-}
-
 func LoadLocationAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*LocationAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadLocationAggregate")
 	defer span.Finish()

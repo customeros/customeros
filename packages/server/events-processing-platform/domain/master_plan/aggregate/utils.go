@@ -24,11 +24,6 @@ func getMasterPlanObjectUUID(aggregateID string) string {
 	return fullUUID
 }
 
-// IsAggregateNotFound checks if the provided aggregate is not found.
-func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() < 0
-}
-
 func LoadMasterPlanAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*MasterPlanAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadMasterPlanAggregate")
 	defer span.Finish()

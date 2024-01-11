@@ -42,7 +42,7 @@ func (h *reorderMasterPlanMilestonesCommandHandler) Handle(ctx context.Context, 
 			return err
 		}
 
-		if aggregate.IsAggregateNotFound(masterPlanAggregate) {
+		if eventstore.IsAggregateNotFound(masterPlanAggregate) {
 			tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 			return eventstore.ErrAggregateNotFound
 		}
