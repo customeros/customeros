@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package.json yarn.lock* ./
 RUN mkdir ./scripts
 COPY scripts/. ./scripts/.
-
+ARG GITHUB_ACTIONS=GITHUB_ACTIONS
 RUN yarn install --frozen-lockfile
 
 FROM base AS builder
