@@ -68,6 +68,15 @@ func Contains(slice []string, value string) bool {
 	return false
 }
 
+func ContainsElement[T comparable](slice []T, value T) bool {
+	for _, v := range slice {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
 func ContainsAll(sourceSlice, itemsToCheck []string) bool {
 	for _, item := range itemsToCheck {
 		found := false

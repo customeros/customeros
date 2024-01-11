@@ -534,6 +534,23 @@ func (s *organizationService) CreateBillingProfile(ctx context.Context, request 
 	return &organizationpb.BillingProfileIdGrpcResponse{Id: billingProfileId}, nil
 }
 
+func (s *organizationService) UpdateBillingProfile(ctx context.Context, request *organizationpb.UpdateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateBillingProfile")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
+
+	_, err := s.organizationRequestHandler.HandleWithRetry(ctx, request.Tenant, request.OrganizationId, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateBillingProfile) tenant:{%s}, organization id: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, s.errResponse(err)
+	}
+
+	return &organizationpb.BillingProfileIdGrpcResponse{Id: request.BillingProfileId}, nil
+}
+
 func (s *organizationService) LinkEmailToBillingProfile(ctx context.Context, request *organizationpb.LinkEmailToBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkEmailToBillingProfile")
 	defer span.Finish()

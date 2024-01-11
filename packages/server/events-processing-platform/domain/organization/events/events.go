@@ -42,6 +42,7 @@ const (
 	OrganizationUpdateOnboardingStatusV1           = "V1_ORGANIZATION_UPDATE_ONBOARDING_STATUS"
 	OrganizationUpdateOwnerV1                      = "V1_ORGANIZATION_UPDATE_OWNER"
 	OrganizationCreateBillingProfileV1             = "V1_ORGANIZATION_CREATE_BILLING_PROFILE"
+	OrganizationUpdateBillingProfileV1             = "V1_ORGANIZATION_UPDATE_BILLING_PROFILE"
 	OrganizationEmailLinkToBillingProfileV1        = "V1_ORGANIZATION_EMAIL_LINK_TO_BILLING_PROFILE"
 	OrganizationEmailUnlinkFromBillingProfileV1    = "V1_ORGANIZATION_EMAIL_UNLINK_FROM_BILLING_PROFILE"
 	OrganizationLocationLinkToBillingProfileV1     = "V1_ORGANIZATION_LOCATION_LINK_TO_BILLING_PROFILE"
