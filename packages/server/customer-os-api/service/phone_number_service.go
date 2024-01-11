@@ -18,7 +18,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
-	"time"
 )
 
 type PhoneNumberService interface {
@@ -81,15 +80,8 @@ func (s *phoneNumberService) CreatePhoneNumberByEvents(ctx context.Context, phon
 			s.log.Errorf("Error from events processing %s", err.Error())
 			return "", err
 		}
-		for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-			phoneNumberEntity, findPhoneNumberErr := s.GetById(ctx, response.Id)
-			if phoneNumberEntity != nil && findPhoneNumberErr == nil {
-				span.LogFields(log.Bool("phoneNumberSavedInGraphDb", true))
-				break
-			}
-			time.Sleep(utils.BackOffIncrementalDelay(i))
-		}
-		span.LogFields(log.String("output - createdPhoneNumberId", response.Id))
+
+		WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelPhoneNumber, span)
 		return response.Id, nil
 	} else {
 		return phoneNumberEntity.Id, nil

@@ -1,13 +1,21 @@
 package service
 
 import (
+	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"time"
 )
 
 type Services struct {
@@ -116,4 +124,17 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 
 	services.cfg = cfg
 	return &services
+}
+
+func WaitForObjectCreationAndLogSpan(ctx context.Context, s *repository.Repositories, id, nodeLabel string, span opentracing.Span) {
+	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
+		found, findErr := s.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), id, nodeLabel)
+		if found && findErr == nil {
+			span.LogFields(log.Bool(fmt.Sprintf("response - %s saved in db", nodeLabel), true))
+			break
+		}
+		time.Sleep(utils.BackOffIncrementalDelay(i))
+	}
+
+	span.LogFields(log.String(fmt.Sprintf("response - created %s with id", nodeLabel), id))
 }
