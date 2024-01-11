@@ -31,6 +31,10 @@ func (a *OrganizationAggregate) HandleRequest(ctx context.Context, request any) 
 		return nil, a.LinkEmailToBillingProfile(ctx, r)
 	case *organizationpb.UnlinkEmailFromBillingProfileGrpcRequest:
 		return nil, a.UnlinkEmailFromBillingProfile(ctx, r)
+	case *organizationpb.LinkLocationToBillingProfileGrpcRequest:
+		return nil, a.LinkLocationToBillingProfile(ctx, r)
+	case *organizationpb.UnlinkLocationFromBillingProfileGrpcRequest:
+		return nil, a.UnlinkLocationFromBillingProfile(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -98,6 +102,50 @@ func (a *OrganizationAggregate) UnlinkEmailFromBillingProfile(ctx context.Contex
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUnlinkEmailFromBillingProfileEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(event)
+}
+
+func (a *OrganizationAggregate) LinkLocationToBillingProfile(ctx context.Context, request *organizationpb.LinkLocationToBillingProfileGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.LinkLocationToBillingProfile")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := events.NewLinkLocationToBillingProfileEvent(a, request.BillingProfileId, request.LocationId, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewLinkLocationToBillingProfileEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(event)
+}
+
+func (a *OrganizationAggregate) UnlinkLocationFromBillingProfile(ctx context.Context, request *organizationpb.UnlinkLocationFromBillingProfileGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.UnlinkLocationFromBillingProfile")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := events.NewUnlinkLocationFromBillingProfileEvent(a, request.BillingProfileId, request.LocationId, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewUnlinkLocationFromBillingProfileEvent")
 	}
 
 	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
