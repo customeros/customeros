@@ -24,10 +24,6 @@ func getContractObjectUUID(aggregateID string) string {
 	return fullUUID
 }
 
-func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() < 0
-}
-
 func LoadContractAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*ContractAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadContractAggregate")
 	defer span.Finish()

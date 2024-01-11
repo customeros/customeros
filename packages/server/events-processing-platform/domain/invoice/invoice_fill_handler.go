@@ -12,21 +12,21 @@ import (
 	"github.com/pkg/errors"
 )
 
-type InvoiceNewHandler interface {
-	Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *invoicepb.NewInvoiceRequest) error
+type InvoiceFillHandler interface {
+	Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *invoicepb.FillInvoiceRequest) error
 }
 
-type invoiceNewHandler struct {
+type invoiceFillHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 }
 
-func NewInvoiceNewHandler(log logger.Logger, es eventstore.AggregateStore) InvoiceNewHandler {
-	return &invoiceNewHandler{log: log, es: es}
+func NewInvoiceFillHandler(log logger.Logger, es eventstore.AggregateStore) InvoiceFillHandler {
+	return &invoiceFillHandler{log: log, es: es}
 }
 
-func (h *invoiceNewHandler) Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *invoicepb.NewInvoiceRequest) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceNewHandler.Handle")
+func (h *invoiceFillHandler) Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *invoicepb.FillInvoiceRequest) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceFillHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, baseRequest.Tenant, baseRequest.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "common", baseRequest)
@@ -38,18 +38,39 @@ func (h *invoiceNewHandler) Handle(ctx context.Context, baseRequest eventstore.B
 		return err
 	}
 
-	createEvent, err := NewInvoiceNewEvent(invoiceAggregate, request.OrganizationId, utils.TimestampProtoToTimePtr(request.CreatedAt), baseRequest.SourceFields)
+	if eventstore.IsAggregateNotFound(invoiceAggregate) {
+		tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
+		return eventstore.ErrAggregateNotFound
+	}
+
+	invoiceAggregate.Invoice.Amount = request.Amount
+	invoiceAggregate.Invoice.VAT = request.Vat
+	invoiceAggregate.Invoice.Total = request.Total
+	invoiceAggregate.Invoice.Lines = make([]InvoiceLine, len(request.Lines))
+	for i, line := range request.Lines {
+		invoiceAggregate.Invoice.Lines[i] = InvoiceLine{
+			Index:    line.Index,
+			Name:     line.Name,
+			Price:    line.Price,
+			Quantity: line.Quantity,
+			Amount:   line.Amount,
+			VAT:      line.Vat,
+			Total:    line.Total,
+		}
+	}
+
+	fillEvent, err := NewInvoiceFillEvent(invoiceAggregate, utils.TimestampProtoToTimePtr(request.UpdatedAt), baseRequest.SourceFields, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "InvoiceNewEvent")
+		return errors.Wrap(err, "InvoiceFillEvent")
 	}
-	commonAggregate.EnrichEventWithMetadataExtended(&createEvent, span, commonAggregate.EventMetadata{
+	commonAggregate.EnrichEventWithMetadataExtended(&fillEvent, span, commonAggregate.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.SourceFields.AppSource,
 	})
 
-	err = invoiceAggregate.Apply(createEvent)
+	err = invoiceAggregate.Apply(fillEvent)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
