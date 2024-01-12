@@ -75,7 +75,7 @@ export const UpdateServiceModal = ({
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
         return produce(currentCache, (draft) => {
           if (draft?.['organization']?.['contracts']) {
-            draft['organization']['contracts']?.map((contractData, index) => {
+            draft['organization']['contracts']?.map((contractData) => {
               return (contractData.serviceLineItems ?? []).map(
                 (serviceItem) => {
                   if (serviceItem.id === input.serviceLineItemId) {
@@ -218,7 +218,7 @@ export const UpdateServiceModal = ({
               name='reason'
               id='reason'
               spellCheck='false'
-              placeholder={`What this modification about?`}
+              placeholder={`What's this modification about?`}
             />
           </div>
         </ModalBody>
