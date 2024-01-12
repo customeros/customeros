@@ -1,0 +1,24 @@
+query dashboardView_Renewals($page: Int!, $limit: Int!, $searchTerm: Any!, $includeEmpty: Boolean!) {
+  dashboardView_Renewals(
+  pagination: { page: $page, limit: $limit },
+  where: {
+     AND: [
+         {
+             filter: {
+                 property: "NAME",
+                 operation: EQ,
+                 value: $searchTerm,
+                 includeEmpty: $includeEmpty
+             }
+         }
+     ]
+    },
+    sort: {by: "CONTRACT"}) {
+    content {
+       id
+        name
+
+    }
+    totalElements
+  }
+}

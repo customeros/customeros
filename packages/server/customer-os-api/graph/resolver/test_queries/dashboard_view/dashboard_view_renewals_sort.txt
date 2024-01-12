@@ -12,6 +12,7 @@ query dashboardView_Renewals($page: Int!, $limit: Int!, $sortBy: String!, $sortD
     }
     }
     totalPages
+    totalAvailable
     totalElements
   }
 }
