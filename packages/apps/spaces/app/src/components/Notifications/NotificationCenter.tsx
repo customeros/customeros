@@ -47,9 +47,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
       }}
       onNotificationClick={handlerOnNotificationClick}
       listItem={(message, _, onNotificationClick) => {
+        const parsedMessage = new DOMParser()?.parseFromString(
+          message?.content as string,
+          'text/html',
+        )?.documentElement?.textContent;
         const content: false | string[] =
-          typeof message.content === 'string' &&
-          message.content.split('owner of ');
+          typeof parsedMessage === 'string' &&
+          parsedMessage?.split('owner of ');
 
         return (
           <Tooltip

@@ -78,24 +78,25 @@ export const CountButton: React.FC<CountBalloonProps> = ({ unseenCount }) => {
                   <audio autoPlay src='/soundEffects/99_audio.mp4' />
                 </>
               ) : (
-                <RedBalloon
-                  boxSize='53px'
-                  position='absolute'
-                  left={0}
-                  zIndex={1}
-                />
+                <>
+                  <RedBalloon
+                    boxSize='53px'
+                    position='absolute'
+                    left={0}
+                    zIndex={1}
+                  />
+                  <Text
+                    color='white'
+                    position='absolute'
+                    zIndex={1}
+                    fontSize='xs'
+                    left='18px'
+                    top='7px'
+                  >
+                    99+
+                  </Text>
+                </>
               )}
-
-              <Text
-                color='white'
-                position='absolute'
-                zIndex={1}
-                fontSize='xs'
-                left='18px'
-                top='7px'
-              >
-                99+
-              </Text>
             </Box>
           ) : (
             <Badge
