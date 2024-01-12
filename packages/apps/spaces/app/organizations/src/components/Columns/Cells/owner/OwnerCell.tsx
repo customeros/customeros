@@ -189,7 +189,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
 
   const handleSelect = useCallback(
     (option: SelectOption) => {
-      if (!option && !!prevSelection) {
+      if ((!option || !option.value) && !!prevSelection) {
         removeOrganizationOwner.mutate({
           organizationId: id,
         });

@@ -124,7 +124,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
 
   const handleSelect = useCallback(
     (option: SelectOption) => {
-      if (!option) {
+      if (!option || !option.value) {
         removeOrganizationOwner.mutate({
           organizationId: id,
         });
