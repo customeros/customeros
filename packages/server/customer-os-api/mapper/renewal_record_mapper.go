@@ -9,20 +9,17 @@ func MapEntityToRenewalRecord(renewalRecordEntity *entity.RenewalsRecordEntity) 
 	if renewalRecordEntity == nil {
 		return nil
 	}
-	organization := entity.OrganizationEntity{}
 	orgModel := model.Organization{}
-	contract := entity.ContractEntity{}
 	contractModel := model.Contract{}
-	opportunity := entity.OpportunityEntity{}
 	opportunityModel := model.Opportunity{}
 
-	if renewalRecordEntity.Organization != organization {
+	if renewalRecordEntity.Organization.ID != "" {
 		orgModel = *MapEntityToOrganization(&renewalRecordEntity.Organization)
 	}
-	if renewalRecordEntity.Contract != contract {
+	if renewalRecordEntity.Contract.Id != "" {
 		contractModel = *MapEntityToContract(&renewalRecordEntity.Contract)
 	}
-	if renewalRecordEntity.Opportunity != opportunity {
+	if renewalRecordEntity.Opportunity.Id != "" {
 		opportunityModel = *MapEntityToOpportunity(&renewalRecordEntity.Opportunity)
 	}
 	return &model.RenewalRecord{
