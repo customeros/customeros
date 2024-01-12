@@ -71,14 +71,16 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: false,
     cell: (props) => {
+      const contractName = props.getValue()?.contract?.name ?? 'Unnamed';
+      const orgId = props.getValue()?.organization?.id;
+      const orgName = props.getValue()?.organization?.name ?? 'Unnamed';
+
       return (
         <OrganizationCell
-          id={props.getValue().id}
-          name={props.getValue().name}
-          isSubsidiary={!!props.getValue()?.subsidiaryOf?.length}
-          parentOrganizationName={
-            props.getValue()?.subsidiaryOf?.[0]?.organization.name
-          }
+          id={orgId}
+          name={contractName}
+          isSubsidiary={true}
+          parentOrganizationName={orgName}
         />
       );
     },
@@ -294,7 +296,7 @@ const columns: Record<string, Column> = {
   }),
 };
 
-export const getColumnsConfig = (tableViewDef: TableViewDef) => {
+export const getColumnsConfig = (tableViewDef?: TableViewDef) => {
   if (!tableViewDef) return [];
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {

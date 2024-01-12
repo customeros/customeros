@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useMemo, useState, useCallback } from 'react';
 
 import { useIsRestoring } from '@tanstack/react-query';
 
@@ -13,7 +13,6 @@ import { Search } from './src/components/Search';
 import { useRenewalsPageData } from './src/hooks';
 import { getColumnsConfig } from './src/components/Columns/Columns';
 import { EmptyState } from './src/components/EmptyState/EmptyState';
-import { useFilterSetter } from './src/components/Columns/Filters/filterSetters';
 
 const tableViewDef1: TableViewDef = {
   id: '1',
@@ -311,14 +310,11 @@ const mockedTableViewDefs = [tableViewDef1, tableViewDef2, tableViewDef3];
 export default function RenewalsPage() {
   const isRestoring = useIsRestoring();
   const searchParams = useSearchParams();
-  // const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'LAST_TOUCHPOINT', desc: true },
   ]);
 
   const preset = searchParams?.get('preset');
-
-  useFilterSetter(tableViewDef1.filters);
 
   const {
     data,
@@ -336,12 +332,14 @@ export default function RenewalsPage() {
   }, [fetchNextPage, isFetching]);
 
   const tableViewDef = mockedTableViewDefs.find((t) => t.id === preset);
+  const columns = useMemo(
+    () => getColumnsConfig(tableViewDef),
+    [tableViewDef?.id],
+  );
 
-  if (!tableViewDef || totalAvailable === 0) {
+  if (!columns.length || totalAvailable === 0) {
     return <EmptyState />;
   }
-
-  const columns = getColumnsConfig(tableViewDef);
 
   return (
     <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>

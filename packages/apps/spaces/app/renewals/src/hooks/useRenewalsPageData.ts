@@ -61,29 +61,29 @@ export const useRenewalsPageData = ({ sorting }: UseRenewalsPageDataProps) => {
         });
       }
 
-      if (preset) {
-        const [property, value] = (() => {
-          if (preset === 'customer') {
-            return ['IS_CUSTOMER', [true]];
-          }
-          if (preset === 'portfolio') {
-            const userId = globalCache?.global_Cache?.user.id;
+      // if (preset) {
+      //   const [property, value] = (() => {
+      //     if (preset === 'customer') {
+      //       return ['IS_CUSTOMER', [true]];
+      //     }
+      //     if (preset === 'portfolio') {
+      //       const userId = globalCache?.global_Cache?.user.id;
 
-            return ['OWNER_ID', [userId]];
-          }
+      //       return ['OWNER_ID', [userId]];
+      //     }
 
-          return [];
-        })();
-        if (!property || !value) return;
-        draft.AND.push({
-          filter: {
-            property,
-            value,
-            operation: ComparisonOperator.Eq,
-            includeEmpty: false,
-          },
-        });
-      }
+      //     return [];
+      //   })();
+      //   if (!property || !value) return;
+      //   draft.AND.push({
+      //     filter: {
+      //       property,
+      //       value,
+      //       operation: ComparisonOperator.Eq,
+      //       includeEmpty: false,
+      //     },
+      //   });
+      // }
 
       if (
         organization?.isActive &&
