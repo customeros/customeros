@@ -447,23 +447,6 @@ type ContractInput struct {
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 }
 
-type ContractPage struct {
-	Content        []*Contract `json:"content"`
-	TotalPages     int         `json:"totalPages"`
-	TotalElements  int64       `json:"totalElements"`
-	TotalAvailable int64       `json:"totalAvailable"`
-}
-
-func (ContractPage) IsPages() {}
-
-// The total number of pages included in the query response.
-// **Required.**
-func (this ContractPage) GetTotalPages() int { return this.TotalPages }
-
-// The total number of elements included in the query response.
-// **Required.**
-func (this ContractPage) GetTotalElements() int64 { return this.TotalElements }
-
 type ContractUpdateInput struct {
 	ContractID       string                `json:"contractId"`
 	Name             *string               `json:"name,omitempty"`
@@ -1801,12 +1784,35 @@ type PlayerUser struct {
 type Query struct {
 }
 
+type RenewalRecord struct {
+	Organization *Organization `json:"organization"`
+	Contract     *Contract     `json:"contract"`
+	Opportunity  *Opportunity  `json:"opportunity,omitempty"`
+}
+
 type RenewalSummary struct {
 	ArrForecast       *float64                      `json:"arrForecast,omitempty"`
 	MaxArrForecast    *float64                      `json:"maxArrForecast,omitempty"`
 	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
 	NextRenewalDate   *time.Time                    `json:"nextRenewalDate,omitempty"`
 }
+
+type RenewalsPage struct {
+	Content        []*RenewalRecord `json:"content"`
+	TotalPages     int              `json:"totalPages"`
+	TotalElements  int64            `json:"totalElements"`
+	TotalAvailable int64            `json:"totalAvailable"`
+}
+
+func (RenewalsPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this RenewalsPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this RenewalsPage) GetTotalElements() int64 { return this.TotalElements }
 
 // Describes the success or failure of the GraphQL call.
 // **A `return` object**

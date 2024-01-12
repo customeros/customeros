@@ -3,7 +3,7 @@ extend type Query {
     sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE, ONBOARDING_STATUS
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
-    dashboardView_Contracts(pagination: Pagination!, where: Filter, sort: SortBy): ContractPage
+    dashboardView_Renewals(pagination: Pagination!, where: Filter, sort: SortBy): RenewalsPage
 
     dashboard_CustomerMap: [DashboardCustomerMap!]
     dashboard_MRRPerCustomer(period: DashboardPeriodInput): DashboardMRRPerCustomer
@@ -124,4 +124,17 @@ type DashboardOnboardingCompletionPerMonth {
     year: Int!
     month: Int!
     value: Float!
+}
+
+type RenewalsPage implements Pages {
+    content: [RenewalRecord!]!
+    totalPages: Int!
+    totalElements: Int64!
+    totalAvailable: Int64!
+}
+
+type RenewalRecord {
+    organization: Organization!
+    contract: Contract!
+    opportunity: Opportunity
 }

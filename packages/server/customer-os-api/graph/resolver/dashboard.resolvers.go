@@ -7,8 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -82,9 +80,36 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 	}, err
 }
 
-// DashboardViewContracts is the resolver for the dashboardView_Contracts field.
-func (r *queryResolver) DashboardViewContracts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContractPage, error) {
-	panic(fmt.Errorf("not implemented: DashboardViewContracts - dashboardView_Contracts"))
+// DashboardViewRenewals is the resolver for the dashboardView_Renewals field.
+func (r *queryResolver) DashboardViewRenewals(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.RenewalsPage, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardViewRenewals", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("pagination", pagination))
+	if where != nil {
+		span.LogFields(log.Object("filter", *where))
+	}
+	if sort != nil {
+		span.LogFields(log.Object("sort", *sort))
+	}
+
+	paginatedResult, err := r.Services.QueryService.GetDashboardViewRenewalsData(ctx, service.DashboardViewRenewalsRequest{
+		Page:  pagination.Page,
+		Limit: pagination.Limit,
+		Where: where,
+		Sort:  sort,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get renewals data")
+		return nil, nil
+	}
+
+	return &model.RenewalsPage{
+		Content:       mapper.MapEntitiesToRenewalRecords(paginatedResult.Rows.(*entity.RenewalsRecordEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
 }
 
 // DashboardCustomerMap is the resolver for the dashboard_CustomerMap field.

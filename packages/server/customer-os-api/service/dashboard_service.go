@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	entityDashboard "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity/dashboard"
@@ -25,8 +26,16 @@ type DashboardViewOrganizationsRequest struct {
 	Limit int
 }
 
+type DashboardViewRenewalsRequest struct {
+	Where *model.Filter
+	Sort  *model.SortBy
+	Page  int
+	Limit int
+}
+
 type DashboardService interface {
 	GetDashboardViewOrganizationsData(ctx context.Context, requestDetails DashboardViewOrganizationsRequest) (*utils.Pagination, error)
+	GetDashboardViewRenewalsData(ctx context.Context, requestDetails DashboardViewRenewalsRequest) (*utils.Pagination, error)
 
 	GetDashboardCustomerMapData(ctx context.Context) ([]*entityDashboard.DashboardCustomerMapData, error)
 	GetDashboardMRRPerCustomerData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardDashboardMRRPerCustomerData, error)
@@ -87,6 +96,49 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 	}
 
 	paginatedResult.SetRows(&organizationEntities)
+	return &paginatedResult, nil
+}
+
+func (s *dashboardService) GetDashboardViewRenewalsData(ctx context.Context, requestDetails DashboardViewRenewalsRequest) (*utils.Pagination, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardViewRenewalsData")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("page", requestDetails.Page), log.Int("limit", requestDetails.Limit))
+	if requestDetails.Where != nil {
+		span.LogFields(log.Object("filter", *requestDetails.Where))
+	}
+	if requestDetails.Sort != nil {
+		span.LogFields(log.Object("sort", *requestDetails.Sort))
+	}
+
+	var paginatedResult = utils.Pagination{
+		Limit: requestDetails.Limit,
+		Page:  requestDetails.Page,
+	}
+
+	dbRecords, err := s.repositories.DashboardRepository.GetDashboardViewRenewalData(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), requestDetails.Where, requestDetails.Sort)
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbRecords.Count)
+
+	renewalRecordEntities := entity.RenewalsRecordEntities{}
+
+	for _, v := range dbRecords.Records {
+		renewalRecordEntity := entity.RenewalsRecordEntity{}
+		if v.Values[0] != nil {
+			renewalRecordEntity.Organization = *s.services.OrganizationService.mapDbNodeToOrganizationEntity(v.Values[0].(dbtype.Node))
+		}
+		if v.Values[1] != nil {
+			renewalRecordEntity.Contract = *s.services.ContractService.mapDbNodeToContractEntity(v.Values[1].(dbtype.Node))
+		}
+		if v.Values[2] != nil {
+			renewalRecordEntity.Opportunity = *s.services.OpportunityService.mapDbNodeToOpportunityEntity(v.Values[2].(dbtype.Node))
+		}
+		renewalRecordEntities = append(renewalRecordEntities, renewalRecordEntity)
+	}
+
+	paginatedResult.SetRows(&renewalRecordEntities)
 	return &paginatedResult, nil
 }
 
