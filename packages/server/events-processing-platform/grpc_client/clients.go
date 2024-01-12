@@ -27,7 +27,7 @@ type Clients struct {
 	OpportunityClient      opportunitypb.OpportunityGrpcServiceClient
 }
 
-func InitClients(conn *grpc.ClientConn) *Clients {
+func InitGrpcClients(conn *grpc.ClientConn) *Clients {
 	if conn == nil {
 		return &Clients{}
 	}

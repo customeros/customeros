@@ -52,7 +52,7 @@ func SetupTestDatabase() (TestDatabase, func()) {
 func SetupMockedTestGrpcClient() *grpc_client.Clients {
 	testDialFactory := mocked_grpc.NewMockedTestDialFactory()
 	grpcConn, _ := testDialFactory.GetEventsProcessingPlatformConn()
-	return grpc_client.InitClients(grpcConn)
+	return grpc_client.InitGrpcClients(grpcConn)
 }
 
 func AssertRecentTime(t *testing.T, checkTime time.Time) {
