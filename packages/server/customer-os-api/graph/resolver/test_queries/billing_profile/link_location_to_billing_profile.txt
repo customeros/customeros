@@ -1,0 +1,8 @@
+mutation LinkLocation($organizationId :ID!, $billingProfileId: ID!, $locationId: ID!) {
+billingProfile_LinkLocation(
+    input: {
+        organizationId: $organizationId
+        billingProfileId: $billingProfileId
+        locationId: $locationId
+    })
+}

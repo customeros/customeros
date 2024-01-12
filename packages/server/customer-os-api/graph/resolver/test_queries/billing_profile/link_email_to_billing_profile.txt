@@ -1,0 +1,9 @@
+mutation LinkEmail($organizationId :ID!, $billingProfileId: ID!, $emailId: ID!) {
+billingProfile_LinkEmail(
+    input: {
+        organizationId: $organizationId
+        billingProfileId: $billingProfileId
+        emailId: $emailId
+        primary: true
+    })
+}
