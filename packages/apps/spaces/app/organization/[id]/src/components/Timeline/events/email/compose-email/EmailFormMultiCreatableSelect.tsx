@@ -8,9 +8,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { GroupBase, OptionProps, MultiValueProps } from 'chakra-react-select';
 
 import { SelectOption } from '@ui/utils';
+import { Text } from '@ui/typography/Text';
 import { Copy01 } from '@ui/media/icons/Copy01';
 import { IconButton } from '@ui/form/IconButton';
 import { chakraComponents } from '@ui/form/SyncSelect';
+import { getName } from '@spaces/utils/getParticipantsName';
 import { SelectInstance } from '@ui/form/SyncSelect/Select';
 import { Contact, ComparisonOperator } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -62,6 +64,16 @@ export const EmailFormMultiCreatableSelect = forwardRef<
     },
   });
 
+  const handleNavigateToContact = () => {
+    const urlSearchParams = new URLSearchParams(searchParams?.toString());
+    urlSearchParams.set('tab', 'people');
+    setLastActivePosition({
+      ...lastActivePosition,
+      [organizationId as string]: urlSearchParams.toString(),
+    });
+
+    router.push(`?${urlSearchParams}`);
+  };
   const handleAddContact = ({
     name,
     email,
@@ -83,16 +95,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
             input: { contactId, organizationId },
           });
         },
-        onSettled: () => {
-          const urlSearchParams = new URLSearchParams(searchParams?.toString());
-          urlSearchParams.set('tab', 'people');
-          setLastActivePosition({
-            ...lastActivePosition,
-            [organizationId as string]: urlSearchParams.toString(),
-          });
-
-          router.push(`?${urlSearchParams}`);
-        },
+        onSettled: handleNavigateToContact,
       },
     );
   };
@@ -100,13 +103,21 @@ export const EmailFormMultiCreatableSelect = forwardRef<
   const organizationContacts: OptionsOrGroups<unknown, GroupBase<unknown>> = (
     (data?.organization?.contacts?.content || []) as Array<Contact>
   )
-    .filter((e) => e.emails.length)
-    .map((e) =>
-      e.emails.map((email) => ({
-        value: email.email,
-        label: `${e.firstName} ${e.lastName}`,
-      })),
-    )
+    .map((e: Contact) => {
+      if (e.emails.some((e) => !!e.email)) {
+        return e.emails.map((email) => ({
+          value: email.email,
+          label: `${e.firstName} ${e.lastName}`,
+        }));
+      }
+
+      return [
+        {
+          label: getName(e),
+          value: '',
+        },
+      ];
+    })
     .flat();
   const { getInputProps } = useField(name, formId);
   const { id, onChange, onBlur, value } = getInputProps();
@@ -131,7 +142,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
           contacts: { content: Contact[] };
         };
       }>(GetContactsEmailListDocument, {
-        id,
+        id: organizationId,
         pagination: {
           page: 1,
           limit: 5,
@@ -165,14 +176,23 @@ export const EmailFormMultiCreatableSelect = forwardRef<
       const options: OptionsOrGroups<unknown, GroupBase<unknown>> = (
         results?.organization?.contacts?.content || []
       )
-        .filter((e: Contact) => e.emails.length)
-        .map((e: Contact) =>
-          e.emails.map((email) => ({
-            value: email.email,
-            label: `${e.firstName} ${e.lastName}`,
-          })),
-        )
+        .map((e: Contact) => {
+          if (e.emails.some((e) => !!e.email)) {
+            return e.emails.map((email) => ({
+              value: email.email,
+              label: `${e.firstName} ${e.lastName}`,
+            }));
+          }
+
+          return [
+            {
+              label: getName(e),
+              value: '',
+            },
+          ];
+        })
         .flat();
+
       callback(options);
     } catch (error) {
       callback([]);
@@ -181,11 +201,24 @@ export const EmailFormMultiCreatableSelect = forwardRef<
 
   const handleAddToPeople = () => {};
   const Option = useCallback((rest: OptionProps<SelectOption>) => {
+    const fullLabel =
+      rest?.data?.label &&
+      rest?.data?.value &&
+      `${rest.data.label} - ${rest.data.value}`;
+    const emailOnly =
+      !rest?.data?.label && rest?.data?.value && `${rest.data.value}`;
+    const noEmail = rest?.data?.label && !rest?.data?.value && (
+      <Text>
+        {rest.data.label} -
+        <Text as='span' color='gray.500' ml={1}>
+          [No email for this contact]
+        </Text>
+      </Text>
+    );
+
     return (
       <chakraComponents.Option {...rest}>
-        {rest.data.label
-          ? `${rest.data.label} - ${rest.data.value}`
-          : rest.data.value}
+        {fullLabel || emailOnly || noEmail}
         {rest?.isFocused && (
           <IconButton
             aria-label='Copy'
@@ -207,9 +240,12 @@ export const EmailFormMultiCreatableSelect = forwardRef<
     (rest: MultiValueProps<SelectOption>) => {
       const isContactInOrg = organizationContacts.findIndex(
         (data: SelectOption | unknown) => {
-          return (data as SelectOption)?.value === rest?.data?.value;
+          return rest?.data?.value
+            ? (data as SelectOption)?.value === rest?.data?.value
+            : rest?.data?.label === (data as SelectOption)?.label;
         },
       );
+      const isContactWithoutEmail = isContactInOrg && !rest?.data?.value;
       const name =
         rest?.data?.label !== rest?.data?.value
           ? rest?.data?.label
@@ -224,9 +260,15 @@ export const EmailFormMultiCreatableSelect = forwardRef<
           <MenuButton
             sx={{
               '&[aria-expanded="true"] > span > span': {
-                bg: 'primary.50 !important',
-                color: 'primary.700 !important',
-                borderColor: 'primary.200 !important',
+                bg: isContactWithoutEmail
+                  ? 'warning.50 !important'
+                  : 'primary.50 !important',
+                color: isContactWithoutEmail
+                  ? 'warning.700 !important'
+                  : 'primary.700 !important',
+                borderColor: isContactWithoutEmail
+                  ? 'warning.200 !important'
+                  : 'primary.200 !important',
               },
             }}
           >
@@ -235,7 +277,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
             </chakraComponents.MultiValue>
           </MenuButton>
           <ChakraMenuList maxW={300}>
-            {rest?.data?.value && (
+            {rest?.data?.value ? (
               <MenuItem
                 display='flex'
                 justifyContent='space-between'
@@ -246,6 +288,10 @@ export const EmailFormMultiCreatableSelect = forwardRef<
               >
                 {rest?.data?.value}
                 <Copy01 boxSize={3} color='gray.500' ml={2} />
+              </MenuItem>
+            ) : (
+              <MenuItem onClick={handleNavigateToContact}>
+                Add email in People list
               </MenuItem>
             )}
 
@@ -295,6 +341,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
       onBlur={(e) => handleBlur(e.target.value)}
       onChange={onChange}
       Option={Option}
+      options={organizationContacts}
       MultiValue={MultiValue}
       customStyles={multiCreatableSelectStyles}
       components={components}
