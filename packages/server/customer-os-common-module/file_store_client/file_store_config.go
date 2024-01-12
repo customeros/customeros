@@ -1,4 +1,4 @@
-package config
+package fsc
 
 type FileStoreApiConfig struct {
 	ApiPath string `env:"FILE_STORE_API,required" envDefault:""`

@@ -1,8 +1,12 @@
 package invoice
 
 import (
+	"bytes"
 	"context"
+	"github.com/jung-kurt/gofpdf"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
+	"github.com/opentracing/opentracing-go"
 	"strings"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
@@ -23,13 +27,15 @@ type InvoiceSubscriber struct {
 	log logger.Logger
 	db  *esdb.Client
 	cfg *config.Config
+	fsc fsc.FileStoreApiService
 }
 
-func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *InvoiceSubscriber {
+func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService) *InvoiceSubscriber {
 	return &InvoiceSubscriber{
 		log: log,
 		db:  db,
 		cfg: cfg,
+		fsc: fsc,
 	}
 }
 
@@ -117,9 +123,50 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	switch evt.GetEventType() {
 
 	case invoice.InvoiceFillV1:
-
+		s.onInvoiceFillV1(ctx, evt)
 	default:
 		return nil
+	}
+
+	return nil
+}
+
+func (s *InvoiceSubscriber) onInvoiceFillV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceSubscriber.onInvoiceFillV1")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData invoice.InvoiceFillEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	//load tenant billing details ( logo, address, etc ) from neo4j
+	//load billing profile for organization from neo4j
+	//load invoice from neo4j for invoice date and due date
+	//take the data from InvoiceFillEvent to fill the invoice
+
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+	pdf.Cell(40, 10, "Hello, World!")
+
+	w := &bytes.Buffer{}
+	if err := pdf.Output(w); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "pdf.Output")
+	}
+
+	fileDTO, err := s.fsc.UploadSingleFileBytes(eventData.Tenant, w.Bytes())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.UploadSingleFileBytes")
+	}
+
+	//fire event UpdateInvoiceWithFile
+	if fileDTO.Id == "" {
+		return errors.New("fileDTO.Id is empty")
 	}
 
 	return nil

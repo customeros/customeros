@@ -44,6 +44,7 @@ func NewInvoiceNewEvent(aggregate eventstore.Aggregate, organizationId string, c
 }
 
 type InvoiceFillEvent struct {
+	Tenant       string             `json:"tenant" validate:"required"`
 	UpdatedAt    time.Time          `json:"createdAt"`
 	SourceFields commonmodel.Source `json:"sourceFields"`
 
@@ -54,6 +55,7 @@ type InvoiceFillEvent struct {
 }
 
 type InvoiceLineFillEvent struct {
+	Tenant   string  `json:"tenant" validate:"required"`
 	Index    int64   `json:"index"`
 	Name     string  `json:"name"`
 	Price    float64 `json:"price"`
@@ -65,6 +67,7 @@ type InvoiceLineFillEvent struct {
 
 func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, sourceFields commonmodel.Source, request *invoicepb.FillInvoiceRequest) (eventstore.Event, error) {
 	eventData := InvoiceFillEvent{
+		Tenant:       aggregate.GetTenant(),
 		UpdatedAt:    *updatedAt,
 		SourceFields: sourceFields,
 
@@ -98,12 +101,14 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, s
 }
 
 type InvoicePayEvent struct {
+	Tenant       string             `json:"tenant" validate:"required"`
 	UpdatedAt    time.Time          `json:"createdAt"`
 	SourceFields commonmodel.Source `json:"sourceFields"`
 }
 
 func NewInvoicePayEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, sourceFields commonmodel.Source, request *invoicepb.PayInvoiceRequest) (eventstore.Event, error) {
 	eventData := InvoicePayEvent{
+		Tenant:       aggregate.GetTenant(),
 		UpdatedAt:    *updatedAt,
 		SourceFields: sourceFields,
 	}

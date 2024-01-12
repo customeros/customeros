@@ -45,6 +45,7 @@ require (
 	github.com/andybalholm/brotli v1.0.6 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
+	github.com/jung-kurt/gofpdf v1.16.2 // indirect
 	github.com/tetratelabs/wazero v1.6.0 // indirect
 )
 
