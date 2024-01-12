@@ -958,6 +958,7 @@ func TestQueryResolver_Sort_Renewals_ByRenewalDate(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, 1, renewalsPageStruct.DashboardView_Renewals.TotalPages)
+	require.Equal(t, int64(2), renewalsPageStruct.DashboardView_Renewals.TotalAvailable)
 	require.Equal(t, int64(3), renewalsPageStruct.DashboardView_Renewals.TotalElements)
 
 	require.Equal(t, organizationId3, renewalsPageStruct.DashboardView_Renewals.Content[0].Organization.ID)
