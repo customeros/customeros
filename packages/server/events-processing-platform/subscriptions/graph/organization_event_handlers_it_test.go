@@ -620,9 +620,49 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 	require.Equal(t, "Billing profile", billingProfile.LegalName)
 	require.Equal(t, "Tax id", billingProfile.TaxId)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), billingProfile.Source)
-	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), billingProfile.Source)
+	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), billingProfile.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, billingProfile.AppSource)
 	require.Equal(t, now, billingProfile.CreatedAt)
+	require.Equal(t, now, billingProfile.UpdatedAt)
+}
+
+func TestGraphOrganizationEventHandler_OnUpdateBillingProfile(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	billingProfileId := neo4jtest.CreateBillingProfileForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.BillingProfileEntity{
+		LegalName: "Billing profile",
+		TaxId:     "Tax id",
+	})
+	orgEventHandler := &OrganizationEventHandler{
+		repositories: testDatabase.Repositories,
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	now := utils.Now()
+	event, err := events.NewBillingProfileUpdateEvent(orgAggregate, billingProfileId, "Updated name", "Updated tax id",
+		now, []string{events.FieldMaskLegalName, events.FieldMaskTaxId})
+	require.Nil(t, err)
+	err = orgEventHandler.OnUpdateBillingProfile(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jentity.NodeLabelOrganization:   1,
+		neo4jentity.NodeLabelBillingProfile: 1,
+	})
+	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "HAS_BILLING_PROFILE", billingProfileId)
+
+	// Check billing profile
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelBillingProfile, billingProfileId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
+	require.Equal(t, billingProfileId, billingProfile.Id)
+	require.Equal(t, "Updated name", billingProfile.LegalName)
+	require.Equal(t, "Updated tax id", billingProfile.TaxId)
 	require.Equal(t, now, billingProfile.UpdatedAt)
 }
 
