@@ -13,7 +13,7 @@ import (
 )
 
 type invoicingCycleService struct {
-	invoicingcyclepb.UnimplementedInvoicingCycleServiceServer
+	invoicingcyclepb.UnimplementedInvoicingCycleGrpcServiceServer
 	log            logger.Logger
 	eventHandlers  *invoicingcycleEvents.EventHandlers
 	aggregateStore eventstore.AggregateStore

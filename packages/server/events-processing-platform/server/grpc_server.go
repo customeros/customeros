@@ -90,6 +90,6 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	contractpb.RegisterContractGrpcServiceServer(grpcServer, services.ContractService)
 	servicelineitempb.RegisterServiceLineItemGrpcServiceServer(grpcServer, services.ServiceLineItemService)
 	masterplanpb.RegisterMasterPlanGrpcServiceServer(grpcServer, services.MasterPlanService)
-	invoicingcyclepb.RegisterInvoicingCycleServiceServer(grpcServer, services.InvoicingCycleService)
-	invoicepb.RegisterInvoiceServiceServer(grpcServer, services.InvoiceService)
+	invoicingcyclepb.RegisterInvoicingCycleGrpcServiceServer(grpcServer, services.InvoicingCycleService)
+	invoicepb.RegisterInvoiceGrpcServiceServer(grpcServer, services.InvoiceService)
 }

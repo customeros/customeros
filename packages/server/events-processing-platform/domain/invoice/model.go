@@ -13,12 +13,13 @@ type Invoice struct {
 	UpdatedAt      time.Time          `json:"updatedAt"`
 	SourceFields   commonmodel.Source `json:"source"`
 
-	Date    time.Time     `json:"date"`
-	DueDate time.Time     `json:"dueDate"`
-	Amount  float64       `json:"amount"`
-	VAT     float64       `json:"vat"`
-	Total   float64       `json:"total"`
-	Lines   []InvoiceLine `json:"invoiceLines"`
+	Date             time.Time     `json:"date"`
+	DueDate          time.Time     `json:"dueDate"`
+	Amount           float64       `json:"amount"`
+	VAT              float64       `json:"vat"`
+	Total            float64       `json:"total"`
+	Lines            []InvoiceLine `json:"invoiceLines"`
+	RepositoryFileId string        `json:"repositoryFileId"`
 }
 
 type InvoiceLine struct {

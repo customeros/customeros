@@ -24,7 +24,7 @@ func TestInvoicingCycleService_CreateInvoicingCycle(t *testing.T) {
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	require.Nil(t, err, "Failed to get grpc connection")
-	invoicingCycleServiceClient := invoicingcyclepb.NewInvoicingCycleServiceClient(grpcConnection)
+	invoicingCycleServiceClient := invoicingcyclepb.NewInvoicingCycleGrpcServiceClient(grpcConnection)
 
 	response, err := invoicingCycleServiceClient.CreateInvoicingCycleType(ctx, &invoicingcyclepb.CreateInvoicingCycleTypeRequest{
 		Tenant: tenant,
@@ -79,7 +79,7 @@ func TestInvoicingCycleService_UpdateInvoicingCycle(t *testing.T) {
 	// prepare connection to grpc server
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	require.Nil(t, err)
-	invoicingCycleClient := invoicingcyclepb.NewInvoicingCycleServiceClient(grpcConnection)
+	invoicingCycleClient := invoicingcyclepb.NewInvoicingCycleGrpcServiceClient(grpcConnection)
 
 	// Execute the command
 	response, err := invoicingCycleClient.UpdateInvoicingCycleType(ctx, &invoicingcyclepb.UpdateInvoicingCycleTypeRequest{

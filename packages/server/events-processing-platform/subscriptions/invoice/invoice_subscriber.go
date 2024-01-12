@@ -5,7 +5,10 @@ import (
 	"context"
 	"github.com/jung-kurt/gofpdf"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/opentracing/opentracing-go"
 	"strings"
 
@@ -27,15 +30,18 @@ type InvoiceSubscriber struct {
 	log logger.Logger
 	db  *esdb.Client
 	cfg *config.Config
-	fsc fsc.FileStoreApiService
+
+	grpcClients *grpc_client.Clients
+	fsc         fsc.FileStoreApiService
 }
 
 func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService) *InvoiceSubscriber {
 	return &InvoiceSubscriber{
-		log: log,
-		db:  db,
-		cfg: cfg,
-		fsc: fsc,
+		log:         log,
+		db:          db,
+		cfg:         cfg,
+		grpcClients: grpcClients,
+		fsc:         fsc,
 	}
 }
 
@@ -123,7 +129,9 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	switch evt.GetEventType() {
 
 	case invoice.InvoiceFillV1:
-		s.onInvoiceFillV1(ctx, evt)
+		return s.onInvoiceFillV1(ctx, evt)
+	case invoice.InvoicePdfGeneratedV1:
+		return s.onInvoicePdfGeneratedV1(ctx, evt)
 	default:
 		return nil
 	}
@@ -142,6 +150,7 @@ func (s *InvoiceSubscriber) onInvoiceFillV1(ctx context.Context, evt eventstore.
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
+	//TODO build invoice PDF
 	//load tenant billing details ( logo, address, etc ) from neo4j
 	//load billing profile for organization from neo4j
 	//load invoice from neo4j for invoice date and due date
@@ -164,10 +173,49 @@ func (s *InvoiceSubscriber) onInvoiceFillV1(ctx context.Context, evt eventstore.
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.UploadSingleFileBytes")
 	}
 
-	//fire event UpdateInvoiceWithFile
 	if fileDTO.Id == "" {
 		return errors.New("fileDTO.Id is empty")
 	}
 
+	err = s.CallPdfGeneratedInvoice(ctx, eventData.Tenant, evt.GetAggregateID(), fileDTO.Id, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.CallPdfGeneratedInvoice")
+	}
+
+	return nil
+}
+
+func (s *InvoiceSubscriber) onInvoicePdfGeneratedV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceSubscriber.onInvoiceFillV1")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData invoice.InvoicePdfGeneratedEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	//TODO CALL STRIPE
+
+	return nil
+}
+
+func (s *InvoiceSubscriber) CallPdfGeneratedInvoice(ctx context.Context, tenant, invoiceId, repositoryFileId string, span opentracing.Span) error {
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := s.grpcClients.InvoiceClient.PdfGeneratedInvoice(ctx, &invoicepb.PdfGeneratedInvoiceRequest{
+		Tenant:           tenant,
+		InvoiceId:        invoiceId,
+		RepositoryFileId: repositoryFileId,
+		SourceFields: &commonpb.SourceFields{
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error sending the pdf generated request for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
 	return nil
 }
