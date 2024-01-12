@@ -908,13 +908,13 @@ func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyTrue(t *testing.T
 	daysFromNow10 := utils.Now().AddDate(0, 0, 10)
 	daysFromNow20 := utils.Now().AddDate(0, 0, 20)
 
-	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	_ = neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org1",
 		RenewalSummary: entity.RenewalSummary{
 			NextRenewalAt: utils.TimePtr(daysFromNow10),
 		},
 	})
-	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+	_ = neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org2",
 	})
 	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -932,7 +932,13 @@ func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyTrue(t *testing.T
 	}, entity.OpportunityEntity{})
 	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 1, "Opportunity": 1})
+	_ = insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contractStartedAt,
+	}, entity.OpportunityEntity{})
+	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 2, "Opportunity": 2})
 
 	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_renewals_sort",
 		map[string]interface{}{
@@ -943,16 +949,15 @@ func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyTrue(t *testing.T
 		})
 
 	var renewalsPageStruct struct {
-		DashboardView_RenewalRecords model.RenewalsPage
+		DashboardView_Renewals model.RenewalsPage
 	}
 	fmt.Println(rawResponse.Data.(map[string]any))
 	err := decode.Decode(rawResponse.Data.(map[string]any), &renewalsPageStruct)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, renewalsPageStruct.DashboardView_RenewalRecords.TotalPages)
-	require.Equal(t, 3, renewalsPageStruct.DashboardView_RenewalRecords.TotalElements)
+	require.Equal(t, 1, renewalsPageStruct.DashboardView_Renewals.TotalPages)
+	require.Equal(t, int64(3), renewalsPageStruct.DashboardView_Renewals.TotalElements)
 
-	require.Equal(t, organizationId1, renewalsPageStruct.DashboardView_RenewalRecords.Content[0].Organization.ID)
-	require.Equal(t, organizationId3, renewalsPageStruct.DashboardView_RenewalRecords.Content[1].Organization.ID)
-	require.Equal(t, organizationId2, renewalsPageStruct.DashboardView_RenewalRecords.Content[2].Organization.ID)
+	require.Equal(t, organizationId3, renewalsPageStruct.DashboardView_Renewals.Content[0].Organization.ID)
+	require.Equal(t, contractId, renewalsPageStruct.DashboardView_Renewals.Content[4].Contract.ID)
 }
