@@ -4,13 +4,11 @@ import { useRouter } from 'next/navigation';
 import { IMessage, PopoverNotificationCenter } from '@novu/notification-center';
 
 import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { Tooltip } from '@ui/overlay/Tooltip';
-import { Badge } from '@ui/presentation/Badge';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Avatar, AvatarBadge } from '@ui/media/Avatar';
-import { ArrowsRight } from '@ui/media/icons/ArrowsRight';
+import { CountButton } from '@shared/components/Notifications/CountButton';
 import { EmptyNotifications } from '@shared/components/Notifications/EmptyNotifications';
 import { NotificationsHeader } from '@shared/components/Notifications/NotificationsHeader';
 
@@ -49,9 +47,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
       }}
       onNotificationClick={handlerOnNotificationClick}
       listItem={(message, _, onNotificationClick) => {
+        const parsedMessage = new DOMParser()?.parseFromString(
+          message?.content as string,
+          'text/html',
+        )?.documentElement?.textContent;
         const content: false | string[] =
-          typeof message.content === 'string' &&
-          message.content.split('owner of ');
+          typeof parsedMessage === 'string' &&
+          parsedMessage?.split('owner of ');
 
         return (
           <Tooltip
@@ -116,45 +118,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
         );
       }}
     >
-      {({ unseenCount }) => (
-        <Button
-          px='3'
-          w='full'
-          size='md'
-          variant='ghost'
-          fontSize='sm'
-          textDecoration='none'
-          fontWeight='regular'
-          justifyContent='flex-start'
-          borderRadius='md'
-          color={'gray.500'}
-          leftIcon={<ArrowsRight color='inherit' boxSize='5' />}
-          _focus={{
-            boxShadow: 'sidenavItemFocus',
-          }}
-        >
-          <Flex justifyContent='space-between' flex={1} alignItems='center'>
-            <span>Up next</span>
-            {!!unseenCount && (
-              <Badge
-                w={5}
-                h={5}
-                display='flex'
-                alignItems='center'
-                justifyContent='center'
-                variant='outline'
-                borderRadius='xl'
-                boxShadow='none'
-                border='1px solid'
-                borderColor='gray.300'
-                fontWeight='regular'
-              >
-                {unseenCount}
-              </Badge>
-            )}
-          </Flex>
-        </Button>
-      )}
+      {({ unseenCount }) => <CountButton unseenCount={unseenCount} />}
     </PopoverNotificationCenter>
   );
 };
