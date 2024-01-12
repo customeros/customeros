@@ -27,6 +27,7 @@ type ContractService interface {
 	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*entity.ContractEntities, error)
 	ContractsExistForTenant(ctx context.Context) (bool, error)
 	mapDbNodeToContractEntity(node dbtype.Node) *entity.ContractEntity
+	CountContracts(ctx context.Context, tenant string) (int64, error)
 }
 type contractService struct {
 	log          logger.Logger
@@ -251,4 +252,13 @@ func (s *contractService) mapDbNodeToContractEntity(dbNode dbtype.Node) *entity.
 		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &contract
+}
+
+func (s *contractService) CountContracts(ctx context.Context, tenant string) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.CountContracts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("tenant", tenant))
+
+	return s.repositories.Neo4jRepositories.ContractReadRepository.CountContracts(ctx, tenant)
 }

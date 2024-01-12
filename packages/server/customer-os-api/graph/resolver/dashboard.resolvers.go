@@ -104,11 +104,18 @@ func (r *queryResolver) DashboardViewRenewals(ctx context.Context, pagination mo
 		graphql.AddErrorf(ctx, "Failed to get renewals data")
 		return nil, nil
 	}
+	countContracts, err := r.Services.ContractService.CountContracts(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get contacts count")
+		return nil, nil
+	}
 
 	return &model.RenewalsPage{
-		Content:       mapper.MapEntitiesToRenewalRecords(paginatedResult.Rows.(*entity.RenewalsRecordEntities)),
-		TotalPages:    paginatedResult.TotalPages,
-		TotalElements: paginatedResult.TotalRows,
+		Content:        mapper.MapEntitiesToRenewalRecords(paginatedResult.Rows.(*entity.RenewalsRecordEntities)),
+		TotalPages:     paginatedResult.TotalPages,
+		TotalElements:  paginatedResult.TotalRows,
+		TotalAvailable: countContracts,
 	}, err
 }
 

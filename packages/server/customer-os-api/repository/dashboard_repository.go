@@ -457,6 +457,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 	dbRecordsWithTotalCount := new(utils.RecordsWithTotalCount)
 
 	organizationFilterCypher, organizationFilterParams := "", make(map[string]interface{})
+	contractFilterCypher, contractFilterParams := "", make(map[string]interface{})
 	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
@@ -464,7 +465,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 	ownerIncludeEmpty := true
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
-	//region organization filters
+	//region organization & contract filters
 	if where != nil {
 		organizationFilter := new(utils.CypherFilter)
 		organizationFilter.Negate = false
@@ -481,6 +482,11 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		locationFilter.LogicalOperator = utils.OR
 		locationFilter.Filters = make([]*utils.CypherFilter, 0)
 
+		contractFilter := new(utils.CypherFilter)
+		contractFilter.Negate = false
+		contractFilter.LogicalOperator = utils.AND
+		contractFilter.Filters = make([]*utils.CypherFilter, 0)
+
 		for _, filter := range where.And {
 			if filter.Filter.Property == SearchSortParamOrganization {
 				orFilter := utils.CypherFilter{}
@@ -494,7 +500,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 
 				organizationFilter.Filters = append(organizationFilter.Filters, &orFilter)
 			} else if filter.Filter.Property == SearchSortParamName {
-				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
+				contractFilter.Filters = append(contractFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
 			} else if filter.Filter.Property == SearchSortParamWebsite {
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
 			} else if filter.Filter.Property == SearchSortParamEmail {
@@ -546,6 +552,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		if len(locationFilter.Filters) > 0 {
 			locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
 		}
+		if len(contractFilter.Filters) > 0 {
+			contractFilterCypher, contractFilterParams = contractFilter.BuildCypherFilterFragmentWithParamName("contract", "contract_param_")
+		}
 	}
 
 	//endregion
@@ -563,6 +572,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		utils.MergeMapToMap(organizationFilterParams, params)
 		utils.MergeMapToMap(emailFilterParams, params)
 		utils.MergeMapToMap(locationFilterParams, params)
+		utils.MergeMapToMap(contractFilterParams, params)
 
 		//region count query
 		countQuery := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
@@ -574,6 +584,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		}
 		if locationFilterCypher != "" {
 			countQuery += ` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
+		}
+		if contractFilterCypher != "" {
+			countQuery += ` MATCH (o)-[:HAS_CONTRACT]->(contract:Contract) WITH *`
 		}
 		countQuery += ` WHERE o.hide = false `
 
@@ -649,6 +662,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		if locationFilterCypher != "" {
 			queryParts = append(queryParts, locationFilterCypher)
 		}
+		if contractFilterCypher != "" {
+			queryParts = append(queryParts, contractFilterCypher)
+		}
 
 		//endregion
 		query = query + strings.Join(queryParts, " AND ")
@@ -668,9 +684,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		}
 		if sort != nil && sort.By == SearchSortParamName {
 			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.name <> \"\" and not o.name is null THEN o.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
+				query += ", CASE WHEN contract.name <> \"\" and not contract.name is null THEN contract.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
 			} else {
-				query += ", o.name as NAME_FOR_SORTING "
+				query += ", contract.name as NAME_FOR_SORTING "
 			}
 			aliases += ", NAME_FOR_SORTING "
 		}
