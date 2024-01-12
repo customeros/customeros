@@ -75,6 +75,8 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		return a.onNewInvoice(evt)
 	case InvoiceFillV1:
 		return a.onFillInvoice(evt)
+	case InvoicePdfGeneratedV1:
+		return a.onPdfGeneratedInvoice(evt)
 	case InvoicePayV1:
 		return a.onPayInvoice(evt)
 	default:
@@ -121,6 +123,17 @@ func (a *InvoiceAggregate) onFillInvoice(evt eventstore.Event) error {
 			Total:    line.Total,
 		}
 	}
+
+	return nil
+}
+
+func (a *InvoiceAggregate) onPdfGeneratedInvoice(evt eventstore.Event) error {
+	var eventData InvoicePdfGeneratedEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Invoice.RepositoryFileId = eventData.RepositoryFileId
 
 	return nil
 }

@@ -59,7 +59,7 @@ message InvoicingCycleDayResponse {
 }
 
 // Service definition
-service InvoicingCycleService {
+service InvoicingCycleGrpcService {
   rpc CreateInvoicingCycleType(CreateInvoicingCycleTypeRequest) returns (InvoicingCycleTypeResponse);
   rpc UpdateInvoicingCycleType(UpdateInvoicingCycleTypeRequest) returns (InvoicingCycleTypeResponse);
   rpc CreateInvoicingCycleDay(CreateInvoicingCycleDayRequest) returns (InvoicingCycleDayResponse);

@@ -11,14 +11,15 @@ import (
 )
 
 const (
-	InvoiceNewV1  = "V1_INVOICE_NEW"
-	InvoiceFillV1 = "V1_INVOICE_FILL"
-	InvoicePayV1  = "V1_INVOICE_PAY"
+	InvoiceNewV1          = "V1_INVOICE_NEW"
+	InvoiceFillV1         = "V1_INVOICE_FILL"
+	InvoicePdfGeneratedV1 = "V1_INVOICE_PDF_GENERATED"
+	InvoicePayV1          = "V1_INVOICE_PAY"
 )
 
 type InvoiceNewEvent struct {
 	Tenant         string             `json:"tenant" validate:"required"`
-	OrganizationId string             `json:"organizationId"`
+	OrganizationId string             `json:"organizationId" validate:"required"`
 	CreatedAt      time.Time          `json:"createdAt"`
 	SourceFields   commonmodel.Source `json:"sourceFields"`
 }
@@ -48,21 +49,21 @@ type InvoiceFillEvent struct {
 	UpdatedAt    time.Time          `json:"createdAt"`
 	SourceFields commonmodel.Source `json:"sourceFields"`
 
-	Amount float64                `json:"amount"`
-	VAT    float64                `json:"vat"`
-	Total  float64                `json:"total"`
-	Lines  []InvoiceLineFillEvent `json:"invoiceLines"`
+	Amount float64                `json:"amount" validate:"required"`
+	VAT    float64                `json:"vat" validate:"required"`
+	Total  float64                `json:"total" validate:"required"`
+	Lines  []InvoiceLineFillEvent `json:"invoiceLines" validate:"required"`
 }
 
 type InvoiceLineFillEvent struct {
 	Tenant   string  `json:"tenant" validate:"required"`
-	Index    int64   `json:"index"`
-	Name     string  `json:"name"`
-	Price    float64 `json:"price"`
-	Quantity int64   `json:"quantity"`
-	Amount   float64 `json:"amount"`
-	VAT      float64 `json:"vat"`
-	Total    float64 `json:"total"`
+	Index    int64   `json:"index" validate:"required"`
+	Name     string  `json:"name" validate:"required"`
+	Price    float64 `json:"price" validate:"required"`
+	Quantity int64   `json:"quantity" validate:"required"`
+	Amount   float64 `json:"amount" validate:"required"`
+	VAT      float64 `json:"vat" validate:"required"`
+	Total    float64 `json:"total" validate:"required"`
 }
 
 func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, sourceFields commonmodel.Source, request *invoicepb.FillInvoiceRequest) (eventstore.Event, error) {
@@ -100,6 +101,34 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, s
 	return event, nil
 }
 
+type InvoicePdfGeneratedEvent struct {
+	Tenant       string             `json:"tenant" validate:"required"`
+	UpdatedAt    time.Time          `json:"createdAt"`
+	SourceFields commonmodel.Source `json:"sourceFields"`
+
+	RepositoryFileId string `json:"repositoryFileId" validate:"required"`
+}
+
+func NewInvoicePdfGeneratedEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, sourceFields commonmodel.Source, request *invoicepb.PdfGeneratedInvoiceRequest) (eventstore.Event, error) {
+	eventData := InvoicePdfGeneratedEvent{
+		Tenant:           aggregate.GetTenant(),
+		UpdatedAt:        *updatedAt,
+		SourceFields:     sourceFields,
+		RepositoryFileId: request.RepositoryFileId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate InvoicePdfGeneratedEvent")
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, InvoicePdfGeneratedV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InvoicePdfGeneratedEvent")
+	}
+
+	return event, nil
+}
+
 type InvoicePayEvent struct {
 	Tenant       string             `json:"tenant" validate:"required"`
 	UpdatedAt    time.Time          `json:"createdAt"`
@@ -126,15 +155,17 @@ func NewInvoicePayEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, so
 }
 
 type EventHandlers struct {
-	InvoiceNew  InvoiceNewHandler
-	InvoiceFill InvoiceFillHandler
-	InvoicePay  InvoicePayHandler
+	InvoiceNew          InvoiceNewHandler
+	InvoiceFill         InvoiceFillHandler
+	InvoicePdfGenerated InvoicePdfGeneratedHandler
+	InvoicePay          InvoicePayHandler
 }
 
 func NewEventHandlers(log logger.Logger, es eventstore.AggregateStore) *EventHandlers {
 	return &EventHandlers{
-		InvoiceNew:  NewInvoiceNewHandler(log, es),
-		InvoiceFill: NewInvoiceFillHandler(log, es),
-		InvoicePay:  NewInvoicePayHandler(log, es),
+		InvoiceNew:          NewInvoiceNewHandler(log, es),
+		InvoiceFill:         NewInvoiceFillHandler(log, es),
+		InvoicePdfGenerated: NewInvoicePdfGeneratedHandler(log, es),
+		InvoicePay:          NewInvoicePayHandler(log, es),
 	}
 }

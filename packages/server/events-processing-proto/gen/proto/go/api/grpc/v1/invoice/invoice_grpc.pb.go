@@ -18,156 +18,192 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// InvoiceServiceClient is the client API for InvoiceService service.
+// InvoiceGrpcServiceClient is the client API for InvoiceGrpcService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type InvoiceServiceClient interface {
+type InvoiceGrpcServiceClient interface {
 	NewInvoice(ctx context.Context, in *NewInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	FillInvoice(ctx context.Context, in *FillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
+	PdfGeneratedInvoice(ctx context.Context, in *PdfGeneratedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PayInvoice(ctx context.Context, in *PayInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 }
 
-type invoiceServiceClient struct {
+type invoiceGrpcServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewInvoiceServiceClient(cc grpc.ClientConnInterface) InvoiceServiceClient {
-	return &invoiceServiceClient{cc}
+func NewInvoiceGrpcServiceClient(cc grpc.ClientConnInterface) InvoiceGrpcServiceClient {
+	return &invoiceGrpcServiceClient{cc}
 }
 
-func (c *invoiceServiceClient) NewInvoice(ctx context.Context, in *NewInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
+func (c *invoiceGrpcServiceClient) NewInvoice(ctx context.Context, in *NewInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
 	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceService/NewInvoice", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/NewInvoice", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *invoiceServiceClient) FillInvoice(ctx context.Context, in *FillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
+func (c *invoiceGrpcServiceClient) FillInvoice(ctx context.Context, in *FillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
 	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceService/FillInvoice", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/FillInvoice", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *invoiceServiceClient) PayInvoice(ctx context.Context, in *PayInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
+func (c *invoiceGrpcServiceClient) PdfGeneratedInvoice(ctx context.Context, in *PdfGeneratedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
 	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceService/PayInvoice", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/PdfGeneratedInvoice", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// InvoiceServiceServer is the server API for InvoiceService service.
-// All implementations should embed UnimplementedInvoiceServiceServer
+func (c *invoiceGrpcServiceClient) PayInvoice(ctx context.Context, in *PayInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
+	out := new(InvoiceIdResponse)
+	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/PayInvoice", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// InvoiceGrpcServiceServer is the server API for InvoiceGrpcService service.
+// All implementations should embed UnimplementedInvoiceGrpcServiceServer
 // for forward compatibility
-type InvoiceServiceServer interface {
+type InvoiceGrpcServiceServer interface {
 	NewInvoice(context.Context, *NewInvoiceRequest) (*InvoiceIdResponse, error)
 	FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error)
+	PdfGeneratedInvoice(context.Context, *PdfGeneratedInvoiceRequest) (*InvoiceIdResponse, error)
 	PayInvoice(context.Context, *PayInvoiceRequest) (*InvoiceIdResponse, error)
 }
 
-// UnimplementedInvoiceServiceServer should be embedded to have forward compatible implementations.
-type UnimplementedInvoiceServiceServer struct {
+// UnimplementedInvoiceGrpcServiceServer should be embedded to have forward compatible implementations.
+type UnimplementedInvoiceGrpcServiceServer struct {
 }
 
-func (UnimplementedInvoiceServiceServer) NewInvoice(context.Context, *NewInvoiceRequest) (*InvoiceIdResponse, error) {
+func (UnimplementedInvoiceGrpcServiceServer) NewInvoice(context.Context, *NewInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewInvoice not implemented")
 }
-func (UnimplementedInvoiceServiceServer) FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error) {
+func (UnimplementedInvoiceGrpcServiceServer) FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FillInvoice not implemented")
 }
-func (UnimplementedInvoiceServiceServer) PayInvoice(context.Context, *PayInvoiceRequest) (*InvoiceIdResponse, error) {
+func (UnimplementedInvoiceGrpcServiceServer) PdfGeneratedInvoice(context.Context, *PdfGeneratedInvoiceRequest) (*InvoiceIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PdfGeneratedInvoice not implemented")
+}
+func (UnimplementedInvoiceGrpcServiceServer) PayInvoice(context.Context, *PayInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PayInvoice not implemented")
 }
 
-// UnsafeInvoiceServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to InvoiceServiceServer will
+// UnsafeInvoiceGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to InvoiceGrpcServiceServer will
 // result in compilation errors.
-type UnsafeInvoiceServiceServer interface {
-	mustEmbedUnimplementedInvoiceServiceServer()
+type UnsafeInvoiceGrpcServiceServer interface {
+	mustEmbedUnimplementedInvoiceGrpcServiceServer()
 }
 
-func RegisterInvoiceServiceServer(s grpc.ServiceRegistrar, srv InvoiceServiceServer) {
-	s.RegisterService(&InvoiceService_ServiceDesc, srv)
+func RegisterInvoiceGrpcServiceServer(s grpc.ServiceRegistrar, srv InvoiceGrpcServiceServer) {
+	s.RegisterService(&InvoiceGrpcService_ServiceDesc, srv)
 }
 
-func _InvoiceService_NewInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _InvoiceGrpcService_NewInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(NewInvoiceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InvoiceServiceServer).NewInvoice(ctx, in)
+		return srv.(InvoiceGrpcServiceServer).NewInvoice(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/InvoiceService/NewInvoice",
+		FullMethod: "/InvoiceGrpcService/NewInvoice",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceServiceServer).NewInvoice(ctx, req.(*NewInvoiceRequest))
+		return srv.(InvoiceGrpcServiceServer).NewInvoice(ctx, req.(*NewInvoiceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _InvoiceService_FillInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _InvoiceGrpcService_FillInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FillInvoiceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InvoiceServiceServer).FillInvoice(ctx, in)
+		return srv.(InvoiceGrpcServiceServer).FillInvoice(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/InvoiceService/FillInvoice",
+		FullMethod: "/InvoiceGrpcService/FillInvoice",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceServiceServer).FillInvoice(ctx, req.(*FillInvoiceRequest))
+		return srv.(InvoiceGrpcServiceServer).FillInvoice(ctx, req.(*FillInvoiceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _InvoiceService_PayInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _InvoiceGrpcService_PdfGeneratedInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PdfGeneratedInvoiceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvoiceGrpcServiceServer).PdfGeneratedInvoice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/InvoiceGrpcService/PdfGeneratedInvoice",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvoiceGrpcServiceServer).PdfGeneratedInvoice(ctx, req.(*PdfGeneratedInvoiceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InvoiceGrpcService_PayInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PayInvoiceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InvoiceServiceServer).PayInvoice(ctx, in)
+		return srv.(InvoiceGrpcServiceServer).PayInvoice(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/InvoiceService/PayInvoice",
+		FullMethod: "/InvoiceGrpcService/PayInvoice",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceServiceServer).PayInvoice(ctx, req.(*PayInvoiceRequest))
+		return srv.(InvoiceGrpcServiceServer).PayInvoice(ctx, req.(*PayInvoiceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// InvoiceService_ServiceDesc is the grpc.ServiceDesc for InvoiceService service.
+// InvoiceGrpcService_ServiceDesc is the grpc.ServiceDesc for InvoiceGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var InvoiceService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "InvoiceService",
-	HandlerType: (*InvoiceServiceServer)(nil),
+var InvoiceGrpcService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "InvoiceGrpcService",
+	HandlerType: (*InvoiceGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "NewInvoice",
-			Handler:    _InvoiceService_NewInvoice_Handler,
+			Handler:    _InvoiceGrpcService_NewInvoice_Handler,
 		},
 		{
 			MethodName: "FillInvoice",
-			Handler:    _InvoiceService_FillInvoice_Handler,
+			Handler:    _InvoiceGrpcService_FillInvoice_Handler,
+		},
+		{
+			MethodName: "PdfGeneratedInvoice",
+			Handler:    _InvoiceGrpcService_PdfGeneratedInvoice_Handler,
 		},
 		{
 			MethodName: "PayInvoice",
-			Handler:    _InvoiceService_PayInvoice_Handler,
+			Handler:    _InvoiceGrpcService_PayInvoice_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

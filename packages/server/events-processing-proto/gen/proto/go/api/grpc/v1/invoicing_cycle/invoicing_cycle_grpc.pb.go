@@ -18,192 +18,192 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// InvoicingCycleServiceClient is the client API for InvoicingCycleService service.
+// InvoicingCycleGrpcServiceClient is the client API for InvoicingCycleGrpcService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type InvoicingCycleServiceClient interface {
+type InvoicingCycleGrpcServiceClient interface {
 	CreateInvoicingCycleType(ctx context.Context, in *CreateInvoicingCycleTypeRequest, opts ...grpc.CallOption) (*InvoicingCycleTypeResponse, error)
 	UpdateInvoicingCycleType(ctx context.Context, in *UpdateInvoicingCycleTypeRequest, opts ...grpc.CallOption) (*InvoicingCycleTypeResponse, error)
 	CreateInvoicingCycleDay(ctx context.Context, in *CreateInvoicingCycleDayRequest, opts ...grpc.CallOption) (*InvoicingCycleDayResponse, error)
 	UpdateInvoicingCycleDay(ctx context.Context, in *UpdateInvoicingCycleDayRequest, opts ...grpc.CallOption) (*InvoicingCycleDayResponse, error)
 }
 
-type invoicingCycleServiceClient struct {
+type invoicingCycleGrpcServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewInvoicingCycleServiceClient(cc grpc.ClientConnInterface) InvoicingCycleServiceClient {
-	return &invoicingCycleServiceClient{cc}
+func NewInvoicingCycleGrpcServiceClient(cc grpc.ClientConnInterface) InvoicingCycleGrpcServiceClient {
+	return &invoicingCycleGrpcServiceClient{cc}
 }
 
-func (c *invoicingCycleServiceClient) CreateInvoicingCycleType(ctx context.Context, in *CreateInvoicingCycleTypeRequest, opts ...grpc.CallOption) (*InvoicingCycleTypeResponse, error) {
+func (c *invoicingCycleGrpcServiceClient) CreateInvoicingCycleType(ctx context.Context, in *CreateInvoicingCycleTypeRequest, opts ...grpc.CallOption) (*InvoicingCycleTypeResponse, error) {
 	out := new(InvoicingCycleTypeResponse)
-	err := c.cc.Invoke(ctx, "/InvoicingCycleService/CreateInvoicingCycleType", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/InvoicingCycleGrpcService/CreateInvoicingCycleType", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *invoicingCycleServiceClient) UpdateInvoicingCycleType(ctx context.Context, in *UpdateInvoicingCycleTypeRequest, opts ...grpc.CallOption) (*InvoicingCycleTypeResponse, error) {
+func (c *invoicingCycleGrpcServiceClient) UpdateInvoicingCycleType(ctx context.Context, in *UpdateInvoicingCycleTypeRequest, opts ...grpc.CallOption) (*InvoicingCycleTypeResponse, error) {
 	out := new(InvoicingCycleTypeResponse)
-	err := c.cc.Invoke(ctx, "/InvoicingCycleService/UpdateInvoicingCycleType", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/InvoicingCycleGrpcService/UpdateInvoicingCycleType", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *invoicingCycleServiceClient) CreateInvoicingCycleDay(ctx context.Context, in *CreateInvoicingCycleDayRequest, opts ...grpc.CallOption) (*InvoicingCycleDayResponse, error) {
+func (c *invoicingCycleGrpcServiceClient) CreateInvoicingCycleDay(ctx context.Context, in *CreateInvoicingCycleDayRequest, opts ...grpc.CallOption) (*InvoicingCycleDayResponse, error) {
 	out := new(InvoicingCycleDayResponse)
-	err := c.cc.Invoke(ctx, "/InvoicingCycleService/CreateInvoicingCycleDay", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/InvoicingCycleGrpcService/CreateInvoicingCycleDay", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *invoicingCycleServiceClient) UpdateInvoicingCycleDay(ctx context.Context, in *UpdateInvoicingCycleDayRequest, opts ...grpc.CallOption) (*InvoicingCycleDayResponse, error) {
+func (c *invoicingCycleGrpcServiceClient) UpdateInvoicingCycleDay(ctx context.Context, in *UpdateInvoicingCycleDayRequest, opts ...grpc.CallOption) (*InvoicingCycleDayResponse, error) {
 	out := new(InvoicingCycleDayResponse)
-	err := c.cc.Invoke(ctx, "/InvoicingCycleService/UpdateInvoicingCycleDay", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/InvoicingCycleGrpcService/UpdateInvoicingCycleDay", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// InvoicingCycleServiceServer is the server API for InvoicingCycleService service.
-// All implementations should embed UnimplementedInvoicingCycleServiceServer
+// InvoicingCycleGrpcServiceServer is the server API for InvoicingCycleGrpcService service.
+// All implementations should embed UnimplementedInvoicingCycleGrpcServiceServer
 // for forward compatibility
-type InvoicingCycleServiceServer interface {
+type InvoicingCycleGrpcServiceServer interface {
 	CreateInvoicingCycleType(context.Context, *CreateInvoicingCycleTypeRequest) (*InvoicingCycleTypeResponse, error)
 	UpdateInvoicingCycleType(context.Context, *UpdateInvoicingCycleTypeRequest) (*InvoicingCycleTypeResponse, error)
 	CreateInvoicingCycleDay(context.Context, *CreateInvoicingCycleDayRequest) (*InvoicingCycleDayResponse, error)
 	UpdateInvoicingCycleDay(context.Context, *UpdateInvoicingCycleDayRequest) (*InvoicingCycleDayResponse, error)
 }
 
-// UnimplementedInvoicingCycleServiceServer should be embedded to have forward compatible implementations.
-type UnimplementedInvoicingCycleServiceServer struct {
+// UnimplementedInvoicingCycleGrpcServiceServer should be embedded to have forward compatible implementations.
+type UnimplementedInvoicingCycleGrpcServiceServer struct {
 }
 
-func (UnimplementedInvoicingCycleServiceServer) CreateInvoicingCycleType(context.Context, *CreateInvoicingCycleTypeRequest) (*InvoicingCycleTypeResponse, error) {
+func (UnimplementedInvoicingCycleGrpcServiceServer) CreateInvoicingCycleType(context.Context, *CreateInvoicingCycleTypeRequest) (*InvoicingCycleTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateInvoicingCycleType not implemented")
 }
-func (UnimplementedInvoicingCycleServiceServer) UpdateInvoicingCycleType(context.Context, *UpdateInvoicingCycleTypeRequest) (*InvoicingCycleTypeResponse, error) {
+func (UnimplementedInvoicingCycleGrpcServiceServer) UpdateInvoicingCycleType(context.Context, *UpdateInvoicingCycleTypeRequest) (*InvoicingCycleTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateInvoicingCycleType not implemented")
 }
-func (UnimplementedInvoicingCycleServiceServer) CreateInvoicingCycleDay(context.Context, *CreateInvoicingCycleDayRequest) (*InvoicingCycleDayResponse, error) {
+func (UnimplementedInvoicingCycleGrpcServiceServer) CreateInvoicingCycleDay(context.Context, *CreateInvoicingCycleDayRequest) (*InvoicingCycleDayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateInvoicingCycleDay not implemented")
 }
-func (UnimplementedInvoicingCycleServiceServer) UpdateInvoicingCycleDay(context.Context, *UpdateInvoicingCycleDayRequest) (*InvoicingCycleDayResponse, error) {
+func (UnimplementedInvoicingCycleGrpcServiceServer) UpdateInvoicingCycleDay(context.Context, *UpdateInvoicingCycleDayRequest) (*InvoicingCycleDayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateInvoicingCycleDay not implemented")
 }
 
-// UnsafeInvoicingCycleServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to InvoicingCycleServiceServer will
+// UnsafeInvoicingCycleGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to InvoicingCycleGrpcServiceServer will
 // result in compilation errors.
-type UnsafeInvoicingCycleServiceServer interface {
-	mustEmbedUnimplementedInvoicingCycleServiceServer()
+type UnsafeInvoicingCycleGrpcServiceServer interface {
+	mustEmbedUnimplementedInvoicingCycleGrpcServiceServer()
 }
 
-func RegisterInvoicingCycleServiceServer(s grpc.ServiceRegistrar, srv InvoicingCycleServiceServer) {
-	s.RegisterService(&InvoicingCycleService_ServiceDesc, srv)
+func RegisterInvoicingCycleGrpcServiceServer(s grpc.ServiceRegistrar, srv InvoicingCycleGrpcServiceServer) {
+	s.RegisterService(&InvoicingCycleGrpcService_ServiceDesc, srv)
 }
 
-func _InvoicingCycleService_CreateInvoicingCycleType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _InvoicingCycleGrpcService_CreateInvoicingCycleType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateInvoicingCycleTypeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InvoicingCycleServiceServer).CreateInvoicingCycleType(ctx, in)
+		return srv.(InvoicingCycleGrpcServiceServer).CreateInvoicingCycleType(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/InvoicingCycleService/CreateInvoicingCycleType",
+		FullMethod: "/InvoicingCycleGrpcService/CreateInvoicingCycleType",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoicingCycleServiceServer).CreateInvoicingCycleType(ctx, req.(*CreateInvoicingCycleTypeRequest))
+		return srv.(InvoicingCycleGrpcServiceServer).CreateInvoicingCycleType(ctx, req.(*CreateInvoicingCycleTypeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _InvoicingCycleService_UpdateInvoicingCycleType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _InvoicingCycleGrpcService_UpdateInvoicingCycleType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateInvoicingCycleTypeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InvoicingCycleServiceServer).UpdateInvoicingCycleType(ctx, in)
+		return srv.(InvoicingCycleGrpcServiceServer).UpdateInvoicingCycleType(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/InvoicingCycleService/UpdateInvoicingCycleType",
+		FullMethod: "/InvoicingCycleGrpcService/UpdateInvoicingCycleType",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoicingCycleServiceServer).UpdateInvoicingCycleType(ctx, req.(*UpdateInvoicingCycleTypeRequest))
+		return srv.(InvoicingCycleGrpcServiceServer).UpdateInvoicingCycleType(ctx, req.(*UpdateInvoicingCycleTypeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _InvoicingCycleService_CreateInvoicingCycleDay_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _InvoicingCycleGrpcService_CreateInvoicingCycleDay_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateInvoicingCycleDayRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InvoicingCycleServiceServer).CreateInvoicingCycleDay(ctx, in)
+		return srv.(InvoicingCycleGrpcServiceServer).CreateInvoicingCycleDay(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/InvoicingCycleService/CreateInvoicingCycleDay",
+		FullMethod: "/InvoicingCycleGrpcService/CreateInvoicingCycleDay",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoicingCycleServiceServer).CreateInvoicingCycleDay(ctx, req.(*CreateInvoicingCycleDayRequest))
+		return srv.(InvoicingCycleGrpcServiceServer).CreateInvoicingCycleDay(ctx, req.(*CreateInvoicingCycleDayRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _InvoicingCycleService_UpdateInvoicingCycleDay_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _InvoicingCycleGrpcService_UpdateInvoicingCycleDay_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateInvoicingCycleDayRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InvoicingCycleServiceServer).UpdateInvoicingCycleDay(ctx, in)
+		return srv.(InvoicingCycleGrpcServiceServer).UpdateInvoicingCycleDay(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/InvoicingCycleService/UpdateInvoicingCycleDay",
+		FullMethod: "/InvoicingCycleGrpcService/UpdateInvoicingCycleDay",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoicingCycleServiceServer).UpdateInvoicingCycleDay(ctx, req.(*UpdateInvoicingCycleDayRequest))
+		return srv.(InvoicingCycleGrpcServiceServer).UpdateInvoicingCycleDay(ctx, req.(*UpdateInvoicingCycleDayRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// InvoicingCycleService_ServiceDesc is the grpc.ServiceDesc for InvoicingCycleService service.
+// InvoicingCycleGrpcService_ServiceDesc is the grpc.ServiceDesc for InvoicingCycleGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var InvoicingCycleService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "InvoicingCycleService",
-	HandlerType: (*InvoicingCycleServiceServer)(nil),
+var InvoicingCycleGrpcService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "InvoicingCycleGrpcService",
+	HandlerType: (*InvoicingCycleGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "CreateInvoicingCycleType",
-			Handler:    _InvoicingCycleService_CreateInvoicingCycleType_Handler,
+			Handler:    _InvoicingCycleGrpcService_CreateInvoicingCycleType_Handler,
 		},
 		{
 			MethodName: "UpdateInvoicingCycleType",
-			Handler:    _InvoicingCycleService_UpdateInvoicingCycleType_Handler,
+			Handler:    _InvoicingCycleGrpcService_UpdateInvoicingCycleType_Handler,
 		},
 		{
 			MethodName: "CreateInvoicingCycleDay",
-			Handler:    _InvoicingCycleService_CreateInvoicingCycleDay_Handler,
+			Handler:    _InvoicingCycleGrpcService_CreateInvoicingCycleDay_Handler,
 		},
 		{
 			MethodName: "UpdateInvoicingCycleDay",
-			Handler:    _InvoicingCycleService_UpdateInvoicingCycleDay_Handler,
+			Handler:    _InvoicingCycleGrpcService_UpdateInvoicingCycleDay_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
