@@ -920,6 +920,29 @@ func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, e
 	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.Create(ctx, eventData.Tenant, eventData.BillingProfileId, data)
 }
 
+func (h *OrganizationEventHandler) OnUpdateBillingProfile(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUpdateBillingProfile")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData events.BillingProfileUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	data := neo4jrepository.BillingProfileUpdateFields{
+		OrganizationId:  organizationId,
+		UpdatedAt:       eventData.UpdatedAt,
+		LegalName:       eventData.LegalName,
+		TaxId:           eventData.TaxId,
+		UpdateLegalName: eventData.UpdateLegalName(),
+		UpdateTaxId:     eventData.UpdateTaxId(),
+	}
+	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.Update(ctx, eventData.Tenant, eventData.BillingProfileId, data)
+}
+
 func (h *OrganizationEventHandler) OnEmailLinkedToBillingProfile(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnEmailLinkedToBillingProfile")
 	defer span.Finish()

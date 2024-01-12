@@ -21,8 +21,18 @@ type BillingProfileCreateFields struct {
 	SourceFields   model.Source `json:"sourceFields"`
 }
 
+type BillingProfileUpdateFields struct {
+	OrganizationId  string    `json:"organizationId"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+	LegalName       string    `json:"legalName"`
+	TaxId           string    `json:"taxId"`
+	UpdateLegalName bool      `json:"updateLegalName"`
+	UpdateTaxId     bool      `json:"updateTaxId"`
+}
+
 type BillingProfileWriteRepository interface {
 	Create(ctx context.Context, tenant, billingProfileId string, data BillingProfileCreateFields) error
+	Update(ctx context.Context, tenant, billingProfileId string, data BillingProfileUpdateFields) error
 	LinkEmailToBillingProfile(ctx context.Context, tenant, organizationId, billingProfileId, emailId string, primary bool, updatedAt time.Time) error
 	UnlinkEmailFromBillingProfile(ctx context.Context, tenant, organizationId, billingProfileId, emailId string, updatedAt time.Time) error
 	LinkLocationToBillingProfile(ctx context.Context, tenant, organizationId, billingProfileId, locationId string, updatedAt time.Time) error
@@ -70,6 +80,40 @@ func (r *billingProfileWriteRepository) Create(ctx context.Context, tenant, bill
 		"appSource":        data.SourceFields.AppSource,
 		"legalName":        data.LegalName,
 		"taxId":            data.TaxId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *billingProfileWriteRepository) Update(ctx context.Context, tenant, billingProfileId string, data BillingProfileUpdateFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileWriteRepository.Create")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
+	tracing.LogObjectAsJson(span, "data", data)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(:Organization {id:$orgId})-[:HAS_BILLING_PROFILE]->(bp:BillingProfile {id:$billingProfileId})
+							SET bp.updatedAt=$updatedAt
+								`
+	params := map[string]any{
+		"tenant":           tenant,
+		"billingProfileId": billingProfileId,
+		"orgId":            data.OrganizationId,
+		"updatedAt":        data.UpdatedAt,
+	}
+	if data.UpdateLegalName {
+		cypher += ", bp.legalName=$legalName"
+		params["legalName"] = data.LegalName
+	}
+	if data.UpdateTaxId {
+		cypher += ", bp.taxId=$taxId"
+		params["taxId"] = data.TaxId
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
