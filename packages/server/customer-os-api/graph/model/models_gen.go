@@ -145,6 +145,40 @@ type AttachmentInput struct {
 	AppSource string `json:"appSource"`
 }
 
+type BillingProfile struct {
+	ID            string     `json:"id"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+	LegalName     string     `json:"legalName"`
+	TaxID         string     `json:"taxId"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+}
+
+func (BillingProfile) IsSourceFields()                   {}
+func (this BillingProfile) GetID() string                { return this.ID }
+func (this BillingProfile) GetSource() DataSource        { return this.Source }
+func (this BillingProfile) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this BillingProfile) GetAppSource() string         { return this.AppSource }
+
+func (BillingProfile) IsNode() {}
+
+type BillingProfileInput struct {
+	OrganizationID string     `json:"organizationId"`
+	LegalName      *string    `json:"legalName,omitempty"`
+	TaxID          *string    `json:"taxId,omitempty"`
+	CreatedAt      *time.Time `json:"createdAt,omitempty"`
+}
+
+type BillingProfileUpdateInput struct {
+	OrganizationID   string     `json:"organizationId"`
+	BillingProfileID string     `json:"billingProfileId"`
+	LegalName        *string    `json:"legalName,omitempty"`
+	TaxID            *string    `json:"taxId,omitempty"`
+	UpdatedAt        *time.Time `json:"updatedAt,omitempty"`
+}
+
 // Describes the relationship a Contact has with a Organization.
 // **A `return` object**
 type Calendar struct {

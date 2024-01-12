@@ -2,6 +2,10 @@ package server
 
 import (
 	"context"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/invoice"
+	"google.golang.org/grpc"
 	"os"
 	"os/signal"
 	"syscall"
@@ -37,194 +41,90 @@ const (
 	waitShotDownDuration = 3 * time.Second
 )
 
-type server struct {
-	cfg             *config.Config
-	log             logger.Logger
-	repositories    *repository.Repositories
-	commandHandlers *command.CommandHandlers
-	echo            *echo.Echo
-	doneCh          chan struct{}
-	caches          caches.Cache
-	aggregateStore  eventstore.AggregateStore
+type Server struct {
+	Config          *config.Config
+	Log             logger.Logger
+	Repositories    *repository.Repositories
+	Services        *service.Services
+	CommandHandlers *command.CommandHandlers
+	AggregateStore  eventstore.AggregateStore
+	GrpcServer      *grpc.Server
+
+	echo   *echo.Echo
+	doneCh chan struct{}
+	caches caches.Cache
 	//	metrics            *metrics.ESMicroserviceMetrics
 }
 
-func NewServer(cfg *config.Config, log logger.Logger) *server {
-	return &server{cfg: cfg,
-		log:    log,
+func NewServer(cfg *config.Config, log logger.Logger) *Server {
+	return &Server{Config: cfg,
+		Log:    log,
 		echo:   echo.New(),
 		doneCh: make(chan struct{}),
 		caches: caches.InitCaches(),
 	}
 }
 
-func (server *server) SetRepository(repository *repository.Repositories) {
-	server.repositories = repository
-}
-
-func (server *server) SetAggregateStpre(aggregateStore eventstore.AggregateStore) {
-	server.aggregateStore = aggregateStore
-}
-
-func (server *server) SetCommands(commands *command.CommandHandlers) {
-	server.commandHandlers = commands
-}
-
-func (server *server) Start(parentCtx context.Context) error {
+func (server *Server) Start(parentCtx context.Context) error {
 	ctx, cancel := signal.NotifyContext(parentCtx, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	if err := validator.GetValidator().Struct(server.cfg); err != nil {
+	if err := validator.GetValidator().Struct(server.Config); err != nil {
 		return errors.Wrap(err, "cfg validate")
 	}
 
 	// Setting up tracing
-	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Jaeger, server.log)
+	tracer, closer, err := tracing.NewJaegerTracer(&server.Config.Jaeger, server.Log)
 	if err != nil {
-		server.log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
+		server.Log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}
 	defer closer.Close()
 	opentracing.SetGlobalTracer(tracer)
 
-	//server.metrics = metrics.NewESMicroserviceMetrics(server.cfg)
-	//server.interceptorManager = interceptors.NewInterceptorManager(server.log, server.getGrpcMetricsCb())
-	//server.mw = middlewares.NewMiddlewareManager(server.log, server.cfg, server.getHttpMetricsCb())
+	//Server.metrics = metrics.NewESMicroserviceMetrics(Server.cfg)
+	//Server.interceptorManager = interceptors.NewInterceptorManager(Server.log, Server.getGrpcMetricsCb())
+	//Server.mw = middlewares.NewMiddlewareManager(Server.log, Server.cfg, Server.getHttpMetricsCb())
 
-	esdb, err := eventstroredb.NewEventStoreDB(server.cfg.EventStoreConfig, server.log)
+	esdb, err := eventstroredb.NewEventStoreDB(server.Config.EventStoreConfig, server.Log)
 	if err != nil {
 		return err
 	}
 	defer esdb.Close() // nolint: errcheck
 
 	// Setting up eventstore subscriptions
-	err = subscriptions.NewSubscriptions(server.log, esdb, server.cfg).RefreshSubscriptions(ctx)
+	err = subscriptions.NewSubscriptions(server.Log, esdb, server.Config).RefreshSubscriptions(ctx)
 	if err != nil {
-		server.log.Errorf("(graphConsumer.Connect) err: {%v}", err)
+		server.Log.Errorf("(graphConsumer.Connect) err: {%v}", err)
 		cancel()
 	}
 
 	// Initialize postgres db
-	postgresDb, _ := InitPostgresDB(server.cfg, server.log)
+	postgresDb, _ := InitPostgresDB(server.Config, server.Log)
 	defer postgresDb.SqlDB.Close()
 
 	// Setting up Neo4j
-	neo4jDriver, err := commonconf.NewNeo4jDriver(server.cfg.Neo4j)
+	neo4jDriver, err := commonconf.NewNeo4jDriver(server.Config.Neo4j)
 	if err != nil {
-		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
+		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.Config.Neo4j.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
-	server.repositories = repository.InitRepos(&neo4jDriver, server.cfg.Neo4j.Database, postgresDb.GormDB)
+	server.Repositories = repository.InitRepos(&neo4jDriver, server.Config.Neo4j.Database, postgresDb.GormDB)
 
-	aggregateStore := store.NewAggregateStore(server.log, esdb)
-	server.aggregateStore = aggregateStore
-	server.commandHandlers = command.NewCommandHandlers(server.log, server.cfg, aggregateStore, server.repositories)
+	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
+	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, server.Repositories)
 
-	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(server.cfg)
-	gRPCconn, err := df.GetEventsProcessingPlatformConn()
-	if err != nil {
-		server.log.Fatalf("Failed to connect: %v", err)
-	}
-	defer df.Close(gRPCconn)
-	grpcClients := grpc_client.InitClients(gRPCconn)
+	//Server.runMetrics(cancel)
+	//Server.runHealthCheck(ctx)
 
-	if server.cfg.Subscriptions.GraphSubscription.Enabled {
-		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, esdb, server.repositories, grpcClients, server.cfg)
-		go func() {
-			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
-			if err != nil {
-				server.log.Errorf("(graphSubscriber.Connect) err: {%v}", err)
-				cancel()
-			}
-		}()
-	}
+	server.Services = service.InitServices(server.Config, server.Repositories, server.AggregateStore, server.CommandHandlers, server.Log)
 
-	if server.cfg.Subscriptions.EmailValidationSubscription.Enabled {
-		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.log, esdb, server.cfg, grpcClients)
-		go func() {
-			err := emailValidationSubscriber.Connect(ctx, emailValidationSubscriber.ProcessEvents)
-			if err != nil {
-				server.log.Errorf("(emailValidationSubscriber.Connect) err: {%v}", err)
-				cancel()
-			}
-		}()
-	}
-
-	if server.cfg.Subscriptions.PhoneNumberValidationSubscription.Enabled {
-		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.log, esdb, server.cfg, server.repositories, grpcClients)
-		go func() {
-			err := phoneNumberValidationSubscriber.Connect(ctx, phoneNumberValidationSubscriber.ProcessEvents)
-			if err != nil {
-				server.log.Errorf("(phoneNumberValidationSubscriber.Connect) err: {%v}", err)
-				cancel()
-			}
-		}()
-	}
-
-	if server.cfg.Subscriptions.LocationValidationSubscription.Enabled {
-		locationValidationSubscriber := location_validation_subscription.NewLocationValidationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.Location, server.repositories)
-		go func() {
-			err := locationValidationSubscriber.Connect(ctx, locationValidationSubscriber.ProcessEvents)
-			if err != nil {
-				server.log.Errorf("(locationValidationSubscriber.Connect) err: {%v}", err)
-				cancel()
-			}
-		}()
-	}
-
-	if server.cfg.Subscriptions.OrganizationSubscription.Enabled {
-		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, esdb, server.cfg, server.repositories, server.caches, grpcClients)
-		go func() {
-			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
-			if err != nil {
-				server.log.Errorf("(organizationSubscriber.Connect) err: {%v}", err)
-				cancel()
-			}
-		}()
-	}
-
-	if server.cfg.Subscriptions.OrganizationWebscrapeSubscription.Enabled {
-		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationWebscrapeSubscriber(server.log, esdb, server.cfg, server.repositories, server.caches, grpcClients)
-		go func() {
-			err := organizationWebscrapeSubscriber.Connect(ctx, organizationWebscrapeSubscriber.ProcessEvents)
-			if err != nil {
-				server.log.Errorf("(organizationWebscrapeSubscriber.Connect) err: {%v}", err)
-				cancel()
-			}
-		}()
-	}
-
-	if server.cfg.Subscriptions.InteractionEventSubscription.Enabled {
-		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.log, esdb, server.cfg, server.commandHandlers.InteractionEvent, server.repositories)
-		go func() {
-			err := interactionEventSubscriber.Connect(ctx, interactionEventSubscriber.ProcessEvents)
-			if err != nil {
-				server.log.Errorf("(interactionEventSubscriber.Connect) err: {%v}", err)
-				cancel()
-			}
-		}()
-	}
-
-	if server.cfg.Subscriptions.NotificationsSubscription.Enabled {
-		notificationsSubscriber := notifications.NewNotificationsSubscriber(server.log, esdb, server.repositories, grpcClients, server.cfg)
-		go func() {
-			err := notificationsSubscriber.Connect(ctx, notificationsSubscriber.ProcessEvents)
-			if err != nil {
-				server.log.Errorf("(notificationsSubscriber.Connect) err: {%v}", err)
-				cancel()
-			}
-		}()
-	}
-
-	//server.runMetrics(cancel)
-	//server.runHealthCheck(ctx)
-
-	closeGrpcServer, grpcServer, err := server.newEventProcessorGrpcServer()
+	closeGrpcServer, grpcServer, err := server.NewEventProcessorGrpcServer()
 	if err != nil {
 		cancel()
 		return err
 	}
 	defer closeGrpcServer()
+	server.GrpcServer = grpcServer
 
 	<-ctx.Done()
 	server.waitShootDown(waitShotDownDuration)
@@ -232,15 +132,26 @@ func (server *server) Start(parentCtx context.Context) error {
 	grpcServer.GracefulStop()
 
 	if err := server.echo.Shutdown(ctx); err != nil {
-		server.log.Warnf("(Shutdown) err: {%validate}", err)
+		server.Log.Warnf("(Shutdown) err: {%validate}", err)
 	}
 
 	<-server.doneCh
-	server.log.Infof("%server server exited properly", GetMicroserviceName(server.cfg))
+
+	// Setting up gRPC client
+	df := grpc_client.NewDialFactory(server.Config)
+	gRPCconn, err := df.GetEventsProcessingPlatformConn()
+	if err != nil {
+		server.Log.Fatalf("Failed to connect: %v", err)
+	}
+	defer df.Close(gRPCconn)
+	grpcClients := grpc_client.InitGrpcClients(gRPCconn)
+	InitSubscribers(server, ctx, grpcClients, esdb, cancel, server.Services)
+
+	server.Log.Infof("%Server Server exited properly", GetMicroserviceName(server.Config))
 	return nil
 }
 
-func (server *server) waitShootDown(duration time.Duration) {
+func (server *Server) waitShootDown(duration time.Duration) {
 	go func() {
 		time.Sleep(duration)
 		server.doneCh <- struct{}{}
@@ -252,4 +163,105 @@ func InitPostgresDB(cfg *config.Config, log logger.Logger) (db *commonconf.Stora
 		log.Fatalf("Could not open db connection: %s", err.Error())
 	}
 	return
+}
+
+func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_client.Clients, esdb *esdb.Client, cancel context.CancelFunc, services *service.Services) {
+	if server.Config.Subscriptions.GraphSubscription.Enabled {
+		graphSubscriber := graph_subscription.NewGraphSubscriber(server.Log, esdb, server.Repositories, grpcClients, server.Config)
+		go func() {
+			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
+			if err != nil {
+				server.Log.Errorf("(graphSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.Config.Subscriptions.EmailValidationSubscription.Enabled {
+		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.Log, esdb, server.Config, grpcClients)
+		go func() {
+			err := emailValidationSubscriber.Connect(ctx, emailValidationSubscriber.ProcessEvents)
+			if err != nil {
+				server.Log.Errorf("(emailValidationSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.Config.Subscriptions.PhoneNumberValidationSubscription.Enabled {
+		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.Log, esdb, server.Config, server.Repositories, grpcClients)
+		go func() {
+			err := phoneNumberValidationSubscriber.Connect(ctx, phoneNumberValidationSubscriber.ProcessEvents)
+			if err != nil {
+				server.Log.Errorf("(phoneNumberValidationSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.Config.Subscriptions.LocationValidationSubscription.Enabled {
+		locationValidationSubscriber := location_validation_subscription.NewLocationValidationSubscriber(server.Log, esdb, server.Config, server.CommandHandlers.Location, server.Repositories)
+		go func() {
+			err := locationValidationSubscriber.Connect(ctx, locationValidationSubscriber.ProcessEvents)
+			if err != nil {
+				server.Log.Errorf("(locationValidationSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.Config.Subscriptions.OrganizationSubscription.Enabled {
+		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.Log, esdb, server.Config, server.Repositories, server.caches, grpcClients)
+		go func() {
+			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
+			if err != nil {
+				server.Log.Errorf("(organizationSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.Config.Subscriptions.OrganizationWebscrapeSubscription.Enabled {
+		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationWebscrapeSubscriber(server.Log, esdb, server.Config, server.Repositories, server.caches, grpcClients)
+		go func() {
+			err := organizationWebscrapeSubscriber.Connect(ctx, organizationWebscrapeSubscriber.ProcessEvents)
+			if err != nil {
+				server.Log.Errorf("(organizationWebscrapeSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.Config.Subscriptions.InteractionEventSubscription.Enabled {
+		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.Log, esdb, server.Config, server.CommandHandlers.InteractionEvent, server.Repositories)
+		go func() {
+			err := interactionEventSubscriber.Connect(ctx, interactionEventSubscriber.ProcessEvents)
+			if err != nil {
+				server.Log.Errorf("(interactionEventSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.Config.Subscriptions.NotificationsSubscription.Enabled {
+		notificationsSubscriber := notifications.NewNotificationsSubscriber(server.Log, esdb, server.Repositories, grpcClients, server.Config)
+		go func() {
+			err := notificationsSubscriber.Connect(ctx, notificationsSubscriber.ProcessEvents)
+			if err != nil {
+				server.Log.Errorf("(notificationsSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.Config.Subscriptions.InvoiceSubscription.Enabled {
+		invoiceSubscriber := invoice.NewInvoiceSubscriber(server.Log, esdb, server.Config, server.Repositories, grpcClients, services.FileStoreApiService)
+		go func() {
+			err := invoiceSubscriber.Connect(ctx, invoiceSubscriber.ProcessEvents)
+			if err != nil {
+				server.Log.Errorf("(invoiceSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
 }

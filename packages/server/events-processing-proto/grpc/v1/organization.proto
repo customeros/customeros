@@ -33,6 +33,12 @@ enum OrganizationMaskField {
   ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE = 22;
 }
 
+enum BillingProfileFieldMask {
+  BILLING_PROFILE_PROPERTY_NONE = 0; // No property, ignored by the server
+  BILLING_PROFILE_PROPERTY_LEGAL_NAME = 2;
+  BILLING_PROFILE_PROPERTY_TAX_ID = 3;
+}
+
 message UpsertOrganizationGrpcRequest {
   string id = 1;
   string tenant = 2;
@@ -115,11 +121,48 @@ message LinkEmailToOrganizationGrpcRequest {
   string loggedInUserId = 6;
 }
 
+message LinkEmailToBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string emailId = 4;
+  string loggedInUserId = 5;
+  string appSource = 6;
+  bool primary = 7;
+}
+
+message UnlinkEmailFromBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string emailId = 4;
+  string loggedInUserId = 5;
+  string appSource = 6;
+}
+
 message LinkLocationToOrganizationGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
   string locationId = 3;
   string loggedInUserId = 4;
+}
+
+message LinkLocationToBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string locationId = 4;
+  string loggedInUserId = 5;
+  string appSource = 6;
+}
+
+message UnlinkLocationFromBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string locationId = 4;
+  string loggedInUserId = 5;
+  string appSource = 6;
 }
 
 message LinkDomainToOrganizationGrpcRequest {
@@ -236,7 +279,20 @@ message CreateBillingProfileGrpcRequest {
   SourceFields sourceFields = 5;
   google.protobuf.Timestamp createdAt = 6;
   google.protobuf.Timestamp updatedAt = 7;
-  string name = 8;
+  string legalName = 8;
+  string taxId = 9;
+}
+
+message UpdateBillingProfileGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string billingProfileId = 3;
+  string loggedInUserId = 4;
+  string appSource = 5;
+  google.protobuf.Timestamp updatedAt = 6;
+  string legalName = 7;
+  string taxId = 8;
+  repeated BillingProfileFieldMask fieldsMask = 9;
 }
 
 message OrganizationIdGrpcResponse {
@@ -271,4 +327,9 @@ service organizationGrpcService {
   rpc AddSocial(AddSocialGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationOwner(UpdateOrganizationOwnerGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc UpdateBillingProfile(UpdateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc LinkEmailToBillingProfile(LinkEmailToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc UnlinkEmailFromBillingProfile(UnlinkEmailFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc LinkLocationToBillingProfile(LinkLocationToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc UnlinkLocationFromBillingProfile(UnlinkLocationFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
 }

@@ -1,0 +1,30 @@
+extend type Mutation {
+    billingProfile_Create(input: BillingProfileInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    billingProfile_Update(input: BillingProfileUpdateInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type BillingProfile implements SourceFields & Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    legalName:          String!
+    taxId:              String!
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+}
+
+input BillingProfileInput {
+    organizationId: ID!
+    legalName: String
+    taxId: String
+    createdAt: Time
+}
+
+input BillingProfileUpdateInput {
+    organizationId: ID!
+    billingProfileId: ID!
+    legalName: String
+    taxId: String
+    updatedAt: Time
+}

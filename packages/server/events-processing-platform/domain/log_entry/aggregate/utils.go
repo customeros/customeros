@@ -24,10 +24,6 @@ func getLogEntryObjectUUID(aggregateID string) string {
 	return fullUUID
 }
 
-func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() < 0
-}
-
 func LoadLogEntryAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*LogEntryAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadLogEntryAggregate")
 	defer span.Finish()

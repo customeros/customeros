@@ -6,6 +6,7 @@ const (
 	NodeLabelCustomField         = "CustomField"
 	NodeLabelJobRole             = "JobRole"
 	NodeLabelEmail               = "Email"
+	NodeLabelLocation            = "Location"
 	NodeLabelInteractionEvent    = "InteractionEvent"
 	NodeLabelInteractionSession  = "InteractionSession"
 	NodeLabelNote                = "Note"

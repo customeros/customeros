@@ -24,10 +24,6 @@ func getCommentObjectUUID(aggregateID string) string {
 	return fullUUID
 }
 
-func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() < 0
-}
-
 func LoadCommentAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*CommentAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadCommentAggregate")
 	defer span.Finish()

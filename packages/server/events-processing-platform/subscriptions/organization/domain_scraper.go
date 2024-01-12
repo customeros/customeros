@@ -1,15 +1,14 @@
 package organization
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
+
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
@@ -75,7 +74,7 @@ func (ds *DomainScraperV1) Scrape(domainOrWebsite, tenant, organizationId string
 
 	if r.Linkedin != "" {
 		lId := getLinkedinId(r.Linkedin)
-		r, err = ds.addLinkedinData(ds.cfg.Services.ScrapingDogApiKey, lId, r, httpClient)
+		r, err = ds.addLinkedinData(ds.cfg.Services.CoreSignalApiKey, lId, r, httpClient)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to add linkedin data")
 		}
@@ -320,124 +319,91 @@ func (ds *DomainScraperV1) addLinkedinData(apiKey, companyLinkedinId string, scr
 	}
 	// Fallback if the scraped data is empty
 	if scrapedContent.CompanyName == "" {
-		scrapedContent.CompanyName = (*linkedinData)[0].CompanyName
+		scrapedContent.CompanyName = linkedinData.Name
 	}
 
 	if scrapedContent.Industry == "" {
-		scrapedContent.Industry = (*linkedinData)[0].Industry
+		scrapedContent.Industry = linkedinData.Industry
 	}
 
 	if scrapedContent.Website == "" {
-		scrapedContent.Website = (*linkedinData)[0].Website
+		scrapedContent.Website = linkedinData.Website
 	}
 
 	if scrapedContent.ValueProposition == "" {
-		scrapedContent.ValueProposition = (*linkedinData)[0].About
+		scrapedContent.ValueProposition = linkedinData.Description
 	}
 
 	// enrich org data with linkedin data
-	scrapedContent.LogoUrl = (*linkedinData)[0].ProfilePhoto
-	scrapedContent.CompanySize, err = strconv.ParseInt((*linkedinData)[0].CompanySizeOnLinkedin, 10, 64) // actual value
-	if err != nil {
-		scrapedContent.CompanySize = 0
-	}
-	scrapedContent.YearFounded, err = strconv.ParseInt((*linkedinData)[0].Founded, 10, 64)
-	if err != nil {
-		scrapedContent.YearFounded = 0
-	}
-	scrapedContent.HeadquartersLocation = (*linkedinData)[0].Headquarters
+	scrapedContent.LogoUrl = linkedinData.LogoURL
+	scrapedContent.CompanySize = int64(linkedinData.EmployeesCount) // actual value
+	scrapedContent.YearFounded = int64(linkedinData.Founded)
+	hq := fmt.Sprintf("%s, %s", linkedinData.HeadquartersNewAddress, linkedinData.HeadquartersCountryParsed)
+	scrapedContent.HeadquartersLocation = hq
 	scrapedContent.EmployeeGrowthRate = "" // FIXME: not available in linkedin scraped data we need to decide how to calculate this
 	return scrapedContent, nil
 }
 
 func (ds *DomainScraperV1) getLinkedinData(apiKey, companyLinkedinId string, httpClient *http.Client) (*LinkedinScrapeResponse, error) {
-	url := fmt.Sprintf("https://api.scrapingdog.com/linkedin/?api_key=%s&type=company&linkId=%s", apiKey, companyLinkedinId)
-	var apiLimitResponse struct {
-		Success *bool   `json:"success"`
-		Message *string `json:"message"`
-	}
-	linkedinScrape := &LinkedinScrapeResponse{}
+	url := fmt.Sprintf("https://api.coresignal.com/cdapi/v1/linkedin/company/collect/%s", companyLinkedinId)
 
-	r, err := httpClient.Get(url)
+	linkedinScrape := &LinkedinScrapeResponse{}
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+
+	r, err := httpClient.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch linkedin scrape request")
 	}
 	defer r.Body.Close()
 
-	data, err := io.ReadAll(r.Body) // copy body so we don't get sticky problems reading it multiple times
-
-	// do raw decode first and check for success plus api limit messages
-	if err := json.NewDecoder(bytes.NewReader(data)).Decode(&apiLimitResponse); err != nil {
-		return nil, errors.Wrap(err, "failed to decode linkedin scrape response")
+	if r.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("StatusCode: %s", r.Status)
 	}
 
-	if apiLimitResponse.Success != nil && !*apiLimitResponse.Success {
-		err := errors.New(string(*apiLimitResponse.Message))
-		return nil, errors.Wrap(err, "Received error from linkedin scrape api")
-	}
-
-	if err := json.NewDecoder(bytes.NewReader(data)).Decode(&linkedinScrape); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&linkedinScrape); err != nil {
 		return nil, errors.Wrap(err, "failed to decode linkedin scrape response")
 	}
 
 	return linkedinScrape, nil
 }
 
-type LinkedinScrapeResponse []struct {
-	CompanyName             string `json:"company_name"`
-	UniversalNameID         string `json:"universal_name_id"`
-	BackgroundCoverImageURL string `json:"background_cover_image_url"`
-	LinkedinInternalID      string `json:"linkedin_internal_id"`
-	ProfilePhoto            string `json:"profile_photo"`
-	Industry                string `json:"industry"`
-	Location                string `json:"location"`
-	FollowerCount           string `json:"follower_count"`
-	Tagline                 string `json:"tagline"`
-	CompanySizeOnLinkedin   string `json:"company_size_on_linkedin"`
-	About                   string `json:"about"`
-	Website                 string `json:"website"`
-	Industries              string `json:"industries"`
-	CompanySize             string `json:"company_size"`
-	Headquarters            string `json:"headquarters"`
-	Type                    string `json:"type"`
-	Founded                 string `json:"founded"`
-	Specialties             string `json:"specialties"`
-	Description             struct {
-	} `json:"description"`
-	Locations []struct {
-		IsHq               bool   `json:"is_hq"`
-		OfficeAddressLine1 string `json:"office_address_line_1"`
-		OfficeAddressLine2 string `json:"office_address_line_2"`
-		OfficeLocaionLink  string `json:"office_locaion_link"`
-	} `json:"locations"`
-	Employees []struct {
-		EmployeePhoto      string `json:"employee_photo"`
-		EmployeeName       string `json:"employee_name"`
-		EmployeePosition   string `json:"employee_position"`
-		EmployeeProfileURL string `json:"employee_profile_url"`
-	} `json:"employees"`
-	Updates []struct {
-		Text              string `json:"text"`
-		ArticlePostedDate string `json:"article_posted_date"`
-		TotalLikes        string `json:"total_likes"`
-		ArticleTitle      string `json:"article_title"`
-		ArticleSubTitle   string `json:"article_sub_title"`
-		ArticleLink       any    `json:"article_link"`
-		ArticleImage      any    `json:"article_image"`
-	} `json:"updates"`
-	SimilarCompanies []struct {
-		Link     string `json:"link"`
-		Name     string `json:"name"`
-		Summary  string `json:"summary"`
-		Location string `json:"location"`
-	} `json:"similar_companies"`
-	AffiliatedCompanies []struct {
-		Link     string `json:"link"`
-		Name     string `json:"name"`
-		Industry string `json:"industry"`
-		Location string `json:"location"`
-	} `json:"affiliated_companies"`
-	Product []any `json:"product"`
+type LinkedinScrapeResponse struct {
+	ID                          int    `json:"id"`
+	URL                         string `json:"url"`
+	Hash                        string `json:"hash"`
+	Name                        string `json:"name"`
+	Website                     string `json:"website"`
+	Size                        string `json:"size"`
+	Industry                    string `json:"industry"`
+	Description                 string `json:"description"`
+	Followers                   int    `json:"followers"`
+	Founded                     int    `json:"founded"`
+	HeadquartersCity            any    `json:"headquarters_city"`
+	HeadquartersCountry         any    `json:"headquarters_country"`
+	HeadquartersState           any    `json:"headquarters_state"`
+	HeadquartersStreet1         any    `json:"headquarters_street1"`
+	HeadquartersStreet2         any    `json:"headquarters_street2"`
+	HeadquartersZip             any    `json:"headquarters_zip"`
+	LogoURL                     string `json:"logo_url"`
+	Created                     string `json:"created"`
+	LastUpdated                 string `json:"last_updated"`
+	LastResponseCode            int    `json:"last_response_code"`
+	Type                        string `json:"type"`
+	HeadquartersNewAddress      string `json:"headquarters_new_address"`
+	EmployeesCount              int    `json:"employees_count"`
+	HeadquartersCountryRestored string `json:"headquarters_country_restored"`
+	HeadquartersCountryParsed   string `json:"headquarters_country_parsed"`
+	CompanyShorthandName        string `json:"company_shorthand_name"`
+	CompanyShorthandNameHash    string `json:"company_shorthand_name_hash"`
+	CanonicalURL                string `json:"canonical_url"`
+	CanonicalHash               string `json:"canonical_hash"`
+	CanonicalShorthandName      string `json:"canonical_shorthand_name"`
+	CanonicalShorthandNameHash  string `json:"canonical_shorthand_name_hash"`
+	Deleted                     int    `json:"deleted"`
+	LastUpdatedUx               int    `json:"last_updated_ux"`
+	SourceID                    int    `json:"source_id"`
 }
 
 func jsonStructure() *string {

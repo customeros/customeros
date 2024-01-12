@@ -42,7 +42,7 @@ func (c *upsertLogEntryCommandHandler) Handle(ctx context.Context, command *cmd.
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(logEntryAggregate) {
+	if eventstore.IsAggregateNotFound(logEntryAggregate) {
 		command.IsCreateCommand = true
 	}
 	if err = logEntryAggregate.HandleCommand(ctx, command); err != nil {

@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -27,6 +28,7 @@ type Subscriptions struct {
 	InteractionEventSubscription      InteractionEventSubscription
 	ContractSubscription              ContractSubscription
 	NotificationsSubscription         NotificationsSubscription
+	InvoiceSubscription               InvoiceSubscription
 }
 
 type GraphSubscription struct {
@@ -112,13 +114,22 @@ type NotificationsSubscription struct {
 	EmailTemplatePath string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_EMAIL_TEMPLATE_PATH" envDefault:"./email_templates"`
 }
 
+type InvoiceSubscription struct {
+	Enabled          bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_ENABLED" envDefault:"true"`
+	GroupName        string `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_GROUP_NAME" envDefault:"invoice-v1" validate:"required"`
+	PoolSize         int    `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
+	BufferSizeClient uint32 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
+	StartPosition    uint64 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_START_POSITION" envDefault:"0"`
+	IgnoreEvents     bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"true"`
+}
+
 type Services struct {
 	ValidationApi                  string `env:"VALIDATION_API" validate:"required"`
 	ValidationApiKey               string `env:"VALIDATION_API_KEY" validate:"required"`
 	EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL" validate:"required"`
 	EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY" validate:"required"`
 	ScrapingBeeApiKey              string `env:"SCRAPING_BEE_API_KEY" validate:"required"`
-	ScrapingDogApiKey              string `env:"SCRAPING_DOG_API_KEY" validate:"required"`
+	CoreSignalApiKey               string `env:"CORE_SIGNAL_API_KEY" validate:"required" envDefault:"{}"`
 	PromptJsonSchema               string `env:"PROMPT_JSON_SCHEMA" validate:"required" envDefault:"{
 		"$schema": "http://json-schema.org/draft-07/schema#",
 		"type": "object",
@@ -193,6 +204,7 @@ type Services struct {
 		ApplicationId string `env:"MJML_APPLICATION_ID,required" envDefault:""`
 		SecretKey     string `env:"MJML_SECRET_KEY,required" envDefault:""`
 	}
+	FileStoreApiConfig fsc.FileStoreApiConfig
 }
 
 type Utils struct {

@@ -44,7 +44,7 @@ func (c *removeRoleCommandHandler) Handle(ctx context.Context, cmd *command.Remo
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(userAggregate) {
+	if eventstore.IsAggregateNotFound(userAggregate) {
 		tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 		return eventstore.ErrAggregateNotFound
 	} else {

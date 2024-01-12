@@ -1,6 +1,6 @@
-package dto
+package fsc
 
-type File struct {
+type FileDTO struct {
 	Id          string `json:"id"`
 	Name        string `json:"name"`
 	Extension   string `json:"extension"`

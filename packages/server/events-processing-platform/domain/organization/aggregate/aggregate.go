@@ -65,6 +65,16 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onOrganizationOwnerUpdate(event)
 	case events.OrganizationCreateBillingProfileV1:
 		return a.onCreateBillingProfile(event)
+	case events.OrganizationUpdateBillingProfileV1:
+		return a.onUpdateBillingProfile(event)
+	case events.OrganizationEmailLinkToBillingProfileV1:
+		return a.onEmailLinkToBillingProfile(event)
+	case events.OrganizationEmailUnlinkFromBillingProfileV1:
+		return a.onEmailUnlinkFromBillingProfile(event)
+	case events.OrganizationLocationLinkToBillingProfileV1:
+		return a.onLocationLinkToBillingProfile(event)
+	case events.OrganizationLocationUnlinkFromBillingProfileV1:
+		return a.onLocationUnlinkFromBillingProfile(event)
 	case events.OrganizationUpdateRenewalLikelihoodV1,
 		events.OrganizationUpdateRenewalForecastV1,
 		events.OrganizationUpdateBillingDetailsV1,
@@ -509,7 +519,7 @@ func (a *OrganizationAggregate) onOrganizationOwnerUpdate(event eventstore.Event
 }
 
 func (a *OrganizationAggregate) onCreateBillingProfile(event eventstore.Event) error {
-	var eventData events.CreateBillingProfileEvent
+	var eventData events.BillingProfileCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -520,11 +530,132 @@ func (a *OrganizationAggregate) onCreateBillingProfile(event eventstore.Event) e
 
 	a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{
 		Id:           eventData.BillingProfileId,
-		Name:         eventData.Name,
+		LegalName:    eventData.LegalName,
+		TaxId:        eventData.TaxId,
 		CreatedAt:    eventData.CreatedAt,
 		UpdatedAt:    eventData.UpdatedAt,
 		SourceFields: eventData.SourceFields,
 	}
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onUpdateBillingProfile(event eventstore.Event) error {
+	var eventData events.BillingProfileUpdateEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+
+	if eventData.UpdateLegalName() {
+		billingProfile.LegalName = eventData.LegalName
+	}
+	if eventData.UpdateTaxId() {
+		billingProfile.TaxId = eventData.TaxId
+	}
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onEmailLinkToBillingProfile(event eventstore.Event) error {
+	var eventData events.LinkEmailToBillingProfileEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+
+	if eventData.Primary {
+		billingProfile.PrimaryEmailId = eventData.EmailId
+		billingProfile.EmailIds = utils.RemoveFromList(billingProfile.EmailIds, eventData.EmailId)
+	} else {
+		billingProfile.EmailIds = utils.AddToListIfNotExists(billingProfile.EmailIds, eventData.EmailId)
+		if billingProfile.PrimaryEmailId == eventData.EmailId {
+			billingProfile.PrimaryEmailId = ""
+		}
+	}
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onEmailUnlinkFromBillingProfile(event eventstore.Event) error {
+	var eventData events.UnlinkEmailFromBillingProfileEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+	if billingProfile.PrimaryEmailId == eventData.EmailId {
+		billingProfile.PrimaryEmailId = ""
+	}
+	billingProfile.EmailIds = utils.RemoveFromList(billingProfile.EmailIds, eventData.EmailId)
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onLocationLinkToBillingProfile(event eventstore.Event) error {
+	var eventData events.LinkLocationToBillingProfileEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+
+	billingProfile.LocationIds = utils.AddToListIfNotExists(billingProfile.LocationIds, eventData.LocationId)
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onLocationUnlinkFromBillingProfile(event eventstore.Event) error {
+	var eventData events.UnlinkLocationFromBillingProfileEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.BillingProfiles == nil {
+		a.Organization.BillingProfiles = make(map[string]model.BillingProfile)
+	}
+	billingProfile, ok := a.Organization.BillingProfiles[eventData.BillingProfileId]
+	if !ok {
+		a.Organization.BillingProfiles[eventData.BillingProfileId] = model.BillingProfile{}
+		billingProfile = a.Organization.BillingProfiles[eventData.BillingProfileId]
+	}
+	billingProfile.LocationIds = utils.RemoveFromList(billingProfile.LocationIds, eventData.LocationId)
+	billingProfile.UpdatedAt = eventData.UpdatedAt
+	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
 
 	return nil
 }

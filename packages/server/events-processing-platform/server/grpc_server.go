@@ -10,6 +10,7 @@ import (
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	ispb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_session"
+	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	invoicingcyclepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoicing_cycle"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
@@ -40,8 +41,8 @@ const (
 	gRPCTime          = 10
 )
 
-func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server, error) {
-	l, err := net.Listen(constants.Tcp, server.cfg.GRPC.Port)
+func (server *Server) NewEventProcessorGrpcServer() (func() error, *grpc.Server, error) {
+	l, err := net.Listen(constants.Tcp, server.Config.GRPC.Port)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "net.Listen")
 	}
@@ -57,69 +58,38 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 			grpc_ctxtags.UnaryServerInterceptor(),
 			grpc_prometheus.UnaryServerInterceptor,
 			grpc_recovery.UnaryServerInterceptor(),
-			interceptors.CheckApiKeyInterceptor(server.cfg.GRPC.ApiKey),
+			interceptors.CheckApiKeyInterceptor(server.Config.GRPC.ApiKey),
 		),
 		),
 	)
-	RegisterGrpcServices(server, grpcServer)
+
+	RegisterGrpcServices(grpcServer, server.Services)
 
 	go func() {
-		server.log.Infof("%s gRPC server is listening on port: {%s}", GetMicroserviceName(server.cfg), server.cfg.GRPC.Port)
-		server.log.Error(grpcServer.Serve(l))
+		server.Log.Infof("%s gRPC Server is listening on port: {%s}", GetMicroserviceName(server.Config), server.Config.GRPC.Port)
+		server.Log.Error(grpcServer.Serve(l))
 	}()
 
 	return l.Close, grpcServer, nil
 }
 
-func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
-	contactService := service.NewContactService(server.log, server.commandHandlers.Contact)
-	contactpb.RegisterContactGrpcServiceServer(grpcServer, contactService)
-
-	organizationService := service.NewOrganizationService(server.log, server.commandHandlers.Organization, server.aggregateStore, server.cfg)
-	organizationpb.RegisterOrganizationGrpcServiceServer(grpcServer, organizationService)
-
-	phoneNumberService := service.NewPhoneNumberService(server.log, server.repositories.Neo4jRepositories, server.commandHandlers.PhoneNumber)
-	phonenumpb.RegisterPhoneNumberGrpcServiceServer(grpcServer, phoneNumberService)
-
-	emailService := service.NewEmailService(server.log, server.repositories.Neo4jRepositories, server.commandHandlers.Email)
-	emailpb.RegisterEmailGrpcServiceServer(grpcServer, emailService)
-
-	userService := service.NewUserService(server.log, server.commandHandlers.User)
-	userpb.RegisterUserGrpcServiceServer(grpcServer, userService)
-
-	locationService := service.NewLocationService(server.log, server.commandHandlers.Location)
-	locationpb.RegisterLocationGrpcServiceServer(grpcServer, locationService)
-
-	jobRoleService := service.NewJobRoleService(server.log, server.commandHandlers.JobRole)
-	jobrolepb.RegisterJobRoleGrpcServiceServer(grpcServer, jobRoleService)
-
-	interactionEventService := service.NewInteractionEventService(server.log, server.commandHandlers.InteractionEvent)
-	iepb.RegisterInteractionEventGrpcServiceServer(grpcServer, interactionEventService)
-
-	interactionSessionService := service.NewInteractionSessionService(server.log, server.commandHandlers.InteractionSession)
-	ispb.RegisterInteractionSessionGrpcServiceServer(grpcServer, interactionSessionService)
-
-	logEntryService := service.NewLogEntryService(server.log, server.commandHandlers.LogEntry)
-	logentrypb.RegisterLogEntryGrpcServiceServer(grpcServer, logEntryService)
-
-	issueService := service.NewIssueService(server.log, server.commandHandlers.Issue)
-	issuepb.RegisterIssueGrpcServiceServer(grpcServer, issueService)
-
-	commentService := service.NewCommentService(server.log, server.commandHandlers.Comment)
-	commentpb.RegisterCommentGrpcServiceServer(grpcServer, commentService)
-
-	opportunityService := service.NewOpportunityService(server.log, server.commandHandlers.Opportunity, server.aggregateStore)
-	opportunitypb.RegisterOpportunityGrpcServiceServer(grpcServer, opportunityService)
-
-	contractService := service.NewContractService(server.log, server.commandHandlers.Contract, server.aggregateStore)
-	contractpb.RegisterContractGrpcServiceServer(grpcServer, contractService)
-
-	serviceLineItemService := service.NewServiceLineItemService(server.log, server.commandHandlers.ServiceLineItem, server.aggregateStore)
-	servicelineitempb.RegisterServiceLineItemGrpcServiceServer(grpcServer, serviceLineItemService)
-
-	masterPlanService := service.NewMasterPlanService(server.log, server.commandHandlers.MasterPlan, server.aggregateStore)
-	masterplanpb.RegisterMasterPlanGrpcServiceServer(grpcServer, masterPlanService)
-
-	invoicingCycleService := service.NewInvoicingCycleService(server.log, server.commandHandlers.InvoicingCycle, server.aggregateStore)
-	invoicingcyclepb.RegisterInvoicingCycleServiceServer(grpcServer, invoicingCycleService)
+func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
+	contactpb.RegisterContactGrpcServiceServer(grpcServer, services.ContactService)
+	organizationpb.RegisterOrganizationGrpcServiceServer(grpcServer, services.OrganizationService)
+	phonenumpb.RegisterPhoneNumberGrpcServiceServer(grpcServer, services.PhoneNumberService)
+	emailpb.RegisterEmailGrpcServiceServer(grpcServer, services.EmailService)
+	userpb.RegisterUserGrpcServiceServer(grpcServer, services.UserService)
+	locationpb.RegisterLocationGrpcServiceServer(grpcServer, services.LocationService)
+	jobrolepb.RegisterJobRoleGrpcServiceServer(grpcServer, services.JobRoleService)
+	iepb.RegisterInteractionEventGrpcServiceServer(grpcServer, services.InteractionEventService)
+	ispb.RegisterInteractionSessionGrpcServiceServer(grpcServer, services.InteractionSessionService)
+	logentrypb.RegisterLogEntryGrpcServiceServer(grpcServer, services.LogEntryService)
+	issuepb.RegisterIssueGrpcServiceServer(grpcServer, services.IssueService)
+	commentpb.RegisterCommentGrpcServiceServer(grpcServer, services.CommentService)
+	opportunitypb.RegisterOpportunityGrpcServiceServer(grpcServer, services.OpportunityService)
+	contractpb.RegisterContractGrpcServiceServer(grpcServer, services.ContractService)
+	servicelineitempb.RegisterServiceLineItemGrpcServiceServer(grpcServer, services.ServiceLineItemService)
+	masterplanpb.RegisterMasterPlanGrpcServiceServer(grpcServer, services.MasterPlanService)
+	invoicingcyclepb.RegisterInvoicingCycleServiceServer(grpcServer, services.InvoicingCycleService)
+	invoicepb.RegisterInvoiceServiceServer(grpcServer, services.InvoiceService)
 }

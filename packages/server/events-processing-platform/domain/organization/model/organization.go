@@ -97,11 +97,15 @@ type Organization struct {
 }
 
 type BillingProfile struct {
-	Id           string        `json:"id"`
-	Name         string        `json:"name"`
-	CreatedAt    time.Time     `json:"createdAt"`
-	UpdatedAt    time.Time     `json:"updatedAt"`
-	SourceFields cmnmod.Source `json:"sourceFields"`
+	Id             string        `json:"id"`
+	LegalName      string        `json:"legalName"`
+	TaxId          string        `json:"taxId"`
+	CreatedAt      time.Time     `json:"createdAt"`
+	UpdatedAt      time.Time     `json:"updatedAt"`
+	SourceFields   cmnmod.Source `json:"sourceFields"`
+	PrimaryEmailId string        `json:"primaryEmailId"`
+	EmailIds       []string      `json:"emailIds"`
+	LocationIds    []string      `json:"locationIds"`
 }
 
 type OnboardingDetails struct {

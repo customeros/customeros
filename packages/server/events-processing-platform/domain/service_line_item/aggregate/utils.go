@@ -25,11 +25,6 @@ func getServiceLineItemObjectUUID(aggregateID string) string {
 	return fullUUID
 }
 
-// IsAggregateNotFound checks if the provided aggregate is not found.
-func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() < 0
-}
-
 // LoadServiceLineItemAggregate loads the service line item aggregate from the event store.
 func LoadServiceLineItemAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*ServiceLineItemAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadServiceLineItemAggregate")

@@ -24,8 +24,6 @@ var myVoiceApiConfig = &config.Config{
 	Service: struct {
 		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
 		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
-		FileStoreAPI     string `env:"FILE_STORE_API,required"`
-		FileStoreAPIKey  string `env:"FILE_STORE_API_KEY,required"`
 		ServerAddress    string `env:"COMMS_API_SERVER_ADDRESS,required"`
 		CorsUrl          string `env:"COMMS_API_CORS_URL,required"`
 	}{CustomerOsAPIKey: "my-key"},

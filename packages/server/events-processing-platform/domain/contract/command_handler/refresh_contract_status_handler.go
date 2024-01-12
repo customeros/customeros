@@ -46,7 +46,7 @@ func (h *refreshContractStatusCommandHandler) Handle(ctx context.Context, cmd *c
 			return err
 		}
 
-		if aggregate.IsAggregateNotFound(contractAggregate) {
+		if eventstore.IsAggregateNotFound(contractAggregate) {
 			tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 			return eventstore.ErrAggregateNotFound
 		}

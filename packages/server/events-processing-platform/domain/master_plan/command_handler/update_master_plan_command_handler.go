@@ -43,7 +43,7 @@ func (h *updateMasterPlanCommandHandler) Handle(ctx context.Context, cmd *comman
 			return err
 		}
 
-		if aggregate.IsAggregateNotFound(masterPlanAggregate) {
+		if eventstore.IsAggregateNotFound(masterPlanAggregate) {
 			tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 			return eventstore.ErrAggregateNotFound
 		}
