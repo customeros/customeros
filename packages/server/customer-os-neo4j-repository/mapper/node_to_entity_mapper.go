@@ -4,6 +4,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 )
 
 func MapDbNodeToInvoicingCycleEntity(dbNode *dbtype.Node) *entity.InvoicingCycleEntity {
@@ -163,4 +164,19 @@ func MapDbNodeToBillingProfileEntity(dbNode *dbtype.Node) *entity.BillingProfile
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &billingProfileEntity
+}
+
+func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettingsEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	tenantSettingsEntity := entity.TenantSettingsEntity{
+		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		LogoUrl:          utils.GetStringPropOrEmpty(props, "logoUrl"),
+		InvoicingEnabled: utils.GetBoolPropOrFalse(props, "invoicingEnabled"),
+		DefaultCurrency:  enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "defaultCurrency")),
+	}
+	return &tenantSettingsEntity
 }

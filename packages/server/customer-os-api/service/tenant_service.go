@@ -17,9 +17,9 @@ import (
 )
 
 type TenantService interface {
-	GetTenantForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*entity.TenantEntity, error)
-	GetTenantForUserEmail(ctx context.Context, email string) (*entity.TenantEntity, error)
-	Merge(ctx context.Context, tenantEntity entity.TenantEntity) (*entity.TenantEntity, error)
+	GetTenantForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*neo4jentity.TenantEntity, error)
+	GetTenantForUserEmail(ctx context.Context, email string) (*neo4jentity.TenantEntity, error)
+	Merge(ctx context.Context, tenantEntity neo4jentity.TenantEntity) (*neo4jentity.TenantEntity, error)
 }
 
 type tenantService struct {
@@ -34,12 +34,12 @@ func NewTenantService(log logger.Logger, repository *repository.Repositories) Te
 	}
 }
 
-func (s *tenantService) Merge(ctx context.Context, tenantEntity entity.TenantEntity) (*entity.TenantEntity, error) {
+func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.TenantEntity) (*neo4jentity.TenantEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.Merge")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
 	for {
-		existNode, err := s.repositories.TenantRepository.GetByName(ctx, tenantEntity.Name)
+		existNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantByName(ctx, tenantEntity.Name)
 		if err != nil {
 			return nil, fmt.Errorf("Merge: %w", err)
 		}
@@ -58,13 +58,13 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity entity.TenantEnt
 	return s.mapDbNodeToTenantEntity(tenant), nil
 }
 
-func (s *tenantService) GetTenantForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*entity.TenantEntity, error) {
+func (s *tenantService) GetTenantForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*neo4jentity.TenantEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantForWorkspace")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
 	span.LogFields(log.Object("workspace", workspaceEntity))
 
-	tenant, err := s.repositories.TenantRepository.GetForWorkspace(ctx, workspaceEntity)
+	tenant, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspaceProvider(ctx, workspaceEntity.Name, workspaceEntity.Provider)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("GetTenantForWorkspace: %w", err)
@@ -73,13 +73,13 @@ func (s *tenantService) GetTenantForWorkspace(ctx context.Context, workspaceEnti
 	return s.mapDbNodeToTenantEntity(tenant), nil
 }
 
-func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string) (*entity.TenantEntity, error) {
+func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string) (*neo4jentity.TenantEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantForUserEmail")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
 	span.LogFields(log.String("email", email))
 
-	tenant, err := s.repositories.TenantRepository.GetForUserEmail(ctx, email)
+	tenant, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantForUserEmail(ctx, email)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("GetTenantForWorkspace: %w", err)
@@ -88,14 +88,14 @@ func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string)
 	return s.mapDbNodeToTenantEntity(tenant), nil
 }
 
-func (s *tenantService) mapDbNodeToTenantEntity(dbNode *dbtype.Node) *entity.TenantEntity {
+func (s *tenantService) mapDbNodeToTenantEntity(dbNode *dbtype.Node) *neo4jentity.TenantEntity {
 
 	if dbNode == nil {
 		return nil
 	}
 
 	props := utils.GetPropsFromNode(*dbNode)
-	tenant := entity.TenantEntity{
+	tenant := neo4jentity.TenantEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),

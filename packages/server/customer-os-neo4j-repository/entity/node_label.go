@@ -1,36 +1,39 @@
 package entity
 
+import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+
+// Deprecated: use neo4jutil.NodeLabel* instead
 const (
-	NodeLabelTimelineEvent       = "TimelineEvent"
-	NodeLabelContact             = "Contact"
-	NodeLabelCustomField         = "CustomField"
-	NodeLabelJobRole             = "JobRole"
-	NodeLabelEmail               = "Email"
-	NodeLabelLocation            = "Location"
-	NodeLabelInteractionEvent    = "InteractionEvent"
-	NodeLabelInteractionSession  = "InteractionSession"
-	NodeLabelNote                = "Note"
-	NodeLabelLogEntry            = "LogEntry"
-	NodeLabelOrganization        = "Organization"
-	NodeLabelBillingProfile      = "BillingProfile"
-	NodeLabelMasterPlan          = "MasterPlan"
-	NodeLabelMasterPlanMilestone = "MasterPlanMilestone"
-	NodeLabelAction              = "Action"
-	NodeLabelPageView            = "PageView"
-	NodeLabelPhoneNumber         = "PhoneNumber"
-	NodeLabelTag                 = "Tag"
-	NodeLabelIssue               = "Issue"
-	NodeLabelUser                = "User"
-	NodeLabelAnalysis            = "Analysis"
-	NodeLabelAttachment          = "Attachment"
-	NodeLabelMeeting             = "Meeting"
-	NodeLabelSocial              = "Social"
-	NodeLabelPlayer              = "Player"
-	NodeLabelCountry             = "Country"
-	NodeLabelActionItem          = "ActionItem"
-	NodeLabelComment             = "Comment"
-	NodeLabelContract            = "Contract"
-	NodeLabelServiceLineItem     = "ServiceLineItem"
-	NodeLabelOpportunity         = "Opportunity"
-	NodeLabelInvoicingCycle      = "InvoicingCycle"
+	NodeLabelTimelineEvent       = neo4jutil.NodeLabelTimelineEvent
+	NodeLabelContact             = neo4jutil.NodeLabelContact
+	NodeLabelCustomField         = neo4jutil.NodeLabelCustomField
+	NodeLabelJobRole             = neo4jutil.NodeLabelJobRole
+	NodeLabelEmail               = neo4jutil.NodeLabelEmail
+	NodeLabelLocation            = neo4jutil.NodeLabelLocation
+	NodeLabelInteractionEvent    = neo4jutil.NodeLabelInteractionEvent
+	NodeLabelInteractionSession  = neo4jutil.NodeLabelInteractionSession
+	NodeLabelNote                = neo4jutil.NodeLabelNote
+	NodeLabelLogEntry            = neo4jutil.NodeLabelLogEntry
+	NodeLabelOrganization        = neo4jutil.NodeLabelOrganization
+	NodeLabelBillingProfile      = neo4jutil.NodeLabelBillingProfile
+	NodeLabelMasterPlan          = neo4jutil.NodeLabelMasterPlan
+	NodeLabelMasterPlanMilestone = neo4jutil.NodeLabelMasterPlanMilestone
+	NodeLabelAction              = neo4jutil.NodeLabelAction
+	NodeLabelPageView            = neo4jutil.NodeLabelPageView
+	NodeLabelPhoneNumber         = neo4jutil.NodeLabelPhoneNumber
+	NodeLabelTag                 = neo4jutil.NodeLabelTag
+	NodeLabelIssue               = neo4jutil.NodeLabelIssue
+	NodeLabelUser                = neo4jutil.NodeLabelUser
+	NodeLabelAnalysis            = neo4jutil.NodeLabelAnalysis
+	NodeLabelAttachment          = neo4jutil.NodeLabelAttachment
+	NodeLabelMeeting             = neo4jutil.NodeLabelMeeting
+	NodeLabelSocial              = neo4jutil.NodeLabelSocial
+	NodeLabelPlayer              = neo4jutil.NodeLabelPlayer
+	NodeLabelCountry             = neo4jutil.NodeLabelCountry
+	NodeLabelActionItem          = neo4jutil.NodeLabelActionItem
+	NodeLabelComment             = neo4jutil.NodeLabelComment
+	NodeLabelContract            = neo4jutil.NodeLabelContract
+	NodeLabelServiceLineItem     = neo4jutil.NodeLabelServiceLineItem
+	NodeLabelOpportunity         = neo4jutil.NodeLabelOpportunity
+	NodeLabelInvoicingCycle      = neo4jutil.NodeLabelInvoicingCycle
 )
