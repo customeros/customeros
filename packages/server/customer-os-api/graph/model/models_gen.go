@@ -171,6 +171,14 @@ type BillingProfileInput struct {
 	CreatedAt      *time.Time `json:"createdAt,omitempty"`
 }
 
+type BillingProfileUpdateInput struct {
+	OrganizationID   string     `json:"organizationId"`
+	BillingProfileID string     `json:"billingProfileId"`
+	LegalName        *string    `json:"legalName,omitempty"`
+	TaxID            *string    `json:"taxId,omitempty"`
+	UpdatedAt        *time.Time `json:"updatedAt,omitempty"`
+}
+
 // Describes the relationship a Contact has with a Organization.
 // **A `return` object**
 type Calendar struct {

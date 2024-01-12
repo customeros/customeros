@@ -56,3 +56,49 @@ func TestMutationResolver_BillingProfileCreate(t *testing.T) {
 
 	require.True(t, calledCreateBillingProfile)
 }
+
+func TestMutationResolver_BillingProfileUpdate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	billingProfileId := neo4jtest.CreateBillingProfileForOrganization(ctx, driver, tenantName, orgId, neo4jentity.BillingProfileEntity{
+		LegalName: "Old profile",
+		TaxId:     "987654321",
+	})
+	calledUpdateBillingProfile := false
+
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+		UpdateBillingProfile: func(context context.Context, billingProfile *organizationpb.UpdateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+			require.Equal(t, tenantName, billingProfile.Tenant)
+			require.Equal(t, testUserId, billingProfile.LoggedInUserId)
+			require.Equal(t, "New name", billingProfile.LegalName)
+			require.Equal(t, "", billingProfile.TaxId)
+			require.Equal(t, []organizationpb.BillingProfileFieldMask{organizationpb.BillingProfileFieldMask_BILLING_PROFILE_PROPERTY_LEGAL_NAME}, billingProfile.FieldsMask)
+			require.Nil(t, billingProfile.UpdatedAt)
+			require.Equal(t, orgId, billingProfile.OrganizationId)
+			calledUpdateBillingProfile = true
+			return &organizationpb.BillingProfileIdGrpcResponse{
+				Id: billingProfileId,
+			}, nil
+		},
+	}
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "billing_profile/update_billing_profile", map[string]interface{}{"organizationId": orgId, "billingProfileId": billingProfileId})
+	require.Nil(t, rawResponse.Errors)
+
+	var billingProfileStruct struct {
+		BillingProfile_Update string
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &billingProfileStruct)
+	require.Nil(t, err)
+
+	// Verify
+	require.Equal(t, billingProfileId, billingProfileStruct.BillingProfile_Update)
+
+	require.True(t, calledUpdateBillingProfile)
+}

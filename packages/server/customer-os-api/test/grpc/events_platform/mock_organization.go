@@ -16,6 +16,7 @@ type MockOrganizationServiceCallbacks struct {
 	UpdateOnboardingStatus        func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner       func(ctx context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	CreateBillingProfile          func(ctx context.Context, proto *organizationpb.CreateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
+	UpdateBillingProfile          func(ctx context.Context, proto *organizationpb.UpdateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
 }
 
 var organizationCallbacks = &MockOrganizationServiceCallbacks{}
@@ -89,4 +90,11 @@ func (MockOrganizationService) CreateBillingProfile(context context.Context, pro
 		panic("organizationCallbacks.CreateBillingProfile is not set")
 	}
 	return organizationCallbacks.CreateBillingProfile(context, proto)
+}
+
+func (MockOrganizationService) UpdateBillingProfile(context context.Context, proto *organizationpb.UpdateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	if organizationCallbacks.UpdateBillingProfile == nil {
+		panic("organizationCallbacks.UpdateBillingProfile is not set")
+	}
+	return organizationCallbacks.UpdateBillingProfile(context, proto)
 }

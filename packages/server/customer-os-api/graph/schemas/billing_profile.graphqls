@@ -1,5 +1,6 @@
 extend type Mutation {
     billingProfile_Create(input: BillingProfileInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    billingProfile_Update(input: BillingProfileUpdateInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type BillingProfile implements SourceFields & Node {
@@ -18,4 +19,12 @@ input BillingProfileInput {
     legalName: String
     taxId: String
     createdAt: Time
+}
+
+input BillingProfileUpdateInput {
+    organizationId: ID!
+    billingProfileId: ID!
+    legalName: String
+    taxId: String
+    updatedAt: Time
 }
