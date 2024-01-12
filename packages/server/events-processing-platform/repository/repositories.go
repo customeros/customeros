@@ -11,6 +11,7 @@ import (
 
 type Drivers struct {
 	Neo4jDriver *neo4j.DriverWithContext
+	GormDb      *gorm.DB
 }
 
 type Repositories struct {
@@ -25,6 +26,7 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 	repositories := Repositories{
 		Drivers: Drivers{
 			Neo4jDriver: driver,
+			GormDb:      gormDb,
 		},
 		Neo4jRepositories:       neo4jrepository.InitNeo4jRepositories(driver, neo4jDatabase),
 		CommonRepositories:      cmn_repository.InitRepositories(gormDb, driver),

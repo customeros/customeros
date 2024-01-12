@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -203,6 +204,7 @@ type Services struct {
 		ApplicationId string `env:"MJML_APPLICATION_ID,required" envDefault:""`
 		SecretKey     string `env:"MJML_SECRET_KEY,required" envDefault:""`
 	}
+	FileStoreApiConfig fsc.FileStoreApiConfig
 }
 
 type Utils struct {
