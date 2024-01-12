@@ -21,6 +21,7 @@ import (
 
 type BillingProfileService interface {
 	CreateBillingProfile(ctx context.Context, organizationId, legalName, taxId string, createdAt *time.Time) (string, error)
+	UpdateBillingProfile(ctx context.Context, organizationId, billingProfileId string, legalName, taxId *string, updatedAt *time.Time) error
 }
 type billingProfileService struct {
 	log          logger.Logger
@@ -77,4 +78,51 @@ func (s *billingProfileService) CreateBillingProfile(ctx context.Context, organi
 	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelBillingProfile, span)
 
 	return response.Id, nil
+}
+
+func (s *billingProfileService) UpdateBillingProfile(ctx context.Context, organizationId, billingProfileId string, legalName, taxId *string, updatedAt *time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileService.UpdateBillingProfile")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
+	span.LogFields(log.Object("legalName", legalName), log.Object("taxId", legalName), log.String("organizationId", organizationId), log.Object("updatedAt", updatedAt))
+
+	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, neo4jentity.NodeLabelBillingProfile, organizationId, neo4jentity.NodeLabelOrganization, "HAS_BILLING_PROFILE")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !billingProfileExists {
+		err = errors.New(fmt.Sprintf("Billing profile with id {%s} not found", billingProfileId))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	grpcRequest := organizationpb.UpdateBillingProfileGrpcRequest{
+		Tenant:           common.GetTenantFromContext(ctx),
+		OrganizationId:   organizationId,
+		BillingProfileId: billingProfileId,
+		LegalName:        utils.IfNotNilString(legalName),
+		TaxId:            utils.IfNotNilString(taxId),
+		LoggedInUserId:   common.GetUserIdFromContext(ctx),
+		UpdatedAt:        utils.ConvertTimeToTimestampPtr(updatedAt),
+	}
+	fieldsMask := make([]organizationpb.BillingProfileFieldMask, 0)
+	if legalName != nil {
+		fieldsMask = append(fieldsMask, organizationpb.BillingProfileFieldMask_BILLING_PROFILE_PROPERTY_LEGAL_NAME)
+	}
+	if taxId != nil {
+		fieldsMask = append(fieldsMask, organizationpb.BillingProfileFieldMask_BILLING_PROFILE_PROPERTY_TAX_ID)
+	}
+	grpcRequest.FieldsMask = fieldsMask
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = s.grpcClients.OrganizationClient.UpdateBillingProfile(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
 }

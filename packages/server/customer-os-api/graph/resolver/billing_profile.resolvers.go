@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -23,7 +22,24 @@ func (r *mutationResolver) BillingProfileCreate(ctx context.Context, input model
 	billingProfileId, err := r.Services.BillingProfileService.CreateBillingProfile(ctx, input.OrganizationID, utils.IfNotNilString(input.LegalName), utils.IfNotNilString(input.TaxID), input.CreatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to create master plan")
+		graphql.AddErrorf(ctx, "Failed to create billing profile")
+		return "", nil
 	}
-	return billingProfileId, err
+	return billingProfileId, nil
+}
+
+// BillingProfileUpdate is the resolver for the billingProfile_Update field.
+func (r *mutationResolver) BillingProfileUpdate(ctx context.Context, input model.BillingProfileUpdateInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	err := r.Services.BillingProfileService.UpdateBillingProfile(ctx, input.OrganizationID, input.BillingProfileID, input.LegalName, input.TaxID, input.UpdatedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update billing profile")
+		return "", nil
+	}
+	return input.BillingProfileID, nil
 }

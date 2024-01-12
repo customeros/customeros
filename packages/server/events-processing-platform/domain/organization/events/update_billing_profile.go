@@ -26,10 +26,14 @@ func NewBillingProfileUpdateEvent(aggregate eventstore.Aggregate, billingProfile
 	eventData := BillingProfileUpdateEvent{
 		Tenant:           aggregate.GetTenant(),
 		BillingProfileId: billingProfileId,
-		LegalName:        legalName,
-		TaxId:            taxId,
 		UpdatedAt:        updatedAt,
 		FieldsMask:       fieldsMask,
+	}
+	if eventData.UpdateLegalName() {
+		eventData.LegalName = legalName
+	}
+	if eventData.UpdateTaxId() {
+		eventData.TaxId = taxId
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
