@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -40,7 +41,7 @@ const (
 
 type DashboardRepository interface {
 	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
-	GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
+	GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.RecordsWithTotalCount, error)
 	GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardCustomerMapData(ctx context.Context, tenant string) ([]map[string]interface{}, error)
 	GetDashboardRevenueAtRiskData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
@@ -445,7 +446,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
+func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.RecordsWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewOrganizationData")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -453,7 +454,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 	tracing.LogObjectAsJson(span, "where", where)
 	tracing.LogObjectAsJson(span, "sort", sort)
 
-	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
+	dbRecordsWithTotalCount := new(utils.RecordsWithTotalCount)
 
 	organizationFilterCypher, organizationFilterParams := "", make(map[string]interface{})
 	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
@@ -611,19 +612,19 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		if err != nil {
 			return nil, err
 		}
-		dbNodesWithTotalCount.Count = countRecord.Values[0].(int64)
+		dbRecordsWithTotalCount.Count = countRecord.Values[0].(int64)
 		//endregion
 
 		//region query to fetch data
 		query := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
 					 MATCH (o)-[:HAS_CONTRACT]->(contract:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t)
-					 MATCH (contract)-[:HAS_OPPORTUNITY]->(op:Opportunity)
+					 MATCH (contract)-[:ACTIVE_RENEWAL]->(op:Opportunity)
 					 `
 		if len(ownerId) > 0 {
-			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
+			query += fmt.Sprintf(` OPTIONAL MATCH (op)<-[:OWNS]-(owner:User) WITH *`)
 		}
 		if sort != nil && sort.By == SearchSortParamOwner {
-			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
+			query += fmt.Sprintf(` OPTIONAL MATCH (op)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
 		}
 		//query += ` WHERE (o.hide = false) `
 
@@ -758,7 +759,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			query += string(cypherSort.SortingCypherFragment("o"))
 		}
 		// end sort region
-		query += fmt.Sprintf(` RETURN distinct(o), contract, op `)
+		query += fmt.Sprintf(` RETURN o, contract, op `)
 		query += fmt.Sprintf(` SKIP $skip LIMIT $limit`)
 
 		span.LogFields(log.Object("query", query))
@@ -774,18 +775,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 	if err != nil {
 		return nil, err
 	}
-
-	for _, record := range dbRecords.([]*neo4j.Record) {
-		// Assuming record.Values is a slice of neo4j.Node
-		for _, value := range record.Values {
-			if node, ok := value.(neo4j.Node); ok {
-				dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(node))
-			} else {
-				// Handle the case where the value is not a neo4j.Node
-			}
-		}
-	}
-	return dbNodesWithTotalCount, nil
+	dbRecordsWithTotalCount.Records = dbRecords.([]*db.Record)
+	//each record will contain three nodes, organization, contract and opportunity
+	return dbRecordsWithTotalCount, nil
 }
 
 func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {

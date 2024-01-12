@@ -900,7 +900,7 @@ func assert_Search_Organization_ByOnboardingStatus(t *testing.T, searchStatuses 
 	}
 }
 
-func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyTrue(t *testing.T) {
+func TestQueryResolver_Sort_Renewals_ByRenewalDate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -925,22 +925,24 @@ func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyTrue(t *testing.T
 	})
 
 	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contractId := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
-		ServiceStartedAt: &contractStartedAt,
-	}, entity.OpportunityEntity{})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	contract2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
 
-	_ = insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId1 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
 		ContractStatus:   entity.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
-	}, entity.OpportunityEntity{})
-	insertServiceLineItem(ctx, driver, contractId, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow20})
+	insertServiceLineItem(ctx, driver, contractId1, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
+	contractId2 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contract2StartedAt,
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow10})
+	insertServiceLineItem(ctx, driver, contractId2, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 2, "Opportunity": 2})
 
-	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_renewals_sort",
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_view_renewals_sort",
 		map[string]interface{}{
 			"page":    1,
 			"limit":   10,
@@ -959,5 +961,6 @@ func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyTrue(t *testing.T
 	require.Equal(t, int64(3), renewalsPageStruct.DashboardView_Renewals.TotalElements)
 
 	require.Equal(t, organizationId3, renewalsPageStruct.DashboardView_Renewals.Content[0].Organization.ID)
-	require.Equal(t, contractId, renewalsPageStruct.DashboardView_Renewals.Content[4].Contract.ID)
+	require.Equal(t, contractId2, renewalsPageStruct.DashboardView_Renewals.Content[0].Contract.ID)
+	require.Equal(t, contractId1, renewalsPageStruct.DashboardView_Renewals.Content[1].Contract.ID)
 }

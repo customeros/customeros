@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/log"
 	"github.com/pkg/errors"
@@ -20,6 +21,11 @@ func CypherPtr(cypher Cypher) *Cypher {
 type PairDbNodesWithTotalCount struct {
 	Pairs []*Pair[*dbtype.Node, *dbtype.Node]
 	Count int64
+}
+
+type RecordsWithTotalCount struct {
+	Records []*db.Record
+	Count   int64
 }
 
 type DbNodesWithTotalCount struct {

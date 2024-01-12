@@ -120,16 +120,26 @@ func (s *dashboardService) GetDashboardViewRenewalsData(ctx context.Context, req
 		Page:  requestDetails.Page,
 	}
 
-	dbNodes, err := s.repositories.DashboardRepository.GetDashboardViewRenewalData(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), requestDetails.Where, requestDetails.Sort)
+	dbRecords, err := s.repositories.DashboardRepository.GetDashboardViewRenewalData(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), requestDetails.Where, requestDetails.Sort)
 	if err != nil {
 		return nil, err
 	}
-	paginatedResult.SetTotalRows(dbNodes.Count)
+	paginatedResult.SetTotalRows(dbRecords.Count)
 
 	renewalRecordEntities := entity.RenewalsRecordEntities{}
 
-	for _, v := range dbNodes.Nodes {
-		renewalRecordEntities = append(renewalRecordEntities, *s.mapDbNodeToRenewalRecordEntity(*v))
+	for _, v := range dbRecords.Records {
+		renewalRecordEntity := entity.RenewalsRecordEntity{}
+		if v.Values[0] != nil {
+			renewalRecordEntity.Organization = *s.services.OrganizationService.mapDbNodeToOrganizationEntity(v.Values[0].(dbtype.Node))
+		}
+		if v.Values[1] != nil {
+			renewalRecordEntity.Contract = *s.services.ContractService.mapDbNodeToContractEntity(v.Values[1].(dbtype.Node))
+		}
+		if v.Values[2] != nil {
+			renewalRecordEntity.Opportunity = *s.services.OpportunityService.mapDbNodeToOpportunityEntity(v.Values[2].(dbtype.Node))
+		}
+		renewalRecordEntities = append(renewalRecordEntities, renewalRecordEntity)
 	}
 
 	paginatedResult.SetRows(&renewalRecordEntities)
