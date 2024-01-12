@@ -144,11 +144,7 @@ export const Table = <T extends object>({
         >
           {table.getHeaderGroups().map((headerGroup) => (
             <THeaderGroup key={headerGroup.id}>
-              <THeaderCell
-                p='0'
-                w='28px'
-                visibility={enableRowSelection ? 'visible' : 'hidden'}
-              />
+              <THeaderCell p='0' w='28px' minH='8' />
               {headerGroup.headers.map((header, index) => (
                 <THeaderCell
                   key={header.id}
@@ -207,13 +203,14 @@ export const Table = <T extends object>({
                   },
                 }}
               >
-                <TCell
-                  pl='2'
-                  pr='0'
-                  maxW='fit-content'
-                  visibility={enableRowSelection ? 'visible' : 'hidden'}
-                >
-                  <Flex align='center' flexDir='row' h='full'>
+                <TCell pl='2' pr='0' maxW='fit-content'>
+                  <Flex
+                    align='center'
+                    flexDir='row'
+                    h='full'
+                    opacity={enableRowSelection ? 1 : 0}
+                    pointerEvents={enableRowSelection ? 'auto' : 'none'}
+                  >
                     <MemoizedCheckbox
                       key={`checkbox-${virtualRow.index}`}
                       isSelected={row?.getIsSelected()}

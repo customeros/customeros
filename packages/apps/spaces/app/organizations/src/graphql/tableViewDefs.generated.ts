@@ -27,7 +27,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
 export type TableViewDefsQueryVariables = Types.Exact<{
   pagination?: Types.InputMaybe<Types.Pagination>;
   where?: Types.InputMaybe<Types.Filter>;
-  sort?: Types.InputMaybe<Array<Types.SortBy> | Types.SortBy>;
+  sort?: Types.InputMaybe<Types.SortBy>;
 }>;
 
 export type TableViewDefsQuery = {
@@ -39,6 +39,8 @@ export type TableViewDefsQuery = {
       id: string;
       name: string;
       order?: number | null;
+      filters?: string | null;
+      sorting?: string | null;
       type?: {
         __typename?: 'ViewType';
         id: string;
@@ -47,7 +49,6 @@ export type TableViewDefsQuery = {
       columns?: Array<{
         __typename?: 'ColumnDef';
         id: string;
-        viewTypeId?: string | null;
         isFilterable?: boolean | null;
         isSortable?: boolean | null;
         isDefaultSort?: boolean | null;
@@ -63,7 +64,7 @@ export type TableViewDefsQuery = {
 };
 
 export const TableViewDefsDocument = `
-    query tableViewDefs($pagination: Pagination, $where: Filter, $sort: [SortBy!]) {
+    query tableViewDefs($pagination: Pagination, $where: Filter, $sort: SortBy) {
   tableViewDefs(pagination: $pagination, where: $where, sort: $sort) {
     content {
       id
@@ -75,7 +76,6 @@ export const TableViewDefsDocument = `
       }
       columns {
         id
-        viewTypeId
         columnType {
           id
           name
@@ -85,6 +85,8 @@ export const TableViewDefsDocument = `
         isDefaultSort
         isVisible
       }
+      filters
+      sorting
     }
   }
 }

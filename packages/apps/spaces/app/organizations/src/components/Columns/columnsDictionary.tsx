@@ -2,9 +2,13 @@ import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
 import { Flex } from '@ui/layout/Flex';
 import { Skeleton } from '@ui/presentation/Skeleton';
-import { Organization, TableViewDef } from '@graphql/types';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
+import {
+  // SortBy,
+  Organization,
+  TableViewDef,
+} from '@graphql/types';
 
 import { AvatarHeader } from './Headers/Avatar';
 import {
@@ -403,3 +407,10 @@ export const getColumnConfig = (tableViewDef: TableViewDef) => {
     return [...acc, column];
   }, [] as Column[]);
 };
+
+// const getSortConfig = (tableViewDef: TableViewDef) => {
+//   // @ts-expect-error remove
+//   const sort = JSON.parse(tableViewDef?.sorting);
+
+//   return sort as SortBy;
+// };

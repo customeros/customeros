@@ -115,6 +115,47 @@ export enum BilledType {
   Usage = 'USAGE',
 }
 
+export type BillingProfile = Node &
+  SourceFields & {
+    __typename?: 'BillingProfile';
+    appSource: Scalars['String'];
+    createdAt: Scalars['Time'];
+    id: Scalars['ID'];
+    legalName: Scalars['String'];
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    taxId: Scalars['String'];
+    updatedAt: Scalars['Time'];
+  };
+
+export type BillingProfileInput = {
+  createdAt?: InputMaybe<Scalars['Time']>;
+  legalName?: InputMaybe<Scalars['String']>;
+  organizationId: Scalars['ID'];
+  taxId?: InputMaybe<Scalars['String']>;
+};
+
+export type BillingProfileLinkEmailInput = {
+  billingProfileId: Scalars['ID'];
+  emailId: Scalars['ID'];
+  organizationId: Scalars['ID'];
+  primary?: InputMaybe<Scalars['Boolean']>;
+};
+
+export type BillingProfileLinkLocationInput = {
+  billingProfileId: Scalars['ID'];
+  locationId: Scalars['ID'];
+  organizationId: Scalars['ID'];
+};
+
+export type BillingProfileUpdateInput = {
+  billingProfileId: Scalars['ID'];
+  legalName?: InputMaybe<Scalars['String']>;
+  organizationId: Scalars['ID'];
+  taxId?: InputMaybe<Scalars['String']>;
+  updatedAt?: InputMaybe<Scalars['Time']>;
+};
+
 /**
  * Describes the relationship a Contact has with a Organization.
  * **A `return` object**
@@ -147,8 +188,8 @@ export type ColumnDef = Node & {
   isFilterable?: Maybe<Scalars['Boolean']>;
   isSortable?: Maybe<Scalars['Boolean']>;
   isVisible?: Maybe<Scalars['Boolean']>;
+  type?: Maybe<ViewType>;
   updatedAt: Scalars['Time'];
-  viewTypeId?: Maybe<Scalars['String']>;
 };
 
 export type ColumnType = Node & {
@@ -1185,6 +1226,32 @@ export enum InternalType {
   Upsell = 'UPSELL',
 }
 
+export type InvoicingCycle = Node &
+  SourceFields & {
+    __typename?: 'InvoicingCycle';
+    appSource: Scalars['String'];
+    createdAt: Scalars['Time'];
+    id: Scalars['ID'];
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    type: InvoicingCycleType;
+    updatedAt: Scalars['Time'];
+  };
+
+export type InvoicingCycleInput = {
+  type: InvoicingCycleType;
+};
+
+export enum InvoicingCycleType {
+  Anniversary = 'ANNIVERSARY',
+  Date = 'DATE',
+}
+
+export type InvoicingCycleUpdateInput = {
+  id: Scalars['ID'];
+  type: InvoicingCycleType;
+};
+
 export type Issue = Node &
   SourceFields & {
     __typename?: 'Issue';
@@ -1570,6 +1637,12 @@ export type Mutation = {
   __typename?: 'Mutation';
   analysis_Create: Analysis;
   attachment_Create: Attachment;
+  billingProfile_Create: Scalars['ID'];
+  billingProfile_LinkEmail: Scalars['ID'];
+  billingProfile_LinkLocation: Scalars['ID'];
+  billingProfile_UnlinkEmail: Scalars['ID'];
+  billingProfile_UnlinkLocation: Scalars['ID'];
+  billingProfile_Update: Scalars['ID'];
   contact_AddNewLocation: Location;
   contact_AddOrganizationById: Contact;
   contact_AddSocial: Social;
@@ -1617,6 +1690,8 @@ export type Mutation = {
   interactionEvent_LinkAttachment: InteractionEvent;
   interactionSession_Create: InteractionSession;
   interactionSession_LinkAttachment: InteractionSession;
+  invoicingCycle_Create: InvoicingCycle;
+  invoicingCycle_Update: InvoicingCycle;
   jobRole_Create: JobRole;
   jobRole_Delete: Result;
   jobRole_Update: JobRole;
@@ -1633,6 +1708,7 @@ export type Mutation = {
   masterPlanMilestone_Reorder: Scalars['ID'];
   masterPlanMilestone_Update: MasterPlanMilestone;
   masterPlan_Create: MasterPlan;
+  masterPlan_Duplicate: MasterPlan;
   masterPlan_Update: MasterPlan;
   meeting_AddNewLocation: Location;
   meeting_AddNote: Meeting;
@@ -1709,6 +1785,30 @@ export type MutationAnalysis_CreateArgs = {
 
 export type MutationAttachment_CreateArgs = {
   input: AttachmentInput;
+};
+
+export type MutationBillingProfile_CreateArgs = {
+  input: BillingProfileInput;
+};
+
+export type MutationBillingProfile_LinkEmailArgs = {
+  input: BillingProfileLinkEmailInput;
+};
+
+export type MutationBillingProfile_LinkLocationArgs = {
+  input: BillingProfileLinkLocationInput;
+};
+
+export type MutationBillingProfile_UnlinkEmailArgs = {
+  input: BillingProfileLinkEmailInput;
+};
+
+export type MutationBillingProfile_UnlinkLocationArgs = {
+  input: BillingProfileLinkLocationInput;
+};
+
+export type MutationBillingProfile_UpdateArgs = {
+  input: BillingProfileUpdateInput;
 };
 
 export type MutationContact_AddNewLocationArgs = {
@@ -1932,6 +2032,14 @@ export type MutationInteractionSession_LinkAttachmentArgs = {
   sessionId: Scalars['ID'];
 };
 
+export type MutationInvoicingCycle_CreateArgs = {
+  input: InvoicingCycleInput;
+};
+
+export type MutationInvoicingCycle_UpdateArgs = {
+  input: InvoicingCycleUpdateInput;
+};
+
 export type MutationJobRole_CreateArgs = {
   contactId: Scalars['ID'];
   input: JobRoleInput;
@@ -2005,6 +2113,10 @@ export type MutationMasterPlanMilestone_UpdateArgs = {
 
 export type MutationMasterPlan_CreateArgs = {
   input: MasterPlanInput;
+};
+
+export type MutationMasterPlan_DuplicateArgs = {
+  id: Scalars['ID'];
 };
 
 export type MutationMasterPlan_UpdateArgs = {
@@ -2315,17 +2427,6 @@ export type MutationWorkspace_MergeArgs = {
 export type MutationWorkspace_MergeToTenantArgs = {
   tenant: Scalars['String'];
   workspace: WorkspaceInput;
-};
-
-export type NavigationDef = Node & {
-  __typename?: 'NavigationDef';
-  createdAt: Scalars['Time'];
-  createdBy?: Maybe<User>;
-  icon?: Maybe<Scalars['String']>;
-  id: Scalars['ID'];
-  myViewIds?: Maybe<Array<Maybe<Scalars['String']>>>;
-  tenantViewIds?: Maybe<Array<Maybe<Scalars['String']>>>;
-  updatedAt: Scalars['Time'];
 };
 
 export type Node = {
@@ -2813,6 +2914,7 @@ export type Query = {
   contract: Contract;
   /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE, ONBOARDING_STATUS */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
+  dashboardView_Renewals?: Maybe<RenewalsPage>;
   dashboard_ARRBreakdown?: Maybe<DashboardArrBreakdown>;
   dashboard_CustomerMap?: Maybe<Array<DashboardCustomerMap>>;
   dashboard_GrossRevenueRetention?: Maybe<DashboardGrossRevenueRetention>;
@@ -2831,12 +2933,12 @@ export type Query = {
   interactionEvent_ByEventIdentifier: InteractionEvent;
   interactionSession: InteractionSession;
   interactionSession_BySessionIdentifier: InteractionSession;
+  invoicingCycle: InvoicingCycle;
   issue: Issue;
   logEntry: LogEntry;
   masterPlan: MasterPlan;
   masterPlans: Array<MasterPlan>;
   meeting: Meeting;
-  navigationDef?: Maybe<NavigationDef>;
   opportunity?: Maybe<Opportunity>;
   organization?: Maybe<Organization>;
   organization_DistinctOwners: Array<User>;
@@ -2844,7 +2946,6 @@ export type Query = {
   phoneNumber: PhoneNumber;
   player_ByAuthIdProvider: Player;
   serviceLineItem: ServiceLineItem;
-  tableViewDef?: Maybe<TableViewDef>;
   tableViewDefs: TableViewDefPage;
   tags: Array<Tag>;
   tenant: Scalars['String'];
@@ -2887,6 +2988,12 @@ export type QueryContractArgs = {
 };
 
 export type QueryDashboardView_OrganizationsArgs = {
+  pagination: Pagination;
+  sort?: InputMaybe<SortBy>;
+  where?: InputMaybe<Filter>;
+};
+
+export type QueryDashboardView_RenewalsArgs = {
   pagination: Pagination;
   sort?: InputMaybe<SortBy>;
   where?: InputMaybe<Filter>;
@@ -3008,13 +3115,9 @@ export type QueryServiceLineItemArgs = {
   id: Scalars['ID'];
 };
 
-export type QueryTableViewDefArgs = {
-  id: Scalars['ID'];
-};
-
 export type QueryTableViewDefsArgs = {
   pagination?: InputMaybe<Pagination>;
-  sort?: InputMaybe<Array<SortBy>>;
+  sort?: InputMaybe<SortBy>;
   where?: InputMaybe<Filter>;
 };
 
@@ -3044,12 +3147,27 @@ export type QueryUsersArgs = {
   where?: InputMaybe<Filter>;
 };
 
+export type RenewalRecord = {
+  __typename?: 'RenewalRecord';
+  contract: Contract;
+  opportunity?: Maybe<Opportunity>;
+  organization: Organization;
+};
+
 export type RenewalSummary = {
   __typename?: 'RenewalSummary';
   arrForecast?: Maybe<Scalars['Float']>;
   maxArrForecast?: Maybe<Scalars['Float']>;
   nextRenewalDate?: Maybe<Scalars['Time']>;
   renewalLikelihood?: Maybe<OpportunityRenewalLikelihood>;
+};
+
+export type RenewalsPage = Pages & {
+  __typename?: 'RenewalsPage';
+  content: Array<RenewalRecord>;
+  totalAvailable: Scalars['Int64'];
+  totalElements: Scalars['Int64'];
+  totalPages: Scalars['Int'];
 };
 
 /**
@@ -3185,9 +3303,12 @@ export type TableViewDef = Node & {
   columns?: Maybe<Array<Maybe<ColumnDef>>>;
   createdAt: Scalars['Time'];
   createdBy?: Maybe<User>;
+  filters?: Maybe<Scalars['String']>;
+  icon?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
   name: Scalars['String'];
   order?: Maybe<Scalars['Int']>;
+  sorting?: Maybe<Scalars['String']>;
   type?: Maybe<ViewType>;
   updatedAt: Scalars['Time'];
 };
