@@ -1,7 +1,9 @@
 import addDays from 'date-fns/addDays';
 import { atom, selector, useRecoilState } from 'recoil';
 
-interface TimeToRenewalState {
+import { makeServerToAtomMapper } from '../shared/makeServerToAtomMapper';
+
+export interface TimeToRenewalState {
   value: string;
   isActive: boolean;
 }
@@ -26,3 +28,20 @@ export const TimeToRenewalFilterSelector = selector({
 export const useTimeToRenewalFilter = () => {
   return useRecoilState(TimeToRenewalAtom);
 };
+
+/**
+ * Used for mapping server-side Filter data to client-side atom TimeToRenewalState
+ */
+export const mapTimeToRenewalToAtom =
+  makeServerToAtomMapper<TimeToRenewalState>(
+    {
+      filter: {
+        property: 'RENEWAL_DATE',
+      },
+    },
+    ({ filter }) => ({
+      isActive: true,
+      value: filter?.value,
+    }),
+    defaultState,
+  );

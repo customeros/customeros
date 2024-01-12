@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { produce } from 'immer';
 import { signOut } from 'next-auth/react';
 import { useLocalStorage } from 'usehooks-ts';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -14,6 +15,7 @@ import { GridItem } from '@ui/layout/Grid';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
@@ -28,6 +30,7 @@ export const RootSidenav = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [_, setOrganizationsMeta] = useOrganizationsMeta();
+  const showMyViewsItems = useFeatureIsOn('my-views-nav-item');
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { root: 'organization' },
@@ -151,6 +154,19 @@ export const RootSidenav = () => {
             onClick={() => handleItemClick('organizations?preset=portfolio')}
             icon={(isActive) => (
               <Icons.Briefcase1
+                boxSize='5'
+                color={isActive ? 'gray.700' : 'gray.500'}
+              />
+            )}
+          />
+        )}
+        {showMyViewsItems && (
+          <SidenavItem
+            label='Renewals'
+            isActive={checkIsActive('renewals', { preset: '1' })}
+            onClick={() => handleItemClick('renewals?preset=1')}
+            icon={(isActive) => (
+              <ClockFastForward
                 boxSize='5'
                 color={isActive ? 'gray.700' : 'gray.500'}
               />

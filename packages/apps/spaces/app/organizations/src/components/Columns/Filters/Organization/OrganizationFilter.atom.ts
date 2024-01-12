@@ -1,6 +1,8 @@
 import { atom, selector, useRecoilState } from 'recoil';
 
-interface OrganizationFilterState {
+import { makeServerToAtomMapper } from '../shared/makeServerToAtomMapper';
+
+export interface OrganizationFilterState {
   value: string;
   isActive: boolean;
   showEmpty: boolean;
@@ -25,3 +27,21 @@ export const OrganizationFilterSelector = selector({
 export const useOrganizationFilter = () => {
   return useRecoilState(OrganizationFilterAtom);
 };
+
+/**
+ * Used for mapping server-side Filter data to client-side atom OrganizationFilterState
+ */
+export const mapOrganizationToAtom =
+  makeServerToAtomMapper<OrganizationFilterState>(
+    {
+      filter: {
+        property: 'NAME',
+      },
+    },
+    ({ filter }) => ({
+      isActive: true,
+      value: filter?.value,
+      showEmpty: filter?.includeEmpty ?? false,
+    }),
+    defaultState,
+  );
