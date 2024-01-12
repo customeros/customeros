@@ -37,11 +37,11 @@ interface TimelineActionEmailContextContextMethods {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   remirrorProps: any;
   isSending: boolean;
-  onCreateEmail: () => void;
   showConfirmationDialog: boolean;
   checkCanExitSafely: () => boolean;
   closeConfirmationDialog: () => void;
   handleExitEditorAndCleanData: () => void;
+  onCreateEmail: (handleSuccess?: () => void) => void;
 }
 
 const TimelineActionEmailContextContext =
@@ -122,7 +122,7 @@ export const TimelineActionEmailContextContextProvider = ({
   const handleEmailSendError = () => {
     setIsSending(false);
   };
-  const onCreateEmail = () => {
+  const onCreateEmail = (handleSuccess?: () => void) => {
     const to = [...state.values.to].map(({ value }) => value);
     const cc = [...state.values.cc].map(({ value }) => value);
     const bcc = [...state.values.bcc].map(({ value }) => value);
@@ -130,6 +130,10 @@ export const TimelineActionEmailContextContextProvider = ({
 
     setIsSending(true);
     const id = params.get('events');
+    const handleSendSuccess = async (response: unknown) => {
+      await handleEmailSendSuccess(response);
+      handleSuccess?.();
+    };
 
     return handleSendEmail(
       state.values.content,
@@ -138,7 +142,7 @@ export const TimelineActionEmailContextContextProvider = ({
       bcc,
       id,
       state.values.subject,
-      handleEmailSendSuccess,
+      handleSendSuccess,
       handleEmailSendError,
       session?.user,
     );
