@@ -1,4 +1,4 @@
-package config
+package fsc
 
 import (
 	"bytes"

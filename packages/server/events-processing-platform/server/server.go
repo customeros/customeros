@@ -145,7 +145,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 	}
 	defer df.Close(gRPCconn)
 	grpcClients := grpc_client.InitGrpcClients(gRPCconn)
-	InitSubscribers(server, ctx, grpcClients, esdb, cancel)
+	InitSubscribers(server, ctx, grpcClients, esdb, cancel, server.Services)
 
 	server.Log.Infof("%Server Server exited properly", GetMicroserviceName(server.Config))
 	return nil
@@ -165,7 +165,7 @@ func InitPostgresDB(cfg *config.Config, log logger.Logger) (db *commonconf.Stora
 	return
 }
 
-func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_client.Clients, esdb *esdb.Client, cancel context.CancelFunc) {
+func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_client.Clients, esdb *esdb.Client, cancel context.CancelFunc, services *service.Services) {
 	if server.Config.Subscriptions.GraphSubscription.Enabled {
 		graphSubscriber := graph_subscription.NewGraphSubscriber(server.Log, esdb, server.Repositories, grpcClients, server.Config)
 		go func() {
@@ -255,7 +255,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.InvoiceSubscription.Enabled {
-		invoiceSubscriber := invoice.NewInvoiceSubscriber(server.Log, esdb, server.Repositories, grpcClients, server.Config)
+		invoiceSubscriber := invoice.NewInvoiceSubscriber(server.Log, esdb, server.Config, server.Repositories, grpcClients, services.FileStoreApiService)
 		go func() {
 			err := invoiceSubscriber.Connect(ctx, invoiceSubscriber.ProcessEvents)
 			if err != nil {

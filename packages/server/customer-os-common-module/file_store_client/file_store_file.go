@@ -1,4 +1,4 @@
-package config
+package fsc
 
 type FileDTO struct {
 	Id          string `json:"id"`
