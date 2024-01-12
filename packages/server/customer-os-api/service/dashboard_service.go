@@ -13,11 +13,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"math"
-	"strings"
 	"time"
 )
 
@@ -48,8 +46,6 @@ type DashboardService interface {
 	GetDashboardNewCustomersData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardNewCustomersData, error)
 	GetDashboardAverageTimeToOnboardPerMonth(ctx context.Context, start, end time.Time) (*model.DashboardTimeToOnboard, error)
 	GetDashboardOnboardingCompletionPerMonth(ctx context.Context, start, end time.Time) (*model.DashboardOnboardingCompletion, error)
-
-	mapDbNodeToRenewalRecordEntity(node dbtype.Node) *entity.RenewalsRecordEntity
 }
 
 type dashboardService struct {
@@ -839,119 +835,4 @@ func calculatePercentageChange(a, b float64) float64 {
 		return math.Round((b-a)/b*1000) / 10 // Keep only one decimal place
 	}
 	return math.Round((b-a)/a*1000) / 10 // Keep only one decimal place
-}
-
-func (s *dashboardService) mapDbNodeToRenewalRecordEntity(dbNode dbtype.Node) *entity.RenewalsRecordEntity {
-	props := utils.GetPropsFromNode(dbNode)
-	organization := entity.OrganizationEntity{}
-	contract := entity.ContractEntity{}
-	opportunity := entity.OpportunityEntity{}
-	for _, label := range dbNode.Labels {
-		if containsLabel(label, "organization") {
-			organization = entity.OrganizationEntity{
-				ID:                 utils.GetStringPropOrEmpty(props, "id"),
-				CustomerOsId:       utils.GetStringPropOrEmpty(props, "customerOsId"),
-				ReferenceId:        utils.GetStringPropOrEmpty(props, "referenceId"),
-				Name:               utils.GetStringPropOrEmpty(props, "name"),
-				Description:        utils.GetStringPropOrEmpty(props, "description"),
-				Website:            utils.GetStringPropOrEmpty(props, "website"),
-				Industry:           utils.GetStringPropOrEmpty(props, "industry"),
-				IndustryGroup:      utils.GetStringPropOrEmpty(props, "industryGroup"),
-				SubIndustry:        utils.GetStringPropOrEmpty(props, "subIndustry"),
-				TargetAudience:     utils.GetStringPropOrEmpty(props, "targetAudience"),
-				ValueProposition:   utils.GetStringPropOrEmpty(props, "valueProposition"),
-				LastFundingRound:   utils.GetStringPropOrEmpty(props, "lastFundingRound"),
-				LastFundingAmount:  utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
-				Note:               utils.GetStringPropOrEmpty(props, "note"),
-				IsPublic:           utils.GetBoolPropOrFalse(props, "isPublic"),
-				IsCustomer:         utils.GetBoolPropOrFalse(props, "isCustomer"),
-				Hide:               utils.GetBoolPropOrFalse(props, "hide"),
-				Employees:          utils.GetInt64PropOrZero(props, "employees"),
-				Market:             utils.GetStringPropOrEmpty(props, "market"),
-				Headquarters:       utils.GetStringPropOrEmpty(props, "headquarters"),
-				YearFounded:        utils.GetInt64PropOrNil(props, "yearFounded"),
-				LogoUrl:            utils.GetStringPropOrEmpty(props, "logoUrl"),
-				EmployeeGrowthRate: utils.GetStringPropOrEmpty(props, "employeeGrowthRate"),
-				CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
-				UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
-				Source:             neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-				SourceOfTruth:      neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-				AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
-				LastTouchpointId:   utils.GetStringPropOrNil(props, "lastTouchpointId"),
-				LastTouchpointAt:   utils.GetTimePropOrNil(props, "lastTouchpointAt"),
-				LastTouchpointType: utils.GetStringPropOrNil(props, "lastTouchpointType"),
-				RenewalSummary: entity.RenewalSummary{
-					ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
-					MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
-					NextRenewalAt:          utils.GetTimePropOrNil(props, "derivedNextRenewalAt"),
-					RenewalLikelihood:      utils.GetStringPropOrEmpty(props, "derivedRenewalLikelihood"),
-					RenewalLikelihoodOrder: utils.GetInt64PropOrNil(props, "derivedRenewalLikelihoodOrder"),
-				},
-				OnboardingDetails: entity.OnboardingDetails{
-					Status:       entity.GetOnboardingStatus(utils.GetStringPropOrEmpty(props, "onboardingStatus")),
-					SortingOrder: utils.GetInt64PropOrNil(props, "onboardingStatusOrder"),
-					UpdatedAt:    utils.GetTimePropOrNil(props, "onboardingUpdatedAt"),
-					Comments:     utils.GetStringPropOrEmpty(props, "onboardingComments"),
-				},
-			}
-		}
-		if containsLabel(label, "contract") {
-			contractStatus := entity.GetContractStatus(utils.GetStringPropOrEmpty(props, "status"))
-			contractRenewalCycle := entity.GetRenewalCycle(utils.GetStringPropOrEmpty(props, "renewalCycle"))
-			contract = entity.ContractEntity{
-				Id:               utils.GetStringPropOrEmpty(props, "id"),
-				Name:             utils.GetStringPropOrEmpty(props, "name"),
-				CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
-				UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
-				ServiceStartedAt: utils.GetTimePropOrNil(props, "serviceStartedAt"),
-				SignedAt:         utils.GetTimePropOrNil(props, "signedAt"),
-				EndedAt:          utils.GetTimePropOrNil(props, "endedAt"),
-				ContractUrl:      utils.GetStringPropOrEmpty(props, "contractUrl"),
-				ContractStatus:   contractStatus,
-				RenewalCycle:     contractRenewalCycle,
-				RenewalPeriods:   utils.GetInt64PropOrNil(props, "renewalPeriods"),
-				Source:           neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-				SourceOfTruth:    neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-				AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
-			}
-		}
-
-		if containsLabel(label, "opportunity") {
-			opportunity = entity.OpportunityEntity{
-				Id:                     utils.GetStringPropOrEmpty(props, "id"),
-				Name:                   utils.GetStringPropOrEmpty(props, "name"),
-				CreatedAt:              utils.GetTimePropOrEpochStart(props, "createdAt"),
-				UpdatedAt:              utils.GetTimePropOrEpochStart(props, "updatedAt"),
-				InternalStage:          entity.GetInternalStage(utils.GetStringPropOrEmpty(props, "internalStage")),
-				ExternalStage:          utils.GetStringPropOrEmpty(props, "externalStage"),
-				InternalType:           entity.GetInternalType(utils.GetStringPropOrEmpty(props, "internalType")),
-				ExternalType:           utils.GetStringPropOrEmpty(props, "externalType"),
-				Amount:                 utils.GetFloatPropOrZero(props, "amount"),
-				MaxAmount:              utils.GetFloatPropOrZero(props, "maxAmount"),
-				EstimatedClosedAt:      utils.GetTimePropOrNil(props, "estimatedClosedAt"),
-				NextSteps:              utils.GetStringPropOrEmpty(props, "nextSteps"),
-				GeneralNotes:           utils.GetStringPropOrEmpty(props, "generalNotes"),
-				RenewedAt:              utils.GetTimePropOrEpochStart(props, "renewedAt"),
-				RenewalLikelihood:      entity.GetOpportunityRenewalLikelihood(utils.GetStringPropOrEmpty(props, "renewalLikelihood")),
-				RenewalUpdatedByUserAt: utils.GetTimePropOrEpochStart(props, "renewalUpdatedByUserAt"),
-				RenewalUpdatedByUserId: utils.GetStringPropOrEmpty(props, "renewalUpdatedByUserId"),
-				Comments:               utils.GetStringPropOrEmpty(props, "comments"),
-				Source:                 neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-				SourceOfTruth:          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-				AppSource:              utils.GetStringPropOrEmpty(props, "appSource"),
-			}
-
-		}
-	}
-
-	renewalRecord := entity.RenewalsRecordEntity{
-		Organization: organization,
-		Contract:     contract,
-		Opportunity:  opportunity,
-	}
-	return &renewalRecord
-}
-
-func containsLabel(label string, target string) bool {
-	return strings.ToLower(label) == strings.ToLower(target)
 }
