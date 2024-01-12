@@ -7,16 +7,20 @@ import (
 )
 
 type MockOrganizationServiceCallbacks struct {
-	CreateOrganization            func(context.Context, *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	AddParent                     func(context.Context, *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	RemoveParent                  func(context.Context, *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	LinkEmailToOrganization       func(context context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	LinkPhoneNumberToOrganization func(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	RefreshLastTouchpoint         func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	UpdateOnboardingStatus        func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	UpdateOrganizationOwner       func(ctx context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	CreateBillingProfile          func(ctx context.Context, proto *organizationpb.CreateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
-	UpdateBillingProfile          func(ctx context.Context, proto *organizationpb.UpdateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
+	CreateOrganization               func(context.Context, *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	AddParent                        func(context.Context, *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	RemoveParent                     func(context.Context, *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	LinkEmailToOrganization          func(context context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	LinkPhoneNumberToOrganization    func(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	RefreshLastTouchpoint            func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	UpdateOnboardingStatus           func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	UpdateOrganizationOwner          func(ctx context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	CreateBillingProfile             func(ctx context.Context, proto *organizationpb.CreateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
+	UpdateBillingProfile             func(ctx context.Context, proto *organizationpb.UpdateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
+	LinkEmailToBillingProfile        func(ctx context.Context, proto *organizationpb.LinkEmailToBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
+	UnlinkEmailFromBillingProfile    func(ctx context.Context, proto *organizationpb.UnlinkEmailFromBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
+	LinkLocationToBillingProfile     func(ctx context.Context, proto *organizationpb.LinkLocationToBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
+	UnlinkLocationFromBillingProfile func(ctx context.Context, proto *organizationpb.UnlinkLocationFromBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
 }
 
 var organizationCallbacks = &MockOrganizationServiceCallbacks{}
@@ -97,4 +101,32 @@ func (MockOrganizationService) UpdateBillingProfile(context context.Context, pro
 		panic("organizationCallbacks.UpdateBillingProfile is not set")
 	}
 	return organizationCallbacks.UpdateBillingProfile(context, proto)
+}
+
+func (MockOrganizationService) LinkEmailToBillingProfile(context context.Context, proto *organizationpb.LinkEmailToBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	if organizationCallbacks.LinkEmailToBillingProfile == nil {
+		panic("organizationCallbacks.LinkEmailToBillingProfile is not set")
+	}
+	return organizationCallbacks.LinkEmailToBillingProfile(context, proto)
+}
+
+func (MockOrganizationService) UnlinkEmailFromBillingProfile(context context.Context, proto *organizationpb.UnlinkEmailFromBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	if organizationCallbacks.UnlinkEmailFromBillingProfile == nil {
+		panic("organizationCallbacks.UnlinkEmailFromBillingProfile is not set")
+	}
+	return organizationCallbacks.UnlinkEmailFromBillingProfile(context, proto)
+}
+
+func (MockOrganizationService) LinkLocationToBillingProfile(context context.Context, proto *organizationpb.LinkLocationToBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	if organizationCallbacks.LinkLocationToBillingProfile == nil {
+		panic("organizationCallbacks.LinkLocationToBillingProfile is not set")
+	}
+	return organizationCallbacks.LinkLocationToBillingProfile(context, proto)
+}
+
+func (MockOrganizationService) UnlinkLocationFromBillingProfile(context context.Context, proto *organizationpb.UnlinkLocationFromBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {
+	if organizationCallbacks.UnlinkLocationFromBillingProfile == nil {
+		panic("organizationCallbacks.UnlinkLocationFromBillingProfile is not set")
+	}
+	return organizationCallbacks.UnlinkLocationFromBillingProfile(context, proto)
 }

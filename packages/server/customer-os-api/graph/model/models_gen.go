@@ -171,6 +171,19 @@ type BillingProfileInput struct {
 	CreatedAt      *time.Time `json:"createdAt,omitempty"`
 }
 
+type BillingProfileLinkEmailInput struct {
+	OrganizationID   string `json:"organizationId"`
+	BillingProfileID string `json:"billingProfileId"`
+	EmailID          string `json:"emailId"`
+	Primary          *bool  `json:"primary,omitempty"`
+}
+
+type BillingProfileLinkLocationInput struct {
+	OrganizationID   string `json:"organizationId"`
+	BillingProfileID string `json:"billingProfileId"`
+	LocationID       string `json:"locationId"`
+}
+
 type BillingProfileUpdateInput struct {
 	OrganizationID   string     `json:"organizationId"`
 	BillingProfileID string     `json:"billingProfileId"`

@@ -22,6 +22,10 @@ import (
 type BillingProfileService interface {
 	CreateBillingProfile(ctx context.Context, organizationId, legalName, taxId string, createdAt *time.Time) (string, error)
 	UpdateBillingProfile(ctx context.Context, organizationId, billingProfileId string, legalName, taxId *string, updatedAt *time.Time) error
+	LinkEmailToBillingProfile(ctx context.Context, organizationId, billingProfileId, emailId string, primary bool) error
+	UnlinkEmailFromBillingProfile(ctx context.Context, organizationId, billingProfileId, emailId string) error
+	LinkLocationToBillingProfile(ctx context.Context, organizationId, billingProfileId, locationId string) error
+	UnlinkLocationFromBillingProfile(ctx context.Context, organizationId, billingProfileId, locationId string) error
 }
 type billingProfileService struct {
 	log          logger.Logger
@@ -106,6 +110,7 @@ func (s *billingProfileService) UpdateBillingProfile(ctx context.Context, organi
 		TaxId:            utils.IfNotNilString(taxId),
 		LoggedInUserId:   common.GetUserIdFromContext(ctx),
 		UpdatedAt:        utils.ConvertTimeToTimestampPtr(updatedAt),
+		AppSource:        constants.AppSourceCustomerOsApi,
 	}
 	fieldsMask := make([]organizationpb.BillingProfileFieldMask, 0)
 	if legalName != nil {
@@ -118,6 +123,203 @@ func (s *billingProfileService) UpdateBillingProfile(ctx context.Context, organi
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = s.grpcClients.OrganizationClient.UpdateBillingProfile(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *billingProfileService) LinkEmailToBillingProfile(ctx context.Context, organizationId, billingProfileId, emailId string, primary bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileService.LinkEmailToBillingProfile")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
+	span.LogFields(log.String("organizationId", organizationId), log.String("emailId", emailId), log.Bool("primary", primary))
+
+	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, neo4jentity.NodeLabelBillingProfile, organizationId, neo4jentity.NodeLabelOrganization, "HAS_BILLING_PROFILE")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !billingProfileExists {
+		err = errors.New(fmt.Sprintf("Billing profile with id {%s} not found", billingProfileId))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	emailExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), emailId, neo4jentity.NodeLabelEmail)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !emailExists {
+		err = errors.New(fmt.Sprintf("Email with id {%s} not found", emailId))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	grpcRequest := organizationpb.LinkEmailToBillingProfileGrpcRequest{
+		Tenant:           common.GetTenantFromContext(ctx),
+		OrganizationId:   organizationId,
+		BillingProfileId: billingProfileId,
+		EmailId:          emailId,
+		Primary:          primary,
+		LoggedInUserId:   common.GetUserIdFromContext(ctx),
+		AppSource:        constants.AppSourceCustomerOsApi,
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = s.grpcClients.OrganizationClient.LinkEmailToBillingProfile(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *billingProfileService) UnlinkEmailFromBillingProfile(ctx context.Context, organizationId, billingProfileId, emailId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileService.UnlinkEmailFromBillingProfile")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
+	span.LogFields(log.String("organizationId", organizationId), log.String("emailId", emailId))
+
+	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, neo4jentity.NodeLabelBillingProfile, organizationId, neo4jentity.NodeLabelOrganization, "HAS_BILLING_PROFILE")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !billingProfileExists {
+		err = errors.New(fmt.Sprintf("Billing profile with id {%s} not found", billingProfileId))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	emailExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), emailId, neo4jentity.NodeLabelEmail)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !emailExists {
+		err = errors.New(fmt.Sprintf("Email with id {%s} not found", emailId))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	grpcRequest := organizationpb.UnlinkEmailFromBillingProfileGrpcRequest{
+		Tenant:           common.GetTenantFromContext(ctx),
+		OrganizationId:   organizationId,
+		BillingProfileId: billingProfileId,
+		EmailId:          emailId,
+		LoggedInUserId:   common.GetUserIdFromContext(ctx),
+		AppSource:        constants.AppSourceCustomerOsApi,
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = s.grpcClients.OrganizationClient.UnlinkEmailFromBillingProfile(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *billingProfileService) LinkLocationToBillingProfile(ctx context.Context, organizationId, billingProfileId, locationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileService.LinkLocationToBillingProfile")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
+	span.LogFields(log.String("organizationId", organizationId), log.String("locationId", locationId))
+
+	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, neo4jentity.NodeLabelBillingProfile, organizationId, neo4jentity.NodeLabelOrganization, "HAS_BILLING_PROFILE")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !billingProfileExists {
+		err = errors.New(fmt.Sprintf("Billing profile with id {%s} not found", billingProfileId))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	locationExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), locationId, neo4jentity.NodeLabelLocation)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !locationExists {
+		err = errors.New(fmt.Sprintf("LocationlocationId with id {%s} not found", locationId))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	grpcRequest := organizationpb.LinkLocationToBillingProfileGrpcRequest{
+		Tenant:           common.GetTenantFromContext(ctx),
+		OrganizationId:   organizationId,
+		BillingProfileId: billingProfileId,
+		LocationId:       locationId,
+		LoggedInUserId:   common.GetUserIdFromContext(ctx),
+		AppSource:        constants.AppSourceCustomerOsApi,
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = s.grpcClients.OrganizationClient.LinkLocationToBillingProfile(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *billingProfileService) UnlinkLocationFromBillingProfile(ctx context.Context, organizationId, billingProfileId, locationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileService.UnlinkLocationFromBillingProfile")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
+	span.LogFields(log.String("organizationId", organizationId), log.String("locationId", locationId))
+
+	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, neo4jentity.NodeLabelBillingProfile, organizationId, neo4jentity.NodeLabelOrganization, "HAS_BILLING_PROFILE")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !billingProfileExists {
+		err = errors.New(fmt.Sprintf("Billing profile with id {%s} not found", billingProfileId))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	locationExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), locationId, neo4jentity.NodeLabelLocation)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !locationExists {
+		err = errors.New(fmt.Sprintf("Location with id {%s} not found", locationId))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	grpcRequest := organizationpb.UnlinkLocationFromBillingProfileGrpcRequest{
+		Tenant:           common.GetTenantFromContext(ctx),
+		OrganizationId:   organizationId,
+		BillingProfileId: billingProfileId,
+		LocationId:       locationId,
+		LoggedInUserId:   common.GetUserIdFromContext(ctx),
+		AppSource:        constants.AppSourceCustomerOsApi,
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = s.grpcClients.OrganizationClient.UnlinkLocationFromBillingProfile(ctx, &grpcRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
