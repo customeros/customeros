@@ -2,9 +2,11 @@ package aggregate
 
 import (
 	"context"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"strings"
+
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/event"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -13,6 +15,7 @@ import (
 	localerror "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
+	orgplancmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -221,6 +224,16 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 		return a.updateOnboardingStatus(ctx, c)
 	case *command.UpdateOrganizationOwnerCommand:
 		return a.UpdateOrganizationOwner(ctx, c)
+	case *orgplancmd.CreateOrgPlanCommand:
+		return a.createOrgPlan(ctx, c)
+	case *orgplancmd.UpdateOrgPlanCommand:
+		return a.updateOrgPlan(ctx, c)
+	case *orgplancmd.CreateOrgPlanMilestoneCommand:
+		return a.createOrgPlanMilestone(ctx, c)
+	case *orgplancmd.UpdateOrgPlanMilestoneCommand:
+		return a.updateOrgPlanMilestone(ctx, c)
+	case *orgplancmd.ReorderOrgPlanMilestonesCommand:
+		return a.reorderOrgPlanMilestones(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -813,4 +826,127 @@ func (a *OrganizationAggregate) UpdateOrganizationOwner(ctx context.Context, cmd
 	})
 
 	return a.Apply(event)
+}
+
+/////////// handle organization plans ///////////
+
+func (a *OrganizationAggregate) createOrgPlan(ctx context.Context, cmd *orgplancmd.CreateOrgPlanCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrgPlanAggregate.createOrgPlan")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
+
+	createEvent, err := event.NewOrgPlanCreateEvent(a, cmd.Name, cmd.SourceFields, createdAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrgPlanCreateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.GetAppSource(),
+	})
+
+	return a.Apply(createEvent)
+}
+
+func (a *OrganizationAggregate) updateOrgPlan(ctx context.Context, cmd *orgplancmd.UpdateOrgPlanCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrgPlanAggregate.updateOrgPlan")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
+
+	updateEvent, err := event.NewOrgPlanUpdateEvent(a, cmd.Name, cmd.Retired, updatedAtNotNil, cmd.FieldsMask)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrgPlanUpdateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.GetAppSource(),
+	})
+
+	return a.Apply(updateEvent)
+}
+
+func (a *OrganizationAggregate) createOrgPlanMilestone(ctx context.Context, cmd *orgplancmd.CreateOrgPlanMilestoneCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.createOrgPlanMilestone")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
+
+	createEvent, err := event.NewOrgPlanMilestoneCreateEvent(a, cmd.MilestoneId, cmd.Name, cmd.DurationHours, cmd.Order, cmd.Items, cmd.Optional, cmd.SourceFields, createdAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrgPlanMilestoneCreateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.GetAppSource(),
+	})
+
+	return a.Apply(createEvent)
+}
+
+func (a *OrganizationAggregate) updateOrgPlanMilestone(ctx context.Context, cmd *orgplancmd.UpdateOrgPlanMilestoneCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrgPlanAggregate.updateOrgPlanMilestone")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
+
+	updateEvent, err := event.NewOrgPlanMilestoneUpdateEvent(a, cmd.MilestoneId, cmd.Name, cmd.DurationHours, cmd.Order,
+		cmd.Items, cmd.FieldsMask, cmd.Optional, cmd.Retired, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrgPlanMilestoneUpdateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.GetAppSource(),
+	})
+
+	return a.Apply(updateEvent)
+}
+
+func (a *OrganizationAggregate) reorderOrgPlanMilestones(ctx context.Context, cmd *orgplancmd.ReorderOrgPlanMilestonesCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrgPlanAggregate.reorderOrgPlanMilestones")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
+
+	reorderEvent, err := event.NewOrgPlanMilestoneReorderEvent(a, cmd.MilestoneIds, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrgPlanMilestoneReorderEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&reorderEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.GetAppSource(),
+	})
+
+	return a.Apply(reorderEvent)
 }
