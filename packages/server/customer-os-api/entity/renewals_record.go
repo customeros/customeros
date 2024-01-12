@@ -5,3 +5,5 @@ type RenewalsRecordEntity struct {
 	Contract     ContractEntity
 	Opportunity  OpportunityEntity
 }
+
+type RenewalsRecordEntities []RenewalsRecordEntity

@@ -446,7 +446,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 }
 
 func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewRenewalData")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewOrganizationData")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.Int("skip", skip), log.Int("limit", limit))
@@ -456,10 +456,14 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	organizationFilterCypher, organizationFilterParams := "", make(map[string]interface{})
+	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
+	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
 	ownerId := []string{}
 	ownerIncludeEmpty := true
 
+	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
+	//region organization filters
 	if where != nil {
 		organizationFilter := new(utils.CypherFilter)
 		organizationFilter.Negate = false
@@ -477,7 +481,31 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		locationFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		for _, filter := range where.And {
-			if filter.Filter.Property == SearchSortParamOwnerId {
+			if filter.Filter.Property == SearchSortParamOrganization {
+				orFilter := utils.CypherFilter{}
+				orFilter.LogicalOperator = utils.OR
+				orFilter.Details = new(utils.CypherFilterItem)
+
+				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("customerOsId", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("referenceId", *filter.Filter.Value.Str, utils.CONTAINS))
+
+				organizationFilter.Filters = append(organizationFilter.Filters, &orFilter)
+			} else if filter.Filter.Property == SearchSortParamName {
+				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
+			} else if filter.Filter.Property == SearchSortParamWebsite {
+				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
+			} else if filter.Filter.Property == SearchSortParamEmail {
+				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
+				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
+			} else if filter.Filter.Property == SearchSortParamCountry {
+				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
+			} else if filter.Filter.Property == SearchSortParamRegion {
+				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
+			} else if filter.Filter.Property == SearchSortParamLocality {
+				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
+			} else if filter.Filter.Property == SearchSortParamOwnerId {
 				ownerId = *filter.Filter.Value.ArrayStr
 				ownerIncludeEmpty = *filter.Filter.IncludeEmpty
 			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
@@ -488,6 +516,12 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 					renewalLikelihoodValues = append(renewalLikelihoodValues, mapper.MapOpportunityRenewalLikelihoodFromString(&v))
 				}
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("derivedRenewalLikelihood", renewalLikelihoodValues, utils.IN, false))
+			} else if filter.Filter.Property == SearchSortParamOnboardingStatus && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
+				onboardingStatusValues := make([]string, 0)
+				for _, v := range *filter.Filter.Value.ArrayStr {
+					onboardingStatusValues = append(onboardingStatusValues, mapper.MapOnboardingStatusFromString(&v))
+				}
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("onboardingStatus", onboardingStatusValues, utils.IN, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalCycleNext && filter.Filter.Value.Time != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("billingDetailsRenewalCycleNext", *filter.Filter.Value.Time, utils.LTE, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalDate && filter.Filter.Value.Time != nil {
@@ -501,8 +535,15 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointType", *filter.Filter.Value.ArrayStr, utils.IN, false))
 			}
 		}
+
 		if len(organizationFilter.Filters) > 0 {
 			organizationFilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
+		}
+		if len(emailFilter.Filters) > 0 {
+			emailFilterCypher, emailFilterParams = emailFilter.BuildCypherFilterFragmentWithParamName("e", "e_param_")
+		}
+		if len(locationFilter.Filters) > 0 {
+			locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
 		}
 	}
 
@@ -519,14 +560,23 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		}
 
 		utils.MergeMapToMap(organizationFilterParams, params)
+		utils.MergeMapToMap(emailFilterParams, params)
+		utils.MergeMapToMap(locationFilterParams, params)
 
+		//region count query
 		countQuery := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 		if len(ownerId) > 0 {
 			countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`
 		}
+		if emailFilterCypher != "" {
+			countQuery += ` MATCH (o)-[:HAS]->(e:Email) WITH *`
+		}
+		if locationFilterCypher != "" {
+			countQuery += ` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
+		}
 		countQuery += ` WHERE o.hide = false `
 
-		if organizationFilterCypher != "" || len(ownerId) > 0 {
+		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
 			countQuery += " AND "
 		}
 
@@ -540,6 +590,12 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			} else {
 				countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IN $ownerId `))
 			}
+		}
+		if emailFilterCypher != "" {
+			countQueryParts = append(countQueryParts, emailFilterCypher)
+		}
+		if locationFilterCypher != "" {
+			countQueryParts = append(countQueryParts, locationFilterCypher)
 		}
 
 		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(o))`)
@@ -556,17 +612,22 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			return nil, err
 		}
 		dbNodesWithTotalCount.Count = countRecord.Values[0].(int64)
+		//endregion
 
-		query := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		//region query to fetch data
+		query := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+					 MATCH (o)-[:HAS_CONTRACT]->(contract:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t)
+					 MATCH (contract)-[:HAS_OPPORTUNITY]->(op:Opportunity)
+					 `
 		if len(ownerId) > 0 {
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
 		}
 		if sort != nil && sort.By == SearchSortParamOwner {
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
 		}
-		query += ` WHERE (o.hide = false) `
+		//query += ` WHERE (o.hide = false) `
 
-		if organizationFilterCypher != "" || len(ownerId) > 0 {
+		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
 			query += " AND "
 		}
 
@@ -581,13 +642,19 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				queryParts = append(queryParts, fmt.Sprintf(` owner.id IN $ownerId `))
 			}
 		}
+		if emailFilterCypher != "" {
+			queryParts = append(queryParts, emailFilterCypher)
+		}
+		if locationFilterCypher != "" {
+			queryParts = append(queryParts, locationFilterCypher)
+		}
 
 		//endregion
 		query = query + strings.Join(queryParts, " AND ")
 
 		// sort region
-		aliases := " o, d, l"
-		query += " WITH o, d, l "
+		aliases := " o, contract, op"
+		query += " WITH o, contract, op "
 		if sort != nil && sort.By == SearchSortParamOwner {
 			if sort.Direction == model.SortingDirectionAsc {
 				query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_FIRST_NAME_FOR_SORTING "
@@ -630,6 +697,16 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			}
 			aliases += ", RENEWAL_DATE_FOR_SORTING "
 		}
+		if sort != nil && sort.By == SearchSortParamOnboardingStatus {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE 9999 END as ONBOARDING_STATUS_FOR_SORTING "
+				query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE -1 END as ONBOARDING_STATUS_FOR_SORTING "
+				query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
+			}
+			aliases += ", ONBOARDING_STATUS_FOR_SORTING, ONBOARDING_UPDATED_AT_FOR_SORTING "
+		}
 		if sort != nil && sort.By == SearchSortParamForecastArr {
 			if sort.Direction == model.SortingDirectionAsc {
 				query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
@@ -637,6 +714,10 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 0 END as FORECAST_ARR_FOR_SORTING "
 			}
 			aliases += ", FORECAST_ARR_FOR_SORTING "
+		}
+		if sort != nil && sort.By == SearchSortParamOrganization {
+			query += " OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(parent:Organization) WITH "
+			query += aliases + ", parent "
 		}
 
 		cypherSort := utils.CypherSort{}
@@ -653,6 +734,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				query += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == SearchSortParamRenewalLikelihood {
 				query += " ORDER BY RENEWAL_LIKELIHOOD_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == SearchSortParamOnboardingStatus {
+				query += " ORDER BY ONBOARDING_STATUS_FOR_SORTING " + string(sort.Direction) +
+					", ONBOARDING_UPDATED_AT_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == SearchSortParamRenewalCycleNext {
 				query += " ORDER BY RENEWAL_CYCLE_NEXT_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == SearchSortParamRenewalDate {
@@ -674,7 +758,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			query += string(cypherSort.SortingCypherFragment("o"))
 		}
 		// end sort region
-		query += fmt.Sprintf(` RETURN distinct(o) `)
+		query += fmt.Sprintf(` RETURN distinct(o), contract, op `)
 		query += fmt.Sprintf(` SKIP $skip LIMIT $limit`)
 
 		span.LogFields(log.Object("query", query))
@@ -691,8 +775,15 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		return nil, err
 	}
 
-	for _, v := range dbRecords.([]*neo4j.Record) {
-		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	for _, record := range dbRecords.([]*neo4j.Record) {
+		// Assuming record.Values is a slice of neo4j.Node
+		for _, value := range record.Values {
+			if node, ok := value.(neo4j.Node); ok {
+				dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(node))
+			} else {
+				// Handle the case where the value is not a neo4j.Node
+			}
+		}
 	}
 	return dbNodesWithTotalCount, nil
 }
