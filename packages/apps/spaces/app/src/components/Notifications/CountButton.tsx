@@ -75,7 +75,6 @@ export const CountButton: React.FC<CountBalloonProps> = ({ unseenCount }) => {
                       left: '-26px',
                     }}
                   />
-                  <audio autoPlay src='/soundEffects/99_audio.mp4' />
                 </>
               ) : (
                 <>
