@@ -94,6 +94,10 @@ export const tagsSelectStyles = (
     bg: isSelected ? 'primary.50' : 'white',
     boxShadow: isFocused ? 'menuOptionsFocus' : 'none',
     _hover: { bg: isSelected ? 'primary.50' : 'gray.100' },
+    _selected: {
+      bg: 'primary.50',
+      color: 'primary.600',
+    },
   }),
   groupHeading: (props: CSSWithMultiValues) => ({
     ...props,
