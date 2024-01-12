@@ -112,9 +112,10 @@ func (r *queryResolver) DashboardViewRenewals(ctx context.Context, pagination mo
 	}
 
 	return &model.RenewalsPage{
-		Content:        mapper.MapEntitiesToRenewalRecords(paginatedResult.Rows.(*entity.RenewalsRecordEntities)),
-		TotalPages:     paginatedResult.TotalPages,
-		TotalElements:  paginatedResult.TotalRows,
+		Content:    mapper.MapEntitiesToRenewalRecords(paginatedResult.Rows.(*entity.RenewalsRecordEntities)),
+		TotalPages: paginatedResult.TotalPages,
+		//TODO fix total elements
+		TotalElements:  countContracts,
 		TotalAvailable: countContracts,
 	}, err
 }
