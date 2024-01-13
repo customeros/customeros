@@ -67,6 +67,7 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	tenant := eventData.Tenant
 	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, tenant)
 	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
+	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	phoneNumberNodeAvailable := subscriptions.WaitCheckNodeExistsInNeo4j(ctx, h.repositories.Neo4jRepositories, eventData.Tenant, phoneNumberId, neo4jutil.NodeLabelPhoneNumber)
 	if !phoneNumberNodeAvailable {
