@@ -38,7 +38,11 @@ func (h *invoiceNewHandler) Handle(ctx context.Context, baseRequest eventstore.B
 		return err
 	}
 
-	createEvent, err := NewInvoiceNewEvent(invoiceAggregate, request.OrganizationId, utils.TimestampProtoToTimePtr(request.CreatedAt), baseRequest.SourceFields)
+	date := utils.TimestampProtoToTime(request.Date).UTC()
+	dueDate := utils.TimestampProtoToTime(request.Date).UTC()
+	createdAt := utils.TimestampProtoToTime(request.CreatedAt).UTC()
+
+	createEvent, err := NewInvoiceNewEvent(invoiceAggregate, request.OrganizationId, request.DryRun, date, dueDate, createdAt, baseRequest.SourceFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceNewEvent")

@@ -22,14 +22,22 @@ type InvoiceNewEvent struct {
 	OrganizationId string             `json:"organizationId" validate:"required"`
 	CreatedAt      time.Time          `json:"createdAt"`
 	SourceFields   commonmodel.Source `json:"sourceFields"`
+
+	DryRun  bool      `json:"dryRun"`
+	Date    time.Time `json:"date" validate:"required"`
+	DueDate time.Time `json:"dueDate" validate:"required"`
 }
 
-func NewInvoiceNewEvent(aggregate eventstore.Aggregate, organizationId string, createdAt *time.Time, sourceFields commonmodel.Source) (eventstore.Event, error) {
+func NewInvoiceNewEvent(aggregate eventstore.Aggregate, organizationId string, dryRun bool, date, dueDate, createdAt time.Time, sourceFields commonmodel.Source) (eventstore.Event, error) {
 	eventData := InvoiceNewEvent{
 		Tenant:         aggregate.GetTenant(),
 		OrganizationId: organizationId,
-		CreatedAt:      *createdAt,
+		CreatedAt:      createdAt,
 		SourceFields:   sourceFields,
+
+		DryRun:  dryRun,
+		Date:    date,
+		DueDate: dueDate,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

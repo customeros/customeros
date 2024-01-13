@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"strings"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
@@ -56,6 +57,7 @@ type GraphSubscriber struct {
 	serviceLineItemEventHandler    *ServiceLineItemEventHandler
 	masterPlanEventHandler         *MasterPlanEventHandler
 	invoicingCycleEventHandler     *InvoicingCycleEventHandler
+	invoiceEventHandler            *InvoiceEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphSubscriber {
@@ -80,6 +82,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		serviceLineItemEventHandler:    NewServiceLineItemEventHandler(log, repositories, grpcClients),
 		masterPlanEventHandler:         NewMasterPlanEventHandler(log, repositories),
 		invoicingCycleEventHandler:     NewInvoicingCycleEventHandler(log, repositories),
+		invoiceEventHandler:            NewInvoiceEventHandler(log, repositories),
 	}
 }
 
@@ -369,6 +372,13 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.invoicingCycleEventHandler.OnCreate(ctx, evt)
 	case invoicingcycleevent.InvoicingCycleUpdateV1:
 		return s.invoicingCycleEventHandler.OnUpdate(ctx, evt)
+
+	case invoiceevents.InvoiceNewV1:
+		return s.invoiceEventHandler.OnInvoiceNew(ctx, evt)
+	case invoiceevents.InvoiceFillV1:
+		return s.invoiceEventHandler.OnInvoiceFill(ctx, evt)
+	case invoiceevents.InvoicePdfGeneratedV1:
+		return s.invoiceEventHandler.OnInvoicePdfGenerated(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)

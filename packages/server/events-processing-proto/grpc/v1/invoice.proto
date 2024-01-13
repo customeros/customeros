@@ -9,8 +9,10 @@ message NewInvoiceRequest {
   string tenant = 1;
   string loggedInUserId = 2;
   string organizationId = 3;
-  google.protobuf.Timestamp createdAt = 4;
-  SourceFields sourceFields = 5;
+  google.protobuf.Timestamp date = 4;
+  bool dryRun = 5;
+  google.protobuf.Timestamp createdAt = 6;
+  SourceFields sourceFields = 7;
 }
 
 message FillInvoiceRequest {

@@ -13,6 +13,7 @@ type Invoice struct {
 	UpdatedAt      time.Time          `json:"updatedAt"`
 	SourceFields   commonmodel.Source `json:"source"`
 
+	DryRun           bool          `json:"dryRun"`
 	Date             time.Time     `json:"date"`
 	DueDate          time.Time     `json:"dueDate"`
 	Amount           float64       `json:"amount"`

@@ -7,6 +7,52 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 )
 
+func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	masterPlanEntity := entity.InvoiceEntity{
+		Id:               utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		DryRun:           utils.GetBoolPropOrFalse(props, "dryRun"),
+		Date:             utils.GetTimePropOrEpochStart(props, "date"),
+		DueDate:          utils.GetTimePropOrEpochStart(props, "dueDate"),
+		Amount:           utils.GetFloatPropOrZero(props, "amount"),
+		Vat:              utils.GetFloatPropOrZero(props, "vat"),
+		Total:            utils.GetFloatPropOrZero(props, "total"),
+		RepositoryFileId: utils.GetStringPropOrEmpty(props, "repositoryFileId"),
+		PdfGenerated:     utils.GetBoolPropOrFalse(props, "pdfGenerated"),
+		Source:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &masterPlanEntity
+}
+func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	masterPlanEntity := entity.InvoiceLineEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Index:         utils.GetInt64PropOrZero(props, "index"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		Price:         utils.GetFloatPropOrZero(props, "price"),
+		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
+		Amount:        utils.GetFloatPropOrZero(props, "amount"),
+		Vat:           utils.GetFloatPropOrZero(props, "vat"),
+		Total:         utils.GetFloatPropOrZero(props, "total"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &masterPlanEntity
+}
+
 func MapDbNodeToInvoicingCycleEntity(dbNode *dbtype.Node) *entity.InvoicingCycleEntity {
 	if dbNode == nil {
 		return nil
