@@ -8,7 +8,6 @@ const (
 
 	ComponentService         = "service"
 	ComponentNeo4jRepository = "neo4jRepository"
-	ComponentRepository      = "repository"
 
 	RequestMaxBodySizeCommon                      = 1 * 1024 * 1024   // 1 MB
 	RequestMaxBodySizeMessages                    = 10 * 1024 * 1024  // 10 MB
