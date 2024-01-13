@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -518,8 +519,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelOpportunity: 1,
-		neo4jentity.NodeLabelContract:    1})
+		neo4jutil.NodeLabelOpportunity: 1,
+		neo4jutil.NodeLabelContract:    1})
 
 	// prepare grpc client
 	calledEventsPlatformToUpdateOpportunity := false
