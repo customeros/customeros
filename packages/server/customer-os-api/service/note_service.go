@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
@@ -256,11 +257,11 @@ func (s *noteService) GetNotedEntities(ctx context.Context, ids []string) (*enti
 
 	notedEntities := entity.NotedEntities{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, neo4jentity.NodeLabelOrganization) {
+		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelOrganization) {
 			notedEntity := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
 			notedEntity.DataloaderKey = v.LinkedNodeId
 			notedEntities = append(notedEntities, notedEntity)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabelContact) {
+		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelContact) {
 			notedEntity := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
 			notedEntity.DataloaderKey = v.LinkedNodeId
 			notedEntities = append(notedEntities, notedEntity)

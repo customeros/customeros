@@ -28,7 +28,7 @@ func (*IssueEntity) IsTimelineEvent() {
 }
 
 func (*IssueEntity) TimelineEventLabel() string {
-	return neo4jentity.NodeLabelIssue
+	return neo4jutil.NodeLabelIssue
 }
 
 func (issue *IssueEntity) SetDataloaderKey(key string) {

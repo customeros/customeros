@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
@@ -447,19 +448,19 @@ func (s *meetingService) FindAll(ctx context.Context, externalSystemID string, e
 func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.DbNodeWithRelationAndId) entity.MeetingParticipants {
 	meetingParticipants := entity.MeetingParticipants{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, neo4jentity.NodeLabelUser) {
+		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelUser) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabelContact) {
+		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelContact) {
 			participant := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabelOrganization) {
+		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelOrganization) {
 			participant := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jentity.NodeLabelEmail) {
+		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelEmail) {
 			participant := s.services.EmailService.mapDbNodeToEmailEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)

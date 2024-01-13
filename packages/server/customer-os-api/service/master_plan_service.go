@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	masterplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
 	"github.com/opentracing/opentracing-go"
@@ -70,7 +71,7 @@ func (s *masterPlanService) CreateMasterPlan(ctx context.Context, name string) (
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelMasterPlan, span)
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
 
 	return response.Id, nil
 }
@@ -87,7 +88,7 @@ func (s *masterPlanService) UpdateMasterPlan(ctx context.Context, masterPlanId s
 		return nil
 	}
 
-	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jentity.NodeLabelMasterPlan)
+	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jutil.NodeLabelMasterPlan)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -146,7 +147,7 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, maste
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("masterPlanId", masterPlanId), log.String("name", name), log.Int64("order", order), log.Int64("durationHours", durationHours), log.Bool("optional", optional), log.Object("items", items))
 
-	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jentity.NodeLabelMasterPlan)
+	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jutil.NodeLabelMasterPlan)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
@@ -180,7 +181,7 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, maste
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelMasterPlanMilestone, span)
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlanMilestone, span)
 
 	span.LogFields(log.String("response - created masterPlanMilestoneId", response.Id))
 	return response.Id, nil
@@ -251,7 +252,7 @@ func (s *masterPlanService) UpdateMasterPlanMilestone(ctx context.Context, maste
 		return nil
 	}
 
-	masterPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanMilestoneId, neo4jentity.NodeLabelMasterPlanMilestone)
+	masterPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanMilestoneId, neo4jutil.NodeLabelMasterPlanMilestone)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -312,7 +313,7 @@ func (s *masterPlanService) ReorderMasterPlanMilestones(ctx context.Context, mas
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("masterPlanId", masterPlanId), log.Object("masterPlanMilestoneIds", masterPlanMilestoneIds))
 
-	masterPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jentity.NodeLabelMasterPlan)
+	masterPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jutil.NodeLabelMasterPlan)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -386,7 +387,7 @@ func (s *masterPlanService) DuplicateMasterPlanMilestone(ctx context.Context, ma
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelMasterPlanMilestone, span)
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlanMilestone, span)
 	return response.Id, nil
 }
 
@@ -430,7 +431,7 @@ func (s *masterPlanService) DuplicateMasterPlan(ctx context.Context, sourceMaste
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelMasterPlan, span)
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
 
 	for _, masterPlanMilestoneEntity := range *masterPlanMilestoneEntities {
 		if !masterPlanMilestoneEntity.Retired {

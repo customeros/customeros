@@ -3,6 +3,7 @@ package entity
 import (
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -76,7 +77,7 @@ func (organization OrganizationEntity) ToString() string {
 func (OrganizationEntity) IsNotedEntity() {}
 
 func (OrganizationEntity) NotedEntityLabel() string {
-	return neo4jentity.NodeLabelOrganization
+	return neo4jutil.NodeLabelOrganization
 }
 
 func (OrganizationEntity) IsInteractionEventParticipant() {}
@@ -84,13 +85,13 @@ func (OrganizationEntity) IsInteractionEventParticipant() {}
 func (OrganizationEntity) IsIssueParticipant() {}
 
 func (OrganizationEntity) ParticipantLabel() string {
-	return neo4jentity.NodeLabelOrganization
+	return neo4jutil.NodeLabelOrganization
 }
 
 func (OrganizationEntity) IsMeetingParticipant() {}
 
 func (OrganizationEntity) MeetingParticipantLabel() string {
-	return neo4jentity.NodeLabelOrganization
+	return neo4jutil.NodeLabelOrganization
 }
 
 func (organization OrganizationEntity) GetDataloaderKey() string {
@@ -101,7 +102,7 @@ type OrganizationEntities []OrganizationEntity
 
 func (organization OrganizationEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jentity.NodeLabelOrganization,
-		neo4jentity.NodeLabelOrganization + "_" + tenant,
+		neo4jutil.NodeLabelOrganization,
+		neo4jutil.NodeLabelOrganization + "_" + tenant,
 	}
 }

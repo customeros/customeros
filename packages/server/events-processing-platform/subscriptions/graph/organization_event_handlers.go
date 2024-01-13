@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -114,7 +113,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 				ExternalSource:   eventData.ExternalSystem.ExternalSource,
 				SyncDate:         eventData.ExternalSystem.SyncDate,
 			}
-			err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jentity.NodeLabelOrganization, externalSystemData)
+			err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization, externalSystemData)
 			if err != nil {
 				h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, err
@@ -292,7 +291,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 					ExternalSource:   eventData.ExternalSystem.ExternalSource,
 					SyncDate:         eventData.ExternalSystem.SyncDate,
 				}
-				innerErr := h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jentity.NodeLabelOrganization, externalSystemData)
+				innerErr := h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization, externalSystemData)
 				if innerErr != nil {
 					h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 					return nil, innerErr
@@ -414,7 +413,7 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 			AppSource:     helper.GetSource(eventData.AppSource),
 		},
 	}
-	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialFor(ctx, eventData.Tenant, organizationId, neo4jentity.NodeLabelOrganization, data)
+	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialFor(ctx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization, data)
 
 	return err
 }
@@ -531,13 +530,13 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 
 	var timelineEventType string
 	switch timelineEvent.TimelineEventLabel() {
-	case neo4jentity.NodeLabelPageView:
+	case neo4jutil.NodeLabelPageView:
 		timelineEventType = "PAGE_VIEW"
-	case neo4jentity.NodeLabelInteractionSession:
+	case neo4jutil.NodeLabelInteractionSession:
 		timelineEventType = "INTERACTION_SESSION"
-	case neo4jentity.NodeLabelNote:
+	case neo4jutil.NodeLabelNote:
 		timelineEventType = "NOTE"
-	case neo4jentity.NodeLabelInteractionEvent:
+	case neo4jutil.NodeLabelInteractionEvent:
 		timelineEventInteractionEvent := timelineEvent.(*entity.InteractionEventEntity)
 		if timelineEventInteractionEvent.Channel == "EMAIL" {
 			timelineEventType = "INTERACTION_EVENT_EMAIL_SENT"
@@ -548,20 +547,20 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 		} else if timelineEventInteractionEvent.EventType == "meeting" {
 			timelineEventType = "MEETING"
 		}
-	case neo4jentity.NodeLabelAnalysis:
+	case neo4jutil.NodeLabelAnalysis:
 		timelineEventType = "ANALYSIS"
-	case neo4jentity.NodeLabelMeeting:
+	case neo4jutil.NodeLabelMeeting:
 		timelineEventType = "MEETING"
-	case neo4jentity.NodeLabelAction:
+	case neo4jutil.NodeLabelAction:
 		timelineEventAction := timelineEvent.(*entity.ActionEntity)
 		if timelineEventAction.Type == neo4jenum.ActionCreated {
 			timelineEventType = "ACTION_CREATED"
 		} else {
 			timelineEventType = "ACTION"
 		}
-	case neo4jentity.NodeLabelLogEntry:
+	case neo4jutil.NodeLabelLogEntry:
 		timelineEventType = "LOG_ENTRY"
-	case neo4jentity.NodeLabelIssue:
+	case neo4jutil.NodeLabelIssue:
 		timelineEventIssue := timelineEvent.(*entity.IssueEntity)
 		if timelineEventIssue.CreatedAt.Equal(timelineEventIssue.UpdatedAt) {
 			timelineEventType = "ISSUE_CREATED"

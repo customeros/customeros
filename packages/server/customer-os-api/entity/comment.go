@@ -2,6 +2,7 @@ package entity
 
 import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -29,5 +30,5 @@ func (comment *CommentEntity) GetDataloaderKey() string {
 }
 
 func (CommentEntity) Labels(tenant string) []string {
-	return []string{neo4jentity.NodeLabelComment, neo4jentity.NodeLabelComment + "_" + tenant}
+	return []string{neo4jutil.NodeLabelComment, neo4jutil.NodeLabelComment + "_" + tenant}
 }

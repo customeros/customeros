@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicingcyclepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoicing_cycle"
 	"github.com/opentracing/opentracing-go"
@@ -61,7 +62,7 @@ func (s *invoicingCycleService) CreateInvoicingCycle(ctx context.Context, invoic
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelInvoicingCycle, span)
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelInvoicingCycle, span)
 
 	return response.Id, nil
 }
@@ -73,7 +74,7 @@ func (s *invoicingCycleService) UpdateInvoicingCycle(ctx context.Context, id str
 	span.SetTag(tracing.SpanTagEntityId, id)
 	span.LogFields(log.Object("invoicingCycleType", invoicingCycleType))
 
-	exists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), id, neo4jentity.NodeLabelInvoicingCycle)
+	exists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), id, neo4jutil.NodeLabelInvoicingCycle)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

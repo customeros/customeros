@@ -85,7 +85,7 @@ func (ActionEntity) IsTimelineEvent() {
 }
 
 func (ActionEntity) TimelineEventLabel() string {
-	return neo4jentity.NodeLabelAction
+	return neo4jutil.NodeLabelAction
 }
 
 type ActionEntities []ActionEntity

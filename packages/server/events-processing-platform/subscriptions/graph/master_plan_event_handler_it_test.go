@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -49,10 +50,10 @@ func TestMasterPlanEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelMasterPlan:                    1,
-		neo4jentity.NodeLabelMasterPlan + "_" + tenantName: 1})
+		neo4jutil.NodeLabelMasterPlan:                    1,
+		neo4jutil.NodeLabelMasterPlan + "_" + tenantName: 1})
 
-	masterPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelMasterPlan, masterPlanId)
+	masterPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelMasterPlan, masterPlanId)
 	require.Nil(t, err)
 	require.NotNil(t, masterPlanDbNode)
 
@@ -76,7 +77,7 @@ func TestMasterPlanEventHandler_OnCreateMilestone(t *testing.T) {
 	masterPlanId := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelMasterPlan: 1,
+		neo4jutil.NodeLabelMasterPlan: 1,
 	})
 
 	// Prepare the event handler
@@ -111,13 +112,13 @@ func TestMasterPlanEventHandler_OnCreateMilestone(t *testing.T) {
 
 	// verify nodes and relationships
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelMasterPlan:                             1,
-		neo4jentity.NodeLabelMasterPlanMilestone:                    1,
-		neo4jentity.NodeLabelMasterPlanMilestone + "_" + tenantName: 1})
+		neo4jutil.NodeLabelMasterPlan:                             1,
+		neo4jutil.NodeLabelMasterPlanMilestone:                    1,
+		neo4jutil.NodeLabelMasterPlanMilestone + "_" + tenantName: 1})
 	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, masterPlanId, "HAS_MILESTONE", milestoneId)
 
 	// verify master plan milestone node
-	masterPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelMasterPlanMilestone, milestoneId)
+	masterPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelMasterPlanMilestone, milestoneId)
 	require.Nil(t, err)
 	require.NotNil(t, masterPlanMilestoneDbNode)
 
@@ -166,10 +167,10 @@ func TestMasterPlanEventHandler_OnUpdate(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelMasterPlan:                    1,
-		neo4jentity.NodeLabelMasterPlan + "_" + tenantName: 1})
+		neo4jutil.NodeLabelMasterPlan:                    1,
+		neo4jutil.NodeLabelMasterPlan + "_" + tenantName: 1})
 
-	masterPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelMasterPlan, masterPlanId)
+	masterPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelMasterPlan, masterPlanId)
 	require.Nil(t, err)
 	require.NotNil(t, masterPlanDbNode)
 
@@ -191,8 +192,8 @@ func TestMasterPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 	milestoneId := neo4jtest.CreateMasterPlanMilestone(ctx, testDatabase.Driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelMasterPlan:          1,
-		neo4jentity.NodeLabelMasterPlanMilestone: 1,
+		neo4jutil.NodeLabelMasterPlan:          1,
+		neo4jutil.NodeLabelMasterPlanMilestone: 1,
 	})
 
 	// Prepare the event handler
@@ -224,11 +225,11 @@ func TestMasterPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 
 	// verify nodes and relationships
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelMasterPlan:          1,
-		neo4jentity.NodeLabelMasterPlanMilestone: 1})
+		neo4jutil.NodeLabelMasterPlan:          1,
+		neo4jutil.NodeLabelMasterPlanMilestone: 1})
 
 	// verify master plan milestone node
-	masterPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelMasterPlanMilestone, milestoneId)
+	masterPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelMasterPlanMilestone, milestoneId)
 	require.Nil(t, err)
 	require.NotNil(t, masterPlanMilestoneDbNode)
 
@@ -254,8 +255,8 @@ func TestMasterPlanEventHandler_OnReorderMilestones(t *testing.T) {
 	milestoneId2 := neo4jtest.CreateMasterPlanMilestone(ctx, testDatabase.Driver, tenantName, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{Order: 1})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelMasterPlan:          1,
-		neo4jentity.NodeLabelMasterPlanMilestone: 2,
+		neo4jutil.NodeLabelMasterPlan:          1,
+		neo4jutil.NodeLabelMasterPlanMilestone: 2,
 	})
 
 	// Prepare the event handler
@@ -280,17 +281,17 @@ func TestMasterPlanEventHandler_OnReorderMilestones(t *testing.T) {
 
 	// verify nodes and relationships
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelMasterPlan:          1,
-		neo4jentity.NodeLabelMasterPlanMilestone: 2})
+		neo4jutil.NodeLabelMasterPlan:          1,
+		neo4jutil.NodeLabelMasterPlanMilestone: 2})
 
 	// verify master plan milestone nodes
-	masterPlanMilestoneDbNode1, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelMasterPlanMilestone, milestoneId1)
+	masterPlanMilestoneDbNode1, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelMasterPlanMilestone, milestoneId1)
 	require.Nil(t, err)
 	require.NotNil(t, masterPlanMilestoneDbNode1)
 	milestone1 := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneDbNode1)
 	require.Equal(t, int64(1), milestone1.Order)
 
-	masterPlanMilestoneDbNode2, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelMasterPlanMilestone, milestoneId2)
+	masterPlanMilestoneDbNode2, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelMasterPlanMilestone, milestoneId2)
 	require.Nil(t, err)
 	require.NotNil(t, masterPlanMilestoneDbNode2)
 	milestone2 := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneDbNode2)

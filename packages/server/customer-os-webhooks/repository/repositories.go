@@ -15,7 +15,6 @@ type Repositories struct {
 	Neo4jRepositories            *neo4jrepository.Repositories
 	CommonRepositories           *commonRepository.Repositories
 	SyncRunWebhookRepository     repository.SyncRunWebhookRepository
-	ExternalSystemRepository     ExternalSystemRepository
 	UserRepository               UserRepository
 	LocationRepository           LocationRepository
 	OrganizationRepository       OrganizationRepository
@@ -43,7 +42,6 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, neo4jDatabase s
 		CommonRepositories:       commonRepository.InitRepositories(gormDb, driver),
 		SyncRunWebhookRepository: repository.NewSyncRunWebhookRepository(gormDb),
 	}
-	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver, neo4jDatabase)
 	repositories.UserRepository = NewUserRepository(driver)
 	repositories.LocationRepository = NewLocationRepository(driver)
 	repositories.OrganizationRepository = NewOrganizationRepository(driver)

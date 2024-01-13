@@ -8,6 +8,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -604,15 +605,15 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelOrganization:                      1,
-		neo4jentity.NodeLabelOrganization + "_" + tenantName:   1,
-		neo4jentity.NodeLabelBillingProfile:                    1,
-		neo4jentity.NodeLabelBillingProfile + "_" + tenantName: 1,
+		neo4jutil.NodeLabelOrganization:                      1,
+		neo4jutil.NodeLabelOrganization + "_" + tenantName:   1,
+		neo4jutil.NodeLabelBillingProfile:                    1,
+		neo4jutil.NodeLabelBillingProfile + "_" + tenantName: 1,
 	})
 	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "HAS_BILLING_PROFILE", billingProfileId)
 
 	// Check billing profile
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelBillingProfile, billingProfileId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelBillingProfile, billingProfileId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
@@ -650,13 +651,13 @@ func TestGraphOrganizationEventHandler_OnUpdateBillingProfile(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelOrganization:   1,
-		neo4jentity.NodeLabelBillingProfile: 1,
+		neo4jutil.NodeLabelOrganization:   1,
+		neo4jutil.NodeLabelBillingProfile: 1,
 	})
 	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "HAS_BILLING_PROFILE", billingProfileId)
 
 	// Check billing profile
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelBillingProfile, billingProfileId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelBillingProfile, billingProfileId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
@@ -689,15 +690,15 @@ func TestGraphOrganizationEventHandler_OnEmailLinkedToBillingProfile(t *testing.
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelOrganization:   1,
-		neo4jentity.NodeLabelBillingProfile: 1,
-		neo4jentity.NodeLabelEmail:          2,
+		neo4jutil.NodeLabelOrganization:   1,
+		neo4jutil.NodeLabelBillingProfile: 1,
+		neo4jutil.NodeLabelEmail:          2,
 	})
 	neo4jtest.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, billingProfileId, "HAS", existingEmailId, map[string]interface{}{"primary": false})
 	neo4jtest.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, billingProfileId, "HAS", newEmailId, map[string]interface{}{"primary": true})
 
 	// Check billing profile
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelBillingProfile, billingProfileId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelBillingProfile, billingProfileId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
@@ -726,16 +727,16 @@ func TestGraphOrganizationEventHandler_OnEmailUnlinkedFromBillingProfile(t *test
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelOrganization:   1,
-		neo4jentity.NodeLabelBillingProfile: 1,
-		neo4jentity.NodeLabelEmail:          1,
+		neo4jutil.NodeLabelOrganization:   1,
+		neo4jutil.NodeLabelBillingProfile: 1,
+		neo4jutil.NodeLabelEmail:          1,
 	})
 	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"HAS": 0,
 	})
 
 	// Check billing profile
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelBillingProfile, billingProfileId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelBillingProfile, billingProfileId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
@@ -763,14 +764,14 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToBillingProfile(t *testi
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelOrganization:   1,
-		neo4jentity.NodeLabelBillingProfile: 1,
-		neo4jentity.NodeLabelLocation:       1,
+		neo4jutil.NodeLabelOrganization:   1,
+		neo4jutil.NodeLabelBillingProfile: 1,
+		neo4jutil.NodeLabelLocation:       1,
 	})
 	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, billingProfileId, "HAS", locationId)
 
 	// Check billing profile
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelBillingProfile, billingProfileId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelBillingProfile, billingProfileId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
@@ -799,16 +800,16 @@ func TestGraphOrganizationEventHandler_OnLocationUnlinkedFromBillingProfile(t *t
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelOrganization:   1,
-		neo4jentity.NodeLabelBillingProfile: 1,
-		neo4jentity.NodeLabelLocation:       1,
+		neo4jutil.NodeLabelOrganization:   1,
+		neo4jutil.NodeLabelBillingProfile: 1,
+		neo4jutil.NodeLabelLocation:       1,
 	})
 	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"HAS": 0,
 	})
 
 	// Check billing profile
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelBillingProfile, billingProfileId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelBillingProfile, billingProfileId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)

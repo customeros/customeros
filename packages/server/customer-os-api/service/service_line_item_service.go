@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/opentracing/opentracing-go"
@@ -120,7 +121,7 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		return "", err
 	}
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelServiceLineItem, span)
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelServiceLineItem, span)
 	return response.Id, err
 }
 
@@ -142,7 +143,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 		return err
 	}
 
-	serviceLineItemExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItem.ID, neo4jentity.NodeLabelServiceLineItem)
+	serviceLineItemExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItem.ID, neo4jutil.NodeLabelServiceLineItem)
 	if !serviceLineItemExists {
 		err := fmt.Errorf("(ServiceLineItemService.Update) service line item with id {%s} not found", serviceLineItem.ID)
 		s.log.Error(err.Error())
@@ -212,7 +213,7 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
 
-	sliExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, neo4jentity.NodeLabelServiceLineItem)
+	sliExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, neo4jutil.NodeLabelServiceLineItem)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("error on checking if service line item exists: %s", err.Error())
@@ -242,7 +243,7 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 
 	// wait for service line item to be deleted from graph db
 	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		serviceLineItemFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, neo4jentity.NodeLabelServiceLineItem)
+		serviceLineItemFound, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, neo4jutil.NodeLabelServiceLineItem)
 		if findErr != nil {
 			tracing.TraceErr(span, findErr)
 			s.log.Errorf("error on checking if service line item exists: %s", findErr.Error())
@@ -262,7 +263,7 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
 
-	sliExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, neo4jentity.NodeLabelServiceLineItem)
+	sliExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, neo4jutil.NodeLabelServiceLineItem)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("error on checking if service line item exists: %s", err.Error())
