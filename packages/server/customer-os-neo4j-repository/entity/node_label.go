@@ -4,9 +4,7 @@ import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 // Deprecated: use neo4jutil.NodeLabel* instead
 const (
-	NodeLabelTimelineEvent       = neo4jutil.NodeLabelTimelineEvent
 	NodeLabelContact             = neo4jutil.NodeLabelContact
-	NodeLabelCustomField         = neo4jutil.NodeLabelCustomField
 	NodeLabelJobRole             = neo4jutil.NodeLabelJobRole
 	NodeLabelEmail               = neo4jutil.NodeLabelEmail
 	NodeLabelLocation            = neo4jutil.NodeLabelLocation
@@ -30,9 +28,7 @@ const (
 	NodeLabelSocial              = neo4jutil.NodeLabelSocial
 	NodeLabelPlayer              = neo4jutil.NodeLabelPlayer
 	NodeLabelCountry             = neo4jutil.NodeLabelCountry
-	NodeLabelActionItem          = neo4jutil.NodeLabelActionItem
 	NodeLabelComment             = neo4jutil.NodeLabelComment
-	NodeLabelContract            = neo4jutil.NodeLabelContract
 	NodeLabelServiceLineItem     = neo4jutil.NodeLabelServiceLineItem
 	NodeLabelOpportunity         = neo4jutil.NodeLabelOpportunity
 	NodeLabelInvoicingCycle      = neo4jutil.NodeLabelInvoicingCycle

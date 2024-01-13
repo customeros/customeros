@@ -2,6 +2,7 @@ package entity
 
 import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -40,9 +41,9 @@ func (issue *IssueEntity) GetDataloaderKey() string {
 
 func (*IssueEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jentity.NodeLabelIssue,
-		neo4jentity.NodeLabelIssue + "_" + tenant,
-		neo4jentity.NodeLabelTimelineEvent,
-		neo4jentity.NodeLabelTimelineEvent + "_" + tenant,
+		neo4jutil.NodeLabelIssue,
+		neo4jutil.NodeLabelIssue + "_" + tenant,
+		neo4jutil.NodeLabelTimelineEvent,
+		neo4jutil.NodeLabelTimelineEvent + "_" + tenant,
 	}
 }

@@ -3,6 +3,7 @@ package entity
 import (
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -55,9 +56,9 @@ func (interactionEventEntity InteractionEventEntity) GetDataloaderKey() string {
 
 func (InteractionEventEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jentity.NodeLabelInteractionEvent,
-		neo4jentity.NodeLabelInteractionEvent + "_" + tenant,
-		neo4jentity.NodeLabelTimelineEvent,
-		neo4jentity.NodeLabelTimelineEvent + "_" + tenant,
+		neo4jutil.NodeLabelInteractionEvent,
+		neo4jutil.NodeLabelInteractionEvent + "_" + tenant,
+		neo4jutil.NodeLabelTimelineEvent,
+		neo4jutil.NodeLabelTimelineEvent + "_" + tenant,
 	}
 }
