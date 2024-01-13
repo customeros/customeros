@@ -77,6 +77,14 @@ func UnmarshalDateTime(input string) (*time.Time, error) {
 	return nil, errors.New(fmt.Sprintf("cannot parse input as date time %s", input))
 }
 
+func TimestampProtoToTime(pbTime *timestamppb.Timestamp) time.Time {
+	if pbTime == nil {
+		return ZeroTime()
+	}
+	t := pbTime.AsTime()
+	return t
+}
+
 func TimestampProtoToTimePtr(pbTime *timestamppb.Timestamp) *time.Time {
 	if pbTime == nil {
 		return nil

@@ -44,6 +44,7 @@ type Repositories struct {
 	UserWriteRepository               UserWriteRepository
 	InvoicingCycleWriteRepository     InvoicingCycleWriteRepository
 	InvoicingCycleReadRepository      InvoicingCycleReadRepository
+	InvoiceWriteRepository            InvoiceWriteRepository
 }
 
 func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string) *Repositories {
@@ -87,6 +88,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		UserWriteRepository:               NewUserWriteRepository(driver, neo4jDatabase),
 		InvoicingCycleWriteRepository:     NewInvoicingCycleWriteRepository(driver, neo4jDatabase),
 		InvoicingCycleReadRepository:      NewInvoicingCycleReadRepository(driver, neo4jDatabase),
+		InvoiceWriteRepository:            NewInvoiceWriteRepository(driver, neo4jDatabase),
 	}
 	return &repositories
 }

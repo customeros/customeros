@@ -85,6 +85,51 @@ func CreateInvoicingCycle(ctx context.Context, driver *neo4j.DriverWithContext, 
 	return id
 }
 
+func CreateInvoice(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, entity entity.InvoiceEntity) string {
+	id := utils.NewUUIDIfEmpty(entity.Id)
+
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s {id:$organizationId})
+							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$id}) 
+							ON CREATE SET 
+								i:Invoice_%s,
+								i.createdAt=$createdAt,
+								i.updatedAt=$updatedAt,
+								i.source=$source,
+								i.sourceOfTruth=$sourceOfTruth,
+								i.appSource=$appSource,
+								i.date=$date,
+								i.dueDate=$dueDate,
+								i.dryRun=$dryRun,
+								i.amount=$amount,
+								i.vat=$vat,
+								i.total=$total,
+								i.repositoryFileId=$repositoryFileId,
+								i.pdfGenerated=$pdfGenerated
+							WITH o, i 
+							MERGE (o)-[:HAS_INVOICE]->(i) 
+					`, tenant, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":           tenant,
+		"organizationId":   organizationId,
+		"id":               id,
+		"createdAt":        entity.CreatedAt,
+		"updatedAt":        entity.UpdatedAt,
+		"source":           entity.Source,
+		"sourceOfTruth":    entity.SourceOfTruth,
+		"appSource":        entity.AppSource,
+		"dryRun":           entity.DryRun,
+		"date":             entity.Date,
+		"dueDate":          entity.DueDate,
+		"amount":           entity.Amount,
+		"vat":              entity.Vat,
+		"total":            entity.Total,
+		"repositoryFileId": entity.RepositoryFileId,
+		"pdfGenerated":     entity.PdfGenerated,
+	})
+	return id
+}
+
 func CreateMasterPlan(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, masterPlan entity.MasterPlanEntity) string {
 	masterPlanId := utils.NewUUIDIfEmpty(masterPlan.Id)
 
