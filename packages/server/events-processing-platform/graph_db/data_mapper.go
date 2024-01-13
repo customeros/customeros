@@ -3,6 +3,7 @@ package graph_db
 import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -291,23 +292,23 @@ func MigrateStartedAt(props map[string]any) time.Time {
 
 // Deprecated
 func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) neo4jentity.TimelineEvent {
-	if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelPageView) {
+	if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelPageView) {
 		return MapDbNodeToPageView(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelInteractionSession) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelInteractionSession) {
 		return MapDbNodeToInteractionSessionEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelIssue) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelIssue) {
 		return MapDbNodeToIssueEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelNote) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelNote) {
 		return MapDbNodeToNoteEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelInteractionEvent) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelInteractionEvent) {
 		return MapDbNodeToInteractionEventEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelAnalysis) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelAnalysis) {
 		return MapDbNodeToAnalysisEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelMeeting) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelMeeting) {
 		return MapDbNodeToMeetingEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelAction) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelAction) {
 		return MapDbNodeToActionEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, neo4jentity.NodeLabelLogEntry) {
+	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelLogEntry) {
 		return MapDbNodeToLogEntryEntity(*dbNode)
 	}
 	return nil

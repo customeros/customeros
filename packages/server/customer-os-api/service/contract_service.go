@@ -183,7 +183,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
 
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jentity.NodeLabelContact, span)
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact, span)
 	return response.Id, err
 }
 

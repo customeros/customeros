@@ -12,6 +12,7 @@ import (
 )
 
 type ExternalSystemWriteRepository interface {
+	CreateIfNotExists(ctx context.Context, tenant, externalSystemId, externalSystemName string) error
 	LinkWithEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error
 	LinkWithEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error
 }
@@ -30,6 +31,31 @@ func NewExternalSystemWriteRepository(driver *neo4j.DriverWithContext, database 
 
 func (r *externalSystemWriteRepository) prepareWriteSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+}
+
+func (r *externalSystemWriteRepository) CreateIfNotExists(ctx context.Context, tenant, externalSystemId, externalSystemName string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.CreateIfNotExists")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("externalSystemName", externalSystemName))
+
+	cypher := fmt.Sprintf(`MATCH(t:Tenant {name:$tenant})
+							MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId}) 
+							ON CREATE SET e.name=$externalSystemName, e.createdAt=$now, e.updatedAt=$now, e:ExternalSystem_%s`, tenant)
+	params := map[string]any{
+		"tenant":             tenant,
+		"externalSystemId":   externalSystemId,
+		"externalSystemName": utils.FirstNotEmpty(externalSystemName, externalSystemId),
+		"now":                utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
 }
 
 func (r *externalSystemWriteRepository) LinkWithEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error {

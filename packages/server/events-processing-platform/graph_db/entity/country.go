@@ -1,6 +1,8 @@
 package entity
 
-import neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+)
 
 type CountryEntity struct {
 	Name      string
@@ -15,6 +17,6 @@ type CountryEntities []CountryEntity
 
 func (CountryEntity) Labels(string) []string {
 	return []string{
-		neo4jentity.NodeLabelCountry,
+		neo4jutil.NodeLabelCountry,
 	}
 }

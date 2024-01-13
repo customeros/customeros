@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -38,8 +38,8 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberCreate(t *testing.T) {
 	err = phoneNumberEventHandler.OnPhoneNumberCreate(context.Background(), event)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, neo4jentity.NodeLabelPhoneNumber))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, neo4jentity.NodeLabelPhoneNumber+"_"+tenantName), "Incorrect number of PhoneNumber_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, neo4jutil.NodeLabelPhoneNumber))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, neo4jutil.NodeLabelPhoneNumber+"_"+tenantName), "Incorrect number of PhoneNumber_%s nodes in Neo4j", tenantName)
 	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "PHONE_NUMBER_BELONGS_TO_TENANT"), "Incorrect number of PHONE_NUMBER_BELONGS_TO_TENANT relationships in Neo4j")
 
 	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "PhoneNumber_"+tenantName, phoneNumberId.String())

@@ -3,12 +3,11 @@ package organization
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
-
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
@@ -145,7 +144,7 @@ func (ds *DomainScraperV1) runCompanyPrompt(text *string, tenant, organizationId
 		PromptType:     constants.PromptType_WebscrapeCompanyPrompt,
 		Tenant:         &tenant,
 		NodeId:         &organizationId,
-		NodeLabel:      utils.StringPtr(neo4jentity.NodeLabelOrganization),
+		NodeLabel:      utils.StringPtr(neo4jutil.NodeLabelOrganization),
 		PromptTemplate: &ds.cfg.Services.OpenAi.ScrapeCompanyPrompt,
 		Prompt:         prompt,
 	}
@@ -280,7 +279,7 @@ func (ds *DomainScraperV1) runDataPrompt(analysis, domainUrl, socials, jsonStruc
 		PromptType:     constants.PromptType_WebscrapeExtractCompanyData,
 		Tenant:         &tenant,
 		NodeId:         &organizationId,
-		NodeLabel:      utils.StringPtr(neo4jentity.NodeLabelOrganization),
+		NodeLabel:      utils.StringPtr(neo4jutil.NodeLabelOrganization),
 		PromptTemplate: &ds.cfg.Services.OpenAi.ScrapeDataPrompt,
 		Prompt:         prompt,
 	}

@@ -3,6 +3,7 @@ package entity
 import (
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -27,7 +28,7 @@ type TagEntities []TagEntity
 
 func (TagEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jentity.NodeLabelTag,
-		neo4jentity.NodeLabelTag + "_" + tenant,
+		neo4jutil.NodeLabelTag,
+		neo4jutil.NodeLabelTag + "_" + tenant,
 	}
 }

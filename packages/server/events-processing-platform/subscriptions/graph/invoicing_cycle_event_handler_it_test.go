@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -45,10 +46,10 @@ func TestInvoicingCycleEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelInvoicingCycle:                    1,
-		neo4jentity.NodeLabelInvoicingCycle + "_" + tenantName: 1})
+		neo4jutil.NodeLabelInvoicingCycle:                    1,
+		neo4jutil.NodeLabelInvoicingCycle + "_" + tenantName: 1})
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelInvoicingCycle, id)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoicingCycle, id)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -96,10 +97,10 @@ func TestInvoicingCycleEventHandler_OnUpdate(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jentity.NodeLabelInvoicingCycle:                    1,
-		neo4jentity.NodeLabelInvoicingCycle + "_" + tenantName: 1})
+		neo4jutil.NodeLabelInvoicingCycle:                    1,
+		neo4jutil.NodeLabelInvoicingCycle + "_" + tenantName: 1})
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jentity.NodeLabelInvoicingCycle, id)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoicingCycle, id)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 

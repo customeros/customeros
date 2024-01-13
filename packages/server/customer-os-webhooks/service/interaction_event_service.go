@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/entity"
@@ -233,9 +234,9 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 		}
 		if parentId != "" {
 			switch parentLabel {
-			case neo4jentity.NodeLabelIssue:
+			case neo4jutil.NodeLabelIssue:
 				interactionEventGrpcRequest.BelongsToIssueId = &parentId
-			case neo4jentity.NodeLabelInteractionSession:
+			case neo4jutil.NodeLabelInteractionSession:
 				interactionEventGrpcRequest.BelongsToSessionId = &parentId
 			}
 		}
@@ -382,11 +383,11 @@ func (s *interactionEventService) getReceiversIdAndLabel(ctx context.Context, in
 func (s *interactionEventService) checkRequiredContact(interactionEventInput model.InteractionEventData, senderLabel string, receiversIdAndLabel map[string]string, tenant string, span opentracing.Span) (SyncStatus, bool) {
 	if interactionEventInput.ContactRequired {
 		found := false
-		if senderLabel == neo4jentity.NodeLabelContact {
+		if senderLabel == neo4jutil.NodeLabelContact {
 			found = true
 		}
 		for _, receiverLabel := range receiversIdAndLabel {
-			if receiverLabel == neo4jentity.NodeLabelContact {
+			if receiverLabel == neo4jutil.NodeLabelContact {
 				found = true
 				break
 			}
@@ -413,15 +414,15 @@ func (s *interactionEventService) checkRequiredParent(interactionEventInput mode
 
 func (s *interactionEventService) setParticipantTypeForGrpcRequest(participantLabel string, participant *interactioneventpb.Participant) {
 	switch participantLabel {
-	case neo4jentity.NodeLabelContact:
+	case neo4jutil.NodeLabelContact:
 		participant.ParticipantType = &interactioneventpb.Participant_Contact{
 			Contact: &interactioneventpb.Contact{},
 		}
-	case neo4jentity.NodeLabelOrganization:
+	case neo4jutil.NodeLabelOrganization:
 		participant.ParticipantType = &interactioneventpb.Participant_Organization{
 			Organization: &interactioneventpb.Organization{},
 		}
-	case neo4jentity.NodeLabelUser:
+	case neo4jutil.NodeLabelUser:
 		participant.ParticipantType = &interactioneventpb.Participant_User{
 			User: &interactioneventpb.User{},
 		}

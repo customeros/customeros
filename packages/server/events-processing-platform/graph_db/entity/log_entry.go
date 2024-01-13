@@ -2,6 +2,7 @@ package entity
 
 import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -22,5 +23,5 @@ func (LogEntryEntity) IsTimelineEvent() {
 }
 
 func (LogEntryEntity) TimelineEventLabel() string {
-	return neo4jentity.NodeLabelLogEntry
+	return neo4jutil.NodeLabelLogEntry
 }
