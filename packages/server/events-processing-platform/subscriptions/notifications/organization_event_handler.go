@@ -50,6 +50,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
 	err := h.notificationProviderSendEmail(
 		ctx,
