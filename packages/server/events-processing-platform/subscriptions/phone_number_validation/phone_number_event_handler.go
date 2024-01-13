@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/aggregate"
@@ -14,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
@@ -62,11 +64,18 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-
 	tenant := eventData.Tenant
-	rawPhoneNumber := eventData.RawPhoneNumber
 	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, tenant)
+	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
 
+	phoneNumberNodeAvailable := subscriptions.WaitCheckNodeExistsInNeo4j(ctx, h.repositories.Neo4jRepositories, eventData.Tenant, phoneNumberId, neo4jutil.NodeLabelPhoneNumber)
+	if !phoneNumberNodeAvailable {
+		err := errors.Errorf("%s node %s not available in neo4j", neo4jutil.NodeLabelPhoneNumber, phoneNumberId)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	rawPhoneNumber := eventData.RawPhoneNumber
 	countryCodeA2, err := h.repositories.Neo4jRepositories.PhoneNumberReadRepository.GetCountryCodeA2ForPhoneNumber(ctx, tenant, phoneNumberId)
 	if err != nil {
 		tracing.TraceErr(span, err)

@@ -35,6 +35,8 @@ const (
 	OnboardingStatus_Order_Done       = 50
 	OnboardingStatus_Order_Successful = 60
 
+	MaxRetriesCheckDataInNeo4j = 8
+
 	Tcp = "tcp"
 
 	GRPC     = "GRPC"
