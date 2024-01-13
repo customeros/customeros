@@ -69,8 +69,11 @@ func (r *commonReadRepository) ExistsByIdLinkedTo(ctx context.Context, tenant, i
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("id", id), log.String("label", label), log.String("linkedToId", linkedToId), log.String("linkedToLabel", linkedToLabel), log.String("linkRelationship", linkRelationship))
 
-	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id})-[:%s]->(m:%s {id:$linkedToId}) WHERE n:%s_%s RETURN n.id LIMIT 1`,
-		label, linkRelationship, linkedToLabel, label, tenant)
+	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id})-`, label)
+	if linkRelationship != "" {
+		cypher += fmt.Sprintf(`[:%s]`, linkRelationship)
+	}
+	cypher += fmt.Sprintf(`->(m:%s {id:$linkedToId}) WHERE n:%s_%s RETURN n.id LIMIT 1`, linkedToLabel, label, tenant)
 	params := map[string]any{
 		"id":         id,
 		"linkedToId": linkedToId,
@@ -100,10 +103,13 @@ func (r *commonReadRepository) ExistsByIdLinkedFrom(ctx context.Context, tenant,
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsById")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.LogFields(log.String("id", id), log.String("label", label), log.String("linkedToId", linkedFromId), log.String("linkedToLabel", linkedFromLabel), log.String("linkRelationship", linkRelationship))
+	span.LogFields(log.String("id", id), log.String("label", label), log.String("linkedFromId", linkedFromId), log.String("linkedFromLabel", linkedFromLabel), log.String("linkRelationship", linkRelationship))
 
-	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id})<-[:%s]-(m:%s {id:$linkedFromId}) WHERE n:%s_%s RETURN n.id LIMIT 1`,
-		label, linkRelationship, linkedFromLabel, label, tenant)
+	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id})<-`, label)
+	if linkRelationship != "" {
+		cypher += fmt.Sprintf(`[:%s]`, linkRelationship)
+	}
+	cypher += fmt.Sprintf(`-(m:%s {id:$linkedFromId}) WHERE n:%s_%s RETURN n.id LIMIT 1`, linkedFromLabel, label, tenant)
 	params := map[string]any{
 		"id":           id,
 		"linkedFromId": linkedFromId,
