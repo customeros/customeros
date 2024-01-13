@@ -5,7 +5,9 @@ import (
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"strings"
@@ -123,6 +125,14 @@ func (h *organizationEventHandler) WebScrapeOrganizationByWebsite(ctx context.Co
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	organizationNodeAvailable := subscriptions.WaitCheckNodeExistsInNeo4j(ctx, h.repositories.Neo4jRepositories, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization)
+	if !organizationNodeAvailable {
+		err := errors.Errorf("%s node %s not available in neo4j", neo4jutil.NodeLabelOrganization, organizationId)
+		tracing.TraceErr(span, err)
+		return nil
+	}
+
 	span.LogFields(log.String("website", eventData.Website))
 	if eventData.Website == "" {
 		tracing.TraceErr(span, errors.New("website is empty"))
