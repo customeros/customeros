@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "api/grpc/v1/currency;currency_grpc_service";
+import "common/source.proto";
+
+message CreateCurrencyRequest {
+  string loggedInUserId = 1;
+  SourceFields sourceFields = 2;
+
+  string name = 3;
+  string symbol = 4;
+}
+
+message CurrencyIdGrpcResponse {
+  string id = 1;
+}
+
+service CurrencyGrpcService {
+  rpc CreateCurrency(CreateCurrencyRequest) returns (CurrencyIdGrpcResponse);
+}

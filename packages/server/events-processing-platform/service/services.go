@@ -33,6 +33,7 @@ type Services struct {
 	MasterPlanService         *masterPlanService
 	InvoicingCycleService     *invoicingCycleService
 	InvoiceService            *invoiceService
+	CurrencyService           *currencyService
 }
 
 func InitServices(config *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger) *Services {
@@ -60,6 +61,7 @@ func InitServices(config *config.Config, repositories *repository.Repositories, 
 	services.MasterPlanService = NewMasterPlanService(log, commandHandlers.MasterPlan, aggregateStore)
 	services.InvoicingCycleService = NewInvoicingCycleService(log, commandHandlers.InvoicingCycle, aggregateStore)
 	services.InvoiceService = NewInvoiceService(log, commandHandlers.Invoice, aggregateStore)
+	services.CurrencyService = NewCurrencyService(log, commandHandlers.Currency)
 
 	return &services
 }

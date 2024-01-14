@@ -1,6 +1,7 @@
 package neo4jutil
 
 const (
+	NodeLabelCurrency            = "Currency"
 	NodeLabelTimelineEvent       = "TimelineEvent"
 	NodeLabelContact             = "Contact"
 	NodeLabelCustomField         = "CustomField"

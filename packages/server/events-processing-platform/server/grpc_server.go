@@ -7,6 +7,7 @@ import (
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
+	currencypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/currency"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	ispb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_session"
@@ -92,4 +93,5 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	masterplanpb.RegisterMasterPlanGrpcServiceServer(grpcServer, services.MasterPlanService)
 	invoicingcyclepb.RegisterInvoicingCycleGrpcServiceServer(grpcServer, services.InvoicingCycleService)
 	invoicepb.RegisterInvoiceGrpcServiceServer(grpcServer, services.InvoiceService)
+	currencypb.RegisterCurrencyGrpcServiceServer(grpcServer, services.CurrencyService)
 }

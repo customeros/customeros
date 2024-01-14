@@ -19,7 +19,11 @@ func NewCommonAggregateWithTenantAndId(aggregateType eventstore.AggregateType, t
 	if id == "" {
 		return nil
 	}
-	aggregate := NewCommonAggregate(aggregateType)
+
+	aggregate := &CommonTenantIdAggregate{}
+	base := eventstore.NewAggregateBase(aggregate.When)
+	base.SetType(aggregateType)
+	aggregate.AggregateBase = base
 	aggregate.SetID(tenant + "-" + id)
 	return aggregate
 }
@@ -39,14 +43,6 @@ func LoadCommonAggregateWithTenantAndId(ctx context.Context, eventStore eventsto
 		return nil, err
 	}
 	return aggregate, nil
-}
-
-func NewCommonAggregate(aggregateType eventstore.AggregateType) *CommonTenantIdAggregate {
-	commonAggregate := &CommonTenantIdAggregate{}
-	base := eventstore.NewAggregateBase(commonAggregate.When)
-	base.SetType(aggregateType)
-	commonAggregate.AggregateBase = base
-	return commonAggregate
 }
 
 func (a *CommonTenantIdAggregate) When(event eventstore.Event) error {

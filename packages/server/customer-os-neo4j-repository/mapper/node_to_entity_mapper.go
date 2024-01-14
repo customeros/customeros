@@ -226,3 +226,23 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 	}
 	return &tenantSettingsEntity
 }
+
+func MapDbNodeToCurrencyEntity(dbNode *dbtype.Node) *entity.CurrencyEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	e := entity.CurrencyEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+
+		Name:   utils.GetStringPropOrEmpty(props, "name"),
+		Symbol: utils.GetStringPropOrEmpty(props, "symbol"),
+
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &e
+}

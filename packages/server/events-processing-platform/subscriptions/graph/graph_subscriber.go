@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	currencyevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/currency"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"strings"
 
@@ -58,6 +59,7 @@ type GraphSubscriber struct {
 	masterPlanEventHandler         *MasterPlanEventHandler
 	invoicingCycleEventHandler     *InvoicingCycleEventHandler
 	invoiceEventHandler            *InvoiceEventHandler
+	currencyEventHandler           *CurrencyEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphSubscriber {
@@ -83,6 +85,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		masterPlanEventHandler:         NewMasterPlanEventHandler(log, repositories),
 		invoicingCycleEventHandler:     NewInvoicingCycleEventHandler(log, repositories),
 		invoiceEventHandler:            NewInvoiceEventHandler(log, repositories),
+		currencyEventHandler:           NewCurrencyEventHandler(log, repositories),
 	}
 }
 
@@ -379,6 +382,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.invoiceEventHandler.OnInvoiceFill(ctx, evt)
 	case invoiceevents.InvoicePdfGeneratedV1:
 		return s.invoiceEventHandler.OnInvoicePdfGenerated(ctx, evt)
+
+	case currencyevents.CurrencyCreateV1:
+		return s.currencyEventHandler.OnCreate(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
