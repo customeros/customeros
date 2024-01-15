@@ -118,6 +118,16 @@ func (server *Server) Start(parentCtx context.Context) error {
 
 	server.Services = service.InitServices(server.Config, server.Repositories, server.AggregateStore, server.CommandHandlers, server.Log)
 
+	// Setting up gRPC client
+	df := grpc_client.NewDialFactory(server.Config)
+	gRPCconn, err := df.GetEventsProcessingPlatformConn()
+	if err != nil {
+		server.Log.Fatalf("Failed to connect: %v", err)
+	}
+	defer df.Close(gRPCconn)
+	grpcClients := grpc_client.InitGrpcClients(gRPCconn)
+	InitSubscribers(server, ctx, grpcClients, esdb, cancel, server.Services)
+
 	closeGrpcServer, grpcServer, err := server.NewEventProcessorGrpcServer()
 	if err != nil {
 		cancel()
@@ -136,16 +146,6 @@ func (server *Server) Start(parentCtx context.Context) error {
 	}
 
 	<-server.doneCh
-
-	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(server.Config)
-	gRPCconn, err := df.GetEventsProcessingPlatformConn()
-	if err != nil {
-		server.Log.Fatalf("Failed to connect: %v", err)
-	}
-	defer df.Close(gRPCconn)
-	grpcClients := grpc_client.InitGrpcClients(gRPCconn)
-	InitSubscribers(server, ctx, grpcClients, esdb, cancel, server.Services)
 
 	server.Log.Infof("%Server Server exited properly", GetMicroserviceName(server.Config))
 	return nil
