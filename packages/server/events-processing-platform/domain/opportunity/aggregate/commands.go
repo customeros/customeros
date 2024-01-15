@@ -206,6 +206,11 @@ func (a *OpportunityAggregate) closeWinOpportunity(ctx context.Context, cmd *com
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
+	// skip if opportunity is already closed won
+	if a.Opportunity.InternalStage == neo4jenum.OpportunityInternalStageClosedWon.String() {
+		return nil
+	}
+
 	now := utils.Now()
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, now)
 	closedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.ClosedAt, now)
@@ -230,6 +235,11 @@ func (a *OpportunityAggregate) closeLooseOpportunity(ctx context.Context, cmd *c
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	// skip if opportunity is already closed lost
+	if a.Opportunity.InternalStage == neo4jenum.OpportunityInternalStageClosedLost.String() {
+		return nil
+	}
 
 	now := utils.Now()
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, now)
