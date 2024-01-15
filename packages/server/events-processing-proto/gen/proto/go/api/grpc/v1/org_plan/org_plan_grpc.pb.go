@@ -18,228 +18,228 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// OrgPlanGrpcServiceClient is the client API for OrgPlanGrpcService service.
+// OrganizationPlanGrpcServiceClient is the client API for OrganizationPlanGrpcService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type OrgPlanGrpcServiceClient interface {
-	CreateOrgPlan(ctx context.Context, in *CreateOrgPlanGrpcRequest, opts ...grpc.CallOption) (*OrgPlanIdGrpcResponse, error)
-	UpdateOrgPlan(ctx context.Context, in *UpdateOrgPlanGrpcRequest, opts ...grpc.CallOption) (*OrgPlanIdGrpcResponse, error)
-	CreateOrgPlanMilestone(ctx context.Context, in *CreateOrgPlanMilestoneGrpcRequest, opts ...grpc.CallOption) (*OrgPlanMilestoneIdGrpcResponse, error)
-	UpdateOrgPlanMilestone(ctx context.Context, in *UpdateOrgPlanMilestoneGrpcRequest, opts ...grpc.CallOption) (*OrgPlanMilestoneIdGrpcResponse, error)
-	ReorderOrgPlanMilestones(ctx context.Context, in *ReorderOrgPlanMilestonesGrpcRequest, opts ...grpc.CallOption) (*OrgPlanIdGrpcResponse, error)
+type OrganizationPlanGrpcServiceClient interface {
+	CreateOrganizationPlan(ctx context.Context, in *CreateOrganizationPlanGrpcRequest, opts ...grpc.CallOption) (*OrganizationPlanIdGrpcResponse, error)
+	UpdateOrganizationPlan(ctx context.Context, in *UpdateOrganizationPlanGrpcRequest, opts ...grpc.CallOption) (*OrganizationPlanIdGrpcResponse, error)
+	CreateOrganizationPlanMilestone(ctx context.Context, in *CreateOrganizationPlanMilestoneGrpcRequest, opts ...grpc.CallOption) (*OrganizationPlanMilestoneIdGrpcResponse, error)
+	UpdateOrganizationPlanMilestone(ctx context.Context, in *UpdateOrganizationPlanMilestoneGrpcRequest, opts ...grpc.CallOption) (*OrganizationPlanMilestoneIdGrpcResponse, error)
+	ReorderOrganizationPlanMilestones(ctx context.Context, in *ReorderOrganizationPlanMilestonesGrpcRequest, opts ...grpc.CallOption) (*OrganizationPlanIdGrpcResponse, error)
 }
 
-type orgPlanGrpcServiceClient struct {
+type organizationPlanGrpcServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewOrgPlanGrpcServiceClient(cc grpc.ClientConnInterface) OrgPlanGrpcServiceClient {
-	return &orgPlanGrpcServiceClient{cc}
+func NewOrganizationPlanGrpcServiceClient(cc grpc.ClientConnInterface) OrganizationPlanGrpcServiceClient {
+	return &organizationPlanGrpcServiceClient{cc}
 }
 
-func (c *orgPlanGrpcServiceClient) CreateOrgPlan(ctx context.Context, in *CreateOrgPlanGrpcRequest, opts ...grpc.CallOption) (*OrgPlanIdGrpcResponse, error) {
-	out := new(OrgPlanIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/OrgPlanGrpcService/CreateOrgPlan", in, out, opts...)
+func (c *organizationPlanGrpcServiceClient) CreateOrganizationPlan(ctx context.Context, in *CreateOrganizationPlanGrpcRequest, opts ...grpc.CallOption) (*OrganizationPlanIdGrpcResponse, error) {
+	out := new(OrganizationPlanIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/OrganizationPlanGrpcService/CreateOrganizationPlan", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *orgPlanGrpcServiceClient) UpdateOrgPlan(ctx context.Context, in *UpdateOrgPlanGrpcRequest, opts ...grpc.CallOption) (*OrgPlanIdGrpcResponse, error) {
-	out := new(OrgPlanIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/OrgPlanGrpcService/UpdateOrgPlan", in, out, opts...)
+func (c *organizationPlanGrpcServiceClient) UpdateOrganizationPlan(ctx context.Context, in *UpdateOrganizationPlanGrpcRequest, opts ...grpc.CallOption) (*OrganizationPlanIdGrpcResponse, error) {
+	out := new(OrganizationPlanIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/OrganizationPlanGrpcService/UpdateOrganizationPlan", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *orgPlanGrpcServiceClient) CreateOrgPlanMilestone(ctx context.Context, in *CreateOrgPlanMilestoneGrpcRequest, opts ...grpc.CallOption) (*OrgPlanMilestoneIdGrpcResponse, error) {
-	out := new(OrgPlanMilestoneIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/OrgPlanGrpcService/CreateOrgPlanMilestone", in, out, opts...)
+func (c *organizationPlanGrpcServiceClient) CreateOrganizationPlanMilestone(ctx context.Context, in *CreateOrganizationPlanMilestoneGrpcRequest, opts ...grpc.CallOption) (*OrganizationPlanMilestoneIdGrpcResponse, error) {
+	out := new(OrganizationPlanMilestoneIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/OrganizationPlanGrpcService/CreateOrganizationPlanMilestone", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *orgPlanGrpcServiceClient) UpdateOrgPlanMilestone(ctx context.Context, in *UpdateOrgPlanMilestoneGrpcRequest, opts ...grpc.CallOption) (*OrgPlanMilestoneIdGrpcResponse, error) {
-	out := new(OrgPlanMilestoneIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/OrgPlanGrpcService/UpdateOrgPlanMilestone", in, out, opts...)
+func (c *organizationPlanGrpcServiceClient) UpdateOrganizationPlanMilestone(ctx context.Context, in *UpdateOrganizationPlanMilestoneGrpcRequest, opts ...grpc.CallOption) (*OrganizationPlanMilestoneIdGrpcResponse, error) {
+	out := new(OrganizationPlanMilestoneIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/OrganizationPlanGrpcService/UpdateOrganizationPlanMilestone", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *orgPlanGrpcServiceClient) ReorderOrgPlanMilestones(ctx context.Context, in *ReorderOrgPlanMilestonesGrpcRequest, opts ...grpc.CallOption) (*OrgPlanIdGrpcResponse, error) {
-	out := new(OrgPlanIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/OrgPlanGrpcService/ReorderOrgPlanMilestones", in, out, opts...)
+func (c *organizationPlanGrpcServiceClient) ReorderOrganizationPlanMilestones(ctx context.Context, in *ReorderOrganizationPlanMilestonesGrpcRequest, opts ...grpc.CallOption) (*OrganizationPlanIdGrpcResponse, error) {
+	out := new(OrganizationPlanIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/OrganizationPlanGrpcService/ReorderOrganizationPlanMilestones", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// OrgPlanGrpcServiceServer is the server API for OrgPlanGrpcService service.
-// All implementations should embed UnimplementedOrgPlanGrpcServiceServer
+// OrganizationPlanGrpcServiceServer is the server API for OrganizationPlanGrpcService service.
+// All implementations should embed UnimplementedOrganizationPlanGrpcServiceServer
 // for forward compatibility
-type OrgPlanGrpcServiceServer interface {
-	CreateOrgPlan(context.Context, *CreateOrgPlanGrpcRequest) (*OrgPlanIdGrpcResponse, error)
-	UpdateOrgPlan(context.Context, *UpdateOrgPlanGrpcRequest) (*OrgPlanIdGrpcResponse, error)
-	CreateOrgPlanMilestone(context.Context, *CreateOrgPlanMilestoneGrpcRequest) (*OrgPlanMilestoneIdGrpcResponse, error)
-	UpdateOrgPlanMilestone(context.Context, *UpdateOrgPlanMilestoneGrpcRequest) (*OrgPlanMilestoneIdGrpcResponse, error)
-	ReorderOrgPlanMilestones(context.Context, *ReorderOrgPlanMilestonesGrpcRequest) (*OrgPlanIdGrpcResponse, error)
+type OrganizationPlanGrpcServiceServer interface {
+	CreateOrganizationPlan(context.Context, *CreateOrganizationPlanGrpcRequest) (*OrganizationPlanIdGrpcResponse, error)
+	UpdateOrganizationPlan(context.Context, *UpdateOrganizationPlanGrpcRequest) (*OrganizationPlanIdGrpcResponse, error)
+	CreateOrganizationPlanMilestone(context.Context, *CreateOrganizationPlanMilestoneGrpcRequest) (*OrganizationPlanMilestoneIdGrpcResponse, error)
+	UpdateOrganizationPlanMilestone(context.Context, *UpdateOrganizationPlanMilestoneGrpcRequest) (*OrganizationPlanMilestoneIdGrpcResponse, error)
+	ReorderOrganizationPlanMilestones(context.Context, *ReorderOrganizationPlanMilestonesGrpcRequest) (*OrganizationPlanIdGrpcResponse, error)
 }
 
-// UnimplementedOrgPlanGrpcServiceServer should be embedded to have forward compatible implementations.
-type UnimplementedOrgPlanGrpcServiceServer struct {
+// UnimplementedOrganizationPlanGrpcServiceServer should be embedded to have forward compatible implementations.
+type UnimplementedOrganizationPlanGrpcServiceServer struct {
 }
 
-func (UnimplementedOrgPlanGrpcServiceServer) CreateOrgPlan(context.Context, *CreateOrgPlanGrpcRequest) (*OrgPlanIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateOrgPlan not implemented")
+func (UnimplementedOrganizationPlanGrpcServiceServer) CreateOrganizationPlan(context.Context, *CreateOrganizationPlanGrpcRequest) (*OrganizationPlanIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateOrganizationPlan not implemented")
 }
-func (UnimplementedOrgPlanGrpcServiceServer) UpdateOrgPlan(context.Context, *UpdateOrgPlanGrpcRequest) (*OrgPlanIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrgPlan not implemented")
+func (UnimplementedOrganizationPlanGrpcServiceServer) UpdateOrganizationPlan(context.Context, *UpdateOrganizationPlanGrpcRequest) (*OrganizationPlanIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationPlan not implemented")
 }
-func (UnimplementedOrgPlanGrpcServiceServer) CreateOrgPlanMilestone(context.Context, *CreateOrgPlanMilestoneGrpcRequest) (*OrgPlanMilestoneIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateOrgPlanMilestone not implemented")
+func (UnimplementedOrganizationPlanGrpcServiceServer) CreateOrganizationPlanMilestone(context.Context, *CreateOrganizationPlanMilestoneGrpcRequest) (*OrganizationPlanMilestoneIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateOrganizationPlanMilestone not implemented")
 }
-func (UnimplementedOrgPlanGrpcServiceServer) UpdateOrgPlanMilestone(context.Context, *UpdateOrgPlanMilestoneGrpcRequest) (*OrgPlanMilestoneIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrgPlanMilestone not implemented")
+func (UnimplementedOrganizationPlanGrpcServiceServer) UpdateOrganizationPlanMilestone(context.Context, *UpdateOrganizationPlanMilestoneGrpcRequest) (*OrganizationPlanMilestoneIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationPlanMilestone not implemented")
 }
-func (UnimplementedOrgPlanGrpcServiceServer) ReorderOrgPlanMilestones(context.Context, *ReorderOrgPlanMilestonesGrpcRequest) (*OrgPlanIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ReorderOrgPlanMilestones not implemented")
+func (UnimplementedOrganizationPlanGrpcServiceServer) ReorderOrganizationPlanMilestones(context.Context, *ReorderOrganizationPlanMilestonesGrpcRequest) (*OrganizationPlanIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReorderOrganizationPlanMilestones not implemented")
 }
 
-// UnsafeOrgPlanGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to OrgPlanGrpcServiceServer will
+// UnsafeOrganizationPlanGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to OrganizationPlanGrpcServiceServer will
 // result in compilation errors.
-type UnsafeOrgPlanGrpcServiceServer interface {
-	mustEmbedUnimplementedOrgPlanGrpcServiceServer()
+type UnsafeOrganizationPlanGrpcServiceServer interface {
+	mustEmbedUnimplementedOrganizationPlanGrpcServiceServer()
 }
 
-func RegisterOrgPlanGrpcServiceServer(s grpc.ServiceRegistrar, srv OrgPlanGrpcServiceServer) {
-	s.RegisterService(&OrgPlanGrpcService_ServiceDesc, srv)
+func RegisterOrganizationPlanGrpcServiceServer(s grpc.ServiceRegistrar, srv OrganizationPlanGrpcServiceServer) {
+	s.RegisterService(&OrganizationPlanGrpcService_ServiceDesc, srv)
 }
 
-func _OrgPlanGrpcService_CreateOrgPlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateOrgPlanGrpcRequest)
+func _OrganizationPlanGrpcService_CreateOrganizationPlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateOrganizationPlanGrpcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrgPlanGrpcServiceServer).CreateOrgPlan(ctx, in)
+		return srv.(OrganizationPlanGrpcServiceServer).CreateOrganizationPlan(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/OrgPlanGrpcService/CreateOrgPlan",
+		FullMethod: "/OrganizationPlanGrpcService/CreateOrganizationPlan",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrgPlanGrpcServiceServer).CreateOrgPlan(ctx, req.(*CreateOrgPlanGrpcRequest))
+		return srv.(OrganizationPlanGrpcServiceServer).CreateOrganizationPlan(ctx, req.(*CreateOrganizationPlanGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrgPlanGrpcService_UpdateOrgPlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateOrgPlanGrpcRequest)
+func _OrganizationPlanGrpcService_UpdateOrganizationPlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateOrganizationPlanGrpcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrgPlanGrpcServiceServer).UpdateOrgPlan(ctx, in)
+		return srv.(OrganizationPlanGrpcServiceServer).UpdateOrganizationPlan(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/OrgPlanGrpcService/UpdateOrgPlan",
+		FullMethod: "/OrganizationPlanGrpcService/UpdateOrganizationPlan",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrgPlanGrpcServiceServer).UpdateOrgPlan(ctx, req.(*UpdateOrgPlanGrpcRequest))
+		return srv.(OrganizationPlanGrpcServiceServer).UpdateOrganizationPlan(ctx, req.(*UpdateOrganizationPlanGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrgPlanGrpcService_CreateOrgPlanMilestone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateOrgPlanMilestoneGrpcRequest)
+func _OrganizationPlanGrpcService_CreateOrganizationPlanMilestone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateOrganizationPlanMilestoneGrpcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrgPlanGrpcServiceServer).CreateOrgPlanMilestone(ctx, in)
+		return srv.(OrganizationPlanGrpcServiceServer).CreateOrganizationPlanMilestone(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/OrgPlanGrpcService/CreateOrgPlanMilestone",
+		FullMethod: "/OrganizationPlanGrpcService/CreateOrganizationPlanMilestone",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrgPlanGrpcServiceServer).CreateOrgPlanMilestone(ctx, req.(*CreateOrgPlanMilestoneGrpcRequest))
+		return srv.(OrganizationPlanGrpcServiceServer).CreateOrganizationPlanMilestone(ctx, req.(*CreateOrganizationPlanMilestoneGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrgPlanGrpcService_UpdateOrgPlanMilestone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateOrgPlanMilestoneGrpcRequest)
+func _OrganizationPlanGrpcService_UpdateOrganizationPlanMilestone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateOrganizationPlanMilestoneGrpcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrgPlanGrpcServiceServer).UpdateOrgPlanMilestone(ctx, in)
+		return srv.(OrganizationPlanGrpcServiceServer).UpdateOrganizationPlanMilestone(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/OrgPlanGrpcService/UpdateOrgPlanMilestone",
+		FullMethod: "/OrganizationPlanGrpcService/UpdateOrganizationPlanMilestone",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrgPlanGrpcServiceServer).UpdateOrgPlanMilestone(ctx, req.(*UpdateOrgPlanMilestoneGrpcRequest))
+		return srv.(OrganizationPlanGrpcServiceServer).UpdateOrganizationPlanMilestone(ctx, req.(*UpdateOrganizationPlanMilestoneGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrgPlanGrpcService_ReorderOrgPlanMilestones_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReorderOrgPlanMilestonesGrpcRequest)
+func _OrganizationPlanGrpcService_ReorderOrganizationPlanMilestones_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReorderOrganizationPlanMilestonesGrpcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrgPlanGrpcServiceServer).ReorderOrgPlanMilestones(ctx, in)
+		return srv.(OrganizationPlanGrpcServiceServer).ReorderOrganizationPlanMilestones(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/OrgPlanGrpcService/ReorderOrgPlanMilestones",
+		FullMethod: "/OrganizationPlanGrpcService/ReorderOrganizationPlanMilestones",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrgPlanGrpcServiceServer).ReorderOrgPlanMilestones(ctx, req.(*ReorderOrgPlanMilestonesGrpcRequest))
+		return srv.(OrganizationPlanGrpcServiceServer).ReorderOrganizationPlanMilestones(ctx, req.(*ReorderOrganizationPlanMilestonesGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// OrgPlanGrpcService_ServiceDesc is the grpc.ServiceDesc for OrgPlanGrpcService service.
+// OrganizationPlanGrpcService_ServiceDesc is the grpc.ServiceDesc for OrganizationPlanGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var OrgPlanGrpcService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "OrgPlanGrpcService",
-	HandlerType: (*OrgPlanGrpcServiceServer)(nil),
+var OrganizationPlanGrpcService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "OrganizationPlanGrpcService",
+	HandlerType: (*OrganizationPlanGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateOrgPlan",
-			Handler:    _OrgPlanGrpcService_CreateOrgPlan_Handler,
+			MethodName: "CreateOrganizationPlan",
+			Handler:    _OrganizationPlanGrpcService_CreateOrganizationPlan_Handler,
 		},
 		{
-			MethodName: "UpdateOrgPlan",
-			Handler:    _OrgPlanGrpcService_UpdateOrgPlan_Handler,
+			MethodName: "UpdateOrganizationPlan",
+			Handler:    _OrganizationPlanGrpcService_UpdateOrganizationPlan_Handler,
 		},
 		{
-			MethodName: "CreateOrgPlanMilestone",
-			Handler:    _OrgPlanGrpcService_CreateOrgPlanMilestone_Handler,
+			MethodName: "CreateOrganizationPlanMilestone",
+			Handler:    _OrganizationPlanGrpcService_CreateOrganizationPlanMilestone_Handler,
 		},
 		{
-			MethodName: "UpdateOrgPlanMilestone",
-			Handler:    _OrgPlanGrpcService_UpdateOrgPlanMilestone_Handler,
+			MethodName: "UpdateOrganizationPlanMilestone",
+			Handler:    _OrganizationPlanGrpcService_UpdateOrganizationPlanMilestone_Handler,
 		},
 		{
-			MethodName: "ReorderOrgPlanMilestones",
-			Handler:    _OrgPlanGrpcService_ReorderOrgPlanMilestones_Handler,
+			MethodName: "ReorderOrganizationPlanMilestones",
+			Handler:    _OrganizationPlanGrpcService_ReorderOrganizationPlanMilestones_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

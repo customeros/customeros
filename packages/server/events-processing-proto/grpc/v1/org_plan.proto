@@ -5,7 +5,7 @@ import "common/source.proto";
 
 option go_package = "api/grpc/v1/org_plan;org_plan_grpc_service";
 
-message CreateOrgPlanGrpcRequest {
+message CreateOrganizationPlanGrpcRequest {
   string tenant = 1;
   string loggedInUserId = 2;
   string name = 3;
@@ -16,9 +16,9 @@ message CreateOrgPlanGrpcRequest {
 }
 
 // Create Milestone takes just a list of string items, as they are all `not started` by default
-message CreateOrgPlanMilestoneGrpcRequest {
+message CreateOrganizationPlanMilestoneGrpcRequest {
   string tenant = 1;
-  string orgPlanId = 2;
+  string organizationPlanId = 2;
   string loggedInUserId = 3;
   string name = 4;
   google.protobuf.Timestamp createdAt = 5;
@@ -29,47 +29,47 @@ message CreateOrgPlanMilestoneGrpcRequest {
   int64 order = 10;
 }
 
-enum OrgPlanFieldMask {
-  ORG_PLAN_PROPERTY_NONE = 0; // No property, ignored by the server
-  ORG_PLAN_PROPERTY_ALL = 1; // All properties, if present in the list all other properties are ignored
-  ORG_PLAN_PROPERTY_NAME = 2;
-  ORG_PLAN_PROPERTY_RETIRED = 3;
+enum OrganizationPlanFieldMask {
+  ORGANIZATION_PLAN_PROPERTY_NONE = 0; // No property, ignored by the server
+  ORGANIZATION_PLAN_PROPERTY_ALL = 1; // All properties, if present in the list all other properties are ignored
+  ORGANIZATION_PLAN_PROPERTY_NAME = 2;
+  ORGANIZATION_PLAN_PROPERTY_RETIRED = 3;
 }
 
-message UpdateOrgPlanGrpcRequest {
-  string orgPlanId = 1;
+message UpdateOrganizationPlanGrpcRequest {
+  string organizationPlanId = 1;
   string tenant = 2;
   string loggedInUserId = 3;
   string name = 4;
   bool retired = 5;
-  repeated OrgPlanFieldMask fieldsMask = 6;
+  repeated OrganizationPlanFieldMask fieldsMask = 6;
   google.protobuf.Timestamp updatedAt = 7;
   string appSource = 8;
   string masterPlanId = 9;
   string orgId = 10;
 }
 
-enum OrgPlanMilestoneFieldMask {
-  ORG_PLAN_MILESTONE_PROPERTY_NONE = 0; // No property, ignored by the server
-  ORG_PLAN_MILESTONE_PROPERTY_ALL = 1; // All properties, if present in the list all other properties are ignored
-  ORG_PLAN_MILESTONE_PROPERTY_NAME = 2;
-  ORG_PLAN_MILESTONE_PROPERTY_RETIRED = 3;
-  ORG_PLAN_MILESTONE_PROPERTY_OPTIONAL = 4;
-  ORG_PLAN_MILESTONE_PROPERTY_DURATION_HOURS = 5;
-  ORG_PLAN_MILESTONE_PROPERTY_ITEMS = 6;
-  ORG_PLAN_MILESTONE_PROPERTY_ORDER = 7;
+enum OrganizationPlanMilestoneFieldMask {
+  ORGANIZATION_PLAN_MILESTONE_PROPERTY_NONE = 0; // No property, ignored by the server
+  ORGANIZATION_PLAN_MILESTONE_PROPERTY_ALL = 1; // All properties, if present in the list all other properties are ignored
+  ORGANIZATION_PLAN_MILESTONE_PROPERTY_NAME = 2;
+  ORGANIZATION_PLAN_MILESTONE_PROPERTY_RETIRED = 3;
+  ORGANIZATION_PLAN_MILESTONE_PROPERTY_OPTIONAL = 4;
+  ORGANIZATION_PLAN_MILESTONE_PROPERTY_DURATION_HOURS = 5;
+  ORGANIZATION_PLAN_MILESTONE_PROPERTY_ITEMS = 6;
+  ORGANIZATION_PLAN_MILESTONE_PROPERTY_ORDER = 7;
 }
 
-message OrgPlanMilestoneItem {
+message OrganizationPlanMilestoneItem {
     string status = 1;
     google.protobuf.Timestamp updatedAt = 2;
     string text = 3;
 }
 
 // Update milestone requires items to be a list of objects, which would contain the status, text and updatedAt
-message UpdateOrgPlanMilestoneGrpcRequest {
-  string orgPlanId = 1;
-  string orgPlanMilestoneId = 2;
+message UpdateOrganizationPlanMilestoneGrpcRequest {
+  string organizationPlanId = 1;
+  string organizationPlanMilestoneId = 2;
   string tenant = 3;
   string loggedInUserId = 4;
   string appSource = 5;
@@ -79,32 +79,32 @@ message UpdateOrgPlanMilestoneGrpcRequest {
   bool optional = 9;
   int64 order = 10;
   int64 durationHours = 11;
-  repeated OrgPlanMilestoneItem items = 12;
-  repeated OrgPlanMilestoneFieldMask fieldsMask = 13;
+  repeated OrganizationPlanMilestoneItem items = 12;
+  repeated OrganizationPlanMilestoneFieldMask fieldsMask = 13;
 }
 
-message ReorderOrgPlanMilestonesGrpcRequest {
-  string orgPlanId = 1;
+message ReorderOrganizationPlanMilestonesGrpcRequest {
+  string organizationPlanId = 1;
   string tenant = 2;
   string loggedInUserId = 3;
   string appSource = 4;
   google.protobuf.Timestamp updatedAt = 5;
-  repeated string orgPlanMilestoneIds = 6;
+  repeated string organizationPlanMilestoneIds = 6;
 }
 
-message OrgPlanIdGrpcResponse {
+message OrganizationPlanIdGrpcResponse {
   string id = 1;
 }
 
-message OrgPlanMilestoneIdGrpcResponse {
+message OrganizationPlanMilestoneIdGrpcResponse {
   string id = 1;
 }
 
 // Service definition
-service OrgPlanGrpcService {
-  rpc CreateOrgPlan(CreateOrgPlanGrpcRequest) returns (OrgPlanIdGrpcResponse);
-  rpc UpdateOrgPlan(UpdateOrgPlanGrpcRequest) returns (OrgPlanIdGrpcResponse);
-  rpc CreateOrgPlanMilestone(CreateOrgPlanMilestoneGrpcRequest) returns (OrgPlanMilestoneIdGrpcResponse);
-  rpc UpdateOrgPlanMilestone(UpdateOrgPlanMilestoneGrpcRequest) returns (OrgPlanMilestoneIdGrpcResponse);
-  rpc ReorderOrgPlanMilestones(ReorderOrgPlanMilestonesGrpcRequest) returns (OrgPlanIdGrpcResponse);
+service OrganizationPlanGrpcService {
+  rpc CreateOrganizationPlan(CreateOrganizationPlanGrpcRequest) returns (OrganizationPlanIdGrpcResponse);
+  rpc UpdateOrganizationPlan(UpdateOrganizationPlanGrpcRequest) returns (OrganizationPlanIdGrpcResponse);
+  rpc CreateOrganizationPlanMilestone(CreateOrganizationPlanMilestoneGrpcRequest) returns (OrganizationPlanMilestoneIdGrpcResponse);
+  rpc UpdateOrganizationPlanMilestone(UpdateOrganizationPlanMilestoneGrpcRequest) returns (OrganizationPlanMilestoneIdGrpcResponse);
+  rpc ReorderOrganizationPlanMilestones(ReorderOrganizationPlanMilestonesGrpcRequest) returns (OrganizationPlanIdGrpcResponse);
 }
