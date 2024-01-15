@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "api/grpc/v1/country;country_grpc_service";
+import "common/source.proto";
+
+message CreateCountryRequest {
+  string loggedInUserId = 1;
+  SourceFields sourceFields = 2;
+
+  string name = 3;
+  string codeA2 = 4;
+  string codeA3 = 5;
+  string phoneCode = 6;
+}
+
+message CountryIdGrpcResponse {
+  string id = 1;
+}
+
+service CountryGrpcService {
+  rpc CreateCountry(CreateCountryRequest) returns (CountryIdGrpcResponse);
+}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j/entity"
 )
 
 type CacheService interface {
@@ -29,19 +28,15 @@ func (s *cacheService) InitCache() {
 	//cache US states for the gCliCache
 	gCliStatesCache := make([]*model.GCliItem, 0)
 
-	countries := []*commonEntity.CountryEntity{}
-	countries = append(countries, &commonEntity.CountryEntity{Id: "1", CodeA3: "USA"})
+	//read states from db for USA
+	states, err := s.services.CommonServices.StateService.GetStatesByCountryId(context.Background(), "1")
+	if err != nil {
+		//todo: log error
+	}
 
-	for _, country := range countries {
-		states, err := s.services.CommonServices.StateService.GetStatesByCountryId(context.Background(), country.Id)
-		if err != nil {
-			//todo: log error
-		}
-
-		for _, v := range states {
-			item := mapper.MapStateToGCliItem(*v)
-			gCliStatesCache = append(gCliStatesCache, &item)
-		}
+	for _, v := range states {
+		item := mapper.MapStateToGCliItem(*v)
+		gCliStatesCache = append(gCliStatesCache, &item)
 	}
 
 	s.States = gCliStatesCache
