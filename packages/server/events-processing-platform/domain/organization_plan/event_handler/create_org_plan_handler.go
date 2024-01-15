@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/event"
+	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -50,7 +50,7 @@ func (h *createOrganizationPlanHandler) Handle(ctx context.Context, baseRequest 
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(request.CreatedAt, utils.Now())
 
-	createEvent, err := event.NewOrganizationPlanCreateEvent(organizationAggregate, request.Name, baseRequest.SourceFields, createdAtNotNil)
+	createEvent, err := event.NewOrganizationPlanCreateEvent(organizationAggregate, baseRequest.ObjectID, request.MasterPlanId, request.Name, baseRequest.SourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationPlanCreateEvent")

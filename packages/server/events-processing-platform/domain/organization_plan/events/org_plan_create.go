@@ -10,18 +10,22 @@ import (
 )
 
 type OrganizationPlanCreateEvent struct {
-	Tenant       string             `json:"tenant" validate:"required"`
-	Name         string             `json:"name"`
-	CreatedAt    time.Time          `json:"createdAt"`
-	SourceFields commonmodel.Source `json:"sourceFields"`
+	Tenant             string             `json:"tenant" validate:"required"`
+	Name               string             `json:"name"`
+	CreatedAt          time.Time          `json:"createdAt"`
+	SourceFields       commonmodel.Source `json:"sourceFields"`
+	OrganizationPlanId string             `json:"organizationPlanId"`
+	MasterPlanId       string             `json:"masterPlanId"`
 }
 
-func NewOrganizationPlanCreateEvent(aggregate eventstore.Aggregate, name string, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewOrganizationPlanCreateEvent(aggregate eventstore.Aggregate, organizationPlanId, masterPlanId, name string, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationPlanCreateEvent{
-		Tenant:       aggregate.GetTenant(),
-		Name:         name,
-		CreatedAt:    createdAt,
-		SourceFields: sourceFields,
+		Tenant:             aggregate.GetTenant(),
+		Name:               name,
+		CreatedAt:          createdAt,
+		SourceFields:       sourceFields,
+		OrganizationPlanId: organizationPlanId,
+		MasterPlanId:       masterPlanId,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

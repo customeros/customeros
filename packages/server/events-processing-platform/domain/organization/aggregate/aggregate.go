@@ -9,6 +9,8 @@ import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
+	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
+	orgplanmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
 )
@@ -97,6 +99,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		events.OrganizationRefreshRenewalSummaryV1,
 		events.OrganizationRequestScrapeByWebsiteV1:
 		return nil
+	case orgplanevents.OrganizationPlanCreateV1:
+		return a.onOrganizationPlanCreate(event)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
@@ -668,6 +672,28 @@ func (a *OrganizationAggregate) onLocationUnlinkFromBillingProfile(event eventst
 	billingProfile.LocationIds = utils.RemoveFromList(billingProfile.LocationIds, eventData.LocationId)
 	billingProfile.UpdatedAt = eventData.UpdatedAt
 	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onOrganizationPlanCreate(event eventstore.Event) error {
+	var eventData orgplanevents.OrganizationPlanCreateEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.OrganizationPlans == nil {
+		a.Organization.OrganizationPlans = []orgplanmodel.OrganizationPlan{}
+	}
+
+	a.Organization.OrganizationPlans = append(a.Organization.OrganizationPlans, orgplanmodel.OrganizationPlan{
+		ID:           eventData.OrganizationPlanId,
+		Name:         eventData.Name,
+		SourceFields: eventData.SourceFields,
+		CreatedAt:    eventData.CreatedAt,
+		UpdatedAt:    eventData.CreatedAt,
+		MasterPlanId: eventData.MasterPlanId,
+	})
 
 	return nil
 }

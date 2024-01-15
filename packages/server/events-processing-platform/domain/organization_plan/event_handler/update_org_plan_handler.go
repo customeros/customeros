@@ -8,7 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commonAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/event"
+	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -18,22 +18,23 @@ import (
 	"github.com/pkg/errors"
 )
 
-type ReorderOrganizationPlanMilestonesHandler interface {
-	Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.ReorderOrganizationPlanMilestonesGrpcRequest) error
+type UpdateOrganizationPlanHandler interface {
+	Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.UpdateOrganizationPlanGrpcRequest) error
 }
 
-type reorderOrganizationPlanMilestonesHandler struct {
+type updateOrganizationPlanHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 	cfg config.Utils
 }
 
-func NewReorderOrganizationPlanMilestonesHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) ReorderOrganizationPlanMilestonesHandler {
-	return &reorderOrganizationPlanMilestonesHandler{log: log, es: es, cfg: cfg}
+func NewUpdateOrganizationPlanHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) UpdateOrganizationPlanHandler {
+	return &updateOrganizationPlanHandler{log: log, es: es, cfg: cfg}
 }
 
-func (h *reorderOrganizationPlanMilestonesHandler) Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.ReorderOrganizationPlanMilestonesGrpcRequest) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReorderOrganizationPlanMilestonesHandler.Handle")
+// Handle processes the UpdateOrganizationPlanCommand to update a new master plan.
+func (h *updateOrganizationPlanHandler) Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.UpdateOrganizationPlanGrpcRequest) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateOrganizationPlanHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, baseRequest.Tenant, baseRequest.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "common", baseRequest)
@@ -54,10 +55,10 @@ func (h *reorderOrganizationPlanMilestonesHandler) Handle(ctx context.Context, b
 
 		updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
 
-		evt, err := event.NewOrganizationPlanMilestoneReorderEvent(orgAggregate, request.OrganizationPlanMilestoneIds, *updatedAt)
+		evt, err := event.NewOrganizationPlanUpdateEvent(orgAggregate, request.Name, request.Retired, *updatedAt, extractOrganizationPlanFieldsMask(request.FieldsMask))
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "NewOrganizationPlanMilestoneCreateEvent")
+			return errors.Wrap(err, "NewOrganizationPlanUpdateEvent")
 		}
 
 		commonAggregate.EnrichEventWithMetadataExtended(&evt, span, commonAggregate.EventMetadata{
@@ -71,6 +72,7 @@ func (h *reorderOrganizationPlanMilestonesHandler) Handle(ctx context.Context, b
 			tracing.TraceErr(span, err)
 			return err
 		}
+
 		// Persist the changes to the event store
 		err = h.es.Save(ctx, orgAggregate)
 		if err == nil {
@@ -95,4 +97,32 @@ func (h *reorderOrganizationPlanMilestonesHandler) Handle(ctx context.Context, b
 	}
 
 	return nil
+}
+
+func extractOrganizationPlanFieldsMask(fields []orgplanpb.OrganizationPlanFieldMask) []string {
+	fieldsMask := make([]string, 0)
+	if len(fields) == 0 {
+		return fieldsMask
+	}
+	if containsOrganizationPlanMaskFieldAll(fields) {
+		return fieldsMask
+	}
+	for _, field := range fields {
+		switch field {
+		case orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_NAME:
+			fieldsMask = append(fieldsMask, event.FieldMaskName)
+		case orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_RETIRED:
+			fieldsMask = append(fieldsMask, event.FieldMaskRetired)
+		}
+	}
+	return utils.RemoveDuplicates(fieldsMask)
+}
+
+func containsOrganizationPlanMaskFieldAll(fields []orgplanpb.OrganizationPlanFieldMask) bool {
+	for _, field := range fields {
+		if field == orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_ALL {
+			return true
+		}
+	}
+	return false
 }

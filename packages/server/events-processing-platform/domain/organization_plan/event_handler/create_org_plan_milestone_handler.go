@@ -8,7 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commonAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/event"
+	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -18,23 +18,23 @@ import (
 	"github.com/pkg/errors"
 )
 
-type UpdateOrganizationPlanHandler interface {
-	Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.UpdateOrganizationPlanGrpcRequest) error
+type CreateOrganizationPlanMilestoneHandler interface {
+	Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.CreateOrganizationPlanMilestoneGrpcRequest) error
 }
 
-type updateOrganizationPlanHandler struct {
+type createOrganizationPlanMilestoneHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 	cfg config.Utils
 }
 
-func NewUpdateOrganizationPlanHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) UpdateOrganizationPlanHandler {
-	return &updateOrganizationPlanHandler{log: log, es: es, cfg: cfg}
+func NewCreateOrganizationPlanMilestoneHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) CreateOrganizationPlanMilestoneHandler {
+	return &createOrganizationPlanMilestoneHandler{log: log, es: es, cfg: cfg}
 }
 
-// Handle processes the UpdateOrganizationPlanCommand to update a new master plan.
-func (h *updateOrganizationPlanHandler) Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.UpdateOrganizationPlanGrpcRequest) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateOrganizationPlanHandler.Handle")
+// Handle processes the CreateOrganizationPlanMilestone event to create a new org plan.
+func (h *createOrganizationPlanMilestoneHandler) Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.CreateOrganizationPlanMilestoneGrpcRequest) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "createOrganizationPlanMilestoneHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, baseRequest.Tenant, baseRequest.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "common", baseRequest)
@@ -42,39 +42,39 @@ func (h *updateOrganizationPlanHandler) Handle(ctx context.Context, baseRequest 
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
 		// Load or initialize the org aggregate
-		orgAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, baseRequest.Tenant, baseRequest.ObjectID)
+		organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, baseRequest.Tenant, baseRequest.ObjectID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
-		if eventstore.IsAggregateNotFound(orgAggregate) {
+		if eventstore.IsAggregateNotFound(organizationAggregate) {
 			tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 			return eventstore.ErrAggregateNotFound
 		}
 
-		updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
+		createdAtNotNil := utils.IfNotNilTimeWithDefault(request.CreatedAt, utils.Now())
 
-		evt, err := event.NewOrganizationPlanUpdateEvent(orgAggregate, request.Name, request.Retired, *updatedAt, extractOrganizationPlanFieldsMask(request.FieldsMask))
+		evt, err := event.NewOrganizationPlanMilestoneCreateEvent(organizationAggregate, baseRequest.ObjectID, request.Name, request.DurationHours, request.Order, request.Items, request.Optional, baseRequest.SourceFields, createdAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "NewOrganizationPlanUpdateEvent")
+			return errors.Wrap(err, "NewOrganizationPlanMilestoneCreateEvent")
 		}
 
 		commonAggregate.EnrichEventWithMetadataExtended(&evt, span, commonAggregate.EventMetadata{
 			Tenant: request.Tenant,
 			UserId: request.LoggedInUserId,
-			App:    baseRequest.SourceFields.AppSource,
+			App:    request.SourceFields.AppSource,
 		})
 
-		err = orgAggregate.Apply(evt)
+		err = organizationAggregate.Apply(evt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
 		// Persist the changes to the event store
-		err = h.es.Save(ctx, orgAggregate)
+		err = h.es.Save(ctx, organizationAggregate)
 		if err == nil {
 			return nil // Save successful
 		}
@@ -97,32 +97,4 @@ func (h *updateOrganizationPlanHandler) Handle(ctx context.Context, baseRequest 
 	}
 
 	return nil
-}
-
-func extractOrganizationPlanFieldsMask(fields []orgplanpb.OrganizationPlanFieldMask) []string {
-	fieldsMask := make([]string, 0)
-	if len(fields) == 0 {
-		return fieldsMask
-	}
-	if containsOrganizationPlanMaskFieldAll(fields) {
-		return fieldsMask
-	}
-	for _, field := range fields {
-		switch field {
-		case orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_NAME:
-			fieldsMask = append(fieldsMask, event.FieldMaskName)
-		case orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_RETIRED:
-			fieldsMask = append(fieldsMask, event.FieldMaskRetired)
-		}
-	}
-	return utils.RemoveDuplicates(fieldsMask)
-}
-
-func containsOrganizationPlanMaskFieldAll(fields []orgplanpb.OrganizationPlanFieldMask) bool {
-	for _, field := range fields {
-		if field == orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_ALL {
-			return true
-		}
-	}
-	return false
 }

@@ -2,10 +2,12 @@ package model
 
 import (
 	"fmt"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"time"
 
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	orgplanmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
 )
 
 const (
@@ -94,6 +96,7 @@ type Organization struct {
 	EmployeeGrowthRate  string                             `json:"employeeGrowthRate,omitempty"`
 	OnboardingDetails   OnboardingDetails                  `json:"onboardingDetails,omitempty"`
 	BillingProfiles     map[string]BillingProfile          `json:"billingProfiles,omitempty"`
+	OrganizationPlans   []orgplanmodel.OrganizationPlan    `json:"organizationPlans,omitempty"`
 }
 
 type BillingProfile struct {
