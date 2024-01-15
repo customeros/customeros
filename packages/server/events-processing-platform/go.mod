@@ -15,12 +15,13 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.4
-	github.com/go-playground/validator/v10 v10.16.0
+	github.com/go-playground/validator/v10 v10.17.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.5.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/joho/godotenv v1.5.1
+	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/labstack/echo/v4 v4.11.3
 	github.com/neo4j/neo4j-go-driver/v5 v5.16.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231227140027-08b87eac2360
@@ -45,7 +46,6 @@ require (
 	github.com/andybalholm/brotli v1.0.6 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
-	github.com/jung-kurt/gofpdf v1.16.2 // indirect
 	github.com/tetratelabs/wazero v1.6.0 // indirect
 )
 
