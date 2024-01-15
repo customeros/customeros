@@ -447,7 +447,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 }
 
 func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.RecordsWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewOrganizationData")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewRenewalData")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.Int("skip", skip), log.Int("limit", limit))
@@ -458,6 +458,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 
 	organizationFilterCypher, organizationFilterParams := "", make(map[string]interface{})
 	contractFilterCypher, contractFilterParams := "", make(map[string]interface{})
+	opportunityFilterCypher, opportunityFilterParams := "", make(map[string]interface{})
 	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
@@ -486,6 +487,11 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		contractFilter.Negate = false
 		contractFilter.LogicalOperator = utils.AND
 		contractFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		opportunityFilter := new(utils.CypherFilter)
+		opportunityFilter.Negate = false
+		opportunityFilter.LogicalOperator = utils.AND
+		opportunityFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		for _, filter := range where.And {
 			if filter.Filter.Property == SearchSortParamOrganization {
@@ -522,7 +528,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				for _, v := range *filter.Filter.Value.ArrayStr {
 					renewalLikelihoodValues = append(renewalLikelihoodValues, mapper.MapOpportunityRenewalLikelihoodFromString(&v))
 				}
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("derivedRenewalLikelihood", renewalLikelihoodValues, utils.IN, false))
+				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("renewalLikelihood", renewalLikelihoodValues, utils.IN, false))
 			} else if filter.Filter.Property == SearchSortParamOnboardingStatus && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				onboardingStatusValues := make([]string, 0)
 				for _, v := range *filter.Filter.Value.ArrayStr {
@@ -530,12 +536,12 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				}
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("onboardingStatus", onboardingStatusValues, utils.IN, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalCycleNext && filter.Filter.Value.Time != nil {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("billingDetailsRenewalCycleNext", *filter.Filter.Value.Time, utils.LTE, false))
+				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("renewedAt", *filter.Filter.Value.Time, utils.LTE, false))
 			} else if filter.Filter.Property == SearchSortParamRenewalDate && filter.Filter.Value.Time != nil {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("derivedNextRenewalAt", *filter.Filter.Value.Time, utils.LTE, false))
+				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("renewedAt", *filter.Filter.Value.Time, utils.LTE, false))
 			} else if filter.Filter.Property == SearchSortParamForecastArr && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
+				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("maxAmount", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
+				opportunityFilter.Filters = append(opportunityFilter.Filters, createCypherFilter("maxAmount", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
 			} else if filter.Filter.Property == SearchSortParamLastTouchpointAt && filter.Filter.Value.Time != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE, false))
 			} else if filter.Filter.Property == SearchSortParamLastTouchpointType && filter.Filter.Value.ArrayStr != nil {
@@ -555,6 +561,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		if len(contractFilter.Filters) > 0 {
 			contractFilterCypher, contractFilterParams = contractFilter.BuildCypherFilterFragmentWithParamName("contract", "contract_param_")
 		}
+		if len(opportunityFilter.Filters) > 0 {
+			opportunityFilterCypher, opportunityFilterParams = opportunityFilter.BuildCypherFilterFragmentWithParamName("op", "opportunity_param_")
+		}
 	}
 
 	//endregion
@@ -573,9 +582,12 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		utils.MergeMapToMap(emailFilterParams, params)
 		utils.MergeMapToMap(locationFilterParams, params)
 		utils.MergeMapToMap(contractFilterParams, params)
+		utils.MergeMapToMap(opportunityFilterParams, params)
 
 		//region count query
-		countQuery := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		countQuery := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+					 MATCH (o)-[:HAS_CONTRACT]->(contract:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t)
+					 MATCH (contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) `
 		if len(ownerId) > 0 {
 			countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`
 		}
@@ -588,9 +600,12 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		if contractFilterCypher != "" {
 			countQuery += ` MATCH (o)-[:HAS_CONTRACT]->(contract:Contract) WITH *`
 		}
+		if opportunityFilterCypher != "" {
+			countQuery += ` MATCH (contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) WITH *`
+		}
 		countQuery += ` WHERE o.hide = false `
 
-		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
+		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || contractFilterCypher != "" || opportunityFilterCypher != "" || len(ownerId) > 0 {
 			countQuery += " AND "
 		}
 
@@ -611,8 +626,14 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		if locationFilterCypher != "" {
 			countQueryParts = append(countQueryParts, locationFilterCypher)
 		}
+		if contractFilterCypher != "" {
+			countQueryParts = append(countQueryParts, contractFilterCypher)
+		}
+		if opportunityFilterCypher != "" {
+			countQueryParts = append(countQueryParts, opportunityFilterCypher)
+		}
 
-		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(o))`)
+		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(contract))`)
 
 		span.LogFields(log.String("countQuery", countQuery))
 
@@ -692,25 +713,25 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		}
 		if sort != nil && sort.By == SearchSortParamRenewalLikelihood {
 			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE 9999 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
+				query += ", CASE WHEN op.renewalLikelihood IS NOT NULL THEN op.renewalLikelihood ELSE 9999 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
 			} else {
-				query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE -1 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
+				query += ", CASE WHEN op.renewalLikelihood IS NOT NULL THEN op.renewalLikelihood ELSE -1 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
 			}
 			aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
 		}
 		if sort != nil && sort.By == SearchSortParamRenewalCycleNext {
 			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('2100-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
+				query += ", CASE WHEN op.renewedAt IS NOT NULL THEN date(op.renewedAt) ELSE date('2100-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
 			} else {
-				query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('1900-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
+				query += ", CASE WHEN op.renewedAt IS NOT NULL THEN date(op.renewedAt) ELSE date('1900-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
 			}
 			aliases += ", RENEWAL_CYCLE_NEXT_FOR_SORTING "
 		}
 		if sort != nil && sort.By == SearchSortParamRenewalDate {
 			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('2100-01-01') END as RENEWAL_DATE_FOR_SORTING "
+				query += ", CASE WHEN op.renewedAt IS NOT NULL THEN date(op.renewedAt) ELSE date('2100-01-01') END as RENEWAL_DATE_FOR_SORTING "
 			} else {
-				query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('1900-01-01') END as RENEWAL_DATE_FOR_SORTING "
+				query += ", CASE WHEN op.renewedAt IS NOT NULL THEN date(op.renewedAt) ELSE date('1900-01-01') END as RENEWAL_DATE_FOR_SORTING "
 			}
 			aliases += ", RENEWAL_DATE_FOR_SORTING "
 		}
@@ -726,9 +747,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		}
 		if sort != nil && sort.By == SearchSortParamForecastArr {
 			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
+				query += ", CASE WHEN op.maxAmount <> \"\" and op.maxAmount IS NOT NULL THEN op.maxAmount ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
 			} else {
-				query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 0 END as FORECAST_ARR_FOR_SORTING "
+				query += ", CASE WHEN op.maxAmount <> \"\" and op.maxAmount IS NOT NULL THEN op.maxAmount ELSE 0 END as FORECAST_ARR_FOR_SORTING "
 			}
 			aliases += ", FORECAST_ARR_FOR_SORTING "
 		}
