@@ -1,9 +1,8 @@
 'use client';
 import { produce } from 'immer';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { Command, CommandMenu, useCommands, CommandWrapper } from 'kmenu';
 
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
 import {
   LastTouchpointType,
   OpportunityRenewalLikelihood,
@@ -40,7 +39,6 @@ import {
 import 'kmenu/dist/index.css';
 
 export const KMenu = () => {
-  const client = getGraphQLClient();
   const [_owner, setOwnerFilter] = useOwnerFilter();
   const [_forecast, setForecastFilter] = useForecastFilter();
   const [_touchpoint, setTouchpointFilter] = useLastTouchpointFilter();
@@ -48,6 +46,8 @@ export const KMenu = () => {
   const [_organization, setOrganizationFilter] = useOrganizationFilter();
   const [_timeToRenewal, setTimeToRenewalFilter] = useTimeToRenewalFilter();
   const [_renewal, setRenewalLikelihoodFilter] = useRenewalLikelihoodFilter();
+
+  const isFeatureOn = useFeatureIsOn('kmenu');
 
   const resetFilters = () => {
     setOwnerFilter(ownerDefaultState);
@@ -152,10 +152,8 @@ export const KMenu = () => {
   ];
 
   const [mainCommands] = useCommands(main);
-  const { data } = useTenantNameQuery(client);
 
-  if (!data?.tenant || !['openlineai', 'openline'].includes(data?.tenant))
-    return null;
+  if (!isFeatureOn) return null;
 
   return (
     <CommandWrapper>

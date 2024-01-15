@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type ResetLogEntryTagsMutationVariables = Types.Exact<{
-  id: Types.Scalars['ID'];
+  id: Types.Scalars['ID']['input'];
   input?: Types.InputMaybe<
     Array<Types.TagIdOrNameInput> | Types.TagIdOrNameInput
   >;
@@ -35,6 +35,7 @@ export const ResetLogEntryTagsDocument = `
   logEntry_ResetTags(id: $id, input: $input)
 }
     `;
+
 export const useResetLogEntryTagsMutation = <
   TError = unknown,
   TContext = unknown,
@@ -47,23 +48,25 @@ export const useResetLogEntryTagsMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     ResetLogEntryTagsMutation,
     TError,
     ResetLogEntryTagsMutationVariables,
     TContext
-  >(
-    ['resetLogEntryTags'],
-    (variables?: ResetLogEntryTagsMutationVariables) =>
+  >({
+    mutationKey: ['resetLogEntryTags'],
+    mutationFn: (variables?: ResetLogEntryTagsMutationVariables) =>
       fetcher<ResetLogEntryTagsMutation, ResetLogEntryTagsMutationVariables>(
         client,
         ResetLogEntryTagsDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useResetLogEntryTagsMutation.getKey = () => ['resetLogEntryTags'];
 
 useResetLogEntryTagsMutation.fetcher = (

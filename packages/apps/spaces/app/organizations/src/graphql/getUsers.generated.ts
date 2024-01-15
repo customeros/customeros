@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../src/types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -9,6 +8,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -57,54 +57,75 @@ export const GetUsersDocument = `
   }
 }
     `;
+
 export const useGetUsersQuery = <TData = GetUsersQuery, TError = unknown>(
   client: GraphQLClient,
   variables: GetUsersQueryVariables,
-  options?: UseQueryOptions<GetUsersQuery, TError, TData>,
+  options?: Omit<UseQueryOptions<GetUsersQuery, TError, TData>, 'queryKey'> & {
+    queryKey?: UseQueryOptions<GetUsersQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GetUsersQuery, TError, TData>(
-    ['getUsers', variables],
-    fetcher<GetUsersQuery, GetUsersQueryVariables>(
+) => {
+  return useQuery<GetUsersQuery, TError, TData>({
+    queryKey: ['getUsers', variables],
+    queryFn: fetcher<GetUsersQuery, GetUsersQueryVariables>(
       client,
       GetUsersDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useGetUsersQuery.document = GetUsersDocument;
 
 useGetUsersQuery.getKey = (variables: GetUsersQueryVariables) => [
   'getUsers',
   variables,
 ];
+
 export const useInfiniteGetUsersQuery = <
-  TData = GetUsersQuery,
+  TData = InfiniteData<GetUsersQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GetUsersQueryVariables,
   client: GraphQLClient,
   variables: GetUsersQueryVariables,
-  options?: UseInfiniteQueryOptions<GetUsersQuery, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<GetUsersQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GetUsersQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GetUsersQuery, TError, TData>(
-    ['getUsers.infinite', variables],
-    (metaData) =>
-      fetcher<GetUsersQuery, GetUsersQueryVariables>(
-        client,
-        GetUsersDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GetUsersQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ['getUsers.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<GetUsersQuery, GetUsersQueryVariables>(
+            client,
+            GetUsersDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGetUsersQuery.getKey = (variables: GetUsersQueryVariables) => [
   'getUsers.infinite',
   variables,
 ];
+
 useGetUsersQuery.fetcher = (
   client: GraphQLClient,
   variables: GetUsersQueryVariables,

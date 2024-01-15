@@ -124,8 +124,8 @@ export const UpdateServiceModal = ({
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(queryKey);
-        queryClient.invalidateQueries(timelineQueryKey);
+        queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({ queryKey: timelineQueryKey });
       }, 1000);
     },
   });
@@ -229,7 +229,7 @@ export const UpdateServiceModal = ({
           <Button
             ml='3'
             w='full'
-            isLoading={updateService.status === 'loading'}
+            isLoading={updateService.status === 'pending'}
             loadingText='Modifying...'
             variant='outline'
             colorScheme='primary'

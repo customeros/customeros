@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../src/types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -9,6 +8,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -54,52 +54,79 @@ export const TimeToOnboardDocument = `
   }
 }
     `;
+
 export const useTimeToOnboardQuery = <
   TData = TimeToOnboardQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables?: TimeToOnboardQueryVariables,
-  options?: UseQueryOptions<TimeToOnboardQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<TimeToOnboardQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<TimeToOnboardQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<TimeToOnboardQuery, TError, TData>(
-    variables === undefined ? ['TimeToOnboard'] : ['TimeToOnboard', variables],
-    fetcher<TimeToOnboardQuery, TimeToOnboardQueryVariables>(
+) => {
+  return useQuery<TimeToOnboardQuery, TError, TData>({
+    queryKey:
+      variables === undefined
+        ? ['TimeToOnboard']
+        : ['TimeToOnboard', variables],
+    queryFn: fetcher<TimeToOnboardQuery, TimeToOnboardQueryVariables>(
       client,
       TimeToOnboardDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useTimeToOnboardQuery.document = TimeToOnboardDocument;
 
 useTimeToOnboardQuery.getKey = (variables?: TimeToOnboardQueryVariables) =>
   variables === undefined ? ['TimeToOnboard'] : ['TimeToOnboard', variables];
+
 export const useInfiniteTimeToOnboardQuery = <
-  TData = TimeToOnboardQuery,
+  TData = InfiniteData<TimeToOnboardQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof TimeToOnboardQueryVariables,
   client: GraphQLClient,
-  variables?: TimeToOnboardQueryVariables,
-  options?: UseInfiniteQueryOptions<TimeToOnboardQuery, TError, TData>,
+  variables: TimeToOnboardQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<TimeToOnboardQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      TimeToOnboardQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<TimeToOnboardQuery, TError, TData>(
-    variables === undefined
-      ? ['TimeToOnboard.infinite']
-      : ['TimeToOnboard.infinite', variables],
-    (metaData) =>
-      fetcher<TimeToOnboardQuery, TimeToOnboardQueryVariables>(
-        client,
-        TimeToOnboardDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<TimeToOnboardQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['TimeToOnboard.infinite']
+            : ['TimeToOnboard.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<TimeToOnboardQuery, TimeToOnboardQueryVariables>(
+            client,
+            TimeToOnboardDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteTimeToOnboardQuery.getKey = (
   variables?: TimeToOnboardQueryVariables,
@@ -107,6 +134,7 @@ useInfiniteTimeToOnboardQuery.getKey = (
   variables === undefined
     ? ['TimeToOnboard.infinite']
     : ['TimeToOnboard.infinite', variables];
+
 useTimeToOnboardQuery.fetcher = (
   client: GraphQLClient,
   variables?: TimeToOnboardQueryVariables,

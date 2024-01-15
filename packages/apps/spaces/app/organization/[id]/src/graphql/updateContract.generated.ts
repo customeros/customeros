@@ -34,6 +34,7 @@ export const UpdateContractDocument = `
   }
 }
     `;
+
 export const useUpdateContractMutation = <TError = unknown, TContext = unknown>(
   client: GraphQLClient,
   options?: UseMutationOptions<
@@ -43,23 +44,25 @@ export const useUpdateContractMutation = <TError = unknown, TContext = unknown>(
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     UpdateContractMutation,
     TError,
     UpdateContractMutationVariables,
     TContext
-  >(
-    ['updateContract'],
-    (variables?: UpdateContractMutationVariables) =>
+  >({
+    mutationKey: ['updateContract'],
+    mutationFn: (variables?: UpdateContractMutationVariables) =>
       fetcher<UpdateContractMutation, UpdateContractMutationVariables>(
         client,
         UpdateContractDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useUpdateContractMutation.getKey = () => ['updateContract'];
 
 useUpdateContractMutation.fetcher = (

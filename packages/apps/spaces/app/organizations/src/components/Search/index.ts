@@ -1,1 +1,2 @@
-export * from './Search';
+'use client';
+export { Search } from './Search';

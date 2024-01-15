@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type UpdateMeetingMutationVariables = Types.Exact<{
-  meetingId: Types.Scalars['ID'];
+  meetingId: Types.Scalars['ID']['input'];
   meeting: Types.MeetingUpdateInput;
 }>;
 
@@ -35,6 +35,7 @@ export const UpdateMeetingDocument = `
   }
 }
     `;
+
 export const useUpdateMeetingMutation = <TError = unknown, TContext = unknown>(
   client: GraphQLClient,
   options?: UseMutationOptions<
@@ -44,23 +45,25 @@ export const useUpdateMeetingMutation = <TError = unknown, TContext = unknown>(
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     UpdateMeetingMutation,
     TError,
     UpdateMeetingMutationVariables,
     TContext
-  >(
-    ['updateMeeting'],
-    (variables?: UpdateMeetingMutationVariables) =>
+  >({
+    mutationKey: ['updateMeeting'],
+    mutationFn: (variables?: UpdateMeetingMutationVariables) =>
       fetcher<UpdateMeetingMutation, UpdateMeetingMutationVariables>(
         client,
         UpdateMeetingDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useUpdateMeetingMutation.getKey = () => ['updateMeeting'];
 
 useUpdateMeetingMutation.fetcher = (

@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../src/types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -9,6 +8,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -49,56 +49,81 @@ export const GetBillableInfoDocument = `
   }
 }
     `;
+
 export const useGetBillableInfoQuery = <
   TData = GetBillableInfoQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables?: GetBillableInfoQueryVariables,
-  options?: UseQueryOptions<GetBillableInfoQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<GetBillableInfoQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<GetBillableInfoQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GetBillableInfoQuery, TError, TData>(
-    variables === undefined
-      ? ['getBillableInfo']
-      : ['getBillableInfo', variables],
-    fetcher<GetBillableInfoQuery, GetBillableInfoQueryVariables>(
+) => {
+  return useQuery<GetBillableInfoQuery, TError, TData>({
+    queryKey:
+      variables === undefined
+        ? ['getBillableInfo']
+        : ['getBillableInfo', variables],
+    queryFn: fetcher<GetBillableInfoQuery, GetBillableInfoQueryVariables>(
       client,
       GetBillableInfoDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useGetBillableInfoQuery.document = GetBillableInfoDocument;
 
 useGetBillableInfoQuery.getKey = (variables?: GetBillableInfoQueryVariables) =>
   variables === undefined
     ? ['getBillableInfo']
     : ['getBillableInfo', variables];
+
 export const useInfiniteGetBillableInfoQuery = <
-  TData = GetBillableInfoQuery,
+  TData = InfiniteData<GetBillableInfoQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GetBillableInfoQueryVariables,
   client: GraphQLClient,
-  variables?: GetBillableInfoQueryVariables,
-  options?: UseInfiniteQueryOptions<GetBillableInfoQuery, TError, TData>,
+  variables: GetBillableInfoQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<GetBillableInfoQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GetBillableInfoQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GetBillableInfoQuery, TError, TData>(
-    variables === undefined
-      ? ['getBillableInfo.infinite']
-      : ['getBillableInfo.infinite', variables],
-    (metaData) =>
-      fetcher<GetBillableInfoQuery, GetBillableInfoQueryVariables>(
-        client,
-        GetBillableInfoDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GetBillableInfoQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['getBillableInfo.infinite']
+            : ['getBillableInfo.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<GetBillableInfoQuery, GetBillableInfoQueryVariables>(
+            client,
+            GetBillableInfoDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGetBillableInfoQuery.getKey = (
   variables?: GetBillableInfoQueryVariables,
@@ -106,6 +131,7 @@ useInfiniteGetBillableInfoQuery.getKey = (
   variables === undefined
     ? ['getBillableInfo.infinite']
     : ['getBillableInfo.infinite', variables];
+
 useGetBillableInfoQuery.fetcher = (
   client: GraphQLClient,
   variables?: GetBillableInfoQueryVariables,

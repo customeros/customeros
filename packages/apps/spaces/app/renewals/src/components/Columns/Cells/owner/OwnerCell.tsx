@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import { produce } from 'immer';
 
 import { User } from '@graphql/types';
@@ -29,14 +31,6 @@ export const OwnerCell = ({ owner }: OwnerProps) => {
     },
     {
       enabled: !getUsers.hasFetched,
-      onSuccess: () => {
-        if (getUsers.hasFetched) return;
-        setRenewalsMeta(
-          produce(renewalsMeta, (draft) => {
-            draft.getUsers.hasFetched = true;
-          }),
-        );
-      },
     },
   );
 
@@ -44,6 +38,16 @@ export const OwnerCell = ({ owner }: OwnerProps) => {
   const name =
     value?.name ??
     [owner?.firstName, owner?.lastName].filter(Boolean).join(' ').trim();
+
+  useEffect(() => {
+    if (!getUsers.hasFetched) {
+      setRenewalsMeta(
+        produce(renewalsMeta, (draft) => {
+          draft.getUsers.hasFetched = false;
+        }),
+      );
+    }
+  }, [getUsers.hasFetched]);
 
   return (
     <Flex

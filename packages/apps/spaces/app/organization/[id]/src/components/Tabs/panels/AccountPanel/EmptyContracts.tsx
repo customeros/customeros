@@ -83,7 +83,7 @@ export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
       );
     },
     onSettled: () => {
-      queryClient.invalidateQueries(queryKey);
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
@@ -120,7 +120,7 @@ export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
         <Button
           fontSize='sm'
           size='sm'
-          isLoading={createContract.status === 'loading'}
+          isLoading={createContract.status === 'pending'}
           loadingText='Creating contract...'
           colorScheme='primary'
           mt={6}

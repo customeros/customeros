@@ -32,6 +32,7 @@ export const CloseServiceLineItemDocument = `
   serviceLineItem_Close(input: $input)
 }
     `;
+
 export const useCloseServiceLineItemMutation = <
   TError = unknown,
   TContext = unknown,
@@ -44,21 +45,23 @@ export const useCloseServiceLineItemMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     CloseServiceLineItemMutation,
     TError,
     CloseServiceLineItemMutationVariables,
     TContext
-  >(
-    ['CloseServiceLineItem'],
-    (variables?: CloseServiceLineItemMutationVariables) =>
+  >({
+    mutationKey: ['CloseServiceLineItem'],
+    mutationFn: (variables?: CloseServiceLineItemMutationVariables) =>
       fetcher<
         CloseServiceLineItemMutation,
         CloseServiceLineItemMutationVariables
       >(client, CloseServiceLineItemDocument, variables, headers)(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useCloseServiceLineItemMutation.getKey = () => ['CloseServiceLineItem'];
 
 useCloseServiceLineItemMutation.fetcher = (

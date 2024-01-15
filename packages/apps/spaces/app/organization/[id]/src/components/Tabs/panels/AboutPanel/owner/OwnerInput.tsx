@@ -56,7 +56,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
       );
       const organization =
         queryClient.getQueryData<OrganizationQuery>(queryKey);
-      queryClient.cancelQueries(queryKey);
+      queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<OrganizationQuery>(queryKey, (oldData) => {
         if (!oldData || !oldData?.organization) return;
 
@@ -91,7 +91,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
     onMutate: () => {
       const organization =
         queryClient.getQueryData<OrganizationQuery>(queryKey);
-      queryClient.cancelQueries(queryKey);
+      queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<OrganizationQuery>(queryKey, (oldData) => {
         if (!oldData || !oldData?.organization) return;
 
@@ -142,7 +142,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
     <Select
       isClearable
       value={value}
-      isLoading={setOrganizationOwner.isLoading}
+      isLoading={setOrganizationOwner.isPending}
       placeholder='Owner'
       backspaceRemovesValue
       onChange={handleSelect}

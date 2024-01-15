@@ -39,6 +39,7 @@ export const CreateOrganizationDocument = `
   }
 }
     `;
+
 export const useCreateOrganizationMutation = <
   TError = unknown,
   TContext = unknown,
@@ -51,23 +52,25 @@ export const useCreateOrganizationMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     CreateOrganizationMutation,
     TError,
     CreateOrganizationMutationVariables,
     TContext
-  >(
-    ['createOrganization'],
-    (variables?: CreateOrganizationMutationVariables) =>
+  >({
+    mutationKey: ['createOrganization'],
+    mutationFn: (variables?: CreateOrganizationMutationVariables) =>
       fetcher<CreateOrganizationMutation, CreateOrganizationMutationVariables>(
         client,
         CreateOrganizationDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useCreateOrganizationMutation.getKey = () => ['createOrganization'];
 
 useCreateOrganizationMutation.fetcher = (

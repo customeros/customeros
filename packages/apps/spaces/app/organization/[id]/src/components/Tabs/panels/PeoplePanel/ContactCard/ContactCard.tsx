@@ -359,7 +359,7 @@ export const ContactCard = ({
               id='confirm-button'
               position='absolute'
               aria-label='Delete contact'
-              isLoading={deleteContact.isLoading}
+              isLoading={deleteContact.isPending}
               onClick={toggleConfirmDelete}
               icon={<Icons.Trash1 boxSize='5' />}
             />
@@ -446,7 +446,7 @@ export const ContactCard = ({
         isOpen={isOpen}
         onClose={onClose}
         onConfirm={handleDelete}
-        isLoading={deleteContact.isLoading}
+        isLoading={deleteContact.isPending}
       />
     </>
   );

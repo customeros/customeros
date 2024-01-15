@@ -39,7 +39,7 @@ export const Providers = ({
       new QueryClient({
         defaultOptions: {
           queries: {
-            cacheTime: 1000 * 60 * 60 * 24, // 24 hours
+            gcTime: 1000 * 60 * 60 * 24, // 24 hours
           },
         },
       }),
@@ -51,7 +51,7 @@ export const Providers = ({
         client={queryClient}
         persistOptions={{ persister }}
       >
-        <ReactQueryDevtools initialIsOpen={false} position='bottom-right' />
+        <ReactQueryDevtools initialIsOpen={false} position='bottom' />
         <RecoilRoot>
           <NextAuthProvider>
             <GrowthbookProvider>

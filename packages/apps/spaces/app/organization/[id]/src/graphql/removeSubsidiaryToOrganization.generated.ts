@@ -19,8 +19,8 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type RemoveSubsidiaryToOrganizationMutationVariables = Types.Exact<{
-  organizationId: Types.Scalars['ID'];
-  subsidiaryId: Types.Scalars['ID'];
+  organizationId: Types.Scalars['ID']['input'];
+  subsidiaryId: Types.Scalars['ID']['input'];
 }>;
 
 export type RemoveSubsidiaryToOrganizationMutation = {
@@ -64,6 +64,7 @@ export const RemoveSubsidiaryToOrganizationDocument = `
   }
 }
     `;
+
 export const useRemoveSubsidiaryToOrganizationMutation = <
   TError = unknown,
   TContext = unknown,
@@ -76,21 +77,23 @@ export const useRemoveSubsidiaryToOrganizationMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     RemoveSubsidiaryToOrganizationMutation,
     TError,
     RemoveSubsidiaryToOrganizationMutationVariables,
     TContext
-  >(
-    ['removeSubsidiaryToOrganization'],
-    (variables?: RemoveSubsidiaryToOrganizationMutationVariables) =>
+  >({
+    mutationKey: ['removeSubsidiaryToOrganization'],
+    mutationFn: (variables?: RemoveSubsidiaryToOrganizationMutationVariables) =>
       fetcher<
         RemoveSubsidiaryToOrganizationMutation,
         RemoveSubsidiaryToOrganizationMutationVariables
       >(client, RemoveSubsidiaryToOrganizationDocument, variables, headers)(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useRemoveSubsidiaryToOrganizationMutation.getKey = () => [
   'removeSubsidiaryToOrganization',
 ];

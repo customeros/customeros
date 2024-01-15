@@ -28,7 +28,6 @@ const plugin = (_schema, documents, _config) => {
 
   if (output)
     return {
-      prepend: [`import type { InfiniteData } from '@tanstack/react-query';`],
       content: output,
     };
 };

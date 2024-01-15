@@ -1,5 +1,7 @@
 import { GraphQLClient } from 'graphql-request';
 import {
+  InfiniteData,
+  keepPreviousData,
   useInfiniteQuery,
   UseInfiniteQueryOptions,
 } from '@tanstack/react-query';
@@ -25,12 +27,15 @@ function fetcher<TData, TVariables extends { [key: string]: unknown }>(
 }
 
 export const useGetOrganizationsInfiniteQuery = <
-  TData = GetOrganizationsQuery,
+  TData = InfiniteData<GetOrganizationsQuery>,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables: GetOrganizationsQueryVariables,
-  _options?: UseInfiniteQueryOptions<GetOrganizationsQuery, TError, TData>,
+  options?: Omit<
+    UseInfiniteQueryOptions<GetOrganizationsQuery, TError, TData>,
+    'queryKey' | 'getNextPageParam' | 'initialPageParam'
+  >,
 ) => {
   return useInfiniteQuery<GetOrganizationsQuery, TError, TData>({
     queryKey: ['getOrganizations.infinite', variables],
@@ -40,9 +45,10 @@ export const useGetOrganizationsInfiniteQuery = <
         GetOrganizationsDocument,
         {
           ...variables,
-          pagination: { ...variables.pagination, page: pageParam },
+          pagination: { ...variables.pagination, page: pageParam as number },
         },
       )(),
+    initialPageParam: 1,
     getNextPageParam: (lastPage, pages) => {
       const content = pages.flatMap(
         (page) => page.dashboardView_Organizations?.content ?? [],
@@ -57,6 +63,7 @@ export const useGetOrganizationsInfiniteQuery = <
       return pages.length + 1;
     },
     refetchOnWindowFocus: false,
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
+    ...options,
   });
 };

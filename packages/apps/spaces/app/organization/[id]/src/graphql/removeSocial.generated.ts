@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type RemoveSocialMutationVariables = Types.Exact<{
-  socialId: Types.Scalars['ID'];
+  socialId: Types.Scalars['ID']['input'];
 }>;
 
 export type RemoveSocialMutation = {
@@ -34,6 +34,7 @@ export const RemoveSocialDocument = `
   }
 }
     `;
+
 export const useRemoveSocialMutation = <TError = unknown, TContext = unknown>(
   client: GraphQLClient,
   options?: UseMutationOptions<
@@ -43,23 +44,25 @@ export const useRemoveSocialMutation = <TError = unknown, TContext = unknown>(
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     RemoveSocialMutation,
     TError,
     RemoveSocialMutationVariables,
     TContext
-  >(
-    ['removeSocial'],
-    (variables?: RemoveSocialMutationVariables) =>
+  >({
+    mutationKey: ['removeSocial'],
+    mutationFn: (variables?: RemoveSocialMutationVariables) =>
       fetcher<RemoveSocialMutation, RemoveSocialMutationVariables>(
         client,
         RemoveSocialDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useRemoveSocialMutation.getKey = () => ['removeSocial'];
 
 useRemoveSocialMutation.fetcher = (

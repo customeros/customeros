@@ -34,6 +34,7 @@ export const UpdateOpportunityRenewalDocument = `
   }
 }
     `;
+
 export const useUpdateOpportunityRenewalMutation = <
   TError = unknown,
   TContext = unknown,
@@ -46,21 +47,23 @@ export const useUpdateOpportunityRenewalMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     UpdateOpportunityRenewalMutation,
     TError,
     UpdateOpportunityRenewalMutationVariables,
     TContext
-  >(
-    ['updateOpportunityRenewal'],
-    (variables?: UpdateOpportunityRenewalMutationVariables) =>
+  >({
+    mutationKey: ['updateOpportunityRenewal'],
+    mutationFn: (variables?: UpdateOpportunityRenewalMutationVariables) =>
       fetcher<
         UpdateOpportunityRenewalMutation,
         UpdateOpportunityRenewalMutationVariables
       >(client, UpdateOpportunityRenewalDocument, variables, headers)(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useUpdateOpportunityRenewalMutation.getKey = () => ['updateOpportunityRenewal'];
 
 useUpdateOpportunityRenewalMutation.fetcher = (

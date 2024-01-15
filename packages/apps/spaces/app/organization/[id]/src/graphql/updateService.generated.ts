@@ -34,6 +34,7 @@ export const UpdateServiceDocument = `
   }
 }
     `;
+
 export const useUpdateServiceMutation = <TError = unknown, TContext = unknown>(
   client: GraphQLClient,
   options?: UseMutationOptions<
@@ -43,23 +44,25 @@ export const useUpdateServiceMutation = <TError = unknown, TContext = unknown>(
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     UpdateServiceMutation,
     TError,
     UpdateServiceMutationVariables,
     TContext
-  >(
-    ['updateService'],
-    (variables?: UpdateServiceMutationVariables) =>
+  >({
+    mutationKey: ['updateService'],
+    mutationFn: (variables?: UpdateServiceMutationVariables) =>
       fetcher<UpdateServiceMutation, UpdateServiceMutationVariables>(
         client,
         UpdateServiceDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useUpdateServiceMutation.getKey = () => ['updateService'];
 
 useUpdateServiceMutation.fetcher = (
