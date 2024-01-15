@@ -87,7 +87,7 @@ func TestMutationResolver_GetByWorkspace(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateTenant(ctx, driver, "other")
-	neo4jt.CreateWorkspace(ctx, driver, "testworkspace", "testprovider", tenantName)
+	neo4jtest.CreateWorkspace(ctx, driver, "testworkspace", "testprovider", tenantName)
 
 	rawResponse, err := cAdmin.RawPost(getQuery("tenant/get_by_workspace"),
 		client.Var("name", "testworkspace"),

@@ -8,6 +8,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -103,7 +104,7 @@ func TestQueryResolver_Issue_WithParticipants(t *testing.T) {
 		CreatedAt:   utils.Now(),
 	})
 
-	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{})
+	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{})
 

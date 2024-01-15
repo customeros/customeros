@@ -1,11 +1,10 @@
 package entity
 
 import (
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 )
 
-// Deprecated
 type ServiceLineItemEntity struct {
 	ID               string
 	Name             string
@@ -14,20 +13,15 @@ type ServiceLineItemEntity struct {
 	StartedAt        time.Time
 	EndedAt          *time.Time
 	IsCanceled       bool
-	Billed           BilledType
+	Billed           enum.BilledType
 	Price            float64
 	Quantity         int64
-	PreviousBilled   BilledType
+	PreviousBilled   enum.BilledType
 	PreviousPrice    float64
 	PreviousQuantity int64
 	Comments         string
-	Source           neo4jentity.DataSource
-	SourceOfTruth    neo4jentity.DataSource
+	Source           DataSource
+	SourceOfTruth    DataSource
 	AppSource        string
 	ParentID         string
-
-	DataloaderKey string
 }
-
-// Deprecated
-type ServiceLineItemEntities []ServiceLineItemEntity

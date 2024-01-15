@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -31,12 +32,12 @@ func TestGet_Whoami(t *testing.T) {
 	otherTenant := "other"
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateTenant(ctx, driver, otherTenant)
-	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId1 := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
 		Roles:     []string{model.RoleUser.String(), model.RoleOwner.String()},
 	})
-	userId2 := neo4jt.CreateUser(ctx, driver, otherTenant, entity.UserEntity{
+	userId2 := neo4jtest.CreateUser(ctx, driver, otherTenant, neo4jentity.UserEntity{
 		FirstName: "otherFirst",
 		LastName:  "otherLast",
 		Roles:     []string{model.RoleUser.String()},

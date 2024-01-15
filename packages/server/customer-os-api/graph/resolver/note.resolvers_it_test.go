@@ -19,7 +19,7 @@ func TestMutationResolver_NoteCreateForContact(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 
 	rawResponse, err := c.RawPost(getQuery("note/create_note_for_contact"),
@@ -64,7 +64,7 @@ func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
 
 	rawResponse, err := c.RawPost(getQuery("note/create_note_for_organization"),

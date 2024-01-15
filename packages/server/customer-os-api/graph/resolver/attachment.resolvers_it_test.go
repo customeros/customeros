@@ -3,7 +3,6 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
@@ -15,7 +14,7 @@ func TestMutationResolver_AttachmentCreate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	rawResponse, err := c.RawPost(getQuery("attachment/create_attachment"),
 		client.Var("mimeType", "text/plain"),

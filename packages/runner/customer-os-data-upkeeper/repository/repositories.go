@@ -2,8 +2,10 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository/neo4j"
 	commrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"gorm.io/gorm"
 )
 
@@ -17,18 +19,21 @@ type Repositories struct {
 
 	CommonRepositories *commrepo.Repositories
 
+	Neo4jRepositories *neo4jRepository.Repositories
+
 	ContractRepository     neo4jrepo.ContractRepository
 	OpportunityRepository  neo4jrepo.OpportunityRepository
 	OrganizationRepository neo4jrepo.OrganizationRepository
 }
 
-func InitRepositories(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
+func InitRepositories(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 	repositories := Repositories{
 		Dbs: Dbs{
 			Neo4jDriver: driver,
 			GormDb:      gormDb,
 		},
 		CommonRepositories: commrepo.InitRepositories(gormDb, driver),
+		Neo4jRepositories:  neo4jRepository.InitNeo4jRepositories(driver, cfg.Neo4j.Database),
 
 		ContractRepository:     neo4jrepo.NewContractRepository(driver),
 		OpportunityRepository:  neo4jrepo.NewOpportunityRepository(driver),
