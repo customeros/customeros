@@ -1,11 +1,11 @@
 package event
 
 const (
-	OrgPlanCreateV1           = "V1_ORG_PLAN_CREATE"
-	OrgPlanUpdateV1           = "V1_ORG_PLAN_UPDATE"
-	OrgPlanMilestoneCreateV1  = "V1_ORG_PLAN_MILESTONE_CREATE"
-	OrgPlanMilestoneUpdateV1  = "V1_ORG_PLAN_MILESTONE_UPDATE"
-	OrgPlanMilestoneReorderV1 = "V1_ORG_PLAN_MILESTONE_REORDER"
+	OrganizationPlanCreateV1           = "V1_ORGANIZATION_PLAN_CREATE"
+	OrganizationPlanUpdateV1           = "V1_ORGANIZATION_PLAN_UPDATE"
+	OrganizationPlanMilestoneCreateV1  = "V1_ORGANIZATION_PLAN_MILESTONE_CREATE"
+	OrganizationPlanMilestoneUpdateV1  = "V1_ORGANIZATION_PLAN_MILESTONE_UPDATE"
+	OrganizationPlanMilestoneReorderV1 = "V1_ORGANIZATION_PLAN_MILESTONE_REORDER"
 )
 
 const (

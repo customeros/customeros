@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type OrgPlanMilestoneCreateEvent struct {
+type OrganizationPlanMilestoneCreateEvent struct {
 	Tenant        string             `json:"tenant" validate:"required"`
 	MilestoneId   string             `json:"milestoneId" validate:"required"`
 	Name          string             `json:"name"`
@@ -21,8 +21,8 @@ type OrgPlanMilestoneCreateEvent struct {
 	Optional      bool               `json:"optional"`
 }
 
-func NewOrgPlanMilestoneCreateEvent(aggregate eventstore.Aggregate, milestoneId, name string, durationHours, order int64, items []string, optional bool, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
-	eventData := OrgPlanMilestoneCreateEvent{
+func NewOrganizationPlanMilestoneCreateEvent(aggregate eventstore.Aggregate, milestoneId, name string, durationHours, order int64, items []string, optional bool, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationPlanMilestoneCreateEvent{
 		Tenant:        aggregate.GetTenant(),
 		MilestoneId:   milestoneId,
 		Name:          name,
@@ -35,12 +35,12 @@ func NewOrgPlanMilestoneCreateEvent(aggregate eventstore.Aggregate, milestoneId,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrgPlanMilestoneCreateEvent")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationPlanMilestoneCreateEvent")
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, OrgPlanMilestoneCreateV1)
+	event := eventstore.NewBaseEvent(aggregate, OrganizationPlanMilestoneCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrgPlanMilestoneCreateEvent")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationPlanMilestoneCreateEvent")
 	}
 
 	return event, nil

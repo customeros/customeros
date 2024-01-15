@@ -15,23 +15,23 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type CreateOrgPlanMilestoneCommandHandler interface {
-	Handle(ctx context.Context, cmd *command.CreateOrgPlanMilestoneCommand) error
+type CreateOrganizationPlanMilestoneCommandHandler interface {
+	Handle(ctx context.Context, cmd *command.CreateOrganizationPlanMilestoneCommand) error
 }
 
-type createOrgPlanMilestoneCommandHandler struct {
+type createOrganizationPlanMilestoneCommandHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 	cfg config.Utils
 }
 
-func NewCreateOrgPlanMilestoneCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) CreateOrgPlanMilestoneCommandHandler {
-	return &createOrgPlanMilestoneCommandHandler{log: log, es: es, cfg: cfg}
+func NewCreateOrganizationPlanMilestoneCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) CreateOrganizationPlanMilestoneCommandHandler {
+	return &createOrganizationPlanMilestoneCommandHandler{log: log, es: es, cfg: cfg}
 }
 
-// Handle processes the CreateOrgPlanCommand to create a new org plan.
-func (h *createOrgPlanMilestoneCommandHandler) Handle(ctx context.Context, cmd *command.CreateOrgPlanMilestoneCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "createOrgPlanMilestoneCommandHandler.Handle")
+// Handle processes the CreateOrganizationPlanCommand to create a new org plan.
+func (h *createOrganizationPlanMilestoneCommandHandler) Handle(ctx context.Context, cmd *command.CreateOrganizationPlanMilestoneCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "createOrganizationPlanMilestoneCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "command", cmd)

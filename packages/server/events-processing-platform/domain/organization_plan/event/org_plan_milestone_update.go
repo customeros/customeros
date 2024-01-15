@@ -10,21 +10,21 @@ import (
 	"github.com/pkg/errors"
 )
 
-type OrgPlanMilestoneUpdateEvent struct {
-	Tenant        string                          `json:"tenant" validate:"required"`
-	MilestoneId   string                          `json:"milestoneId" validate:"required"`
-	Name          string                          `json:"name,omitempty"`
-	Order         int64                           `json:"order" validate:"gte=0"`
-	DurationHours int64                           `json:"durationHours" validate:"gte=0"`
-	UpdatedAt     time.Time                       `json:"updatedAt"`
-	Items         []command.OrgPlanMilestoneItems `json:"items"`
-	Optional      bool                            `json:"optional"`
-	Retired       bool                            `json:"retired"`
-	FieldsMask    []string                        `json:"fieldsMask,omitempty"`
+type OrganizationPlanMilestoneUpdateEvent struct {
+	Tenant        string                                   `json:"tenant" validate:"required"`
+	MilestoneId   string                                   `json:"milestoneId" validate:"required"`
+	Name          string                                   `json:"name,omitempty"`
+	Order         int64                                    `json:"order" validate:"gte=0"`
+	DurationHours int64                                    `json:"durationHours" validate:"gte=0"`
+	UpdatedAt     time.Time                                `json:"updatedAt"`
+	Items         []command.OrganizationPlanMilestoneItems `json:"items"`
+	Optional      bool                                     `json:"optional"`
+	Retired       bool                                     `json:"retired"`
+	FieldsMask    []string                                 `json:"fieldsMask,omitempty"`
 }
 
-func NewOrgPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, milestoneId, name string, durationHours, order int64, items []command.OrgPlanMilestoneItems, fieldsMask []string, optional, retired bool, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := OrgPlanMilestoneUpdateEvent{
+func NewOrganizationPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, milestoneId, name string, durationHours, order int64, items []command.OrganizationPlanMilestoneItems, fieldsMask []string, optional, retired bool, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationPlanMilestoneUpdateEvent{
 		Tenant:      aggregate.GetTenant(),
 		MilestoneId: milestoneId,
 		UpdatedAt:   updatedAt,
@@ -50,37 +50,37 @@ func NewOrgPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, milestoneId,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrgPlanMilestoneUpdateEvent")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationPlanMilestoneUpdateEvent")
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, OrgPlanMilestoneUpdateV1)
+	event := eventstore.NewBaseEvent(aggregate, OrganizationPlanMilestoneUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrgPlanMilestoneUpdateEvent")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationPlanMilestoneUpdateEvent")
 	}
 
 	return event, nil
 }
 
-func (e OrgPlanMilestoneUpdateEvent) UpdateName() bool {
+func (e OrganizationPlanMilestoneUpdateEvent) UpdateName() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskName)
 }
 
-func (e OrgPlanMilestoneUpdateEvent) UpdateOrder() bool {
+func (e OrganizationPlanMilestoneUpdateEvent) UpdateOrder() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskOrder)
 }
 
-func (e OrgPlanMilestoneUpdateEvent) UpdateDurationHours() bool {
+func (e OrganizationPlanMilestoneUpdateEvent) UpdateDurationHours() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskDurationHours)
 }
 
-func (e OrgPlanMilestoneUpdateEvent) UpdateItems() bool {
+func (e OrganizationPlanMilestoneUpdateEvent) UpdateItems() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskItems)
 }
 
-func (e OrgPlanMilestoneUpdateEvent) UpdateOptional() bool {
+func (e OrganizationPlanMilestoneUpdateEvent) UpdateOptional() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskOptional)
 }
 
-func (e OrgPlanMilestoneUpdateEvent) UpdateRetired() bool {
+func (e OrganizationPlanMilestoneUpdateEvent) UpdateRetired() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskRetired)
 }

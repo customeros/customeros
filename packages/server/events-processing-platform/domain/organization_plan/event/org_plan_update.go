@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm/utils"
 )
 
-type OrgPlanUpdateEvent struct {
+type OrganizationPlanUpdateEvent struct {
 	Tenant     string    `json:"tenant" validate:"required"`
 	Name       string    `json:"name,omitempty"`
 	UpdatedAt  time.Time `json:"updatedAt"`
@@ -17,8 +17,8 @@ type OrgPlanUpdateEvent struct {
 	FieldsMask []string  `json:"fieldsMask,omitempty"`
 }
 
-func NewOrgPlanUpdateEvent(aggregate eventstore.Aggregate, name string, retired bool, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
-	eventData := OrgPlanUpdateEvent{
+func NewOrganizationPlanUpdateEvent(aggregate eventstore.Aggregate, name string, retired bool, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
+	eventData := OrganizationPlanUpdateEvent{
 		Tenant:     aggregate.GetTenant(),
 		UpdatedAt:  updatedAt,
 		FieldsMask: fieldsMask,
@@ -31,21 +31,21 @@ func NewOrgPlanUpdateEvent(aggregate eventstore.Aggregate, name string, retired 
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrgPlanUpdateEvent")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationPlanUpdateEvent")
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, OrgPlanUpdateV1)
+	event := eventstore.NewBaseEvent(aggregate, OrganizationPlanUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrgPlanUpdateEvent")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationPlanUpdateEvent")
 	}
 
 	return event, nil
 }
 
-func (e OrgPlanUpdateEvent) UpdateName() bool {
+func (e OrganizationPlanUpdateEvent) UpdateName() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskName)
 }
 
-func (e OrgPlanUpdateEvent) UpdateRetired() bool {
+func (e OrganizationPlanUpdateEvent) UpdateRetired() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskRetired)
 }

@@ -11,41 +11,41 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-type CreateOrgPlanCommandHandler interface {
-	Handle(ctx context.Context, cmd *command.CreateOrgPlanCommand) error
+type CreateOrganizationPlanCommandHandler interface {
+	Handle(ctx context.Context, cmd *command.CreateOrganizationPlanCommand) error
 }
 
-type createOrgPlanCommandHandler struct {
+type createOrganizationPlanCommandHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 }
 
-func NewCreateOrgPlanCommandHandler(log logger.Logger, es eventstore.AggregateStore) CreateOrgPlanCommandHandler {
-	return &createOrgPlanCommandHandler{log: log, es: es}
+func NewCreateOrganizationPlanCommandHandler(log logger.Logger, es eventstore.AggregateStore) CreateOrganizationPlanCommandHandler {
+	return &createOrganizationPlanCommandHandler{log: log, es: es}
 }
 
-// Handle processes the CreateOrgPlanCommand to create a new master plan.
-func (h *createOrgPlanCommandHandler) Handle(ctx context.Context, cmd *command.CreateOrgPlanCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "createOrgPlanCommandHandler.Handle")
+// Handle processes the CreateOrganizationPlanCommand to create a new master plan.
+func (h *createOrganizationPlanCommandHandler) Handle(ctx context.Context, cmd *command.CreateOrganizationPlanCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "createOrganizationPlanCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "command", cmd)
 
 	// Load or initialize the org plan aggregate
-	orgPlanAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
+	organizationPlanAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// Apply the command to the aggregate
-	if err = orgPlanAggregate.HandleCommand(ctx, cmd); err != nil {
+	if err = organizationPlanAggregate.HandleCommand(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// Persist the changes to the event store
-	if err = h.es.Save(ctx, orgPlanAggregate); err != nil {
+	if err = h.es.Save(ctx, organizationPlanAggregate); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}

@@ -43,7 +43,7 @@ type CommandHandlers struct {
 	Contract           *contractcmdhandler.CommandHandlers
 	ServiceLineItem    *servicelineitemcmdhandler.CommandHandlers
 	MasterPlan         *masterplancmdhandler.CommandHandlers
-	OrgPlan            *orgplancmdhandler.CommandHandlers
+	OrganizationPlan   *orgplancmdhandler.CommandHandlers
 	InvoicingCycle     *invoicingcycleevents.EventHandlers
 	Country            *countryevents.EventHandlers
 }
@@ -70,7 +70,7 @@ func NewCommandHandlers(log logger.Logger,
 		Contract:           contractcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		ServiceLineItem:    servicelineitemcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		MasterPlan:         masterplancmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		OrgPlan:            orgplancmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		OrganizationPlan:   orgplancmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		InvoicingCycle:     invoicingcycleevents.NewEventHandlers(log, aggregateStore),
 		Country:            countryevents.NewEventHandlers(log, aggregateStore),
 	}

@@ -224,16 +224,16 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 		return a.updateOnboardingStatus(ctx, c)
 	case *command.UpdateOrganizationOwnerCommand:
 		return a.UpdateOrganizationOwner(ctx, c)
-	case *orgplancmd.CreateOrgPlanCommand:
-		return a.createOrgPlan(ctx, c)
-	case *orgplancmd.UpdateOrgPlanCommand:
-		return a.updateOrgPlan(ctx, c)
-	case *orgplancmd.CreateOrgPlanMilestoneCommand:
-		return a.createOrgPlanMilestone(ctx, c)
-	case *orgplancmd.UpdateOrgPlanMilestoneCommand:
-		return a.updateOrgPlanMilestone(ctx, c)
-	case *orgplancmd.ReorderOrgPlanMilestonesCommand:
-		return a.reorderOrgPlanMilestones(ctx, c)
+	case *orgplancmd.CreateOrganizationPlanCommand:
+		return a.createOrganizationPlan(ctx, c)
+	case *orgplancmd.UpdateOrganizationPlanCommand:
+		return a.updateOrganizationPlan(ctx, c)
+	case *orgplancmd.CreateOrganizationPlanMilestoneCommand:
+		return a.createOrganizationPlanMilestone(ctx, c)
+	case *orgplancmd.UpdateOrganizationPlanMilestoneCommand:
+		return a.updateOrganizationPlanMilestone(ctx, c)
+	case *orgplancmd.ReorderOrganizationPlanMilestonesCommand:
+		return a.reorderOrganizationPlanMilestones(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -830,8 +830,8 @@ func (a *OrganizationAggregate) UpdateOrganizationOwner(ctx context.Context, cmd
 
 /////////// handle organization plans ///////////
 
-func (a *OrganizationAggregate) createOrgPlan(ctx context.Context, cmd *orgplancmd.CreateOrgPlanCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrgPlanAggregate.createOrgPlan")
+func (a *OrganizationAggregate) createOrganizationPlan(ctx context.Context, cmd *orgplancmd.CreateOrganizationPlanCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationPlanAggregate.createOrganizationPlan")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
@@ -840,10 +840,10 @@ func (a *OrganizationAggregate) createOrgPlan(ctx context.Context, cmd *orgplanc
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 
-	createEvent, err := event.NewOrgPlanCreateEvent(a, cmd.Name, cmd.SourceFields, createdAtNotNil)
+	createEvent, err := event.NewOrganizationPlanCreateEvent(a, cmd.Name, cmd.SourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrgPlanCreateEvent")
+		return errors.Wrap(err, "NewOrganizationPlanCreateEvent")
 	}
 	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
@@ -854,8 +854,8 @@ func (a *OrganizationAggregate) createOrgPlan(ctx context.Context, cmd *orgplanc
 	return a.Apply(createEvent)
 }
 
-func (a *OrganizationAggregate) updateOrgPlan(ctx context.Context, cmd *orgplancmd.UpdateOrgPlanCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrgPlanAggregate.updateOrgPlan")
+func (a *OrganizationAggregate) updateOrganizationPlan(ctx context.Context, cmd *orgplancmd.UpdateOrganizationPlanCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationPlanAggregate.updateOrganizationPlan")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
@@ -864,10 +864,10 @@ func (a *OrganizationAggregate) updateOrgPlan(ctx context.Context, cmd *orgplanc
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
-	updateEvent, err := event.NewOrgPlanUpdateEvent(a, cmd.Name, cmd.Retired, updatedAtNotNil, cmd.FieldsMask)
+	updateEvent, err := event.NewOrganizationPlanUpdateEvent(a, cmd.Name, cmd.Retired, updatedAtNotNil, cmd.FieldsMask)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrgPlanUpdateEvent")
+		return errors.Wrap(err, "NewOrganizationPlanUpdateEvent")
 	}
 	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
@@ -878,8 +878,8 @@ func (a *OrganizationAggregate) updateOrgPlan(ctx context.Context, cmd *orgplanc
 	return a.Apply(updateEvent)
 }
 
-func (a *OrganizationAggregate) createOrgPlanMilestone(ctx context.Context, cmd *orgplancmd.CreateOrgPlanMilestoneCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.createOrgPlanMilestone")
+func (a *OrganizationAggregate) createOrganizationPlanMilestone(ctx context.Context, cmd *orgplancmd.CreateOrganizationPlanMilestoneCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.createOrganizationPlanMilestone")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
@@ -888,10 +888,10 @@ func (a *OrganizationAggregate) createOrgPlanMilestone(ctx context.Context, cmd 
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 
-	createEvent, err := event.NewOrgPlanMilestoneCreateEvent(a, cmd.MilestoneId, cmd.Name, cmd.DurationHours, cmd.Order, cmd.Items, cmd.Optional, cmd.SourceFields, createdAtNotNil)
+	createEvent, err := event.NewOrganizationPlanMilestoneCreateEvent(a, cmd.MilestoneId, cmd.Name, cmd.DurationHours, cmd.Order, cmd.Items, cmd.Optional, cmd.SourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrgPlanMilestoneCreateEvent")
+		return errors.Wrap(err, "NewOrganizationPlanMilestoneCreateEvent")
 	}
 	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
@@ -902,8 +902,8 @@ func (a *OrganizationAggregate) createOrgPlanMilestone(ctx context.Context, cmd 
 	return a.Apply(createEvent)
 }
 
-func (a *OrganizationAggregate) updateOrgPlanMilestone(ctx context.Context, cmd *orgplancmd.UpdateOrgPlanMilestoneCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrgPlanAggregate.updateOrgPlanMilestone")
+func (a *OrganizationAggregate) updateOrganizationPlanMilestone(ctx context.Context, cmd *orgplancmd.UpdateOrganizationPlanMilestoneCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationPlanAggregate.updateOrganizationPlanMilestone")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
@@ -912,11 +912,11 @@ func (a *OrganizationAggregate) updateOrgPlanMilestone(ctx context.Context, cmd 
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
-	updateEvent, err := event.NewOrgPlanMilestoneUpdateEvent(a, cmd.MilestoneId, cmd.Name, cmd.DurationHours, cmd.Order,
+	updateEvent, err := event.NewOrganizationPlanMilestoneUpdateEvent(a, cmd.MilestoneId, cmd.Name, cmd.DurationHours, cmd.Order,
 		cmd.Items, cmd.FieldsMask, cmd.Optional, cmd.Retired, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrgPlanMilestoneUpdateEvent")
+		return errors.Wrap(err, "NewOrganizationPlanMilestoneUpdateEvent")
 	}
 	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
@@ -927,8 +927,8 @@ func (a *OrganizationAggregate) updateOrgPlanMilestone(ctx context.Context, cmd 
 	return a.Apply(updateEvent)
 }
 
-func (a *OrganizationAggregate) reorderOrgPlanMilestones(ctx context.Context, cmd *orgplancmd.ReorderOrgPlanMilestonesCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrgPlanAggregate.reorderOrgPlanMilestones")
+func (a *OrganizationAggregate) reorderOrganizationPlanMilestones(ctx context.Context, cmd *orgplancmd.ReorderOrganizationPlanMilestonesCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationPlanAggregate.reorderOrganizationPlanMilestones")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
@@ -937,10 +937,10 @@ func (a *OrganizationAggregate) reorderOrgPlanMilestones(ctx context.Context, cm
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
-	reorderEvent, err := event.NewOrgPlanMilestoneReorderEvent(a, cmd.MilestoneIds, updatedAtNotNil)
+	reorderEvent, err := event.NewOrganizationPlanMilestoneReorderEvent(a, cmd.MilestoneIds, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrgPlanMilestoneReorderEvent")
+		return errors.Wrap(err, "NewOrganizationPlanMilestoneReorderEvent")
 	}
 	aggregate.EnrichEventWithMetadataExtended(&reorderEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,

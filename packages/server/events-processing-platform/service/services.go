@@ -31,7 +31,7 @@ type Services struct {
 	ContractService           *contractService
 	ServiceLineItemService    *serviceLineItemService
 	MasterPlanService         *masterPlanService
-	OrgPlanService            *orgPlanService
+	OrganizationPlanService   *organizationPlanService
 	InvoicingCycleService     *invoicingCycleService
 	InvoiceService            *invoiceService
 	CountryService            *countryService
@@ -60,7 +60,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.ContractService = NewContractService(log, commandHandlers.Contract, aggregateStore)
 	services.ServiceLineItemService = NewServiceLineItemService(log, commandHandlers.ServiceLineItem, aggregateStore)
 	services.MasterPlanService = NewMasterPlanService(log, commandHandlers.MasterPlan, aggregateStore)
-	services.OrgPlanService = NewOrgPlanService(log, commandHandlers.OrgPlan, aggregateStore)
+	services.OrganizationPlanService = NewOrganizationPlanService(log, commandHandlers.OrganizationPlan, aggregateStore)
 	services.InvoicingCycleService = NewInvoicingCycleService(log, commandHandlers.InvoicingCycle, aggregateStore)
 	services.InvoiceService = NewInvoiceService(log, aggregateStore, cfg)
 	services.CountryService = NewCountryService(log, commandHandlers.Country)

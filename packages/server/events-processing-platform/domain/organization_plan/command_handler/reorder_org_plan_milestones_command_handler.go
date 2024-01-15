@@ -15,22 +15,22 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type ReorderOrgPlanMilestonesCommandHandler interface {
-	Handle(ctx context.Context, cmd *command.ReorderOrgPlanMilestonesCommand) error
+type ReorderOrganizationPlanMilestonesCommandHandler interface {
+	Handle(ctx context.Context, cmd *command.ReorderOrganizationPlanMilestonesCommand) error
 }
 
-type reorderOrgPlanMilestonesCommandHandler struct {
+type reorderOrganizationPlanMilestonesCommandHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 	cfg config.Utils
 }
 
-func NewReorderOrgPlanMilestonesCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) ReorderOrgPlanMilestonesCommandHandler {
-	return &reorderOrgPlanMilestonesCommandHandler{log: log, es: es, cfg: cfg}
+func NewReorderOrganizationPlanMilestonesCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) ReorderOrganizationPlanMilestonesCommandHandler {
+	return &reorderOrganizationPlanMilestonesCommandHandler{log: log, es: es, cfg: cfg}
 }
 
-func (h *reorderOrgPlanMilestonesCommandHandler) Handle(ctx context.Context, cmd *command.ReorderOrgPlanMilestonesCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "reorderOrgPlanMilestonesCommandHandler.Handle")
+func (h *reorderOrganizationPlanMilestonesCommandHandler) Handle(ctx context.Context, cmd *command.ReorderOrganizationPlanMilestonesCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "reorderOrganizationPlanMilestonesCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "command", cmd)

@@ -9,15 +9,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-type OrgPlanCreateEvent struct {
+type OrganizationPlanCreateEvent struct {
 	Tenant       string             `json:"tenant" validate:"required"`
 	Name         string             `json:"name"`
 	CreatedAt    time.Time          `json:"createdAt"`
 	SourceFields commonmodel.Source `json:"sourceFields"`
 }
 
-func NewOrgPlanCreateEvent(aggregate eventstore.Aggregate, name string, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
-	eventData := OrgPlanCreateEvent{
+func NewOrganizationPlanCreateEvent(aggregate eventstore.Aggregate, name string, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationPlanCreateEvent{
 		Tenant:       aggregate.GetTenant(),
 		Name:         name,
 		CreatedAt:    createdAt,
@@ -25,12 +25,12 @@ func NewOrgPlanCreateEvent(aggregate eventstore.Aggregate, name string, sourceFi
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrgPlanCreateEvent")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationPlanCreateEvent")
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, OrgPlanCreateV1)
+	event := eventstore.NewBaseEvent(aggregate, OrganizationPlanCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrgPlanCreateEvent")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationPlanCreateEvent")
 	}
 
 	return event, nil

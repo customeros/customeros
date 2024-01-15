@@ -8,26 +8,26 @@ import (
 	"github.com/pkg/errors"
 )
 
-type OrgPlanMilestoneReorderEvent struct {
+type OrganizationPlanMilestoneReorderEvent struct {
 	Tenant       string    `json:"tenant" validate:"required"`
 	MilestoneIds []string  `json:"milestoneId" validate:"required"`
 	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
-func NewOrgPlanMilestoneReorderEvent(aggregate eventstore.Aggregate, milestoneIds []string, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := OrgPlanMilestoneReorderEvent{
+func NewOrganizationPlanMilestoneReorderEvent(aggregate eventstore.Aggregate, milestoneIds []string, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationPlanMilestoneReorderEvent{
 		Tenant:       aggregate.GetTenant(),
 		UpdatedAt:    updatedAt,
 		MilestoneIds: milestoneIds,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrgPlanMilestoneReorderEvent")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationPlanMilestoneReorderEvent")
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, OrgPlanMilestoneReorderV1)
+	event := eventstore.NewBaseEvent(aggregate, OrganizationPlanMilestoneReorderV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrgPlanMilestoneReorderEvent")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationPlanMilestoneReorderEvent")
 	}
 
 	return event, nil

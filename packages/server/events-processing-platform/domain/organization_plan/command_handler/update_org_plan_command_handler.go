@@ -15,23 +15,23 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type UpdateOrgPlanCommandHandler interface {
-	Handle(ctx context.Context, cmd *command.UpdateOrgPlanCommand) error
+type UpdateOrganizationPlanCommandHandler interface {
+	Handle(ctx context.Context, cmd *command.UpdateOrganizationPlanCommand) error
 }
 
-type updateOrgPlanCommandHandler struct {
+type updateOrganizationPlanCommandHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 	cfg config.Utils
 }
 
-func NewUpdateOrgPlanCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) UpdateOrgPlanCommandHandler {
-	return &updateOrgPlanCommandHandler{log: log, es: es, cfg: cfg}
+func NewUpdateOrganizationPlanCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) UpdateOrganizationPlanCommandHandler {
+	return &updateOrganizationPlanCommandHandler{log: log, es: es, cfg: cfg}
 }
 
-// Handle processes the UpdateOrgPlanCommand to update a new master plan.
-func (h *updateOrgPlanCommandHandler) Handle(ctx context.Context, cmd *command.UpdateOrgPlanCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateOrgPlanCommandHandler.Handle")
+// Handle processes the UpdateOrganizationPlanCommand to update a new master plan.
+func (h *updateOrganizationPlanCommandHandler) Handle(ctx context.Context, cmd *command.UpdateOrganizationPlanCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateOrganizationPlanCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "command", cmd)

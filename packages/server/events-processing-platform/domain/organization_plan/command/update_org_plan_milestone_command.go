@@ -6,13 +6,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 )
 
-type OrgPlanMilestoneItems struct {
+type OrganizationPlanMilestoneItems struct {
 	Text      []string
 	UpdatedAt *time.Time
 	Status    string
 }
 
-type UpdateOrgPlanMilestoneCommand struct {
+type UpdateOrganizationPlanMilestoneCommand struct {
 	eventstore.BaseCommand
 	MilestoneId   string `validate:"required"`
 	UpdatedAt     *time.Time
@@ -20,15 +20,15 @@ type UpdateOrgPlanMilestoneCommand struct {
 	Name          string
 	Order         int64
 	DurationHours int64
-	Items         []OrgPlanMilestoneItems
+	Items         []OrganizationPlanMilestoneItems
 	Optional      bool
 	Retired       bool
 	FieldsMask    []string
 }
 
-func NewUpdateOrgPlanMilestoneCommand(orgPlanId, tenant, loggedInUserId, milestoneId, name, appSource string, order, durationHours int64, items []OrgPlanMilestoneItems, optional, retired bool, updatedAt *time.Time, fieldsMask []string) *UpdateOrgPlanMilestoneCommand {
-	return &UpdateOrgPlanMilestoneCommand{
-		BaseCommand:   eventstore.NewBaseCommand(orgPlanId, tenant, loggedInUserId).WithAppSource(appSource),
+func NewUpdateOrganizationPlanMilestoneCommand(organizationPlanId, tenant, loggedInUserId, milestoneId, name, appSource string, order, durationHours int64, items []OrganizationPlanMilestoneItems, optional, retired bool, updatedAt *time.Time, fieldsMask []string) *UpdateOrganizationPlanMilestoneCommand {
+	return &UpdateOrganizationPlanMilestoneCommand{
+		BaseCommand:   eventstore.NewBaseCommand(organizationPlanId, tenant, loggedInUserId).WithAppSource(appSource),
 		MilestoneId:   milestoneId,
 		UpdatedAt:     updatedAt,
 		Name:          name,

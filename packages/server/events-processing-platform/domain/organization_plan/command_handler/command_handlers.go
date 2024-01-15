@@ -8,19 +8,19 @@ import (
 
 // CommandHandlers acts as a container for all command handlers.
 type CommandHandlers struct {
-	CreateOrgPlan            CreateOrgPlanCommandHandler
-	UpdateOrgPlan            UpdateOrgPlanCommandHandler
-	CreateOrgPlanMilestone   CreateOrgPlanMilestoneCommandHandler
-	UpdateOrgPlanMilestone   UpdateOrgPlanMilestoneCommandHandler
-	ReorderOrgPlanMilestones ReorderOrgPlanMilestonesCommandHandler
+	CreateOrganizationPlan            CreateOrganizationPlanCommandHandler
+	UpdateOrganizationPlan            UpdateOrganizationPlanCommandHandler
+	CreateOrganizationPlanMilestone   CreateOrganizationPlanMilestoneCommandHandler
+	UpdateOrganizationPlanMilestone   UpdateOrganizationPlanMilestoneCommandHandler
+	ReorderOrganizationPlanMilestones ReorderOrganizationPlanMilestonesCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
 	return &CommandHandlers{
-		CreateOrgPlan:            NewCreateOrgPlanCommandHandler(log, es),
-		UpdateOrgPlan:            NewUpdateOrgPlanCommandHandler(log, es, cfg.Utils),
-		CreateOrgPlanMilestone:   NewCreateOrgPlanMilestoneCommandHandler(log, es, cfg.Utils),
-		UpdateOrgPlanMilestone:   NewUpdateOrgPlanMilestoneCommandHandler(log, es, cfg.Utils),
-		ReorderOrgPlanMilestones: NewReorderOrgPlanMilestonesCommandHandler(log, es, cfg.Utils),
+		CreateOrganizationPlan:            NewCreateOrganizationPlanCommandHandler(log, es),
+		UpdateOrganizationPlan:            NewUpdateOrganizationPlanCommandHandler(log, es, cfg.Utils),
+		CreateOrganizationPlanMilestone:   NewCreateOrganizationPlanMilestoneCommandHandler(log, es, cfg.Utils),
+		UpdateOrganizationPlanMilestone:   NewUpdateOrganizationPlanMilestoneCommandHandler(log, es, cfg.Utils),
+		ReorderOrganizationPlanMilestones: NewReorderOrganizationPlanMilestonesCommandHandler(log, es, cfg.Utils),
 	}
 }

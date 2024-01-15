@@ -1,96 +1,96 @@
 package model
 
-type OrgPlanStatusString string
+type OrganizationPlanStatusString string
 
 const (
-	OrgPlanStatusNotStarted OrgPlanStatusString = "NOT_STARTED"
-	OrgPlanStatusOnTrack    OrgPlanStatusString = "ON_TRACK"
-	OrgPlanStatusLate       OrgPlanStatusString = "LATE"
-	OrgPlanStatusDone       OrgPlanStatusString = "DONE"
+	OrganizationPlanStatusNotStarted OrganizationPlanStatusString = "NOT_STARTED"
+	OrganizationPlanStatusOnTrack    OrganizationPlanStatusString = "ON_TRACK"
+	OrganizationPlanStatusLate       OrganizationPlanStatusString = "LATE"
+	OrganizationPlanStatusDone       OrganizationPlanStatusString = "DONE"
 )
 
-type OrgPlanStatus int32
+type OrganizationPlanStatus int32
 
 const (
-	NotStarted OrgPlanStatus = iota
+	NotStarted OrganizationPlanStatus = iota
 	OnTrack
 	Late
 	Done
 )
 
-func (os OrgPlanStatus) String() string {
+func (os OrganizationPlanStatus) String() string {
 	switch os {
 	case NotStarted:
-		return string(OrgPlanStatusNotStarted)
+		return string(OrganizationPlanStatusNotStarted)
 	case OnTrack:
-		return string(OrgPlanStatusOnTrack)
+		return string(OrganizationPlanStatusOnTrack)
 	case Late:
-		return string(OrgPlanStatusLate)
+		return string(OrganizationPlanStatusLate)
 	case Done:
-		return string(OrgPlanStatusDone)
+		return string(OrganizationPlanStatusDone)
 	default:
-		return string(OrgPlanStatusNotStarted)
+		return string(OrganizationPlanStatusNotStarted)
 	}
 }
 
 /////// milestone status
 
-type OrgPlanMilestoneStatusString string
+type OrganizationPlanMilestoneStatusString string
 
 const (
-	OrgPlanMilestoneStatusNotStarted OrgPlanMilestoneStatusString = "NOT_STARTED"
-	OrgPlanMilestoneStatusStarted    OrgPlanMilestoneStatusString = "STARTED"
-	OrgPlanMilestoneStatusDone       OrgPlanMilestoneStatusString = "DONE"
+	OrganizationPlanMilestoneStatusNotStarted OrganizationPlanMilestoneStatusString = "NOT_STARTED"
+	OrganizationPlanMilestoneStatusStarted    OrganizationPlanMilestoneStatusString = "STARTED"
+	OrganizationPlanMilestoneStatusDone       OrganizationPlanMilestoneStatusString = "DONE"
 )
 
-type OrgPlanMilestoneStatus int32
+type OrganizationPlanMilestoneStatus int32
 
 const (
-	MilestoneNotStarted OrgPlanMilestoneStatus = iota
+	MilestoneNotStarted OrganizationPlanMilestoneStatus = iota
 	MilestoneStarted
 	MilestoneDone
 )
 
-func (os OrgPlanMilestoneStatus) String() string {
+func (os OrganizationPlanMilestoneStatus) String() string {
 	switch os {
 	case MilestoneNotStarted:
-		return string(OrgPlanMilestoneStatusNotStarted)
+		return string(OrganizationPlanMilestoneStatusNotStarted)
 	case MilestoneStarted:
-		return string(OrgPlanMilestoneStatusStarted)
+		return string(OrganizationPlanMilestoneStatusStarted)
 	case MilestoneDone:
-		return string(OrgPlanMilestoneStatusDone)
+		return string(OrganizationPlanMilestoneStatusDone)
 	default:
-		return string(OrgPlanMilestoneStatusNotStarted)
+		return string(OrganizationPlanMilestoneStatusNotStarted)
 	}
 }
 
 ///// milestone task status
 
-type OrgPlanMilestoneTaskStatusString string
+type OrganizationPlanMilestoneTaskStatusString string
 
 const (
-	OrgPlanMilestoneTaskStatusNotDone OrgPlanMilestoneTaskStatusString = "NOT_DONE"
-	OrgPlanMilestoneTaskStatusSkipped OrgPlanMilestoneTaskStatusString = "SKIPPED"
-	OrgPlanMilestoneTaskStatusDone    OrgPlanMilestoneTaskStatusString = "DONE"
+	OrganizationPlanMilestoneTaskStatusNotDone OrganizationPlanMilestoneTaskStatusString = "NOT_DONE"
+	OrganizationPlanMilestoneTaskStatusSkipped OrganizationPlanMilestoneTaskStatusString = "SKIPPED"
+	OrganizationPlanMilestoneTaskStatusDone    OrganizationPlanMilestoneTaskStatusString = "DONE"
 )
 
-type OrgPlanMilestoneTaskStatus int32
+type OrganizationPlanMilestoneTaskStatus int32
 
 const (
-	TaskNotDone OrgPlanMilestoneTaskStatus = iota
+	TaskNotDone OrganizationPlanMilestoneTaskStatus = iota
 	TaskSkipped
 	TaskDone
 )
 
-func (os OrgPlanMilestoneTaskStatus) String() string {
+func (os OrganizationPlanMilestoneTaskStatus) String() string {
 	switch os {
 	case TaskNotDone:
-		return string(OrgPlanMilestoneTaskStatusNotDone)
+		return string(OrganizationPlanMilestoneTaskStatusNotDone)
 	case TaskSkipped:
-		return string(OrgPlanMilestoneTaskStatusSkipped)
+		return string(OrganizationPlanMilestoneTaskStatusSkipped)
 	case TaskDone:
-		return string(OrgPlanMilestoneStatusDone)
+		return string(OrganizationPlanMilestoneStatusDone)
 	default:
-		return string(OrgPlanMilestoneTaskStatusNotDone)
+		return string(OrganizationPlanMilestoneTaskStatusNotDone)
 	}
 }

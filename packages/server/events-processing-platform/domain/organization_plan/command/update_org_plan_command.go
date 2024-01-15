@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 )
 
-type UpdateOrgPlanCommand struct {
+type UpdateOrganizationPlanCommand struct {
 	eventstore.BaseCommand
 	UpdatedAt  *time.Time
 	Name       string
@@ -14,9 +14,9 @@ type UpdateOrgPlanCommand struct {
 	FieldsMask []string
 }
 
-func NewUpdateOrgPlanCommand(orgPlanId, tenant, loggedInUserId, appSource, name string, retired bool, updatedAt *time.Time, fieldsMask []string) *UpdateOrgPlanCommand {
-	return &UpdateOrgPlanCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgPlanId, tenant, loggedInUserId).WithAppSource(appSource),
+func NewUpdateOrganizationPlanCommand(organizationPlanId, tenant, loggedInUserId, appSource, name string, retired bool, updatedAt *time.Time, fieldsMask []string) *UpdateOrganizationPlanCommand {
+	return &UpdateOrganizationPlanCommand{
+		BaseCommand: eventstore.NewBaseCommand(organizationPlanId, tenant, loggedInUserId).WithAppSource(appSource),
 		UpdatedAt:   updatedAt,
 		Name:        name,
 		Retired:     retired,

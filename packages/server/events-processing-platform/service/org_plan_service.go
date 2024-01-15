@@ -15,36 +15,36 @@ import (
 	"golang.org/x/net/context"
 )
 
-type orgPlanService struct {
-	orgplanpb.UnimplementedOrgPlanGrpcServiceServer
-	log                    logger.Logger
-	orgPlanCommandHandlers *command_handler.CommandHandlers
-	aggregateStore         eventstore.AggregateStore
+type organizationPlanService struct {
+	orgplanpb.UnimplementedOrganizationPlanGrpcServiceServer
+	log                             logger.Logger
+	organizationPlanCommandHandlers *command_handler.CommandHandlers
+	aggregateStore                  eventstore.AggregateStore
 }
 
-func NewOrgPlanService(log logger.Logger, commandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore) *orgPlanService {
-	return &orgPlanService{
-		log:                    log,
-		orgPlanCommandHandlers: commandHandlers,
-		aggregateStore:         aggregateStore,
+func NewOrganizationPlanService(log logger.Logger, commandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore) *organizationPlanService {
+	return &organizationPlanService{
+		log:                             log,
+		organizationPlanCommandHandlers: commandHandlers,
+		aggregateStore:                  aggregateStore,
 	}
 }
 
-func (s *orgPlanService) CreateOrgPlan(ctx context.Context, request *orgplanpb.CreateOrgPlanGrpcRequest) (*orgplanpb.OrgPlanIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrgPlanService.CreateOrgPlan")
+func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, request *orgplanpb.CreateOrganizationPlanGrpcRequest) (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationPlanService.CreateOrganizationPlan")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	orgPlanId := uuid.New().String()
+	organizationPlanId := uuid.New().String()
 
 	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
 
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	createOrgPlanCommand := command.NewCreateOrgPlanCommand(
-		orgPlanId,
+	createOrganizationPlanCommand := command.NewCreateOrganizationPlanCommand(
+		organizationPlanId,
 		request.Tenant,
 		request.LoggedInUserId,
 		request.Name,
@@ -52,18 +52,18 @@ func (s *orgPlanService) CreateOrgPlan(ctx context.Context, request *orgplanpb.C
 		createdAt,
 	)
 
-	if err := s.orgPlanCommandHandlers.CreateOrgPlan.Handle(ctx, createOrgPlanCommand); err != nil {
+	if err := s.organizationPlanCommandHandlers.CreateOrganizationPlan.Handle(ctx, createOrganizationPlanCommand); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(CreateOrgPlan.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(CreateOrganizationPlan.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
 	// Return the ID of the newly created master plan
-	return &orgplanpb.OrgPlanIdGrpcResponse{Id: orgPlanId}, nil
+	return &orgplanpb.OrganizationPlanIdGrpcResponse{Id: organizationPlanId}, nil
 }
 
-func (s *orgPlanService) CreateOrgPlanMilestone(ctx context.Context, request *orgplanpb.CreateOrgPlanMilestoneGrpcRequest) (*orgplanpb.OrgPlanMilestoneIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrgPlanService.CreateOrgPlanMilestone")
+func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Context, request *orgplanpb.CreateOrganizationPlanMilestoneGrpcRequest) (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationPlanService.CreateOrganizationPlanMilestone")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
@@ -75,8 +75,8 @@ func (s *orgPlanService) CreateOrgPlanMilestone(ctx context.Context, request *or
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	createOrgPlanMilestoneCommand := command.NewCreateOrgPlanMilestoneCommand(
-		request.OrgPlanId,
+	createOrganizationPlanMilestoneCommand := command.NewCreateOrganizationPlanMilestoneCommand(
+		request.OrganizationPlanId,
 		request.Tenant,
 		request.LoggedInUserId,
 		milestoneId,
@@ -89,70 +89,70 @@ func (s *orgPlanService) CreateOrgPlanMilestone(ctx context.Context, request *or
 		createdAt,
 	)
 
-	if err := s.orgPlanCommandHandlers.CreateOrgPlanMilestone.Handle(ctx, createOrgPlanMilestoneCommand); err != nil {
+	if err := s.organizationPlanCommandHandlers.CreateOrganizationPlanMilestone.Handle(ctx, createOrganizationPlanMilestoneCommand); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(CreateOrgPlanMilestone.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(CreateOrganizationPlanMilestone.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	return &orgplanpb.OrgPlanMilestoneIdGrpcResponse{Id: milestoneId}, nil
+	return &orgplanpb.OrganizationPlanMilestoneIdGrpcResponse{Id: milestoneId}, nil
 }
 
-func (s *orgPlanService) UpdateOrgPlan(ctx context.Context, request *orgplanpb.UpdateOrgPlanGrpcRequest) (*orgplanpb.OrgPlanIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrgPlanService.UpdateOrgPlan")
+func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, request *orgplanpb.UpdateOrganizationPlanGrpcRequest) (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationPlanService.UpdateOrganizationPlan")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
-	span.SetTag(tracing.SpanTagEntityId, request.OrgPlanId)
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationPlanId)
 
-	if request.OrgPlanId == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("orgPlanId"))
+	if request.OrganizationPlanId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationPlanId"))
 	}
 
 	// Convert any protobuf timestamp to time.Time, if necessary
 	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
 
-	cmd := command.NewUpdateOrgPlanCommand(
-		request.OrgPlanId,
+	cmd := command.NewUpdateOrganizationPlanCommand(
+		request.OrganizationPlanId,
 		request.Tenant,
 		request.LoggedInUserId,
 		request.AppSource,
 		request.Name,
 		request.Retired,
 		updatedAt,
-		extractOrgPlanFieldsMask(request.FieldsMask),
+		extractOrganizationPlanFieldsMask(request.FieldsMask),
 	)
 
-	if err := s.orgPlanCommandHandlers.UpdateOrgPlan.Handle(ctx, cmd); err != nil {
+	if err := s.organizationPlanCommandHandlers.UpdateOrganizationPlan.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpdateOrgPlan.Handle) tenant:{%v}, orgPlanId:{%v}, err: %v", request.Tenant, request.OrgPlanId, err.Error())
+		s.log.Errorf("(UpdateOrganizationPlan.Handle) tenant:{%v}, organizationPlanId:{%v}, err: %v", request.Tenant, request.OrganizationPlanId, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	return &orgplanpb.OrgPlanIdGrpcResponse{Id: request.OrgPlanId}, nil
+	return &orgplanpb.OrganizationPlanIdGrpcResponse{Id: request.OrganizationPlanId}, nil
 }
 
-func (s *orgPlanService) UpdateOrgPlanMilestone(ctx context.Context, request *orgplanpb.UpdateOrgPlanMilestoneGrpcRequest) (*orgplanpb.OrgPlanMilestoneIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrgPlanService.UpdateOrgPlanMilestone")
+func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Context, request *orgplanpb.UpdateOrganizationPlanMilestoneGrpcRequest) (*orgplanpb.OrganizationPlanMilestoneIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationPlanService.UpdateOrganizationPlanMilestone")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	if request.OrgPlanId == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("orgPlanId"))
+	if request.OrganizationPlanId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationPlanId"))
 	}
-	if request.OrgPlanMilestoneId == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("orgPlanMilestoneId"))
+	if request.OrganizationPlanMilestoneId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationPlanMilestoneId"))
 	}
 
 	// Convert any protobuf timestamp to time.Time, if necessary
 	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
 
-	updateOrgPlanMilestoneCommand := command.NewUpdateOrgPlanMilestoneCommand(
-		request.OrgPlanId,
+	updateOrganizationPlanMilestoneCommand := command.NewUpdateOrganizationPlanMilestoneCommand(
+		request.OrganizationPlanId,
 		request.Tenant,
 		request.LoggedInUserId,
-		request.OrgPlanMilestoneId,
+		request.OrganizationPlanMilestoneId,
 		request.Name,
 		request.AppSource,
 		request.Order,
@@ -161,113 +161,113 @@ func (s *orgPlanService) UpdateOrgPlanMilestone(ctx context.Context, request *or
 		request.Optional,
 		request.Retired,
 		updatedAt,
-		extractOrgPlanMilestoneFieldsMask(request.FieldsMask),
+		extractOrganizationPlanMilestoneFieldsMask(request.FieldsMask),
 	)
 
-	if err := s.orgPlanCommandHandlers.UpdateOrgPlanMilestone.Handle(ctx, updateOrgPlanMilestoneCommand); err != nil {
+	if err := s.organizationPlanCommandHandlers.UpdateOrganizationPlanMilestone.Handle(ctx, updateOrganizationPlanMilestoneCommand); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpdateOrgPlanMilestone.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(UpdateOrganizationPlanMilestone.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
 	// Return the ID of the newly created master plan
-	return &orgplanpb.OrgPlanMilestoneIdGrpcResponse{Id: request.OrgPlanMilestoneId}, nil
+	return &orgplanpb.OrganizationPlanMilestoneIdGrpcResponse{Id: request.OrganizationPlanMilestoneId}, nil
 }
 
-func extractOrgPlanFieldsMask(fields []orgplanpb.OrgPlanFieldMask) []string {
+func extractOrganizationPlanFieldsMask(fields []orgplanpb.OrganizationPlanFieldMask) []string {
 	fieldsMask := make([]string, 0)
 	if fields == nil || len(fields) == 0 {
 		return fieldsMask
 	}
-	if containsOrgPlanMaskFieldAll(fields) {
+	if containsOrganizationPlanMaskFieldAll(fields) {
 		return fieldsMask
 	}
 	for _, field := range fields {
 		switch field {
-		case orgplanpb.OrgPlanFieldMask_ORG_PLAN_PROPERTY_NAME:
+		case orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_NAME:
 			fieldsMask = append(fieldsMask, event.FieldMaskName)
-		case orgplanpb.OrgPlanFieldMask_ORG_PLAN_PROPERTY_RETIRED:
+		case orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_RETIRED:
 			fieldsMask = append(fieldsMask, event.FieldMaskRetired)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)
 }
 
-func containsOrgPlanMaskFieldAll(fields []orgplanpb.OrgPlanFieldMask) bool {
+func containsOrganizationPlanMaskFieldAll(fields []orgplanpb.OrganizationPlanFieldMask) bool {
 	for _, field := range fields {
-		if field == orgplanpb.OrgPlanFieldMask_ORG_PLAN_PROPERTY_ALL {
+		if field == orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_ALL {
 			return true
 		}
 	}
 	return false
 }
 
-func extractOrgPlanMilestoneFieldsMask(fields []orgplanpb.OrgPlanMilestoneFieldMask) []string {
+func extractOrganizationPlanMilestoneFieldsMask(fields []orgplanpb.OrganizationPlanMilestoneFieldMask) []string {
 	fieldsMask := make([]string, 0)
 	if fields == nil || len(fields) == 0 {
 		return fieldsMask
 	}
-	if containsOrgPlanMilestoneMaskFieldAll(fields) {
+	if containsOrganizationPlanMilestoneMaskFieldAll(fields) {
 		return fieldsMask
 	}
 	for _, field := range fields {
 		switch field {
-		case orgplanpb.OrgPlanMilestoneFieldMask_ORG_PLAN_MILESTONE_PROPERTY_NAME:
+		case orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_NAME:
 			fieldsMask = append(fieldsMask, event.FieldMaskName)
-		case orgplanpb.OrgPlanMilestoneFieldMask_ORG_PLAN_MILESTONE_PROPERTY_RETIRED:
+		case orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_RETIRED:
 			fieldsMask = append(fieldsMask, event.FieldMaskRetired)
-		case orgplanpb.OrgPlanMilestoneFieldMask_ORG_PLAN_MILESTONE_PROPERTY_ORDER:
+		case orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ORDER:
 			fieldsMask = append(fieldsMask, event.FieldMaskOrder)
-		case orgplanpb.OrgPlanMilestoneFieldMask_ORG_PLAN_MILESTONE_PROPERTY_OPTIONAL:
+		case orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_OPTIONAL:
 			fieldsMask = append(fieldsMask, event.FieldMaskOptional)
-		case orgplanpb.OrgPlanMilestoneFieldMask_ORG_PLAN_MILESTONE_PROPERTY_DURATION_HOURS:
+		case orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_DURATION_HOURS:
 			fieldsMask = append(fieldsMask, event.FieldMaskDurationHours)
-		case orgplanpb.OrgPlanMilestoneFieldMask_ORG_PLAN_MILESTONE_PROPERTY_ITEMS:
+		case orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ITEMS:
 			fieldsMask = append(fieldsMask, event.FieldMaskItems)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)
 }
 
-func containsOrgPlanMilestoneMaskFieldAll(fields []orgplanpb.OrgPlanMilestoneFieldMask) bool {
+func containsOrganizationPlanMilestoneMaskFieldAll(fields []orgplanpb.OrganizationPlanMilestoneFieldMask) bool {
 	for _, field := range fields {
-		if field == orgplanpb.OrgPlanMilestoneFieldMask_ORG_PLAN_MILESTONE_PROPERTY_ALL {
+		if field == orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ALL {
 			return true
 		}
 	}
 	return false
 }
 
-func (s *orgPlanService) ReorderOrgPlanMilestones(ctx context.Context, request *orgplanpb.ReorderOrgPlanMilestonesGrpcRequest) (*orgplanpb.OrgPlanIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrgPlanService.ReorderOrgPlanMilestones")
+func (s *organizationPlanService) ReorderOrganizationPlanMilestones(ctx context.Context, request *orgplanpb.ReorderOrganizationPlanMilestonesGrpcRequest) (*orgplanpb.OrganizationPlanIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationPlanService.ReorderOrganizationPlanMilestones")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	if request.OrgPlanId == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("orgPlanId"))
+	if request.OrganizationPlanId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationPlanId"))
 	}
-	if len(request.OrgPlanMilestoneIds) == 0 {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("orgPlanMilestoneIds"))
+	if len(request.OrganizationPlanMilestoneIds) == 0 {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationPlanMilestoneIds"))
 	}
 
 	// Convert any protobuf timestamp to time.Time, if necessary
 	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
 
-	reorderOrgPlanMilestonesCommand := command.NewReorderOrgPlanMilestonesCommand(
-		request.OrgPlanId,
+	reorderOrganizationPlanMilestonesCommand := command.NewReorderOrganizationPlanMilestonesCommand(
+		request.OrganizationPlanId,
 		request.Tenant,
 		request.LoggedInUserId,
 		request.AppSource,
-		request.OrgPlanMilestoneIds,
+		request.OrganizationPlanMilestoneIds,
 		updatedAt,
 	)
 
-	if err := s.orgPlanCommandHandlers.ReorderOrgPlanMilestones.Handle(ctx, reorderOrgPlanMilestonesCommand); err != nil {
+	if err := s.organizationPlanCommandHandlers.ReorderOrganizationPlanMilestones.Handle(ctx, reorderOrganizationPlanMilestonesCommand); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(ReorderOrgPlanMilestones.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(ReorderOrganizationPlanMilestones.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	return &orgplanpb.OrgPlanIdGrpcResponse{Id: request.OrgPlanId}, nil
+	return &orgplanpb.OrganizationPlanIdGrpcResponse{Id: request.OrganizationPlanId}, nil
 }
