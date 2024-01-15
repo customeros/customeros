@@ -589,7 +589,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 					 MATCH (o)-[:HAS_CONTRACT]->(contract:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t)
 					 MATCH (contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) `
 		if len(ownerId) > 0 {
-			countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`
+			countQuery += ` OPTIONAL MATCH (op)<-[:OWNS]-(owner:User) WITH *`
 		}
 		if emailFilterCypher != "" {
 			countQuery += ` MATCH (o)-[:HAS]->(e:Email) WITH *`
@@ -657,13 +657,10 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		if len(ownerId) > 0 {
 			query += fmt.Sprintf(` OPTIONAL MATCH (op)<-[:OWNS]-(owner:User) WITH *`)
 		}
-		if sort != nil && sort.By == SearchSortParamOwner {
-			query += fmt.Sprintf(` OPTIONAL MATCH (op)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
-		}
 		//query += ` WHERE (o.hide = false) `
 
 		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
-			query += " AND "
+			query += " WHERE "
 		}
 
 		queryParts := []string{}

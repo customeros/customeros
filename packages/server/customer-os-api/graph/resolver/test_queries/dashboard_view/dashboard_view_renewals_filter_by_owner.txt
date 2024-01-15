@@ -21,6 +21,9 @@ query dashboardView_Renewals($page: Int!, $limit: Int!, $ownerIdList: Any!, $own
                 id
                 } opportunity{
                 id
+                 owner {
+                        id
+                    }
                 }
                 }
     totalAvailable

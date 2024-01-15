@@ -1148,44 +1148,48 @@ func assert_Search_Renewals_By_Likelihood(t *testing.T, searchTerm []string) mod
 	return responseRaw.DashboardView_Renewals
 }
 
-//
-//func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyFalse(t *testing.T) {
-//	ctx := context.Background()
-//	defer tearDownTestCase(ctx)(t)
-//	neo4jtest.CreateTenant(ctx, driver, tenantName)
-//
-//	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-//	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-//	org := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
-//		Name: "org",
-//	})
-//
-//	contractId1 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org, entity.ContractEntity{})
-//	opportunityId1 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId1, entity.OpportunityEntity{})
-//	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId1, opportunityId1)
-//	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId1, userId1)
-//
-//	contractId2 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org, entity.ContractEntity{})
-//	opportunityId2 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId2, entity.OpportunityEntity{})
-//	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId2, opportunityId1)
-//	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId2, userId2)
-//
-//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-//	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
-//	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
-//
-//	rawResponse := callGraphQL(t, "dashboard_view/dashboard_view_renewals_filter_by_owner", map[string]interface{}{"ownerIdList": []string{userId1}, "ownerIdEmpty": false, "page": 1, "limit": 10})
-//
-//	var renewalsPageStruct struct {
-//		DashboardView_Renewals model.RenewalsPage
-//	}
-//
-//	err := decode.Decode(rawResponse.Data.(map[string]any), &renewalsPageStruct)
-//	require.Nil(t, err)
-//
-//	require.Equal(t, int64(4), renewalsPageStruct.DashboardView_Renewals.TotalAvailable)
-//	require.Equal(t, int64(2), renewalsPageStruct.DashboardView_Renewals.TotalElements)
-//	require.Equal(t, 2, len(renewalsPageStruct.DashboardView_Renewals.Content))
-//	require.ElementsMatch(t, []string{opportunityId1, opportunityId2},
-//		[]string{renewalsPageStruct.DashboardView_Renewals.Content[0].Opportunity.ID, renewalsPageStruct.DashboardView_Renewals.Content[1].Opportunity.ID})
-//}
+func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyFalse(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	org := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org",
+	})
+
+	contractId1 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org, entity.ContractEntity{})
+	opportunityId1 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId1, entity.OpportunityEntity{})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId1, opportunityId1)
+	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId1, userId1)
+
+	contractId2 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org, entity.ContractEntity{})
+	opportunityId2 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId2, entity.OpportunityEntity{})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId2, opportunityId2)
+	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId2, userId2)
+
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_view_renewals_filter_by_owner",
+		map[string]interface{}{
+			"ownerIdList":  []string{userId1},
+			"ownerIdEmpty": false,
+			"page":         1,
+			"limit":        10})
+
+	var renewalsPageStruct struct {
+		DashboardView_Renewals model.RenewalsPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &renewalsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(2), renewalsPageStruct.DashboardView_Renewals.TotalAvailable)
+	require.Equal(t, int64(1), renewalsPageStruct.DashboardView_Renewals.TotalElements)
+	require.Equal(t, 1, len(renewalsPageStruct.DashboardView_Renewals.Content))
+	require.ElementsMatch(t, []string{opportunityId1},
+		[]string{renewalsPageStruct.DashboardView_Renewals.Content[0].Opportunity.ID})
+}
