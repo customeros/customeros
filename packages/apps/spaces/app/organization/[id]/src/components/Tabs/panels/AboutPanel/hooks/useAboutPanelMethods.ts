@@ -29,7 +29,7 @@ export const useAboutPanelMethods = ({ id }: UseAboutPanelMethodsOptions) => {
     organizationsMeta.getOrganization,
   );
 
-  const invalidateQuery = () => queryClient.invalidateQueries(queryKey);
+  const invalidateQuery = () => queryClient.invalidateQueries({ queryKey });
 
   const updateOrganization = useUpdateOrganizationMutation(client, {
     onMutate: ({ input }) => {
@@ -81,7 +81,7 @@ export const useAboutPanelMethods = ({ id }: UseAboutPanelMethodsOptions) => {
     },
     onSettled: () => {
       invalidateQuery();
-      queryClient.invalidateQueries(organizationsQueryKey);
+      queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
     },
   });
 

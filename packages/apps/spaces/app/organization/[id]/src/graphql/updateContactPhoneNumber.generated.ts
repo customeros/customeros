@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type UpdateContactPhoneNumberMutationVariables = Types.Exact<{
-  contactId: Types.Scalars['ID'];
+  contactId: Types.Scalars['ID']['input'];
   input: Types.PhoneNumberUpdateInput;
 }>;
 
@@ -40,6 +40,7 @@ export const UpdateContactPhoneNumberDocument = `
   }
 }
     `;
+
 export const useUpdateContactPhoneNumberMutation = <
   TError = unknown,
   TContext = unknown,
@@ -52,21 +53,23 @@ export const useUpdateContactPhoneNumberMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     UpdateContactPhoneNumberMutation,
     TError,
     UpdateContactPhoneNumberMutationVariables,
     TContext
-  >(
-    ['updateContactPhoneNumber'],
-    (variables?: UpdateContactPhoneNumberMutationVariables) =>
+  >({
+    mutationKey: ['updateContactPhoneNumber'],
+    mutationFn: (variables?: UpdateContactPhoneNumberMutationVariables) =>
       fetcher<
         UpdateContactPhoneNumberMutation,
         UpdateContactPhoneNumberMutationVariables
       >(client, UpdateContactPhoneNumberDocument, variables, headers)(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useUpdateContactPhoneNumberMutation.getKey = () => ['updateContactPhoneNumber'];
 
 useUpdateContactPhoneNumberMutation.fetcher = (

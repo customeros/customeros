@@ -201,7 +201,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
         closeConfirmationDialog: onClose,
         onCreateLogEntry,
         remirrorProps,
-        isSaving: createLogEntryMutation.isLoading,
+        isSaving: createLogEntryMutation.isPending,
         showLogEntryConfirmationDialog: isOpen,
       }}
     >

@@ -1,1 +1,2 @@
-export * from './Providers';
+'use client';
+export { Providers } from './Providers';

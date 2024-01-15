@@ -19,8 +19,10 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type MergeOrganizationsMutationVariables = Types.Exact<{
-  primaryOrganizationId: Types.Scalars['ID'];
-  mergedOrganizationIds: Array<Types.Scalars['ID']> | Types.Scalars['ID'];
+  primaryOrganizationId: Types.Scalars['ID']['input'];
+  mergedOrganizationIds:
+    | Array<Types.Scalars['ID']['input']>
+    | Types.Scalars['ID']['input'];
 }>;
 
 export type MergeOrganizationsMutation = {
@@ -38,6 +40,7 @@ export const MergeOrganizationsDocument = `
   }
 }
     `;
+
 export const useMergeOrganizationsMutation = <
   TError = unknown,
   TContext = unknown,
@@ -50,23 +53,25 @@ export const useMergeOrganizationsMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     MergeOrganizationsMutation,
     TError,
     MergeOrganizationsMutationVariables,
     TContext
-  >(
-    ['mergeOrganizations'],
-    (variables?: MergeOrganizationsMutationVariables) =>
+  >({
+    mutationKey: ['mergeOrganizations'],
+    mutationFn: (variables?: MergeOrganizationsMutationVariables) =>
       fetcher<MergeOrganizationsMutation, MergeOrganizationsMutationVariables>(
         client,
         MergeOrganizationsDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useMergeOrganizationsMutation.getKey = () => ['mergeOrganizations'];
 
 useMergeOrganizationsMutation.fetcher = (

@@ -226,3 +226,21 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 	}
 	return &tenantSettingsEntity
 }
+
+func MapDbNodeToCountryEntity(dbNode *dbtype.Node) *entity.CountryEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	result := entity.CountryEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		CodeA2:    utils.GetStringPropOrEmpty(props, "codeA2"),
+		CodeA3:    utils.GetStringPropOrEmpty(props, "codeA3"),
+		PhoneCode: utils.GetStringPropOrEmpty(props, "phoneCode"),
+	}
+	return &result
+}

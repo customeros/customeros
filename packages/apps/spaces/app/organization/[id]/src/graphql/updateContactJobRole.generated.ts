@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type UpdateContactRoleMutationVariables = Types.Exact<{
-  contactId: Types.Scalars['ID'];
+  contactId: Types.Scalars['ID']['input'];
   input: Types.JobRoleUpdateInput;
 }>;
 
@@ -35,6 +35,7 @@ export const UpdateContactRoleDocument = `
   }
 }
     `;
+
 export const useUpdateContactRoleMutation = <
   TError = unknown,
   TContext = unknown,
@@ -47,23 +48,25 @@ export const useUpdateContactRoleMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     UpdateContactRoleMutation,
     TError,
     UpdateContactRoleMutationVariables,
     TContext
-  >(
-    ['updateContactRole'],
-    (variables?: UpdateContactRoleMutationVariables) =>
+  >({
+    mutationKey: ['updateContactRole'],
+    mutationFn: (variables?: UpdateContactRoleMutationVariables) =>
       fetcher<UpdateContactRoleMutation, UpdateContactRoleMutationVariables>(
         client,
         UpdateContactRoleDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useUpdateContactRoleMutation.getKey = () => ['updateContactRole'];
 
 useUpdateContactRoleMutation.fetcher = (

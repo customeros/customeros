@@ -85,7 +85,6 @@ export const OrganizationTimeline: FC = () => {
   const client = getGraphQLClient();
   const { data, isFetchingNextPage, fetchNextPage } =
     useInfiniteGetTimelineQuery(
-      'from',
       client,
       {
         organizationId: id,
@@ -93,6 +92,7 @@ export const OrganizationTimeline: FC = () => {
         size: 50,
       },
       {
+        initialPageParam: 0,
         getNextPageParam: (lastPage) => {
           const lastEvent = lastPage?.organization?.timelineEvents?.slice(
             -1,
@@ -106,7 +106,7 @@ export const OrganizationTimeline: FC = () => {
       },
     );
   const invalidateQuery = useCallback(() => {
-    queryClient.invalidateQueries(['GetTimeline.infinite']);
+    queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
   }, []);
 
   useEffect(() => {

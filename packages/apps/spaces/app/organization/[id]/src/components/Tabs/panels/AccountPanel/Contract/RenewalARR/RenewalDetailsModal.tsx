@@ -95,7 +95,7 @@ const RenewalDetailsForm = ({ data, onClose }: RenewalDetailsFormProps) => {
     client,
     {
       onMutate: ({ input }) => {
-        queryClient.cancelQueries(getContractsQueryKey);
+        queryClient.cancelQueries({ queryKey: getContractsQueryKey });
 
         queryClient.setQueryData<GetContractsQuery>(
           getContractsQueryKey,
@@ -148,7 +148,7 @@ const RenewalDetailsForm = ({ data, onClose }: RenewalDetailsFormProps) => {
           clearTimeout(timeoutRef.current);
         }
         timeoutRef.current = setTimeout(() => {
-          queryClient.invalidateQueries(getContractsQueryKey);
+          queryClient.invalidateQueries({ queryKey: getContractsQueryKey });
         }, 1000);
       },
     },
@@ -280,7 +280,7 @@ const RenewalDetailsForm = ({ data, onClose }: RenewalDetailsFormProps) => {
             variant='outline'
             w='full'
             onClick={onClose}
-            isDisabled={updateOpportunityMutation.isLoading}
+            isDisabled={updateOpportunityMutation.isPending}
           >
             Cancel
           </Button>
@@ -290,7 +290,7 @@ const RenewalDetailsForm = ({ data, onClose }: RenewalDetailsFormProps) => {
             type='submit'
             variant='outline'
             colorScheme='primary'
-            isLoading={updateOpportunityMutation.isLoading}
+            isLoading={updateOpportunityMutation.isPending}
           >
             Update
           </Button>

@@ -13,9 +13,9 @@ export const invalidateAccountDetailsQuery = (
   queryClient: QueryClient,
   id: string,
 ) =>
-  queryClient.invalidateQueries(
-    useOrganizationAccountDetailsQuery.getKey({ id }),
-  );
+  queryClient.invalidateQueries({
+    queryKey: useOrganizationAccountDetailsQuery.getKey({ id }),
+  });
 
 export function getRenewalLikelihoodColor(
   renewalLikelihood?: Maybe<OpportunityRenewalLikelihood> | undefined,

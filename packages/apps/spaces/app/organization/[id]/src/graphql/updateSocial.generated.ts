@@ -35,6 +35,7 @@ export const UpdateSocialDocument = `
   }
 }
     `;
+
 export const useUpdateSocialMutation = <TError = unknown, TContext = unknown>(
   client: GraphQLClient,
   options?: UseMutationOptions<
@@ -44,23 +45,25 @@ export const useUpdateSocialMutation = <TError = unknown, TContext = unknown>(
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     UpdateSocialMutation,
     TError,
     UpdateSocialMutationVariables,
     TContext
-  >(
-    ['updateSocial'],
-    (variables?: UpdateSocialMutationVariables) =>
+  >({
+    mutationKey: ['updateSocial'],
+    mutationFn: (variables?: UpdateSocialMutationVariables) =>
       fetcher<UpdateSocialMutation, UpdateSocialMutationVariables>(
         client,
         UpdateSocialDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useUpdateSocialMutation.getKey = () => ['updateSocial'];
 
 useUpdateSocialMutation.fetcher = (

@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -9,6 +8,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -25,7 +25,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type OrganizationPeoplePanelQueryVariables = Types.Exact<{
-  id: Types.Scalars['ID'];
+  id: Types.Scalars['ID']['input'];
 }>;
 
 export type OrganizationPeoplePanelQuery = {
@@ -148,60 +148,87 @@ export const OrganizationPeoplePanelDocument = `
   }
 }
     `;
+
 export const useOrganizationPeoplePanelQuery = <
   TData = OrganizationPeoplePanelQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables: OrganizationPeoplePanelQueryVariables,
-  options?: UseQueryOptions<OrganizationPeoplePanelQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<OrganizationPeoplePanelQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<
+      OrganizationPeoplePanelQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<OrganizationPeoplePanelQuery, TError, TData>(
-    ['OrganizationPeoplePanel', variables],
-    fetcher<
+) => {
+  return useQuery<OrganizationPeoplePanelQuery, TError, TData>({
+    queryKey: ['OrganizationPeoplePanel', variables],
+    queryFn: fetcher<
       OrganizationPeoplePanelQuery,
       OrganizationPeoplePanelQueryVariables
     >(client, OrganizationPeoplePanelDocument, variables, headers),
-    options,
-  );
+    ...options,
+  });
+};
+
 useOrganizationPeoplePanelQuery.document = OrganizationPeoplePanelDocument;
 
 useOrganizationPeoplePanelQuery.getKey = (
   variables: OrganizationPeoplePanelQueryVariables,
 ) => ['OrganizationPeoplePanel', variables];
+
 export const useInfiniteOrganizationPeoplePanelQuery = <
-  TData = OrganizationPeoplePanelQuery,
+  TData = InfiniteData<OrganizationPeoplePanelQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof OrganizationPeoplePanelQueryVariables,
   client: GraphQLClient,
   variables: OrganizationPeoplePanelQueryVariables,
-  options?: UseInfiniteQueryOptions<
-    OrganizationPeoplePanelQuery,
-    TError,
-    TData
-  >,
+  options: Omit<
+    UseInfiniteQueryOptions<OrganizationPeoplePanelQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      OrganizationPeoplePanelQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<OrganizationPeoplePanelQuery, TError, TData>(
-    ['OrganizationPeoplePanel.infinite', variables],
-    (metaData) =>
-      fetcher<
-        OrganizationPeoplePanelQuery,
-        OrganizationPeoplePanelQueryVariables
-      >(
-        client,
-        OrganizationPeoplePanelDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<OrganizationPeoplePanelQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? [
+          'OrganizationPeoplePanel.infinite',
+          variables,
+        ],
+        queryFn: (metaData) =>
+          fetcher<
+            OrganizationPeoplePanelQuery,
+            OrganizationPeoplePanelQueryVariables
+          >(
+            client,
+            OrganizationPeoplePanelDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteOrganizationPeoplePanelQuery.getKey = (
   variables: OrganizationPeoplePanelQueryVariables,
 ) => ['OrganizationPeoplePanel.infinite', variables];
+
 useOrganizationPeoplePanelQuery.fetcher = (
   client: GraphQLClient,
   variables: OrganizationPeoplePanelQueryVariables,

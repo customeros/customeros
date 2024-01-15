@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -9,6 +8,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -25,7 +25,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type GetMentionOptionsQueryVariables = Types.Exact<{
-  id: Types.Scalars['ID'];
+  id: Types.Scalars['ID']['input'];
 }>;
 
 export type GetMentionOptionsQuery = {
@@ -63,55 +63,83 @@ export const GetMentionOptionsDocument = `
   }
 }
     `;
+
 export const useGetMentionOptionsQuery = <
   TData = GetMentionOptionsQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables: GetMentionOptionsQueryVariables,
-  options?: UseQueryOptions<GetMentionOptionsQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<GetMentionOptionsQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<
+      GetMentionOptionsQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GetMentionOptionsQuery, TError, TData>(
-    ['getMentionOptions', variables],
-    fetcher<GetMentionOptionsQuery, GetMentionOptionsQueryVariables>(
+) => {
+  return useQuery<GetMentionOptionsQuery, TError, TData>({
+    queryKey: ['getMentionOptions', variables],
+    queryFn: fetcher<GetMentionOptionsQuery, GetMentionOptionsQueryVariables>(
       client,
       GetMentionOptionsDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useGetMentionOptionsQuery.document = GetMentionOptionsDocument;
 
 useGetMentionOptionsQuery.getKey = (
   variables: GetMentionOptionsQueryVariables,
 ) => ['getMentionOptions', variables];
+
 export const useInfiniteGetMentionOptionsQuery = <
-  TData = GetMentionOptionsQuery,
+  TData = InfiniteData<GetMentionOptionsQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GetMentionOptionsQueryVariables,
   client: GraphQLClient,
   variables: GetMentionOptionsQueryVariables,
-  options?: UseInfiniteQueryOptions<GetMentionOptionsQuery, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<GetMentionOptionsQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GetMentionOptionsQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GetMentionOptionsQuery, TError, TData>(
-    ['getMentionOptions.infinite', variables],
-    (metaData) =>
-      fetcher<GetMentionOptionsQuery, GetMentionOptionsQueryVariables>(
-        client,
-        GetMentionOptionsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GetMentionOptionsQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ['getMentionOptions.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<GetMentionOptionsQuery, GetMentionOptionsQueryVariables>(
+            client,
+            GetMentionOptionsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGetMentionOptionsQuery.getKey = (
   variables: GetMentionOptionsQueryVariables,
 ) => ['getMentionOptions.infinite', variables];
+
 useGetMentionOptionsQuery.fetcher = (
   client: GraphQLClient,
   variables: GetMentionOptionsQueryVariables,

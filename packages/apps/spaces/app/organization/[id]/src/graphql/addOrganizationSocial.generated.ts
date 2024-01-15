@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type AddSocialMutationVariables = Types.Exact<{
-  organizationId: Types.Scalars['ID'];
+  organizationId: Types.Scalars['ID']['input'];
   input: Types.SocialInput;
 }>;
 
@@ -36,6 +36,7 @@ export const AddSocialDocument = `
   }
 }
     `;
+
 export const useAddSocialMutation = <TError = unknown, TContext = unknown>(
   client: GraphQLClient,
   options?: UseMutationOptions<
@@ -45,18 +46,25 @@ export const useAddSocialMutation = <TError = unknown, TContext = unknown>(
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<AddSocialMutation, TError, AddSocialMutationVariables, TContext>(
-    ['addSocial'],
-    (variables?: AddSocialMutationVariables) =>
+) => {
+  return useMutation<
+    AddSocialMutation,
+    TError,
+    AddSocialMutationVariables,
+    TContext
+  >({
+    mutationKey: ['addSocial'],
+    mutationFn: (variables?: AddSocialMutationVariables) =>
       fetcher<AddSocialMutation, AddSocialMutationVariables>(
         client,
         AddSocialDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useAddSocialMutation.getKey = () => ['addSocial'];
 
 useAddSocialMutation.fetcher = (

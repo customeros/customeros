@@ -34,6 +34,7 @@ export const UpdateOpportunityDocument = `
   }
 }
     `;
+
 export const useUpdateOpportunityMutation = <
   TError = unknown,
   TContext = unknown,
@@ -46,23 +47,25 @@ export const useUpdateOpportunityMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     UpdateOpportunityMutation,
     TError,
     UpdateOpportunityMutationVariables,
     TContext
-  >(
-    ['updateOpportunity'],
-    (variables?: UpdateOpportunityMutationVariables) =>
+  >({
+    mutationKey: ['updateOpportunity'],
+    mutationFn: (variables?: UpdateOpportunityMutationVariables) =>
       fetcher<UpdateOpportunityMutation, UpdateOpportunityMutationVariables>(
         client,
         UpdateOpportunityDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useUpdateOpportunityMutation.getKey = () => ['updateOpportunity'];
 
 useUpdateOpportunityMutation.fetcher = (

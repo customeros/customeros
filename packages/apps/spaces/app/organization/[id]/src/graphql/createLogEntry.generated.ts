@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type CreateLogEntryMutationVariables = Types.Exact<{
-  organizationId: Types.Scalars['ID'];
+  organizationId: Types.Scalars['ID']['input'];
   logEntry: Types.LogEntryInput;
 }>;
 
@@ -36,6 +36,7 @@ export const CreateLogEntryDocument = `
   )
 }
     `;
+
 export const useCreateLogEntryMutation = <TError = unknown, TContext = unknown>(
   client: GraphQLClient,
   options?: UseMutationOptions<
@@ -45,23 +46,25 @@ export const useCreateLogEntryMutation = <TError = unknown, TContext = unknown>(
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     CreateLogEntryMutation,
     TError,
     CreateLogEntryMutationVariables,
     TContext
-  >(
-    ['createLogEntry'],
-    (variables?: CreateLogEntryMutationVariables) =>
+  >({
+    mutationKey: ['createLogEntry'],
+    mutationFn: (variables?: CreateLogEntryMutationVariables) =>
       fetcher<CreateLogEntryMutation, CreateLogEntryMutationVariables>(
         client,
         CreateLogEntryDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useCreateLogEntryMutation.getKey = () => ['createLogEntry'];
 
 useCreateLogEntryMutation.fetcher = (

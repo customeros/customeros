@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -9,6 +8,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -25,7 +25,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type OrganizationQueryVariables = Types.Exact<{
-  id: Types.Scalars['ID'];
+  id: Types.Scalars['ID']['input'];
 }>;
 
 export type OrganizationQuery = {
@@ -129,56 +129,80 @@ export const OrganizationDocument = `
   }
 }
     `;
+
 export const useOrganizationQuery = <
   TData = OrganizationQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables: OrganizationQueryVariables,
-  options?: UseQueryOptions<OrganizationQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<OrganizationQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<OrganizationQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<OrganizationQuery, TError, TData>(
-    ['Organization', variables],
-    fetcher<OrganizationQuery, OrganizationQueryVariables>(
+) => {
+  return useQuery<OrganizationQuery, TError, TData>({
+    queryKey: ['Organization', variables],
+    queryFn: fetcher<OrganizationQuery, OrganizationQueryVariables>(
       client,
       OrganizationDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useOrganizationQuery.document = OrganizationDocument;
 
 useOrganizationQuery.getKey = (variables: OrganizationQueryVariables) => [
   'Organization',
   variables,
 ];
+
 export const useInfiniteOrganizationQuery = <
-  TData = OrganizationQuery,
+  TData = InfiniteData<OrganizationQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof OrganizationQueryVariables,
   client: GraphQLClient,
   variables: OrganizationQueryVariables,
-  options?: UseInfiniteQueryOptions<OrganizationQuery, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<OrganizationQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      OrganizationQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<OrganizationQuery, TError, TData>(
-    ['Organization.infinite', variables],
-    (metaData) =>
-      fetcher<OrganizationQuery, OrganizationQueryVariables>(
-        client,
-        OrganizationDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<OrganizationQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ['Organization.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<OrganizationQuery, OrganizationQueryVariables>(
+            client,
+            OrganizationDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteOrganizationQuery.getKey = (
   variables: OrganizationQueryVariables,
 ) => ['Organization.infinite', variables];
+
 useOrganizationQuery.fetcher = (
   client: GraphQLClient,
   variables: OrganizationQueryVariables,

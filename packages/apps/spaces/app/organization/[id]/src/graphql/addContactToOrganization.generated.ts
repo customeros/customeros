@@ -34,6 +34,7 @@ export const AddOrganizationToContactDocument = `
   }
 }
     `;
+
 export const useAddOrganizationToContactMutation = <
   TError = unknown,
   TContext = unknown,
@@ -46,21 +47,23 @@ export const useAddOrganizationToContactMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     AddOrganizationToContactMutation,
     TError,
     AddOrganizationToContactMutationVariables,
     TContext
-  >(
-    ['addOrganizationToContact'],
-    (variables?: AddOrganizationToContactMutationVariables) =>
+  >({
+    mutationKey: ['addOrganizationToContact'],
+    mutationFn: (variables?: AddOrganizationToContactMutationVariables) =>
       fetcher<
         AddOrganizationToContactMutation,
         AddOrganizationToContactMutationVariables
       >(client, AddOrganizationToContactDocument, variables, headers)(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useAddOrganizationToContactMutation.getKey = () => ['addOrganizationToContact'];
 
 useAddOrganizationToContactMutation.fetcher = (

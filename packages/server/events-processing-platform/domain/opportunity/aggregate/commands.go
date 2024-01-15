@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -116,6 +117,13 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 		return err
 	}
 
+	// skip if not changes on aggregate
+	if a.Opportunity.RenewalDetails.RenewedAt != nil &&
+		cmd.RenewedAt != nil &&
+		a.Opportunity.RenewalDetails.RenewedAt.Equal(*cmd.RenewedAt) {
+		return nil
+	}
+
 	updateRenewalNextCycleDateEvent, err := event.NewOpportunityUpdateNextCycleDateEvent(a, updatedAtNotNil, cmd.RenewedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -139,6 +147,14 @@ func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, cmd *comma
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 	cmd.Source.SetDefaultValues()
+
+	// skip if no changes on aggregate
+	// case 1 skip if only amount to be updated, but no changes
+	if cmd.FieldMaskContainsOnly([]string{model.FieldMaskAmount, model.FieldMaskMaxAmount}) &&
+		a.Opportunity.Amount == cmd.DataFields.Amount &&
+		a.Opportunity.MaxAmount == cmd.DataFields.MaxAmount {
+		return nil
+	}
 
 	updateEvent, err := event.NewOpportunityUpdateEvent(a, cmd.DataFields, cmd.Source.Source, cmd.ExternalSystem, updatedAtNotNil, cmd.FieldsMask)
 	if err != nil {
@@ -190,6 +206,11 @@ func (a *OpportunityAggregate) closeWinOpportunity(ctx context.Context, cmd *com
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
+	// skip if opportunity is already closed won
+	if a.Opportunity.InternalStage == neo4jenum.OpportunityInternalStageClosedWon.String() {
+		return nil
+	}
+
 	now := utils.Now()
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, now)
 	closedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.ClosedAt, now)
@@ -214,6 +235,11 @@ func (a *OpportunityAggregate) closeLooseOpportunity(ctx context.Context, cmd *c
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	// skip if opportunity is already closed lost
+	if a.Opportunity.InternalStage == neo4jenum.OpportunityInternalStageClosedLost.String() {
+		return nil
+	}
 
 	now := utils.Now()
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, now)

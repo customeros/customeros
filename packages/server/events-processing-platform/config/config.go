@@ -35,7 +35,7 @@ type GraphSubscription struct {
 	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_ENABLED" envDefault:"true"`
 	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_GROUP_NAME" envDefault:"graph-v1" validate:"required"`
 	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
+	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
 }
 
 type EmailValidationSubscription struct {
@@ -211,17 +211,22 @@ type Utils struct {
 	RetriesOnOptimisticLockException int `env:"UTILS_RETRIES_ON_OPTIMISTIC_LOCK" envDefault:"5"`
 }
 
+type Events struct {
+	EventsToIgnore []string `env:"EVENTS_TO_IGNORE" envDefault:""`
+}
+
 type Config struct {
 	ServiceName      string `env:"SERVICE_NAME" envDefault:"events-processing-platform"`
 	Logger           logger.Config
-	GRPC             GRPC
 	EventStoreConfig eventstroredb.EventStoreConfig
-	Subscriptions    Subscriptions
 	Neo4j            config.Neo4jConfig
 	Postgres         config.PostgresConfig
 	Jaeger           tracing.JaegerConfig
+	GRPC             GRPC
+	Subscriptions    Subscriptions
 	Services         Services
 	Utils            Utils
+	Events           Events
 }
 
 func InitConfig() (*Config, error) {

@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../src/types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -9,6 +8,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -50,54 +50,80 @@ export const CustomerMapDocument = `
   }
 }
     `;
+
 export const useCustomerMapQuery = <TData = CustomerMapQuery, TError = unknown>(
   client: GraphQLClient,
   variables?: CustomerMapQueryVariables,
-  options?: UseQueryOptions<CustomerMapQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<CustomerMapQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<CustomerMapQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<CustomerMapQuery, TError, TData>(
-    variables === undefined ? ['CustomerMap'] : ['CustomerMap', variables],
-    fetcher<CustomerMapQuery, CustomerMapQueryVariables>(
+) => {
+  return useQuery<CustomerMapQuery, TError, TData>({
+    queryKey:
+      variables === undefined ? ['CustomerMap'] : ['CustomerMap', variables],
+    queryFn: fetcher<CustomerMapQuery, CustomerMapQueryVariables>(
       client,
       CustomerMapDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useCustomerMapQuery.document = CustomerMapDocument;
 
 useCustomerMapQuery.getKey = (variables?: CustomerMapQueryVariables) =>
   variables === undefined ? ['CustomerMap'] : ['CustomerMap', variables];
+
 export const useInfiniteCustomerMapQuery = <
-  TData = CustomerMapQuery,
+  TData = InfiniteData<CustomerMapQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof CustomerMapQueryVariables,
   client: GraphQLClient,
-  variables?: CustomerMapQueryVariables,
-  options?: UseInfiniteQueryOptions<CustomerMapQuery, TError, TData>,
+  variables: CustomerMapQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<CustomerMapQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      CustomerMapQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<CustomerMapQuery, TError, TData>(
-    variables === undefined
-      ? ['CustomerMap.infinite']
-      : ['CustomerMap.infinite', variables],
-    (metaData) =>
-      fetcher<CustomerMapQuery, CustomerMapQueryVariables>(
-        client,
-        CustomerMapDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<CustomerMapQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['CustomerMap.infinite']
+            : ['CustomerMap.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<CustomerMapQuery, CustomerMapQueryVariables>(
+            client,
+            CustomerMapDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteCustomerMapQuery.getKey = (variables?: CustomerMapQueryVariables) =>
   variables === undefined
     ? ['CustomerMap.infinite']
     : ['CustomerMap.infinite', variables];
+
 useCustomerMapQuery.fetcher = (
   client: GraphQLClient,
   variables?: CustomerMapQueryVariables,

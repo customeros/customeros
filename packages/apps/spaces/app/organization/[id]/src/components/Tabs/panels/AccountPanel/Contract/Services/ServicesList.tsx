@@ -168,7 +168,7 @@ export const ServicesList = ({ data, contractId }: ServicesListProps) => {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(queryKey);
+        queryClient.invalidateQueries({ queryKey });
       }, 1000);
     },
   });

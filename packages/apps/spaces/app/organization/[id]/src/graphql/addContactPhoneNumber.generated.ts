@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type AddContactPhoneNumberMutationVariables = Types.Exact<{
-  contactId: Types.Scalars['ID'];
+  contactId: Types.Scalars['ID']['input'];
   input: Types.PhoneNumberInput;
 }>;
 
@@ -40,6 +40,7 @@ export const AddContactPhoneNumberDocument = `
   }
 }
     `;
+
 export const useAddContactPhoneNumberMutation = <
   TError = unknown,
   TContext = unknown,
@@ -52,21 +53,23 @@ export const useAddContactPhoneNumberMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     AddContactPhoneNumberMutation,
     TError,
     AddContactPhoneNumberMutationVariables,
     TContext
-  >(
-    ['addContactPhoneNumber'],
-    (variables?: AddContactPhoneNumberMutationVariables) =>
+  >({
+    mutationKey: ['addContactPhoneNumber'],
+    mutationFn: (variables?: AddContactPhoneNumberMutationVariables) =>
       fetcher<
         AddContactPhoneNumberMutation,
         AddContactPhoneNumberMutationVariables
       >(client, AddContactPhoneNumberDocument, variables, headers)(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useAddContactPhoneNumberMutation.getKey = () => ['addContactPhoneNumber'];
 
 useAddContactPhoneNumberMutation.fetcher = (

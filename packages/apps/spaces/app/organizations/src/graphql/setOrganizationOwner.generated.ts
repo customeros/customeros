@@ -19,8 +19,8 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type SetOrganizationOwnerMutationVariables = Types.Exact<{
-  organizationId: Types.Scalars['ID'];
-  userId: Types.Scalars['ID'];
+  organizationId: Types.Scalars['ID']['input'];
+  userId: Types.Scalars['ID']['input'];
 }>;
 
 export type SetOrganizationOwnerMutation = {
@@ -49,6 +49,7 @@ export const SetOrganizationOwnerDocument = `
   }
 }
     `;
+
 export const useSetOrganizationOwnerMutation = <
   TError = unknown,
   TContext = unknown,
@@ -61,21 +62,23 @@ export const useSetOrganizationOwnerMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     SetOrganizationOwnerMutation,
     TError,
     SetOrganizationOwnerMutationVariables,
     TContext
-  >(
-    ['setOrganizationOwner'],
-    (variables?: SetOrganizationOwnerMutationVariables) =>
+  >({
+    mutationKey: ['setOrganizationOwner'],
+    mutationFn: (variables?: SetOrganizationOwnerMutationVariables) =>
       fetcher<
         SetOrganizationOwnerMutation,
         SetOrganizationOwnerMutationVariables
       >(client, SetOrganizationOwnerDocument, variables, headers)(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useSetOrganizationOwnerMutation.getKey = () => ['setOrganizationOwner'];
 
 useSetOrganizationOwnerMutation.fetcher = (

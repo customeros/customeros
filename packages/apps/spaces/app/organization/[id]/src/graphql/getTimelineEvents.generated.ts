@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../../../../src/types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
@@ -13,6 +12,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -29,7 +29,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type GetTimelineEventsQueryVariables = Types.Exact<{
-  ids: Array<Types.Scalars['ID']> | Types.Scalars['ID'];
+  ids: Array<Types.Scalars['ID']['input']> | Types.Scalars['ID']['input'];
 }>;
 
 export type GetTimelineEventsQuery = {
@@ -868,55 +868,83 @@ export const GetTimelineEventsDocument = `
 }
     ${InteractionEventParticipantFragmentFragmentDoc}
 ${MeetingParticipantFragmentFragmentDoc}`;
+
 export const useGetTimelineEventsQuery = <
   TData = GetTimelineEventsQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables: GetTimelineEventsQueryVariables,
-  options?: UseQueryOptions<GetTimelineEventsQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<GetTimelineEventsQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<
+      GetTimelineEventsQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GetTimelineEventsQuery, TError, TData>(
-    ['getTimelineEvents', variables],
-    fetcher<GetTimelineEventsQuery, GetTimelineEventsQueryVariables>(
+) => {
+  return useQuery<GetTimelineEventsQuery, TError, TData>({
+    queryKey: ['getTimelineEvents', variables],
+    queryFn: fetcher<GetTimelineEventsQuery, GetTimelineEventsQueryVariables>(
       client,
       GetTimelineEventsDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useGetTimelineEventsQuery.document = GetTimelineEventsDocument;
 
 useGetTimelineEventsQuery.getKey = (
   variables: GetTimelineEventsQueryVariables,
 ) => ['getTimelineEvents', variables];
+
 export const useInfiniteGetTimelineEventsQuery = <
-  TData = GetTimelineEventsQuery,
+  TData = InfiniteData<GetTimelineEventsQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GetTimelineEventsQueryVariables,
   client: GraphQLClient,
   variables: GetTimelineEventsQueryVariables,
-  options?: UseInfiniteQueryOptions<GetTimelineEventsQuery, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<GetTimelineEventsQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GetTimelineEventsQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GetTimelineEventsQuery, TError, TData>(
-    ['getTimelineEvents.infinite', variables],
-    (metaData) =>
-      fetcher<GetTimelineEventsQuery, GetTimelineEventsQueryVariables>(
-        client,
-        GetTimelineEventsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GetTimelineEventsQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ['getTimelineEvents.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<GetTimelineEventsQuery, GetTimelineEventsQueryVariables>(
+            client,
+            GetTimelineEventsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGetTimelineEventsQuery.getKey = (
   variables: GetTimelineEventsQueryVariables,
 ) => ['getTimelineEvents.infinite', variables];
+
 useGetTimelineEventsQuery.fetcher = (
   client: GraphQLClient,
   variables: GetTimelineEventsQueryVariables,

@@ -51,6 +51,7 @@ export const UpdateOnboardingStatusDocument = `
   }
 }
     `;
+
 export const useUpdateOnboardingStatusMutation = <
   TError = unknown,
   TContext = unknown,
@@ -63,21 +64,23 @@ export const useUpdateOnboardingStatusMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     UpdateOnboardingStatusMutation,
     TError,
     UpdateOnboardingStatusMutationVariables,
     TContext
-  >(
-    ['updateOnboardingStatus'],
-    (variables?: UpdateOnboardingStatusMutationVariables) =>
+  >({
+    mutationKey: ['updateOnboardingStatus'],
+    mutationFn: (variables?: UpdateOnboardingStatusMutationVariables) =>
       fetcher<
         UpdateOnboardingStatusMutation,
         UpdateOnboardingStatusMutationVariables
       >(client, UpdateOnboardingStatusDocument, variables, headers)(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useUpdateOnboardingStatusMutation.getKey = () => ['updateOnboardingStatus'];
 
 useUpdateOnboardingStatusMutation.fetcher = (

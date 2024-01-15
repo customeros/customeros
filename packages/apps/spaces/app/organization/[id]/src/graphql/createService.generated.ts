@@ -34,6 +34,7 @@ export const CreateServiceDocument = `
   }
 }
     `;
+
 export const useCreateServiceMutation = <TError = unknown, TContext = unknown>(
   client: GraphQLClient,
   options?: UseMutationOptions<
@@ -43,23 +44,25 @@ export const useCreateServiceMutation = <TError = unknown, TContext = unknown>(
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     CreateServiceMutation,
     TError,
     CreateServiceMutationVariables,
     TContext
-  >(
-    ['createService'],
-    (variables?: CreateServiceMutationVariables) =>
+  >({
+    mutationKey: ['createService'],
+    mutationFn: (variables?: CreateServiceMutationVariables) =>
       fetcher<CreateServiceMutation, CreateServiceMutationVariables>(
         client,
         CreateServiceDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useCreateServiceMutation.getKey = () => ['createService'];
 
 useCreateServiceMutation.fetcher = (

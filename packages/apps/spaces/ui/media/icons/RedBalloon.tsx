@@ -1,7 +1,7 @@
 import { Icon, IconProps } from '@ui/media/Icon';
 
 export const RedBalloon = (props: IconProps) => (
-  <Icon viewBox='0 0 28 50' fill='none' boxSize='4' {...props}>
+  <Icon viewBox='0 0 23 50' fill='none' boxSize='4' {...props}>
     <path
       fillRule='evenodd'
       clipRule='evenodd'

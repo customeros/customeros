@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type AddMeetingNoteMutationVariables = Types.Exact<{
-  meetingId: Types.Scalars['ID'];
+  meetingId: Types.Scalars['ID']['input'];
   note: Types.NoteInput;
 }>;
 
@@ -35,6 +35,7 @@ export const AddMeetingNoteDocument = `
   }
 }
     `;
+
 export const useAddMeetingNoteMutation = <TError = unknown, TContext = unknown>(
   client: GraphQLClient,
   options?: UseMutationOptions<
@@ -44,23 +45,25 @@ export const useAddMeetingNoteMutation = <TError = unknown, TContext = unknown>(
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     AddMeetingNoteMutation,
     TError,
     AddMeetingNoteMutationVariables,
     TContext
-  >(
-    ['addMeetingNote'],
-    (variables?: AddMeetingNoteMutationVariables) =>
+  >({
+    mutationKey: ['addMeetingNote'],
+    mutationFn: (variables?: AddMeetingNoteMutationVariables) =>
       fetcher<AddMeetingNoteMutation, AddMeetingNoteMutationVariables>(
         client,
         AddMeetingNoteDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useAddMeetingNoteMutation.getKey = () => ['addMeetingNote'];
 
 useAddMeetingNoteMutation.fetcher = (
