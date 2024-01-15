@@ -1,7 +1,6 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../types/__generated__/graphql.types';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
