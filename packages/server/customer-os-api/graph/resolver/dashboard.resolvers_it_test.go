@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"github.com/99designs/gqlgen/client"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -910,18 +909,12 @@ func TestQueryResolver_Sort_Renewals_ByRenewalDate(t *testing.T) {
 
 	_ = neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org1",
-		RenewalSummary: entity.RenewalSummary{
-			NextRenewalAt: utils.TimePtr(daysFromNow10),
-		},
 	})
 	_ = neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org2",
 	})
 	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org3",
-		RenewalSummary: entity.RenewalSummary{
-			NextRenewalAt: utils.TimePtr(daysFromNow20),
-		},
 	})
 
 	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
@@ -953,7 +946,6 @@ func TestQueryResolver_Sort_Renewals_ByRenewalDate(t *testing.T) {
 	var renewalsPageStruct struct {
 		DashboardView_Renewals model.RenewalsPage
 	}
-	fmt.Println(rawResponse.Data.(map[string]any))
 	err := decode.Decode(rawResponse.Data.(map[string]any), &renewalsPageStruct)
 	require.Nil(t, err)
 
@@ -964,4 +956,240 @@ func TestQueryResolver_Sort_Renewals_ByRenewalDate(t *testing.T) {
 	require.Equal(t, organizationId3, renewalsPageStruct.DashboardView_Renewals.Content[0].Organization.ID)
 	require.Equal(t, contractId2, renewalsPageStruct.DashboardView_Renewals.Content[0].Contract.ID)
 	require.Equal(t, contractId1, renewalsPageStruct.DashboardView_Renewals.Content[1].Contract.ID)
+}
+
+func TestQueryResolver_Sort_Renewals_ByForecastAmountASC(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	daysFromNow10 := utils.Now().AddDate(0, 0, 10)
+	daysFromNow20 := utils.Now().AddDate(0, 0, 20)
+
+	_ = neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org1",
+	})
+	_ = neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org2",
+	})
+	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org3",
+	})
+
+	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId1 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contractStartedAt,
+		RenewalCycle:     "MONTHLY",
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100})
+	insertServiceLineItem(ctx, driver, contractId1, entity.BilledTypeAnnually, 3, 2, sli1StartedAt)
+
+	contractId2 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contract2StartedAt,
+		RenewalCycle:     "MONTHLY",
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200})
+	insertServiceLineItem(ctx, driver, contractId2, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 2, "Opportunity": 2})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_view_renewals_sort",
+		map[string]interface{}{
+			"page":    1,
+			"limit":   10,
+			"sortBy":  "FORECAST_ARR",
+			"sortDir": "ASC",
+		})
+
+	var renewalsPageStruct struct {
+		DashboardView_Renewals model.RenewalsPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &renewalsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, renewalsPageStruct.DashboardView_Renewals.TotalPages)
+	require.Equal(t, int64(2), renewalsPageStruct.DashboardView_Renewals.TotalAvailable)
+	require.Equal(t, int64(2), renewalsPageStruct.DashboardView_Renewals.TotalElements)
+
+	require.Equal(t, organizationId3, renewalsPageStruct.DashboardView_Renewals.Content[0].Organization.ID)
+	require.Equal(t, contractId1, renewalsPageStruct.DashboardView_Renewals.Content[0].Contract.ID)
+	require.Equal(t, contractId2, renewalsPageStruct.DashboardView_Renewals.Content[1].Contract.ID)
+}
+
+func TestQueryResolver_Sort_Renewals_ByForecastAmountDESC(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	daysFromNow10 := utils.Now().AddDate(0, 0, 10)
+	daysFromNow20 := utils.Now().AddDate(0, 0, 20)
+
+	_ = neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org1",
+	})
+	_ = neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org2",
+	})
+	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org3",
+	})
+
+	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId1 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contractStartedAt,
+		RenewalCycle:     "MONTHLY",
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100})
+	insertServiceLineItem(ctx, driver, contractId1, entity.BilledTypeAnnually, 3, 2, sli1StartedAt)
+
+	contractId2 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contract2StartedAt,
+		RenewalCycle:     "MONTHLY",
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200})
+	insertServiceLineItem(ctx, driver, contractId2, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 2, "Opportunity": 2})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_view_renewals_sort",
+		map[string]interface{}{
+			"page":    1,
+			"limit":   10,
+			"sortBy":  "FORECAST_ARR",
+			"sortDir": "DESC",
+		})
+
+	var renewalsPageStruct struct {
+		DashboardView_Renewals model.RenewalsPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &renewalsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, renewalsPageStruct.DashboardView_Renewals.TotalPages)
+	require.Equal(t, int64(2), renewalsPageStruct.DashboardView_Renewals.TotalAvailable)
+	require.Equal(t, int64(2), renewalsPageStruct.DashboardView_Renewals.TotalElements)
+
+	require.Equal(t, organizationId3, renewalsPageStruct.DashboardView_Renewals.Content[0].Organization.ID)
+	require.Equal(t, contractId1, renewalsPageStruct.DashboardView_Renewals.Content[1].Contract.ID)
+	require.Equal(t, contractId2, renewalsPageStruct.DashboardView_Renewals.Content[0].Contract.ID)
+}
+
+func TestQueryResolver_Sort_Renewals_ByRenewalLikelihood(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	daysFromNow10 := utils.Now().AddDate(0, 0, 10)
+	daysFromNow20 := utils.Now().AddDate(0, 0, 20)
+
+	_ = neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org1",
+	})
+	_ = neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org2",
+	})
+	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org3",
+	})
+
+	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId1 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contractStartedAt,
+		RenewalCycle:     "MONTHLY",
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100, RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh})
+	insertServiceLineItem(ctx, driver, contractId1, entity.BilledTypeAnnually, 3, 2, sli1StartedAt)
+
+	contractId2 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contract2StartedAt,
+		RenewalCycle:     "MONTHLY",
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium})
+	insertServiceLineItem(ctx, driver, contractId2, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
+	contractId3 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contract2StartedAt,
+		RenewalCycle:     "MONTHLY",
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow})
+	insertServiceLineItem(ctx, driver, contractId3, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 3, "Opportunity": 3})
+	require.Equal(t, int64(2), assert_Search_Renewals_By_Likelihood(t, []string{"HIGH_RENEWAL", "MEDIUM_RENEWAL"}).TotalElements)
+}
+
+func assert_Search_Renewals_By_Likelihood(t *testing.T, searchTerm []string) model.RenewalsPage {
+	rawResponse, err := c.RawPost(getQuery("dashboard_view/dashboard_view_renewals_filter_by_renewal_likelihood"),
+		client.Var("page", 1),
+		client.Var("limit", 10),
+		client.Var("searchTerm", searchTerm),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var responseRaw struct {
+		DashboardView_Renewals model.RenewalsPage
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &responseRaw)
+	require.Nil(t, err)
+	require.NotNil(t, responseRaw)
+
+	return responseRaw.DashboardView_Renewals
+}
+
+func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyFalse(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	org := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org",
+	})
+
+	contractId1 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org, entity.ContractEntity{})
+	opportunityId1 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId1, entity.OpportunityEntity{})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId1, opportunityId1)
+	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId1, userId1)
+
+	contractId2 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org, entity.ContractEntity{})
+	opportunityId2 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId2, entity.OpportunityEntity{})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId2, opportunityId2)
+	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId2, userId2)
+
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_view_renewals_filter_by_owner",
+		map[string]interface{}{
+			"ownerIdList":  []string{userId1},
+			"ownerIdEmpty": false,
+			"page":         1,
+			"limit":        10})
+
+	var renewalsPageStruct struct {
+		DashboardView_Renewals model.RenewalsPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &renewalsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(2), renewalsPageStruct.DashboardView_Renewals.TotalAvailable)
+	require.Equal(t, int64(1), renewalsPageStruct.DashboardView_Renewals.TotalElements)
+	require.Equal(t, 1, len(renewalsPageStruct.DashboardView_Renewals.Content))
+	require.ElementsMatch(t, []string{opportunityId1},
+		[]string{renewalsPageStruct.DashboardView_Renewals.Content[0].Opportunity.ID})
 }

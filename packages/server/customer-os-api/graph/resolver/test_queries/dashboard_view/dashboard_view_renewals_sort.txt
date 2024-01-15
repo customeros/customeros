@@ -9,6 +9,7 @@ query dashboardView_Renewals($page: Int!, $limit: Int!, $sortBy: String!, $sortD
     id
     } opportunity{
     id
+    maxAmount
     }
     }
     totalPages
