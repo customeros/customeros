@@ -344,7 +344,8 @@ func (r *opportunityWriteRepository) CloseWin(ctx context.Context, tenant, oppor
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s 
+	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) 
+							WHERE op:Opportunity_%s AND op.internalStage <> $internalStage
 							SET 
 								op.closedAt=$closedAt, 
 								op.internalStage=$internalStage,
@@ -374,7 +375,8 @@ func (r *opportunityWriteRepository) CloseLoose(ctx context.Context, tenant, opp
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s 
+	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) 
+							WHERE op:Opportunity_%s AND op.internalStage <> $internalStage
 							SET op.closedAt=$closedAt, 
 								op.internalStage=$internalStage,
 								op.updatedAt=$updatedAt
