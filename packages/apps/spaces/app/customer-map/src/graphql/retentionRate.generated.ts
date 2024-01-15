@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -56,52 +57,79 @@ export const RetentionRateDocument = `
   }
 }
     `;
+
 export const useRetentionRateQuery = <
   TData = RetentionRateQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables?: RetentionRateQueryVariables,
-  options?: UseQueryOptions<RetentionRateQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<RetentionRateQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<RetentionRateQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<RetentionRateQuery, TError, TData>(
-    variables === undefined ? ['RetentionRate'] : ['RetentionRate', variables],
-    fetcher<RetentionRateQuery, RetentionRateQueryVariables>(
+) => {
+  return useQuery<RetentionRateQuery, TError, TData>({
+    queryKey:
+      variables === undefined
+        ? ['RetentionRate']
+        : ['RetentionRate', variables],
+    queryFn: fetcher<RetentionRateQuery, RetentionRateQueryVariables>(
       client,
       RetentionRateDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useRetentionRateQuery.document = RetentionRateDocument;
 
 useRetentionRateQuery.getKey = (variables?: RetentionRateQueryVariables) =>
   variables === undefined ? ['RetentionRate'] : ['RetentionRate', variables];
+
 export const useInfiniteRetentionRateQuery = <
-  TData = RetentionRateQuery,
+  TData = InfiniteData<RetentionRateQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof RetentionRateQueryVariables,
   client: GraphQLClient,
-  variables?: RetentionRateQueryVariables,
-  options?: UseInfiniteQueryOptions<RetentionRateQuery, TError, TData>,
+  variables: RetentionRateQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<RetentionRateQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      RetentionRateQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<RetentionRateQuery, TError, TData>(
-    variables === undefined
-      ? ['RetentionRate.infinite']
-      : ['RetentionRate.infinite', variables],
-    (metaData) =>
-      fetcher<RetentionRateQuery, RetentionRateQueryVariables>(
-        client,
-        RetentionRateDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<RetentionRateQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['RetentionRate.infinite']
+            : ['RetentionRate.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<RetentionRateQuery, RetentionRateQueryVariables>(
+            client,
+            RetentionRateDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteRetentionRateQuery.getKey = (
   variables?: RetentionRateQueryVariables,
@@ -109,6 +137,7 @@ useInfiniteRetentionRateQuery.getKey = (
   variables === undefined
     ? ['RetentionRate.infinite']
     : ['RetentionRate.infinite', variables];
+
 useRetentionRateQuery.fetcher = (
   client: GraphQLClient,
   variables?: RetentionRateQueryVariables,

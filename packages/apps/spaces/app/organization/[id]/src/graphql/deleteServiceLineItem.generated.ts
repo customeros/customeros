@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type DeleteServiceLineItemMutationVariables = Types.Exact<{
-  id: Types.Scalars['ID'];
+  id: Types.Scalars['ID']['input'];
 }>;
 
 export type DeleteServiceLineItemMutation = {
@@ -39,6 +39,7 @@ export const DeleteServiceLineItemDocument = `
   }
 }
     `;
+
 export const useDeleteServiceLineItemMutation = <
   TError = unknown,
   TContext = unknown,
@@ -51,21 +52,23 @@ export const useDeleteServiceLineItemMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     DeleteServiceLineItemMutation,
     TError,
     DeleteServiceLineItemMutationVariables,
     TContext
-  >(
-    ['deleteServiceLineItem'],
-    (variables?: DeleteServiceLineItemMutationVariables) =>
+  >({
+    mutationKey: ['deleteServiceLineItem'],
+    mutationFn: (variables?: DeleteServiceLineItemMutationVariables) =>
       fetcher<
         DeleteServiceLineItemMutation,
         DeleteServiceLineItemMutationVariables
       >(client, DeleteServiceLineItemDocument, variables, headers)(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useDeleteServiceLineItemMutation.getKey = () => ['deleteServiceLineItem'];
 
 useDeleteServiceLineItemMutation.fetcher = (

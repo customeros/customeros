@@ -19,8 +19,8 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type RemoveContactEmailMutationVariables = Types.Exact<{
-  contactId: Types.Scalars['ID'];
-  email: Types.Scalars['String'];
+  contactId: Types.Scalars['ID']['input'];
+  email: Types.Scalars['String']['input'];
 }>;
 
 export type RemoveContactEmailMutation = {
@@ -35,6 +35,7 @@ export const RemoveContactEmailDocument = `
   }
 }
     `;
+
 export const useRemoveContactEmailMutation = <
   TError = unknown,
   TContext = unknown,
@@ -47,23 +48,25 @@ export const useRemoveContactEmailMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     RemoveContactEmailMutation,
     TError,
     RemoveContactEmailMutationVariables,
     TContext
-  >(
-    ['removeContactEmail'],
-    (variables?: RemoveContactEmailMutationVariables) =>
+  >({
+    mutationKey: ['removeContactEmail'],
+    mutationFn: (variables?: RemoveContactEmailMutationVariables) =>
       fetcher<RemoveContactEmailMutation, RemoveContactEmailMutationVariables>(
         client,
         RemoveContactEmailDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useRemoveContactEmailMutation.getKey = () => ['removeContactEmail'];
 
 useRemoveContactEmailMutation.fetcher = (

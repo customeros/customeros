@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -66,52 +67,77 @@ export const ArrBreakdownDocument = `
   }
 }
     `;
+
 export const useArrBreakdownQuery = <
   TData = ArrBreakdownQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables?: ArrBreakdownQueryVariables,
-  options?: UseQueryOptions<ArrBreakdownQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<ArrBreakdownQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<ArrBreakdownQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<ArrBreakdownQuery, TError, TData>(
-    variables === undefined ? ['ArrBreakdown'] : ['ArrBreakdown', variables],
-    fetcher<ArrBreakdownQuery, ArrBreakdownQueryVariables>(
+) => {
+  return useQuery<ArrBreakdownQuery, TError, TData>({
+    queryKey:
+      variables === undefined ? ['ArrBreakdown'] : ['ArrBreakdown', variables],
+    queryFn: fetcher<ArrBreakdownQuery, ArrBreakdownQueryVariables>(
       client,
       ArrBreakdownDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useArrBreakdownQuery.document = ArrBreakdownDocument;
 
 useArrBreakdownQuery.getKey = (variables?: ArrBreakdownQueryVariables) =>
   variables === undefined ? ['ArrBreakdown'] : ['ArrBreakdown', variables];
+
 export const useInfiniteArrBreakdownQuery = <
-  TData = ArrBreakdownQuery,
+  TData = InfiniteData<ArrBreakdownQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof ArrBreakdownQueryVariables,
   client: GraphQLClient,
-  variables?: ArrBreakdownQueryVariables,
-  options?: UseInfiniteQueryOptions<ArrBreakdownQuery, TError, TData>,
+  variables: ArrBreakdownQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<ArrBreakdownQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      ArrBreakdownQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<ArrBreakdownQuery, TError, TData>(
-    variables === undefined
-      ? ['ArrBreakdown.infinite']
-      : ['ArrBreakdown.infinite', variables],
-    (metaData) =>
-      fetcher<ArrBreakdownQuery, ArrBreakdownQueryVariables>(
-        client,
-        ArrBreakdownDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<ArrBreakdownQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['ArrBreakdown.infinite']
+            : ['ArrBreakdown.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<ArrBreakdownQuery, ArrBreakdownQueryVariables>(
+            client,
+            ArrBreakdownDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteArrBreakdownQuery.getKey = (
   variables?: ArrBreakdownQueryVariables,
@@ -119,6 +145,7 @@ useInfiniteArrBreakdownQuery.getKey = (
   variables === undefined
     ? ['ArrBreakdown.infinite']
     : ['ArrBreakdown.infinite', variables];
+
 useArrBreakdownQuery.fetcher = (
   client: GraphQLClient,
   variables?: ArrBreakdownQueryVariables,

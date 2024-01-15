@@ -32,7 +32,7 @@ export const PeoplePanel = () => {
     onSuccess: () => invalidateQuery(queryClient, id),
   });
   const isLoading =
-    createContact.isLoading || addContactToOrganization.isLoading;
+    createContact.isPending || addContactToOrganization.isPending;
 
   const contacts = data?.organization?.contacts.content.map((c) => c) ?? [];
 

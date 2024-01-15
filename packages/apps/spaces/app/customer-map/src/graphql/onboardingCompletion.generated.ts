@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -54,27 +55,38 @@ export const OnboardingCompletionDocument = `
   }
 }
     `;
+
 export const useOnboardingCompletionQuery = <
   TData = OnboardingCompletionQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables?: OnboardingCompletionQueryVariables,
-  options?: UseQueryOptions<OnboardingCompletionQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<OnboardingCompletionQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<
+      OnboardingCompletionQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<OnboardingCompletionQuery, TError, TData>(
-    variables === undefined
-      ? ['OnboardingCompletion']
-      : ['OnboardingCompletion', variables],
-    fetcher<OnboardingCompletionQuery, OnboardingCompletionQueryVariables>(
-      client,
-      OnboardingCompletionDocument,
-      variables,
-      headers,
-    ),
-    options,
-  );
+) => {
+  return useQuery<OnboardingCompletionQuery, TError, TData>({
+    queryKey:
+      variables === undefined
+        ? ['OnboardingCompletion']
+        : ['OnboardingCompletion', variables],
+    queryFn: fetcher<
+      OnboardingCompletionQuery,
+      OnboardingCompletionQueryVariables
+    >(client, OnboardingCompletionDocument, variables, headers),
+    ...options,
+  });
+};
+
 useOnboardingCompletionQuery.document = OnboardingCompletionDocument;
 
 useOnboardingCompletionQuery.getKey = (
@@ -83,29 +95,48 @@ useOnboardingCompletionQuery.getKey = (
   variables === undefined
     ? ['OnboardingCompletion']
     : ['OnboardingCompletion', variables];
+
 export const useInfiniteOnboardingCompletionQuery = <
-  TData = OnboardingCompletionQuery,
+  TData = InfiniteData<OnboardingCompletionQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof OnboardingCompletionQueryVariables,
   client: GraphQLClient,
-  variables?: OnboardingCompletionQueryVariables,
-  options?: UseInfiniteQueryOptions<OnboardingCompletionQuery, TError, TData>,
+  variables: OnboardingCompletionQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<OnboardingCompletionQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      OnboardingCompletionQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<OnboardingCompletionQuery, TError, TData>(
-    variables === undefined
-      ? ['OnboardingCompletion.infinite']
-      : ['OnboardingCompletion.infinite', variables],
-    (metaData) =>
-      fetcher<OnboardingCompletionQuery, OnboardingCompletionQueryVariables>(
-        client,
-        OnboardingCompletionDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<OnboardingCompletionQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['OnboardingCompletion.infinite']
+            : ['OnboardingCompletion.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<
+            OnboardingCompletionQuery,
+            OnboardingCompletionQueryVariables
+          >(
+            client,
+            OnboardingCompletionDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteOnboardingCompletionQuery.getKey = (
   variables?: OnboardingCompletionQueryVariables,
@@ -113,6 +144,7 @@ useInfiniteOnboardingCompletionQuery.getKey = (
   variables === undefined
     ? ['OnboardingCompletion.infinite']
     : ['OnboardingCompletion.infinite', variables];
+
 useOnboardingCompletionQuery.fetcher = (
   client: GraphQLClient,
   variables?: OnboardingCompletionQueryVariables,

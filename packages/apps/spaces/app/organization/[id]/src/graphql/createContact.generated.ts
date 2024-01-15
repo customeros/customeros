@@ -34,6 +34,7 @@ export const CreateContactDocument = `
   }
 }
     `;
+
 export const useCreateContactMutation = <TError = unknown, TContext = unknown>(
   client: GraphQLClient,
   options?: UseMutationOptions<
@@ -43,23 +44,25 @@ export const useCreateContactMutation = <TError = unknown, TContext = unknown>(
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     CreateContactMutation,
     TError,
     CreateContactMutationVariables,
     TContext
-  >(
-    ['createContact'],
-    (variables?: CreateContactMutationVariables) =>
+  >({
+    mutationKey: ['createContact'],
+    mutationFn: (variables?: CreateContactMutationVariables) =>
       fetcher<CreateContactMutation, CreateContactMutationVariables>(
         client,
         CreateContactDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useCreateContactMutation.getKey = () => ['createContact'];
 
 useCreateContactMutation.fetcher = (

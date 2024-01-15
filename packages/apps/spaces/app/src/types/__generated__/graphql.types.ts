@@ -9,36 +9,45 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
   [SubKey in K]: Maybe<T[SubKey]>;
 };
+export type MakeEmpty<
+  T extends { [key: string]: unknown },
+  K extends keyof T,
+> = { [_ in K]?: never };
+export type Incremental<T> =
+  | T
+  | {
+      [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never;
+    };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
-  Any: any;
-  Int64: any;
-  Time: any;
+  ID: { input: string; output: string };
+  String: { input: string; output: string };
+  Boolean: { input: boolean; output: boolean };
+  Int: { input: number; output: number };
+  Float: { input: number; output: number };
+  Any: { input: any; output: any };
+  Int64: { input: any; output: any };
+  Time: { input: any; output: any };
 };
 
 export type Action = {
   __typename?: 'Action';
   actionType: ActionType;
-  appSource: Scalars['String'];
-  content?: Maybe<Scalars['String']>;
-  createdAt: Scalars['Time'];
+  appSource: Scalars['String']['output'];
+  content?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
-  id: Scalars['ID'];
-  metadata?: Maybe<Scalars['String']>;
+  id: Scalars['ID']['output'];
+  metadata?: Maybe<Scalars['String']['output']>;
   source: DataSource;
 };
 
 export type ActionItem = {
   __typename?: 'ActionItem';
-  appSource: Scalars['String'];
-  content: Scalars['String'];
-  createdAt: Scalars['Time'];
-  id: Scalars['ID'];
+  appSource: Scalars['String']['output'];
+  content: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
   source: DataSource;
 };
 
@@ -60,50 +69,50 @@ export enum ActionType {
 
 export type Analysis = Node & {
   __typename?: 'Analysis';
-  analysisType?: Maybe<Scalars['String']>;
-  appSource: Scalars['String'];
-  content?: Maybe<Scalars['String']>;
-  contentType?: Maybe<Scalars['String']>;
-  createdAt: Scalars['Time'];
+  analysisType?: Maybe<Scalars['String']['output']>;
+  appSource: Scalars['String']['output'];
+  content?: Maybe<Scalars['String']['output']>;
+  contentType?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Time']['output'];
   describes: Array<DescriptionNode>;
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   source: DataSource;
   sourceOfTruth: DataSource;
 };
 
 export type AnalysisDescriptionInput = {
-  interactionEventId?: InputMaybe<Scalars['ID']>;
-  interactionSessionId?: InputMaybe<Scalars['ID']>;
-  meetingId?: InputMaybe<Scalars['ID']>;
+  interactionEventId?: InputMaybe<Scalars['ID']['input']>;
+  interactionSessionId?: InputMaybe<Scalars['ID']['input']>;
+  meetingId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type AnalysisInput = {
-  analysisType?: InputMaybe<Scalars['String']>;
-  appSource: Scalars['String'];
-  content?: InputMaybe<Scalars['String']>;
-  contentType?: InputMaybe<Scalars['String']>;
+  analysisType?: InputMaybe<Scalars['String']['input']>;
+  appSource: Scalars['String']['input'];
+  content?: InputMaybe<Scalars['String']['input']>;
+  contentType?: InputMaybe<Scalars['String']['input']>;
   describes: Array<AnalysisDescriptionInput>;
 };
 
 export type Attachment = Node & {
   __typename?: 'Attachment';
-  appSource: Scalars['String'];
-  createdAt: Scalars['Time'];
-  extension: Scalars['String'];
-  id: Scalars['ID'];
-  mimeType: Scalars['String'];
-  name: Scalars['String'];
-  size: Scalars['Int64'];
+  appSource: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  extension: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  mimeType: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  size: Scalars['Int64']['output'];
   source: DataSource;
   sourceOfTruth: DataSource;
 };
 
 export type AttachmentInput = {
-  appSource: Scalars['String'];
-  extension: Scalars['String'];
-  mimeType: Scalars['String'];
-  name: Scalars['String'];
-  size: Scalars['Int64'];
+  appSource: Scalars['String']['input'];
+  extension: Scalars['String']['input'];
+  mimeType: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  size: Scalars['Int64']['input'];
 };
 
 export enum BilledType {
@@ -118,42 +127,42 @@ export enum BilledType {
 export type BillingProfile = Node &
   SourceFields & {
     __typename?: 'BillingProfile';
-    appSource: Scalars['String'];
-    createdAt: Scalars['Time'];
-    id: Scalars['ID'];
-    legalName: Scalars['String'];
+    appSource: Scalars['String']['output'];
+    createdAt: Scalars['Time']['output'];
+    id: Scalars['ID']['output'];
+    legalName: Scalars['String']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
-    taxId: Scalars['String'];
-    updatedAt: Scalars['Time'];
+    taxId: Scalars['String']['output'];
+    updatedAt: Scalars['Time']['output'];
   };
 
 export type BillingProfileInput = {
-  createdAt?: InputMaybe<Scalars['Time']>;
-  legalName?: InputMaybe<Scalars['String']>;
-  organizationId: Scalars['ID'];
-  taxId?: InputMaybe<Scalars['String']>;
+  createdAt?: InputMaybe<Scalars['Time']['input']>;
+  legalName?: InputMaybe<Scalars['String']['input']>;
+  organizationId: Scalars['ID']['input'];
+  taxId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type BillingProfileLinkEmailInput = {
-  billingProfileId: Scalars['ID'];
-  emailId: Scalars['ID'];
-  organizationId: Scalars['ID'];
-  primary?: InputMaybe<Scalars['Boolean']>;
+  billingProfileId: Scalars['ID']['input'];
+  emailId: Scalars['ID']['input'];
+  organizationId: Scalars['ID']['input'];
+  primary?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type BillingProfileLinkLocationInput = {
-  billingProfileId: Scalars['ID'];
-  locationId: Scalars['ID'];
-  organizationId: Scalars['ID'];
+  billingProfileId: Scalars['ID']['input'];
+  locationId: Scalars['ID']['input'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type BillingProfileUpdateInput = {
-  billingProfileId: Scalars['ID'];
-  legalName?: InputMaybe<Scalars['String']>;
-  organizationId: Scalars['ID'];
-  taxId?: InputMaybe<Scalars['String']>;
-  updatedAt?: InputMaybe<Scalars['Time']>;
+  billingProfileId: Scalars['ID']['input'];
+  legalName?: InputMaybe<Scalars['String']['input']>;
+  organizationId: Scalars['ID']['input'];
+  taxId?: InputMaybe<Scalars['String']['input']>;
+  updatedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
 /**
@@ -162,15 +171,15 @@ export type BillingProfileUpdateInput = {
  */
 export type Calendar = {
   __typename?: 'Calendar';
-  appSource: Scalars['String'];
+  appSource: Scalars['String']['output'];
   calType: CalendarType;
-  createdAt: Scalars['Time'];
-  id: Scalars['ID'];
-  link?: Maybe<Scalars['String']>;
-  primary: Scalars['Boolean'];
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  link?: Maybe<Scalars['String']['output']>;
+  primary: Scalars['Boolean']['output'];
   source: DataSource;
   sourceOfTruth: DataSource;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export enum CalendarType {
@@ -181,39 +190,39 @@ export enum CalendarType {
 export type ColumnDef = Node & {
   __typename?: 'ColumnDef';
   columnType?: Maybe<ColumnType>;
-  createdAt: Scalars['Time'];
+  createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
-  id: Scalars['ID'];
-  isDefaultSort?: Maybe<Scalars['Boolean']>;
-  isFilterable?: Maybe<Scalars['Boolean']>;
-  isSortable?: Maybe<Scalars['Boolean']>;
-  isVisible?: Maybe<Scalars['Boolean']>;
+  id: Scalars['ID']['output'];
+  isDefaultSort?: Maybe<Scalars['Boolean']['output']>;
+  isFilterable?: Maybe<Scalars['Boolean']['output']>;
+  isSortable?: Maybe<Scalars['Boolean']['output']>;
+  isVisible?: Maybe<Scalars['Boolean']['output']>;
   type?: Maybe<ViewType>;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type ColumnType = Node & {
   __typename?: 'ColumnType';
-  createdAt: Scalars['Time'];
+  createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
-  id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
-  updatedAt: Scalars['Time'];
-  viewTypeId?: Maybe<Scalars['String']>;
+  id: Scalars['ID']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['Time']['output'];
+  viewTypeId?: Maybe<Scalars['String']['output']>;
 };
 
 export type Comment = {
   __typename?: 'Comment';
-  appSource: Scalars['String'];
-  content?: Maybe<Scalars['String']>;
-  contentType?: Maybe<Scalars['String']>;
-  createdAt: Scalars['Time'];
+  appSource: Scalars['String']['output'];
+  content?: Maybe<Scalars['String']['output']>;
+  contentType?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
   externalLinks: Array<ExternalSystem>;
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   source: DataSource;
   sourceOfTruth: DataSource;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export enum ComparisonOperator {
@@ -233,18 +242,18 @@ export enum ComparisonOperator {
 export type Contact = ExtensibleEntity &
   Node & {
     __typename?: 'Contact';
-    appSource?: Maybe<Scalars['String']>;
+    appSource?: Maybe<Scalars['String']['output']>;
     /**
      * An ISO8601 timestamp recording when the contact was created in customerOS.
      * **Required**
      */
-    createdAt: Scalars['Time'];
+    createdAt: Scalars['Time']['output'];
     /**
      * User defined metadata appended to the contact record in customerOS.
      * **Required.  If no values it returns an empty array.**
      */
     customFields: Array<CustomField>;
-    description?: Maybe<Scalars['String']>;
+    description?: Maybe<Scalars['String']['output']>;
     /**
      * All email addresses associated with a contact in customerOS.
      * **Required.  If no values it returns an empty array.**
@@ -252,28 +261,28 @@ export type Contact = ExtensibleEntity &
     emails: Array<Email>;
     fieldSets: Array<FieldSet>;
     /** The first name of the contact in customerOS. */
-    firstName?: Maybe<Scalars['String']>;
+    firstName?: Maybe<Scalars['String']['output']>;
     /**
      * The unique ID associated with the contact in customerOS.
      * **Required**
      */
-    id: Scalars['ID'];
+    id: Scalars['ID']['output'];
     /**
      * `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
      * **Required.  If no values it returns an empty array.**
      */
     jobRoles: Array<JobRole>;
     /** @deprecated Use `tags` instead */
-    label?: Maybe<Scalars['String']>;
+    label?: Maybe<Scalars['String']['output']>;
     /** The last name of the contact in customerOS. */
-    lastName?: Maybe<Scalars['String']>;
+    lastName?: Maybe<Scalars['String']['output']>;
     /**
      * All locations associated with a contact in customerOS.
      * **Required.  If no values it returns an empty array.**
      */
     locations: Array<Location>;
     /** The name of the contact in customerOS, alternative for firstName + lastName. */
-    name?: Maybe<Scalars['String']>;
+    name?: Maybe<Scalars['String']['output']>;
     /** Contact notes */
     notes: NotePage;
     notesByTime: Array<Note>;
@@ -285,8 +294,8 @@ export type Contact = ExtensibleEntity &
      * **Required.  If no values it returns an empty array.**
      */
     phoneNumbers: Array<PhoneNumber>;
-    prefix?: Maybe<Scalars['String']>;
-    profilePhotoUrl?: Maybe<Scalars['String']>;
+    prefix?: Maybe<Scalars['String']['output']>;
+    profilePhotoUrl?: Maybe<Scalars['String']['output']>;
     socials: Array<Social>;
     source: DataSource;
     sourceOfTruth: DataSource;
@@ -294,14 +303,14 @@ export type Contact = ExtensibleEntity &
     /** Template of the contact in customerOS. */
     template?: Maybe<EntityTemplate>;
     timelineEvents: Array<TimelineEvent>;
-    timelineEventsTotalCount: Scalars['Int64'];
-    timezone?: Maybe<Scalars['String']>;
+    timelineEventsTotalCount: Scalars['Int64']['output'];
+    timezone?: Maybe<Scalars['String']['output']>;
     /**
      * The title associate with the contact in customerOS.
      * @deprecated Use `prefix` instead
      */
-    title?: Maybe<Scalars['String']>;
-    updatedAt: Scalars['Time'];
+    title?: Maybe<Scalars['String']['output']>;
+    updatedAt: Scalars['Time']['output'];
   };
 
 /**
@@ -335,8 +344,8 @@ export type ContactOrganizationsArgs = {
  * **A `response` object.**
  */
 export type ContactTimelineEventsArgs = {
-  from?: InputMaybe<Scalars['Time']>;
-  size: Scalars['Int'];
+  from?: InputMaybe<Scalars['Time']['input']>;
+  size: Scalars['Int']['input'];
   timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
 };
 
@@ -353,50 +362,50 @@ export type ContactTimelineEventsTotalCountArgs = {
  * **A `create` object.**
  */
 export type ContactInput = {
-  appSource?: InputMaybe<Scalars['String']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
   /** An ISO8601 timestamp recording when the contact was created in customerOS. */
-  createdAt?: InputMaybe<Scalars['Time']>;
+  createdAt?: InputMaybe<Scalars['Time']['input']>;
   /**
    * User defined metadata appended to contact.
    * **Required.**
    */
   customFields?: InputMaybe<Array<CustomFieldInput>>;
-  description?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars['String']['input']>;
   /** An email addresses associated with the contact. */
   email?: InputMaybe<EmailInput>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
   /** The first name of the contact. */
-  firstName?: InputMaybe<Scalars['String']>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
   /** The last name of the contact. */
-  lastName?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
   /** Id of the contact owner (user) */
-  ownerId?: InputMaybe<Scalars['ID']>;
+  ownerId?: InputMaybe<Scalars['ID']['input']>;
   /** A phone number associated with the contact. */
   phoneNumber?: InputMaybe<PhoneNumberInput>;
   /** The prefix of the contact. */
-  prefix?: InputMaybe<Scalars['String']>;
-  profilePhotoUrl?: InputMaybe<Scalars['String']>;
+  prefix?: InputMaybe<Scalars['String']['input']>;
+  profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
   /** The unique ID associated with the template of the contact in customerOS. */
-  templateId?: InputMaybe<Scalars['ID']>;
-  timezone?: InputMaybe<Scalars['String']>;
+  templateId?: InputMaybe<Scalars['ID']['input']>;
+  timezone?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ContactOrganizationInput = {
-  contactId: Scalars['ID'];
-  organizationId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type ContactParticipant = {
   __typename?: 'ContactParticipant';
   contactParticipant: Contact;
-  type?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']['output']>;
 };
 
 export type ContactTagInput = {
-  contactId: Scalars['ID'];
-  tagId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
+  tagId: Scalars['ID']['input'];
 };
 
 /**
@@ -404,24 +413,24 @@ export type ContactTagInput = {
  * **An `update` object.**
  */
 export type ContactUpdateInput = {
-  description?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars['String']['input']>;
   /** The first name of the contact in customerOS. */
-  firstName?: InputMaybe<Scalars['String']>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
   /**
    * The unique ID associated with the contact in customerOS.
    * **Required.**
    */
-  id: Scalars['ID'];
-  label?: InputMaybe<Scalars['String']>;
+  id: Scalars['ID']['input'];
+  label?: InputMaybe<Scalars['String']['input']>;
   /** The last name of the contact in customerOS. */
-  lastName?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
   /** Id of the contact owner (user) */
-  ownerId?: InputMaybe<Scalars['ID']>;
+  ownerId?: InputMaybe<Scalars['ID']['input']>;
   /** The prefix associate with the contact in customerOS. */
-  prefix?: InputMaybe<Scalars['String']>;
-  profilePhotoUrl?: InputMaybe<Scalars['String']>;
-  timezone?: InputMaybe<Scalars['String']>;
+  prefix?: InputMaybe<Scalars['String']['input']>;
+  profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
+  timezone?: InputMaybe<Scalars['String']['input']>;
 };
 
 /**
@@ -439,47 +448,47 @@ export type ContactsPage = Pages & {
    * Total number of elements in the query response.
    * **Required.**
    */
-  totalElements: Scalars['Int64'];
+  totalElements: Scalars['Int64']['output'];
   /**
    * Total number of pages in the query response.
    * **Required.**
    */
-  totalPages: Scalars['Int'];
+  totalPages: Scalars['Int']['output'];
 };
 
 export type Contract = Node & {
   __typename?: 'Contract';
-  appSource: Scalars['String'];
-  contractUrl?: Maybe<Scalars['String']>;
-  createdAt: Scalars['Time'];
+  appSource: Scalars['String']['output'];
+  contractUrl?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
-  endedAt?: Maybe<Scalars['Time']>;
+  endedAt?: Maybe<Scalars['Time']['output']>;
   externalLinks: Array<ExternalSystem>;
-  id: Scalars['ID'];
-  name: Scalars['String'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
   opportunities?: Maybe<Array<Opportunity>>;
   owner?: Maybe<User>;
   renewalCycle: ContractRenewalCycle;
-  renewalPeriods?: Maybe<Scalars['Int64']>;
+  renewalPeriods?: Maybe<Scalars['Int64']['output']>;
   serviceLineItems?: Maybe<Array<ServiceLineItem>>;
-  serviceStartedAt?: Maybe<Scalars['Time']>;
-  signedAt?: Maybe<Scalars['Time']>;
+  serviceStartedAt?: Maybe<Scalars['Time']['output']>;
+  signedAt?: Maybe<Scalars['Time']['output']>;
   source: DataSource;
   sourceOfTruth: DataSource;
   status: ContractStatus;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type ContractInput = {
-  appSource?: InputMaybe<Scalars['String']>;
-  contractUrl?: InputMaybe<Scalars['String']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  contractUrl?: InputMaybe<Scalars['String']['input']>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
-  name?: InputMaybe<Scalars['String']>;
-  organizationId: Scalars['ID'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  organizationId: Scalars['ID']['input'];
   renewalCycle?: InputMaybe<ContractRenewalCycle>;
-  renewalPeriods?: InputMaybe<Scalars['Int64']>;
-  serviceStartedAt?: InputMaybe<Scalars['Time']>;
-  signedAt?: InputMaybe<Scalars['Time']>;
+  renewalPeriods?: InputMaybe<Scalars['Int64']['input']>;
+  serviceStartedAt?: InputMaybe<Scalars['Time']['input']>;
+  signedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
 export enum ContractRenewalCycle {
@@ -497,24 +506,24 @@ export enum ContractStatus {
 }
 
 export type ContractUpdateInput = {
-  appSource?: InputMaybe<Scalars['String']>;
-  contractId: Scalars['ID'];
-  contractUrl?: InputMaybe<Scalars['String']>;
-  endedAt?: InputMaybe<Scalars['Time']>;
-  name?: InputMaybe<Scalars['String']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  contractId: Scalars['ID']['input'];
+  contractUrl?: InputMaybe<Scalars['String']['input']>;
+  endedAt?: InputMaybe<Scalars['Time']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
   renewalCycle?: InputMaybe<ContractRenewalCycle>;
-  renewalPeriods?: InputMaybe<Scalars['Int64']>;
-  serviceStartedAt?: InputMaybe<Scalars['Time']>;
-  signedAt?: InputMaybe<Scalars['Time']>;
+  renewalPeriods?: InputMaybe<Scalars['Int64']['input']>;
+  serviceStartedAt?: InputMaybe<Scalars['Time']['input']>;
+  signedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
 export type Country = {
   __typename?: 'Country';
-  codeA2: Scalars['String'];
-  codeA3: Scalars['String'];
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  phoneCode: Scalars['String'];
+  codeA2: Scalars['String']['output'];
+  codeA3: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  phoneCode: Scalars['String']['output'];
 };
 
 /**
@@ -523,7 +532,7 @@ export type Country = {
  */
 export type CustomField = Node & {
   __typename?: 'CustomField';
-  createdAt: Scalars['Time'];
+  createdAt: Scalars['Time']['output'];
   /**
    * Datatype of the custom field.
    * **Required**
@@ -533,21 +542,21 @@ export type CustomField = Node & {
    * The unique ID associated with the custom field.
    * **Required**
    */
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   /**
    * The name of the custom field.
    * **Required**
    */
-  name: Scalars['String'];
+  name: Scalars['String']['output'];
   /** The source of the custom field value */
   source: DataSource;
   template?: Maybe<CustomFieldTemplate>;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
   /**
    * The value of the custom field.
    * **Required**
    */
-  value: Scalars['Any'];
+  value: Scalars['Any']['output'];
 };
 
 export enum CustomFieldDataType {
@@ -560,7 +569,7 @@ export enum CustomFieldDataType {
 
 export type CustomFieldEntityType = {
   entityType: EntityType;
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 /**
@@ -570,38 +579,38 @@ export type CustomFieldEntityType = {
 export type CustomFieldInput = {
   /** Datatype of the custom field. */
   datatype?: InputMaybe<CustomFieldDataType>;
-  id?: InputMaybe<Scalars['ID']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
   /** The name of the custom field. */
-  name?: InputMaybe<Scalars['String']>;
-  templateId?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  templateId?: InputMaybe<Scalars['ID']['input']>;
   /**
    * The value of the custom field.
    * **Required**
    */
-  value: Scalars['Any'];
+  value: Scalars['Any']['input'];
 };
 
 export type CustomFieldTemplate = Node & {
   __typename?: 'CustomFieldTemplate';
-  createdAt: Scalars['Time'];
-  id: Scalars['ID'];
-  length?: Maybe<Scalars['Int']>;
-  mandatory: Scalars['Boolean'];
-  max?: Maybe<Scalars['Int']>;
-  min?: Maybe<Scalars['Int']>;
-  name: Scalars['String'];
-  order: Scalars['Int'];
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  length?: Maybe<Scalars['Int']['output']>;
+  mandatory: Scalars['Boolean']['output'];
+  max?: Maybe<Scalars['Int']['output']>;
+  min?: Maybe<Scalars['Int']['output']>;
+  name: Scalars['String']['output'];
+  order: Scalars['Int']['output'];
   type: CustomFieldTemplateType;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type CustomFieldTemplateInput = {
-  length?: InputMaybe<Scalars['Int']>;
-  mandatory?: InputMaybe<Scalars['Boolean']>;
-  max?: InputMaybe<Scalars['Int']>;
-  min?: InputMaybe<Scalars['Int']>;
-  name: Scalars['String'];
-  order: Scalars['Int'];
+  length?: InputMaybe<Scalars['Int']['input']>;
+  mandatory?: InputMaybe<Scalars['Boolean']['input']>;
+  max?: InputMaybe<Scalars['Int']['input']>;
+  min?: InputMaybe<Scalars['Int']['input']>;
+  name: Scalars['String']['input'];
+  order: Scalars['Int']['input'];
   type: CustomFieldTemplateType;
 };
 
@@ -624,83 +633,83 @@ export type CustomFieldUpdateInput = {
    * The unique ID associated with the custom field.
    * **Required**
    */
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   /**
    * The name of the custom field.
    * **Required**
    */
-  name: Scalars['String'];
+  name: Scalars['String']['input'];
   /**
    * The value of the custom field.
    * **Required**
    */
-  value: Scalars['Any'];
+  value: Scalars['Any']['input'];
 };
 
 export type CustomerContact = {
   __typename?: 'CustomerContact';
   email: CustomerEmail;
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
 };
 
 export type CustomerContactInput = {
-  appSource?: InputMaybe<Scalars['String']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
   /** An ISO8601 timestamp recording when the contact was created in customerOS. */
-  createdAt?: InputMaybe<Scalars['Time']>;
-  description?: InputMaybe<Scalars['String']>;
+  createdAt?: InputMaybe<Scalars['Time']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
   /** An email addresses associted with the contact. */
   email?: InputMaybe<EmailInput>;
   /** The first name of the contact. */
-  firstName?: InputMaybe<Scalars['String']>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
   /** The last name of the contact. */
-  lastName?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
   /** The prefix of the contact. */
-  prefix?: InputMaybe<Scalars['String']>;
-  timezone?: InputMaybe<Scalars['String']>;
+  prefix?: InputMaybe<Scalars['String']['input']>;
+  timezone?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CustomerEmail = {
   __typename?: 'CustomerEmail';
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
 };
 
 export type CustomerJobRole = {
   __typename?: 'CustomerJobRole';
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
 };
 
 export type CustomerUser = {
   __typename?: 'CustomerUser';
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   jobRole: CustomerJobRole;
 };
 
 export type DashboardArrBreakdown = {
   __typename?: 'DashboardARRBreakdown';
-  arrBreakdown: Scalars['Float'];
-  increasePercentage: Scalars['String'];
+  arrBreakdown: Scalars['Float']['output'];
+  increasePercentage: Scalars['String']['output'];
   perMonth: Array<Maybe<DashboardArrBreakdownPerMonth>>;
 };
 
 export type DashboardArrBreakdownPerMonth = {
   __typename?: 'DashboardARRBreakdownPerMonth';
-  cancellations: Scalars['Float'];
-  churned: Scalars['Float'];
-  downgrades: Scalars['Float'];
-  month: Scalars['Int'];
-  newlyContracted: Scalars['Float'];
-  renewals: Scalars['Float'];
-  upsells: Scalars['Float'];
-  year: Scalars['Int'];
+  cancellations: Scalars['Float']['output'];
+  churned: Scalars['Float']['output'];
+  downgrades: Scalars['Float']['output'];
+  month: Scalars['Int']['output'];
+  newlyContracted: Scalars['Float']['output'];
+  renewals: Scalars['Float']['output'];
+  upsells: Scalars['Float']['output'];
+  year: Scalars['Int']['output'];
 };
 
 export type DashboardCustomerMap = {
   __typename?: 'DashboardCustomerMap';
-  arr: Scalars['Float'];
-  contractSignedDate: Scalars['Time'];
+  arr: Scalars['Float']['output'];
+  contractSignedDate: Scalars['Time']['output'];
   organization: Organization;
-  organizationId: Scalars['ID'];
+  organizationId: Scalars['ID']['output'];
   state: DashboardCustomerMapState;
 };
 
@@ -712,98 +721,98 @@ export enum DashboardCustomerMapState {
 
 export type DashboardGrossRevenueRetention = {
   __typename?: 'DashboardGrossRevenueRetention';
-  grossRevenueRetention: Scalars['Float'];
-  increasePercentage: Scalars['String'];
+  grossRevenueRetention: Scalars['Float']['output'];
+  increasePercentage: Scalars['String']['output'];
   perMonth: Array<Maybe<DashboardGrossRevenueRetentionPerMonth>>;
 };
 
 export type DashboardGrossRevenueRetentionPerMonth = {
   __typename?: 'DashboardGrossRevenueRetentionPerMonth';
-  month: Scalars['Int'];
-  percentage: Scalars['Float'];
-  year: Scalars['Int'];
+  month: Scalars['Int']['output'];
+  percentage: Scalars['Float']['output'];
+  year: Scalars['Int']['output'];
 };
 
 export type DashboardMrrPerCustomer = {
   __typename?: 'DashboardMRRPerCustomer';
-  increasePercentage: Scalars['String'];
-  mrrPerCustomer: Scalars['Float'];
+  increasePercentage: Scalars['String']['output'];
+  mrrPerCustomer: Scalars['Float']['output'];
   perMonth: Array<Maybe<DashboardMrrPerCustomerPerMonth>>;
 };
 
 export type DashboardMrrPerCustomerPerMonth = {
   __typename?: 'DashboardMRRPerCustomerPerMonth';
-  month: Scalars['Int'];
-  value: Scalars['Float'];
-  year: Scalars['Int'];
+  month: Scalars['Int']['output'];
+  value: Scalars['Float']['output'];
+  year: Scalars['Int']['output'];
 };
 
 export type DashboardNewCustomers = {
   __typename?: 'DashboardNewCustomers';
   perMonth: Array<Maybe<DashboardNewCustomersPerMonth>>;
-  thisMonthCount: Scalars['Int'];
-  thisMonthIncreasePercentage: Scalars['String'];
+  thisMonthCount: Scalars['Int']['output'];
+  thisMonthIncreasePercentage: Scalars['String']['output'];
 };
 
 export type DashboardNewCustomersPerMonth = {
   __typename?: 'DashboardNewCustomersPerMonth';
-  count: Scalars['Int'];
-  month: Scalars['Int'];
-  year: Scalars['Int'];
+  count: Scalars['Int']['output'];
+  month: Scalars['Int']['output'];
+  year: Scalars['Int']['output'];
 };
 
 export type DashboardOnboardingCompletion = {
   __typename?: 'DashboardOnboardingCompletion';
-  completionPercentage: Scalars['Float'];
-  increasePercentage: Scalars['Float'];
+  completionPercentage: Scalars['Float']['output'];
+  increasePercentage: Scalars['Float']['output'];
   perMonth: Array<DashboardOnboardingCompletionPerMonth>;
 };
 
 export type DashboardOnboardingCompletionPerMonth = {
   __typename?: 'DashboardOnboardingCompletionPerMonth';
-  month: Scalars['Int'];
-  value: Scalars['Float'];
-  year: Scalars['Int'];
+  month: Scalars['Int']['output'];
+  value: Scalars['Float']['output'];
+  year: Scalars['Int']['output'];
 };
 
 export type DashboardPeriodInput = {
-  end: Scalars['Time'];
-  start: Scalars['Time'];
+  end: Scalars['Time']['input'];
+  start: Scalars['Time']['input'];
 };
 
 export type DashboardRetentionRate = {
   __typename?: 'DashboardRetentionRate';
-  increasePercentage: Scalars['String'];
+  increasePercentage: Scalars['String']['output'];
   perMonth: Array<Maybe<DashboardRetentionRatePerMonth>>;
-  retentionRate: Scalars['Float'];
+  retentionRate: Scalars['Float']['output'];
 };
 
 export type DashboardRetentionRatePerMonth = {
   __typename?: 'DashboardRetentionRatePerMonth';
-  churnCount: Scalars['Int'];
-  month: Scalars['Int'];
-  renewCount: Scalars['Int'];
-  year: Scalars['Int'];
+  churnCount: Scalars['Int']['output'];
+  month: Scalars['Int']['output'];
+  renewCount: Scalars['Int']['output'];
+  year: Scalars['Int']['output'];
 };
 
 export type DashboardRevenueAtRisk = {
   __typename?: 'DashboardRevenueAtRisk';
-  atRisk: Scalars['Float'];
-  highConfidence: Scalars['Float'];
+  atRisk: Scalars['Float']['output'];
+  highConfidence: Scalars['Float']['output'];
 };
 
 export type DashboardTimeToOnboard = {
   __typename?: 'DashboardTimeToOnboard';
-  increasePercentage?: Maybe<Scalars['Float']>;
+  increasePercentage?: Maybe<Scalars['Float']['output']>;
   perMonth: Array<DashboardTimeToOnboardPerMonth>;
-  timeToOnboard?: Maybe<Scalars['Float']>;
+  timeToOnboard?: Maybe<Scalars['Float']['output']>;
 };
 
 export type DashboardTimeToOnboardPerMonth = {
   __typename?: 'DashboardTimeToOnboardPerMonth';
-  month: Scalars['Int'];
-  value: Scalars['Float'];
-  year: Scalars['Int'];
+  month: Scalars['Int']['output'];
+  value: Scalars['Float']['output'];
+  year: Scalars['Int']['output'];
 };
 
 export enum DataSource {
@@ -822,8 +831,8 @@ export enum DataSource {
 
 export type DeleteResponse = {
   __typename?: 'DeleteResponse';
-  accepted: Scalars['Boolean'];
-  completed: Scalars['Boolean'];
+  accepted: Scalars['Boolean']['output'];
+  completed: Scalars['Boolean']['output'];
 };
 
 export type DescriptionNode = InteractionEvent | InteractionSession | Meeting;
@@ -834,17 +843,17 @@ export type DescriptionNode = InteractionEvent | InteractionSession | Meeting;
  */
 export type Email = {
   __typename?: 'Email';
-  appSource: Scalars['String'];
+  appSource: Scalars['String']['output'];
   contacts: Array<Contact>;
-  createdAt: Scalars['Time'];
+  createdAt: Scalars['Time']['output'];
   /** An email address assocaited with the contact in customerOS. */
-  email?: Maybe<Scalars['String']>;
+  email?: Maybe<Scalars['String']['output']>;
   emailValidationDetails: EmailValidationDetails;
   /**
    * The unique ID associated with the contact in customerOS.
    * **Required**
    */
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   /** Describes the type of email address (WORK, PERSONAL, etc). */
   label?: Maybe<EmailLabel>;
   organizations: Array<Organization>;
@@ -852,11 +861,11 @@ export type Email = {
    * Identifies whether the email address is primary or not.
    * **Required.**
    */
-  primary: Scalars['Boolean'];
-  rawEmail?: Maybe<Scalars['String']>;
+  primary: Scalars['Boolean']['output'];
+  rawEmail?: Maybe<Scalars['String']['output']>;
   source: DataSource;
   sourceOfTruth: DataSource;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
   users: Array<User>;
 };
 
@@ -865,19 +874,19 @@ export type Email = {
  * **A `create` object.**
  */
 export type EmailInput = {
-  appSource?: InputMaybe<Scalars['String']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
   /**
    * An email address associated with the contact in customerOS.
    * **Required.**
    */
-  email: Scalars['String'];
+  email: Scalars['String']['input'];
   /** Describes the type of email address (WORK, PERSONAL, etc). */
   label?: InputMaybe<EmailLabel>;
   /**
    * Identifies whether the email address is primary or not.
    * **Required.**
    */
-  primary?: InputMaybe<Scalars['Boolean']>;
+  primary?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /**
@@ -894,7 +903,7 @@ export enum EmailLabel {
 export type EmailParticipant = {
   __typename?: 'EmailParticipant';
   emailParticipant: Email;
-  type?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']['output']>;
 };
 
 /**
@@ -902,45 +911,45 @@ export type EmailParticipant = {
  * **An `update` object.**
  */
 export type EmailUpdateInput = {
-  email?: InputMaybe<Scalars['String']>;
+  email?: InputMaybe<Scalars['String']['input']>;
   /**
    * An email address assocaited with the contact in customerOS.
    * **Required.**
    */
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   /** Describes the type of email address (WORK, PERSONAL, etc). */
   label?: InputMaybe<EmailLabel>;
   /**
    * Identifies whether the email address is primary or not.
    * **Required.**
    */
-  primary?: InputMaybe<Scalars['Boolean']>;
+  primary?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type EmailValidationDetails = {
   __typename?: 'EmailValidationDetails';
-  acceptsMail?: Maybe<Scalars['Boolean']>;
-  canConnectSmtp?: Maybe<Scalars['Boolean']>;
-  error?: Maybe<Scalars['String']>;
-  hasFullInbox?: Maybe<Scalars['Boolean']>;
-  isCatchAll?: Maybe<Scalars['Boolean']>;
-  isDeliverable?: Maybe<Scalars['Boolean']>;
-  isDisabled?: Maybe<Scalars['Boolean']>;
-  isReachable?: Maybe<Scalars['String']>;
-  isValidSyntax?: Maybe<Scalars['Boolean']>;
-  validated?: Maybe<Scalars['Boolean']>;
+  acceptsMail?: Maybe<Scalars['Boolean']['output']>;
+  canConnectSmtp?: Maybe<Scalars['Boolean']['output']>;
+  error?: Maybe<Scalars['String']['output']>;
+  hasFullInbox?: Maybe<Scalars['Boolean']['output']>;
+  isCatchAll?: Maybe<Scalars['Boolean']['output']>;
+  isDeliverable?: Maybe<Scalars['Boolean']['output']>;
+  isDisabled?: Maybe<Scalars['Boolean']['output']>;
+  isReachable?: Maybe<Scalars['String']['output']>;
+  isValidSyntax?: Maybe<Scalars['Boolean']['output']>;
+  validated?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type EntityTemplate = Node & {
   __typename?: 'EntityTemplate';
-  createdAt: Scalars['Time'];
+  createdAt: Scalars['Time']['output'];
   customFieldTemplates: Array<CustomFieldTemplate>;
   extends?: Maybe<EntityTemplateExtension>;
   fieldSetTemplates: Array<FieldSetTemplate>;
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  updatedAt: Scalars['Time'];
-  version: Scalars['Int'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+  version: Scalars['Int']['output'];
 };
 
 export enum EntityTemplateExtension {
@@ -952,7 +961,7 @@ export type EntityTemplateInput = {
   customFieldTemplateInputs?: InputMaybe<Array<CustomFieldTemplateInput>>;
   extends?: InputMaybe<EntityTemplateExtension>;
   fieldSetTemplateInputs?: InputMaybe<Array<FieldSetTemplateInput>>;
-  name: Scalars['String'];
+  name: Scalars['String']['input'];
 };
 
 export enum EntityType {
@@ -961,24 +970,24 @@ export enum EntityType {
 }
 
 export type ExtensibleEntity = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   template?: Maybe<EntityTemplate>;
 };
 
 export type ExternalSystem = {
   __typename?: 'ExternalSystem';
-  externalId?: Maybe<Scalars['String']>;
-  externalSource?: Maybe<Scalars['String']>;
-  externalUrl?: Maybe<Scalars['String']>;
-  syncDate?: Maybe<Scalars['Time']>;
+  externalId?: Maybe<Scalars['String']['output']>;
+  externalSource?: Maybe<Scalars['String']['output']>;
+  externalUrl?: Maybe<Scalars['String']['output']>;
+  syncDate?: Maybe<Scalars['Time']['output']>;
   type: ExternalSystemType;
 };
 
 export type ExternalSystemReferenceInput = {
-  externalId: Scalars['ID'];
-  externalSource?: InputMaybe<Scalars['String']>;
-  externalUrl?: InputMaybe<Scalars['String']>;
-  syncDate?: InputMaybe<Scalars['Time']>;
+  externalId: Scalars['ID']['input'];
+  externalSource?: InputMaybe<Scalars['String']['input']>;
+  externalUrl?: InputMaybe<Scalars['String']['input']>;
+  syncDate?: InputMaybe<Scalars['Time']['input']>;
   type: ExternalSystemType;
 };
 
@@ -996,41 +1005,41 @@ export enum ExternalSystemType {
 
 export type FieldSet = {
   __typename?: 'FieldSet';
-  createdAt: Scalars['Time'];
+  createdAt: Scalars['Time']['output'];
   customFields: Array<CustomField>;
-  id: Scalars['ID'];
-  name: Scalars['String'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
   source: DataSource;
   template?: Maybe<FieldSetTemplate>;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type FieldSetInput = {
   customFields?: InputMaybe<Array<CustomFieldInput>>;
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  templateId?: InputMaybe<Scalars['ID']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  name: Scalars['String']['input'];
+  templateId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type FieldSetTemplate = Node & {
   __typename?: 'FieldSetTemplate';
-  createdAt: Scalars['Time'];
+  createdAt: Scalars['Time']['output'];
   customFieldTemplates: Array<CustomFieldTemplate>;
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  order: Scalars['Int'];
-  updatedAt: Scalars['Time'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  order: Scalars['Int']['output'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type FieldSetTemplateInput = {
   customFieldTemplateInputs?: InputMaybe<Array<CustomFieldTemplateInput>>;
-  name: Scalars['String'];
-  order: Scalars['Int'];
+  name: Scalars['String']['input'];
+  order: Scalars['Int']['input'];
 };
 
 export type FieldSetUpdateInput = {
-  id: Scalars['ID'];
-  name: Scalars['String'];
+  id: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
 };
 
 export type Filter = {
@@ -1041,11 +1050,11 @@ export type Filter = {
 };
 
 export type FilterItem = {
-  caseSensitive?: InputMaybe<Scalars['Boolean']>;
-  includeEmpty?: InputMaybe<Scalars['Boolean']>;
+  caseSensitive?: InputMaybe<Scalars['Boolean']['input']>;
+  includeEmpty?: InputMaybe<Scalars['Boolean']['input']>;
   operation?: ComparisonOperator;
-  property: Scalars['String'];
-  value: Scalars['Any'];
+  property: Scalars['String']['input'];
+  value: Scalars['Any']['input'];
 };
 
 export enum FundingRound {
@@ -1065,9 +1074,9 @@ export enum FundingRound {
 
 export type GCliAttributeKeyValuePair = {
   __typename?: 'GCliAttributeKeyValuePair';
-  display?: Maybe<Scalars['String']>;
-  key: Scalars['String'];
-  value: Scalars['String'];
+  display?: Maybe<Scalars['String']['output']>;
+  key: Scalars['String']['output'];
+  value: Scalars['String']['output'];
 };
 
 export enum GCliCacheItemType {
@@ -1079,8 +1088,8 @@ export enum GCliCacheItemType {
 export type GCliItem = {
   __typename?: 'GCliItem';
   data?: Maybe<Array<GCliAttributeKeyValuePair>>;
-  display: Scalars['String'];
-  id: Scalars['ID'];
+  display: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
   type: GCliSearchResultType;
 };
 
@@ -1094,29 +1103,29 @@ export enum GCliSearchResultType {
 
 export type GlobalCache = {
   __typename?: 'GlobalCache';
-  contractsExist: Scalars['Boolean'];
+  contractsExist: Scalars['Boolean']['output'];
   gCliCache: Array<GCliItem>;
-  isGoogleActive: Scalars['Boolean'];
-  isGoogleTokenExpired: Scalars['Boolean'];
-  isOwner: Scalars['Boolean'];
-  maxARRForecastValue: Scalars['Float'];
-  minARRForecastValue: Scalars['Float'];
+  isGoogleActive: Scalars['Boolean']['output'];
+  isGoogleTokenExpired: Scalars['Boolean']['output'];
+  isOwner: Scalars['Boolean']['output'];
+  maxARRForecastValue: Scalars['Float']['output'];
+  minARRForecastValue: Scalars['Float']['output'];
   user: User;
 };
 
 export type InteractionEvent = Node & {
   __typename?: 'InteractionEvent';
   actionItems?: Maybe<Array<ActionItem>>;
-  appSource: Scalars['String'];
-  channel?: Maybe<Scalars['String']>;
-  channelData?: Maybe<Scalars['String']>;
-  content?: Maybe<Scalars['String']>;
-  contentType?: Maybe<Scalars['String']>;
-  createdAt: Scalars['Time'];
-  eventIdentifier?: Maybe<Scalars['String']>;
-  eventType?: Maybe<Scalars['String']>;
+  appSource: Scalars['String']['output'];
+  channel?: Maybe<Scalars['String']['output']>;
+  channelData?: Maybe<Scalars['String']['output']>;
+  content?: Maybe<Scalars['String']['output']>;
+  contentType?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Time']['output'];
+  eventIdentifier?: Maybe<Scalars['String']['output']>;
+  eventType?: Maybe<Scalars['String']['output']>;
   externalLinks: Array<ExternalSystem>;
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   includes: Array<Attachment>;
   interactionSession?: Maybe<InteractionSession>;
   issue?: Maybe<Issue>;
@@ -1130,19 +1139,19 @@ export type InteractionEvent = Node & {
 };
 
 export type InteractionEventInput = {
-  appSource: Scalars['String'];
-  channel?: InputMaybe<Scalars['String']>;
-  channelData?: InputMaybe<Scalars['String']>;
-  content?: InputMaybe<Scalars['String']>;
-  contentType?: InputMaybe<Scalars['String']>;
-  createdAt?: InputMaybe<Scalars['Time']>;
-  eventIdentifier?: InputMaybe<Scalars['String']>;
-  eventType?: InputMaybe<Scalars['String']>;
-  externalId?: InputMaybe<Scalars['String']>;
-  externalSystemId?: InputMaybe<Scalars['String']>;
-  interactionSession?: InputMaybe<Scalars['ID']>;
-  meetingId?: InputMaybe<Scalars['ID']>;
-  repliesTo?: InputMaybe<Scalars['ID']>;
+  appSource: Scalars['String']['input'];
+  channel?: InputMaybe<Scalars['String']['input']>;
+  channelData?: InputMaybe<Scalars['String']['input']>;
+  content?: InputMaybe<Scalars['String']['input']>;
+  contentType?: InputMaybe<Scalars['String']['input']>;
+  createdAt?: InputMaybe<Scalars['Time']['input']>;
+  eventIdentifier?: InputMaybe<Scalars['String']['input']>;
+  eventType?: InputMaybe<Scalars['String']['input']>;
+  externalId?: InputMaybe<Scalars['String']['input']>;
+  externalSystemId?: InputMaybe<Scalars['String']['input']>;
+  interactionSession?: InputMaybe<Scalars['ID']['input']>;
+  meetingId?: InputMaybe<Scalars['ID']['input']>;
+  repliesTo?: InputMaybe<Scalars['ID']['input']>;
   sentBy: Array<InteractionEventParticipantInput>;
   sentTo: Array<InteractionEventParticipantInput>;
 };
@@ -1156,46 +1165,46 @@ export type InteractionEventParticipant =
   | UserParticipant;
 
 export type InteractionEventParticipantInput = {
-  contactID?: InputMaybe<Scalars['ID']>;
-  email?: InputMaybe<Scalars['String']>;
-  phoneNumber?: InputMaybe<Scalars['String']>;
-  type?: InputMaybe<Scalars['String']>;
-  userID?: InputMaybe<Scalars['ID']>;
+  contactID?: InputMaybe<Scalars['ID']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
+  phoneNumber?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<Scalars['String']['input']>;
+  userID?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type InteractionSession = Node & {
   __typename?: 'InteractionSession';
-  appSource: Scalars['String'];
+  appSource: Scalars['String']['output'];
   attendedBy: Array<InteractionSessionParticipant>;
-  channel?: Maybe<Scalars['String']>;
-  channelData?: Maybe<Scalars['String']>;
-  createdAt: Scalars['Time'];
+  channel?: Maybe<Scalars['String']['output']>;
+  channelData?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Time']['output'];
   describedBy: Array<Analysis>;
   /** @deprecated Use updatedAt instead */
-  endedAt?: Maybe<Scalars['Time']>;
+  endedAt?: Maybe<Scalars['Time']['output']>;
   events: Array<InteractionEvent>;
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   includes: Array<Attachment>;
-  name: Scalars['String'];
-  sessionIdentifier?: Maybe<Scalars['String']>;
+  name: Scalars['String']['output'];
+  sessionIdentifier?: Maybe<Scalars['String']['output']>;
   source: DataSource;
   sourceOfTruth: DataSource;
   /** @deprecated Use createdAt instead */
-  startedAt: Scalars['Time'];
-  status: Scalars['String'];
-  type?: Maybe<Scalars['String']>;
-  updatedAt: Scalars['Time'];
+  startedAt: Scalars['Time']['output'];
+  status: Scalars['String']['output'];
+  type?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type InteractionSessionInput = {
-  appSource: Scalars['String'];
+  appSource: Scalars['String']['input'];
   attendedBy?: InputMaybe<Array<InteractionSessionParticipantInput>>;
-  channel?: InputMaybe<Scalars['String']>;
-  channelData?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  sessionIdentifier?: InputMaybe<Scalars['String']>;
-  status: Scalars['String'];
-  type?: InputMaybe<Scalars['String']>;
+  channel?: InputMaybe<Scalars['String']['input']>;
+  channelData?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  sessionIdentifier?: InputMaybe<Scalars['String']['input']>;
+  status: Scalars['String']['input'];
+  type?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type InteractionSessionParticipant =
@@ -1205,11 +1214,11 @@ export type InteractionSessionParticipant =
   | UserParticipant;
 
 export type InteractionSessionParticipantInput = {
-  contactID?: InputMaybe<Scalars['ID']>;
-  email?: InputMaybe<Scalars['String']>;
-  phoneNumber?: InputMaybe<Scalars['String']>;
-  type?: InputMaybe<Scalars['String']>;
-  userID?: InputMaybe<Scalars['ID']>;
+  contactID?: InputMaybe<Scalars['ID']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
+  phoneNumber?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<Scalars['String']['input']>;
+  userID?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export enum InternalStage {
@@ -1229,13 +1238,13 @@ export enum InternalType {
 export type InvoicingCycle = Node &
   SourceFields & {
     __typename?: 'InvoicingCycle';
-    appSource: Scalars['String'];
-    createdAt: Scalars['Time'];
-    id: Scalars['ID'];
+    appSource: Scalars['String']['output'];
+    createdAt: Scalars['Time']['output'];
+    id: Scalars['ID']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
     type: InvoicingCycleType;
-    updatedAt: Scalars['Time'];
+    updatedAt: Scalars['Time']['output'];
   };
 
 export type InvoicingCycleInput = {
@@ -1248,31 +1257,31 @@ export enum InvoicingCycleType {
 }
 
 export type InvoicingCycleUpdateInput = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   type: InvoicingCycleType;
 };
 
 export type Issue = Node &
   SourceFields & {
     __typename?: 'Issue';
-    appSource: Scalars['String'];
+    appSource: Scalars['String']['output'];
     assignedTo: Array<IssueParticipant>;
     comments: Array<Comment>;
-    createdAt: Scalars['Time'];
-    description?: Maybe<Scalars['String']>;
+    createdAt: Scalars['Time']['output'];
+    description?: Maybe<Scalars['String']['output']>;
     externalLinks: Array<ExternalSystem>;
     followedBy: Array<IssueParticipant>;
-    id: Scalars['ID'];
+    id: Scalars['ID']['output'];
     interactionEvents: Array<InteractionEvent>;
-    priority?: Maybe<Scalars['String']>;
+    priority?: Maybe<Scalars['String']['output']>;
     reportedBy?: Maybe<IssueParticipant>;
     source: DataSource;
     sourceOfTruth: DataSource;
-    status: Scalars['String'];
-    subject?: Maybe<Scalars['String']>;
+    status: Scalars['String']['output'];
+    subject?: Maybe<Scalars['String']['output']>;
     submittedBy?: Maybe<IssueParticipant>;
     tags?: Maybe<Array<Maybe<Tag>>>;
-    updatedAt: Scalars['Time'];
+    updatedAt: Scalars['Time']['output'];
   };
 
 export type IssueParticipant =
@@ -1282,8 +1291,8 @@ export type IssueParticipant =
 
 export type IssueSummaryByStatus = {
   __typename?: 'IssueSummaryByStatus';
-  count: Scalars['Int64'];
-  status: Scalars['String'];
+  count: Scalars['Int64']['output'];
+  status: Scalars['String']['output'];
 };
 
 /**
@@ -1292,25 +1301,25 @@ export type IssueSummaryByStatus = {
  */
 export type JobRole = {
   __typename?: 'JobRole';
-  appSource: Scalars['String'];
-  company?: Maybe<Scalars['String']>;
+  appSource: Scalars['String']['output'];
+  company?: Maybe<Scalars['String']['output']>;
   contact?: Maybe<Contact>;
-  createdAt: Scalars['Time'];
-  description?: Maybe<Scalars['String']>;
-  endedAt?: Maybe<Scalars['Time']>;
-  id: Scalars['ID'];
+  createdAt: Scalars['Time']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  endedAt?: Maybe<Scalars['Time']['output']>;
+  id: Scalars['ID']['output'];
   /** The Contact's job title. */
-  jobTitle?: Maybe<Scalars['String']>;
+  jobTitle?: Maybe<Scalars['String']['output']>;
   /**
    * Organization associated with a Contact.
    * **Required.**
    */
   organization?: Maybe<Organization>;
-  primary: Scalars['Boolean'];
+  primary: Scalars['Boolean']['output'];
   source: DataSource;
   sourceOfTruth: DataSource;
-  startedAt?: Maybe<Scalars['Time']>;
-  updatedAt: Scalars['Time'];
+  startedAt?: Maybe<Scalars['Time']['output']>;
+  updatedAt: Scalars['Time']['output'];
 };
 
 /**
@@ -1318,20 +1327,20 @@ export type JobRole = {
  * **A `create` object**
  */
 export type JobRoleInput = {
-  appSource?: InputMaybe<Scalars['String']>;
-  company?: InputMaybe<Scalars['String']>;
-  description?: InputMaybe<Scalars['String']>;
-  endedAt?: InputMaybe<Scalars['Time']>;
-  jobTitle?: InputMaybe<Scalars['String']>;
-  organizationId?: InputMaybe<Scalars['ID']>;
-  primary?: InputMaybe<Scalars['Boolean']>;
-  startedAt?: InputMaybe<Scalars['Time']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  company?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  endedAt?: InputMaybe<Scalars['Time']['input']>;
+  jobTitle?: InputMaybe<Scalars['String']['input']>;
+  organizationId?: InputMaybe<Scalars['ID']['input']>;
+  primary?: InputMaybe<Scalars['Boolean']['input']>;
+  startedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
 export type JobRoleParticipant = {
   __typename?: 'JobRoleParticipant';
   jobRoleParticipant: JobRole;
-  type?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']['output']>;
 };
 
 /**
@@ -1339,14 +1348,14 @@ export type JobRoleParticipant = {
  * **A `create` object**
  */
 export type JobRoleUpdateInput = {
-  company?: InputMaybe<Scalars['String']>;
-  description?: InputMaybe<Scalars['String']>;
-  endedAt?: InputMaybe<Scalars['Time']>;
-  id: Scalars['ID'];
-  jobTitle?: InputMaybe<Scalars['String']>;
-  organizationId?: InputMaybe<Scalars['ID']>;
-  primary?: InputMaybe<Scalars['Boolean']>;
-  startedAt?: InputMaybe<Scalars['Time']>;
+  company?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  endedAt?: InputMaybe<Scalars['Time']['input']>;
+  id: Scalars['ID']['input'];
+  jobTitle?: InputMaybe<Scalars['String']['input']>;
+  organizationId?: InputMaybe<Scalars['ID']['input']>;
+  primary?: InputMaybe<Scalars['Boolean']['input']>;
+  startedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
 export enum LastTouchpointType {
@@ -1366,100 +1375,100 @@ export enum LastTouchpointType {
 }
 
 export type LinkOrganizationsInput = {
-  organizationId: Scalars['ID'];
-  subOrganizationId: Scalars['ID'];
-  type?: InputMaybe<Scalars['String']>;
+  organizationId: Scalars['ID']['input'];
+  subOrganizationId: Scalars['ID']['input'];
+  type?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type LinkedOrganization = {
   __typename?: 'LinkedOrganization';
   organization: Organization;
-  type?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']['output']>;
 };
 
 export type Location = Node &
   SourceFields & {
     __typename?: 'Location';
-    address?: Maybe<Scalars['String']>;
-    address2?: Maybe<Scalars['String']>;
-    addressType?: Maybe<Scalars['String']>;
-    appSource: Scalars['String'];
-    commercial?: Maybe<Scalars['Boolean']>;
-    country?: Maybe<Scalars['String']>;
-    createdAt: Scalars['Time'];
-    district?: Maybe<Scalars['String']>;
-    houseNumber?: Maybe<Scalars['String']>;
-    id: Scalars['ID'];
-    latitude?: Maybe<Scalars['Float']>;
-    locality?: Maybe<Scalars['String']>;
-    longitude?: Maybe<Scalars['Float']>;
-    name?: Maybe<Scalars['String']>;
-    plusFour?: Maybe<Scalars['String']>;
-    postalCode?: Maybe<Scalars['String']>;
-    predirection?: Maybe<Scalars['String']>;
-    rawAddress?: Maybe<Scalars['String']>;
-    region?: Maybe<Scalars['String']>;
+    address?: Maybe<Scalars['String']['output']>;
+    address2?: Maybe<Scalars['String']['output']>;
+    addressType?: Maybe<Scalars['String']['output']>;
+    appSource: Scalars['String']['output'];
+    commercial?: Maybe<Scalars['Boolean']['output']>;
+    country?: Maybe<Scalars['String']['output']>;
+    createdAt: Scalars['Time']['output'];
+    district?: Maybe<Scalars['String']['output']>;
+    houseNumber?: Maybe<Scalars['String']['output']>;
+    id: Scalars['ID']['output'];
+    latitude?: Maybe<Scalars['Float']['output']>;
+    locality?: Maybe<Scalars['String']['output']>;
+    longitude?: Maybe<Scalars['Float']['output']>;
+    name?: Maybe<Scalars['String']['output']>;
+    plusFour?: Maybe<Scalars['String']['output']>;
+    postalCode?: Maybe<Scalars['String']['output']>;
+    predirection?: Maybe<Scalars['String']['output']>;
+    rawAddress?: Maybe<Scalars['String']['output']>;
+    region?: Maybe<Scalars['String']['output']>;
     source: DataSource;
     sourceOfTruth: DataSource;
-    street?: Maybe<Scalars['String']>;
-    timeZone?: Maybe<Scalars['String']>;
-    updatedAt: Scalars['Time'];
-    utcOffset?: Maybe<Scalars['Int64']>;
-    zip?: Maybe<Scalars['String']>;
+    street?: Maybe<Scalars['String']['output']>;
+    timeZone?: Maybe<Scalars['String']['output']>;
+    updatedAt: Scalars['Time']['output'];
+    utcOffset?: Maybe<Scalars['Int64']['output']>;
+    zip?: Maybe<Scalars['String']['output']>;
   };
 
 export type LocationUpdateInput = {
-  address?: InputMaybe<Scalars['String']>;
-  address2?: InputMaybe<Scalars['String']>;
-  addressType?: InputMaybe<Scalars['String']>;
-  commercial?: InputMaybe<Scalars['Boolean']>;
-  country?: InputMaybe<Scalars['String']>;
-  district?: InputMaybe<Scalars['String']>;
-  houseNumber?: InputMaybe<Scalars['String']>;
-  id: Scalars['ID'];
-  latitude?: InputMaybe<Scalars['Float']>;
-  locality?: InputMaybe<Scalars['String']>;
-  longitude?: InputMaybe<Scalars['Float']>;
-  name?: InputMaybe<Scalars['String']>;
-  plusFour?: InputMaybe<Scalars['String']>;
-  postalCode?: InputMaybe<Scalars['String']>;
-  predirection?: InputMaybe<Scalars['String']>;
-  rawAddress?: InputMaybe<Scalars['String']>;
-  region?: InputMaybe<Scalars['String']>;
-  street?: InputMaybe<Scalars['String']>;
-  timeZone?: InputMaybe<Scalars['String']>;
-  utcOffset?: InputMaybe<Scalars['Int64']>;
-  zip?: InputMaybe<Scalars['String']>;
+  address?: InputMaybe<Scalars['String']['input']>;
+  address2?: InputMaybe<Scalars['String']['input']>;
+  addressType?: InputMaybe<Scalars['String']['input']>;
+  commercial?: InputMaybe<Scalars['Boolean']['input']>;
+  country?: InputMaybe<Scalars['String']['input']>;
+  district?: InputMaybe<Scalars['String']['input']>;
+  houseNumber?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  latitude?: InputMaybe<Scalars['Float']['input']>;
+  locality?: InputMaybe<Scalars['String']['input']>;
+  longitude?: InputMaybe<Scalars['Float']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  plusFour?: InputMaybe<Scalars['String']['input']>;
+  postalCode?: InputMaybe<Scalars['String']['input']>;
+  predirection?: InputMaybe<Scalars['String']['input']>;
+  rawAddress?: InputMaybe<Scalars['String']['input']>;
+  region?: InputMaybe<Scalars['String']['input']>;
+  street?: InputMaybe<Scalars['String']['input']>;
+  timeZone?: InputMaybe<Scalars['String']['input']>;
+  utcOffset?: InputMaybe<Scalars['Int64']['input']>;
+  zip?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type LogEntry = {
   __typename?: 'LogEntry';
-  appSource: Scalars['String'];
-  content?: Maybe<Scalars['String']>;
-  contentType?: Maybe<Scalars['String']>;
-  createdAt: Scalars['Time'];
+  appSource: Scalars['String']['output'];
+  content?: Maybe<Scalars['String']['output']>;
+  contentType?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
   externalLinks: Array<ExternalSystem>;
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   source: DataSource;
   sourceOfTruth: DataSource;
-  startedAt: Scalars['Time'];
+  startedAt: Scalars['Time']['output'];
   tags: Array<Tag>;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type LogEntryInput = {
-  appSource?: InputMaybe<Scalars['String']>;
-  content?: InputMaybe<Scalars['String']>;
-  contentType?: InputMaybe<Scalars['String']>;
-  startedAt?: InputMaybe<Scalars['Time']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  content?: InputMaybe<Scalars['String']['input']>;
+  contentType?: InputMaybe<Scalars['String']['input']>;
+  startedAt?: InputMaybe<Scalars['Time']['input']>;
   tags?: InputMaybe<Array<TagIdOrNameInput>>;
 };
 
 export type LogEntryUpdateInput = {
-  content?: InputMaybe<Scalars['String']>;
-  contentType?: InputMaybe<Scalars['String']>;
-  startedAt?: InputMaybe<Scalars['Time']>;
+  content?: InputMaybe<Scalars['String']['input']>;
+  contentType?: InputMaybe<Scalars['String']['input']>;
+  startedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
 export enum Market {
@@ -1471,110 +1480,110 @@ export enum Market {
 export type MasterPlan = Node &
   SourceFields & {
     __typename?: 'MasterPlan';
-    appSource: Scalars['String'];
-    createdAt: Scalars['Time'];
-    id: Scalars['ID'];
+    appSource: Scalars['String']['output'];
+    createdAt: Scalars['Time']['output'];
+    id: Scalars['ID']['output'];
     milestones: Array<MasterPlanMilestone>;
-    name: Scalars['String'];
-    retired: Scalars['Boolean'];
+    name: Scalars['String']['output'];
+    retired: Scalars['Boolean']['output'];
     retiredMilestones: Array<MasterPlanMilestone>;
     source: DataSource;
     sourceOfTruth: DataSource;
-    updatedAt: Scalars['Time'];
+    updatedAt: Scalars['Time']['output'];
   };
 
 export type MasterPlanInput = {
-  name?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type MasterPlanMilestone = Node &
   SourceFields & {
     __typename?: 'MasterPlanMilestone';
-    appSource: Scalars['String'];
-    createdAt: Scalars['Time'];
-    durationHours: Scalars['Int64'];
-    id: Scalars['ID'];
-    items: Array<Scalars['String']>;
-    name: Scalars['String'];
-    optional: Scalars['Boolean'];
-    order: Scalars['Int64'];
-    retired: Scalars['Boolean'];
+    appSource: Scalars['String']['output'];
+    createdAt: Scalars['Time']['output'];
+    durationHours: Scalars['Int64']['output'];
+    id: Scalars['ID']['output'];
+    items: Array<Scalars['String']['output']>;
+    name: Scalars['String']['output'];
+    optional: Scalars['Boolean']['output'];
+    order: Scalars['Int64']['output'];
+    retired: Scalars['Boolean']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
-    updatedAt: Scalars['Time'];
+    updatedAt: Scalars['Time']['output'];
   };
 
 export type MasterPlanMilestoneInput = {
-  durationHours: Scalars['Int64'];
-  items: Array<Scalars['String']>;
-  masterPlanId: Scalars['ID'];
-  name?: InputMaybe<Scalars['String']>;
-  optional: Scalars['Boolean'];
-  order: Scalars['Int64'];
+  durationHours: Scalars['Int64']['input'];
+  items: Array<Scalars['String']['input']>;
+  masterPlanId: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  optional: Scalars['Boolean']['input'];
+  order: Scalars['Int64']['input'];
 };
 
 export type MasterPlanMilestoneReorderInput = {
-  masterPlanId: Scalars['ID'];
-  orderedIds: Array<Scalars['ID']>;
+  masterPlanId: Scalars['ID']['input'];
+  orderedIds: Array<Scalars['ID']['input']>;
 };
 
 export type MasterPlanMilestoneUpdateInput = {
-  durationHours?: InputMaybe<Scalars['Int64']>;
-  id: Scalars['ID'];
-  items?: InputMaybe<Array<Scalars['String']>>;
-  masterPlanId: Scalars['ID'];
-  name?: InputMaybe<Scalars['String']>;
-  optional?: InputMaybe<Scalars['Boolean']>;
-  order?: InputMaybe<Scalars['Int64']>;
-  retired?: InputMaybe<Scalars['Boolean']>;
+  durationHours?: InputMaybe<Scalars['Int64']['input']>;
+  id: Scalars['ID']['input'];
+  items?: InputMaybe<Array<Scalars['String']['input']>>;
+  masterPlanId: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  optional?: InputMaybe<Scalars['Boolean']['input']>;
+  order?: InputMaybe<Scalars['Int64']['input']>;
+  retired?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type MasterPlanUpdateInput = {
-  id: Scalars['ID'];
-  name?: InputMaybe<Scalars['String']>;
-  retired?: InputMaybe<Scalars['Boolean']>;
+  id: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  retired?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type Meeting = Node & {
   __typename?: 'Meeting';
-  agenda?: Maybe<Scalars['String']>;
-  agendaContentType?: Maybe<Scalars['String']>;
-  appSource: Scalars['String'];
+  agenda?: Maybe<Scalars['String']['output']>;
+  agendaContentType?: Maybe<Scalars['String']['output']>;
+  appSource: Scalars['String']['output'];
   attendedBy: Array<MeetingParticipant>;
-  conferenceUrl?: Maybe<Scalars['String']>;
-  createdAt: Scalars['Time'];
+  conferenceUrl?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Time']['output'];
   createdBy: Array<MeetingParticipant>;
   describedBy: Array<Analysis>;
-  endedAt?: Maybe<Scalars['Time']>;
+  endedAt?: Maybe<Scalars['Time']['output']>;
   events: Array<InteractionEvent>;
   externalSystem: Array<ExternalSystem>;
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   includes: Array<Attachment>;
-  meetingExternalUrl?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
+  meetingExternalUrl?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
   note: Array<Note>;
   recording?: Maybe<Attachment>;
   source: DataSource;
   sourceOfTruth: DataSource;
-  startedAt?: Maybe<Scalars['Time']>;
+  startedAt?: Maybe<Scalars['Time']['output']>;
   status: MeetingStatus;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type MeetingInput = {
-  agenda?: InputMaybe<Scalars['String']>;
-  agendaContentType?: InputMaybe<Scalars['String']>;
-  appSource?: InputMaybe<Scalars['String']>;
+  agenda?: InputMaybe<Scalars['String']['input']>;
+  agendaContentType?: InputMaybe<Scalars['String']['input']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
   attendedBy?: InputMaybe<Array<MeetingParticipantInput>>;
-  conferenceUrl?: InputMaybe<Scalars['String']>;
-  createdAt?: InputMaybe<Scalars['Time']>;
+  conferenceUrl?: InputMaybe<Scalars['String']['input']>;
+  createdAt?: InputMaybe<Scalars['Time']['input']>;
   createdBy?: InputMaybe<Array<MeetingParticipantInput>>;
-  endedAt?: InputMaybe<Scalars['Time']>;
+  endedAt?: InputMaybe<Scalars['Time']['input']>;
   externalSystem?: InputMaybe<ExternalSystemReferenceInput>;
-  meetingExternalUrl?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
+  meetingExternalUrl?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
   note?: InputMaybe<NoteInput>;
-  startedAt?: InputMaybe<Scalars['Time']>;
+  startedAt?: InputMaybe<Scalars['Time']['input']>;
   status?: InputMaybe<MeetingStatus>;
 };
 
@@ -1585,9 +1594,9 @@ export type MeetingParticipant =
   | UserParticipant;
 
 export type MeetingParticipantInput = {
-  contactId?: InputMaybe<Scalars['ID']>;
-  organizationId?: InputMaybe<Scalars['ID']>;
-  userId?: InputMaybe<Scalars['ID']>;
+  contactId?: InputMaybe<Scalars['ID']['input']>;
+  organizationId?: InputMaybe<Scalars['ID']['input']>;
+  userId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export enum MeetingStatus {
@@ -1597,16 +1606,16 @@ export enum MeetingStatus {
 }
 
 export type MeetingUpdateInput = {
-  agenda?: InputMaybe<Scalars['String']>;
-  agendaContentType?: InputMaybe<Scalars['String']>;
-  appSource?: InputMaybe<Scalars['String']>;
-  conferenceUrl?: InputMaybe<Scalars['String']>;
-  endedAt?: InputMaybe<Scalars['Time']>;
+  agenda?: InputMaybe<Scalars['String']['input']>;
+  agendaContentType?: InputMaybe<Scalars['String']['input']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  conferenceUrl?: InputMaybe<Scalars['String']['input']>;
+  endedAt?: InputMaybe<Scalars['Time']['input']>;
   externalSystem?: InputMaybe<ExternalSystemReferenceInput>;
-  meetingExternalUrl?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
+  meetingExternalUrl?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
   note?: InputMaybe<NoteUpdateInput>;
-  startedAt?: InputMaybe<Scalars['Time']>;
+  startedAt?: InputMaybe<Scalars['Time']['input']>;
   status?: InputMaybe<MeetingStatus>;
 };
 
@@ -1625,24 +1634,24 @@ export type MeetingsPage = Pages & {
    * Total number of elements in the query response.
    * **Required.**
    */
-  totalElements: Scalars['Int64'];
+  totalElements: Scalars['Int64']['output'];
   /**
    * Total number of pages in the query response.
    * **Required.**
    */
-  totalPages: Scalars['Int'];
+  totalPages: Scalars['Int']['output'];
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
   analysis_Create: Analysis;
   attachment_Create: Attachment;
-  billingProfile_Create: Scalars['ID'];
-  billingProfile_LinkEmail: Scalars['ID'];
-  billingProfile_LinkLocation: Scalars['ID'];
-  billingProfile_UnlinkEmail: Scalars['ID'];
-  billingProfile_UnlinkLocation: Scalars['ID'];
-  billingProfile_Update: Scalars['ID'];
+  billingProfile_Create: Scalars['ID']['output'];
+  billingProfile_LinkEmail: Scalars['ID']['output'];
+  billingProfile_LinkLocation: Scalars['ID']['output'];
+  billingProfile_UnlinkEmail: Scalars['ID']['output'];
+  billingProfile_UnlinkLocation: Scalars['ID']['output'];
+  billingProfile_Update: Scalars['ID']['output'];
   contact_AddNewLocation: Location;
   contact_AddOrganizationById: Contact;
   contact_AddSocial: Social;
@@ -1698,14 +1707,14 @@ export type Mutation = {
   location_RemoveFromContact: Contact;
   location_RemoveFromOrganization: Organization;
   location_Update: Location;
-  logEntry_AddTag: Scalars['ID'];
-  logEntry_CreateForOrganization: Scalars['ID'];
-  logEntry_RemoveTag: Scalars['ID'];
-  logEntry_ResetTags: Scalars['ID'];
-  logEntry_Update: Scalars['ID'];
+  logEntry_AddTag: Scalars['ID']['output'];
+  logEntry_CreateForOrganization: Scalars['ID']['output'];
+  logEntry_RemoveTag: Scalars['ID']['output'];
+  logEntry_ResetTags: Scalars['ID']['output'];
+  logEntry_Update: Scalars['ID']['output'];
   masterPlanMilestone_Create: MasterPlanMilestone;
   masterPlanMilestone_Duplicate: MasterPlanMilestone;
-  masterPlanMilestone_Reorder: Scalars['ID'];
+  masterPlanMilestone_Reorder: Scalars['ID']['output'];
   masterPlanMilestone_Update: MasterPlanMilestone;
   masterPlan_Create: MasterPlan;
   masterPlan_Duplicate: MasterPlan;
@@ -1734,12 +1743,12 @@ export type Mutation = {
   organization_Archive?: Maybe<Result>;
   organization_ArchiveAll?: Maybe<Result>;
   organization_Create: Organization;
-  organization_Hide: Scalars['ID'];
+  organization_Hide: Scalars['ID']['output'];
   organization_HideAll?: Maybe<Result>;
   organization_Merge: Organization;
   organization_RemoveSubsidiary: Organization;
   organization_SetOwner: Organization;
-  organization_Show: Scalars['ID'];
+  organization_Show: Scalars['ID']['output'];
   organization_ShowAll?: Maybe<Result>;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
@@ -1759,14 +1768,14 @@ export type Mutation = {
   player_Merge: Result;
   serviceLineItemCreate: ServiceLineItem;
   serviceLineItemUpdate: ServiceLineItem;
-  serviceLineItem_Close: Scalars['ID'];
+  serviceLineItem_Close: Scalars['ID']['output'];
   serviceLineItem_Delete: DeleteResponse;
   social_Remove: Result;
   social_Update: Social;
   tag_Create: Tag;
   tag_Delete?: Maybe<Result>;
   tag_Update?: Maybe<Tag>;
-  tenant_Merge: Scalars['String'];
+  tenant_Merge: Scalars['String']['output'];
   user_AddRole: User;
   user_AddRoleInTenant: User;
   user_Create: User;
@@ -1812,7 +1821,7 @@ export type MutationBillingProfile_UpdateArgs = {
 };
 
 export type MutationContact_AddNewLocationArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
 };
 
 export type MutationContact_AddOrganizationByIdArgs = {
@@ -1820,7 +1829,7 @@ export type MutationContact_AddOrganizationByIdArgs = {
 };
 
 export type MutationContact_AddSocialArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   input: SocialInput;
 };
 
@@ -1829,7 +1838,7 @@ export type MutationContact_AddTagByIdArgs = {
 };
 
 export type MutationContact_ArchiveArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
 };
 
 export type MutationContact_CreateArgs = {
@@ -1837,17 +1846,17 @@ export type MutationContact_CreateArgs = {
 };
 
 export type MutationContact_HardDeleteArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
 };
 
 export type MutationContact_MergeArgs = {
-  mergedContactIds: Array<Scalars['ID']>;
-  primaryContactId: Scalars['ID'];
+  mergedContactIds: Array<Scalars['ID']['input']>;
+  primaryContactId: Scalars['ID']['input'];
 };
 
 export type MutationContact_RemoveLocationArgs = {
-  contactId: Scalars['ID'];
-  locationId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
+  locationId: Scalars['ID']['input'];
 };
 
 export type MutationContact_RemoveOrganizationByIdArgs = {
@@ -1859,7 +1868,7 @@ export type MutationContact_RemoveTagByIdArgs = {
 };
 
 export type MutationContact_RestoreFromArchiveArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
 };
 
 export type MutationContact_UpdateArgs = {
@@ -1875,29 +1884,29 @@ export type MutationContract_UpdateArgs = {
 };
 
 export type MutationCustomFieldDeleteFromContactByIdArgs = {
-  contactId: Scalars['ID'];
-  id: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationCustomFieldDeleteFromContactByNameArgs = {
-  contactId: Scalars['ID'];
-  fieldName: Scalars['String'];
+  contactId: Scalars['ID']['input'];
+  fieldName: Scalars['String']['input'];
 };
 
 export type MutationCustomFieldDeleteFromFieldSetByIdArgs = {
-  contactId: Scalars['ID'];
-  fieldSetId: Scalars['ID'];
-  id: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
+  fieldSetId: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationCustomFieldMergeToContactArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   input: CustomFieldInput;
 };
 
 export type MutationCustomFieldMergeToFieldSetArgs = {
-  contactId: Scalars['ID'];
-  fieldSetId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
+  fieldSetId: Scalars['ID']['input'];
   input: CustomFieldInput;
 };
 
@@ -1906,18 +1915,18 @@ export type MutationCustomFieldTemplate_CreateArgs = {
 };
 
 export type MutationCustomFieldUpdateInContactArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   input: CustomFieldUpdateInput;
 };
 
 export type MutationCustomFieldUpdateInFieldSetArgs = {
-  contactId: Scalars['ID'];
-  fieldSetId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
+  fieldSetId: Scalars['ID']['input'];
   input: CustomFieldUpdateInput;
 };
 
 export type MutationCustomFieldsMergeAndUpdateInContactArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   customFields?: InputMaybe<Array<CustomFieldInput>>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
 };
@@ -1927,72 +1936,72 @@ export type MutationCustomer_Contact_CreateArgs = {
 };
 
 export type MutationCustomer_User_AddJobRoleArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   jobRoleInput: JobRoleInput;
 };
 
 export type MutationEmailDeleteArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationEmailMergeToContactArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   input: EmailInput;
 };
 
 export type MutationEmailMergeToOrganizationArgs = {
   input: EmailInput;
-  organizationId: Scalars['ID'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationEmailMergeToUserArgs = {
   input: EmailInput;
-  userId: Scalars['ID'];
+  userId: Scalars['ID']['input'];
 };
 
 export type MutationEmailRemoveFromContactArgs = {
-  contactId: Scalars['ID'];
-  email: Scalars['String'];
+  contactId: Scalars['ID']['input'];
+  email: Scalars['String']['input'];
 };
 
 export type MutationEmailRemoveFromContactByIdArgs = {
-  contactId: Scalars['ID'];
-  id: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationEmailRemoveFromOrganizationArgs = {
-  email: Scalars['String'];
-  organizationId: Scalars['ID'];
+  email: Scalars['String']['input'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationEmailRemoveFromOrganizationByIdArgs = {
-  id: Scalars['ID'];
-  organizationId: Scalars['ID'];
+  id: Scalars['ID']['input'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationEmailRemoveFromUserArgs = {
-  email: Scalars['String'];
-  userId: Scalars['ID'];
+  email: Scalars['String']['input'];
+  userId: Scalars['ID']['input'];
 };
 
 export type MutationEmailRemoveFromUserByIdArgs = {
-  id: Scalars['ID'];
-  userId: Scalars['ID'];
+  id: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
 };
 
 export type MutationEmailUpdateInContactArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   input: EmailUpdateInput;
 };
 
 export type MutationEmailUpdateInOrganizationArgs = {
   input: EmailUpdateInput;
-  organizationId: Scalars['ID'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationEmailUpdateInUserArgs = {
   input: EmailUpdateInput;
-  userId: Scalars['ID'];
+  userId: Scalars['ID']['input'];
 };
 
 export type MutationEntityTemplateCreateArgs = {
@@ -2000,17 +2009,17 @@ export type MutationEntityTemplateCreateArgs = {
 };
 
 export type MutationFieldSetDeleteFromContactArgs = {
-  contactId: Scalars['ID'];
-  id: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationFieldSetMergeToContactArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   input: FieldSetInput;
 };
 
 export type MutationFieldSetUpdateInContactArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   input: FieldSetUpdateInput;
 };
 
@@ -2019,8 +2028,8 @@ export type MutationInteractionEvent_CreateArgs = {
 };
 
 export type MutationInteractionEvent_LinkAttachmentArgs = {
-  attachmentId: Scalars['ID'];
-  eventId: Scalars['ID'];
+  attachmentId: Scalars['ID']['input'];
+  eventId: Scalars['ID']['input'];
 };
 
 export type MutationInteractionSession_CreateArgs = {
@@ -2028,8 +2037,8 @@ export type MutationInteractionSession_CreateArgs = {
 };
 
 export type MutationInteractionSession_LinkAttachmentArgs = {
-  attachmentId: Scalars['ID'];
-  sessionId: Scalars['ID'];
+  attachmentId: Scalars['ID']['input'];
+  sessionId: Scalars['ID']['input'];
 };
 
 export type MutationInvoicingCycle_CreateArgs = {
@@ -2041,28 +2050,28 @@ export type MutationInvoicingCycle_UpdateArgs = {
 };
 
 export type MutationJobRole_CreateArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   input: JobRoleInput;
 };
 
 export type MutationJobRole_DeleteArgs = {
-  contactId: Scalars['ID'];
-  roleId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
+  roleId: Scalars['ID']['input'];
 };
 
 export type MutationJobRole_UpdateArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   input: JobRoleUpdateInput;
 };
 
 export type MutationLocation_RemoveFromContactArgs = {
-  contactId: Scalars['ID'];
-  locationId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
+  locationId: Scalars['ID']['input'];
 };
 
 export type MutationLocation_RemoveFromOrganizationArgs = {
-  locationId: Scalars['ID'];
-  organizationId: Scalars['ID'];
+  locationId: Scalars['ID']['input'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationLocation_UpdateArgs = {
@@ -2070,27 +2079,27 @@ export type MutationLocation_UpdateArgs = {
 };
 
 export type MutationLogEntry_AddTagArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   input: TagIdOrNameInput;
 };
 
 export type MutationLogEntry_CreateForOrganizationArgs = {
   input: LogEntryInput;
-  organizationId: Scalars['ID'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationLogEntry_RemoveTagArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   input: TagIdOrNameInput;
 };
 
 export type MutationLogEntry_ResetTagsArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   input?: InputMaybe<Array<TagIdOrNameInput>>;
 };
 
 export type MutationLogEntry_UpdateArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   input: LogEntryUpdateInput;
 };
 
@@ -2099,8 +2108,8 @@ export type MutationMasterPlanMilestone_CreateArgs = {
 };
 
 export type MutationMasterPlanMilestone_DuplicateArgs = {
-  id: Scalars['ID'];
-  masterPlanId: Scalars['ID'];
+  id: Scalars['ID']['input'];
+  masterPlanId: Scalars['ID']['input'];
 };
 
 export type MutationMasterPlanMilestone_ReorderArgs = {
@@ -2116,7 +2125,7 @@ export type MutationMasterPlan_CreateArgs = {
 };
 
 export type MutationMasterPlan_DuplicateArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationMasterPlan_UpdateArgs = {
@@ -2124,11 +2133,11 @@ export type MutationMasterPlan_UpdateArgs = {
 };
 
 export type MutationMeeting_AddNewLocationArgs = {
-  meetingId: Scalars['ID'];
+  meetingId: Scalars['ID']['input'];
 };
 
 export type MutationMeeting_AddNoteArgs = {
-  meetingId: Scalars['ID'];
+  meetingId: Scalars['ID']['input'];
   note?: InputMaybe<NoteInput>;
 };
 
@@ -2137,62 +2146,62 @@ export type MutationMeeting_CreateArgs = {
 };
 
 export type MutationMeeting_LinkAttachmentArgs = {
-  attachmentId: Scalars['ID'];
-  meetingId: Scalars['ID'];
+  attachmentId: Scalars['ID']['input'];
+  meetingId: Scalars['ID']['input'];
 };
 
 export type MutationMeeting_LinkAttendedByArgs = {
-  meetingId: Scalars['ID'];
+  meetingId: Scalars['ID']['input'];
   participant: MeetingParticipantInput;
 };
 
 export type MutationMeeting_LinkRecordingArgs = {
-  attachmentId: Scalars['ID'];
-  meetingId: Scalars['ID'];
+  attachmentId: Scalars['ID']['input'];
+  meetingId: Scalars['ID']['input'];
 };
 
 export type MutationMeeting_UnlinkAttachmentArgs = {
-  attachmentId: Scalars['ID'];
-  meetingId: Scalars['ID'];
+  attachmentId: Scalars['ID']['input'];
+  meetingId: Scalars['ID']['input'];
 };
 
 export type MutationMeeting_UnlinkAttendedByArgs = {
-  meetingId: Scalars['ID'];
+  meetingId: Scalars['ID']['input'];
   participant: MeetingParticipantInput;
 };
 
 export type MutationMeeting_UnlinkRecordingArgs = {
-  attachmentId: Scalars['ID'];
-  meetingId: Scalars['ID'];
+  attachmentId: Scalars['ID']['input'];
+  meetingId: Scalars['ID']['input'];
 };
 
 export type MutationMeeting_UpdateArgs = {
   meeting: MeetingUpdateInput;
-  meetingId: Scalars['ID'];
+  meetingId: Scalars['ID']['input'];
 };
 
 export type MutationNote_CreateForContactArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   input: NoteInput;
 };
 
 export type MutationNote_CreateForOrganizationArgs = {
   input: NoteInput;
-  organizationId: Scalars['ID'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationNote_DeleteArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationNote_LinkAttachmentArgs = {
-  attachmentId: Scalars['ID'];
-  noteId: Scalars['ID'];
+  attachmentId: Scalars['ID']['input'];
+  noteId: Scalars['ID']['input'];
 };
 
 export type MutationNote_UnlinkAttachmentArgs = {
-  attachmentId: Scalars['ID'];
-  noteId: Scalars['ID'];
+  attachmentId: Scalars['ID']['input'];
+  noteId: Scalars['ID']['input'];
 };
 
 export type MutationNote_UpdateArgs = {
@@ -2201,7 +2210,7 @@ export type MutationNote_UpdateArgs = {
 
 export type MutationOpportunityRenewalUpdateArgs = {
   input: OpportunityRenewalUpdateInput;
-  ownerUserId?: InputMaybe<Scalars['ID']>;
+  ownerUserId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type MutationOpportunityUpdateArgs = {
@@ -2209,12 +2218,12 @@ export type MutationOpportunityUpdateArgs = {
 };
 
 export type MutationOrganization_AddNewLocationArgs = {
-  organizationId: Scalars['ID'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationOrganization_AddSocialArgs = {
   input: SocialInput;
-  organizationId: Scalars['ID'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationOrganization_AddSubsidiaryArgs = {
@@ -2222,11 +2231,11 @@ export type MutationOrganization_AddSubsidiaryArgs = {
 };
 
 export type MutationOrganization_ArchiveArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationOrganization_ArchiveAllArgs = {
-  ids: Array<Scalars['ID']>;
+  ids: Array<Scalars['ID']['input']>;
 };
 
 export type MutationOrganization_CreateArgs = {
@@ -2234,38 +2243,38 @@ export type MutationOrganization_CreateArgs = {
 };
 
 export type MutationOrganization_HideArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationOrganization_HideAllArgs = {
-  ids: Array<Scalars['ID']>;
+  ids: Array<Scalars['ID']['input']>;
 };
 
 export type MutationOrganization_MergeArgs = {
-  mergedOrganizationIds: Array<Scalars['ID']>;
-  primaryOrganizationId: Scalars['ID'];
+  mergedOrganizationIds: Array<Scalars['ID']['input']>;
+  primaryOrganizationId: Scalars['ID']['input'];
 };
 
 export type MutationOrganization_RemoveSubsidiaryArgs = {
-  organizationId: Scalars['ID'];
-  subsidiaryId: Scalars['ID'];
+  organizationId: Scalars['ID']['input'];
+  subsidiaryId: Scalars['ID']['input'];
 };
 
 export type MutationOrganization_SetOwnerArgs = {
-  organizationId: Scalars['ID'];
-  userId: Scalars['ID'];
+  organizationId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
 };
 
 export type MutationOrganization_ShowArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationOrganization_ShowAllArgs = {
-  ids: Array<Scalars['ID']>;
+  ids: Array<Scalars['ID']['input']>;
 };
 
 export type MutationOrganization_UnsetOwnerArgs = {
-  organizationId: Scalars['ID'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationOrganization_UpdateArgs = {
@@ -2277,68 +2286,68 @@ export type MutationOrganization_UpdateOnboardingStatusArgs = {
 };
 
 export type MutationPhoneNumberMergeToContactArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   input: PhoneNumberInput;
 };
 
 export type MutationPhoneNumberMergeToOrganizationArgs = {
   input: PhoneNumberInput;
-  organizationId: Scalars['ID'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationPhoneNumberMergeToUserArgs = {
   input: PhoneNumberInput;
-  userId: Scalars['ID'];
+  userId: Scalars['ID']['input'];
 };
 
 export type MutationPhoneNumberRemoveFromContactByE164Args = {
-  contactId: Scalars['ID'];
-  e164: Scalars['String'];
+  contactId: Scalars['ID']['input'];
+  e164: Scalars['String']['input'];
 };
 
 export type MutationPhoneNumberRemoveFromContactByIdArgs = {
-  contactId: Scalars['ID'];
-  id: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationPhoneNumberRemoveFromOrganizationByE164Args = {
-  e164: Scalars['String'];
-  organizationId: Scalars['ID'];
+  e164: Scalars['String']['input'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationPhoneNumberRemoveFromOrganizationByIdArgs = {
-  id: Scalars['ID'];
-  organizationId: Scalars['ID'];
+  id: Scalars['ID']['input'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationPhoneNumberRemoveFromUserByE164Args = {
-  e164: Scalars['String'];
-  userId: Scalars['ID'];
+  e164: Scalars['String']['input'];
+  userId: Scalars['ID']['input'];
 };
 
 export type MutationPhoneNumberRemoveFromUserByIdArgs = {
-  id: Scalars['ID'];
-  userId: Scalars['ID'];
+  id: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
 };
 
 export type MutationPhoneNumberUpdateInContactArgs = {
-  contactId: Scalars['ID'];
+  contactId: Scalars['ID']['input'];
   input: PhoneNumberUpdateInput;
 };
 
 export type MutationPhoneNumberUpdateInOrganizationArgs = {
   input: PhoneNumberUpdateInput;
-  organizationId: Scalars['ID'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationPhoneNumberUpdateInUserArgs = {
   input: PhoneNumberUpdateInput;
-  userId: Scalars['ID'];
+  userId: Scalars['ID']['input'];
 };
 
 export type MutationPlayer_MergeArgs = {
   input: PlayerInput;
-  userId: Scalars['ID'];
+  userId: Scalars['ID']['input'];
 };
 
 export type MutationServiceLineItemCreateArgs = {
@@ -2354,11 +2363,11 @@ export type MutationServiceLineItem_CloseArgs = {
 };
 
 export type MutationServiceLineItem_DeleteArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationSocial_RemoveArgs = {
-  socialId: Scalars['ID'];
+  socialId: Scalars['ID']['input'];
 };
 
 export type MutationSocial_UpdateArgs = {
@@ -2370,7 +2379,7 @@ export type MutationTag_CreateArgs = {
 };
 
 export type MutationTag_DeleteArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationTag_UpdateArgs = {
@@ -2382,14 +2391,14 @@ export type MutationTenant_MergeArgs = {
 };
 
 export type MutationUser_AddRoleArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   role: Role;
 };
 
 export type MutationUser_AddRoleInTenantArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   role: Role;
-  tenant: Scalars['String'];
+  tenant: Scalars['String']['input'];
 };
 
 export type MutationUser_CreateArgs = {
@@ -2397,23 +2406,23 @@ export type MutationUser_CreateArgs = {
 };
 
 export type MutationUser_DeleteArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type MutationUser_DeleteInTenantArgs = {
-  id: Scalars['ID'];
-  tenant: Scalars['String'];
+  id: Scalars['ID']['input'];
+  tenant: Scalars['String']['input'];
 };
 
 export type MutationUser_RemoveRoleArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   role: Role;
 };
 
 export type MutationUser_RemoveRoleInTenantArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   role: Role;
-  tenant: Scalars['String'];
+  tenant: Scalars['String']['input'];
 };
 
 export type MutationUser_UpdateArgs = {
@@ -2425,55 +2434,55 @@ export type MutationWorkspace_MergeArgs = {
 };
 
 export type MutationWorkspace_MergeToTenantArgs = {
-  tenant: Scalars['String'];
+  tenant: Scalars['String']['input'];
   workspace: WorkspaceInput;
 };
 
 export type Node = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
 };
 
 export type Note = {
   __typename?: 'Note';
-  appSource: Scalars['String'];
-  content?: Maybe<Scalars['String']>;
-  contentType?: Maybe<Scalars['String']>;
-  createdAt: Scalars['Time'];
+  appSource: Scalars['String']['output'];
+  content?: Maybe<Scalars['String']['output']>;
+  contentType?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   includes: Array<Attachment>;
   noted: Array<NotedEntity>;
   source: DataSource;
   sourceOfTruth: DataSource;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type NoteInput = {
-  appSource?: InputMaybe<Scalars['String']>;
-  content?: InputMaybe<Scalars['String']>;
-  contentType?: InputMaybe<Scalars['String']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  content?: InputMaybe<Scalars['String']['input']>;
+  contentType?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type NotePage = Pages & {
   __typename?: 'NotePage';
   content: Array<Note>;
-  totalElements: Scalars['Int64'];
-  totalPages: Scalars['Int'];
+  totalElements: Scalars['Int64']['output'];
+  totalPages: Scalars['Int']['output'];
 };
 
 export type NoteUpdateInput = {
-  content?: InputMaybe<Scalars['String']>;
-  contentType?: InputMaybe<Scalars['String']>;
-  id: Scalars['ID'];
+  content?: InputMaybe<Scalars['String']['input']>;
+  contentType?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
 };
 
 export type NotedEntity = Contact | Organization;
 
 export type OnboardingDetails = {
   __typename?: 'OnboardingDetails';
-  comments?: Maybe<Scalars['String']>;
+  comments?: Maybe<Scalars['String']['output']>;
   status: OnboardingStatus;
-  updatedAt?: Maybe<Scalars['Time']>;
+  updatedAt?: Maybe<Scalars['Time']['output']>;
 };
 
 export enum OnboardingStatus {
@@ -2487,37 +2496,37 @@ export enum OnboardingStatus {
 }
 
 export type OnboardingStatusInput = {
-  comments?: InputMaybe<Scalars['String']>;
-  organizationId: Scalars['ID'];
+  comments?: InputMaybe<Scalars['String']['input']>;
+  organizationId: Scalars['ID']['input'];
   status: OnboardingStatus;
 };
 
 export type Opportunity = Node & {
   __typename?: 'Opportunity';
-  amount: Scalars['Float'];
-  appSource: Scalars['String'];
-  comments: Scalars['String'];
-  createdAt: Scalars['Time'];
+  amount: Scalars['Float']['output'];
+  appSource: Scalars['String']['output'];
+  comments: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
-  estimatedClosedAt?: Maybe<Scalars['Time']>;
+  estimatedClosedAt?: Maybe<Scalars['Time']['output']>;
   externalLinks: Array<ExternalSystem>;
-  externalStage: Scalars['String'];
-  externalType: Scalars['String'];
-  generalNotes: Scalars['String'];
-  id: Scalars['ID'];
+  externalStage: Scalars['String']['output'];
+  externalType: Scalars['String']['output'];
+  generalNotes: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
   internalStage: InternalStage;
   internalType: InternalType;
-  maxAmount: Scalars['Float'];
-  name: Scalars['String'];
-  nextSteps: Scalars['String'];
+  maxAmount: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  nextSteps: Scalars['String']['output'];
   owner?: Maybe<User>;
   renewalLikelihood: OpportunityRenewalLikelihood;
-  renewalUpdatedByUserAt: Scalars['Time'];
-  renewalUpdatedByUserId: Scalars['String'];
-  renewedAt: Scalars['Time'];
+  renewalUpdatedByUserAt: Scalars['Time']['output'];
+  renewalUpdatedByUserId: Scalars['String']['output'];
+  renewedAt: Scalars['Time']['output'];
   source: DataSource;
   sourceOfTruth: DataSource;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export enum OpportunityRenewalLikelihood {
@@ -2528,26 +2537,26 @@ export enum OpportunityRenewalLikelihood {
 }
 
 export type OpportunityRenewalUpdateInput = {
-  amount?: InputMaybe<Scalars['Float']>;
-  appSource?: InputMaybe<Scalars['String']>;
-  comments?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
-  opportunityId: Scalars['ID'];
-  ownerUserId?: InputMaybe<Scalars['ID']>;
+  amount?: InputMaybe<Scalars['Float']['input']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  comments?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  opportunityId: Scalars['ID']['input'];
+  ownerUserId?: InputMaybe<Scalars['ID']['input']>;
   renewalLikelihood?: InputMaybe<OpportunityRenewalLikelihood>;
 };
 
 export type OpportunityUpdateInput = {
-  amount?: InputMaybe<Scalars['Float']>;
-  appSource?: InputMaybe<Scalars['String']>;
-  estimatedClosedDate?: InputMaybe<Scalars['Time']>;
+  amount?: InputMaybe<Scalars['Float']['input']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  estimatedClosedDate?: InputMaybe<Scalars['Time']['input']>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
-  externalStage?: InputMaybe<Scalars['String']>;
-  externalType?: InputMaybe<Scalars['String']>;
-  generalNotes?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
-  nextSteps?: InputMaybe<Scalars['String']>;
-  opportunityId: Scalars['ID'];
+  externalStage?: InputMaybe<Scalars['String']['input']>;
+  externalType?: InputMaybe<Scalars['String']['input']>;
+  generalNotes?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  nextSteps?: InputMaybe<Scalars['String']['input']>;
+  opportunityId: Scalars['ID']['input'];
 };
 
 export type OrgAccountDetails = {
@@ -2559,58 +2568,58 @@ export type OrgAccountDetails = {
 export type Organization = Node & {
   __typename?: 'Organization';
   accountDetails?: Maybe<OrgAccountDetails>;
-  appSource: Scalars['String'];
+  appSource: Scalars['String']['output'];
   contacts: ContactsPage;
   contracts?: Maybe<Array<Contract>>;
-  createdAt: Scalars['Time'];
+  createdAt: Scalars['Time']['output'];
   customFields: Array<CustomField>;
-  customerOsId: Scalars['String'];
-  description?: Maybe<Scalars['String']>;
-  domains: Array<Scalars['String']>;
+  customerOsId: Scalars['String']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  domains: Array<Scalars['String']['output']>;
   emails: Array<Email>;
-  employeeGrowthRate?: Maybe<Scalars['String']>;
-  employees?: Maybe<Scalars['Int64']>;
+  employeeGrowthRate?: Maybe<Scalars['String']['output']>;
+  employees?: Maybe<Scalars['Int64']['output']>;
   entityTemplate?: Maybe<EntityTemplate>;
   externalLinks: Array<ExternalSystem>;
   fieldSets: Array<FieldSet>;
-  headquarters?: Maybe<Scalars['String']>;
-  id: Scalars['ID'];
-  industry?: Maybe<Scalars['String']>;
-  industryGroup?: Maybe<Scalars['String']>;
-  isCustomer?: Maybe<Scalars['Boolean']>;
-  isPublic?: Maybe<Scalars['Boolean']>;
+  headquarters?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  industry?: Maybe<Scalars['String']['output']>;
+  industryGroup?: Maybe<Scalars['String']['output']>;
+  isCustomer?: Maybe<Scalars['Boolean']['output']>;
+  isPublic?: Maybe<Scalars['Boolean']['output']>;
   issueSummaryByStatus: Array<IssueSummaryByStatus>;
   jobRoles: Array<JobRole>;
-  lastFundingAmount?: Maybe<Scalars['String']>;
+  lastFundingAmount?: Maybe<Scalars['String']['output']>;
   lastFundingRound?: Maybe<FundingRound>;
-  lastTouchPointAt?: Maybe<Scalars['Time']>;
+  lastTouchPointAt?: Maybe<Scalars['Time']['output']>;
   lastTouchPointTimelineEvent?: Maybe<TimelineEvent>;
-  lastTouchPointTimelineEventId?: Maybe<Scalars['ID']>;
+  lastTouchPointTimelineEventId?: Maybe<Scalars['ID']['output']>;
   lastTouchPointType?: Maybe<LastTouchpointType>;
   locations: Array<Location>;
-  logoUrl?: Maybe<Scalars['String']>;
+  logoUrl?: Maybe<Scalars['String']['output']>;
   market?: Maybe<Market>;
-  name: Scalars['String'];
-  note?: Maybe<Scalars['String']>;
+  name: Scalars['String']['output'];
+  note?: Maybe<Scalars['String']['output']>;
   notes: NotePage;
   owner?: Maybe<User>;
   phoneNumbers: Array<PhoneNumber>;
-  referenceId?: Maybe<Scalars['String']>;
+  referenceId?: Maybe<Scalars['String']['output']>;
   socials: Array<Social>;
   source: DataSource;
   sourceOfTruth: DataSource;
-  subIndustry?: Maybe<Scalars['String']>;
+  subIndustry?: Maybe<Scalars['String']['output']>;
   subsidiaries: Array<LinkedOrganization>;
   subsidiaryOf: Array<LinkedOrganization>;
   suggestedMergeTo: Array<SuggestedMergeOrganization>;
   tags?: Maybe<Array<Tag>>;
-  targetAudience?: Maybe<Scalars['String']>;
+  targetAudience?: Maybe<Scalars['String']['output']>;
   timelineEvents: Array<TimelineEvent>;
-  timelineEventsTotalCount: Scalars['Int64'];
-  updatedAt: Scalars['Time'];
-  valueProposition?: Maybe<Scalars['String']>;
-  website?: Maybe<Scalars['String']>;
-  yearFounded?: Maybe<Scalars['Int64']>;
+  timelineEventsTotalCount: Scalars['Int64']['output'];
+  updatedAt: Scalars['Time']['output'];
+  valueProposition?: Maybe<Scalars['String']['output']>;
+  website?: Maybe<Scalars['String']['output']>;
+  yearFounded?: Maybe<Scalars['Int64']['output']>;
 };
 
 export type OrganizationContactsArgs = {
@@ -2624,8 +2633,8 @@ export type OrganizationNotesArgs = {
 };
 
 export type OrganizationTimelineEventsArgs = {
-  from?: InputMaybe<Scalars['Time']>;
-  size: Scalars['Int'];
+  from?: InputMaybe<Scalars['Time']['input']>;
+  size: Scalars['Int']['input'];
   timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
 };
 
@@ -2634,89 +2643,89 @@ export type OrganizationTimelineEventsTotalCountArgs = {
 };
 
 export type OrganizationInput = {
-  appSource?: InputMaybe<Scalars['String']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
   customFields?: InputMaybe<Array<CustomFieldInput>>;
-  description?: InputMaybe<Scalars['String']>;
-  domains?: InputMaybe<Array<Scalars['String']>>;
-  employeeGrowthRate?: InputMaybe<Scalars['String']>;
-  employees?: InputMaybe<Scalars['Int64']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  domains?: InputMaybe<Array<Scalars['String']['input']>>;
+  employeeGrowthRate?: InputMaybe<Scalars['String']['input']>;
+  employees?: InputMaybe<Scalars['Int64']['input']>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
-  headquarters?: InputMaybe<Scalars['String']>;
-  industry?: InputMaybe<Scalars['String']>;
-  industryGroup?: InputMaybe<Scalars['String']>;
-  isCustomer?: InputMaybe<Scalars['Boolean']>;
-  isPublic?: InputMaybe<Scalars['Boolean']>;
-  logoUrl?: InputMaybe<Scalars['String']>;
+  headquarters?: InputMaybe<Scalars['String']['input']>;
+  industry?: InputMaybe<Scalars['String']['input']>;
+  industryGroup?: InputMaybe<Scalars['String']['input']>;
+  isCustomer?: InputMaybe<Scalars['Boolean']['input']>;
+  isPublic?: InputMaybe<Scalars['Boolean']['input']>;
+  logoUrl?: InputMaybe<Scalars['String']['input']>;
   market?: InputMaybe<Market>;
-  name?: InputMaybe<Scalars['String']>;
-  note?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
   /**
    * The name of the organization.
    * **Required.**
    */
-  referenceId?: InputMaybe<Scalars['String']>;
-  subIndustry?: InputMaybe<Scalars['String']>;
-  templateId?: InputMaybe<Scalars['ID']>;
-  website?: InputMaybe<Scalars['String']>;
-  yearFounded?: InputMaybe<Scalars['Int64']>;
+  referenceId?: InputMaybe<Scalars['String']['input']>;
+  subIndustry?: InputMaybe<Scalars['String']['input']>;
+  templateId?: InputMaybe<Scalars['ID']['input']>;
+  website?: InputMaybe<Scalars['String']['input']>;
+  yearFounded?: InputMaybe<Scalars['Int64']['input']>;
 };
 
 export type OrganizationPage = Pages & {
   __typename?: 'OrganizationPage';
   content: Array<Organization>;
-  totalAvailable: Scalars['Int64'];
-  totalElements: Scalars['Int64'];
-  totalPages: Scalars['Int'];
+  totalAvailable: Scalars['Int64']['output'];
+  totalElements: Scalars['Int64']['output'];
+  totalPages: Scalars['Int']['output'];
 };
 
 export type OrganizationParticipant = {
   __typename?: 'OrganizationParticipant';
   organizationParticipant: Organization;
-  type?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']['output']>;
 };
 
 export type OrganizationUpdateInput = {
-  description?: InputMaybe<Scalars['String']>;
-  domains?: InputMaybe<Array<Scalars['String']>>;
-  employeeGrowthRate?: InputMaybe<Scalars['String']>;
-  employees?: InputMaybe<Scalars['Int64']>;
-  headquarters?: InputMaybe<Scalars['String']>;
-  id: Scalars['ID'];
-  industry?: InputMaybe<Scalars['String']>;
-  industryGroup?: InputMaybe<Scalars['String']>;
-  isCustomer?: InputMaybe<Scalars['Boolean']>;
-  isPublic?: InputMaybe<Scalars['Boolean']>;
-  lastFundingAmount?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  domains?: InputMaybe<Array<Scalars['String']['input']>>;
+  employeeGrowthRate?: InputMaybe<Scalars['String']['input']>;
+  employees?: InputMaybe<Scalars['Int64']['input']>;
+  headquarters?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  industry?: InputMaybe<Scalars['String']['input']>;
+  industryGroup?: InputMaybe<Scalars['String']['input']>;
+  isCustomer?: InputMaybe<Scalars['Boolean']['input']>;
+  isPublic?: InputMaybe<Scalars['Boolean']['input']>;
+  lastFundingAmount?: InputMaybe<Scalars['String']['input']>;
   lastFundingRound?: InputMaybe<FundingRound>;
-  logoUrl?: InputMaybe<Scalars['String']>;
+  logoUrl?: InputMaybe<Scalars['String']['input']>;
   market?: InputMaybe<Market>;
-  name?: InputMaybe<Scalars['String']>;
-  note?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
   /** Set to true when partial update is needed. Empty or missing fields will not be ignored. */
-  patch?: InputMaybe<Scalars['Boolean']>;
-  referenceId?: InputMaybe<Scalars['String']>;
-  subIndustry?: InputMaybe<Scalars['String']>;
-  targetAudience?: InputMaybe<Scalars['String']>;
-  valueProposition?: InputMaybe<Scalars['String']>;
-  website?: InputMaybe<Scalars['String']>;
-  yearFounded?: InputMaybe<Scalars['Int64']>;
+  patch?: InputMaybe<Scalars['Boolean']['input']>;
+  referenceId?: InputMaybe<Scalars['String']['input']>;
+  subIndustry?: InputMaybe<Scalars['String']['input']>;
+  targetAudience?: InputMaybe<Scalars['String']['input']>;
+  valueProposition?: InputMaybe<Scalars['String']['input']>;
+  website?: InputMaybe<Scalars['String']['input']>;
+  yearFounded?: InputMaybe<Scalars['Int64']['input']>;
 };
 
 export type PageView = Node &
   SourceFields & {
     __typename?: 'PageView';
-    appSource: Scalars['String'];
-    application: Scalars['String'];
-    endedAt: Scalars['Time'];
-    engagedTime: Scalars['Int64'];
-    id: Scalars['ID'];
-    orderInSession: Scalars['Int64'];
-    pageTitle: Scalars['String'];
-    pageUrl: Scalars['String'];
-    sessionId: Scalars['ID'];
+    appSource: Scalars['String']['output'];
+    application: Scalars['String']['output'];
+    endedAt: Scalars['Time']['output'];
+    engagedTime: Scalars['Int64']['output'];
+    id: Scalars['ID']['output'];
+    orderInSession: Scalars['Int64']['output'];
+    pageTitle: Scalars['String']['output'];
+    pageUrl: Scalars['String']['output'];
+    sessionId: Scalars['ID']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
-    startedAt: Scalars['Time'];
+    startedAt: Scalars['Time']['output'];
   };
 
 /**
@@ -2728,12 +2737,12 @@ export type Pages = {
    * The total number of elements included in the query response.
    * **Required.**
    */
-  totalElements: Scalars['Int64'];
+  totalElements: Scalars['Int64']['output'];
   /**
    * The total number of pages included in the query response.
    * **Required.**
    */
-  totalPages: Scalars['Int'];
+  totalPages: Scalars['Int']['output'];
 };
 
 /** If provided as part of the request, results will be filtered down to the `page` and `limit` specified. */
@@ -2742,12 +2751,12 @@ export type Pagination = {
    * The maximum number of results in the response.
    * **Required.**
    */
-  limit: Scalars['Int'];
+  limit: Scalars['Int']['input'];
   /**
    * The results page to return in the response.
    * **Required.**
    */
-  page: Scalars['Int'];
+  page: Scalars['Int']['input'];
 };
 
 /**
@@ -2773,17 +2782,17 @@ export enum PersonTitle {
  */
 export type PhoneNumber = {
   __typename?: 'PhoneNumber';
-  appSource?: Maybe<Scalars['String']>;
+  appSource?: Maybe<Scalars['String']['output']>;
   contacts: Array<Contact>;
   country?: Maybe<Country>;
-  createdAt: Scalars['Time'];
+  createdAt: Scalars['Time']['output'];
   /** The phone number in e164 format.  */
-  e164?: Maybe<Scalars['String']>;
+  e164?: Maybe<Scalars['String']['output']>;
   /**
    * The unique ID associated with the phone number.
    * **Required**
    */
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   /** Defines the type of phone number. */
   label?: Maybe<PhoneNumberLabel>;
   organizations: Array<Organization>;
@@ -2791,12 +2800,12 @@ export type PhoneNumber = {
    * Determines if the phone number is primary or not.
    * **Required**
    */
-  primary: Scalars['Boolean'];
-  rawPhoneNumber?: Maybe<Scalars['String']>;
+  primary: Scalars['Boolean']['output'];
+  rawPhoneNumber?: Maybe<Scalars['String']['output']>;
   source: DataSource;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
   users: Array<User>;
-  validated?: Maybe<Scalars['Boolean']>;
+  validated?: Maybe<Scalars['Boolean']['output']>;
 };
 
 /**
@@ -2804,19 +2813,19 @@ export type PhoneNumber = {
  * **A `create` object.**
  */
 export type PhoneNumberInput = {
-  countryCodeA2?: InputMaybe<Scalars['String']>;
+  countryCodeA2?: InputMaybe<Scalars['String']['input']>;
   /** Defines the type of phone number. */
   label?: InputMaybe<PhoneNumberLabel>;
   /**
    * The phone number in e164 format.
    * **Required**
    */
-  phoneNumber: Scalars['String'];
+  phoneNumber: Scalars['String']['input'];
   /**
    * Determines if the phone number is primary or not.
    * **Required**
    */
-  primary?: InputMaybe<Scalars['Boolean']>;
+  primary?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /**
@@ -2834,7 +2843,7 @@ export enum PhoneNumberLabel {
 export type PhoneNumberParticipant = {
   __typename?: 'PhoneNumberParticipant';
   phoneNumberParticipant: PhoneNumber;
-  type?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']['output']>;
 };
 
 /**
@@ -2842,52 +2851,52 @@ export type PhoneNumberParticipant = {
  * **An `update` object.**
  */
 export type PhoneNumberUpdateInput = {
-  countryCodeA2?: InputMaybe<Scalars['String']>;
+  countryCodeA2?: InputMaybe<Scalars['String']['input']>;
   /**
    * The unique ID associated with the phone number.
    * **Required**
    */
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
   /** Defines the type of phone number. */
   label?: InputMaybe<PhoneNumberLabel>;
-  phoneNumber?: InputMaybe<Scalars['String']>;
+  phoneNumber?: InputMaybe<Scalars['String']['input']>;
   /**
    * Determines if the phone number is primary or not.
    * **Required**
    */
-  primary?: InputMaybe<Scalars['Boolean']>;
+  primary?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type Player = {
   __typename?: 'Player';
-  appSource: Scalars['String'];
-  authId: Scalars['String'];
-  createdAt: Scalars['Time'];
-  id: Scalars['ID'];
-  identityId?: Maybe<Scalars['String']>;
-  provider: Scalars['String'];
+  appSource: Scalars['String']['output'];
+  authId: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  identityId?: Maybe<Scalars['String']['output']>;
+  provider: Scalars['String']['output'];
   source: DataSource;
   sourceOfTruth: DataSource;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
   users: Array<PlayerUser>;
 };
 
 export type PlayerInput = {
-  appSource?: InputMaybe<Scalars['String']>;
-  authId: Scalars['String'];
-  identityId?: InputMaybe<Scalars['String']>;
-  provider: Scalars['String'];
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  authId: Scalars['String']['input'];
+  identityId?: InputMaybe<Scalars['String']['input']>;
+  provider: Scalars['String']['input'];
 };
 
 export type PlayerUpdate = {
-  appSource?: InputMaybe<Scalars['String']>;
-  identityId?: InputMaybe<Scalars['String']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  identityId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type PlayerUser = {
   __typename?: 'PlayerUser';
-  default: Scalars['Boolean'];
-  tenant: Scalars['String'];
+  default: Scalars['Boolean']['output'];
+  tenant: Scalars['String']['output'];
   user: User;
 };
 
@@ -2948,9 +2957,9 @@ export type Query = {
   serviceLineItem: ServiceLineItem;
   tableViewDefs: TableViewDefPage;
   tags: Array<Tag>;
-  tenant: Scalars['String'];
-  tenant_ByEmail?: Maybe<Scalars['String']>;
-  tenant_ByWorkspace?: Maybe<Scalars['String']>;
+  tenant: Scalars['String']['output'];
+  tenant_ByEmail?: Maybe<Scalars['String']['output']>;
+  tenant_ByWorkspace?: Maybe<Scalars['String']['output']>;
   timelineEvents: Array<TimelineEvent>;
   user: User;
   user_ByEmail: User;
@@ -2958,23 +2967,23 @@ export type Query = {
 };
 
 export type QueryAnalysisArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryAttachmentArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryContactArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryContact_ByEmailArgs = {
-  email: Scalars['String'];
+  email: Scalars['String']['input'];
 };
 
 export type QueryContact_ByPhoneArgs = {
-  e164: Scalars['String'];
+  e164: Scalars['String']['input'];
 };
 
 export type QueryContactsArgs = {
@@ -2984,7 +2993,7 @@ export type QueryContactsArgs = {
 };
 
 export type QueryContractArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryDashboardView_OrganizationsArgs = {
@@ -3032,7 +3041,7 @@ export type QueryDashboard_TimeToOnboardArgs = {
 };
 
 export type QueryEmailArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryEntityTemplatesArgs = {
@@ -3040,60 +3049,60 @@ export type QueryEntityTemplatesArgs = {
 };
 
 export type QueryExternalMeetingsArgs = {
-  externalId?: InputMaybe<Scalars['ID']>;
-  externalSystemId: Scalars['String'];
+  externalId?: InputMaybe<Scalars['ID']['input']>;
+  externalSystemId: Scalars['String']['input'];
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
 };
 
 export type QueryGcli_SearchArgs = {
-  keyword: Scalars['String'];
-  limit?: InputMaybe<Scalars['Int']>;
+  keyword: Scalars['String']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryInteractionEventArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryInteractionEvent_ByEventIdentifierArgs = {
-  eventIdentifier: Scalars['String'];
+  eventIdentifier: Scalars['String']['input'];
 };
 
 export type QueryInteractionSessionArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryInteractionSession_BySessionIdentifierArgs = {
-  sessionIdentifier: Scalars['String'];
+  sessionIdentifier: Scalars['String']['input'];
 };
 
 export type QueryIssueArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryLogEntryArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryMasterPlanArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryMasterPlansArgs = {
-  retired?: InputMaybe<Scalars['Boolean']>;
+  retired?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type QueryMeetingArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryOpportunityArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryOrganizationArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryOrganizationsArgs = {
@@ -3103,16 +3112,16 @@ export type QueryOrganizationsArgs = {
 };
 
 export type QueryPhoneNumberArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryPlayer_ByAuthIdProviderArgs = {
-  authId: Scalars['String'];
-  provider: Scalars['String'];
+  authId: Scalars['String']['input'];
+  provider: Scalars['String']['input'];
 };
 
 export type QueryServiceLineItemArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryTableViewDefsArgs = {
@@ -3122,7 +3131,7 @@ export type QueryTableViewDefsArgs = {
 };
 
 export type QueryTenant_ByEmailArgs = {
-  email: Scalars['String'];
+  email: Scalars['String']['input'];
 };
 
 export type QueryTenant_ByWorkspaceArgs = {
@@ -3130,15 +3139,15 @@ export type QueryTenant_ByWorkspaceArgs = {
 };
 
 export type QueryTimelineEventsArgs = {
-  ids: Array<Scalars['ID']>;
+  ids: Array<Scalars['ID']['input']>;
 };
 
 export type QueryUserArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type QueryUser_ByEmailArgs = {
-  email: Scalars['String'];
+  email: Scalars['String']['input'];
 };
 
 export type QueryUsersArgs = {
@@ -3156,18 +3165,18 @@ export type RenewalRecord = {
 
 export type RenewalSummary = {
   __typename?: 'RenewalSummary';
-  arrForecast?: Maybe<Scalars['Float']>;
-  maxArrForecast?: Maybe<Scalars['Float']>;
-  nextRenewalDate?: Maybe<Scalars['Time']>;
+  arrForecast?: Maybe<Scalars['Float']['output']>;
+  maxArrForecast?: Maybe<Scalars['Float']['output']>;
+  nextRenewalDate?: Maybe<Scalars['Time']['output']>;
   renewalLikelihood?: Maybe<OpportunityRenewalLikelihood>;
 };
 
 export type RenewalsPage = Pages & {
   __typename?: 'RenewalsPage';
   content: Array<RenewalRecord>;
-  totalAvailable: Scalars['Int64'];
-  totalElements: Scalars['Int64'];
-  totalPages: Scalars['Int'];
+  totalAvailable: Scalars['Int64']['output'];
+  totalElements: Scalars['Int64']['output'];
+  totalPages: Scalars['Int']['output'];
 };
 
 /**
@@ -3180,7 +3189,7 @@ export type Result = {
    * The result of the GraphQL call.
    * **Required.**
    */
-  result: Scalars['Boolean'];
+  result: Scalars['Boolean']['output'];
 };
 
 export enum Role {
@@ -3192,81 +3201,81 @@ export enum Role {
 
 export type ServiceLineItem = Node & {
   __typename?: 'ServiceLineItem';
-  appSource: Scalars['String'];
+  appSource: Scalars['String']['output'];
   billed: BilledType;
-  comments: Scalars['String'];
-  createdAt: Scalars['Time'];
+  comments: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
-  endedAt?: Maybe<Scalars['Time']>;
+  endedAt?: Maybe<Scalars['Time']['output']>;
   externalLinks: Array<ExternalSystem>;
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  parentId: Scalars['ID'];
-  price: Scalars['Float'];
-  quantity: Scalars['Int64'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  parentId: Scalars['ID']['output'];
+  price: Scalars['Float']['output'];
+  quantity: Scalars['Int64']['output'];
   source: DataSource;
   sourceOfTruth: DataSource;
-  startedAt: Scalars['Time'];
-  updatedAt: Scalars['Time'];
+  startedAt: Scalars['Time']['output'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type ServiceLineItemCloseInput = {
-  endedAt?: InputMaybe<Scalars['Time']>;
-  id: Scalars['ID'];
+  endedAt?: InputMaybe<Scalars['Time']['input']>;
+  id: Scalars['ID']['input'];
 };
 
 export type ServiceLineItemInput = {
-  appSource?: InputMaybe<Scalars['String']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
   billed?: InputMaybe<BilledType>;
-  contractId: Scalars['ID'];
-  endedAt?: InputMaybe<Scalars['Time']>;
+  contractId: Scalars['ID']['input'];
+  endedAt?: InputMaybe<Scalars['Time']['input']>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
-  name?: InputMaybe<Scalars['String']>;
-  price?: InputMaybe<Scalars['Float']>;
-  quantity?: InputMaybe<Scalars['Int64']>;
-  startedAt?: InputMaybe<Scalars['Time']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  price?: InputMaybe<Scalars['Float']['input']>;
+  quantity?: InputMaybe<Scalars['Int64']['input']>;
+  startedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
 export type ServiceLineItemUpdateInput = {
-  appSource?: InputMaybe<Scalars['String']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
   billed?: InputMaybe<BilledType>;
-  comments?: InputMaybe<Scalars['String']>;
+  comments?: InputMaybe<Scalars['String']['input']>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
-  isRetroactiveCorrection?: InputMaybe<Scalars['Boolean']>;
-  name?: InputMaybe<Scalars['String']>;
-  price?: InputMaybe<Scalars['Float']>;
-  quantity?: InputMaybe<Scalars['Int64']>;
-  serviceLineItemId: Scalars['ID'];
+  isRetroactiveCorrection?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  price?: InputMaybe<Scalars['Float']['input']>;
+  quantity?: InputMaybe<Scalars['Int64']['input']>;
+  serviceLineItemId: Scalars['ID']['input'];
 };
 
 export type Social = Node &
   SourceFields & {
     __typename?: 'Social';
-    appSource: Scalars['String'];
-    createdAt: Scalars['Time'];
-    id: Scalars['ID'];
-    platformName?: Maybe<Scalars['String']>;
+    appSource: Scalars['String']['output'];
+    createdAt: Scalars['Time']['output'];
+    id: Scalars['ID']['output'];
+    platformName?: Maybe<Scalars['String']['output']>;
     source: DataSource;
     sourceOfTruth: DataSource;
-    updatedAt: Scalars['Time'];
-    url: Scalars['String'];
+    updatedAt: Scalars['Time']['output'];
+    url: Scalars['String']['output'];
   };
 
 export type SocialInput = {
-  appSource?: InputMaybe<Scalars['String']>;
-  platformName?: InputMaybe<Scalars['String']>;
-  url: Scalars['String'];
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  platformName?: InputMaybe<Scalars['String']['input']>;
+  url: Scalars['String']['input'];
 };
 
 export type SocialUpdateInput = {
-  id: Scalars['ID'];
-  platformName?: InputMaybe<Scalars['String']>;
-  url: Scalars['String'];
+  id: Scalars['ID']['input'];
+  platformName?: InputMaybe<Scalars['String']['input']>;
+  url: Scalars['String']['input'];
 };
 
 export type SortBy = {
-  by: Scalars['String'];
-  caseSensitive?: InputMaybe<Scalars['Boolean']>;
+  by: Scalars['String']['input'];
+  caseSensitive?: InputMaybe<Scalars['Boolean']['input']>;
   direction?: SortingDirection;
 };
 
@@ -3276,87 +3285,87 @@ export enum SortingDirection {
 }
 
 export type SourceFields = {
-  appSource: Scalars['String'];
-  id: Scalars['ID'];
+  appSource: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
   source: DataSource;
   sourceOfTruth: DataSource;
 };
 
 export type State = {
   __typename?: 'State';
-  code: Scalars['String'];
+  code: Scalars['String']['output'];
   country: Country;
-  id: Scalars['ID'];
-  name: Scalars['String'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
 };
 
 export type SuggestedMergeOrganization = {
   __typename?: 'SuggestedMergeOrganization';
-  confidence?: Maybe<Scalars['Float']>;
+  confidence?: Maybe<Scalars['Float']['output']>;
   organization: Organization;
-  suggestedAt?: Maybe<Scalars['Time']>;
-  suggestedBy?: Maybe<Scalars['String']>;
+  suggestedAt?: Maybe<Scalars['Time']['output']>;
+  suggestedBy?: Maybe<Scalars['String']['output']>;
 };
 
 export type TableViewDef = Node & {
   __typename?: 'TableViewDef';
   columns?: Maybe<Array<Maybe<ColumnDef>>>;
-  createdAt: Scalars['Time'];
+  createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
-  filters?: Maybe<Scalars['String']>;
-  icon?: Maybe<Scalars['String']>;
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  order?: Maybe<Scalars['Int']>;
-  sorting?: Maybe<Scalars['String']>;
+  filters?: Maybe<Scalars['String']['output']>;
+  icon?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  order?: Maybe<Scalars['Int']['output']>;
+  sorting?: Maybe<Scalars['String']['output']>;
   type?: Maybe<ViewType>;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type TableViewDefPage = Pages & {
   __typename?: 'TableViewDefPage';
   content: Array<TableViewDef>;
-  totalAvailable: Scalars['Int64'];
-  totalElements: Scalars['Int64'];
-  totalPages: Scalars['Int'];
+  totalAvailable: Scalars['Int64']['output'];
+  totalElements: Scalars['Int64']['output'];
+  totalPages: Scalars['Int']['output'];
 };
 
 export type Tag = {
   __typename?: 'Tag';
-  appSource: Scalars['String'];
-  createdAt: Scalars['Time'];
-  id: Scalars['ID'];
-  name: Scalars['String'];
+  appSource: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
   source: DataSource;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type TagIdOrNameInput = {
-  id?: InputMaybe<Scalars['ID']>;
-  name?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type TagInput = {
-  appSource?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
 };
 
 export type TagUpdateInput = {
-  id: Scalars['ID'];
-  name: Scalars['String'];
+  id: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
 };
 
 export type TenantBillableInfo = {
   __typename?: 'TenantBillableInfo';
-  greylistedContacts: Scalars['Int64'];
-  greylistedOrganizations: Scalars['Int64'];
-  whitelistedContacts: Scalars['Int64'];
-  whitelistedOrganizations: Scalars['Int64'];
+  greylistedContacts: Scalars['Int64']['output'];
+  greylistedOrganizations: Scalars['Int64']['output'];
+  whitelistedContacts: Scalars['Int64']['output'];
+  whitelistedOrganizations: Scalars['Int64']['output'];
 };
 
 export type TenantInput = {
-  appSource?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
 };
 
 export type TimeRange = {
@@ -3364,12 +3373,12 @@ export type TimeRange = {
    * The start time of the time range.
    * **Required.**
    */
-  from: Scalars['Time'];
+  from: Scalars['Time']['input'];
   /**
    * The end time of the time range.
    * **Required.**
    */
-  to: Scalars['Time'];
+  to: Scalars['Time']['input'];
 };
 
 export type TimelineEvent =
@@ -3401,14 +3410,14 @@ export enum TimelineEventType {
  */
 export type User = {
   __typename?: 'User';
-  appSource: Scalars['String'];
-  bot: Scalars['Boolean'];
+  appSource: Scalars['String']['output'];
+  bot: Scalars['Boolean']['output'];
   calendars: Array<Calendar>;
   /**
    * Timestamp of user creation.
    * **Required**
    */
-  createdAt: Scalars['Time'];
+  createdAt: Scalars['Time']['output'];
   /**
    * All email addresses associated with a user in customerOS.
    * **Required.  If no values it returns an empty array.**
@@ -3418,28 +3427,28 @@ export type User = {
    * The first name of the customerOS user.
    * **Required**
    */
-  firstName: Scalars['String'];
+  firstName: Scalars['String']['output'];
   /**
    * The unique ID associated with the customerOS user.
    * **Required**
    */
-  id: Scalars['ID'];
-  internal: Scalars['Boolean'];
+  id: Scalars['ID']['output'];
+  internal: Scalars['Boolean']['output'];
   jobRoles: Array<JobRole>;
   /**
    * The last name of the customerOS user.
    * **Required**
    */
-  lastName: Scalars['String'];
-  name?: Maybe<Scalars['String']>;
+  lastName: Scalars['String']['output'];
+  name?: Maybe<Scalars['String']['output']>;
   phoneNumbers: Array<PhoneNumber>;
   player: Player;
-  profilePhotoUrl?: Maybe<Scalars['String']>;
+  profilePhotoUrl?: Maybe<Scalars['String']['output']>;
   roles: Array<Role>;
   source: DataSource;
   sourceOfTruth: DataSource;
-  timezone?: Maybe<Scalars['String']>;
-  updatedAt: Scalars['Time'];
+  timezone?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['Time']['output'];
 };
 
 /**
@@ -3451,7 +3460,7 @@ export type UserInput = {
    * The name of the app performing the create.
    * **Optional**
    */
-  appSource?: InputMaybe<Scalars['String']>;
+  appSource?: InputMaybe<Scalars['String']['input']>;
   /**
    * The email address of the customerOS user.
    * **Required**
@@ -3461,7 +3470,7 @@ export type UserInput = {
    * The first name of the customerOS user.
    * **Required**
    */
-  firstName: Scalars['String'];
+  firstName: Scalars['String']['input'];
   /**
    * The Job Roles of the user.
    * **Optional**
@@ -3471,15 +3480,15 @@ export type UserInput = {
    * The last name of the customerOS user.
    * **Required**
    */
-  lastName: Scalars['String'];
-  name?: InputMaybe<Scalars['String']>;
+  lastName: Scalars['String']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
   /**
    * Player to associate with the user with. If the person does not exist, it will be created.
    * **Required**
    */
   player: PlayerInput;
-  profilePhotoUrl?: InputMaybe<Scalars['String']>;
-  timezone?: InputMaybe<Scalars['String']>;
+  profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
+  timezone?: InputMaybe<Scalars['String']['input']>;
 };
 
 /**
@@ -3497,17 +3506,17 @@ export type UserPage = Pages & {
    * Total number of elements in the query response.
    * **Required.**
    */
-  totalElements: Scalars['Int64'];
+  totalElements: Scalars['Int64']['output'];
   /**
    * Total number of pages in the query response.
    * **Required.**
    */
-  totalPages: Scalars['Int'];
+  totalPages: Scalars['Int']['output'];
 };
 
 export type UserParticipant = {
   __typename?: 'UserParticipant';
-  type?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']['output']>;
   userParticipant: User;
 };
 
@@ -3516,41 +3525,41 @@ export type UserUpdateInput = {
    * The first name of the customerOS user.
    * **Required**
    */
-  firstName: Scalars['String'];
-  id: Scalars['ID'];
+  firstName: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
   /**
    * The last name of the customerOS user.
    * **Required**
    */
-  lastName: Scalars['String'];
-  name?: InputMaybe<Scalars['String']>;
-  profilePhotoUrl?: InputMaybe<Scalars['String']>;
-  timezone?: InputMaybe<Scalars['String']>;
+  lastName: Scalars['String']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
+  timezone?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ViewType = Node & {
   __typename?: 'ViewType';
-  createdAt: Scalars['Time'];
+  createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
-  id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
-  updatedAt: Scalars['Time'];
+  id: Scalars['ID']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type Workspace = {
   __typename?: 'Workspace';
-  appSource: Scalars['String'];
-  createdAt: Scalars['Time'];
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  provider: Scalars['String'];
+  appSource: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  provider: Scalars['String']['output'];
   source: DataSource;
   sourceOfTruth: DataSource;
-  updatedAt: Scalars['Time'];
+  updatedAt: Scalars['Time']['output'];
 };
 
 export type WorkspaceInput = {
-  appSource?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  provider: Scalars['String'];
+  appSource?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  provider: Scalars['String']['input'];
 };

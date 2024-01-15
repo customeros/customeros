@@ -19,8 +19,8 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type RemoveContactPhoneNumberMutationVariables = Types.Exact<{
-  contactId: Types.Scalars['ID'];
-  id: Types.Scalars['ID'];
+  contactId: Types.Scalars['ID']['input'];
+  id: Types.Scalars['ID']['input'];
 }>;
 
 export type RemoveContactPhoneNumberMutation = {
@@ -35,6 +35,7 @@ export const RemoveContactPhoneNumberDocument = `
   }
 }
     `;
+
 export const useRemoveContactPhoneNumberMutation = <
   TError = unknown,
   TContext = unknown,
@@ -47,21 +48,23 @@ export const useRemoveContactPhoneNumberMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     RemoveContactPhoneNumberMutation,
     TError,
     RemoveContactPhoneNumberMutationVariables,
     TContext
-  >(
-    ['removeContactPhoneNumber'],
-    (variables?: RemoveContactPhoneNumberMutationVariables) =>
+  >({
+    mutationKey: ['removeContactPhoneNumber'],
+    mutationFn: (variables?: RemoveContactPhoneNumberMutationVariables) =>
       fetcher<
         RemoveContactPhoneNumberMutation,
         RemoveContactPhoneNumberMutationVariables
       >(client, RemoveContactPhoneNumberDocument, variables, headers)(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useRemoveContactPhoneNumberMutation.getKey = () => ['removeContactPhoneNumber'];
 
 useRemoveContactPhoneNumberMutation.fetcher = (

@@ -44,7 +44,7 @@ export const Branches: React.FC<BranchesProps> = ({
   const organizationsQueryKey = useInfiniteGetOrganizationsQuery.getKey(
     organizationsMeta.getOrganization,
   );
-  const invalidateQuery = () => queryClient.invalidateQueries(queryKey);
+  const invalidateQuery = () => queryClient.invalidateQueries({ queryKey });
 
   const addSubsidiaryToOrganizationMutation =
     useAddSubsidiaryToOrganizationMutation(client, {
@@ -121,13 +121,13 @@ export const Branches: React.FC<BranchesProps> = ({
       },
       onSettled: () => {
         invalidateQuery();
-        queryClient.invalidateQueries(organizationsQueryKey);
+        queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
       },
     });
   const createOrganization = useCreateOrganizationMutation(client, {
     onMutate: () => {
       const pageIndex = organizationsMeta.getOrganization.pagination.page - 1;
-      queryClient.cancelQueries(queryKey);
+      queryClient.cancelQueries({ queryKey });
 
       const previousEntries =
         queryClient.getQueryData<InfiniteData<GetOrganizationsQuery>>(queryKey);
@@ -181,7 +181,7 @@ export const Branches: React.FC<BranchesProps> = ({
       });
     },
     onSettled: () => {
-      queryClient.invalidateQueries(queryKey);
+      queryClient.invalidateQueries({ queryKey });
     },
   });
   const handleCreateOrganization = useCallback(() => {

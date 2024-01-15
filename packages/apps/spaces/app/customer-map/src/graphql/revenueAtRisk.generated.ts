@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -45,52 +46,79 @@ export const RevenueAtRiskDocument = `
   }
 }
     `;
+
 export const useRevenueAtRiskQuery = <
   TData = RevenueAtRiskQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables?: RevenueAtRiskQueryVariables,
-  options?: UseQueryOptions<RevenueAtRiskQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<RevenueAtRiskQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<RevenueAtRiskQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<RevenueAtRiskQuery, TError, TData>(
-    variables === undefined ? ['RevenueAtRisk'] : ['RevenueAtRisk', variables],
-    fetcher<RevenueAtRiskQuery, RevenueAtRiskQueryVariables>(
+) => {
+  return useQuery<RevenueAtRiskQuery, TError, TData>({
+    queryKey:
+      variables === undefined
+        ? ['RevenueAtRisk']
+        : ['RevenueAtRisk', variables],
+    queryFn: fetcher<RevenueAtRiskQuery, RevenueAtRiskQueryVariables>(
       client,
       RevenueAtRiskDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useRevenueAtRiskQuery.document = RevenueAtRiskDocument;
 
 useRevenueAtRiskQuery.getKey = (variables?: RevenueAtRiskQueryVariables) =>
   variables === undefined ? ['RevenueAtRisk'] : ['RevenueAtRisk', variables];
+
 export const useInfiniteRevenueAtRiskQuery = <
-  TData = RevenueAtRiskQuery,
+  TData = InfiniteData<RevenueAtRiskQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof RevenueAtRiskQueryVariables,
   client: GraphQLClient,
-  variables?: RevenueAtRiskQueryVariables,
-  options?: UseInfiniteQueryOptions<RevenueAtRiskQuery, TError, TData>,
+  variables: RevenueAtRiskQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<RevenueAtRiskQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      RevenueAtRiskQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<RevenueAtRiskQuery, TError, TData>(
-    variables === undefined
-      ? ['RevenueAtRisk.infinite']
-      : ['RevenueAtRisk.infinite', variables],
-    (metaData) =>
-      fetcher<RevenueAtRiskQuery, RevenueAtRiskQueryVariables>(
-        client,
-        RevenueAtRiskDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<RevenueAtRiskQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['RevenueAtRisk.infinite']
+            : ['RevenueAtRisk.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<RevenueAtRiskQuery, RevenueAtRiskQueryVariables>(
+            client,
+            RevenueAtRiskDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteRevenueAtRiskQuery.getKey = (
   variables?: RevenueAtRiskQueryVariables,
@@ -98,6 +126,7 @@ useInfiniteRevenueAtRiskQuery.getKey = (
   variables === undefined
     ? ['RevenueAtRisk.infinite']
     : ['RevenueAtRisk.infinite', variables];
+
 useRevenueAtRiskQuery.fetcher = (
   client: GraphQLClient,
   variables?: RevenueAtRiskQueryVariables,

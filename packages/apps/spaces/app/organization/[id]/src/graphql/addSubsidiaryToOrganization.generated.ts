@@ -60,6 +60,7 @@ export const AddSubsidiaryToOrganizationDocument = `
   }
 }
     `;
+
 export const useAddSubsidiaryToOrganizationMutation = <
   TError = unknown,
   TContext = unknown,
@@ -72,21 +73,23 @@ export const useAddSubsidiaryToOrganizationMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     AddSubsidiaryToOrganizationMutation,
     TError,
     AddSubsidiaryToOrganizationMutationVariables,
     TContext
-  >(
-    ['addSubsidiaryToOrganization'],
-    (variables?: AddSubsidiaryToOrganizationMutationVariables) =>
+  >({
+    mutationKey: ['addSubsidiaryToOrganization'],
+    mutationFn: (variables?: AddSubsidiaryToOrganizationMutationVariables) =>
       fetcher<
         AddSubsidiaryToOrganizationMutation,
         AddSubsidiaryToOrganizationMutationVariables
       >(client, AddSubsidiaryToOrganizationDocument, variables, headers)(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useAddSubsidiaryToOrganizationMutation.getKey = () => [
   'addSubsidiaryToOrganization',
 ];

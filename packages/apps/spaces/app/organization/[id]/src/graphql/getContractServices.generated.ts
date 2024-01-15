@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -25,7 +26,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type GetContractServicesQueryVariables = Types.Exact<{
-  id: Types.Scalars['ID'];
+  id: Types.Scalars['ID']['input'];
 }>;
 
 export type GetContractServicesQuery = {
@@ -41,55 +42,84 @@ export const GetContractServicesDocument = `
   }
 }
     `;
+
 export const useGetContractServicesQuery = <
   TData = GetContractServicesQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables: GetContractServicesQueryVariables,
-  options?: UseQueryOptions<GetContractServicesQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<GetContractServicesQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<
+      GetContractServicesQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GetContractServicesQuery, TError, TData>(
-    ['getContractServices', variables],
-    fetcher<GetContractServicesQuery, GetContractServicesQueryVariables>(
-      client,
-      GetContractServicesDocument,
-      variables,
-      headers,
-    ),
-    options,
-  );
+) => {
+  return useQuery<GetContractServicesQuery, TError, TData>({
+    queryKey: ['getContractServices', variables],
+    queryFn: fetcher<
+      GetContractServicesQuery,
+      GetContractServicesQueryVariables
+    >(client, GetContractServicesDocument, variables, headers),
+    ...options,
+  });
+};
+
 useGetContractServicesQuery.document = GetContractServicesDocument;
 
 useGetContractServicesQuery.getKey = (
   variables: GetContractServicesQueryVariables,
 ) => ['getContractServices', variables];
+
 export const useInfiniteGetContractServicesQuery = <
-  TData = GetContractServicesQuery,
+  TData = InfiniteData<GetContractServicesQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GetContractServicesQueryVariables,
   client: GraphQLClient,
   variables: GetContractServicesQueryVariables,
-  options?: UseInfiniteQueryOptions<GetContractServicesQuery, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<GetContractServicesQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GetContractServicesQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GetContractServicesQuery, TError, TData>(
-    ['getContractServices.infinite', variables],
-    (metaData) =>
-      fetcher<GetContractServicesQuery, GetContractServicesQueryVariables>(
-        client,
-        GetContractServicesDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GetContractServicesQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? [
+          'getContractServices.infinite',
+          variables,
+        ],
+        queryFn: (metaData) =>
+          fetcher<GetContractServicesQuery, GetContractServicesQueryVariables>(
+            client,
+            GetContractServicesDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGetContractServicesQuery.getKey = (
   variables: GetContractServicesQueryVariables,
 ) => ['getContractServices.infinite', variables];
+
 useGetContractServicesQuery.fetcher = (
   client: GraphQLClient,
   variables: GetContractServicesQueryVariables,

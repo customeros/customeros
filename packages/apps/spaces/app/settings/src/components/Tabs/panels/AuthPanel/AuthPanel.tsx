@@ -117,7 +117,9 @@ export const AuthPanel = () => {
             .then((res: OAuthUserSettingsInterface) => {
               setGoogleSettings(res);
               setGoogleSettingsLoading(false);
-              queryClient.invalidateQueries(useGlobalCacheQuery.getKey());
+              queryClient.invalidateQueries({
+                queryKey: useGlobalCacheQuery.getKey(),
+              });
             })
             .catch(() => {
               setGoogleSettingsLoading(false);

@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -25,7 +26,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type GetCanAccessOrganizationQueryVariables = Types.Exact<{
-  id: Types.Scalars['ID'];
+  id: Types.Scalars['ID']['input'];
 }>;
 
 export type GetCanAccessOrganizationQuery = {
@@ -40,60 +41,87 @@ export const GetCanAccessOrganizationDocument = `
   }
 }
     `;
+
 export const useGetCanAccessOrganizationQuery = <
   TData = GetCanAccessOrganizationQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables: GetCanAccessOrganizationQueryVariables,
-  options?: UseQueryOptions<GetCanAccessOrganizationQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<GetCanAccessOrganizationQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<
+      GetCanAccessOrganizationQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GetCanAccessOrganizationQuery, TError, TData>(
-    ['GetCanAccessOrganization', variables],
-    fetcher<
+) => {
+  return useQuery<GetCanAccessOrganizationQuery, TError, TData>({
+    queryKey: ['GetCanAccessOrganization', variables],
+    queryFn: fetcher<
       GetCanAccessOrganizationQuery,
       GetCanAccessOrganizationQueryVariables
     >(client, GetCanAccessOrganizationDocument, variables, headers),
-    options,
-  );
+    ...options,
+  });
+};
+
 useGetCanAccessOrganizationQuery.document = GetCanAccessOrganizationDocument;
 
 useGetCanAccessOrganizationQuery.getKey = (
   variables: GetCanAccessOrganizationQueryVariables,
 ) => ['GetCanAccessOrganization', variables];
+
 export const useInfiniteGetCanAccessOrganizationQuery = <
-  TData = GetCanAccessOrganizationQuery,
+  TData = InfiniteData<GetCanAccessOrganizationQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GetCanAccessOrganizationQueryVariables,
   client: GraphQLClient,
   variables: GetCanAccessOrganizationQueryVariables,
-  options?: UseInfiniteQueryOptions<
-    GetCanAccessOrganizationQuery,
-    TError,
-    TData
-  >,
+  options: Omit<
+    UseInfiniteQueryOptions<GetCanAccessOrganizationQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GetCanAccessOrganizationQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GetCanAccessOrganizationQuery, TError, TData>(
-    ['GetCanAccessOrganization.infinite', variables],
-    (metaData) =>
-      fetcher<
-        GetCanAccessOrganizationQuery,
-        GetCanAccessOrganizationQueryVariables
-      >(
-        client,
-        GetCanAccessOrganizationDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GetCanAccessOrganizationQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? [
+          'GetCanAccessOrganization.infinite',
+          variables,
+        ],
+        queryFn: (metaData) =>
+          fetcher<
+            GetCanAccessOrganizationQuery,
+            GetCanAccessOrganizationQueryVariables
+          >(
+            client,
+            GetCanAccessOrganizationDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGetCanAccessOrganizationQuery.getKey = (
   variables: GetCanAccessOrganizationQueryVariables,
 ) => ['GetCanAccessOrganization.infinite', variables];
+
 useGetCanAccessOrganizationQuery.fetcher = (
   client: GraphQLClient,
   variables: GetCanAccessOrganizationQueryVariables,

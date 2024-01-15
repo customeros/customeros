@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -39,51 +40,72 @@ export const GetTagsDocument = `
   }
 }
     `;
+
 export const useGetTagsQuery = <TData = GetTagsQuery, TError = unknown>(
   client: GraphQLClient,
   variables?: GetTagsQueryVariables,
-  options?: UseQueryOptions<GetTagsQuery, TError, TData>,
+  options?: Omit<UseQueryOptions<GetTagsQuery, TError, TData>, 'queryKey'> & {
+    queryKey?: UseQueryOptions<GetTagsQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GetTagsQuery, TError, TData>(
-    variables === undefined ? ['getTags'] : ['getTags', variables],
-    fetcher<GetTagsQuery, GetTagsQueryVariables>(
+) => {
+  return useQuery<GetTagsQuery, TError, TData>({
+    queryKey: variables === undefined ? ['getTags'] : ['getTags', variables],
+    queryFn: fetcher<GetTagsQuery, GetTagsQueryVariables>(
       client,
       GetTagsDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useGetTagsQuery.document = GetTagsDocument;
 
 useGetTagsQuery.getKey = (variables?: GetTagsQueryVariables) =>
   variables === undefined ? ['getTags'] : ['getTags', variables];
-export const useInfiniteGetTagsQuery = <TData = GetTagsQuery, TError = unknown>(
-  pageParamKey: keyof GetTagsQueryVariables,
+
+export const useInfiniteGetTagsQuery = <
+  TData = InfiniteData<GetTagsQuery>,
+  TError = unknown,
+>(
   client: GraphQLClient,
-  variables?: GetTagsQueryVariables,
-  options?: UseInfiniteQueryOptions<GetTagsQuery, TError, TData>,
+  variables: GetTagsQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<GetTagsQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<GetTagsQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GetTagsQuery, TError, TData>(
-    variables === undefined
-      ? ['getTags.infinite']
-      : ['getTags.infinite', variables],
-    (metaData) =>
-      fetcher<GetTagsQuery, GetTagsQueryVariables>(
-        client,
-        GetTagsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GetTagsQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['getTags.infinite']
+            : ['getTags.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<GetTagsQuery, GetTagsQueryVariables>(
+            client,
+            GetTagsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGetTagsQuery.getKey = (variables?: GetTagsQueryVariables) =>
   variables === undefined
     ? ['getTags.infinite']
     : ['getTags.infinite', variables];
+
 useGetTagsQuery.fetcher = (
   client: GraphQLClient,
   variables?: GetTagsQueryVariables,

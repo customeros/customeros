@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -54,27 +55,38 @@ export const GrossRevenueRetentionDocument = `
   }
 }
     `;
+
 export const useGrossRevenueRetentionQuery = <
   TData = GrossRevenueRetentionQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables?: GrossRevenueRetentionQueryVariables,
-  options?: UseQueryOptions<GrossRevenueRetentionQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<GrossRevenueRetentionQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<
+      GrossRevenueRetentionQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GrossRevenueRetentionQuery, TError, TData>(
-    variables === undefined
-      ? ['GrossRevenueRetention']
-      : ['GrossRevenueRetention', variables],
-    fetcher<GrossRevenueRetentionQuery, GrossRevenueRetentionQueryVariables>(
-      client,
-      GrossRevenueRetentionDocument,
-      variables,
-      headers,
-    ),
-    options,
-  );
+) => {
+  return useQuery<GrossRevenueRetentionQuery, TError, TData>({
+    queryKey:
+      variables === undefined
+        ? ['GrossRevenueRetention']
+        : ['GrossRevenueRetention', variables],
+    queryFn: fetcher<
+      GrossRevenueRetentionQuery,
+      GrossRevenueRetentionQueryVariables
+    >(client, GrossRevenueRetentionDocument, variables, headers),
+    ...options,
+  });
+};
+
 useGrossRevenueRetentionQuery.document = GrossRevenueRetentionDocument;
 
 useGrossRevenueRetentionQuery.getKey = (
@@ -83,29 +95,48 @@ useGrossRevenueRetentionQuery.getKey = (
   variables === undefined
     ? ['GrossRevenueRetention']
     : ['GrossRevenueRetention', variables];
+
 export const useInfiniteGrossRevenueRetentionQuery = <
-  TData = GrossRevenueRetentionQuery,
+  TData = InfiniteData<GrossRevenueRetentionQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GrossRevenueRetentionQueryVariables,
   client: GraphQLClient,
-  variables?: GrossRevenueRetentionQueryVariables,
-  options?: UseInfiniteQueryOptions<GrossRevenueRetentionQuery, TError, TData>,
+  variables: GrossRevenueRetentionQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<GrossRevenueRetentionQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GrossRevenueRetentionQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GrossRevenueRetentionQuery, TError, TData>(
-    variables === undefined
-      ? ['GrossRevenueRetention.infinite']
-      : ['GrossRevenueRetention.infinite', variables],
-    (metaData) =>
-      fetcher<GrossRevenueRetentionQuery, GrossRevenueRetentionQueryVariables>(
-        client,
-        GrossRevenueRetentionDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GrossRevenueRetentionQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['GrossRevenueRetention.infinite']
+            : ['GrossRevenueRetention.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<
+            GrossRevenueRetentionQuery,
+            GrossRevenueRetentionQueryVariables
+          >(
+            client,
+            GrossRevenueRetentionDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGrossRevenueRetentionQuery.getKey = (
   variables?: GrossRevenueRetentionQueryVariables,
@@ -113,6 +144,7 @@ useInfiniteGrossRevenueRetentionQuery.getKey = (
   variables === undefined
     ? ['GrossRevenueRetention.infinite']
     : ['GrossRevenueRetention.infinite', variables];
+
 useGrossRevenueRetentionQuery.fetcher = (
   client: GraphQLClient,
   variables?: GrossRevenueRetentionQueryVariables,

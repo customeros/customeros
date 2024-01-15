@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -83,54 +84,80 @@ export const MasterPlansDocument = `
   }
 }
     `;
+
 export const useMasterPlansQuery = <TData = MasterPlansQuery, TError = unknown>(
   client: GraphQLClient,
   variables?: MasterPlansQueryVariables,
-  options?: UseQueryOptions<MasterPlansQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<MasterPlansQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<MasterPlansQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<MasterPlansQuery, TError, TData>(
-    variables === undefined ? ['masterPlans'] : ['masterPlans', variables],
-    fetcher<MasterPlansQuery, MasterPlansQueryVariables>(
+) => {
+  return useQuery<MasterPlansQuery, TError, TData>({
+    queryKey:
+      variables === undefined ? ['masterPlans'] : ['masterPlans', variables],
+    queryFn: fetcher<MasterPlansQuery, MasterPlansQueryVariables>(
       client,
       MasterPlansDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useMasterPlansQuery.document = MasterPlansDocument;
 
 useMasterPlansQuery.getKey = (variables?: MasterPlansQueryVariables) =>
   variables === undefined ? ['masterPlans'] : ['masterPlans', variables];
+
 export const useInfiniteMasterPlansQuery = <
-  TData = MasterPlansQuery,
+  TData = InfiniteData<MasterPlansQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof MasterPlansQueryVariables,
   client: GraphQLClient,
-  variables?: MasterPlansQueryVariables,
-  options?: UseInfiniteQueryOptions<MasterPlansQuery, TError, TData>,
+  variables: MasterPlansQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<MasterPlansQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      MasterPlansQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<MasterPlansQuery, TError, TData>(
-    variables === undefined
-      ? ['masterPlans.infinite']
-      : ['masterPlans.infinite', variables],
-    (metaData) =>
-      fetcher<MasterPlansQuery, MasterPlansQueryVariables>(
-        client,
-        MasterPlansDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<MasterPlansQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['masterPlans.infinite']
+            : ['masterPlans.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<MasterPlansQuery, MasterPlansQueryVariables>(
+            client,
+            MasterPlansDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteMasterPlansQuery.getKey = (variables?: MasterPlansQueryVariables) =>
   variables === undefined
     ? ['masterPlans.infinite']
     : ['masterPlans.infinite', variables];
+
 useMasterPlansQuery.fetcher = (
   client: GraphQLClient,
   variables?: MasterPlansQueryVariables,

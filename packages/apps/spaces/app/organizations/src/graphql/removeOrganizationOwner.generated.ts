@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type RemoveOrganizationOwnerMutationVariables = Types.Exact<{
-  organizationId: Types.Scalars['ID'];
+  organizationId: Types.Scalars['ID']['input'];
 }>;
 
 export type RemoveOrganizationOwnerMutation = {
@@ -41,6 +41,7 @@ export const RemoveOrganizationOwnerDocument = `
   }
 }
     `;
+
 export const useRemoveOrganizationOwnerMutation = <
   TError = unknown,
   TContext = unknown,
@@ -53,21 +54,23 @@ export const useRemoveOrganizationOwnerMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     RemoveOrganizationOwnerMutation,
     TError,
     RemoveOrganizationOwnerMutationVariables,
     TContext
-  >(
-    ['removeOrganizationOwner'],
-    (variables?: RemoveOrganizationOwnerMutationVariables) =>
+  >({
+    mutationKey: ['removeOrganizationOwner'],
+    mutationFn: (variables?: RemoveOrganizationOwnerMutationVariables) =>
       fetcher<
         RemoveOrganizationOwnerMutation,
         RemoveOrganizationOwnerMutationVariables
       >(client, RemoveOrganizationOwnerDocument, variables, headers)(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useRemoveOrganizationOwnerMutation.getKey = () => ['removeOrganizationOwner'];
 
 useRemoveOrganizationOwnerMutation.fetcher = (

@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type DeleteContactMutationVariables = Types.Exact<{
-  contactId: Types.Scalars['ID'];
+  contactId: Types.Scalars['ID']['input'];
 }>;
 
 export type DeleteContactMutation = {
@@ -34,6 +34,7 @@ export const DeleteContactDocument = `
   }
 }
     `;
+
 export const useDeleteContactMutation = <TError = unknown, TContext = unknown>(
   client: GraphQLClient,
   options?: UseMutationOptions<
@@ -43,23 +44,25 @@ export const useDeleteContactMutation = <TError = unknown, TContext = unknown>(
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     DeleteContactMutation,
     TError,
     DeleteContactMutationVariables,
     TContext
-  >(
-    ['deleteContact'],
-    (variables?: DeleteContactMutationVariables) =>
+  >({
+    mutationKey: ['deleteContact'],
+    mutationFn: (variables?: DeleteContactMutationVariables) =>
       fetcher<DeleteContactMutation, DeleteContactMutationVariables>(
         client,
         DeleteContactDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useDeleteContactMutation.getKey = () => ['deleteContact'];
 
 useDeleteContactMutation.fetcher = (

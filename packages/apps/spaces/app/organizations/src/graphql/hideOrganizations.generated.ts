@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type HideOrganizationsMutationVariables = Types.Exact<{
-  ids: Array<Types.Scalars['ID']> | Types.Scalars['ID'];
+  ids: Array<Types.Scalars['ID']['input']> | Types.Scalars['ID']['input'];
 }>;
 
 export type HideOrganizationsMutation = {
@@ -34,6 +34,7 @@ export const HideOrganizationsDocument = `
   }
 }
     `;
+
 export const useHideOrganizationsMutation = <
   TError = unknown,
   TContext = unknown,
@@ -46,23 +47,25 @@ export const useHideOrganizationsMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     HideOrganizationsMutation,
     TError,
     HideOrganizationsMutationVariables,
     TContext
-  >(
-    ['hideOrganizations'],
-    (variables?: HideOrganizationsMutationVariables) =>
+  >({
+    mutationKey: ['hideOrganizations'],
+    mutationFn: (variables?: HideOrganizationsMutationVariables) =>
       fetcher<HideOrganizationsMutation, HideOrganizationsMutationVariables>(
         client,
         HideOrganizationsDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useHideOrganizationsMutation.getKey = () => ['hideOrganizations'];
 
 useHideOrganizationsMutation.fetcher = (

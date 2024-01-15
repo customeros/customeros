@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -33,54 +34,80 @@ export const TenantNameDocument = `
   tenant
 }
     `;
+
 export const useTenantNameQuery = <TData = TenantNameQuery, TError = unknown>(
   client: GraphQLClient,
   variables?: TenantNameQueryVariables,
-  options?: UseQueryOptions<TenantNameQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<TenantNameQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<TenantNameQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<TenantNameQuery, TError, TData>(
-    variables === undefined ? ['TenantName'] : ['TenantName', variables],
-    fetcher<TenantNameQuery, TenantNameQueryVariables>(
+) => {
+  return useQuery<TenantNameQuery, TError, TData>({
+    queryKey:
+      variables === undefined ? ['TenantName'] : ['TenantName', variables],
+    queryFn: fetcher<TenantNameQuery, TenantNameQueryVariables>(
       client,
       TenantNameDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useTenantNameQuery.document = TenantNameDocument;
 
 useTenantNameQuery.getKey = (variables?: TenantNameQueryVariables) =>
   variables === undefined ? ['TenantName'] : ['TenantName', variables];
+
 export const useInfiniteTenantNameQuery = <
-  TData = TenantNameQuery,
+  TData = InfiniteData<TenantNameQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof TenantNameQueryVariables,
   client: GraphQLClient,
-  variables?: TenantNameQueryVariables,
-  options?: UseInfiniteQueryOptions<TenantNameQuery, TError, TData>,
+  variables: TenantNameQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<TenantNameQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      TenantNameQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<TenantNameQuery, TError, TData>(
-    variables === undefined
-      ? ['TenantName.infinite']
-      : ['TenantName.infinite', variables],
-    (metaData) =>
-      fetcher<TenantNameQuery, TenantNameQueryVariables>(
-        client,
-        TenantNameDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<TenantNameQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['TenantName.infinite']
+            : ['TenantName.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<TenantNameQuery, TenantNameQueryVariables>(
+            client,
+            TenantNameDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteTenantNameQuery.getKey = (variables?: TenantNameQueryVariables) =>
   variables === undefined
     ? ['TenantName.infinite']
     : ['TenantName.infinite', variables];
+
 useTenantNameQuery.fetcher = (
   client: GraphQLClient,
   variables?: TenantNameQueryVariables,

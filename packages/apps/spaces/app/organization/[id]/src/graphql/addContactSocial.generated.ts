@@ -19,7 +19,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type AddContactSocialMutationVariables = Types.Exact<{
-  contactId: Types.Scalars['ID'];
+  contactId: Types.Scalars['ID']['input'];
   input: Types.SocialInput;
 }>;
 
@@ -36,6 +36,7 @@ export const AddContactSocialDocument = `
   }
 }
     `;
+
 export const useAddContactSocialMutation = <
   TError = unknown,
   TContext = unknown,
@@ -48,23 +49,25 @@ export const useAddContactSocialMutation = <
     TContext
   >,
   headers?: RequestInit['headers'],
-) =>
-  useMutation<
+) => {
+  return useMutation<
     AddContactSocialMutation,
     TError,
     AddContactSocialMutationVariables,
     TContext
-  >(
-    ['addContactSocial'],
-    (variables?: AddContactSocialMutationVariables) =>
+  >({
+    mutationKey: ['addContactSocial'],
+    mutationFn: (variables?: AddContactSocialMutationVariables) =>
       fetcher<AddContactSocialMutation, AddContactSocialMutationVariables>(
         client,
         AddContactSocialDocument,
         variables,
         headers,
       )(),
-    options,
-  );
+    ...options,
+  });
+};
+
 useAddContactSocialMutation.getKey = () => ['addContactSocial'];
 
 useAddContactSocialMutation.fetcher = (

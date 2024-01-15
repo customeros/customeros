@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -54,54 +55,79 @@ export const MrrPerCustomerDocument = `
   }
 }
     `;
+
 export const useMrrPerCustomerQuery = <
   TData = MrrPerCustomerQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables?: MrrPerCustomerQueryVariables,
-  options?: UseQueryOptions<MrrPerCustomerQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<MrrPerCustomerQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<MrrPerCustomerQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<MrrPerCustomerQuery, TError, TData>(
-    variables === undefined
-      ? ['MrrPerCustomer']
-      : ['MrrPerCustomer', variables],
-    fetcher<MrrPerCustomerQuery, MrrPerCustomerQueryVariables>(
+) => {
+  return useQuery<MrrPerCustomerQuery, TError, TData>({
+    queryKey:
+      variables === undefined
+        ? ['MrrPerCustomer']
+        : ['MrrPerCustomer', variables],
+    queryFn: fetcher<MrrPerCustomerQuery, MrrPerCustomerQueryVariables>(
       client,
       MrrPerCustomerDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useMrrPerCustomerQuery.document = MrrPerCustomerDocument;
 
 useMrrPerCustomerQuery.getKey = (variables?: MrrPerCustomerQueryVariables) =>
   variables === undefined ? ['MrrPerCustomer'] : ['MrrPerCustomer', variables];
+
 export const useInfiniteMrrPerCustomerQuery = <
-  TData = MrrPerCustomerQuery,
+  TData = InfiniteData<MrrPerCustomerQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof MrrPerCustomerQueryVariables,
   client: GraphQLClient,
-  variables?: MrrPerCustomerQueryVariables,
-  options?: UseInfiniteQueryOptions<MrrPerCustomerQuery, TError, TData>,
+  variables: MrrPerCustomerQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<MrrPerCustomerQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      MrrPerCustomerQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<MrrPerCustomerQuery, TError, TData>(
-    variables === undefined
-      ? ['MrrPerCustomer.infinite']
-      : ['MrrPerCustomer.infinite', variables],
-    (metaData) =>
-      fetcher<MrrPerCustomerQuery, MrrPerCustomerQueryVariables>(
-        client,
-        MrrPerCustomerDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<MrrPerCustomerQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['MrrPerCustomer.infinite']
+            : ['MrrPerCustomer.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<MrrPerCustomerQuery, MrrPerCustomerQueryVariables>(
+            client,
+            MrrPerCustomerDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteMrrPerCustomerQuery.getKey = (
   variables?: MrrPerCustomerQueryVariables,
@@ -109,6 +135,7 @@ useInfiniteMrrPerCustomerQuery.getKey = (
   variables === undefined
     ? ['MrrPerCustomer.infinite']
     : ['MrrPerCustomer.infinite', variables];
+
 useMrrPerCustomerQuery.fetcher = (
   client: GraphQLClient,
   variables?: MrrPerCustomerQueryVariables,

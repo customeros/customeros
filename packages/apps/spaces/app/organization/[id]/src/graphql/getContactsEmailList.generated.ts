@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -25,7 +26,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
     });
 }
 export type GetContactsEmailListQueryVariables = Types.Exact<{
-  id: Types.Scalars['ID'];
+  id: Types.Scalars['ID']['input'];
   pagination: Types.Pagination;
   where?: Types.InputMaybe<Types.Filter>;
   sort?: Types.InputMaybe<Array<Types.SortBy> | Types.SortBy>;
@@ -71,55 +72,87 @@ export const GetContactsEmailListDocument = `
   }
 }
     `;
+
 export const useGetContactsEmailListQuery = <
   TData = GetContactsEmailListQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables: GetContactsEmailListQueryVariables,
-  options?: UseQueryOptions<GetContactsEmailListQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<GetContactsEmailListQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<
+      GetContactsEmailListQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GetContactsEmailListQuery, TError, TData>(
-    ['GetContactsEmailList', variables],
-    fetcher<GetContactsEmailListQuery, GetContactsEmailListQueryVariables>(
-      client,
-      GetContactsEmailListDocument,
-      variables,
-      headers,
-    ),
-    options,
-  );
+) => {
+  return useQuery<GetContactsEmailListQuery, TError, TData>({
+    queryKey: ['GetContactsEmailList', variables],
+    queryFn: fetcher<
+      GetContactsEmailListQuery,
+      GetContactsEmailListQueryVariables
+    >(client, GetContactsEmailListDocument, variables, headers),
+    ...options,
+  });
+};
+
 useGetContactsEmailListQuery.document = GetContactsEmailListDocument;
 
 useGetContactsEmailListQuery.getKey = (
   variables: GetContactsEmailListQueryVariables,
 ) => ['GetContactsEmailList', variables];
+
 export const useInfiniteGetContactsEmailListQuery = <
-  TData = GetContactsEmailListQuery,
+  TData = InfiniteData<GetContactsEmailListQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GetContactsEmailListQueryVariables,
   client: GraphQLClient,
   variables: GetContactsEmailListQueryVariables,
-  options?: UseInfiniteQueryOptions<GetContactsEmailListQuery, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<GetContactsEmailListQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GetContactsEmailListQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GetContactsEmailListQuery, TError, TData>(
-    ['GetContactsEmailList.infinite', variables],
-    (metaData) =>
-      fetcher<GetContactsEmailListQuery, GetContactsEmailListQueryVariables>(
-        client,
-        GetContactsEmailListDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GetContactsEmailListQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? [
+          'GetContactsEmailList.infinite',
+          variables,
+        ],
+        queryFn: (metaData) =>
+          fetcher<
+            GetContactsEmailListQuery,
+            GetContactsEmailListQueryVariables
+          >(
+            client,
+            GetContactsEmailListDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGetContactsEmailListQuery.getKey = (
   variables: GetContactsEmailListQueryVariables,
 ) => ['GetContactsEmailList.infinite', variables];
+
 useGetContactsEmailListQuery.fetcher = (
   client: GraphQLClient,
   variables: GetContactsEmailListQueryVariables,

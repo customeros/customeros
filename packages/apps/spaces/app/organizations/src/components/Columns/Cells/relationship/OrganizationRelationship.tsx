@@ -39,7 +39,7 @@ export const OrganizationRelationship = ({
 
   const updateOrganization = useUpdateOrganizationMutation(client, {
     onMutate: (payload) => {
-      queryClient.cancelQueries(queryKey);
+      queryClient.cancelQueries({ queryKey });
 
       const previousOrganizations =
         queryClient.getQueryData<InfiniteData<GetOrganizationsQuery>>(queryKey);
@@ -79,10 +79,10 @@ export const OrganizationRelationship = ({
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(queryKey);
-        queryClient.invalidateQueries(
-          useOrganizationQuery.getKey({ id: organization.id }),
-        );
+        queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({
+          queryKey: useOrganizationQuery.getKey({ id: organization.id }),
+        });
       }, 500);
     },
   });
@@ -163,7 +163,7 @@ export const OrganizationRelationship = ({
       defaultMenuIsOpen
       onBlur={() => setIsEditing(false)}
       variant='unstyled'
-      isLoading={updateOrganization.isLoading}
+      isLoading={updateOrganization.isPending}
       backspaceRemovesValue
       onChange={handleSelect}
       openMenuOnClick={false}

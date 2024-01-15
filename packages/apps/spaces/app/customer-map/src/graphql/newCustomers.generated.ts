@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -56,52 +57,77 @@ export const NewCustomersDocument = `
   }
 }
     `;
+
 export const useNewCustomersQuery = <
   TData = NewCustomersQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables?: NewCustomersQueryVariables,
-  options?: UseQueryOptions<NewCustomersQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<NewCustomersQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<NewCustomersQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<NewCustomersQuery, TError, TData>(
-    variables === undefined ? ['NewCustomers'] : ['NewCustomers', variables],
-    fetcher<NewCustomersQuery, NewCustomersQueryVariables>(
+) => {
+  return useQuery<NewCustomersQuery, TError, TData>({
+    queryKey:
+      variables === undefined ? ['NewCustomers'] : ['NewCustomers', variables],
+    queryFn: fetcher<NewCustomersQuery, NewCustomersQueryVariables>(
       client,
       NewCustomersDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useNewCustomersQuery.document = NewCustomersDocument;
 
 useNewCustomersQuery.getKey = (variables?: NewCustomersQueryVariables) =>
   variables === undefined ? ['NewCustomers'] : ['NewCustomers', variables];
+
 export const useInfiniteNewCustomersQuery = <
-  TData = NewCustomersQuery,
+  TData = InfiniteData<NewCustomersQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof NewCustomersQueryVariables,
   client: GraphQLClient,
-  variables?: NewCustomersQueryVariables,
-  options?: UseInfiniteQueryOptions<NewCustomersQuery, TError, TData>,
+  variables: NewCustomersQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<NewCustomersQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      NewCustomersQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<NewCustomersQuery, TError, TData>(
-    variables === undefined
-      ? ['NewCustomers.infinite']
-      : ['NewCustomers.infinite', variables],
-    (metaData) =>
-      fetcher<NewCustomersQuery, NewCustomersQueryVariables>(
-        client,
-        NewCustomersDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<NewCustomersQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['NewCustomers.infinite']
+            : ['NewCustomers.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<NewCustomersQuery, NewCustomersQueryVariables>(
+            client,
+            NewCustomersDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteNewCustomersQuery.getKey = (
   variables?: NewCustomersQueryVariables,
@@ -109,6 +135,7 @@ useInfiniteNewCustomersQuery.getKey = (
   variables === undefined
     ? ['NewCustomers.infinite']
     : ['NewCustomers.infinite', variables];
+
 useNewCustomersQuery.fetcher = (
   client: GraphQLClient,
   variables?: NewCustomersQueryVariables,

@@ -120,7 +120,7 @@ export const TableActions = ({
         onClose={onClose}
         confirmButtonLabel={'Archive'}
         onConfirm={handleHideOrganizations}
-        isLoading={hideOrganizations.isLoading}
+        isLoading={hideOrganizations.isPending}
         loadingButtonLabel='Archiving'
         label={`Archive selected ${
           selectCount === 1 ? 'organization' : 'organizations'

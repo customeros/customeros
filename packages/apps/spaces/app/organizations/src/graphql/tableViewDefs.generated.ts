@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -91,52 +92,79 @@ export const TableViewDefsDocument = `
   }
 }
     `;
+
 export const useTableViewDefsQuery = <
   TData = TableViewDefsQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
   variables?: TableViewDefsQueryVariables,
-  options?: UseQueryOptions<TableViewDefsQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<TableViewDefsQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<TableViewDefsQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<TableViewDefsQuery, TError, TData>(
-    variables === undefined ? ['tableViewDefs'] : ['tableViewDefs', variables],
-    fetcher<TableViewDefsQuery, TableViewDefsQueryVariables>(
+) => {
+  return useQuery<TableViewDefsQuery, TError, TData>({
+    queryKey:
+      variables === undefined
+        ? ['tableViewDefs']
+        : ['tableViewDefs', variables],
+    queryFn: fetcher<TableViewDefsQuery, TableViewDefsQueryVariables>(
       client,
       TableViewDefsDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useTableViewDefsQuery.document = TableViewDefsDocument;
 
 useTableViewDefsQuery.getKey = (variables?: TableViewDefsQueryVariables) =>
   variables === undefined ? ['tableViewDefs'] : ['tableViewDefs', variables];
+
 export const useInfiniteTableViewDefsQuery = <
-  TData = TableViewDefsQuery,
+  TData = InfiniteData<TableViewDefsQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof TableViewDefsQueryVariables,
   client: GraphQLClient,
-  variables?: TableViewDefsQueryVariables,
-  options?: UseInfiniteQueryOptions<TableViewDefsQuery, TError, TData>,
+  variables: TableViewDefsQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<TableViewDefsQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      TableViewDefsQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<TableViewDefsQuery, TError, TData>(
-    variables === undefined
-      ? ['tableViewDefs.infinite']
-      : ['tableViewDefs.infinite', variables],
-    (metaData) =>
-      fetcher<TableViewDefsQuery, TableViewDefsQueryVariables>(
-        client,
-        TableViewDefsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<TableViewDefsQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          optionsQueryKey ?? variables === undefined
+            ? ['tableViewDefs.infinite']
+            : ['tableViewDefs.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<TableViewDefsQuery, TableViewDefsQueryVariables>(
+            client,
+            TableViewDefsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteTableViewDefsQuery.getKey = (
   variables?: TableViewDefsQueryVariables,
@@ -144,6 +172,7 @@ useInfiniteTableViewDefsQuery.getKey = (
   variables === undefined
     ? ['tableViewDefs.infinite']
     : ['tableViewDefs.infinite', variables];
+
 useTableViewDefsQuery.fetcher = (
   client: GraphQLClient,
   variables?: TableViewDefsQueryVariables,

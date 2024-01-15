@@ -188,8 +188,8 @@ export const CreateServiceModal = ({
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(queryKey);
-        queryClient.invalidateQueries(timelineQueryKey);
+        queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({ queryKey: timelineQueryKey });
       }, 1000);
     },
   });
@@ -350,7 +350,7 @@ export const CreateServiceModal = ({
             w='full'
             variant='outline'
             colorScheme='primary'
-            isLoading={createService.status === 'loading'}
+            isLoading={createService.status === 'pending'}
             loadingText='Creating...'
             onClick={handleServiceCreation}
           >

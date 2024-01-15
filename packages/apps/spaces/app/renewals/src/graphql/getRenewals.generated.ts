@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
@@ -301,54 +302,78 @@ export const GetRenewalsDocument = `
   }
 }
     `;
+
 export const useGetRenewalsQuery = <TData = GetRenewalsQuery, TError = unknown>(
   client: GraphQLClient,
   variables: GetRenewalsQueryVariables,
-  options?: UseQueryOptions<GetRenewalsQuery, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<GetRenewalsQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseQueryOptions<GetRenewalsQuery, TError, TData>['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useQuery<GetRenewalsQuery, TError, TData>(
-    ['getRenewals', variables],
-    fetcher<GetRenewalsQuery, GetRenewalsQueryVariables>(
+) => {
+  return useQuery<GetRenewalsQuery, TError, TData>({
+    queryKey: ['getRenewals', variables],
+    queryFn: fetcher<GetRenewalsQuery, GetRenewalsQueryVariables>(
       client,
       GetRenewalsDocument,
       variables,
       headers,
     ),
-    options,
-  );
+    ...options,
+  });
+};
+
 useGetRenewalsQuery.document = GetRenewalsDocument;
 
 useGetRenewalsQuery.getKey = (variables: GetRenewalsQueryVariables) => [
   'getRenewals',
   variables,
 ];
+
 export const useInfiniteGetRenewalsQuery = <
-  TData = GetRenewalsQuery,
+  TData = InfiniteData<GetRenewalsQuery>,
   TError = unknown,
 >(
-  pageParamKey: keyof GetRenewalsQueryVariables,
   client: GraphQLClient,
   variables: GetRenewalsQueryVariables,
-  options?: UseInfiniteQueryOptions<GetRenewalsQuery, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<GetRenewalsQuery, TError, TData>,
+    'queryKey'
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GetRenewalsQuery,
+      TError,
+      TData
+    >['queryKey'];
+  },
   headers?: RequestInit['headers'],
-) =>
-  useInfiniteQuery<GetRenewalsQuery, TError, TData>(
-    ['getRenewals.infinite', variables],
-    (metaData) =>
-      fetcher<GetRenewalsQuery, GetRenewalsQueryVariables>(
-        client,
-        GetRenewalsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-        headers,
-      )(),
-    options,
+) => {
+  return useInfiniteQuery<GetRenewalsQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ['getRenewals.infinite', variables],
+        queryFn: (metaData) =>
+          fetcher<GetRenewalsQuery, GetRenewalsQueryVariables>(
+            client,
+            GetRenewalsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+            headers,
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
+};
 
 useInfiniteGetRenewalsQuery.getKey = (variables: GetRenewalsQueryVariables) => [
   'getRenewals.infinite',
   variables,
 ];
+
 useGetRenewalsQuery.fetcher = (
   client: GraphQLClient,
   variables: GetRenewalsQueryVariables,
