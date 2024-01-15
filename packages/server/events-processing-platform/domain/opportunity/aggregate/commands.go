@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -146,6 +147,14 @@ func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, cmd *comma
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 	cmd.Source.SetDefaultValues()
+
+	// skip if no changes on aggregate
+	// case 1 skip if only amount to be updated, but no changes
+	if cmd.FieldMaskContainsOnly([]string{model.FieldMaskAmount, model.FieldMaskMaxAmount}) &&
+		a.Opportunity.Amount == cmd.DataFields.Amount &&
+		a.Opportunity.MaxAmount == cmd.DataFields.MaxAmount {
+		return nil
+	}
 
 	updateEvent, err := event.NewOpportunityUpdateEvent(a, cmd.DataFields, cmd.Source.Source, cmd.ExternalSystem, updatedAtNotNil, cmd.FieldsMask)
 	if err != nil {
