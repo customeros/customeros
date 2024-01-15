@@ -12,7 +12,7 @@ type OrganizationPlanDetails struct {
 	Comments  string    `json:"comments"`
 }
 
-type OrganizationPlanMilestoneTask struct {
+type OrganizationPlanMilestoneItem struct {
 	Status    string    `json:"status"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	Text      string    `json:"text"`
@@ -40,6 +40,6 @@ type OrganizationPlanMilestone struct {
 	Optional      bool                            `json:"optional"`
 	Order         int64                           `json:"order"`
 	DurationHours int64                           `json:"durationHours"`
-	Items         []OrganizationPlanMilestoneTask `json:"items"` // maybe make this a map of `item text -> item done` to keep this very simple
+	Items         []OrganizationPlanMilestoneItem `json:"items"`
 	Details       OrganizationPlanDetails         `json:"details"`
 }

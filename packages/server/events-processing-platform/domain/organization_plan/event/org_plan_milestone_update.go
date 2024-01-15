@@ -4,26 +4,26 @@ import (
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/pkg/errors"
 )
 
 type OrganizationPlanMilestoneUpdateEvent struct {
-	Tenant        string                                   `json:"tenant" validate:"required"`
-	MilestoneId   string                                   `json:"milestoneId" validate:"required"`
-	Name          string                                   `json:"name,omitempty"`
-	Order         int64                                    `json:"order" validate:"gte=0"`
-	DurationHours int64                                    `json:"durationHours" validate:"gte=0"`
-	UpdatedAt     time.Time                                `json:"updatedAt"`
-	Items         []command.OrganizationPlanMilestoneItems `json:"items"`
-	Optional      bool                                     `json:"optional"`
-	Retired       bool                                     `json:"retired"`
-	FieldsMask    []string                                 `json:"fieldsMask,omitempty"`
+	Tenant        string                                `json:"tenant" validate:"required"`
+	MilestoneId   string                                `json:"milestoneId" validate:"required"`
+	Name          string                                `json:"name,omitempty"`
+	Order         int64                                 `json:"order" validate:"gte=0"`
+	DurationHours int64                                 `json:"durationHours" validate:"gte=0"`
+	UpdatedAt     time.Time                             `json:"updatedAt"`
+	Items         []model.OrganizationPlanMilestoneItem `json:"items"`
+	Optional      bool                                  `json:"optional"`
+	Retired       bool                                  `json:"retired"`
+	FieldsMask    []string                              `json:"fieldsMask,omitempty"`
 }
 
-func NewOrganizationPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, milestoneId, name string, durationHours, order int64, items []command.OrganizationPlanMilestoneItems, fieldsMask []string, optional, retired bool, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, milestoneId, name string, durationHours, order int64, items []model.OrganizationPlanMilestoneItem, fieldsMask []string, optional, retired bool, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationPlanMilestoneUpdateEvent{
 		Tenant:      aggregate.GetTenant(),
 		MilestoneId: milestoneId,
