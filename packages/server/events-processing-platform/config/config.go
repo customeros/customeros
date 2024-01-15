@@ -212,6 +212,7 @@ type Utils struct {
 }
 
 type Events struct {
+	// not yet implemented
 	EventsToIgnore []string `env:"EVENTS_TO_IGNORE" envDefault:""`
 }
 
