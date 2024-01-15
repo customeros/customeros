@@ -39,7 +39,6 @@ type Repositories struct {
 	SocialRepository              SocialRepository
 	PlayerRepository              PlayerRepository
 	ActionRepository              ActionRepository
-	CountryRepository             CountryRepository
 	ActionItemRepository          ActionItemRepository
 	LogEntryRepository            LogEntryRepository
 	CommentRepository             CommentRepository
@@ -89,7 +88,6 @@ func InitRepos(driver *neo4j.DriverWithContext, database string) *Repositories {
 	repositories.SocialRepository = NewSocialRepository(driver)
 	repositories.PlayerRepository = NewPlayerRepository(driver)
 	repositories.ActionRepository = NewActionRepository(driver)
-	repositories.CountryRepository = NewCountryRepository(driver)
 	repositories.ActionItemRepository = NewActionItemRepository(driver)
 	repositories.LogEntryRepository = NewLogEntryRepository(driver)
 	repositories.CommentRepository = NewCommentRepository(driver, database)

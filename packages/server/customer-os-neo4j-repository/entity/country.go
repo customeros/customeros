@@ -11,4 +11,8 @@ type CountryEntity struct {
 	CodeA2    string
 	CodeA3    string
 	PhoneCode string
+
+	DataloaderKey string
 }
+
+type CountryEntities []CountryEntity

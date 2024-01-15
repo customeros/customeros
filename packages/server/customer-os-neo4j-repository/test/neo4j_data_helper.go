@@ -15,6 +15,32 @@ func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
 	ExecuteWriteQuery(ctx, driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
 }
 
+func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, entity entity.CountryEntity) string {
+	var countryId = entity.Id
+	if countryId == "" {
+		countryUuid, _ := uuid.NewRandom()
+		countryId = countryUuid.String()
+	}
+	query := `MERGE (c:Country{id:$id}) 
+				ON CREATE SET 
+					c.phoneCode = $phoneCode,
+					c.codeA2 = $codeA2,
+					c.codeA3 = $codeA3,
+					c.name = $name, 
+					c.createdAt = $createdAt, 
+					c.updatedAt = $updatedAt`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":        entity.Id,
+		"codeA2":    entity.CodeA2,
+		"codeA3":    entity.CodeA3,
+		"phoneCode": entity.PhoneCode,
+		"name":      entity.Name,
+		"createdAt": utils.Now(),
+		"updatedAt": utils.Now(),
+	})
+	return countryId
+}
+
 func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := `MERGE (t:Tenant {name:$tenant}) ON CREATE SET t.createdAt=$now`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{

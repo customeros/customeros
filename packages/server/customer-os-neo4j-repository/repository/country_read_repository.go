@@ -16,6 +16,7 @@ type CountryReadRepository interface {
 	GetCountryByCodeA3(ctx context.Context, codeA3 string) (*dbtype.Node, error)
 	GetCountriesPaginated(ctx context.Context, skip, limit int) (*utils.DbNodesWithTotalCount, error)
 	GetCountries(ctx context.Context) ([]*dbtype.Node, error)
+	GetAllForPhoneNumbers(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 }
 
 type countryReadRepository struct {
@@ -163,4 +164,34 @@ func (r *countryReadRepository) GetCountries(ctx context.Context) ([]*dbtype.Nod
 		}
 	}
 	return dbNodes, err
+}
+
+func (r *countryReadRepository) GetAllForPhoneNumbers(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryReadRepository.GetAllForPhoneNumbers")
+	defer span.Finish()
+	span.LogFields(log.Object("ids", ids))
+
+	query := `MATCH (:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber)-[:LINKED_TO]->(c:Country)
+		 		WHERE p.id IN $ids 
+		 		RETURN c, p.id`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": tenant,
+				"ids":    ids,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
 }
