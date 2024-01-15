@@ -7,11 +7,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
@@ -22,7 +24,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId, entity.ContactEntity{
 		Prefix:        "MR",
 		FirstName:     "first",
@@ -32,6 +34,15 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	})
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test organization")
 	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
+
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: organizationId,
+			}, nil
+		},
+	}
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	// create meeting
 	createRawResponse, err := c.RawPost(getQuery("meeting/create_meeting"),
@@ -201,7 +212,7 @@ func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	testUserId := "test_user_id"
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	testContactId1 := "test_contact_id_1"
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, entity.ContactEntity{
 		Prefix:        "MR",
@@ -542,7 +553,8 @@ func TestMutationResolver_AddAndRemoveUserAttendeeToMeeting(t *testing.T) {
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
 	userId1 := uuid.New().String()
-	neo4jt.CreateUserWithId(ctx, driver, tenantName, userId1, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        userId1,
 		FirstName: "a",
 		LastName:  "b",
 	})
@@ -554,9 +566,10 @@ func TestMutationResolver_AddAndRemoveUserAttendeeToMeeting(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse1, err)
 
 	userId2 := uuid.New().String()
-	neo4jt.CreateUserWithId(ctx, driver, tenantName, userId2, entity.UserEntity{
-		FirstName: "c",
-		LastName:  "d",
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        userId2,
+		FirstName: "a",
+		LastName:  "b",
 	})
 	rawResponse2, err := c.RawPost(getQuery("meeting/add_attendee_to_meeting"),
 		client.Var("meetingId", meetingId),
@@ -607,7 +620,7 @@ func TestQueryResolver_Contact_WithMultipleMeetingsInTimelineEvents(t *testing.T
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	secondContactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 
 	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "contact1@openline.ai", true, "WORK")
 	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, secondContactId, "contact2@openline.ai", true, "WORK")
@@ -650,7 +663,7 @@ func TestMutationResolver_GetMeetings(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	testUserId := "test_user_id"
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	testContactId1 := "test_contact_id_1"
 	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, testUserId, "test-user-email", true, "MAIN")
@@ -738,7 +751,7 @@ func TestMutationResolver_GetMeetingsWithExternalId(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	testUserId := "test_user_id"
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	testContactId1 := "test_contact_id_1"
 	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, testUserId, "test-user-email", true, "MAIN")

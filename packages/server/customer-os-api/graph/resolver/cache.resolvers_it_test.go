@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -16,7 +17,8 @@ func TestQueryResolver_GCliCache_IsOwnerFalse(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        testUserId,
 		FirstName: "a",
 		LastName:  "b",
 	})
@@ -50,13 +52,14 @@ func TestQueryResolver_GCliCache_IsOwnerTrue(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	userId := neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        testUserId,
 		FirstName: "a",
 		LastName:  "b",
 	})
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
 
-	neo4jt.UserOwnsOrganization(ctx, driver, userId, organizationId)
+	neo4jt.UserOwnsOrganization(ctx, driver, testUserId, organizationId)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
@@ -87,7 +90,8 @@ func TestQueryResolver_GCliCache(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        testUserId,
 		FirstName: "a",
 		LastName:  "b",
 	})
@@ -150,7 +154,8 @@ func TestQueryResolver_GCliCache_HasContracts_False(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        testUserId,
 		FirstName: "a",
 		LastName:  "b",
 	})
@@ -182,7 +187,8 @@ func TestQueryResolver_GCliCache_HasContracts_True(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
+		Id:        testUserId,
 		FirstName: "a",
 		LastName:  "b",
 	})

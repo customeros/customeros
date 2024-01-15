@@ -257,10 +257,10 @@ func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
-	userId := neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	noteId1 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "note1", utils.Now())
 	noteId2 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "note2", utils.Now())
-	neo4jt.NoteCreatedByUser(ctx, driver, noteId1, userId)
+	neo4jt.NoteCreatedByUser(ctx, driver, noteId1, testUserId)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
@@ -294,7 +294,7 @@ func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
 	require.Equal(t, "note1", *noteWithUser.Content)
 	require.NotNil(t, noteWithUser.CreatedAt)
 	require.NotNil(t, noteWithUser.CreatedBy)
-	require.Equal(t, userId, noteWithUser.CreatedBy.ID)
+	require.Equal(t, testUserId, noteWithUser.CreatedBy.ID)
 	require.Equal(t, "first", noteWithUser.CreatedBy.FirstName)
 	require.Equal(t, "last", noteWithUser.CreatedBy.LastName)
 
@@ -491,7 +491,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 		Content:     "log entry content",
 		ContentType: "text/plain",
 	})
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	neo4jt.LogEntryCreatedByUser(ctx, driver, logEntryId, userId)
 
 	// prepare issue with tags
@@ -1282,7 +1282,7 @@ func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 
 	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
@@ -1326,8 +1326,8 @@ func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	previousOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	newOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	previousOwnerId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
+	newOwnerId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 	neo4jt.UserOwnsOrganization(ctx, driver, previousOwnerId, organizationId)
 
@@ -1373,7 +1373,7 @@ func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	ownerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	ownerId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 	neo4jt.UserOwnsOrganization(ctx, driver, ownerId, organizationId)
 
@@ -1408,7 +1408,7 @@ func TestQueryResolver_Organization_WithOwner(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 	neo4jt.UserOwnsOrganization(ctx, driver, userId, organizationId)
 
@@ -1477,8 +1477,8 @@ func TestQueryResolver_OrganizationDistinctOwners(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	userId2 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+	userId1 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "first2",
 		LastName:  "last2",
 	})

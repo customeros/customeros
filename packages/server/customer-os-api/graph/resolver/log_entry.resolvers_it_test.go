@@ -33,7 +33,7 @@ func TestQueryResolver_LogEntry(t *testing.T) {
 	neo4jt.TagLogEntry(ctx, driver, logEntryId, tagId1, &secAgo30)
 	neo4jt.TagLogEntry(ctx, driver, logEntryId, tagId2, nil)
 
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	neo4jt.LogEntryCreatedByUser(ctx, driver, logEntryId, userId)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{

@@ -1,5 +1,6 @@
 package entity
 
+// Deprecated
 type OpportunityRenewalLikelihood string
 
 const (

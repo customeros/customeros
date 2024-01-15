@@ -314,8 +314,8 @@ func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyFalse(t *tes
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId1 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 
 	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 1 for owner 1")
 	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 2 for owner 1")
@@ -351,8 +351,8 @@ func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyTrue(t *test
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId1 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 
 	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 1 for owner 1")
 	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 2 for owner 1")
@@ -687,6 +687,7 @@ func TestQueryResolver_Sort_Organizations_ByOrganizationName_WithOrganizationHie
 	require.Equal(t, sub2_2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[6].ID)
 }
 
+// Deprecated
 func insertContractWithActiveRenewalOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, contract)
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, opportunity)
@@ -694,12 +695,14 @@ func insertContractWithActiveRenewalOpportunity(ctx context.Context, driver *neo
 	return contractId
 }
 
+// Deprecated
 func insertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, contract)
 	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, opportunity)
 	return contractId
 }
 
+// Deprecated
 func insertServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt time.Time) string {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
@@ -714,6 +717,7 @@ func insertServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext,
 	return id
 }
 
+// Deprecated
 func insertServiceLineItemEnded(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
@@ -729,6 +733,7 @@ func insertServiceLineItemEnded(ctx context.Context, driver *neo4j.DriverWithCon
 	return id
 }
 
+// Deprecated
 func insertServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
@@ -745,6 +750,7 @@ func insertServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWith
 	return id
 }
 
+// Deprecated
 func insertServiceLineItemWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt time.Time, parentId string) {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
@@ -761,6 +767,7 @@ func insertServiceLineItemWithParent(ctx context.Context, driver *neo4j.DriverWi
 	})
 }
 
+// Deprecated
 func insertServiceLineItemEndedWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
@@ -778,6 +785,7 @@ func insertServiceLineItemEndedWithParent(ctx context.Context, driver *neo4j.Dri
 	})
 }
 
+// Deprecated
 func insertServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
@@ -1153,8 +1161,8 @@ func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyFalse(t *testing.
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId1 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	org := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org",
 	})

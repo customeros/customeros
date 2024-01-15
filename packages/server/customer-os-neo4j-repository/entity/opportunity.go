@@ -1,11 +1,10 @@
 package entity
 
 import (
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 )
 
-// Deprecated
 type OpportunityEntity struct {
 	Id                     string
 	Name                   string
@@ -13,25 +12,20 @@ type OpportunityEntity struct {
 	UpdatedAt              time.Time
 	Amount                 float64
 	MaxAmount              float64
-	InternalType           InternalType
+	InternalType           enum.InternalType
 	ExternalType           string
-	InternalStage          InternalStage
+	InternalStage          enum.InternalStage
 	ExternalStage          string
 	EstimatedClosedAt      *time.Time
 	GeneralNotes           string
 	NextSteps              string
 	RenewedAt              time.Time
-	RenewalLikelihood      OpportunityRenewalLikelihood
+	RenewalLikelihood      enum.RenewalLikelihood
 	RenewalUpdatedByUserId string
 	RenewalUpdatedByUserAt time.Time
 	Comments               string
-	Source                 neo4jentity.DataSource
-	SourceOfTruth          neo4jentity.DataSource
+	Source                 DataSource
+	SourceOfTruth          DataSource
 	AppSource              string
 	OwnerUserId            string
-
-	DataloaderKey string
 }
-
-// Deprecated
-type OpportunityEntities []OpportunityEntity

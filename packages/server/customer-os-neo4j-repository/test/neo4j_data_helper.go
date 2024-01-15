@@ -3,9 +3,12 @@ package test
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"time"
 )
 
 func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
@@ -20,7 +23,47 @@ func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	})
 }
 
+func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, workspace string, provider string, tenant string) {
+	query := `MATCH (t:Tenant {name: $tenant})
+			  MERGE (t)-[:HAS_WORKSPACE]->(w:Workspace {name:$workspace, provider:$provider})`
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":    tenant,
+		"provider":  provider,
+		"workspace": workspace,
+	})
+}
+
+func CreateDefaultUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
+	return CreateUser(ctx, driver, tenant, entity.UserEntity{
+		FirstName:     "first",
+		LastName:      "last",
+		Source:        "openline",
+		SourceOfTruth: "openline",
+	})
+}
+
+func CreateDefaultUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string) string {
+	return CreateUser(ctx, driver, tenant, entity.UserEntity{
+		Id:            userId,
+		FirstName:     "first",
+		LastName:      "last",
+		Source:        "openline",
+		SourceOfTruth: "openline",
+	})
+}
+
 func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, user entity.UserEntity) string {
+	now := utils.Now()
+	createdAt := user.CreatedAt
+	if createdAt.IsZero() {
+		createdAt = now
+	}
+	updatedAt := user.UpdatedAt
+	if updatedAt.IsZero() {
+		updatedAt = now
+	}
+
 	userId := utils.NewUUIDIfEmpty(user.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 			MERGE (u:User {id: $userId})-[:USER_BELONGS_TO_TENANT]->(t)
@@ -36,6 +79,7 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 				u.source=$source,
 				u.sourceOfTruth=$sourceOfTruth,
 				u.appSource=$appSource`, tenant)
+
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":          tenant,
 		"userId":          userId,
@@ -48,8 +92,8 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 		"internal":        user.Internal,
 		"bot":             user.Bot,
 		"profilePhotoUrl": user.ProfilePhotoUrl,
-		"createdAt":       user.CreatedAt,
-		"updatedAt":       user.UpdatedAt,
+		"createdAt":       createdAt,
+		"updatedAt":       updatedAt,
 	})
 	return userId
 }
@@ -354,4 +398,281 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"appSource":     location.AppSource,
 	})
 	return locationId
+}
+
+func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, contract entity.ContractEntity) string {
+	contractId := utils.NewUUIDIfEmpty(contract.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (o:Organization {id:$orgId})
+				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id})<-[:HAS_CONTRACT]-(o)
+				SET 
+					c:Contract_%s,
+					c.name=$name,
+					c.contractUrl=$contractUrl,
+					c.source=$source,
+					c.sourceOfTruth=$sourceOfTruth,
+					c.appSource=$appSource,
+					c.status=$status,
+					c.renewalCycle=$renewalCycle,
+					c.renewalPeriods=$renewalPeriods,
+					c.signedAt=$signedAt,
+					c.serviceStartedAt=$serviceStartedAt,
+					c.endedAt=$endedAt,
+					c.createdAt=$createdAt,
+					c.updatedAt=$updatedAt
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":               contractId,
+		"orgId":            orgId,
+		"tenant":           tenant,
+		"name":             contract.Name,
+		"contractUrl":      contract.ContractUrl,
+		"source":           contract.Source,
+		"sourceOfTruth":    contract.SourceOfTruth,
+		"appSource":        contract.AppSource,
+		"status":           contract.ContractStatus,
+		"renewalCycle":     contract.RenewalCycle,
+		"renewalPeriods":   contract.RenewalPeriods,
+		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
+		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
+		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
+		"createdAt":        contract.CreatedAt,
+		"updatedAt":        contract.UpdatedAt,
+	})
+	return contractId
+}
+
+func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, opportunity entity.OpportunityEntity) string {
+	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
+				MERGE (t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity {id:$id})<-[:HAS_OPPORTUNITY]-(c)
+				SET 
+                    op:Opportunity_%s,
+					op.name=$name,
+					op.source=$source,
+					op.sourceOfTruth=$sourceOfTruth,
+					op.appSource=$appSource,
+					op.amount=$amount,
+					op.maxAmount=$maxAmount,
+                    op.internalType=$internalType,
+					op.externalType=$externalType,
+					op.internalStage=$internalStage,
+					op.externalStage=$externalStage,
+					op.estimatedClosedAt=$estimatedClosedAt,
+					op.generalNotes=$generalNotes,
+                    op.comments=$comments,
+                    op.renewedAt=$renewedAt,
+                    op.renewalLikelihood=$renewalLikelihood,
+                    op.renewalUpdatedByUserId=$renewalUpdatedByUserId,
+                    op.renewalUpdateByUserAt=$renewalUpdateByUserAt,
+					op.nextSteps=$nextSteps,
+					op.createdAt=$createdAt,
+					op.updatedAt=$updatedAt
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":                     opportunityId,
+		"contractId":             contractId,
+		"tenant":                 tenant,
+		"name":                   opportunity.Name,
+		"source":                 opportunity.Source,
+		"sourceOfTruth":          opportunity.SourceOfTruth,
+		"appSource":              opportunity.AppSource,
+		"amount":                 opportunity.Amount,
+		"maxAmount":              opportunity.MaxAmount,
+		"internalType":           opportunity.InternalType,
+		"externalType":           opportunity.ExternalType,
+		"internalStage":          opportunity.InternalStage,
+		"externalStage":          opportunity.ExternalStage,
+		"estimatedClosedAt":      opportunity.EstimatedClosedAt,
+		"generalNotes":           opportunity.GeneralNotes,
+		"nextSteps":              opportunity.NextSteps,
+		"comments":               opportunity.Comments,
+		"renewedAt":              opportunity.RenewedAt,
+		"renewalLikelihood":      opportunity.RenewalLikelihood,
+		"renewalUpdatedByUserId": opportunity.RenewalUpdatedByUserId,
+		"renewalUpdateByUserAt":  opportunity.RenewalUpdatedByUserAt,
+		"createdAt":              opportunity.CreatedAt,
+		"updatedAt":              opportunity.UpdatedAt,
+	})
+	return opportunityId
+}
+
+func ActiveRenewalOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId, opportunityId string) string {
+	query := fmt.Sprintf(`
+				MATCH (c:Contract_%s {id:$contractId}), (op:Opportunity_%s {id:$opportunityId})
+				MERGE (c)-[:ACTIVE_RENEWAL]->(op)
+				`, tenant, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"opportunityId": opportunityId,
+		"contractId":    contractId,
+	})
+	return opportunityId
+}
+
+func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, serviceLineItem entity.ServiceLineItemEntity) string {
+	serviceLineItemId := utils.NewUUIDIfEmpty(serviceLineItem.ID)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
+				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(sli:ServiceLineItem {id:$id})<-[:HAS_SERVICE]-(c)
+				SET 
+					sli:ServiceLineItem_%s,
+					sli.name=$name,
+					sli.source=$source,
+					sli.sourceOfTruth=$sourceOfTruth,
+					sli.appSource=$appSource,
+					sli.isCanceled=$isCanceled,	
+					sli.billed=$billed,	
+					sli.quantity=$quantity,	
+					sli.price=$price,
+					sli.previousBilled=$previousBilled,	
+					sli.previousQuantity=$previousQuantity,	
+					sli.previousPrice=$previousPrice,
+                    sli.comments=$comments,
+					sli.startedAt=$startedAt,
+					sli.endedAt=$endedAt,
+					sli.createdAt=$createdAt,
+					sli.updatedAt=$updatedAt,
+	                sli.parentId=$parentId
+				`, tenant)
+
+	params := map[string]any{
+		"id":               serviceLineItemId,
+		"contractId":       contractId,
+		"tenant":           tenant,
+		"name":             serviceLineItem.Name,
+		"source":           serviceLineItem.Source,
+		"sourceOfTruth":    serviceLineItem.SourceOfTruth,
+		"appSource":        serviceLineItem.AppSource,
+		"isCanceled":       serviceLineItem.IsCanceled,
+		"billed":           serviceLineItem.Billed,
+		"quantity":         serviceLineItem.Quantity,
+		"price":            serviceLineItem.Price,
+		"previousBilled":   serviceLineItem.PreviousBilled,
+		"previousQuantity": serviceLineItem.PreviousQuantity,
+		"previousPrice":    serviceLineItem.PreviousPrice,
+		"startedAt":        serviceLineItem.StartedAt,
+		"comments":         serviceLineItem.Comments,
+		"createdAt":        serviceLineItem.CreatedAt,
+		"updatedAt":        serviceLineItem.UpdatedAt,
+		"parentId":         serviceLineItem.ParentID,
+	}
+
+	if serviceLineItem.EndedAt != nil {
+		params["endedAt"] = *serviceLineItem.EndedAt
+	} else {
+		params["endedAt"] = nil
+	}
+
+	ExecuteWriteQuery(ctx, driver, query, params)
+	return serviceLineItemId
+}
+
+func InsertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
+	contractId := CreateContractForOrganization(ctx, driver, tenant, organizationId, contract)
+	CreateOpportunityForContract(ctx, driver, tenant, contractId, opportunity)
+	return contractId
+}
+
+func InsertContractWithActiveRenewalOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
+	contractId := CreateContractForOrganization(ctx, driver, tenant, organizationId, contract)
+	opportunityId := CreateOpportunityForContract(ctx, driver, tenant, contractId, opportunity)
+	ActiveRenewalOpportunityForContract(ctx, driver, tenant, contractId, opportunityId)
+	return contractId
+}
+
+func InsertServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, billedType enum.BilledType, price float64, quantity int64, startedAt time.Time) string {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+		ID:        id,
+		ParentID:  id,
+		Billed:    billedType,
+		Price:     price,
+		Quantity:  quantity,
+		StartedAt: startedAt,
+	})
+	return id
+}
+
+func InsertServiceLineItemEnded(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, billedType enum.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+		ID:        id,
+		ParentID:  id,
+		Billed:    billedType,
+		Price:     price,
+		Quantity:  quantity,
+		StartedAt: startedAt,
+		EndedAt:   &endedAt,
+	})
+	return id
+}
+
+func InsertServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, billedType enum.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+		ID:         id,
+		ParentID:   id,
+		Billed:     billedType,
+		Price:      price,
+		Quantity:   quantity,
+		IsCanceled: true,
+		StartedAt:  startedAt,
+		EndedAt:    &endedAt,
+	})
+	return id
+}
+
+func InsertServiceLineItemWithParent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, billedType enum.BilledType, price float64, quantity int64, previousBilledType enum.BilledType, previousPrice float64, previousQuantity int64, startedAt time.Time, parentId string) {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+		ID:               id,
+		ParentID:         parentId,
+		Billed:           billedType,
+		Price:            price,
+		Quantity:         quantity,
+		PreviousBilled:   previousBilledType,
+		PreviousPrice:    previousPrice,
+		PreviousQuantity: previousQuantity,
+		StartedAt:        startedAt,
+	})
+}
+
+func InsertServiceLineItemEndedWithParent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, billedType enum.BilledType, price float64, quantity int64, previousBilledType enum.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+		ID:               id,
+		ParentID:         parentId,
+		Billed:           billedType,
+		Price:            price,
+		Quantity:         quantity,
+		PreviousBilled:   previousBilledType,
+		PreviousPrice:    previousPrice,
+		PreviousQuantity: previousQuantity,
+		StartedAt:        startedAt,
+		EndedAt:          &endedAt,
+	})
+}
+
+func InsertServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, billedType enum.BilledType, price float64, quantity int64, previousBilledType enum.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
+	rand, _ := uuid.NewRandom()
+	id := rand.String()
+	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+		ID:               id,
+		ParentID:         parentId,
+		Billed:           billedType,
+		Price:            price,
+		Quantity:         quantity,
+		PreviousBilled:   previousBilledType,
+		PreviousPrice:    previousPrice,
+		PreviousQuantity: previousQuantity,
+		IsCanceled:       true,
+		StartedAt:        startedAt,
+		EndedAt:          &endedAt,
+	})
 }

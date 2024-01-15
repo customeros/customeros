@@ -35,6 +35,7 @@ func SourceFromGrpc(grpcSource *grpccommon.SourceFields) Source {
 	s.Source = grpcSource.Source
 	s.SourceOfTruth = comutils.StringFirstNonEmpty(grpcSource.SourceOfTruth, grpcSource.Source)
 	s.AppSource = grpcSource.AppSource
+	s.SetDefaultValues()
 	return s
 }
 

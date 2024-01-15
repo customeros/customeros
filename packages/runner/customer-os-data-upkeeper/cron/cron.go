@@ -11,6 +11,7 @@ import (
 const (
 	organizationGroup = "organization"
 	contractGroup     = "contract"
+	invoiceGroup      = "invoice"
 )
 
 var jobLocks = struct {
@@ -20,6 +21,7 @@ var jobLocks = struct {
 	locks: map[string]*sync.Mutex{
 		organizationGroup: {},
 		contractGroup:     {},
+		invoiceGroup:      {},
 	},
 }
 
@@ -39,6 +41,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "webScrapeOrganizations", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateInvoice, func() {
+		lockAndRunJob(cont, invoiceGroup, generateInvoices)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "generateInvoices", err.Error())
 	}
 
 	c.Start()
@@ -66,4 +75,8 @@ func updateContractsStatusAndRenewal(cont *container.Container) {
 
 func webScrapeOrganizations(cont *container.Container) {
 	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).WebScrapeOrganizations()
+}
+
+func generateInvoices(cont *container.Container) {
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateInvoices()
 }
