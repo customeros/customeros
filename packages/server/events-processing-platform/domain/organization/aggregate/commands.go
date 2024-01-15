@@ -623,6 +623,9 @@ func (a *OrganizationAggregate) refreshRenewalSummary(ctx context.Context, cmd *
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
+	// temp skip this event !!!!!!
+	return nil
+
 	event, err := events.NewOrganizationRefreshRenewalSummaryEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
