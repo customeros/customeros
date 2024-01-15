@@ -116,6 +116,13 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 		return err
 	}
 
+	// skip if not changes on aggregate
+	if a.Opportunity.RenewalDetails.RenewedAt != nil &&
+		cmd.RenewedAt != nil &&
+		a.Opportunity.RenewalDetails.RenewedAt.Equal(*cmd.RenewedAt) {
+		return nil
+	}
+
 	updateRenewalNextCycleDateEvent, err := event.NewOpportunityUpdateNextCycleDateEvent(a, updatedAtNotNil, cmd.RenewedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
