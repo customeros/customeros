@@ -17,7 +17,6 @@ type Repositories struct {
 	PersonalEmailProviderRepository repository.PersonalEmailProviderRepository
 	UserRepository                  neo4jrepo.UserRepository
 	TenantRepository                neo4jrepo.TenantRepository
-	CountryRepository               neo4jrepo.CountryRepository
 	StateRepository                 neo4jrepo.StateRepository
 }
 
@@ -30,7 +29,6 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 		PersonalEmailProviderRepository: repository.NewPersonalEmailProviderRepository(db),
 		UserRepository:                  neo4jrepo.NewUserRepository(driver),
 		TenantRepository:                neo4jrepo.NewTenantRepository(driver),
-		CountryRepository:               neo4jrepo.NewCountryRepository(driver),
 		StateRepository:                 neo4jrepo.NewStateRepository(driver),
 	}
 
