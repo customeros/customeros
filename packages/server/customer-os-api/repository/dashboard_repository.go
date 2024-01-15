@@ -506,7 +506,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 
 				organizationFilter.Filters = append(organizationFilter.Filters, &orFilter)
 			} else if filter.Filter.Property == SearchSortParamName {
-				contractFilter.Filters = append(contractFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
+				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
 			} else if filter.Filter.Property == SearchSortParamWebsite {
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
 			} else if filter.Filter.Property == SearchSortParamEmail {
@@ -702,9 +702,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		}
 		if sort != nil && sort.By == SearchSortParamName {
 			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN contract.name <> \"\" and not contract.name is null THEN contract.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
+				query += ", CASE WHEN o.name <> \"\" and not o.name is null THEN o.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
 			} else {
-				query += ", contract.name as NAME_FOR_SORTING "
+				query += ", o.name as NAME_FOR_SORTING "
 			}
 			aliases += ", NAME_FOR_SORTING "
 		}
