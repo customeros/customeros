@@ -107,6 +107,13 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
+	// skip if no changes on aggregate
+	if a.Opportunity.RenewalDetails.RenewedAt != nil &&
+		cmd.RenewedAt != nil &&
+		a.Opportunity.RenewalDetails.RenewedAt.Equal(*cmd.RenewedAt) {
+		return nil
+	}
+
 	// if opportunity is not renewal or status is closed, return error
 	if a.Opportunity.InternalType != neo4jenum.OpportunityInternalTypeRenewal.String() {
 		err := errors.New(constants.Validate + ": Opportunity is not renewal")
@@ -116,13 +123,6 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 		err := errors.New(constants.Validate + ": Opportunity is closed")
 		tracing.TraceErr(span, err)
 		return err
-	}
-
-	// skip if not changes on aggregate
-	if a.Opportunity.RenewalDetails.RenewedAt != nil &&
-		cmd.RenewedAt != nil &&
-		a.Opportunity.RenewalDetails.RenewedAt.Equal(*cmd.RenewedAt) {
-		return nil
 	}
 
 	updateRenewalNextCycleDateEvent, err := event.NewOpportunityUpdateNextCycleDateEvent(a, updatedAtNotNil, cmd.RenewedAt)
