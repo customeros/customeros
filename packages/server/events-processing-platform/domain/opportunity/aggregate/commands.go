@@ -72,7 +72,8 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, cmd
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)

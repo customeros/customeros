@@ -22,6 +22,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -125,6 +126,22 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
+	// check if active renewal opportunity already exists for this contract
+	opportunotyDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpenRenewalOpportunityForContract(ctx, eventData.Tenant, eventData.ContractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while getting renewal opportunity for contract %s: %s", eventData.ContractId, err.Error())
+		return nil
+	}
+	if opportunotyDbNode != nil {
+		opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunotyDbNode)
+		if opportunity.RenewalDetails.RenewedAt != nil && opportunity.RenewalDetails.RenewedAt.After(utils.Now()) {
+			span.LogFields(log.String("result", "active renewal opportunity already exists, skip creation"))
+			h.log.Infof("active renewal opportunity already exists for contract %s", eventData.ContractId)
+			return nil
+		}
+	}
+
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
 	data := neo4jrepository.RenewalOpportunityCreateFields{
 		ContractId: eventData.ContractId,
@@ -139,7 +156,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 		InternalStage:     eventData.InternalStage,
 		RenewalLikelihood: eventData.RenewalLikelihood,
 	}
-	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CreateRenewal(ctx, eventData.Tenant, opportunityId, data)
+	err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.CreateRenewal(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while saving renewal opportunity %s: %s", opportunityId, err.Error())
