@@ -40,6 +40,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, neo4jDatabase s
 		},
 		neo4jDatabase:            neo4jDatabase,
 		CommonRepositories:       commonRepository.InitRepositories(gormDb, driver),
+		Neo4jRepositories:        neo4jrepository.InitNeo4jRepositories(driver, neo4jDatabase),
 		SyncRunWebhookRepository: repository.NewSyncRunWebhookRepository(gormDb),
 	}
 	repositories.UserRepository = NewUserRepository(driver)
