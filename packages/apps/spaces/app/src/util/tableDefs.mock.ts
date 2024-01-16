@@ -196,7 +196,7 @@ export const mockedTableDefs: TableViewDef[] = [
   {
     id: '3',
     order: 2,
-    name: 'Anual renewals',
+    name: 'Annual renewals',
     type: {
       id: '1',
       name: 'RENEWALS',
