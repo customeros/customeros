@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
+	"strings"
 )
 
 type EventMetadata struct {
@@ -41,4 +42,21 @@ func EnrichEventWithMetadataExtended(event *eventstore.Event, span opentracing.S
 
 func AllowCheckIfEventIsRedundant(appSource, loggedInUserId string) bool {
 	return (appSource == constants.AppSourceIntegrationApp || appSource == constants.AppSourceSyncCustomerOsData) && loggedInUserId == ""
+}
+
+func GetAggregateObjectID(aggregateID, tenant string, aggregateType eventstore.AggregateType) string {
+	if tenant == "" {
+		return getAggregateObjectUUID(aggregateID)
+	}
+	if strings.HasPrefix(aggregateID, string(aggregateType)+"-"+constants.StreamTempPrefix+"-"+tenant+"-") {
+		return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+constants.StreamTempPrefix+"-"+tenant+"-", "")
+	}
+	return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+tenant+"-", "")
+}
+
+// use this method when tenant is not known
+func getAggregateObjectUUID(aggregateID string) string {
+	parts := strings.Split(aggregateID, "-")
+	fullUUID := parts[len(parts)-5] + "-" + parts[len(parts)-4] + "-" + parts[len(parts)-3] + "-" + parts[len(parts)-2] + "-" + parts[len(parts)-1]
+	return fullUUID
 }

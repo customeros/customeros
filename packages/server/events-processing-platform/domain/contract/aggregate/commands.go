@@ -161,9 +161,9 @@ func (a *ContractAggregate) rolloutRenewalOpportunityOnExpiration(ctx context.Co
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "command", cmd)
 
-	// Determine contract status based start and end dates
 	updateEvent, err := event.NewRolloutRenewalOpportunityEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)

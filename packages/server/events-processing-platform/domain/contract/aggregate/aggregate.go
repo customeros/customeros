@@ -29,6 +29,18 @@ func NewContractAggregateWithTenantAndID(tenant, id string) *ContractAggregate {
 	return &contractAggregate
 }
 
+type ContractTempAggregate struct {
+	*aggregate.CommonTenantIdTempAggregate
+}
+
+func NewContractTempAggregateWithTenantAndID(tenant, id string) *ContractTempAggregate {
+	contractTempAggregate := ContractTempAggregate{}
+	contractTempAggregate.CommonTenantIdTempAggregate = aggregate.NewCommonTempAggregateWithTenantAndId(ContractAggregateType, tenant, id)
+	contractTempAggregate.Tenant = tenant
+
+	return &contractTempAggregate
+}
+
 func (a *ContractAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.ContractCreateV1:
