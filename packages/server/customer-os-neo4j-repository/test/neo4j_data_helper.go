@@ -69,6 +69,15 @@ func CreateDefaultUser(ctx context.Context, driver *neo4j.DriverWithContext, ten
 	})
 }
 
+func CreateDefaultUserAlpha(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
+	return CreateUser(ctx, driver, tenant, entity.UserEntity{
+		FirstName:     "alpha",
+		LastName:      "alpha",
+		Source:        "openline",
+		SourceOfTruth: "openline",
+	})
+}
+
 func CreateDefaultUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string) string {
 	return CreateUser(ctx, driver, tenant, entity.UserEntity{
 		Id:            userId,

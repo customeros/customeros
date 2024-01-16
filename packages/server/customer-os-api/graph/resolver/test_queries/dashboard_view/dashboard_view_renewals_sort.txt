@@ -7,9 +7,13 @@ query dashboardView_Renewals($page: Int!, $limit: Int!, $sortBy: String!, $sortD
              id
     } contract{
     id
+    name
     } opportunity{
     id
     maxAmount
+      owner {
+                            id
+                        }
     }
     }
     totalPages

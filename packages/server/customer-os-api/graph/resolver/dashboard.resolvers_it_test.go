@@ -1343,3 +1343,50 @@ func assert_Search_Renewals_By_Cycle(t *testing.T, searchTerm string) model.Rene
 
 	return responseRaw.DashboardView_Renewals
 }
+
+func TestQueryResolver_Sort_Renewals_By_Owner(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	userId1 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jtest.CreateDefaultUserAlpha(ctx, driver, tenantName)
+	org := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org",
+	})
+
+	contractId1 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org, entity.ContractEntity{Name: "Beta"})
+	opportunityId1 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId1, entity.OpportunityEntity{})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId1, opportunityId1)
+
+	contractId2 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org, entity.ContractEntity{Name: "Alpha"})
+	opportunityId2 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId2, entity.OpportunityEntity{})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId2, opportunityId2)
+
+	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId1, userId1)
+	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId2, userId2)
+
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_view_renewals_sort",
+		map[string]interface{}{
+			"page":    1,
+			"limit":   10,
+			"sortBy":  "OWNER",
+			"sortDir": "ASC",
+		})
+	var renewalsPageStruct struct {
+		DashboardView_Renewals model.RenewalsPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &renewalsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(2), renewalsPageStruct.DashboardView_Renewals.TotalAvailable)
+	require.Equal(t, int64(2), renewalsPageStruct.DashboardView_Renewals.TotalElements)
+	require.Equal(t, 2, len(renewalsPageStruct.DashboardView_Renewals.Content))
+	require.ElementsMatch(t, []string{opportunityId1, opportunityId2},
+		[]string{renewalsPageStruct.DashboardView_Renewals.Content[1].Opportunity.ID, renewalsPageStruct.DashboardView_Renewals.Content[0].Opportunity.ID})
+}
