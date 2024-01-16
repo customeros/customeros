@@ -1,10 +1,11 @@
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
 import { Flex } from '@ui/layout/Flex';
+import { RenewalRecord } from '@graphql/types';
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
-import { TableViewDef, RenewalRecord } from '@graphql/types';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
+import { TableViewDefsQuery } from '@shared/graphql/tableViewDefs.generated';
 
 import {
   OwnerCell,
@@ -54,7 +55,7 @@ const columns: Record<string, Column> = {
         />
       );
     },
-    header: () => <></>,
+    header: () => <Flex w='42px' h='32px' />,
     skeleton: () => (
       <Skeleton
         width='42px'
@@ -117,7 +118,7 @@ const columns: Record<string, Column> = {
   }),
   RENEWAL_LIKELIHOOD: columnHelper.accessor('organization.accountDetails', {
     id: 'RENEWAL_LIKELIHOOD',
-    minSize: 200,
+    minSize: 100,
     filterFn: filterRenewalLikelihoodFn,
     cell: (props) => {
       const value = props.getValue()?.renewalSummary?.renewalLikelihood;
@@ -145,7 +146,7 @@ const columns: Record<string, Column> = {
   }),
   RENEWAL_DATE: columnHelper.accessor('organization.accountDetails', {
     id: 'RENEWAL_DATE',
-    minSize: 200,
+    minSize: 100,
     filterFn: filterTimeToRenewalFn,
     enableColumnFilter: false,
     cell: (props) => {
@@ -177,7 +178,7 @@ const columns: Record<string, Column> = {
   }),
   FORECAST_ARR: columnHelper.accessor('organization.accountDetails', {
     id: 'FORECAST_ARR',
-    minSize: 200,
+    minSize: 100,
     filterFn: filterForecastFn,
     enableColumnFilter: false,
     cell: (props) => {
@@ -223,9 +224,9 @@ const columns: Record<string, Column> = {
       </Flex>
     ),
   }),
-  OWNER: columnHelper.accessor('contract.owner', {
+  OWNER: columnHelper.accessor('opportunity.owner', {
     id: 'OWNER',
-    minSize: 200,
+    minSize: 100,
     filterFn: filterOwnerFn,
     cell: (props) => (
       <OwnerCell id={props.getValue()?.id} owner={props.getValue()} />
@@ -255,7 +256,7 @@ const columns: Record<string, Column> = {
   }),
   LAST_TOUCHPOINT: columnHelper.accessor((row) => row, {
     id: 'LAST_TOUCHPOINT',
-    minSize: 250,
+    minSize: 300,
     filterFn: filterLastTouchpointFn,
     cell: (props) => (
       <LastTouchpointCell
@@ -280,13 +281,13 @@ const columns: Record<string, Column> = {
     skeleton: () => (
       <Flex flexDir='column' gap='1'>
         <Skeleton
-          width='75%'
+          width='50%'
           height='18px'
           startColor='gray.300'
           endColor='gray.300'
         />
         <Skeleton
-          width='100%'
+          width='75%'
           height='18px'
           startColor='gray.300'
           endColor='gray.300'
@@ -296,7 +297,9 @@ const columns: Record<string, Column> = {
   }),
 };
 
-export const getColumnsConfig = (tableViewDef?: TableViewDef) => {
+export const getColumnsConfig = (
+  tableViewDef?: TableViewDefsQuery['tableViewDefs']['content'][0],
+) => {
   if (!tableViewDef) return [];
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {

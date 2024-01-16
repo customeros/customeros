@@ -45,6 +45,7 @@ export type GetRenewalsQuery = {
         name: string;
         logoUrl?: string | null;
         lastTouchPointAt?: any | null;
+        lastTouchPointType?: Types.LastTouchpointType | null;
         accountDetails?: {
           __typename?: 'OrgAccountDetails';
           renewalSummary?: {
@@ -160,10 +161,9 @@ export type GetRenewalsQuery = {
           | { __typename: 'PageView'; id: string }
           | null;
       };
-      contract: {
-        __typename?: 'Contract';
-        id: string;
-        name: string;
+      contract: { __typename?: 'Contract'; id: string; name: string };
+      opportunity?: {
+        __typename?: 'Opportunity';
         owner?: {
           __typename?: 'User';
           id: string;
@@ -171,7 +171,7 @@ export type GetRenewalsQuery = {
           lastName: string;
           name?: string | null;
         } | null;
-      };
+      } | null;
     }>;
   } | null;
 };
@@ -193,6 +193,7 @@ export const GetRenewalsDocument = `
           }
         }
         lastTouchPointAt
+        lastTouchPointType
         lastTouchPointTimelineEvent {
           __typename
           ... on PageView {
@@ -287,6 +288,8 @@ export const GetRenewalsDocument = `
       contract {
         id
         name
+      }
+      opportunity {
         owner {
           id
           firstName

@@ -14,7 +14,7 @@ import { Organization } from '@graphql/types';
 import { Tumbleweed } from '@ui/media/icons/Tumbleweed';
 import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
+import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
 
 import { useOwnerFilter, OwnerFilterSelector } from './OwnerFilter.atom';
 import { FilterHeader, useFilterToggle, DebouncedSearchInput } from '../shared';

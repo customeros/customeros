@@ -1,5 +1,3 @@
-import { useLocalStorage } from 'usehooks-ts';
-
 import { Flex } from '@ui/layout/Flex';
 import { Link } from '@ui/navigation/Link';
 import { Text } from '@ui/typography/Text';
@@ -17,12 +15,7 @@ export const OrganizationCell = ({
   isSubsidiary,
   parentOrganizationName,
 }: OrganizationCellProps) => {
-  const [tabs] = useLocalStorage<{
-    [key: string]: string;
-  }>(`customeros-player-last-position`, { root: 'organization' });
-
-  const lastPositionParams = tabs[id];
-  const href = getHref(id, lastPositionParams);
+  const href = `/organization/${id}?tab=account`;
   const fullName = name || 'Unnamed';
 
   return (
@@ -43,7 +36,3 @@ export const OrganizationCell = ({
     </Flex>
   );
 };
-
-function getHref(id: string, lastPositionParams: string | undefined) {
-  return `/organization/${id}?${lastPositionParams || 'tab=about'}`;
-}

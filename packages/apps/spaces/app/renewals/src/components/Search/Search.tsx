@@ -10,9 +10,8 @@ export const Search = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultValue = searchParams?.get('search') ?? '';
-  // const preset = searchParams?.get('preset');
 
-  const placeholder = 'Search renewals';
+  const placeholder = 'Search organizations';
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
