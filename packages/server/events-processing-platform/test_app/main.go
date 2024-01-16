@@ -26,6 +26,9 @@ import (
 const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
 const appSource = "test_app"
 
+var tenant = "openline"
+var orgId = "decc350d-76b8-435d-b6df-6c1ebf3f3d4c"
+
 type Clients struct {
 	InteractionEventClient iepb.InteractionEventGrpcServiceClient
 	OrganizationClient     organizationpb.OrganizationGrpcServiceClient
@@ -68,7 +71,7 @@ func main() {
 	InitClients()
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
-	//testCreateOrganization()
+	testCreateOrganization()
 	//testUpdateWithUpsertOrganization()
 	//testUpdateOrganization()
 	//testHideOrganization()
@@ -99,6 +102,7 @@ func main() {
 	//testCloseLooseOpportunity()
 	//testUpdateOnboardingStatus()
 	//testUpdateOrgOwner()
+	//testRefreshLastTouchpoint()
 }
 
 func testRequestGenerateSummaryRequest() {
@@ -678,6 +682,17 @@ func testUpdateOrgOwner() {
 		LoggedInUserId: actorId,
 		OwnerUserId:    userId,
 		AppSource:      appSource,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testRefreshLastTouchpoint() {
+	result, err := clients.OrganizationClient.RefreshLastTouchpoint(context.Background(), &organizationpb.OrganizationIdGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: orgId,
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
