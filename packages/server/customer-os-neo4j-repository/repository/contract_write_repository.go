@@ -50,6 +50,8 @@ type ContractWriteRepository interface {
 	SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error
 	ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error
 	ContractCausedOnboardingStatusChange(ctx context.Context, tenant, contractId string) error
+	MarkStatusRenewalRequested(ctx context.Context, tenant, contractId string) error
+	MarkRolloutRenewalRequested(ctx context.Context, tenant, contractId string) error
 }
 
 type contractWriteRepository struct {
@@ -273,6 +275,52 @@ func (r *contractWriteRepository) ContractCausedOnboardingStatusChange(ctx conte
 	params := map[string]any{
 		"tenant":     tenant,
 		"contractId": contractId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *contractWriteRepository) MarkStatusRenewalRequested(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkStatusRenewalRequested")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
+				SET ct.techStatusRenewalRequestedAt=$now`
+	params := map[string]any{
+		"tenant":     tenant,
+		"contractId": contractId,
+		"now":        utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *contractWriteRepository) MarkRolloutRenewalRequested(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkRolloutRenewalRequested")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
+				SET ct.techRolloutRenewalRequestedAt=$now`
+	params := map[string]any{
+		"tenant":     tenant,
+		"contractId": contractId,
+		"now":        utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
