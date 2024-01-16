@@ -25,6 +25,16 @@ func (as *TestAggregateStore) Load(ctx context.Context, aggregate eventstore.Agg
 	return nil
 }
 
+func (as *TestAggregateStore) LoadVersion(ctx context.Context, aggregate eventstore.Aggregate) error {
+	if _, ok := as.aggregateMap[aggregate.GetID()]; !ok {
+		return eventstore.ErrAggregateNotFound
+	}
+	for _, event := range as.aggregateMap[aggregate.GetID()] {
+		aggregate.SetVersion(event.Version)
+	}
+	return nil
+}
+
 func (as *TestAggregateStore) Save(ctx context.Context, aggregate eventstore.Aggregate) error {
 	if _, ok := as.aggregateMap[aggregate.GetID()]; !ok {
 		as.aggregateMap[aggregate.GetID()] = make([]eventstore.Event, 0)

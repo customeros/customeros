@@ -2,33 +2,19 @@ package aggregate
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 func GetOrganizationObjectID(aggregateID string, tenant string) string {
-	if tenant == "" {
-		return getOrganizationObjectUUID(aggregateID)
-	}
-	if strings.HasPrefix(aggregateID, string(OrganizationAggregateType)+"-"+constants.StreamTempPrefix+"-"+tenant+"-") {
-		return strings.ReplaceAll(aggregateID, string(OrganizationAggregateType)+"-"+constants.StreamTempPrefix+"-"+tenant+"-", "")
-	}
-	return strings.ReplaceAll(aggregateID, string(OrganizationAggregateType)+"-"+tenant+"-", "")
+	return aggregate.GetAggregateObjectID(aggregateID, tenant, OrganizationAggregateType)
 }
 
-// use this method when tenant is not known
-func getOrganizationObjectUUID(aggregateID string) string {
-	parts := strings.Split(aggregateID, "-")
-	fullUUID := parts[len(parts)-5] + "-" + parts[len(parts)-4] + "-" + parts[len(parts)-3] + "-" + parts[len(parts)-2] + "-" + parts[len(parts)-1]
-	return fullUUID
-}
-
-func LoadOrganizationAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*OrganizationAggregate, error) {
+func LoadOrganizationAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string, opts *eventstore.LoadAggregateOptions) (*OrganizationAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadOrganizationAggregate")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -46,15 +32,22 @@ func LoadOrganizationAggregate(ctx context.Context, eventStore eventstore.Aggreg
 		}
 	}
 
-	if err = eventStore.Load(ctx, organizationAggregate); err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
+	if opts != nil && opts.SkipLoadEvents {
+		if err = eventStore.LoadVersion(ctx, organizationAggregate); err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+	} else {
+		if err = eventStore.Load(ctx, organizationAggregate); err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
 	}
 
 	return organizationAggregate, nil
 }
 
-func LoadOrganizationTempAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*OrganizationTempAggregate, error) {
+func LoadOrganizationTempAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string, opts *eventstore.LoadAggregateOptions) (*OrganizationTempAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadOrganizationTempAggregate")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -72,9 +65,16 @@ func LoadOrganizationTempAggregate(ctx context.Context, eventStore eventstore.Ag
 		}
 	}
 
-	if err = eventStore.Load(ctx, organizationTempAggregate); err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
+	if opts != nil && opts.SkipLoadEvents {
+		if err = eventStore.LoadVersion(ctx, organizationTempAggregate); err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+	} else {
+		if err = eventStore.Load(ctx, organizationTempAggregate); err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
 	}
 
 	return organizationTempAggregate, nil

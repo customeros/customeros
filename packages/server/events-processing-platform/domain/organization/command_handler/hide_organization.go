@@ -36,7 +36,7 @@ func (h *hideOrganizationCommandHandler) Handle(ctx context.Context, cmd *cmd.Hi
 		return validationError
 	}
 
-	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
+	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID, eventstore.NewLoadAggregateOptions())
 	if err != nil {
 		return err
 	}

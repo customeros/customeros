@@ -2,26 +2,16 @@ package aggregate
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
 )
 
-func GetContractObjectID(aggregateID string, tenant string) string {
-	if tenant == "" {
-		return getContractObjectUUID(aggregateID)
-	}
-	return strings.ReplaceAll(aggregateID, string(ContractAggregateType)+"-"+tenant+"-", "")
-}
-
-// Use this method when tenant is not known
-func getContractObjectUUID(aggregateID string) string {
-	parts := strings.Split(aggregateID, "-")
-	fullUUID := parts[len(parts)-5] + "-" + parts[len(parts)-4] + "-" + parts[len(parts)-3] + "-" + parts[len(parts)-2] + "-" + parts[len(parts)-1]
-	return fullUUID
+func GetContractObjectID(aggregateID, tenant string) string {
+	return aggregate.GetAggregateObjectID(aggregateID, tenant, ContractAggregateType)
 }
 
 func LoadContractAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*ContractAggregate, error) {
@@ -48,4 +38,30 @@ func LoadContractAggregate(ctx context.Context, eventStore eventstore.AggregateS
 	}
 
 	return contractAggregate, nil
+}
+
+func LoadContractTempAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*ContractTempAggregate, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadContractTempAggregate")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("ObjectID", objectID))
+
+	contractTempAggregate := NewContractTempAggregateWithTenantAndID(tenant, objectID)
+
+	err := eventStore.Exists(ctx, contractTempAggregate.GetID())
+	if err != nil {
+		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
+			tracing.TraceErr(span, err)
+			return nil, err
+		} else {
+			return contractTempAggregate, nil
+		}
+	}
+
+	if err = eventStore.LoadVersion(ctx, contractTempAggregate); err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return contractTempAggregate, nil
 }

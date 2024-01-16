@@ -9,6 +9,9 @@ type AggregateStore interface {
 	// Load loads the most recent version of an aggregate to provided  into params aggregate with a type and id.
 	Load(ctx context.Context, aggregate Aggregate) error
 
+	// LoadVersion loads the most recent version of an aggregate to provided  into params aggregate with a type and id.
+	LoadVersion(ctx context.Context, aggregate Aggregate) error
+
 	// Save saves the uncommitted events for an aggregate.
 	Save(ctx context.Context, aggregate Aggregate) error
 

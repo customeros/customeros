@@ -10,6 +10,19 @@ const (
 	aggregateUncommittedEventsInitialCap = 10
 )
 
+type LoadAggregateOptions struct {
+	SkipLoadEvents bool
+}
+
+func NewLoadAggregateOptions() *LoadAggregateOptions {
+	return &LoadAggregateOptions{}
+}
+
+func (o *LoadAggregateOptions) WithSkipLoadEvents() *LoadAggregateOptions {
+	o.SkipLoadEvents = true
+	return o
+}
+
 type When interface {
 	When(event Event) error
 }
@@ -39,6 +52,7 @@ type AggregateRoot interface {
 	GetID() string
 	SetID(id string) *AggregateBase
 	GetVersion() int64
+	SetVersion(version int64)
 	ClearUncommittedEvents()
 	ToSnapshot()
 	SetType(aggregateType AggregateType)
@@ -128,6 +142,11 @@ func (a *AggregateBase) GetType() AggregateType {
 // GetVersion get AggregateBase version
 func (a *AggregateBase) GetVersion() int64 {
 	return a.Version
+}
+
+// SetVersion set AggregateBase version
+func (a *AggregateBase) SetVersion(version int64) {
+	a.Version = version
 }
 
 // ClearUncommittedEvents clear AggregateBase uncommitted Event's

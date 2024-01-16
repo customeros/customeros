@@ -67,6 +67,34 @@ func (as *aggregateStore) Load(ctx context.Context, aggregate es.Aggregate) erro
 	return nil
 }
 
+func (as *aggregateStore) LoadVersion(ctx context.Context, aggregate es.Aggregate) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AggregateStore.LoadVersion")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", aggregate.GetID()))
+
+	readOps := esdb.ReadStreamOptions{Direction: esdb.Backwards, From: esdb.End{}}
+	stream, err := as.esdbClient.ReadStream(context.Background(), aggregate.GetID(), readOps, 1)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		as.log.Errorf("(Save) esdbClient.ReadStream: {%s}", err.Error())
+		return errors.Wrap(err, "esdbClient.ReadStream")
+	}
+	defer stream.Close()
+
+	lastEvent, err := stream.Recv()
+	if err != nil {
+		tracing.TraceErr(span, err)
+		as.log.Errorf("(LoadVersion) stream.Recv: {%s}", err.Error())
+		return errors.Wrap(err, "stream.Recv")
+	}
+
+	event := es.NewEventFromRecorded(lastEvent.Event)
+	aggregate.SetVersion(event.GetVersion())
+
+	as.log.Debugf("(LoadVersion) aggregate: {%s}", aggregate.String())
+	return nil
+}
+
 func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AggregateStore.Save")
 	defer span.Finish()
@@ -179,7 +207,7 @@ func (as *aggregateStore) Exists(ctx context.Context, aggregateID string) error 
 	defer stream.Close()
 
 	for {
-		_, err := stream.Recv()
+		_, err = stream.Recv()
 		if errors.Is(err, io.EOF) {
 			break
 		}

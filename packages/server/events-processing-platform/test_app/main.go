@@ -27,7 +27,7 @@ const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
 const appSource = "test_app"
 
 var tenant = "openline"
-var orgId = "decc350d-76b8-435d-b6df-6c1ebf3f3d4c"
+var orgId = "ceae019f-d1e3-49b3-87c5-35ebb68a5ff1"
 
 type Clients struct {
 	InteractionEventClient iepb.InteractionEventGrpcServiceClient
@@ -71,7 +71,7 @@ func main() {
 	InitClients()
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
-	testCreateOrganization()
+	//testCreateOrganization()
 	//testUpdateWithUpsertOrganization()
 	//testUpdateOrganization()
 	//testHideOrganization()
