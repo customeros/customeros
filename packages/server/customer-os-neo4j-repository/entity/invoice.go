@@ -10,6 +10,7 @@ type InvoiceEntity struct {
 	UpdatedAt time.Time
 
 	DryRun           bool
+	Number           string
 	Date             time.Time
 	DueDate          time.Time
 	Amount           float64

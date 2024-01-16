@@ -12,7 +12,7 @@ import (
 )
 
 type InvoiceWriteRepository interface {
-	InvoiceNew(ctx context.Context, tenant, organizationId, id string, date, dueDate time.Time, dryRun bool, source, appSource string, createdAt time.Time) error
+	InvoiceNew(ctx context.Context, tenant, contractId, id string, dryRun bool, number string, date, dueDate time.Time, source, appSource string, createdAt time.Time) error
 	InvoiceFill(ctx context.Context, tenant, id string, amount, vat, total float64, updatedAt time.Time) error
 	InvoiceFillInvoiceLine(ctx context.Context, tenant, id string, index int64, name string, price float64, quantity int64, amount, vat, total float64, createdAt time.Time) error
 	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string, updatedAt time.Time) error
@@ -30,13 +30,13 @@ func NewInvoiceWriteRepository(driver *neo4j.DriverWithContext, database string)
 	}
 }
 
-func (r *invoiceWriteRepository) InvoiceNew(ctx context.Context, tenant, organizationId, id string, date, dueDate time.Time, dryRun bool, source, appSource string, createdAt time.Time) error {
+func (r *invoiceWriteRepository) InvoiceNew(ctx context.Context, tenant, contractId, id string, dryRun bool, number string, date, dueDate time.Time, source, appSource string, createdAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.InvoiceNew")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s {id:$organizationId})
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s {id:$contractId})
 							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$id}) 
 							ON CREATE SET 
 								i:Invoice_%s,
@@ -45,28 +45,30 @@ func (r *invoiceWriteRepository) InvoiceNew(ctx context.Context, tenant, organiz
 								i.source=$source,
 								i.sourceOfTruth=$sourceOfTruth,
 								i.appSource=$appSource,
+								i.dryRun=$dryRun,
+								i.number=$number,
 								i.date=$date,
 								i.dueDate=$dueDate,
-								i.dryRun=$dryRun,
 								i.amount=0.0,
 								i.vat=0.0,
 								i.total=0.0,
 								i.pdfGenerated=false
-							WITH o, i 
-							MERGE (o)-[:HAS_INVOICE]->(i) 
+							WITH c, i 
+							MERGE (c)-[:HAS_INVOICE]->(i) 
 							`, tenant, tenant)
 	params := map[string]any{
-		"tenant":         tenant,
-		"organizationId": organizationId,
-		"id":             id,
-		"createdAt":      createdAt,
-		"updatedAt":      createdAt,
-		"source":         source,
-		"sourceOfTruth":  source,
-		"appSource":      appSource,
-		"dryRun":         dryRun,
-		"date":           date,
-		"dueDate":        dueDate,
+		"tenant":        tenant,
+		"contractId":    contractId,
+		"id":            id,
+		"createdAt":     createdAt,
+		"updatedAt":     createdAt,
+		"source":        source,
+		"sourceOfTruth": source,
+		"appSource":     appSource,
+		"dryRun":        dryRun,
+		"number":        number,
+		"date":          date,
+		"dueDate":       dueDate,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -116,7 +118,7 @@ func (r *invoiceWriteRepository) InvoiceFillInvoiceLine(ctx context.Context, ten
 	span.SetTag(tracing.SpanTagEntityId, id)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice_%s {id:$id})
-							MERGE (i)<-[:INVOICE_LINE_BELONGS_TO_INVOICE]-(il:InvoiceLine {id:randomUUID()})
+							MERGE (i)-[:HAS_INVOICE_LINE]->(il:InvoiceLine {id:randomUUID()})
 							ON CREATE SET 
 								il:InvoiceLine_%s,
 								il.createdAt=$createdAt,

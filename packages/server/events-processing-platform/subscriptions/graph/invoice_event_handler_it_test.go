@@ -23,6 +23,7 @@ func TestInvoiceEventHandler_OnInvoiceNew(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{})
 
 	eventHandler := &InvoiceEventHandler{
 		log:          testLogger,
@@ -38,8 +39,9 @@ func TestInvoiceEventHandler_OnInvoiceNew(t *testing.T) {
 	timeNow := utils.Now()
 	newEvent, err := invoice.NewInvoiceNewEvent(
 		aggregate,
-		organizationId,
+		contractId,
 		false,
+		"test",
 		now,
 		in30Days,
 		timeNow,
@@ -72,6 +74,7 @@ func TestInvoiceEventHandler_OnInvoiceNew(t *testing.T) {
 	require.Equal(t, timeNow, invoice.CreatedAt)
 	require.Equal(t, timeNow, invoice.UpdatedAt)
 	require.Equal(t, false, invoice.DryRun)
+	require.Equal(t, "test", invoice.Number)
 	require.Equal(t, now, invoice.Date)
 	require.Equal(t, in30Days, invoice.DueDate)
 	require.Equal(t, float64(0), invoice.Amount)
@@ -87,7 +90,8 @@ func TestInvoiceEventHandler_OnInvoiceFill(t *testing.T) {
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	id := neo4jtest.CreateInvoice(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.InvoiceEntity{})
+	contractId := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	id := neo4jtest.CreateInvoice(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
 
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
@@ -170,7 +174,8 @@ func TestInvoiceEventHandler_OnInvoicePdfGenerated(t *testing.T) {
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	id := neo4jtest.CreateInvoice(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.InvoiceEntity{})
+	contractId := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	id := neo4jtest.CreateInvoice(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
 
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{

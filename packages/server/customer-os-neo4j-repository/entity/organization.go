@@ -28,6 +28,7 @@ type OrganizationEntity struct {
 	LastTouchpointAt   *time.Time
 	UpdatedAt          time.Time
 	LastTouchpointId   *string
+	LastTouchpointType *string
 	Source             DataSource
 	SourceOfTruth      DataSource
 	AppSource          string

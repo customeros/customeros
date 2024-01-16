@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -42,7 +43,10 @@ func (h *invoiceNewHandler) Handle(ctx context.Context, baseRequest eventstore.B
 	dueDate := utils.TimestampProtoToTime(request.Date).UTC()
 	createdAt := utils.TimestampProtoToTime(request.CreatedAt).UTC()
 
-	createEvent, err := NewInvoiceNewEvent(invoiceAggregate, request.OrganizationId, request.DryRun, date, dueDate, createdAt, baseRequest.SourceFields)
+	//TODO generate invoice number unique in tenant
+	number := uuid.New().String()
+
+	createEvent, err := NewInvoiceNewEvent(invoiceAggregate, request.ContractId, request.DryRun, number, date, dueDate, createdAt, baseRequest.SourceFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceNewEvent")

@@ -95,9 +95,10 @@ func (a *InvoiceAggregate) onNewInvoice(evt eventstore.Event) error {
 	a.Invoice.ID = a.ID
 	a.Invoice.CreatedAt = eventData.CreatedAt
 	a.Invoice.UpdatedAt = eventData.CreatedAt
-	a.Invoice.OrganizationId = eventData.OrganizationId
+	a.Invoice.ContractId = eventData.ContractId
 	a.Invoice.SourceFields = eventData.SourceFields
 
+	a.Invoice.Number = eventData.Number
 	a.Invoice.Date = eventData.Date
 	a.Invoice.DueDate = eventData.DueDate
 	a.Invoice.DryRun = eventData.DryRun

@@ -18,24 +18,26 @@ const (
 )
 
 type InvoiceNewEvent struct {
-	Tenant         string             `json:"tenant" validate:"required"`
-	OrganizationId string             `json:"organizationId" validate:"required"`
-	CreatedAt      time.Time          `json:"createdAt"`
-	SourceFields   commonmodel.Source `json:"sourceFields"`
+	Tenant       string             `json:"tenant" validate:"required"`
+	ContractId   string             `json:"organizationId" validate:"required"`
+	CreatedAt    time.Time          `json:"createdAt"`
+	SourceFields commonmodel.Source `json:"sourceFields"`
 
 	DryRun  bool      `json:"dryRun"`
+	Number  string    `json:"number"`
 	Date    time.Time `json:"date" validate:"required"`
 	DueDate time.Time `json:"dueDate" validate:"required"`
 }
 
-func NewInvoiceNewEvent(aggregate eventstore.Aggregate, organizationId string, dryRun bool, date, dueDate, createdAt time.Time, sourceFields commonmodel.Source) (eventstore.Event, error) {
+func NewInvoiceNewEvent(aggregate eventstore.Aggregate, contractId string, dryRun bool, number string, date, dueDate, createdAt time.Time, sourceFields commonmodel.Source) (eventstore.Event, error) {
 	eventData := InvoiceNewEvent{
-		Tenant:         aggregate.GetTenant(),
-		OrganizationId: organizationId,
-		CreatedAt:      createdAt,
-		SourceFields:   sourceFields,
+		Tenant:       aggregate.GetTenant(),
+		ContractId:   contractId,
+		CreatedAt:    createdAt,
+		SourceFields: sourceFields,
 
 		DryRun:  dryRun,
+		Number:  number,
 		Date:    date,
 		DueDate: dueDate,
 	}

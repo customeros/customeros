@@ -6,14 +6,15 @@ import (
 )
 
 type Invoice struct {
-	ID             string             `json:"id"`
-	Tenant         string             `json:"tenant"`
-	OrganizationId string             `json:"organizationId"`
-	CreatedAt      time.Time          `json:"createdAt"`
-	UpdatedAt      time.Time          `json:"updatedAt"`
-	SourceFields   commonmodel.Source `json:"source"`
+	ID           string             `json:"id"`
+	Tenant       string             `json:"tenant"`
+	ContractId   string             `json:"contractId"`
+	CreatedAt    time.Time          `json:"createdAt"`
+	UpdatedAt    time.Time          `json:"updatedAt"`
+	SourceFields commonmodel.Source `json:"source"`
 
 	DryRun           bool          `json:"dryRun"`
+	Number           string        `json:"number"`
 	Date             time.Time     `json:"date"`
 	DueDate          time.Time     `json:"dueDate"`
 	Amount           float64       `json:"amount"`

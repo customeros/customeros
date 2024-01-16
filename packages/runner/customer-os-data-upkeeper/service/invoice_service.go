@@ -49,17 +49,24 @@ func (s *invoiceService) GenerateInvoices() {
 	//	return
 	//}
 	//
-	//for _, record := range organizationsForInvoicing {
+	//for _, dbNode := range organizationsForInvoicing {
+	//	props := utils.GetPropsFromNode(*dbNode)
+	//
+	//	tenant := utils.GetStringPropOrEmpty(props, "tenant")
+	//	organizationId := utils.GetStringPropOrEmpty(props, "organizationId")
+	//
 	//	_, err = s.eventsProcessingClient.InvoiceClient.NewInvoice(ctx, &invoicepb.NewInvoiceRequest{
-	//		Tenant:         record.Tenant,
-	//		OrganizationId: record.OrganizationId,
+	//		Tenant:         tenant,
+	//		OrganizationId: organizationId,
 	//		SourceFields: &commonpb.SourceFields{
 	//			AppSource: constants.AppSourceDataUpkeeper,
 	//		},
 	//	})
 	//	if err != nil {
 	//		tracing.TraceErr(span, err)
-	//		s.log.Errorf("Error invoicing organization {%s}: %s", record.OrganizationId, err.Error())
+	//		s.log.Errorf("Error invoicing organization {%s} in tenant {%s}: %s", organizationId, tenant, err.Error())
 	//	}
 	//}
+	//
+	//s.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateInvoicingActive(ctx, tenant, organizationId, true, now)
 }
