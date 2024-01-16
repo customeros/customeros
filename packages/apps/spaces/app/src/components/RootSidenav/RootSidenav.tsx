@@ -88,6 +88,9 @@ export const RootSidenav = () => {
       '/organizations',
       '/organizations?preset=customer',
       '/organizations?preset=portfolio',
+      '/renewals?preset=1',
+      '/renewals?preset=2',
+      '/renewals?preset=3',
     ].forEach((path) => {
       router.prefetch(path);
     });
@@ -164,9 +167,11 @@ export const RootSidenav = () => {
       </VStack>
 
       <VStack spacing='2' w='full'>
-        <Flex w='full' justify='flex-start' pl='3.5'>
-          <Text color='gray.500'>My views</Text>
-        </Flex>
+        {(globalCache?.isOwner || showMyViewsItems) && (
+          <Flex w='full' justify='flex-start' pl='3.5'>
+            <Text color='gray.500'>My views</Text>
+          </Flex>
+        )}
         {globalCache?.isOwner && (
           <SidenavItem
             label='My portfolio'
