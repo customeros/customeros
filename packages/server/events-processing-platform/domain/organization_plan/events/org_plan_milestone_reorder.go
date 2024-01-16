@@ -9,16 +9,18 @@ import (
 )
 
 type OrganizationPlanMilestoneReorderEvent struct {
-	Tenant       string    `json:"tenant" validate:"required"`
-	MilestoneIds []string  `json:"milestoneId" validate:"required"`
-	UpdatedAt    time.Time `json:"updatedAt"`
+	Tenant             string    `json:"tenant" validate:"required"`
+	MilestoneIds       []string  `json:"milestoneId" validate:"required"`
+	UpdatedAt          time.Time `json:"updatedAt"`
+	OrganizationPlanId string    `json:"organizationPlanId" validate:"required"`
 }
 
-func NewOrganizationPlanMilestoneReorderEvent(aggregate eventstore.Aggregate, milestoneIds []string, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationPlanMilestoneReorderEvent(aggregate eventstore.Aggregate, organizationPlanId string, milestoneIds []string, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationPlanMilestoneReorderEvent{
-		Tenant:       aggregate.GetTenant(),
-		UpdatedAt:    updatedAt,
-		MilestoneIds: milestoneIds,
+		Tenant:             aggregate.GetTenant(),
+		UpdatedAt:          updatedAt,
+		MilestoneIds:       milestoneIds,
+		OrganizationPlanId: organizationPlanId,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

@@ -43,7 +43,6 @@ func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, re
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	// Return the ID of the newly created master plan
 	return &orgplanpb.OrganizationPlanIdGrpcResponse{Id: organizationPlanId}, nil
 }
 
@@ -106,7 +105,7 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 
 	srcFields := commonmodel.Source{AppSource: request.AppSource}
 
-	baseRequest := eventstore.NewBaseRequest(request.OrganizationPlanId, request.Tenant, request.LoggedInUserId, srcFields)
+	baseRequest := eventstore.NewBaseRequest(request.OrganizationPlanMilestoneId, request.Tenant, request.LoggedInUserId, srcFields)
 
 	if err := s.eventHandlers.UpdateOrganizationPlanMilestone.Handle(ctx, baseRequest, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -114,7 +113,6 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	// Return the ID of the newly created master plan
 	return &orgplanpb.OrganizationPlanMilestoneIdGrpcResponse{Id: request.OrganizationPlanMilestoneId}, nil
 }
 

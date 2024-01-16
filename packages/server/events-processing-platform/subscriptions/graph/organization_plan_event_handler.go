@@ -105,8 +105,7 @@ func (h *OrganizationPlanEventHandler) OnUpdate(ctx context.Context, evt eventst
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	organizationId := aggregate.GetOrganizationObjectID(evt.GetAggregateID(), eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, eventData.organizationPlanId)
+	span.SetTag(tracing.SpanTagEntityId, eventData.OrganizationPlanId)
 
 	data := neo4jrepository.OrganizationPlanUpdateFields{
 		Name:          eventData.Name,
@@ -115,10 +114,10 @@ func (h *OrganizationPlanEventHandler) OnUpdate(ctx context.Context, evt eventst
 		UpdateName:    eventData.UpdateName(),
 		UpdateRetired: eventData.UpdateRetired(),
 	}
-	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.Update(ctx, eventData.Tenant, organizationPlanId, data)
+	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.Update(ctx, eventData.Tenant, eventData.OrganizationPlanId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while updating master plan %s: %s", organizationPlanId, err.Error())
+		h.log.Errorf("Error while updating organization plan %s: %s", eventData.OrganizationPlanId, err.Error())
 		return err
 	}
 	return err
@@ -135,14 +134,15 @@ func (h *OrganizationPlanEventHandler) OnCreateMilestone(ctx context.Context, ev
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	organizationPlanId := aggregate.GetOrganizationPlanObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, eventData.MilestoneId)
+
 	source := helper.GetSource(eventData.SourceFields.Source)
 	appSource := helper.GetAppSource(eventData.SourceFields.AppSource)
-	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.CreateMilestone(ctx, eventData.Tenant, organizationPlanId, eventData.MilestoneId,
-		eventData.Name, source, appSource, eventData.Order, eventData.DurationHours, eventData.Items, eventData.Optional, eventData.CreatedAt)
+	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.CreateMilestone(ctx, eventData.Tenant, eventData.OrganizationPlanId, eventData.MilestoneId,
+		eventData.Name, source, appSource, eventData.Order, eventData.DurationHours, convertItemsStrToObject(eventData.Items), eventData.Optional, eventData.CreatedAt, entity.OrganizationPlanMilestoneStatusDetails{Status: model.MilestoneNotStarted.String(), UpdatedAt: time.Now(), Comments: ""})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while saving master plan milestone %s: %s", organizationPlanId, err.Error())
+		h.log.Errorf("Error while saving organization plan milestone %s: %s", eventData.OrganizationPlanId, err.Error())
 		return err
 	}
 	return err
@@ -159,7 +159,6 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	organizationPlanId := aggregate.GetOrganizationPlanObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, eventData.MilestoneId)
 
 	data := neo4jrepository.OrganizationPlanMilestoneUpdateFields{
@@ -167,7 +166,7 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		Name:                eventData.Name,
 		Order:               eventData.Order,
 		DurationHours:       eventData.DurationHours,
-		Items:               eventData.Items,
+		Items:               convertItemsModelToEntity(eventData.Items),
 		Optional:            eventData.Optional,
 		Retired:             eventData.Retired,
 		UpdateName:          eventData.UpdateName(),
@@ -177,7 +176,7 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		UpdateOptional:      eventData.UpdateOptional(),
 		UpdateRetired:       eventData.UpdateRetired(),
 	}
-	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, organizationPlanId, eventData.MilestoneId, data)
+	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, eventData.OrganizationPlanId, eventData.MilestoneId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating master plan milestone %s: %s", eventData.MilestoneId, err.Error())
@@ -197,7 +196,8 @@ func (h *OrganizationPlanEventHandler) OnReorderMilestones(ctx context.Context, 
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	organizationPlanId := aggregate.GetOrganizationPlanObjectID(evt.GetAggregateID(), eventData.Tenant)
+	organizationPlanId := eventData.OrganizationPlanId
+
 	span.SetTag(tracing.SpanTagEntityId, organizationPlanId)
 
 	for i, milestoneId := range eventData.MilestoneIds {
@@ -209,7 +209,7 @@ func (h *OrganizationPlanEventHandler) OnReorderMilestones(ctx context.Context, 
 		err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, organizationPlanId, milestoneId, data)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.log.Errorf("Error while updating master plan milestone order %s: %s", milestoneId, err.Error())
+			h.log.Errorf("Error while updating organization plan milestone order %s: %s", milestoneId, err.Error())
 			return err
 		}
 	}
@@ -225,7 +225,7 @@ func convertMasterPlanMilestonesToOrganizationPlanMilestones(masterPlanMilestone
 			Name:          mpMilestone.Name,
 			Order:         mpMilestone.Order,
 			DurationHours: mpMilestone.DurationHours,
-			Items:         convertItemsToObject(mpMilestone.Items),
+			Items:         convertItemsStrToObject(mpMilestone.Items),
 			Optional:      mpMilestone.Optional,
 			CreatedAt:     mpMilestone.CreatedAt,
 			UpdatedAt:     mpMilestone.UpdatedAt,
@@ -235,13 +235,25 @@ func convertMasterPlanMilestonesToOrganizationPlanMilestones(masterPlanMilestone
 	return organizationPlanMilestones
 }
 
-func convertItemsToObject(items []string) []entity.OrganizationPlanMilestoneItem {
+func convertItemsStrToObject(items []string) []entity.OrganizationPlanMilestoneItem {
 	milestoneItems := make([]entity.OrganizationPlanMilestoneItem, len(items))
 	for i, item := range items {
 		milestoneItems[i] = entity.OrganizationPlanMilestoneItem{
 			Text:      item,
 			UpdatedAt: time.Now(),
 			Status:    model.TaskNotDone.String(),
+		}
+	}
+	return milestoneItems
+}
+
+func convertItemsModelToEntity(items []model.OrganizationPlanMilestoneItem) []entity.OrganizationPlanMilestoneItem {
+	milestoneItems := make([]entity.OrganizationPlanMilestoneItem, len(items))
+	for i, item := range items {
+		milestoneItems[i] = entity.OrganizationPlanMilestoneItem{
+			Text:      item.Text,
+			UpdatedAt: time.Now(),
+			Status:    item.Status,
 		}
 	}
 	return milestoneItems

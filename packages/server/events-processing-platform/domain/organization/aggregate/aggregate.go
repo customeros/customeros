@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"strings"
+	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -101,6 +102,14 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return nil
 	case orgplanevents.OrganizationPlanCreateV1:
 		return a.onOrganizationPlanCreate(event)
+	case orgplanevents.OrganizationPlanUpdateV1:
+		return a.onOrganizationPlanUpdate(event)
+	case orgplanevents.OrganizationPlanMilestoneCreateV1:
+		return a.onOrganizationPlanMilestoneCreate(event)
+	case orgplanevents.OrganizationPlanMilestoneUpdateV1:
+		return a.onOrganizationPlanMilestoneUpdate(event)
+	case orgplanevents.OrganizationPlanMilestoneReorderV1:
+		return a.onOrganizationPlanMilestoneReorder(event)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
@@ -683,17 +692,169 @@ func (a *OrganizationAggregate) onOrganizationPlanCreate(event eventstore.Event)
 	}
 
 	if a.Organization.OrganizationPlans == nil {
-		a.Organization.OrganizationPlans = []orgplanmodel.OrganizationPlan{}
+		a.Organization.OrganizationPlans = map[string]orgplanmodel.OrganizationPlan{}
 	}
 
-	a.Organization.OrganizationPlans = append(a.Organization.OrganizationPlans, orgplanmodel.OrganizationPlan{
+	a.Organization.OrganizationPlans[eventData.OrganizationPlanId] = orgplanmodel.OrganizationPlan{
 		ID:           eventData.OrganizationPlanId,
 		Name:         eventData.Name,
 		SourceFields: eventData.SourceFields,
 		CreatedAt:    eventData.CreatedAt,
 		UpdatedAt:    eventData.CreatedAt,
 		MasterPlanId: eventData.MasterPlanId,
-	})
+	}
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onOrganizationPlanUpdate(event eventstore.Event) error {
+	var eventData orgplanevents.OrganizationPlanUpdateEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.OrganizationPlans == nil {
+		a.Organization.OrganizationPlans = map[string]orgplanmodel.OrganizationPlan{}
+	}
+
+	op := orgplanmodel.OrganizationPlan{
+		ID:        eventData.OrganizationPlanId,
+		Name:      eventData.Name,
+		UpdatedAt: eventData.UpdatedAt,
+	}
+
+	a.Organization.OrganizationPlans[eventData.OrganizationPlanId] = op
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onOrganizationPlanMilestoneCreate(event eventstore.Event) error {
+	var eventData orgplanevents.OrganizationPlanMilestoneCreateEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.OrganizationPlans == nil {
+		a.Organization.OrganizationPlans = map[string]orgplanmodel.OrganizationPlan{}
+	}
+
+	mstone := orgplanmodel.OrganizationPlanMilestone{
+		ID:            eventData.MilestoneId,
+		Name:          eventData.Name,
+		Order:         eventData.Order,
+		DurationHours: eventData.DurationHours,
+		CreatedAt:     eventData.CreatedAt,
+		UpdatedAt:     eventData.CreatedAt,
+		Optional:      eventData.Optional,
+		Items:         convertMilestoneItemsToObject(eventData.Items),
+	}
+
+	if a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones == nil {
+		// First we get a "copy" of the entry; doing this because we can't modify the map entry directly
+		if entry, ok := a.Organization.OrganizationPlans[eventData.OrganizationPlanId]; ok {
+
+			// Then we modify the copy
+			entry.Milestones = make(map[string]orgplanmodel.OrganizationPlanMilestone)
+
+			// Then we reassign map entry
+			a.Organization.OrganizationPlans[eventData.OrganizationPlanId] = entry
+		}
+	}
+	a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[mstone.ID] = mstone
+
+	return nil
+}
+
+func convertMilestoneItemsToObject(items []string) []orgplanmodel.OrganizationPlanMilestoneItem {
+	milestoneItems := make([]orgplanmodel.OrganizationPlanMilestoneItem, len(items))
+	for i, item := range items {
+		milestoneItems[i] = orgplanmodel.OrganizationPlanMilestoneItem{
+			Text:      item,
+			UpdatedAt: time.Now(),
+			Status:    orgplanmodel.TaskNotDone.String(),
+		}
+	}
+	return milestoneItems
+}
+
+func (a *OrganizationAggregate) onOrganizationPlanMilestoneUpdate(evt eventstore.Event) error {
+	var eventData orgplanevents.OrganizationPlanMilestoneUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.OrganizationPlans == nil {
+		a.Organization.OrganizationPlans = map[string]orgplanmodel.OrganizationPlan{}
+	}
+
+	if a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones == nil {
+		// First we get a "copy" of the entry; doing this because we can't modify the map entry directly
+		if entry, ok := a.Organization.OrganizationPlans[eventData.OrganizationPlanId]; ok {
+
+			// Then we modify the copy
+			entry.Milestones = make(map[string]orgplanmodel.OrganizationPlanMilestone)
+
+			// Then we reassign map entry
+			a.Organization.OrganizationPlans[eventData.OrganizationPlanId] = entry
+		}
+	}
+	if _, ok := a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[eventData.MilestoneId]; !ok {
+		a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[eventData.MilestoneId] = orgplanmodel.OrganizationPlanMilestone{
+			ID: eventData.MilestoneId,
+		}
+	}
+	milestone := a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[eventData.MilestoneId]
+	if eventData.UpdateName() {
+		milestone.Name = eventData.Name
+	}
+	if eventData.UpdateOrder() {
+		milestone.Order = eventData.Order
+	}
+	if eventData.UpdateDurationHours() {
+		milestone.DurationHours = eventData.DurationHours
+	}
+	if eventData.UpdateItems() {
+		milestone.Items = eventData.Items
+	}
+	if eventData.UpdateOptional() {
+		milestone.Optional = eventData.Optional
+	}
+	if eventData.UpdateRetired() {
+		milestone.Retired = eventData.Retired
+	}
+
+	a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[milestone.ID] = milestone
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onOrganizationPlanMilestoneReorder(evt eventstore.Event) error {
+	var eventData orgplanevents.OrganizationPlanMilestoneReorderEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.OrganizationPlans == nil {
+		a.Organization.OrganizationPlans = map[string]orgplanmodel.OrganizationPlan{}
+	}
+
+	if a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones == nil {
+		// First we get a "copy" of the entry; doing this because we can't modify the map entry directly
+		if entry, ok := a.Organization.OrganizationPlans[eventData.OrganizationPlanId]; ok {
+
+			// Then we modify the copy
+			entry.Milestones = make(map[string]orgplanmodel.OrganizationPlanMilestone)
+
+			// Then we reassign map entry
+			a.Organization.OrganizationPlans[eventData.OrganizationPlanId] = entry
+		}
+	}
+	for i, milestoneId := range eventData.MilestoneIds {
+		if milestone, ok := a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[milestoneId]; ok {
+			milestone.Order = int64(i)
+			a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[milestoneId] = milestone
+		}
+	}
 
 	return nil
 }

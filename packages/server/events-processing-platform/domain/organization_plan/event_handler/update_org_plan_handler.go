@@ -55,7 +55,7 @@ func (h *updateOrganizationPlanHandler) Handle(ctx context.Context, baseRequest 
 
 		updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
 
-		evt, err := event.NewOrganizationPlanUpdateEvent(orgAggregate, request.Name, request.Retired, *updatedAt, extractOrganizationPlanFieldsMask(request.FieldsMask))
+		evt, err := event.NewOrganizationPlanUpdateEvent(orgAggregate, request.OrganizationPlanId, request.Name, request.Retired, *updatedAt, extractOrganizationPlanFieldsMask(request.FieldsMask))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationPlanUpdateEvent")

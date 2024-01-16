@@ -10,18 +10,20 @@ import (
 )
 
 type OrganizationPlanUpdateEvent struct {
-	Tenant     string    `json:"tenant" validate:"required"`
-	Name       string    `json:"name,omitempty"`
-	UpdatedAt  time.Time `json:"updatedAt"`
-	Retired    bool      `json:"retired"`
-	FieldsMask []string  `json:"fieldsMask,omitempty"`
+	Tenant             string    `json:"tenant" validate:"required"`
+	Name               string    `json:"name,omitempty"`
+	UpdatedAt          time.Time `json:"updatedAt"`
+	Retired            bool      `json:"retired"`
+	FieldsMask         []string  `json:"fieldsMask,omitempty"`
+	OrganizationPlanId string    `json:"organizationPlanId" validate:"required"`
 }
 
-func NewOrganizationPlanUpdateEvent(aggregate eventstore.Aggregate, name string, retired bool, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
+func NewOrganizationPlanUpdateEvent(aggregate eventstore.Aggregate, organizationPlanId, name string, retired bool, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
 	eventData := OrganizationPlanUpdateEvent{
-		Tenant:     aggregate.GetTenant(),
-		UpdatedAt:  updatedAt,
-		FieldsMask: fieldsMask,
+		Tenant:             aggregate.GetTenant(),
+		UpdatedAt:          updatedAt,
+		FieldsMask:         fieldsMask,
+		OrganizationPlanId: organizationPlanId,
 	}
 	if eventData.UpdateName() {
 		eventData.Name = name

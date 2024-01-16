@@ -56,7 +56,7 @@ func (h *updateOrganizationPlanMilestoneCommandHandler) Handle(ctx context.Conte
 
 		updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
 
-		evt, err := event.NewOrganizationPlanMilestoneUpdateEvent(orgAggregate, baseRequest.ObjectID, request.Name, request.DurationHours, request.Order, GrpcItemsToDomainItems(request.Items), extractOrganizationPlanMilestoneFieldsMask(request.FieldsMask), request.Optional, request.Retired, *updatedAt)
+		evt, err := event.NewOrganizationPlanMilestoneUpdateEvent(orgAggregate, request.OrganizationPlanId, baseRequest.ObjectID, request.Name, request.DurationHours, request.Order, GrpcItemsToDomainItems(request.Items), extractOrganizationPlanMilestoneFieldsMask(request.FieldsMask), request.Optional, request.Retired, *updatedAt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationPlanUpdateEvent")

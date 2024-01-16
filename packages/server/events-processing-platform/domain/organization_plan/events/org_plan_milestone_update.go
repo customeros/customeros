@@ -11,24 +11,26 @@ import (
 )
 
 type OrganizationPlanMilestoneUpdateEvent struct {
-	Tenant        string                                `json:"tenant" validate:"required"`
-	MilestoneId   string                                `json:"milestoneId" validate:"required"`
-	Name          string                                `json:"name,omitempty"`
-	Order         int64                                 `json:"order" validate:"gte=0"`
-	DurationHours int64                                 `json:"durationHours" validate:"gte=0"`
-	UpdatedAt     time.Time                             `json:"updatedAt"`
-	Items         []model.OrganizationPlanMilestoneItem `json:"items"`
-	Optional      bool                                  `json:"optional"`
-	Retired       bool                                  `json:"retired"`
-	FieldsMask    []string                              `json:"fieldsMask,omitempty"`
+	Tenant             string                                `json:"tenant" validate:"required"`
+	MilestoneId        string                                `json:"milestoneId" validate:"required"`
+	Name               string                                `json:"name,omitempty"`
+	Order              int64                                 `json:"order" validate:"gte=0"`
+	DurationHours      int64                                 `json:"durationHours" validate:"gte=0"`
+	UpdatedAt          time.Time                             `json:"updatedAt"`
+	Items              []model.OrganizationPlanMilestoneItem `json:"items"`
+	Optional           bool                                  `json:"optional"`
+	Retired            bool                                  `json:"retired"`
+	FieldsMask         []string                              `json:"fieldsMask,omitempty"`
+	OrganizationPlanId string                                `json:"organizationPlanId" validate:"required"`
 }
 
-func NewOrganizationPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, milestoneId, name string, durationHours, order int64, items []model.OrganizationPlanMilestoneItem, fieldsMask []string, optional, retired bool, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, organizationPlanId, milestoneId, name string, durationHours, order int64, items []model.OrganizationPlanMilestoneItem, fieldsMask []string, optional, retired bool, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationPlanMilestoneUpdateEvent{
-		Tenant:      aggregate.GetTenant(),
-		MilestoneId: milestoneId,
-		UpdatedAt:   updatedAt,
-		FieldsMask:  fieldsMask,
+		Tenant:             aggregate.GetTenant(),
+		MilestoneId:        milestoneId,
+		UpdatedAt:          updatedAt,
+		FieldsMask:         fieldsMask,
+		OrganizationPlanId: organizationPlanId,
 	}
 	if eventData.UpdateName() {
 		eventData.Name = name

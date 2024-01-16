@@ -2,8 +2,9 @@ package graph
 
 import (
 	"context"
-	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"strings"
+
+	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
@@ -21,6 +22,7 @@ import (
 	masterplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	orgplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
@@ -58,6 +60,7 @@ type GraphSubscriber struct {
 	masterPlanEventHandler         *MasterPlanEventHandler
 	invoicingCycleEventHandler     *InvoicingCycleEventHandler
 	invoiceEventHandler            *InvoiceEventHandler
+	organizationPlanEventHandler   *OrganizationPlanEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphSubscriber {
@@ -83,6 +86,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		masterPlanEventHandler:         NewMasterPlanEventHandler(log, repositories),
 		invoicingCycleEventHandler:     NewInvoicingCycleEventHandler(log, repositories),
 		invoiceEventHandler:            NewInvoiceEventHandler(log, repositories),
+		organizationPlanEventHandler:   NewOrganizationPlanEventHandler(log, repositories),
 	}
 }
 
@@ -379,6 +383,17 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.invoiceEventHandler.OnInvoiceFill(ctx, evt)
 	case invoiceevents.InvoicePdfGeneratedV1:
 		return s.invoiceEventHandler.OnInvoicePdfGenerated(ctx, evt)
+
+	case orgplanevent.OrganizationPlanCreateV1:
+		return s.organizationPlanEventHandler.OnCreate(ctx, evt)
+	case orgplanevent.OrganizationPlanUpdateV1:
+		return s.organizationPlanEventHandler.OnUpdate(ctx, evt)
+	case orgplanevent.OrganizationPlanMilestoneCreateV1:
+		return s.organizationPlanEventHandler.OnCreateMilestone(ctx, evt)
+	case orgplanevent.OrganizationPlanMilestoneUpdateV1:
+		return s.organizationPlanEventHandler.OnUpdateMilestone(ctx, evt)
+	case orgplanevent.OrganizationPlanMilestoneReorderV1:
+		return s.organizationPlanEventHandler.OnReorderMilestones(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)

@@ -54,7 +54,7 @@ func (h *reorderOrganizationPlanMilestonesHandler) Handle(ctx context.Context, b
 
 		updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
 
-		evt, err := event.NewOrganizationPlanMilestoneReorderEvent(orgAggregate, request.OrganizationPlanMilestoneIds, *updatedAt)
+		evt, err := event.NewOrganizationPlanMilestoneReorderEvent(orgAggregate, request.OrganizationPlanId, request.OrganizationPlanMilestoneIds, *updatedAt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationPlanMilestoneCreateEvent")
