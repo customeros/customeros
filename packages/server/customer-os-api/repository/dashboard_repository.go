@@ -37,6 +37,7 @@ const (
 	SearchSortParamOwner              = "OWNER"
 	SearchSortParamLastTouchpointAt   = "LAST_TOUCHPOINT_AT"
 	SearchSortParamLastTouchpointType = "LAST_TOUCHPOINT_TYPE"
+	SearchSortParamRenewalCycle       = "RENEWAL_CYCLE"
 )
 
 type DashboardRepository interface {
@@ -546,6 +547,8 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE, false))
 			} else if filter.Filter.Property == SearchSortParamLastTouchpointType && filter.Filter.Value.ArrayStr != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointType", *filter.Filter.Value.ArrayStr, utils.IN, false))
+			} else if filter.Filter.Property == SearchSortParamRenewalCycle {
+				contractFilter.Filters = append(contractFilter.Filters, createStringCypherFilter("renewalCycle", *filter.Filter.Value.Str, utils.EQUALS))
 			}
 		}
 
@@ -659,7 +662,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		}
 		//query += ` WHERE (o.hide = false) `
 
-		if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
+		if organizationFilterCypher != "" || contractFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
 			query += " WHERE "
 		}
 
