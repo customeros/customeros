@@ -17,7 +17,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationIdsConnectedToInteractionEvent(ctx context.Context, tenant, interactionEventId string) ([]string, error)
 	GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
 	GetOrganizationByContractId(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
-	GetOrganizationsForInvoicing(ctx context.Context, invoiceDate time.Time) ([]*dbtype.Node, error)
+	GetOrganizationsForInvoicing(ctx context.Context, invoiceDateTime time.Time) ([]map[string]any, error)
 }
 
 type organizationReadRepository struct {
@@ -192,57 +192,57 @@ func (r *organizationReadRepository) GetOrganizationByContractId(ctx context.Con
 		return records[0], nil
 	}
 }
-func (r *organizationReadRepository) GetOrganizationsForInvoicing(ctx context.Context, invoiceDate time.Time) ([]*dbtype.Node, error) {
+
+func (r *organizationReadRepository) GetOrganizationsForInvoicing(ctx context.Context, invoiceDateTime time.Time) ([]map[string]any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForInvoicing")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, "")
-	span.LogFields(log.Object("invoiceDate", invoiceDate))
+	span.LogFields(log.Object("invoiceDateTime", invoiceDateTime))
 
 	cypher := fmt.Sprintf(`
-			WITH datetime({year:$invoiceDate.year, month:$invoiceDate.month, day:$invoiceDate.day}) as invoiceDate
-			WITH invoiceDate, invoiceDate - duration({days: 1}) as aDayAgo
+			WITH datetime({year: $invoiceDateTime.year, month: $invoiceDateTime.month, day: $invoiceDateTime.day, hour: $invoiceDateTime.hour, minute: $invoiceDateTime.minute, second: $invoiceDateTime.second, nanosecond: $invoiceDateTime.nanosecond}) as invoiceDateTime
 			MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
 			WHERE 
-			  o.hide = false AND o.isCustomer = true AND 
+			  o.hide = false AND o.isCustomer = true AND (o.invoicingActive is null or o.invoicingActive = false) AND sli.startedAt < invoiceDateTime AND
 			  ((
 				(sli.billed = 'MONTHLY' AND (
-				  duration.inMonths(invoiceDate, sli.startedAt).months %s = 0 and invoiceDate.day = sli.startedAt.day
+				  invoiceDateTime.day = sli.startedAt.day
 				  OR
 				  (
 					sli.startedAt.month = 2 AND sli.startedAt.day = 29 AND 
-					date({year:invoiceDate.year, month:2, day:28}) <= date(invoiceDate) AND 
-					invoiceDate.day = 28
+					date({year:invoiceDateTime.year, month:2, day:28}) <= date(invoiceDateTime) AND invoiceDateTime.day = 28
 				  )
 				))
 				OR
 				(sli.billed = 'QUARTERLY' AND (
 				  (
-					date(sli.startedAt).day = date(invoiceDate).day AND
-					((date(invoiceDate).month - date(sli.startedAt).month) %s = 0 OR
-					(date(sli.startedAt).month = 2 AND date(invoiceDate).month = 2 AND date(sli.startedAt).day = 29 AND date(invoiceDate).day = 28))
+					date(sli.startedAt).day = date(invoiceDateTime).day AND
+					((date(invoiceDateTime).month - date(sli.startedAt).month) %s = 0 OR
+					(date(sli.startedAt).month = 2 AND date(invoiceDateTime).month = 2 AND date(sli.startedAt).day = 29 AND date(invoiceDateTime).day = 28))
 				  )
 				  OR
 				  (
 					date(sli.startedAt).month = 2 AND date(sli.startedAt).day = 29 AND
-					date(invoiceDate).month = 2 AND date(invoiceDate).day = 28 AND
-					date({year: invoiceDate.year, month: 2, day: 28}) <= date(invoiceDate)
+					date(invoiceDateTime).month = 2 AND date(invoiceDateTime).day = 28 AND
+					date({year: invoiceDateTime.year, month: 2, day: 28}) <= date(invoiceDateTime)
 				  )
 				))
 				OR
-				(sli.billed = 'ANNUALY' AND (
-				  date(sli.startedAt).month = date(invoiceDate).month AND
-				  date(sli.startedAt).day = date(invoiceDate).day AND
+				(sli.billed = 'ANNUALLY' AND (
+				  date(sli.startedAt).month = date(invoiceDateTime).month AND
+				  date(sli.startedAt).day = date(invoiceDateTime).day AND
 				  NOT (
 					date(sli.startedAt).month = 2 AND date(sli.startedAt).day = 29 AND
-					date(invoiceDate).month = 2 AND date(invoiceDate).day = 28 AND
-					date({year: invoiceDate.year, month: 2, day: 28}) <= date(invoiceDate)
+					date(invoiceDateTime).month = 2 AND date(invoiceDateTime).day = 28 AND
+					date({year: invoiceDateTime.year, month: 2, day: 28}) <= date(invoiceDateTime)
 				  )
 				))
-			  ) or sli.updatedAt >= aDayAgo)
-			RETURN t.name, DISTINCT(o.id); #limit 5000
-			`, "% 1", "% 3")
+			  ) OR (datetime({year: sli.startedAt.year, month: sli.startedAt.month, day: sli.startedAt.day}) + duration({days: 1})) <= invoiceDateTime)
+			WITH DISTINCT(o.id) as organizationId, t.name as tenant limit 100
+			RETURN tenant, organizationId
+			`, "% 3")
 	params := map[string]any{
-		"invoiceDate": invoiceDate,
+		"invoiceDateTime": invoiceDateTime,
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -262,7 +262,10 @@ func (r *organizationReadRepository) GetOrganizationsForInvoicing(ctx context.Co
 		return nil, err
 	}
 
-	records := result.([]*dbtype.Node)
-	span.LogFields(log.Bool("result.found", true))
-	return records, nil
+	response := make([]map[string]any, 0)
+
+	for _, v := range result.([]*neo4j.Record) {
+		response = append(response, v.AsMap())
+	}
+	return response, nil
 }

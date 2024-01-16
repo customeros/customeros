@@ -267,18 +267,78 @@ func CreateMasterPlanMilestone(ctx context.Context, driver *neo4j.DriverWithCont
 
 func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
 	orgId := utils.NewUUIDIfEmpty(organization.ID)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
-			  MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$id})
-				SET o:Organization_%s,
-					o.name=$name,
-					o.hide=$hide
-				`, tenant)
-
+	now := time.Now().UTC()
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
+			ON CREATE SET 	org.name=$name, 
+							org.customerOsId=$customerOsId,
+							org.referenceId=$referenceId,
+							org.description=$description, 
+							org.website=$website,
+							org.industry=$industry, 
+							org.subIndustry=$subIndustry,
+							org.industryGroup=$industryGroup,
+							org.targetAudience=$targetAudience,	
+							org.valueProposition=$valueProposition,
+							org.lastFundingRound=$lastFundingRound,
+							org.lastFundingAmount=$lastFundingAmount,
+							org.lastTouchpointAt=$lastTouchpointAt,
+							org.lastTouchpointType=$lastTouchpointType,
+							org.note=$note,
+							org.logoUrl=$logoUrl,
+							org.yearFounded=$yearFounded,
+							org.headquarters=$headquarters,
+							org.employeeGrowthRate=$employeeGrowthRate,
+							org.isPublic=$isPublic, 
+							org.isCustomer=$isCustomer, 
+							org.hide=$hide,
+							org.createdAt=$now,
+							org.updatedAt=$now,
+							org.renewalForecastArr=$renewalForecastArr,
+							org.renewalForecastMaxArr=$renewalForecastMaxArr,
+							org.derivedNextRenewalAt=$derivedNextRenewalAt,
+							org.derivedRenewalLikelihood=$derivedRenewalLikelihood,
+							org.derivedRenewalLikelihoodOrder=$derivedRenewalLikelihoodOrder,
+							org.onboardingStatus=$onboardingStatus,
+							org.onboardingStatusOrder=$onboardingStatusOrder,
+							org.onboardingUpdatedAt=$onboardingUpdatedAt,
+							org.onboardingComments=$onboardingComments
+							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant": tenant,
-		"name":   organization.Name,
-		"hide":   organization.Hide,
-		"id":     orgId,
+		"id":                            orgId,
+		"customerOsId":                  organization.CustomerOsId,
+		"referenceId":                   organization.ReferenceId,
+		"tenant":                        tenant,
+		"name":                          organization.Name,
+		"description":                   organization.Description,
+		"website":                       organization.Website,
+		"industry":                      organization.Industry,
+		"isPublic":                      organization.IsPublic,
+		"isCustomer":                    organization.IsCustomer,
+		"subIndustry":                   organization.SubIndustry,
+		"industryGroup":                 organization.IndustryGroup,
+		"targetAudience":                organization.TargetAudience,
+		"valueProposition":              organization.ValueProposition,
+		"hide":                          organization.Hide,
+		"lastTouchpointAt":              utils.TimePtrFirstNonNilNillableAsAny(organization.LastTouchpointAt, &now),
+		"lastTouchpointType":            organization.LastTouchpointType,
+		"lastFundingRound":              organization.LastFundingRound,
+		"lastFundingAmount":             organization.LastFundingAmount,
+		"note":                          organization.Note,
+		"logoUrl":                       organization.LogoUrl,
+		"yearFounded":                   organization.YearFounded,
+		"headquarters":                  organization.Headquarters,
+		"employeeGrowthRate":            organization.EmployeeGrowthRate,
+		"renewalForecastArr":            organization.RenewalSummary.ArrForecast,
+		"renewalForecastMaxArr":         organization.RenewalSummary.MaxArrForecast,
+		"derivedNextRenewalAt":          utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalSummary.NextRenewalAt),
+		"derivedRenewalLikelihood":      organization.RenewalSummary.RenewalLikelihood,
+		"derivedRenewalLikelihoodOrder": organization.RenewalSummary.RenewalLikelihoodOrder,
+		"onboardingStatus":              string(organization.OnboardingDetails.Status),
+		"onboardingStatusOrder":         organization.OnboardingDetails.SortingOrder,
+		"onboardingUpdatedAt":           utils.TimePtrFirstNonNilNillableAsAny(organization.OnboardingDetails.UpdatedAt),
+		"onboardingComments":            organization.OnboardingDetails.Comments,
+		"now":                           utils.Now(),
 	})
 	return orgId
 }
@@ -710,4 +770,16 @@ func InsertServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.
 		StartedAt:        startedAt,
 		EndedAt:          &endedAt,
 	})
+}
+
+func FirstTimeOfMonth(year, month int) time.Time {
+	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+}
+
+func MiddleTimeOfMonth(year, month int) time.Time {
+	return FirstTimeOfMonth(year, month).AddDate(0, 0, 15)
+}
+
+func LastTimeOfMonth(year, month int) time.Time {
+	return FirstTimeOfMonth(year, month).AddDate(0, 1, 0).Add(-time.Nanosecond)
 }
