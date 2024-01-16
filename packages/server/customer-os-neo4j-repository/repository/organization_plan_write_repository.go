@@ -78,7 +78,9 @@ func (r *organizationPlanWriteRepository) Create(ctx context.Context, tenant, or
 								op.sourceOfTruth=$sourceOfTruth,
 								op.appSource=$appSource,
 								op.name=$name
-								op.statusDetails=$statusDetails
+								op.status=$status,
+								op.statusComments=$statusComments,
+								op.statusUpdatedAt=$statusUpdatedAt
 							`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
@@ -89,7 +91,9 @@ func (r *organizationPlanWriteRepository) Create(ctx context.Context, tenant, or
 		"sourceOfTruth":      source,
 		"appSource":          appSource,
 		"name":               name,
-		"statusDetails":      statusDetails,
+		"status":             statusDetails.Status,
+		"statusComments":     statusDetails.Comments,
+		"statusUpdatedAt":    statusDetails.UpdatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -121,7 +125,9 @@ func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, t
 								m.durationHours=$durationHours,
 								m.optional=$optional,
 								m.items=$items
-								m.statusDetails=$statusDetails
+								m.status=$status,
+								m.statusComments=$statusComments,
+								m.statusUpdatedAt=$statusUpdatedAt
 							`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
@@ -137,7 +143,9 @@ func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, t
 		"durationHours":      durationHours,
 		"optional":           optional,
 		"items":              items,
-		"statusDetails":      statusDetails,
+		"status":             statusDetails.Status,
+		"statusComments":     statusDetails.Comments,
+		"statusUpdatedAt":    statusDetails.UpdatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -170,7 +178,9 @@ func (r *organizationPlanWriteRepository) CreateBulkMilestones(ctx context.Conte
 								m.durationHours=milestone.durationHours,
 								m.optional=milestone.optional,
 								m.items=milestone.items,
-								m.statusDetails=milestone.statusDetails
+								m.status=milestone.status
+								m.statusComments=milestone.statusComments,
+								m.statusUpdatedAt=milestone.statusUpdatedAt
 							`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,

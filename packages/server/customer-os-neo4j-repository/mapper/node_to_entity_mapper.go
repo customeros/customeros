@@ -299,3 +299,70 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 	}
 	return &contract
 }
+
+func MapDbNodeToOrganizationPlanEntity(dbNode *dbtype.Node) *entity.OrganizationPlanEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	orgPlanEntity := entity.OrganizationPlanEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Retired:       utils.GetBoolPropOrFalse(props, "retired"),
+		StatusDetails: entity.OrganizationPlanStatusDetails{
+			Status:    utils.GetStringPropOrEmpty(props, "status"),
+			UpdatedAt: utils.GetTimePropOrEpochStart(props, "statusUpdatedAt"),
+			Comments:  utils.GetStringPropOrEmpty(props, "statusComments"),
+		},
+	}
+	return &orgPlanEntity
+}
+
+func MapDbNodeToOrganizationPlanMilestoneEntity(dbNode *dbtype.Node) *entity.OrganizationPlanMilestoneEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	orgPlanMilestoneEntity := entity.OrganizationPlanMilestoneEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Order:         utils.GetInt64PropOrZero(props, "order"),
+		DurationHours: utils.GetInt64PropOrZero(props, "durationHours"),
+		Optional:      utils.GetBoolPropOrFalse(props, "optional"),
+		Items:         MapOrganizationPlanMilestoneItemToEntity(props),
+		Retired:       utils.GetBoolPropOrFalse(props, "retired"),
+		StatusDetails: entity.OrganizationPlanMilestoneStatusDetails{
+			Status:    utils.GetStringPropOrEmpty(props, "status"),
+			UpdatedAt: utils.GetTimePropOrEpochStart(props, "statusUpdatedAt"),
+			Comments:  utils.GetStringPropOrEmpty(props, "statusComments"),
+		},
+	}
+	return &orgPlanMilestoneEntity
+}
+
+func MapOrganizationPlanMilestoneItemToEntity(props map[string]any) []entity.OrganizationPlanMilestoneItem {
+	items := props["items"].([]map[string]any)
+	itemArray := make([]entity.OrganizationPlanMilestoneItem, 0)
+	if items == nil {
+		return itemArray
+	}
+	for _, item := range items {
+		itemEntity := entity.OrganizationPlanMilestoneItem{
+			Text:      utils.GetStringPropOrEmpty(item, "text"),
+			Status:    utils.GetStringPropOrEmpty(item, "status"),
+			UpdatedAt: utils.GetTimePropOrEpochStart(item, "updatedAt"),
+		}
+		itemArray = append(itemArray, itemEntity)
+	}
+	return itemArray
+}
