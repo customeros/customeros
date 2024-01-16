@@ -93,6 +93,12 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
 					s.resyncContract(ctx, record.Tenant, record.ContractId)
 				}
+			} else {
+				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkStatusRenewalRequested(ctx, record.Tenant, record.ContractId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error marking status renewal requested: %s", err.Error())
+				}
 			}
 		}
 
@@ -139,6 +145,12 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 				grpcErr, ok := status.FromError(err)
 				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
 					s.resyncContract(ctx, record.Tenant, record.ContractId)
+				}
+			} else {
+				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkRolloutRenewalRequested(ctx, record.Tenant, record.ContractId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error marking renewal rollout requested: %s", err.Error())
 				}
 			}
 		}
@@ -195,7 +207,7 @@ func (s *contractService) resyncContract(ctx context.Context, tenant, contractId
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.resyncContract")
 	defer span.Finish()
 
-	contractDbNode, err := s.repositories.ContractRepository.GetContractById(ctx, tenant, contractId)
+	contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error getting contract {%s}: %s", contractId, err.Error())
