@@ -24,7 +24,12 @@ func TestMutationResolver_PhoneNumberMergeToContact(t *testing.T) {
 
 	// Create a default contact
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	neo4jt.CreateCountry(ctx, driver, "US", "USA", "United States", "1")
+	neo4jtest.CreateCountry(ctx, driver, neo4jentity.CountryEntity{
+		Name:      "United States",
+		CodeA2:    "US",
+		CodeA3:    "USA",
+		PhoneCode: "1",
+	})
 
 	rawResponse, err := c.RawPost(getQuery("phone_number/merge_phone_number_to_contact"),
 		client.Var("contactId", contactId),
@@ -124,7 +129,12 @@ func TestMutationResolver_PhoneNumberUpdateInContact_ReplacePhoneNumber(t *testi
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact and phone number
-	neo4jt.CreateCountry(ctx, driver, "US", "USA", "United States", "1")
+	neo4jtest.CreateCountry(ctx, driver, neo4jentity.CountryEntity{
+		Name:      "United States",
+		CodeA2:    "US",
+		CodeA3:    "USA",
+		PhoneCode: "1",
+	})
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234567890", false, "WORK")
 

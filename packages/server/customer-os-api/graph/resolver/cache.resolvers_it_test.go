@@ -96,7 +96,13 @@ func TestQueryResolver_GCliCache(t *testing.T) {
 		LastName:  "b",
 	})
 
-	neo4jt.CreateCountryWith(ctx, driver, "1", "USA", "United States")
+	neo4jtest.CreateCountry(ctx, driver, neo4jentity.CountryEntity{
+		Id:        "1",
+		Name:      "United States",
+		CodeA2:    "US",
+		CodeA3:    "USA",
+		PhoneCode: "1",
+	})
 	neo4jt.CreateState(ctx, driver, "USA", "Alabama", "AL")
 	neo4jt.CreateState(ctx, driver, "USA", "Louisiana", "LA")
 

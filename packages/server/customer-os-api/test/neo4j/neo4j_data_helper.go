@@ -1397,37 +1397,6 @@ func InteractionEventRepliesToInteractionEvent(ctx context.Context, driver *neo4
 	})
 }
 
-func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, codeA2, codeA3, name, phoneCode string) {
-	query := `MERGE (c:Country{codeA3: $codeA3}) 
-				ON CREATE SET 
-					c.phoneCode = $phoneCode,
-					c.codeA2 = $codeA2,
-					c.name = $name, 
-					c.createdAt = $now, 
-					c.updatedAt = $now`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"codeA2":    codeA2,
-		"codeA3":    codeA3,
-		"phoneCode": phoneCode,
-		"name":      name,
-		"now":       utils.Now(),
-	})
-}
-
-func CreateCountryWith(ctx context.Context, driver *neo4j.DriverWithContext, id, countryCodeA3, name string) {
-	var countryId = id
-	if countryId == "" {
-		countryUuid, _ := uuid.NewRandom()
-		countryId = countryUuid.String()
-	}
-	query := "MERGE (c:Country{codeA3: $countryCodeA3}) ON CREATE SET c.id = $countryId, c.name = $name, c.createdAt = datetime({timezone: 'UTC'}), c.updatedAt = datetime({timezone: 'UTC'})"
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"countryId":     countryId,
-		"countryCodeA3": countryCodeA3,
-		"name":          name,
-	})
-}
-
 func CreateState(ctx context.Context, driver *neo4j.DriverWithContext, countryCodeA3, name, code string) {
 	query := "MATCH (c:Country{codeA3: $countryCodeA3}) MERGE (c)<-[:BELONGS_TO_COUNTRY]-(az:State { code: $code }) ON CREATE SET az.id = randomUUID(), az.name = $name, az.createdAt = datetime({timezone: 'UTC'}), az.updatedAt = datetime({timezone: 'UTC'})"
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
