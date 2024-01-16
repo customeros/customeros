@@ -10,6 +10,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
+	"time"
 )
 
 type ContractReadRepository interface {
@@ -19,6 +20,7 @@ type ContractReadRepository interface {
 	GetContractsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	TenantsHasAtLeastOneContract(ctx context.Context, tenant string) (bool, error)
 	CountContracts(ctx context.Context, tenant string) (int64, error)
+	GetContractsForInvoicing(ctx context.Context, invoiceDateTime time.Time) ([]map[string]any, error)
 }
 
 type contractReadRepository struct {
@@ -226,4 +228,81 @@ func (r *contractReadRepository) CountContracts(ctx context.Context, tenant stri
 	contractsCount := dbRecord.(*db.Record).Values[0].(int64)
 	span.LogFields(log.Int64("result - contractsCount", contractsCount))
 	return contractsCount, nil
+}
+
+func (r *contractReadRepository) GetContractsForInvoicing(ctx context.Context, invoiceDateTime time.Time) ([]map[string]any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContractsForInvoicing")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Object("invoiceDateTime", invoiceDateTime))
+
+	cypher := fmt.Sprintf(`
+			WITH datetime({year: $invoiceDateTime.year, month: $invoiceDateTime.month, day: $invoiceDateTime.day, hour: $invoiceDateTime.hour, minute: $invoiceDateTime.minute, second: $invoiceDateTime.second, nanosecond: $invoiceDateTime.nanosecond}) as invoiceDateTime
+			MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
+			WHERE 
+			  o.hide = false AND o.isCustomer = true AND (o.invoicingActive is null or o.invoicingActive = false) AND sli.startedAt < invoiceDateTime AND
+			  ((
+				(sli.billed = 'MONTHLY' AND (
+				  invoiceDateTime.day = sli.startedAt.day
+				  OR
+				  (
+					sli.startedAt.month = 2 AND sli.startedAt.day = 29 AND 
+					date({year:invoiceDateTime.year, month:2, day:28}) <= date(invoiceDateTime) AND invoiceDateTime.day = 28
+				  )
+				))
+				OR
+				(sli.billed = 'QUARTERLY' AND (
+				  (
+					date(sli.startedAt).day = date(invoiceDateTime).day AND
+					((date(invoiceDateTime).month - date(sli.startedAt).month) %s = 0 OR
+					(date(sli.startedAt).month = 2 AND date(invoiceDateTime).month = 2 AND date(sli.startedAt).day = 29 AND date(invoiceDateTime).day = 28))
+				  )
+				  OR
+				  (
+					date(sli.startedAt).month = 2 AND date(sli.startedAt).day = 29 AND
+					date(invoiceDateTime).month = 2 AND date(invoiceDateTime).day = 28 AND
+					date({year: invoiceDateTime.year, month: 2, day: 28}) <= date(invoiceDateTime)
+				  )
+				))
+				OR
+				(sli.billed = 'ANNUALLY' AND (
+				  date(sli.startedAt).month = date(invoiceDateTime).month AND
+				  date(sli.startedAt).day = date(invoiceDateTime).day AND
+				  NOT (
+					date(sli.startedAt).month = 2 AND date(sli.startedAt).day = 29 AND
+					date(invoiceDateTime).month = 2 AND date(invoiceDateTime).day = 28 AND
+					date({year: invoiceDateTime.year, month: 2, day: 28}) <= date(invoiceDateTime)
+				  )
+				))
+			  ) OR (datetime({year: sli.startedAt.year, month: sli.startedAt.month, day: sli.startedAt.day}) + duration({days: 1})) <= invoiceDateTime)
+			WITH DISTINCT(o.id) as organizationId, t.name as tenant limit 100
+			RETURN tenant, organizationId
+			`, "% 3")
+	params := map[string]any{
+		"invoiceDateTime": invoiceDateTime,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	response := make([]map[string]any, 0)
+
+	for _, v := range result.([]*neo4j.Record) {
+		response = append(response, v.AsMap())
+	}
+	return response, nil
 }

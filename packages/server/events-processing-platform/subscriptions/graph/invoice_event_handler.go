@@ -40,7 +40,7 @@ func (h *InvoiceEventHandler) OnInvoiceNew(ctx context.Context, evt eventstore.E
 
 	source := helper.GetSource(eventData.SourceFields.Source)
 	appSource := helper.GetAppSource(eventData.SourceFields.AppSource)
-	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.InvoiceNew(ctx, eventData.Tenant, eventData.OrganizationId, id, eventData.Date, eventData.DueDate, eventData.DryRun, source, appSource, eventData.CreatedAt)
+	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.InvoiceNew(ctx, eventData.Tenant, eventData.ContractId, id, eventData.DryRun, eventData.Number, eventData.Date, eventData.DueDate, source, appSource, eventData.CreatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving invoice %s: %s", id, err.Error())

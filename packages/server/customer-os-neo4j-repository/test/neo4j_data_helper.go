@@ -164,51 +164,6 @@ func CreateInvoicingCycle(ctx context.Context, driver *neo4j.DriverWithContext, 
 	return id
 }
 
-func CreateInvoice(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, entity entity.InvoiceEntity) string {
-	id := utils.NewUUIDIfEmpty(entity.Id)
-
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s {id:$organizationId})
-							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$id}) 
-							ON CREATE SET 
-								i:Invoice_%s,
-								i.createdAt=$createdAt,
-								i.updatedAt=$updatedAt,
-								i.source=$source,
-								i.sourceOfTruth=$sourceOfTruth,
-								i.appSource=$appSource,
-								i.date=$date,
-								i.dueDate=$dueDate,
-								i.dryRun=$dryRun,
-								i.amount=$amount,
-								i.vat=$vat,
-								i.total=$total,
-								i.repositoryFileId=$repositoryFileId,
-								i.pdfGenerated=$pdfGenerated
-							WITH o, i 
-							MERGE (o)-[:HAS_INVOICE]->(i) 
-					`, tenant, tenant)
-
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":           tenant,
-		"organizationId":   organizationId,
-		"id":               id,
-		"createdAt":        entity.CreatedAt,
-		"updatedAt":        entity.UpdatedAt,
-		"source":           entity.Source,
-		"sourceOfTruth":    entity.SourceOfTruth,
-		"appSource":        entity.AppSource,
-		"dryRun":           entity.DryRun,
-		"date":             entity.Date,
-		"dueDate":          entity.DueDate,
-		"amount":           entity.Amount,
-		"vat":              entity.Vat,
-		"total":            entity.Total,
-		"repositoryFileId": entity.RepositoryFileId,
-		"pdfGenerated":     entity.PdfGenerated,
-	})
-	return id
-}
-
 func CreateMasterPlan(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, masterPlan entity.MasterPlanEntity) string {
 	masterPlanId := utils.NewUUIDIfEmpty(masterPlan.Id)
 
@@ -495,9 +450,9 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return locationId
 }
 
-func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, contract entity.ContractEntity) string {
+func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity) string {
 	contractId := utils.NewUUIDIfEmpty(contract.Id)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (o:Organization {id:$orgId})
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (o:Organization {id:$organizationId})
 				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id})<-[:HAS_CONTRACT]-(o)
 				SET 
 					c:Contract_%s,
@@ -518,7 +473,7 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":               contractId,
-		"orgId":            orgId,
+		"organizationId":   organizationId,
 		"tenant":           tenant,
 		"name":             contract.Name,
 		"contractUrl":      contract.ContractUrl,
@@ -608,8 +563,8 @@ func ActiveRenewalOpportunityForContract(ctx context.Context, driver *neo4j.Driv
 
 func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, serviceLineItem entity.ServiceLineItemEntity) string {
 	serviceLineItemId := utils.NewUUIDIfEmpty(serviceLineItem.ID)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
-				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(sli:ServiceLineItem {id:$id})<-[:HAS_SERVICE]-(c)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
+				MERGE (c)-[:HAS_SERVICE]->(sli:ServiceLineItem {id:$id})
 				SET 
 					sli:ServiceLineItem_%s,
 					sli.name=$name,
@@ -664,13 +619,13 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 }
 
 func InsertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
-	contractId := CreateContractForOrganization(ctx, driver, tenant, organizationId, contract)
+	contractId := CreateContract(ctx, driver, tenant, organizationId, contract)
 	CreateOpportunityForContract(ctx, driver, tenant, contractId, opportunity)
 	return contractId
 }
 
 func InsertContractWithActiveRenewalOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
-	contractId := CreateContractForOrganization(ctx, driver, tenant, organizationId, contract)
+	contractId := CreateContract(ctx, driver, tenant, organizationId, contract)
 	opportunityId := CreateOpportunityForContract(ctx, driver, tenant, contractId, opportunity)
 	ActiveRenewalOpportunityForContract(ctx, driver, tenant, contractId, opportunityId)
 	return contractId
@@ -770,6 +725,96 @@ func InsertServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.
 		StartedAt:        startedAt,
 		EndedAt:          &endedAt,
 	})
+}
+
+func CreateInvoice(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, invoice entity.InvoiceEntity) string {
+	invoiceId := utils.NewUUIDIfEmpty(invoice.Id)
+	query := fmt.Sprintf(`
+			MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s {id:$contractId})
+			MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$id}) 
+			ON CREATE SET 
+				i:Invoice_%s,
+				i.source=$source,
+				i.sourceOfTruth=$sourceOfTruth,
+				i.appSource=$appSource,
+				i.createdAt=$createdAt,
+				i.updatedAt=$updatedAt,
+				i.dryRun=$dryRun,
+				i.date=$date,
+				i.dueDate=$dueDate,
+				i.amount=$amount,
+				i.vat=$vat,
+				i.total=$total,
+				i.repositoryFileId=$repositoryFileId,
+				i.pdfGenerated=$pdfGenerated
+			WITH c, i 
+			MERGE (c)-[:HAS_INVOICE]->(i) 
+				`, tenant, tenant)
+
+	params := map[string]any{
+		"id":               invoiceId,
+		"contractId":       contractId,
+		"tenant":           tenant,
+		"source":           invoice.Source,
+		"sourceOfTruth":    invoice.SourceOfTruth,
+		"appSource":        invoice.AppSource,
+		"createdAt":        invoice.CreatedAt,
+		"updatedAt":        invoice.UpdatedAt,
+		"dryRun":           invoice.DryRun,
+		"number":           invoice.Number,
+		"date":             invoice.Date,
+		"dueDate":          invoice.DueDate,
+		"amount":           invoice.Amount,
+		"vat":              invoice.Vat,
+		"total":            invoice.Total,
+		"repositoryFileId": invoice.RepositoryFileId,
+		"pdfGenerated":     invoice.PdfGenerated,
+	}
+
+	ExecuteWriteQuery(ctx, driver, query, params)
+	return invoiceId
+}
+
+func CreateInvoiceLine(ctx context.Context, driver *neo4j.DriverWithContext, tenant, invoiceId string, invoiceLine entity.InvoiceLineEntity) string {
+	invoiceLineId := utils.NewUUIDIfEmpty(invoiceLine.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_INVOICE]->(i:Invoice {id:$invoiceId})
+				MERGE (i)-[:HAS_INVOICE_LINE]->(il:InvoiceLine {id:$id})
+				ON CREATE SET  
+					il:InvoiceLine_%s,
+					il.source=$source,
+					il.sourceOfTruth=$sourceOfTruth,
+					il.appSource=$appSource,
+					il.createdAt=$createdAt,
+					il.updatedAt=$updatedAt,
+					il.index=$index,
+					il.name=$name,
+					il.price=$price,
+					il.quantity=$quantity,
+					il.amount=$amount,
+					il.vat=$vat,
+					il.total=$total
+				`, tenant)
+
+	params := map[string]any{
+		"id":            invoiceLineId,
+		"invoiceId":     invoiceId,
+		"tenant":        tenant,
+		"source":        invoiceLine.Source,
+		"sourceOfTruth": invoiceLine.SourceOfTruth,
+		"appSource":     invoiceLine.AppSource,
+		"createdAt":     invoiceLine.CreatedAt,
+		"updatedAt":     invoiceLine.UpdatedAt,
+		"index":         invoiceLine.Index,
+		"name":          invoiceLine.Name,
+		"price":         invoiceLine.Price,
+		"quantity":      invoiceLine.Quantity,
+		"amount":        invoiceLine.Amount,
+		"vat":           invoiceLine.Vat,
+		"total":         invoiceLine.Total,
+	}
+
+	ExecuteWriteQuery(ctx, driver, query, params)
+	return invoiceLineId
 }
 
 func FirstTimeOfMonth(year, month int) time.Time {
