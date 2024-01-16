@@ -2,6 +2,7 @@ import { useSearchParams } from 'next/navigation';
 import { useRef, useMemo, useEffect } from 'react';
 
 import { produce } from 'immer';
+import { match } from 'ts-pattern';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -61,29 +62,24 @@ export const useRenewalsPageData = ({ sorting }: UseRenewalsPageDataProps) => {
         });
       }
 
-      // if (preset) {
-      //   const [property, value] = (() => {
-      //     if (preset === 'customer') {
-      //       return ['IS_CUSTOMER', [true]];
-      //     }
-      //     if (preset === 'portfolio') {
-      //       const userId = globalCache?.global_Cache?.user.id;
+      if (preset) {
+        // TODO: this should be transformed into it's own column with client side filter
+        // too and populated via useFilterSetter().
+        const value = match(preset)
+          .with('1', () => 'MONTHLY')
+          .with('2', () => 'QUARTERLY')
+          .with('3', () => 'ANNUALLY')
+          .otherwise(() => 'MONTHLY');
 
-      //       return ['OWNER_ID', [userId]];
-      //     }
-
-      //     return [];
-      //   })();
-      //   if (!property || !value) return;
-      //   draft.AND.push({
-      //     filter: {
-      //       property,
-      //       value,
-      //       operation: ComparisonOperator.Eq,
-      //       includeEmpty: false,
-      //     },
-      //   });
-      // }
+        draft.AND.push({
+          filter: {
+            property: 'RENEWAL_CYCLE',
+            value,
+            operation: ComparisonOperator.Eq,
+            includeEmpty: false,
+          },
+        });
+      }
 
       if (
         organization?.isActive &&

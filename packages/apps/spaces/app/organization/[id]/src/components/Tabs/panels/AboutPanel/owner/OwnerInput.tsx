@@ -7,7 +7,7 @@ import { User02 } from '@ui/media/icons/User02';
 import { Select } from '@ui/form/SyncSelect/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
+import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
 import { useSetOrganizationOwnerMutation } from '@organizations/graphql/setOrganizationOwner.generated';
 import { useRemoveOrganizationOwnerMutation } from '@organizations/graphql/removeOrganizationOwner.generated';
 import {

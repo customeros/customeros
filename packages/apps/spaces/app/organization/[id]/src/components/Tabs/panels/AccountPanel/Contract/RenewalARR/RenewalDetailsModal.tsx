@@ -21,7 +21,7 @@ import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { FormElement, FormElementProps } from '@ui/form/FormElement';
-import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
+import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
 import {
   Opportunity,
   InternalStage,

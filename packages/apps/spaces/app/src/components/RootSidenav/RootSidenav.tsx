@@ -11,13 +11,16 @@ import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
 import { Image } from '@ui/media/Image';
 import { VStack } from '@ui/layout/Stack';
+import { Text } from '@ui/typography/Text';
 import { GridItem } from '@ui/layout/Grid';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
+import { mockedTableDefs } from '@shared/util/tableDefs.mock';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { useTableViewDefsQuery } from '@shared/graphql/tableViewDefs.generated';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
 import { SidenavItem } from './components/SidenavItem';
@@ -36,8 +39,19 @@ export const RootSidenav = () => {
     { root: 'organization' },
   );
 
+  const { data: tableViewDefsData } = useTableViewDefsQuery(
+    client,
+    {
+      pagination: { limit: 100, page: 1 },
+    },
+    {
+      enabled: false,
+      placeholderData: { tableViewDefs: { content: mockedTableDefs } },
+    },
+  );
   const { data } = useGlobalCacheQuery(client);
   const globalCache = data?.global_Cache;
+  const myViews = tableViewDefsData?.tableViewDefs?.content ?? [];
 
   const handleItemClick = (path: string) => {
     setLastActivePosition({ ...lastActivePosition, root: path });
@@ -116,7 +130,7 @@ export const RootSidenav = () => {
         />
       </Flex>
 
-      <VStack spacing='2' w='full'>
+      <VStack spacing='2' w='full' mb='4'>
         <SidenavItem
           label='Customer map'
           isActive={checkIsActive('customer-map')}
@@ -147,10 +161,18 @@ export const RootSidenav = () => {
             />
           )}
         />
+      </VStack>
+
+      <VStack spacing='2' w='full'>
+        <Flex w='full' justify='flex-start' pl='3.5'>
+          <Text color='gray.500'>My views</Text>
+        </Flex>
         {globalCache?.isOwner && (
           <SidenavItem
             label='My portfolio'
-            isActive={checkIsActive('organizations', { preset: 'portfolio' })}
+            isActive={checkIsActive('organizations', {
+              preset: 'portfolio',
+            })}
             onClick={() => handleItemClick('organizations?preset=portfolio')}
             icon={(isActive) => (
               <Icons.Briefcase1
@@ -160,19 +182,21 @@ export const RootSidenav = () => {
             )}
           />
         )}
-        {showMyViewsItems && (
-          <SidenavItem
-            label='Renewals'
-            isActive={checkIsActive('renewals', { preset: '1' })}
-            onClick={() => handleItemClick('renewals?preset=1')}
-            icon={(isActive) => (
-              <ClockFastForward
-                boxSize='5'
-                color={isActive ? 'gray.700' : 'gray.500'}
-              />
-            )}
-          />
-        )}
+        {showMyViewsItems &&
+          myViews.map((view) => (
+            <SidenavItem
+              key={view.id}
+              label={view.name}
+              isActive={checkIsActive('renewals', { preset: view.id })}
+              onClick={() => handleItemClick(`renewals?preset=${view.id}`)}
+              icon={(isActive) => (
+                <ClockFastForward
+                  boxSize='5'
+                  color={isActive ? 'gray.700' : 'gray.500'}
+                />
+              )}
+            />
+          ))}
       </VStack>
 
       <VStack

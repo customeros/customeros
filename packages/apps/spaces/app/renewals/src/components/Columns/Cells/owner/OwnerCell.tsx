@@ -7,7 +7,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useRenewalsMeta } from '@shared/state/RenewalsMeta.atom';
-import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
+import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
 
 type Owner = Pick<User, 'id' | 'firstName' | 'lastName'> | null;
 interface OwnerProps {
@@ -61,7 +61,7 @@ export const OwnerCell = ({ owner }: OwnerProps) => {
       }}
     >
       <Text cursor='default' color={value ? 'gray.700' : 'gray.400'}>
-        {name ?? 'Owner'}
+        {name || 'Owner'}
       </Text>
     </Flex>
   );
