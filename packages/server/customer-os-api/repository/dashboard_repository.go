@@ -660,10 +660,10 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 
 		query += fmt.Sprintf(` OPTIONAL MATCH (op)<-[:OWNS]-(owner:User) WITH *`)
 
-		//query += ` WHERE (o.hide = false) `
+		query += ` WHERE (o.hide = false) `
 
 		if organizationFilterCypher != "" || contractFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
-			query += " WHERE "
+			query += " AND "
 		}
 
 		queryParts := []string{}
