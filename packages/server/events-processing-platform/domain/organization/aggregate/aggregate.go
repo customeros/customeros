@@ -22,6 +22,10 @@ type OrganizationAggregate struct {
 	Organization *model.Organization
 }
 
+type OrganizationTempAggregate struct {
+	*aggregate.CommonTenantIdTempAggregate
+}
+
 func NewOrganizationAggregateWithTenantAndID(tenant, id string) *OrganizationAggregate {
 	organizationAggregate := OrganizationAggregate{}
 	organizationAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(OrganizationAggregateType, tenant, id)
@@ -30,6 +34,14 @@ func NewOrganizationAggregateWithTenantAndID(tenant, id string) *OrganizationAgg
 	organizationAggregate.Tenant = tenant
 
 	return &organizationAggregate
+}
+
+func NewOrganizationTempAggregateWithTenantAndID(tenant, id string) *OrganizationTempAggregate {
+	organizationTempAggregate := OrganizationTempAggregate{}
+	organizationTempAggregate.CommonTenantIdTempAggregate = aggregate.NewCommonTempAggregateWithTenantAndId(OrganizationAggregateType, tenant, id)
+	organizationTempAggregate.Tenant = tenant
+
+	return &organizationTempAggregate
 }
 
 func (a *OrganizationAggregate) When(event eventstore.Event) error {

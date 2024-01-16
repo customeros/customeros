@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -13,6 +14,9 @@ import (
 func GetOrganizationObjectID(aggregateID string, tenant string) string {
 	if tenant == "" {
 		return getOrganizationObjectUUID(aggregateID)
+	}
+	if strings.HasPrefix(aggregateID, string(OrganizationAggregateType)+"-"+constants.StreamTempPrefix+"-"+tenant+"-") {
+		return strings.ReplaceAll(aggregateID, string(OrganizationAggregateType)+"-"+constants.StreamTempPrefix+"-"+tenant+"-", "")
 	}
 	return strings.ReplaceAll(aggregateID, string(OrganizationAggregateType)+"-"+tenant+"-", "")
 }
@@ -48,4 +52,30 @@ func LoadOrganizationAggregate(ctx context.Context, eventStore eventstore.Aggreg
 	}
 
 	return organizationAggregate, nil
+}
+
+func LoadOrganizationTempAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*OrganizationTempAggregate, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadOrganizationTempAggregate")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("ObjectID", objectID))
+
+	organizationTempAggregate := NewOrganizationTempAggregateWithTenantAndID(tenant, objectID)
+
+	err := eventStore.Exists(ctx, organizationTempAggregate.GetID())
+	if err != nil {
+		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
+			tracing.TraceErr(span, err)
+			return nil, err
+		} else {
+			return organizationTempAggregate, nil
+		}
+	}
+
+	if err = eventStore.Load(ctx, organizationTempAggregate); err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return organizationTempAggregate, nil
 }

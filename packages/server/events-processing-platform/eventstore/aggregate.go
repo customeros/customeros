@@ -1,7 +1,6 @@
 package eventstore
 
 import (
-	"context"
 	"fmt"
 )
 
@@ -10,10 +9,6 @@ const (
 	aggregateAppliedEventsInitialCap     = 10
 	aggregateUncommittedEventsInitialCap = 10
 )
-
-type HandleCommand interface {
-	HandleCommand(ctx context.Context, command Command) error
-}
 
 type When interface {
 	When(event Event) error
@@ -53,6 +48,7 @@ type AggregateRoot interface {
 	RaiseEvent(event Event) error
 	String() string
 	IsWithAppliedEvents() bool
+	IsTemporal() bool
 	Load
 	Apply
 }
@@ -113,6 +109,10 @@ func (a *AggregateBase) GetID() string {
 // GetTenant get AggregateBase Tenant
 func (a *AggregateBase) GetTenant() string {
 	return a.Tenant
+}
+
+func (a *AggregateBase) IsTemporal() bool {
+	return false
 }
 
 // SetType set AggregateBase AggregateType

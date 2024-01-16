@@ -51,12 +51,7 @@ const (
 	REPLY    = "REPLY"
 	TIME     = "TIME"
 
-	Topic        = "topic"
-	Partition    = "partition"
-	Message      = "message"
 	WorkerID     = "workerID"
-	Offset       = "offset"
-	Time         = "time"
 	GroupName    = "GroupName"
 	StreamID     = "StreamID"
 	EventID      = "EventID"
@@ -76,5 +71,9 @@ const (
 	Bcrypt          = "bcrypt"
 	Redis           = "redis"
 
-	EsAll = "$all"
+	EsAll            = "$all"
+	StreamTempPrefix = "temp"
+
+	StreamMetadataMaxCount      = 1000
+	StreamMetadataMaxAgeSeconds = 7 * 24 * 60 * 60 // 7 days
 )
