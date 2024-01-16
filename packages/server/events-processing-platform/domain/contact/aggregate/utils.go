@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func GetContactObjectID(aggregateID string, tenant string) string {
+func GetContactObjectID(aggregateID, tenant string) string {
 	return strings.ReplaceAll(aggregateID, string(ContactAggregateType)+"-"+tenant+"-", "")
 }
 
