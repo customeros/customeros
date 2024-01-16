@@ -1270,3 +1270,76 @@ func assert_Search_Renewals_By_Name(t *testing.T, searchTerm string, includeEmpt
 
 	return responseRaw.DashboardView_Renewals
 }
+
+func TestQueryResolver_Search_Renewals_ByRenewalCycle(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	daysFromNow10 := utils.Now().AddDate(0, 0, 10)
+	daysFromNow20 := utils.Now().AddDate(0, 0, 20)
+
+	_ = neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org1",
+	})
+	_ = neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org2",
+	})
+	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org3",
+	})
+
+	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+
+	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
+	contractId1 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contractStartedAt,
+		RenewalCycle:     "MONTHLY",
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100, RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh})
+	insertServiceLineItem(ctx, driver, contractId1, entity.BilledTypeAnnually, 3, 2, sli1StartedAt)
+
+	contractId2 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contract2StartedAt,
+		RenewalCycle:     "MONTHLY",
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium})
+	insertServiceLineItem(ctx, driver, contractId2, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
+	contractId3 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contract2StartedAt,
+		RenewalCycle:     "QUARTERLY",
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow})
+	insertServiceLineItem(ctx, driver, contractId3, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
+	contractId4 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
+		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt: &contract2StartedAt,
+		RenewalCycle:     "ANNUALLY",
+	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow})
+	insertServiceLineItem(ctx, driver, contractId4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 4, "Opportunity": 4})
+	require.Equal(t, int64(2), assert_Search_Renewals_By_Cycle(t, "MONTHLY").TotalElements)
+}
+
+func assert_Search_Renewals_By_Cycle(t *testing.T, searchTerm string) model.RenewalsPage {
+	rawResponse, err := c.RawPost(getQuery("dashboard_view/dashboard_view_renewals_filter_by_renewal_cycle"),
+		client.Var("page", 1),
+		client.Var("limit", 10),
+		client.Var("searchTerm", searchTerm),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var responseRaw struct {
+		DashboardView_Renewals model.RenewalsPage
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &responseRaw)
+	require.Nil(t, err)
+	require.NotNil(t, responseRaw)
+
+	return responseRaw.DashboardView_Renewals
+}
