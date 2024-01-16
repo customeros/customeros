@@ -1,6 +1,5 @@
-package entity
+package enum
 
-// Deprecated
 type OpportunityRenewalLikelihood string
 
 const (
@@ -10,7 +9,6 @@ const (
 	OpportunityRenewalLikelihoodZero   OpportunityRenewalLikelihood = "ZERO"
 )
 
-// Deprecated
 var AllOpportunityRenewalLikelihoods = []OpportunityRenewalLikelihood{
 	OpportunityRenewalLikelihoodHigh,
 	OpportunityRenewalLikelihoodMedium,
@@ -18,7 +16,6 @@ var AllOpportunityRenewalLikelihoods = []OpportunityRenewalLikelihood{
 	OpportunityRenewalLikelihoodZero,
 }
 
-// Deprecated
 func GetOpportunityRenewalLikelihood(s string) OpportunityRenewalLikelihood {
 	if IsValidOpportunityRenewalLikelihood(s) {
 		return OpportunityRenewalLikelihood(s)
@@ -26,7 +23,6 @@ func GetOpportunityRenewalLikelihood(s string) OpportunityRenewalLikelihood {
 	return OpportunityRenewalLikelihoodZero
 }
 
-// Deprecated
 func IsValidOpportunityRenewalLikelihood(s string) bool {
 	for _, ms := range AllOpportunityRenewalLikelihoods {
 		if ms == OpportunityRenewalLikelihood(s) {
