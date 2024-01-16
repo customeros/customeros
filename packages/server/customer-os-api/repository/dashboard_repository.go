@@ -657,9 +657,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 					 MATCH (o)-[:HAS_CONTRACT]->(contract:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t)
 					 MATCH (contract)-[:ACTIVE_RENEWAL]->(op:Opportunity)
 					 `
-		if len(ownerId) > 0 {
-			query += fmt.Sprintf(` OPTIONAL MATCH (op)<-[:OWNS]-(owner:User) WITH *`)
-		}
+
+		query += fmt.Sprintf(` OPTIONAL MATCH (op)<-[:OWNS]-(owner:User) WITH *`)
+
 		//query += ` WHERE (o.hide = false) `
 
 		if organizationFilterCypher != "" || contractFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
@@ -691,8 +691,8 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		query = query + strings.Join(queryParts, " AND ")
 
 		// sort region
-		aliases := " o, contract, op"
-		query += " WITH o, contract, op "
+		aliases := " o, contract, op, owner"
+		query += " WITH o, contract, op, owner "
 		if sort != nil && sort.By == SearchSortParamOwner {
 			if sort.Direction == model.SortingDirectionAsc {
 				query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_FIRST_NAME_FOR_SORTING "
