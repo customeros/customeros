@@ -42,21 +42,46 @@ func NewInvoiceNewEvent(aggregate eventstore.Aggregate, sourceFields commonmodel
 		SourceFields: sourceFields,
 
 		DryRun:  request.DryRun,
+		Number:  uuid.New().String(), // todo logic for number generation
+		Date:    dateNotNil,
+		DueDate: dateNotNil,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate InvoiceNewEvent")
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, InvoiceNewV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InvoiceNewEvent")
+	}
+
+	return event, nil
+}
+
+func SimulateInvoiceNewEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, request *invoicepb.SimulateInvoiceRequest) (eventstore.Event, error) {
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+	dateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.Date), utils.Now())
+	eventData := InvoiceNewEvent{
+		Tenant:       aggregate.GetTenant(),
+		ContractId:   request.ContractId,
+		CreatedAt:    createdAtNotNil,
+		SourceFields: sourceFields,
+
+		DryRun:  true,
 		Number:  uuid.New().String(),
 		Date:    dateNotNil,
 		DueDate: dateNotNil,
 	}
 
-	if request.DryRunServiceLineItems != nil {
-		eventData.DryRunLines = make([]DryRunServiceLineItem, len(request.DryRunServiceLineItems))
-		for i, line := range request.DryRunServiceLineItems {
-			eventData.DryRunLines[i] = DryRunServiceLineItem{
-				ServiceLineItemId: line.ServiceLineItemId,
-				Name:              line.Name,
-				Billed:            line.Billed.String(),
-				Price:             line.Price,
-				Quantity:          line.Quantity,
-			}
+	eventData.DryRunLines = make([]DryRunServiceLineItem, len(request.DryRunServiceLineItems))
+	for i, line := range request.DryRunServiceLineItems {
+		eventData.DryRunLines[i] = DryRunServiceLineItem{
+			ServiceLineItemId: line.ServiceLineItemId,
+			Name:              line.Name,
+			Billed:            line.Billed.String(),
+			Price:             line.Price,
+			Quantity:          line.Quantity,
 		}
 	}
 

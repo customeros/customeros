@@ -100,3 +100,20 @@ func (s *invoiceService) PayInvoice(ctx context.Context, request *invoicepb.PayI
 
 	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
 }
+
+func (s *invoiceService) SimulateInvoice(ctx context.Context, request *invoicepb.SimulateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.NewInvoice")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	invoiceId := uuid.New().String()
+
+	if _, err := s.invoiceRequestHandler.HandleTemp(ctx, request.Tenant, invoiceId, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(NewInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &invoicepb.InvoiceIdResponse{Id: invoiceId}, nil
+}
