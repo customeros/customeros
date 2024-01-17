@@ -1049,12 +1049,12 @@ func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyFalse(t *testing.
 		Name: "org",
 	})
 
-	contractId1 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org, entity.ContractEntity{})
+	contractId1 := neo4jtest.CreateContract(ctx, driver, tenantName, org, neo4jentity.ContractEntity{})
 	opportunityId1 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId1, entity.OpportunityEntity{})
 	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId1, opportunityId1)
 	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId1, userId1)
 
-	contractId2 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org, entity.ContractEntity{})
+	contractId2 := neo4jtest.CreateContract(ctx, driver, tenantName, org, neo4jentity.ContractEntity{})
 	opportunityId2 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId2, entity.OpportunityEntity{})
 	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId2, opportunityId2)
 	neo4jt.OpportunityOwnedBy(ctx, driver, opportunityId2, userId2)
@@ -1237,11 +1237,11 @@ func TestQueryResolver_Sort_Renewals_By_Owner(t *testing.T) {
 		Name: "org",
 	})
 
-	contractId1 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org, entity.ContractEntity{Name: "Beta"})
+	contractId1 := neo4jtest.CreateContract(ctx, driver, tenantName, org, neo4jentity.ContractEntity{Name: "Beta"})
 	opportunityId1 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId1, entity.OpportunityEntity{})
 	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId1, opportunityId1)
 
-	contractId2 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org, entity.ContractEntity{Name: "Alpha"})
+	contractId2 := neo4jtest.CreateContract(ctx, driver, tenantName, org, neo4jentity.ContractEntity{Name: "Alpha"})
 	opportunityId2 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId2, entity.OpportunityEntity{})
 	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId2, opportunityId2)
 

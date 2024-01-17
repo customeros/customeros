@@ -171,7 +171,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		tracing.TraceErr(span, err)
 		return err
 	}
-	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
 
 	// get user
 	usrMetadata := userMetadata{}
@@ -394,7 +394,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		return nil
 	}
 	if contractDbNode != nil {
-		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+		contract := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
 		contractId = contract.Id
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
@@ -594,7 +594,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 		h.log.Errorf("error while getting contract for service line item %s: %s", serviceLineItemId, err.Error())
 		return nil
 	}
-	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contract := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
 	if contract.Name != "" {
 		contractName = contract.Name
 	} else {
@@ -659,7 +659,7 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 		return nil
 	}
 	if contractDbNode != nil {
-		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+		contract := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {

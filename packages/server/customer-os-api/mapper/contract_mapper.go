@@ -2,13 +2,13 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 )
 
-func MapEntityToContract(entity *entity.ContractEntity) *model.Contract {
+func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 	if entity == nil {
 		return nil
 	}
@@ -30,8 +30,8 @@ func MapEntityToContract(entity *entity.ContractEntity) *model.Contract {
 	}
 }
 
-func MapContractInputToEntity(input model.ContractInput) *entity.ContractEntity {
-	contractEntity := entity.ContractEntity{
+func MapContractInputToEntity(input model.ContractInput) *neo4jentity.ContractEntity {
+	contractEntity := neo4jentity.ContractEntity{
 		Name:             utils.IfNotNilString(input.Name),
 		ContractUrl:      utils.IfNotNilString(input.ContractURL),
 		SignedAt:         input.SignedAt,
@@ -45,14 +45,14 @@ func MapContractInputToEntity(input model.ContractInput) *entity.ContractEntity 
 		contractRenewalCycle := MapContractRenewalCycleFromModel(*input.RenewalCycle)
 		contractEntity.RenewalCycle = contractRenewalCycle
 	} else {
-		contractRenewalCycle := entity.RenewalCycleNone
+		contractRenewalCycle := neo4jenum.RenewalCycleNone
 		contractEntity.RenewalCycle = contractRenewalCycle
 	}
 	return &contractEntity
 }
 
-func MapContractUpdateInputToEntity(input model.ContractUpdateInput) *entity.ContractEntity {
-	contractEntity := entity.ContractEntity{
+func MapContractUpdateInputToEntity(input model.ContractUpdateInput) *neo4jentity.ContractEntity {
+	contractEntity := neo4jentity.ContractEntity{
 		Id:               input.ContractID,
 		Name:             utils.IfNotNilString(input.Name),
 		ContractUrl:      utils.IfNotNilString(input.ContractURL),
@@ -67,12 +67,12 @@ func MapContractUpdateInputToEntity(input model.ContractUpdateInput) *entity.Con
 	if input.RenewalCycle != nil {
 		contractEntity.RenewalCycle = MapContractRenewalCycleFromModel(*input.RenewalCycle)
 	} else {
-		contractEntity.RenewalCycle = entity.RenewalCycleNone
+		contractEntity.RenewalCycle = neo4jenum.RenewalCycleNone
 	}
 	return &contractEntity
 }
 
-func MapEntitiesToContracts(entities *entity.ContractEntities) []*model.Contract {
+func MapEntitiesToContracts(entities *neo4jentity.ContractEntities) []*model.Contract {
 	var contracts []*model.Contract
 	for _, contractEntity := range *entities {
 		contracts = append(contracts, MapEntityToContract(&contractEntity))

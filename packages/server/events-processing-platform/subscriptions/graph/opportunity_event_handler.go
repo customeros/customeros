@@ -200,7 +200,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 		h.log.Errorf("error while getting contract for opportunity %s: %s", opportunityId, err.Error())
 	}
 	if contractDbNode != nil {
-		contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+		contractEntity := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityLikelihood(ctx, eventData.Tenant, contractEntity.Id)
 		if err != nil {
@@ -386,7 +386,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		if contractDbNode == nil {
 			return nil
 		}
-		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+		contract := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
@@ -430,7 +430,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		if contractDbNode == nil {
 			return nil
 		}
-		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+		contract := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
 
 		err = h.saveLikelihoodChangeAction(ctx, contract.Id, eventData, span)
 		if err != nil {

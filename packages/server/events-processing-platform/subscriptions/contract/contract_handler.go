@@ -3,9 +3,10 @@ package contract
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
 	servicelineitemmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -111,7 +112,7 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
 		return err
 	}
-	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contractEntity := mapper.MapDbNodeToContractEntity(*contractDbNode)
 	opportunityEntity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 
 	var renewalLikelihood neo4jenum.RenewalLikelihood
@@ -149,7 +150,7 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 	return nil
 }
 
-func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant string, contractEntity *entity.ContractEntity, renewalOpportunityEntity *entity.OpportunityEntity, span opentracing.Span) error {
+func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant string, contractEntity *neo4jentity.ContractEntity, renewalOpportunityEntity *entity.OpportunityEntity, span opentracing.Span) error {
 	if contractEntity.IsEnded() && renewalOpportunityEntity != nil {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err := h.grpcClients.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
@@ -184,7 +185,7 @@ func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant
 	return nil
 }
 
-func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, renewalCycle string, renewalPeriods *int64) *time.Time {
+func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, renewalCycle neo4jenum.RenewalCycle, renewalPeriods *int64) *time.Time {
 	if serviceStartedAt == nil {
 		return nil
 	}
@@ -192,11 +193,11 @@ func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, re
 	renewalCycleNext := *serviceStartedAt
 	for {
 		switch renewalCycle {
-		case string(model.MonthlyRenewalCycleString):
+		case neo4jenum.RenewalCycleMonthlyRenewal:
 			renewalCycleNext = renewalCycleNext.AddDate(0, 1, 0)
-		case string(model.QuarterlyRenewalCycleString):
+		case neo4jenum.RenewalCycleQuarterlyRenewal:
 			renewalCycleNext = renewalCycleNext.AddDate(0, 3, 0)
-		case string(model.AnnuallyRenewalCycleString):
+		case neo4jenum.RenewalCycleAnnualRenewal:
 			renewalYears := 1
 			if renewalPeriods != nil {
 				renewalYears = int(*renewalPeriods)
@@ -213,7 +214,7 @@ func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, re
 	return &renewalCycleNext
 }
 
-func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, contract *entity.ContractEntity, renewalOpportunity *entity.OpportunityEntity, span opentracing.Span) error {
+func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, contract *neo4jentity.ContractEntity, renewalOpportunity *entity.OpportunityEntity, span opentracing.Span) error {
 	// if contract already ended, return
 	if contract.IsEnded() {
 		span.LogFields(log.Bool("contract ended", true))
@@ -252,7 +253,7 @@ func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, c
 	return nil
 }
 
-func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, contract *entity.ContractEntity, renewalOpportunity *entity.OpportunityEntity, span opentracing.Span) (float64, error) {
+func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, contract *neo4jentity.ContractEntity, renewalOpportunity *entity.OpportunityEntity, span opentracing.Span) (float64, error) {
 	var arr float64
 
 	// Fetch service line items for the contract from the database
@@ -342,7 +343,7 @@ func (h *contractHandler) calculateCurrentArrByLikelihood(amount float64, likeli
 	return math.Trunc(amount*likelihoodFactor*100) / 100
 }
 
-func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Context, tenant, contractId string) (*entity.ContractEntity, *entity.OpportunityEntity, bool) {
+func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Context, tenant, contractId string) (*neo4jentity.ContractEntity, *entity.OpportunityEntity, bool) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.assertContractAndRenewalOpportunity")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -354,10 +355,10 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
 		return nil, nil, true
 	}
-	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
 
 	// if contract is not frequency based, return
-	if !model.IsFrequencyBasedRenewalCycle(contract.RenewalCycle) {
+	if !neo4jenum.IsFrequencyBasedRenewalCycle(contract.RenewalCycle) {
 		return nil, nil, true
 	}
 

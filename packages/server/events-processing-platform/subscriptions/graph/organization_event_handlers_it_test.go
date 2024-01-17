@@ -328,8 +328,8 @@ func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId1 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
-	contractId2 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
+	contractId1 := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	contractId2 := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	opportunityIdRenewal1_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		Amount:       float64(10),
 		MaxAmount:    float64(20),
@@ -395,8 +395,8 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId1 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
-	contractId2 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
+	contractId1 := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	contractId2 := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	opportunityIdRenewal1_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		RenewalDetails: entity.RenewalDetails{
 			RenewedAt:         &tomorrow,
@@ -525,7 +525,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
 	})
-	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
+	contractId := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
 	orgEventHandler := &OrganizationEventHandler{
 		repositories: testDatabase.Repositories,
@@ -561,7 +561,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	// Verify Contract
 	dbNode, err = neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
-	contract := graph_db.MapDbNodeToContractEntity(dbNode)
+	contract := neo4jmapper.MapDbNodeToContractEntity(*dbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.True(t, contract.TriggeredOnboardingStatusChange)
 

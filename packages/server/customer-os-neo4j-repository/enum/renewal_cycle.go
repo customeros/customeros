@@ -31,3 +31,9 @@ func IsValidRenewalCycle(s string) bool {
 	}
 	return false
 }
+
+func IsFrequencyBasedRenewalCycle(renewalCycle RenewalCycle) bool {
+	return renewalCycle == RenewalCycleMonthlyRenewal ||
+		renewalCycle == RenewalCycleAnnualRenewal ||
+		renewalCycle == RenewalCycleQuarterlyRenewal
+}

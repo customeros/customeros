@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -70,11 +71,11 @@ const (
 func (cs ContractStatus) String() string {
 	switch cs {
 	case Draft:
-		return "DRAFT"
+		return string(enum.ContractStatusDraft)
 	case Live:
-		return "LIVE"
+		return string(enum.ContractStatusLive)
 	case Ended:
-		return "ENDED"
+		return string(enum.ContractStatusEnded)
 	default:
 		return ""
 	}
@@ -86,39 +87,12 @@ func (rc RenewalCycle) String() string {
 	case None:
 		return ""
 	case MonthlyRenewal:
-		return string(MonthlyRenewalCycleString)
+		return string(enum.RenewalCycleMonthlyRenewal)
 	case QuarterlyRenewal:
-		return string(QuarterlyRenewalCycleString)
+		return string(enum.RenewalCycleQuarterlyRenewal)
 	case AnnuallyRenewal:
-		return string(AnnuallyRenewalCycleString)
+		return string(enum.RenewalCycleAnnualRenewal)
 	default:
 		return ""
 	}
-}
-
-type RenewalCycleString string
-
-const (
-	MonthlyRenewalCycleString   RenewalCycleString = "MONTHLY"
-	QuarterlyRenewalCycleString RenewalCycleString = "QUARTERLY"
-	AnnuallyRenewalCycleString  RenewalCycleString = "ANNUALLY"
-)
-
-func RenewalCycleFromString(renewalCycle string) RenewalCycle {
-	switch renewalCycle {
-	case "MONTHLY":
-		return MonthlyRenewal
-	case "QUARTERLY":
-		return QuarterlyRenewal
-	case "ANNUALLY":
-		return AnnuallyRenewal
-	default:
-		return None
-	}
-}
-
-func IsFrequencyBasedRenewalCycle(renewalCycle string) bool {
-	return renewalCycle == string(MonthlyRenewalCycleString) ||
-		renewalCycle == string(AnnuallyRenewalCycleString) ||
-		renewalCycle == string(QuarterlyRenewalCycleString)
 }

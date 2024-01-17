@@ -245,3 +245,29 @@ func MapDbNodeToCountryEntity(dbNode *dbtype.Node) *entity.CountryEntity {
 	}
 	return &result
 }
+
+func MapDbNodeToContractEntity(dbNode dbtype.Node) *entity.ContractEntity {
+	props := utils.GetPropsFromNode(dbNode)
+	contractStatus := enum.GetContractStatus(utils.GetStringPropOrEmpty(props, "status"))
+	contractRenewalCycle := enum.GetRenewalCycle(utils.GetStringPropOrEmpty(props, "renewalCycle"))
+
+	contract := entity.ContractEntity{
+		Id:                              utils.GetStringPropOrEmpty(props, "id"),
+		Name:                            utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt:                       utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:                       utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		ServiceStartedAt:                utils.GetTimePropOrNil(props, "serviceStartedAt"),
+		SignedAt:                        utils.GetTimePropOrNil(props, "signedAt"),
+		EndedAt:                         utils.GetTimePropOrNil(props, "endedAt"),
+		ContractUrl:                     utils.GetStringPropOrEmpty(props, "contractUrl"),
+		ContractStatus:                  contractStatus,
+		RenewalCycle:                    contractRenewalCycle,
+		RenewalPeriods:                  utils.GetInt64PropOrNil(props, "renewalPeriods"),
+		TriggeredOnboardingStatusChange: utils.GetBoolPropOrFalse(props, "triggeredOnboardingStatusChange"),
+		NextInvoiceDate:                 utils.GetTimePropOrNil(props, "nextInvoiceDate"),
+		Source:                          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:                   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:                       utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &contract
+}

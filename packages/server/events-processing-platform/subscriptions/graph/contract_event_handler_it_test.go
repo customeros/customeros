@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -126,12 +127,12 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.NotNil(t, contractDbNode)
 
 	// Verify contract
-	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "New Contract", contract.Name)
 	require.Equal(t, "http://contract.url", contract.ContractUrl)
-	require.Equal(t, model.Live.String(), contract.Status)
-	require.Equal(t, model.MonthlyRenewal.String(), contract.RenewalCycle)
+	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
+	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
 	require.True(t, timeNow.Equal(contract.CreatedAt.UTC()))
 	require.True(t, timeNow.Equal(contract.UpdatedAt.UTC()))
 	require.True(t, timeNow.Equal(*contract.ServiceStartedAt))
@@ -151,7 +152,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{
 		Name:        "test contract",
 		ContractUrl: "http://contract.url",
 	})
@@ -209,12 +210,12 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	require.NotNil(t, contractDbNode)
 
 	// verify contract
-	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "test contract updated", contract.Name)
 	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
-	require.Equal(t, model.Live.String(), contract.Status)
-	require.Equal(t, model.MonthlyRenewal.String(), contract.RenewalCycle)
+	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
+	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
 	require.True(t, now.Equal(contract.UpdatedAt))
 	require.True(t, yesterday.Equal(*contract.ServiceStartedAt))
 	require.True(t, daysAgo2.Equal(*contract.SignedAt))
@@ -231,8 +232,8 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
-		RenewalCycle: string(model.MonthlyRenewalCycleString),
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{
+		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
@@ -291,8 +292,8 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
-		RenewalCycle: string(model.MonthlyRenewalCycleString),
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{
+		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
@@ -352,8 +353,8 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{
-		RenewalCycle: string(model.MonthlyRenewalCycleString),
+	contractId := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
@@ -417,8 +418,8 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	contractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
 	require.NotNil(t, contractDbNode)
-	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
-	require.Equal(t, "", contract.RenewalCycle)
+	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
+	require.Equal(t, neo4jenum.RenewalCycleNone, contract.RenewalCycle)
 
 	// verify call to events platform
 	require.True(t, calledEventsPlatformToRefreshRenewalSummary)
@@ -434,8 +435,8 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
-		RenewalCycle:     string(model.MonthlyRenewalCycleString),
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{
+		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
 		ServiceStartedAt: &yesterday,
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
@@ -508,10 +509,10 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{
 		Name:         "test contract",
 		ContractUrl:  "http://contract.url",
-		RenewalCycle: string(model.MonthlyRenewalCycleString),
+		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
 		InternalType:  neo4jenum.OpportunityInternalTypeRenewal.String(),
@@ -604,12 +605,12 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	require.NotNil(t, contractDbNode)
 
 	// verify contract
-	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "test contract updated", contract.Name)
 	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
-	require.Equal(t, model.Live.String(), contract.Status)
-	require.Equal(t, model.MonthlyRenewal.String(), contract.RenewalCycle)
+	require.Equal(t, neo4jenum.ContractStatusLive, contract.ContractStatus)
+	require.Equal(t, neo4jenum.RenewalCycleMonthlyRenewal, contract.RenewalCycle)
 	require.True(t, now.Equal(contract.UpdatedAt))
 	require.True(t, yesterday.Equal(*contract.ServiceStartedAt))
 	require.True(t, daysAgo2.Equal(*contract.SignedAt))
@@ -629,10 +630,10 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	now := utils.Now()
-	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{
 		Name:             "test contract",
 		ContractUrl:      "http://contract.url",
-		Status:           "DRAFT",
+		ContractStatus:   neo4jenum.ContractStatusDraft,
 		RenewalCycle:     "ANNUALLY",
 		ServiceStartedAt: &now,
 		SignedAt:         &now,
@@ -677,12 +678,12 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	require.NotNil(t, contractDbNode)
 
 	// verify contract
-	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "test contract", contract.Name)
 	require.Equal(t, "http://contract.url", contract.ContractUrl)
-	require.Equal(t, model.Draft.String(), contract.Status)
-	require.Equal(t, model.AnnuallyRenewal.String(), contract.RenewalCycle)
+	require.Equal(t, neo4jenum.ContractStatusDraft, contract.ContractStatus)
+	require.Equal(t, neo4jenum.RenewalCycleAnnualRenewal, contract.RenewalCycle)
 	require.True(t, now.Equal(contract.UpdatedAt))
 	require.True(t, now.Equal(*contract.ServiceStartedAt))
 	require.True(t, now.Equal(*contract.SignedAt))
@@ -697,9 +698,9 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	// Prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{
-		Name:   "test contract",
-		Status: string(model.ContractStatusStringDraft),
+	contractId := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		Name:           "test contract",
+		ContractStatus: neo4jenum.ContractStatusDraft,
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
 		"Contract": 1, "Contract_" + tenantName: 1, "Action": 0, "TimelineEvent": 0})
@@ -748,7 +749,7 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	require.NotNil(t, contractDbNode)
 
 	// verify contract
-	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 
 	// verify grpc was called
@@ -774,9 +775,9 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	// Prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{
-		Name:   "test contract",
-		Status: string(model.ContractStatusStringDraft),
+	contractId := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+		Name:           "test contract",
+		ContractStatus: neo4jenum.ContractStatusDraft,
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
 		"Contract": 1, "Contract_" + tenantName: 1, "Action": 0, "TimelineEvent": 0})
@@ -825,7 +826,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	require.NotNil(t, contractDbNode)
 
 	// verify contract
-	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 
 	// verify grpc was called

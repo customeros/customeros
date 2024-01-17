@@ -3,22 +3,22 @@ package dataloader
 import (
 	"context"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"reflect"
 )
 
-func (i *Loaders) GetContractsForOrganization(ctx context.Context, organizationId string) (*entity.ContractEntities, error) {
+func (i *Loaders) GetContractsForOrganization(ctx context.Context, organizationId string) (*neo4jentity.ContractEntities, error) {
 	thunk := i.ContractsForOrganization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ContractEntities)
+	resultObj := result.(neo4jentity.ContractEntities)
 	return &resultObj, nil
 }
 
@@ -43,12 +43,12 @@ func (b *contractBatcher) getContractsForOrganizations(ctx context.Context, keys
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	contractEntitiesByOrganizationId := make(map[string]entity.ContractEntities)
+	contractEntitiesByOrganizationId := make(map[string]neo4jentity.ContractEntities)
 	for _, val := range *contractEntitiesPtr {
 		if list, ok := contractEntitiesByOrganizationId[val.DataloaderKey]; ok {
 			contractEntitiesByOrganizationId[val.DataloaderKey] = append(list, val)
 		} else {
-			contractEntitiesByOrganizationId[val.DataloaderKey] = entity.ContractEntities{val}
+			contractEntitiesByOrganizationId[val.DataloaderKey] = neo4jentity.ContractEntities{val}
 		}
 	}
 
@@ -61,10 +61,10 @@ func (b *contractBatcher) getContractsForOrganizations(ctx context.Context, keys
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.ContractEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.ContractEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.ContractEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ContractEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

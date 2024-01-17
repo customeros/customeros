@@ -102,7 +102,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		}
 	}
 
-	if model.IsFrequencyBasedRenewalCycle(eventData.RenewalCycle) {
+	if neo4jenum.IsFrequencyBasedRenewalCycle(neo4jenum.RenewalCycle(eventData.RenewalCycle)) {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
 			Tenant:     eventData.Tenant,
@@ -140,7 +140,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		tracing.TraceErr(span, err)
 		return err
 	}
-	beforeUpdateContractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	beforeUpdateContractEntity := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
 
 	data := neo4jrepository.ContractUpdateFields{
 		Name:             eventData.Name,
@@ -160,7 +160,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		h.log.Errorf("Error while updating contract %s: %s", contractId, err.Error())
 		return err
 	}
-	afterUpdateContractEntity := graph_db.MapDbNodeToContractEntity(updatedContractDbNode)
+	afterUpdateContractEntity := neo4jmapper.MapDbNodeToContractEntity(*updatedContractDbNode)
 
 	if eventData.ExternalSystem.Available() {
 		externalSystemData := neo4jmodel.ExternalSystem{
@@ -232,8 +232,8 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		}
 	}
 
-	if beforeUpdateContractEntity.Status != afterUpdateContractEntity.Status {
-		h.createActionForStatusChange(ctx, eventData.Tenant, contractId, afterUpdateContractEntity.Status, afterUpdateContractEntity.Name, span)
+	if beforeUpdateContractEntity.ContractStatus != afterUpdateContractEntity.ContractStatus {
+		h.createActionForStatusChange(ctx, eventData.Tenant, contractId, string(afterUpdateContractEntity.ContractStatus), afterUpdateContractEntity.Name, span)
 	}
 
 	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
@@ -265,9 +265,9 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		return err
 	}
-	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
 
-	if model.IsFrequencyBasedRenewalCycle(contractEntity.RenewalCycle) {
+	if neo4jenum.IsFrequencyBasedRenewalCycle(contractEntity.RenewalCycle) {
 		currentRenewalOpportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpenRenewalOpportunityForContract(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -333,9 +333,9 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 		tracing.TraceErr(span, err)
 		return err
 	}
-	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
 	//we will use this boolean below to check if the status has changed
-	statusChanged := contractEntity.Status != eventData.Status
+	statusChanged := string(contractEntity.ContractStatus) != eventData.Status
 
 	err = h.repositories.Neo4jRepositories.ContractWriteRepository.UpdateStatus(ctx, eventData.Tenant, contractId, eventData.Status, eventData.ServiceStartedAt, eventData.EndedAt)
 	if err != nil {
@@ -403,7 +403,7 @@ func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, te
 	if contractDbNode == nil {
 		return
 	}
-	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
 
 	if contractEntity.IsEligibleToStartOnboarding() {
 		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractEntity.Id)

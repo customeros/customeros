@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"testing"
 	"time"
@@ -1522,33 +1523,33 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "org name"})
 	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "just another org"})
-	contractId1 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	contractId1 := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		Name:             "contract 1",
 		CreatedAt:        now,
 		UpdatedAt:        now,
 		ServiceStartedAt: &hoursAgo3,
 		SignedAt:         &hoursAgo2,
 		EndedAt:          &hoursAgo1,
-		RenewalCycle:     entity.RenewalCycleMonthlyRenewal,
-		ContractStatus:   entity.ContractStatusDraft,
+		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
+		ContractStatus:   neo4jenum.ContractStatusDraft,
 		ContractUrl:      "url1",
 		Source:           neo4jentity.DataSourceOpenline,
 		AppSource:        "test1",
 	})
-	contractId2 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+	contractId2 := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		Name:             "contract 2",
 		CreatedAt:        yesterday,
 		UpdatedAt:        yesterday,
 		ServiceStartedAt: &hoursAgo1,
 		SignedAt:         &hoursAgo3,
 		EndedAt:          &hoursAgo2,
-		RenewalCycle:     entity.RenewalCycleAnnualRenewal,
-		ContractStatus:   entity.ContractStatusLive,
+		RenewalCycle:     neo4jenum.RenewalCycleAnnualRenewal,
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ContractUrl:      "url2",
 		Source:           neo4jentity.DataSourceOpenline,
 		AppSource:        "test2",
 	})
-	contractId3 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId2, entity.ContractEntity{})
+	contractId3 := neo4jtest.CreateContract(ctx, driver, tenantName, orgId2, neo4jentity.ContractEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization":           2,

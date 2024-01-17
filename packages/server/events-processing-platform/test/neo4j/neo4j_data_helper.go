@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 )
@@ -107,7 +108,8 @@ func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	return commentId
 }
 
-func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contract entity.ContractEntity) string {
+// Deprecated
+func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contract neo4jentity.ContractEntity) string {
 	contractId := utils.NewUUIDIfEmpty(contract.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id})
@@ -132,7 +134,7 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"contractUrl":      contract.ContractUrl,
 		"source":           contract.Source,
 		"sourceOfTruth":    contract.SourceOfTruth,
-		"status":           contract.Status,
+		"status":           contract.ContractStatus,
 		"renewalCycle":     contract.RenewalCycle,
 		"renewalPeriods":   contract.RenewalPeriods,
 		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
@@ -140,21 +142,6 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
 	})
 	return contractId
-}
-
-func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity) string {
-	contractId := CreateContract(ctx, driver, tenant, contract)
-	LinkContractWithOrganization(ctx, driver, contractId, organizationId)
-	return contractId
-}
-
-func LinkContractWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contractId, organizationId string) {
-	query := `MATCH (c:Contract {id:$contractId}), (o:Organization {id:$organizationId})
-				MERGE (o)-[:HAS_CONTRACT]->(c) `
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"contractId":     contractId,
-		"organizationId": organizationId,
-	})
 }
 
 func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, opportunity entity.OpportunityEntity) string {
