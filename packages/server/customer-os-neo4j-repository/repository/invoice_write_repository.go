@@ -16,6 +16,7 @@ type InvoiceWriteRepository interface {
 	InvoiceFill(ctx context.Context, tenant, id string, amount, vat, total float64, updatedAt time.Time) error
 	InvoiceFillInvoiceLine(ctx context.Context, tenant, id string, index int64, name string, price float64, quantity int64, amount, vat, total float64, createdAt time.Time) error
 	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string, updatedAt time.Time) error
+	SetInvoicePaymentRequested(ctx context.Context, tenant, invoiceId string) error
 }
 
 type invoiceWriteRepository struct {
@@ -117,7 +118,8 @@ func (r *invoiceWriteRepository) InvoiceFillInvoiceLine(ctx context.Context, ten
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
-	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice_%s {id:$id})
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$id})
+							WHERE i:Invoice_%s
 							MERGE (i)-[:HAS_INVOICE_LINE]->(il:InvoiceLine {id:randomUUID()})
 							ON CREATE SET 
 								il:InvoiceLine_%s,
@@ -171,6 +173,31 @@ func (r *invoiceWriteRepository) InvoicePdfGenerated(ctx context.Context, tenant
 		"id":               id,
 		"updatedAt":        updatedAt,
 		"repositoryFileId": repositoryFileId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *invoiceWriteRepository) SetInvoicePaymentRequested(ctx context.Context, tenant, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.SetInvoicePaymentRequested")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
+							WHERE i:Invoice_%s
+							SET i.techPaymentRequestedAt=$now`, tenant)
+	params := map[string]any{
+		"tenant":    tenant,
+		"invoiceId": invoiceId,
+		"now":       utils.Now(),
 	}
 
 	span.LogFields(log.String("cypher", cypher))
