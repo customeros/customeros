@@ -44,6 +44,54 @@ func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Reposito
 	}
 }
 
+func (h *InvoiceEventHandler) onInvoiceNewV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoiceNewV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData invoice.InvoiceNewEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	tracing.LogObjectAsJson(span, "eventData", eventData)
+	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	// get currency
+	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting contract %s: %s", eventData.ContractId, err.Error())
+		return err
+	}
+	if contractDbNode == nil {
+		err = errors.Errorf("Contract %s not found", eventData.ContractId)
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting contract %s: %s", eventData.ContractId, err.Error())
+		return err
+	}
+	//contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+	// TODO use currency from above contract. For now, use default currency
+	// TODO temp code starts here to defaut tenant currency
+	tenantSettingsDbNode, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting tenant settings for tenant %s: %s", eventData.Tenant, err.Error())
+		return err
+	}
+	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
+	currency := tenantSettingsEntity.DefaultCurrency.String()
+	if currency == "" {
+		currency = neo4jenum.CurrencyUSD.String()
+	}
+	// TODO temp code ends here
+
+	// fire fill invoice event
+
+	return nil
+}
+
 func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoicePdfGeneratedV1")
 	defer span.Finish()
@@ -55,7 +103,6 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	tracing.LogObjectAsJson(span, "eventData", eventData)
-
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
@@ -116,18 +163,15 @@ func (h *InvoiceEventHandler) invokeInvoiceReadyWebhook(ctx context.Context, ten
 		return err
 	}
 
-	// get currency for invoice
-	currency := "USD" // TODO alexb implement currency in invoice
-
 	// convert amount to the smallest currency unit
-	amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(currency, invoice.Amount)
+	amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.Amount)
 	if err != nil {
 		return fmt.Errorf("error converting amount to smallest currency unit: %v", err.Error())
 	}
 
 	requestBody := RequestBodyInvoiceReady{
 		Tenant:                       tenant,
-		Currency:                     currency,
+		Currency:                     invoice.Currency.String(),
 		AmountInSmallestCurrencyUnit: amountInSmallestCurrencyUnit,
 		StripeCustomerId:             stripeCustomerId,
 		InvoiceId:                    invoice.Id,

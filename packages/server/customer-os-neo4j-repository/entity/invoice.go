@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 )
 
@@ -11,6 +12,7 @@ type InvoiceEntity struct {
 
 	DryRun           bool
 	Number           string
+	Currency         enum.Currency
 	Date             time.Time
 	DueDate          time.Time
 	Amount           float64

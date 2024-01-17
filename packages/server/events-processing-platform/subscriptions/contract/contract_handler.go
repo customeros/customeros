@@ -112,7 +112,7 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
 		return err
 	}
-	contractEntity := mapper.MapDbNodeToContractEntity(*contractDbNode)
+	contractEntity := mapper.MapDbNodeToContractEntity(contractDbNode)
 	opportunityEntity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 
 	var renewalLikelihood neo4jenum.RenewalLikelihood
@@ -355,7 +355,7 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
 		return nil, nil, true
 	}
-	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
 
 	// if contract is not frequency based, return
 	if !neo4jenum.IsFrequencyBasedRenewalCycle(contract.RenewalCycle) {

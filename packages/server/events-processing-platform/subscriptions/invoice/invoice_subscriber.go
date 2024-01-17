@@ -128,7 +128,7 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 
 	switch evt.GetEventType() {
 	case invoice.InvoiceNewV1:
-		return s.onInvoiceNewV1(ctx, evt)
+		return s.invoiceEventHandler.onInvoiceNewV1(ctx, evt)
 	case invoice.InvoiceFillV1:
 		return s.onInvoiceFillV1(ctx, evt)
 	case invoice.InvoicePdfGeneratedV1:
@@ -137,14 +137,6 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 		return nil
 	}
 
-	return nil
-}
-
-func (s *InvoiceSubscriber) onInvoiceNewV1(ctx context.Context, evt eventstore.Event) error {
-	//todo compute amount, vat, total
-	//compute currency
-
-	//fire fill event
 	return nil
 }
 

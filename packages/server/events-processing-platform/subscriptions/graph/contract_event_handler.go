@@ -140,7 +140,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		tracing.TraceErr(span, err)
 		return err
 	}
-	beforeUpdateContractEntity := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
+	beforeUpdateContractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 	data := neo4jrepository.ContractUpdateFields{
 		Name:             eventData.Name,
@@ -160,7 +160,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		h.log.Errorf("Error while updating contract %s: %s", contractId, err.Error())
 		return err
 	}
-	afterUpdateContractEntity := neo4jmapper.MapDbNodeToContractEntity(*updatedContractDbNode)
+	afterUpdateContractEntity := neo4jmapper.MapDbNodeToContractEntity(updatedContractDbNode)
 
 	if eventData.ExternalSystem.Available() {
 		externalSystemData := neo4jmodel.ExternalSystem{
@@ -265,7 +265,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		return err
 	}
-	contractEntity := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 	if neo4jenum.IsFrequencyBasedRenewalCycle(contractEntity.RenewalCycle) {
 		currentRenewalOpportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpenRenewalOpportunityForContract(ctx, eventData.Tenant, contractId)
@@ -333,7 +333,7 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 		tracing.TraceErr(span, err)
 		return err
 	}
-	contractEntity := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 	//we will use this boolean below to check if the status has changed
 	statusChanged := string(contractEntity.ContractStatus) != eventData.Status
 
@@ -403,7 +403,7 @@ func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, te
 	if contractDbNode == nil {
 		return
 	}
-	contractEntity := neo4jmapper.MapDbNodeToContractEntity(*contractDbNode)
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 	if contractEntity.IsEligibleToStartOnboarding() {
 		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractEntity.Id)

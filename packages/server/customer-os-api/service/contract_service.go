@@ -198,7 +198,7 @@ func (s *contractService) GetById(ctx context.Context, contractId string) (*neo4
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Contract with id {%s} not found", contractId))
 		return nil, wrappedErr
 	} else {
-		return mapper.MapDbNodeToContractEntity(*contractDbNode), nil
+		return mapper.MapDbNodeToContractEntity(contractDbNode), nil
 	}
 }
 
@@ -213,7 +213,7 @@ func (s *contractService) GetContractsForOrganizations(ctx context.Context, orga
 	}
 	contractEntities := make(neo4jentity.ContractEntities, 0, len(contracts))
 	for _, v := range contracts {
-		contractEntity := mapper.MapDbNodeToContractEntity(*v.Node)
+		contractEntity := mapper.MapDbNodeToContractEntity(v.Node)
 		contractEntity.DataloaderKey = v.LinkedNodeId
 		contractEntities = append(contractEntities, *contractEntity)
 	}

@@ -127,7 +127,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.NotNil(t, contractDbNode)
 
 	// Verify contract
-	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "New Contract", contract.Name)
 	require.Equal(t, "http://contract.url", contract.ContractUrl)
@@ -210,7 +210,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	require.NotNil(t, contractDbNode)
 
 	// verify contract
-	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "test contract updated", contract.Name)
 	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
@@ -418,7 +418,7 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	contractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
 	require.NotNil(t, contractDbNode)
-	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, neo4jenum.RenewalCycleNone, contract.RenewalCycle)
 
 	// verify call to events platform
@@ -605,7 +605,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 	require.NotNil(t, contractDbNode)
 
 	// verify contract
-	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "test contract updated", contract.Name)
 	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
@@ -678,7 +678,7 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	require.NotNil(t, contractDbNode)
 
 	// verify contract
-	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "test contract", contract.Name)
 	require.Equal(t, "http://contract.url", contract.ContractUrl)
@@ -749,7 +749,7 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	require.NotNil(t, contractDbNode)
 
 	// verify contract
-	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 
 	// verify grpc was called
@@ -826,7 +826,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	require.NotNil(t, contractDbNode)
 
 	// verify contract
-	contract := mapper.MapDbNodeToContractEntity(*contractDbNode)
+	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 
 	// verify grpc was called
