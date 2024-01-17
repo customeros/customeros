@@ -108,7 +108,7 @@ func (h *InvoiceEventHandler) onInvoiceNewV1(ctx context.Context, evt eventstore
 	total := 0.0
 	invoiceLines := []*invoicepb.InvoiceLine{}
 
-	err = h.CallFillInvoice(ctx, eventData.Tenant, evt.GetAggregateID(), amount, vat, total, invoiceLines, span)
+	err = h.callFillInvoice(ctx, eventData.Tenant, evt.GetAggregateID(), amount, vat, total, invoiceLines, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceNewV1.CallFillInvoice")
@@ -117,7 +117,7 @@ func (h *InvoiceEventHandler) onInvoiceNewV1(ctx context.Context, evt eventstore
 	return nil
 }
 
-func (s *InvoiceEventHandler) CallFillInvoice(ctx context.Context, tenant, invoiceId string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
+func (s *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
 	_, err := s.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
@@ -168,11 +168,14 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	}
 	invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(invoiceDbNode)
 
-	err = h.invokeInvoiceReadyWebhook(ctx, eventData.Tenant, *invoiceEntity)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error invoking invoice ready webhook for invoice %s: %s", invoiceId, err.Error())
-		return err
+	// do not invoke invoice ready webhook if it was already invoked
+	if invoiceEntity.InvoiceInternalFields.PaymentRequestedAt == nil {
+		err = h.invokeInvoiceReadyWebhook(ctx, eventData.Tenant, *invoiceEntity)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error invoking invoice ready webhook for invoice %s: %s", invoiceId, err.Error())
+			return err
+		}
 	}
 
 	return nil

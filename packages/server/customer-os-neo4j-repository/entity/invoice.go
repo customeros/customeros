@@ -24,4 +24,10 @@ type InvoiceEntity struct {
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
+
+	InvoiceInternalFields InvoiceInternalFields
+}
+
+type InvoiceInternalFields struct {
+	PaymentRequestedAt *time.Time
 }

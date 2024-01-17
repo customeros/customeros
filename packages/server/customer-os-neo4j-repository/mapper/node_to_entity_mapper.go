@@ -29,6 +29,9 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		Source:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
+		InvoiceInternalFields: entity.InvoiceInternalFields{
+			PaymentRequestedAt: utils.GetTimePropOrNil(props, "techPaymentRequestedAt"),
+		},
 	}
 	return &masterPlanEntity
 }
