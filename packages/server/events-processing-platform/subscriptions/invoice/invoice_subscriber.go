@@ -41,7 +41,7 @@ func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config
 		cfg:                 cfg,
 		grpcClients:         grpcClients,
 		fsc:                 fsc,
-		invoiceEventHandler: NewInvoiceEventHandler(log, repositories, &cfg.EventNotifications),
+		invoiceEventHandler: NewInvoiceEventHandler(log, repositories, &cfg.EventNotifications, grpcClients),
 	}
 }
 

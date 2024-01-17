@@ -58,12 +58,12 @@ func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any) (any,
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *invoicepb.PdfGeneratedInvoiceRequest:
-		return nil, a.CreatePdfGeneratedEvent(ctx, r)
 	case *invoicepb.NewInvoiceRequest:
 		return nil, a.CreateNewInvoice(ctx, r)
 	case *invoicepb.FillInvoiceRequest:
 		return nil, a.FillInvoice(ctx, r)
+	case *invoicepb.PdfGeneratedInvoiceRequest:
+		return nil, a.CreatePdfGeneratedEvent(ctx, r)
 	case *invoicepb.PayInvoiceRequest:
 		return nil, a.PayInvoice(ctx, r)
 	default:

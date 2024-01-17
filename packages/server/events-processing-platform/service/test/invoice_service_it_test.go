@@ -9,6 +9,7 @@ import (
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -279,4 +280,74 @@ func TestInvoiceService_PayInvoice(t *testing.T) {
 	require.Nil(t, err, "Failed to unmarshal event data")
 
 	test.AssertRecentTime(t, eventData.UpdatedAt)
+}
+
+func TestInvoiceService_SimulateInvoice(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// setup test environment
+	tenant := "ziggy"
+	now := utils.Now()
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err, "Failed to get grpc connection")
+	invoiceServiceClient := invoicepb.NewInvoiceGrpcServiceClient(grpcConnection)
+
+	response, err := invoiceServiceClient.SimulateInvoice(ctx, &invoicepb.SimulateInvoiceRequest{
+		Tenant:     tenant,
+		ContractId: "1",
+		SourceFields: &commonpb.SourceFields{
+			AppSource: "app",
+			Source:    "source",
+		},
+		CreatedAt: utils.ConvertTimeToTimestampPtr(&now),
+		Date:      utils.ConvertTimeToTimestampPtr(&now),
+		DryRunServiceLineItems: []*invoicepb.DryRunServiceLineItem{
+			{
+				ServiceLineItemId: "1",
+				Name:              "name",
+				Billed:            0,
+				Price:             1,
+				Quantity:          2,
+			},
+		},
+	})
+	require.Nil(t, err)
+	require.NotNil(t, response)
+
+	invoiceId := response.Id
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+
+	invoiceTempAggregate := invoice.NewInvoiceTempAggregateWithTenantAndID(tenant, response.Id)
+	eventList := eventsMap[invoiceTempAggregate.ID]
+
+	require.Equal(t, 1, len(eventList))
+
+	require.Equal(t, invoice.InvoiceNewV1, eventList[0].GetEventType())
+	require.Equal(t, string(invoice.InvoiceAggregateType)+"-temp-"+tenant+"-"+invoiceId, eventList[0].GetAggregateID())
+
+	var eventData invoice.InvoiceNewEvent
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	// Assertions to validate the contract create event data
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, "1", eventData.ContractId)
+	require.Equal(t, now, eventData.CreatedAt)
+	require.Equal(t, true, eventData.DryRun)
+	require.Equal(t, 36, len(eventData.Number))
+	require.Equal(t, now, eventData.Date)
+	require.Equal(t, now, eventData.DueDate)
+	require.Equal(t, 1, len(eventData.DryRunLines))
+	require.Equal(t, "1", eventData.DryRunLines[0].ServiceLineItemId)
+	require.Equal(t, "name", eventData.DryRunLines[0].Name)
+	require.Equal(t, servicelineitempb.BilledType_MONTHLY_BILLED.String(), eventData.DryRunLines[0].Billed)
+	require.Equal(t, float64(1), eventData.DryRunLines[0].Price)
+	require.Equal(t, int64(2), eventData.DryRunLines[0].Quantity)
+	require.Equal(t, "app", eventData.SourceFields.AppSource)
+	require.Equal(t, "source", eventData.SourceFields.Source)
+	require.Equal(t, "source", eventData.SourceFields.SourceOfTruth)
 }
