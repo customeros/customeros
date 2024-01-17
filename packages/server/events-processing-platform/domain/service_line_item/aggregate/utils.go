@@ -2,20 +2,17 @@ package aggregate
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 	"strings"
 )
 
 // GetServiceLineItemObjectID generates the object ID for a service line item.
 func GetServiceLineItemObjectID(aggregateID string, tenant string) string {
-	if tenant == "" {
-		return getServiceLineItemObjectUUID(aggregateID)
-	}
-	return strings.ReplaceAll(aggregateID, string(ServiceLineItemAggregateType)+"-"+tenant+"-", "")
+	return aggregate.GetAggregateObjectID(aggregateID, tenant, ServiceLineItemAggregateType)
 }
 
 // getServiceLineItemObjectUUID generates the UUID for a service line item when the tenant is not known.
@@ -34,17 +31,8 @@ func LoadServiceLineItemAggregate(ctx context.Context, eventStore eventstore.Agg
 
 	serviceLineItemAggregate := NewServiceLineItemAggregateWithTenantAndID(tenant, objectID)
 
-	err := eventStore.Exists(ctx, serviceLineItemAggregate.GetID())
+	err := aggregate.LoadAggregate(ctx, eventStore, serviceLineItemAggregate, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
-		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
-			tracing.TraceErr(span, err)
-			return nil, err
-		} else {
-			return serviceLineItemAggregate, nil
-		}
-	}
-
-	if err = eventStore.Load(ctx, serviceLineItemAggregate); err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}

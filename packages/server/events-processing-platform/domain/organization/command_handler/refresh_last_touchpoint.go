@@ -42,7 +42,7 @@ func (h *refreshLastTouchpointCommandHandler) Handle(ctx context.Context, cmd *c
 	}
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
-		organizationAggregate, err := aggregate.LoadOrganizationTempAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID, eventstore.NewLoadAggregateOptions().WithSkipLoadEvents())
+		organizationAggregate, err := aggregate.LoadOrganizationTempAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID, *eventstore.NewLoadAggregateOptions().WithSkipLoadEvents())
 		if err != nil {
 			return err
 		}

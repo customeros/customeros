@@ -2,26 +2,15 @@ package aggregate
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
-	"strings"
 )
 
 func GetIssueObjectID(aggregateID string, tenant string) string {
-	if tenant == "" {
-		return getIssueObjectUUID(aggregateID)
-	}
-	return strings.ReplaceAll(aggregateID, string(IssueAggregateType)+"-"+tenant+"-", "")
-}
-
-// use this method when tenant is not known
-func getIssueObjectUUID(aggregateID string) string {
-	parts := strings.Split(aggregateID, "-")
-	fullUUID := parts[len(parts)-5] + "-" + parts[len(parts)-4] + "-" + parts[len(parts)-3] + "-" + parts[len(parts)-2] + "-" + parts[len(parts)-1]
-	return fullUUID
+	return aggregate.GetAggregateObjectID(aggregateID, tenant, IssueAggregateType)
 }
 
 func LoadIssueAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*IssueAggregate, error) {
@@ -31,18 +20,10 @@ func LoadIssueAggregate(ctx context.Context, eventStore eventstore.AggregateStor
 	span.LogFields(log.String("ObjectID", objectID))
 
 	issueAggregate := NewIssueAggregateWithTenantAndID(tenant, objectID)
-	span.SetTag("aggregateID", issueAggregate.GetID())
 
-	err := eventStore.Exists(ctx, issueAggregate.GetID())
+	err := aggregate.LoadAggregate(ctx, eventStore, issueAggregate, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
-		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
-			return nil, err
-		} else {
-			return issueAggregate, nil
-		}
-	}
-
-	if err = eventStore.Load(ctx, issueAggregate); err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 

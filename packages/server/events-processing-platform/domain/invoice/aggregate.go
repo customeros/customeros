@@ -37,7 +37,7 @@ func LoadInvoiceAggregate(ctx context.Context, eventStore eventstore.AggregateSt
 	err := aggregate.LoadAggregate(ctx, eventStore, invoiceAggregate, options)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, errors.Wrap(err, "LoadInvoiceAggregate")
+		return nil, err
 	}
 
 	return invoiceAggregate, nil

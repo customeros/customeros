@@ -2,26 +2,15 @@ package aggregate
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
-	"strings"
 )
 
 func GetCommentObjectID(aggregateID string, tenant string) string {
-	if tenant == "" {
-		return getCommentObjectUUID(aggregateID)
-	}
-	return strings.ReplaceAll(aggregateID, string(CommentAggregateType)+"-"+tenant+"-", "")
-}
-
-// use this method when tenant is not known
-func getCommentObjectUUID(aggregateID string) string {
-	parts := strings.Split(aggregateID, "-")
-	fullUUID := parts[len(parts)-5] + "-" + parts[len(parts)-4] + "-" + parts[len(parts)-3] + "-" + parts[len(parts)-2] + "-" + parts[len(parts)-1]
-	return fullUUID
+	return aggregate.GetAggregateObjectID(aggregateID, tenant, CommentAggregateType)
 }
 
 func LoadCommentAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*CommentAggregate, error) {
@@ -32,17 +21,8 @@ func LoadCommentAggregate(ctx context.Context, eventStore eventstore.AggregateSt
 
 	commentAggregate := NewCommentAggregateWithTenantAndID(tenant, objectID)
 
-	err := eventStore.Exists(ctx, commentAggregate.GetID())
+	err := aggregate.LoadAggregate(ctx, eventStore, commentAggregate, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
-		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
-			tracing.TraceErr(span, err)
-			return nil, err
-		} else {
-			return commentAggregate, nil
-		}
-	}
-
-	if err = eventStore.Load(ctx, commentAggregate); err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
