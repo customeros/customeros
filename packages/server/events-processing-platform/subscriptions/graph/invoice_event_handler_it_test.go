@@ -188,14 +188,8 @@ func TestInvoiceEventHandler_OnInvoicePdfGenerated(t *testing.T) {
 	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, id)
 	pdfGeneratedEvent, err := invoice.NewInvoicePdfGeneratedEvent(
 		aggregate,
-		&timeNow,
-		commonmodel.Source{
-			Source:    constants.SourceOpenline,
-			AppSource: constants.AppSourceEventProcessingPlatform,
-		},
-		&invoicepb.PdfGeneratedInvoiceRequest{
-			RepositoryFileId: "test",
-		},
+		timeNow,
+		"test",
 	)
 	require.Nil(t, err)
 
