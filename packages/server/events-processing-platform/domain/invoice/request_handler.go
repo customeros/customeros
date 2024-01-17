@@ -16,6 +16,7 @@ import (
 type InvoiceRequestHandler interface {
 	Handle(ctx context.Context, tenant, objectId string, request any) (any, error)
 	HandleWithRetry(ctx context.Context, tenant, objectId string, aggregateRequired bool, request any) (any, error)
+	HandleTemp(ctx context.Context, tenant, objectId string, request any) (any, error)
 }
 
 type invoiceRequestHandler struct {
@@ -98,4 +99,24 @@ func (h *invoiceRequestHandler) HandleWithRetry(ctx context.Context, tenant, obj
 	err := errors.New("reached maximum number of retries")
 	tracing.TraceErr(span, err)
 	return nil, err
+}
+
+func (h *invoiceRequestHandler) HandleTemp(ctx context.Context, tenant, objectId string, request any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceRequestHandler.Handle")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	invoiceAggregate, err := LoadInvoiceTempAggregate(ctx, h.es, tenant, objectId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	result, err := invoiceAggregate.HandleRequest(ctx, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return result, h.es.Save(ctx, invoiceAggregate)
 }

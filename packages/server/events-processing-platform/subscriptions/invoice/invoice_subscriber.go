@@ -3,23 +3,25 @@ package invoice
 import (
 	"bytes"
 	"context"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/jung-kurt/gofpdf"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
-	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	"github.com/opentracing/opentracing-go"
-	"strings"
-
-	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	"github.com/opentracing/opentracing-go"
 	"golang.org/x/sync/errgroup"
+	"strings"
+	"time"
 
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -141,10 +143,62 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 }
 
 func (s *InvoiceSubscriber) onInvoiceNewV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceSubscriber.onInvoiceNewV1")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData invoice.InvoiceNewEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	if eventData.DryRun {
+		if eventData.DryRunLines == nil || len(eventData.DryRunLines) == 0 {
+			//todo compute invoice based on current SLI items in neo4j
+		} else {
+			//todo compute invoice based on SLI items from event
+		}
+	}
+
+	invoice.GetInvoiceObjectID(evt.AggregateID, eventData.Tenant)
+
 	//todo compute amount, vat, total
 	//compute currency
+	amount := 0.0
+	vat := 0.0
+	total := 0.0
+	invoiceLines := []*invoicepb.InvoiceLine{}
 
-	//fire fill event
+	err := s.CallFillInvoice(ctx, eventData.Tenant, evt.GetAggregateID(), amount, vat, total, invoiceLines, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceNewV1.CallFillInvoice")
+	}
+
+	return nil
+}
+
+func (s *InvoiceSubscriber) CallFillInvoice(ctx context.Context, tenant, invoiceId string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	now := time.Now()
+	_, err := s.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
+		Tenant:    tenant,
+		InvoiceId: invoiceId,
+		Amount:    amount,
+		Vat:       vat,
+		Total:     total,
+		Lines:     invoiceLines,
+		UpdatedAt: utils.ConvertTimeToTimestampPtr(&now),
+		SourceFields: &common.SourceFields{
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error sending the fill invoice request for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
 	return nil
 }
 

@@ -71,4 +71,5 @@ service InvoiceGrpcService {
   rpc FillInvoice(FillInvoiceRequest) returns (InvoiceIdResponse);
   rpc PdfGeneratedInvoice(PdfGeneratedInvoiceRequest) returns (InvoiceIdResponse);
   rpc PayInvoice(PayInvoiceRequest) returns (InvoiceIdResponse);
+  rpc SimulateInvoice(NewInvoiceRequest) returns (InvoiceIdResponse);
 }
