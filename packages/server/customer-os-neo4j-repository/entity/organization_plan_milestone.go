@@ -5,9 +5,9 @@ import (
 )
 
 type OrganizationPlanMilestoneItem struct {
-	Text      string
-	Status    string
-	UpdatedAt time.Time
+	Text      string    `json:"text"`
+	Status    string    `json:"status"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type OrganizationPlanMilestoneStatusDetails struct {

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -126,10 +127,10 @@ func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, t
 								m.name=$name,
 								m.order=$order,
 								m.optional=$optional,
-								m.items=$items
+								m.items=$items,
 								m.status=$status,
 								m.statusComments=$statusComments,
-								m.statusUpdatedAt=$statusUpdatedAt
+								m.statusUpdatedAt=$statusUpdatedAt,
 								m.dueDate=$dueDate
 							`, tenant)
 	params := map[string]any{
@@ -144,7 +145,7 @@ func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, t
 		"name":               name,
 		"order":              order,
 		"optional":           optional,
-		"items":              items,
+		"items":              mapMilestoneItemsToNeo4jProperties(items),
 		"status":             statusDetails.Status,
 		"statusComments":     statusDetails.Comments,
 		"statusUpdatedAt":    statusDetails.UpdatedAt,
@@ -169,7 +170,7 @@ func (r *organizationPlanWriteRepository) CreateBulkMilestones(ctx context.Conte
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(op:OrganizationPlan {id:$organizationPlanId}) 
 							UNWIND $milestones as milestone
 							MERGE (op)-[:HAS_MILESTONE]->(m:OrganizationPlanMilestone {id:milestone.id})
-							ON CREATE SET 
+							ON CREATE SET
 								m:OrganizationPlanMilestone_%s,
 								m.createdAt=$createdAt,
 								m.updatedAt=$updatedAt,
@@ -181,15 +182,14 @@ func (r *organizationPlanWriteRepository) CreateBulkMilestones(ctx context.Conte
 								m.dueDate=milestone.dueDate,
 								m.optional=milestone.optional,
 								m.items=milestone.items,
-								m.status=milestone.status
+								m.status=milestone.status,
 								m.statusComments=milestone.statusComments,
 								m.statusUpdatedAt=milestone.statusUpdatedAt
-
 							`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
 		"organizationPlanId": organizationPlanId,
-		"milestones":         milestones,
+		"milestones":         mapMilestoneEntitiesToNeo4jProperties(milestones),
 		"createdAt":          createdAt,
 		"updatedAt":          createdAt,
 		"source":             source,
@@ -270,7 +270,7 @@ func (r *organizationPlanWriteRepository) UpdateMilestone(ctx context.Context, t
 	}
 	if data.UpdateItems {
 		cypher += ", m.items=$items"
-		params["items"] = data.Items
+		params["items"] = mapMilestoneItemsToNeo4jProperties(data.Items)
 	}
 	if data.UpdateOptional {
 		cypher += ", m.optional=$optional"
@@ -347,4 +347,61 @@ func (r *organizationPlanWriteRepository) LinkWithMasterPlan(ctx context.Context
 		tracing.TraceErr(span, err)
 	}
 	return err
+}
+
+// func mapPlanEntityToNeo4jProperties(entity entity.OrganizationPlanEntity) map[string]any {
+// 	return map[string]any{
+// 		"id":              entity.Id,
+// 		"createdAt":       entity.CreatedAt,
+// 		"updatedAt":       entity.UpdatedAt,
+// 		"name":            entity.Name,
+// 		"retired":         entity.Retired,
+// 		"source":          entity.Source,
+// 		"sourceOfTruth":   entity.SourceOfTruth,
+// 		"appSource":       entity.AppSource,
+// 		"status":          entity.StatusDetails.Status,
+// 		"statusComments":  entity.StatusDetails.Comments,
+// 		"statusUpdatedAt": entity.StatusDetails.UpdatedAt,
+// 	}
+// }
+
+func mapMilestoneEntityToNeo4jProperties(entity entity.OrganizationPlanMilestoneEntity) map[string]any {
+	return map[string]any{
+		"id":              entity.Id,
+		"createdAt":       entity.CreatedAt,
+		"updatedAt":       entity.UpdatedAt,
+		"name":            entity.Name,
+		"order":           entity.Order,
+		"dueDate":         entity.DueDate,
+		"optional":        entity.Optional,
+		"retired":         entity.Retired,
+		"source":          entity.Source,
+		"sourceOfTruth":   entity.SourceOfTruth,
+		"appSource":       entity.AppSource,
+		"status":          entity.StatusDetails.Status,
+		"statusComments":  entity.StatusDetails.Comments,
+		"statusUpdatedAt": entity.StatusDetails.UpdatedAt,
+		"items":           mapMilestoneItemsToNeo4jProperties(entity.Items),
+	}
+}
+
+func mapMilestoneItemToNeo4jProperties(item entity.OrganizationPlanMilestoneItem) string {
+	ji, _ := json.Marshal(item)
+	return string(ji[:]) // fmt.Sprintf(`{"text":%s,"status":%s,"updatedAt":%s}`, item.Text, item.Status, item.UpdatedAt)
+}
+
+func mapMilestoneItemsToNeo4jProperties(items []entity.OrganizationPlanMilestoneItem) []string {
+	result := make([]string, len(items))
+	for i, item := range items {
+		result[i] = mapMilestoneItemToNeo4jProperties(item)
+	}
+	return result
+}
+
+func mapMilestoneEntitiesToNeo4jProperties(entities []entity.OrganizationPlanMilestoneEntity) []map[string]any {
+	result := make([]map[string]any, len(entities))
+	for i, entity := range entities {
+		result[i] = mapMilestoneEntityToNeo4jProperties(entity)
+	}
+	return result
 }

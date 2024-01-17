@@ -146,7 +146,7 @@ func (h *OrganizationPlanEventHandler) OnCreateMilestone(ctx context.Context, ev
 	source := helper.GetSource(eventData.SourceFields.Source)
 	appSource := helper.GetAppSource(eventData.SourceFields.AppSource)
 	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.CreateMilestone(ctx, eventData.Tenant, eventData.OrganizationPlanId, eventData.MilestoneId,
-		eventData.Name, source, appSource, eventData.Order, convertItemsStrToObject(eventData.Items), eventData.Optional, eventData.CreatedAt, eventData.DueDate, entity.OrganizationPlanMilestoneStatusDetails{Status: model.MilestoneNotStarted.String(), UpdatedAt: time.Now(), Comments: ""})
+		eventData.Name, source, appSource, eventData.Order, convertItemsStrToObject(eventData.Items), eventData.Optional, eventData.CreatedAt, eventData.DueDate, entity.OrganizationPlanMilestoneStatusDetails{Status: model.MilestoneNotStarted.String(), UpdatedAt: eventData.CreatedAt, Comments: ""})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving organization plan milestone %s: %s", eventData.OrganizationPlanId, err.Error())
@@ -253,7 +253,7 @@ func convertItemsStrToObject(items []string) []entity.OrganizationPlanMilestoneI
 	for i, item := range items {
 		milestoneItems[i] = entity.OrganizationPlanMilestoneItem{
 			Text:      item,
-			UpdatedAt: time.Now(),
+			UpdatedAt: time.Now().UTC(),
 			Status:    model.TaskNotDone.String(),
 		}
 	}
@@ -265,7 +265,7 @@ func convertItemsModelToEntity(items []model.OrganizationPlanMilestoneItem) []en
 	for i, item := range items {
 		milestoneItems[i] = entity.OrganizationPlanMilestoneItem{
 			Text:      item.Text,
-			UpdatedAt: time.Now(),
+			UpdatedAt: time.Now().UTC(),
 			Status:    item.Status,
 		}
 	}

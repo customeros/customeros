@@ -1,6 +1,8 @@
 package mapper
 
 import (
+	"encoding/json"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -351,17 +353,16 @@ func MapDbNodeToOrganizationPlanMilestoneEntity(dbNode *dbtype.Node) *entity.Org
 }
 
 func MapOrganizationPlanMilestoneItemToEntity(props map[string]any) []entity.OrganizationPlanMilestoneItem {
-	items := props["items"].([]map[string]any)
+	items := props["items"].([]any)
+
 	itemArray := make([]entity.OrganizationPlanMilestoneItem, 0)
 	if items == nil {
 		return itemArray
 	}
-	for _, item := range items {
-		itemEntity := entity.OrganizationPlanMilestoneItem{
-			Text:      utils.GetStringPropOrEmpty(item, "text"),
-			Status:    utils.GetStringPropOrEmpty(item, "status"),
-			UpdatedAt: utils.GetTimePropOrEpochStart(item, "updatedAt"),
-		}
+	for _, anyitem := range items {
+		item := anyitem.(string)
+		itemEntity := entity.OrganizationPlanMilestoneItem{}
+		json.Unmarshal([]byte(item), &itemEntity)
 		itemArray = append(itemArray, itemEntity)
 	}
 	return itemArray

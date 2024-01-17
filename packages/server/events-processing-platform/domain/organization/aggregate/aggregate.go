@@ -822,6 +822,9 @@ func (a *OrganizationAggregate) onOrganizationPlanMilestoneUpdate(evt eventstore
 	if eventData.UpdateRetired() {
 		milestone.Retired = eventData.Retired
 	}
+	if eventData.UpdateStatusDetails() {
+		milestone.StatusDetails = eventData.StatusDetails
+	}
 
 	a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[milestone.ID] = milestone
 

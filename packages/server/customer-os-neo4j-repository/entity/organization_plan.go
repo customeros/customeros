@@ -22,4 +22,4 @@ type OrganizationPlanEntity struct {
 	StatusDetails OrganizationPlanStatusDetails
 }
 
-type OrganizationPlanEntities []MasterPlanEntity
+type OrganizationPlanEntities []OrganizationPlanEntity
