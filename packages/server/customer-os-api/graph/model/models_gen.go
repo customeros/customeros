@@ -1042,6 +1042,20 @@ type InvoiceLine struct {
 func (InvoiceLine) IsNode()            {}
 func (this InvoiceLine) GetID() string { return this.ID }
 
+type InvoiceLineInput struct {
+	ServiceLineItemID *string    `json:"serviceLineItemId,omitempty"`
+	Name              string     `json:"name"`
+	Billed            BilledType `json:"billed"`
+	Price             float64    `json:"price"`
+	Quantity          int        `json:"quantity"`
+}
+
+type InvoiceSimulateInput struct {
+	ContractID string              `json:"contractId"`
+	Date       *time.Time          `json:"date,omitempty"`
+	Lines      []*InvoiceLineInput `json:"lines"`
+}
+
 type InvoicesPage struct {
 	Content       []*Invoice `json:"content"`
 	TotalPages    int        `json:"totalPages"`
