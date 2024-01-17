@@ -11,15 +11,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 )
 
 type OrganizationPlanUpdateFields struct {
-	Name          string
-	Retired       bool
-	UpdatedAt     time.Time
-	UpdateName    bool
-	UpdateRetired bool
-	StatusDetails entity.OrganizationPlanStatusDetails
+	Name                string
+	Retired             bool
+	UpdatedAt           time.Time
+	StatusDetails       entity.OrganizationPlanStatusDetails
+	UpdateName          bool
+	UpdateRetired       bool
+	UpdateStatusDetails bool
 }
 
 type OrganizationPlanMilestoneUpdateFields struct {
@@ -27,6 +29,7 @@ type OrganizationPlanMilestoneUpdateFields struct {
 	Name                string
 	Order               int64
 	DurationHours       int64
+	DueDate             time.Time
 	Items               []entity.OrganizationPlanMilestoneItem
 	StatusDetails       entity.OrganizationPlanMilestoneStatusDetails
 	Optional            bool
@@ -36,14 +39,14 @@ type OrganizationPlanMilestoneUpdateFields struct {
 	UpdateItems         bool
 	UpdateOptional      bool
 	UpdateRetired       bool
-	UpdateDurationHours bool
 	UpdateStatusDetails bool
+	UpdateDueDate       bool
 }
 
 type OrganizationPlanWriteRepository interface {
 	Create(ctx context.Context, tenant, organizationPlanId, name, source, appSource string, createdAt time.Time, statusDetails entity.OrganizationPlanStatusDetails) error
 	Update(ctx context.Context, tenant, organizationPlanId string, data OrganizationPlanUpdateFields) error
-	CreateMilestone(ctx context.Context, tenant, organizationPlanId, milestoneId, name, source, appSource string, order, durationHours int64, items []entity.OrganizationPlanMilestoneItem, optional bool, createdAt time.Time, statusDetails entity.OrganizationPlanMilestoneStatusDetails) error
+	CreateMilestone(ctx context.Context, tenant, organizationPlanId, milestoneId, name, source, appSource string, order int64, items []entity.OrganizationPlanMilestoneItem, optional bool, createdAt, dueDate time.Time, statusDetails entity.OrganizationPlanMilestoneStatusDetails) error
 	CreateBulkMilestones(ctx context.Context, tenant, organizationPlanId, source, appSource string, milestones []entity.OrganizationPlanMilestoneEntity, createdAt time.Time) error
 	UpdateMilestone(ctx context.Context, tenant, organizationPlanId, milestoneId string, data OrganizationPlanMilestoneUpdateFields) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationPlanId, organizationId string, createdAt time.Time) error
@@ -77,7 +80,7 @@ func (r *organizationPlanWriteRepository) Create(ctx context.Context, tenant, or
 								op.source=$source,
 								op.sourceOfTruth=$sourceOfTruth,
 								op.appSource=$appSource,
-								op.name=$name
+								op.name=$name,
 								op.status=$status,
 								op.statusComments=$statusComments,
 								op.statusUpdatedAt=$statusUpdatedAt
@@ -105,7 +108,7 @@ func (r *organizationPlanWriteRepository) Create(ctx context.Context, tenant, or
 	return err
 }
 
-func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, tenant, organizationPlanId, milestoneId, name, source, appSource string, order, durationHours int64, items []entity.OrganizationPlanMilestoneItem, optional bool, createdAt time.Time, statusDetails entity.OrganizationPlanMilestoneStatusDetails) error {
+func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, tenant, organizationPlanId, milestoneId, name, source, appSource string, order int64, items []entity.OrganizationPlanMilestoneItem, optional bool, createdAt, dueDate time.Time, statusDetails entity.OrganizationPlanMilestoneStatusDetails) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanWriteRepository.CreateMilestone")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -122,12 +125,12 @@ func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, t
 								m.appSource=$appSource,
 								m.name=$name,
 								m.order=$order,
-								m.durationHours=$durationHours,
 								m.optional=$optional,
 								m.items=$items
 								m.status=$status,
 								m.statusComments=$statusComments,
 								m.statusUpdatedAt=$statusUpdatedAt
+								m.dueDate=$dueDate
 							`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
@@ -140,12 +143,12 @@ func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, t
 		"appSource":          appSource,
 		"name":               name,
 		"order":              order,
-		"durationHours":      durationHours,
 		"optional":           optional,
 		"items":              items,
 		"status":             statusDetails.Status,
 		"statusComments":     statusDetails.Comments,
 		"statusUpdatedAt":    statusDetails.UpdatedAt,
+		"dueDate":            dueDate,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -175,12 +178,13 @@ func (r *organizationPlanWriteRepository) CreateBulkMilestones(ctx context.Conte
 								m.appSource=$appSource,
 								m.name=milestone.name,
 								m.order=milestone.order,
-								m.durationHours=milestone.durationHours,
+								m.dueDate=milestone.dueDate,
 								m.optional=milestone.optional,
 								m.items=milestone.items,
 								m.status=milestone.status
 								m.statusComments=milestone.statusComments,
 								m.statusUpdatedAt=milestone.statusUpdatedAt
+
 							`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
@@ -198,6 +202,7 @@ func (r *organizationPlanWriteRepository) CreateBulkMilestones(ctx context.Conte
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		err = errors.Wrap(err, "failed to create bulk milestones")
 	}
 	return err
 }
@@ -222,6 +227,12 @@ func (r *organizationPlanWriteRepository) Update(ctx context.Context, tenant, or
 	if data.UpdateRetired {
 		cypher += ", op.retired=$retired"
 		params["retired"] = data.Retired
+	}
+	if data.UpdateStatusDetails {
+		cypher += ", op.status=$status, op.statusComments=$statusComments, op.statusUpdatedAt=$statusUpdatedAt"
+		params["status"] = data.StatusDetails.Status
+		params["statusComments"] = data.StatusDetails.Comments
+		params["statusUpdatedAt"] = data.StatusDetails.UpdatedAt
 	}
 
 	span.LogFields(log.String("cypher", cypher))
@@ -257,10 +268,6 @@ func (r *organizationPlanWriteRepository) UpdateMilestone(ctx context.Context, t
 		cypher += ", m.order=$order"
 		params["order"] = data.Order
 	}
-	if data.UpdateDurationHours {
-		cypher += ", m.durationHours=$durationHours"
-		params["durationHours"] = data.DurationHours
-	}
 	if data.UpdateItems {
 		cypher += ", m.items=$items"
 		params["items"] = data.Items
@@ -272,6 +279,16 @@ func (r *organizationPlanWriteRepository) UpdateMilestone(ctx context.Context, t
 	if data.UpdateRetired {
 		cypher += ", m.retired=$retired"
 		params["retired"] = data.Retired
+	}
+	if data.UpdateStatusDetails {
+		cypher += ", m.status=$status, m.statusComments=$statusComments, m.statusUpdatedAt=$statusUpdatedAt"
+		params["status"] = data.StatusDetails.Status
+		params["statusComments"] = data.StatusDetails.Comments
+		params["statusUpdatedAt"] = data.StatusDetails.UpdatedAt
+	}
+	if data.UpdateDueDate {
+		cypher += ", op.dueDate=$dueDate"
+		params["dueDate"] = data.DueDate
 	}
 
 	span.LogFields(log.String("cypher", cypher))

@@ -23,7 +23,7 @@ type OrganizationPlanMilestoneEntity struct {
 	UpdatedAt     time.Time
 	Name          string
 	Order         int64
-	DurationHours int64
+	DueDate       time.Time
 	Items         []OrganizationPlanMilestoneItem
 	Optional      bool
 	Retired       bool

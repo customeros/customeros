@@ -9,6 +9,7 @@ import (
 	commonAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -55,7 +56,13 @@ func (h *updateOrganizationPlanHandler) Handle(ctx context.Context, baseRequest 
 
 		updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
 
-		evt, err := event.NewOrganizationPlanUpdateEvent(orgAggregate, request.OrganizationPlanId, request.Name, request.Retired, *updatedAt, extractOrganizationPlanFieldsMask(request.FieldsMask))
+		statusDetails := model.OrganizationPlanDetails{
+			Status:    request.StatusDetails.Status,
+			UpdatedAt: request.UpdatedAt.AsTime(),
+			Comments:  request.StatusDetails.Comments,
+		}
+
+		evt, err := event.NewOrganizationPlanUpdateEvent(orgAggregate, request.OrganizationPlanId, request.Name, request.Retired, *updatedAt, extractOrganizationPlanFieldsMask(request.FieldsMask), statusDetails)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationPlanUpdateEvent")
@@ -113,6 +120,8 @@ func extractOrganizationPlanFieldsMask(fields []orgplanpb.OrganizationPlanFieldM
 			fieldsMask = append(fieldsMask, event.FieldMaskName)
 		case orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_RETIRED:
 			fieldsMask = append(fieldsMask, event.FieldMaskRetired)
+		case orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_STATUS_DETAILS:
+			fieldsMask = append(fieldsMask, event.FieldMaskStatusDetails)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)

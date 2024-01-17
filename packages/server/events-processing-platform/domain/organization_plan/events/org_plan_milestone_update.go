@@ -15,16 +15,17 @@ type OrganizationPlanMilestoneUpdateEvent struct {
 	MilestoneId        string                                `json:"milestoneId" validate:"required"`
 	Name               string                                `json:"name,omitempty"`
 	Order              int64                                 `json:"order" validate:"gte=0"`
-	DurationHours      int64                                 `json:"durationHours" validate:"gte=0"`
+	DueDate            time.Time                             `json:"dueDate"`
 	UpdatedAt          time.Time                             `json:"updatedAt"`
 	Items              []model.OrganizationPlanMilestoneItem `json:"items"`
 	Optional           bool                                  `json:"optional"`
 	Retired            bool                                  `json:"retired"`
 	FieldsMask         []string                              `json:"fieldsMask,omitempty"`
 	OrganizationPlanId string                                `json:"organizationPlanId" validate:"required"`
+	StatusDetails      model.OrganizationPlanDetails         `json:"statusDetails"`
 }
 
-func NewOrganizationPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, organizationPlanId, milestoneId, name string, durationHours, order int64, items []model.OrganizationPlanMilestoneItem, fieldsMask []string, optional, retired bool, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, organizationPlanId, milestoneId, name string, order int64, items []model.OrganizationPlanMilestoneItem, fieldsMask []string, optional, retired bool, updatedAt, dueDate time.Time, statusDetails model.OrganizationPlanDetails) (eventstore.Event, error) {
 	eventData := OrganizationPlanMilestoneUpdateEvent{
 		Tenant:             aggregate.GetTenant(),
 		MilestoneId:        milestoneId,
@@ -47,8 +48,11 @@ func NewOrganizationPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, org
 	if eventData.UpdateOrder() {
 		eventData.Order = order
 	}
-	if eventData.UpdateDurationHours() {
-		eventData.DurationHours = durationHours
+	if eventData.UpdateDueDate() {
+		eventData.DueDate = dueDate
+	}
+	if eventData.UpdateStatusDetails() {
+		eventData.StatusDetails = statusDetails
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -71,8 +75,8 @@ func (e OrganizationPlanMilestoneUpdateEvent) UpdateOrder() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskOrder)
 }
 
-func (e OrganizationPlanMilestoneUpdateEvent) UpdateDurationHours() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskDurationHours)
+func (e OrganizationPlanMilestoneUpdateEvent) UpdateDueDate() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskDueDate)
 }
 
 func (e OrganizationPlanMilestoneUpdateEvent) UpdateItems() bool {
@@ -85,4 +89,8 @@ func (e OrganizationPlanMilestoneUpdateEvent) UpdateOptional() bool {
 
 func (e OrganizationPlanMilestoneUpdateEvent) UpdateRetired() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskRetired)
+}
+
+func (e OrganizationPlanMilestoneUpdateEvent) UpdateStatusDetails() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskStatusDetails)
 }

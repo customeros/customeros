@@ -24,9 +24,15 @@ message CreateOrganizationPlanMilestoneGrpcRequest {
   google.protobuf.Timestamp createdAt = 5;
   SourceFields sourceFields = 6;
   bool optional = 7;
-  int64 durationHours = 8;
+  google.protobuf.Timestamp dueDate = 8;
   repeated string items = 9;
   int64 order = 10;
+}
+
+message StatusDetails {
+    string status = 1;
+    google.protobuf.Timestamp updatedAt = 2;
+    string comments = 3;
 }
 
 enum OrganizationPlanFieldMask {
@@ -34,6 +40,7 @@ enum OrganizationPlanFieldMask {
   ORGANIZATION_PLAN_PROPERTY_ALL = 1; // All properties, if present in the list all other properties are ignored
   ORGANIZATION_PLAN_PROPERTY_NAME = 2;
   ORGANIZATION_PLAN_PROPERTY_RETIRED = 3;
+  ORGANIZATION_PLAN_PROPERTY_STATUS_DETAILS = 4;
 }
 
 message UpdateOrganizationPlanGrpcRequest {
@@ -47,6 +54,7 @@ message UpdateOrganizationPlanGrpcRequest {
   string appSource = 8;
   string masterPlanId = 9;
   string orgId = 10;
+  StatusDetails statusDetails = 11;
 }
 
 enum OrganizationPlanMilestoneFieldMask {
@@ -55,9 +63,10 @@ enum OrganizationPlanMilestoneFieldMask {
   ORGANIZATION_PLAN_MILESTONE_PROPERTY_NAME = 2;
   ORGANIZATION_PLAN_MILESTONE_PROPERTY_RETIRED = 3;
   ORGANIZATION_PLAN_MILESTONE_PROPERTY_OPTIONAL = 4;
-  ORGANIZATION_PLAN_MILESTONE_PROPERTY_DURATION_HOURS = 5;
+  ORGANIZATION_PLAN_MILESTONE_PROPERTY_DUE_DATE = 5;
   ORGANIZATION_PLAN_MILESTONE_PROPERTY_ITEMS = 6;
   ORGANIZATION_PLAN_MILESTONE_PROPERTY_ORDER = 7;
+  ORGANIZATION_PLAN_MILESTONE_PROPERTY_STATUS_DETAILS = 8;
 }
 
 message OrganizationPlanMilestoneItem {
@@ -78,9 +87,10 @@ message UpdateOrganizationPlanMilestoneGrpcRequest {
   bool retired = 8;
   bool optional = 9;
   int64 order = 10;
-  int64 durationHours = 11;
+  google.protobuf.Timestamp dueDate = 11;
   repeated OrganizationPlanMilestoneItem items = 12;
   repeated OrganizationPlanMilestoneFieldMask fieldsMask = 13;
+  StatusDetails statusDetails = 14;
 }
 
 message ReorderOrganizationPlanMilestonesGrpcRequest {

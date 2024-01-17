@@ -14,7 +14,7 @@ type OrganizationPlanMilestoneCreateEvent struct {
 	MilestoneId        string             `json:"milestoneId" validate:"required"`
 	Name               string             `json:"name"`
 	Order              int64              `json:"order" validate:"gte=0"`
-	DurationHours      int64              `json:"durationHours" validate:"gte=0"`
+	DueDate            time.Time          `json:"dueDate" validate:"gte=0"`
 	CreatedAt          time.Time          `json:"createdAt"`
 	Items              []string           `json:"items"`
 	SourceFields       commonmodel.Source `json:"sourceFields"`
@@ -22,18 +22,18 @@ type OrganizationPlanMilestoneCreateEvent struct {
 	OrganizationPlanId string             `json:"organizationPlanId" validate:"required"`
 }
 
-func NewOrganizationPlanMilestoneCreateEvent(aggregate eventstore.Aggregate, organizationPlanId, milestoneId, name string, durationHours, order int64, items []string, optional bool, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewOrganizationPlanMilestoneCreateEvent(aggregate eventstore.Aggregate, organizationPlanId, milestoneId, name string, order int64, items []string, optional bool, sourceFields commonmodel.Source, createdAt, dueDate time.Time) (eventstore.Event, error) {
 	eventData := OrganizationPlanMilestoneCreateEvent{
 		Tenant:             aggregate.GetTenant(),
 		MilestoneId:        milestoneId,
 		Name:               name,
 		CreatedAt:          createdAt,
 		Order:              order,
-		DurationHours:      durationHours,
 		Items:              items,
 		SourceFields:       sourceFields,
 		Optional:           optional,
 		OrganizationPlanId: organizationPlanId,
+		DueDate:            dueDate,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

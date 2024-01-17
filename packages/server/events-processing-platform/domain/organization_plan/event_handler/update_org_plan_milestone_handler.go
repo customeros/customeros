@@ -56,7 +56,26 @@ func (h *updateOrganizationPlanMilestoneCommandHandler) Handle(ctx context.Conte
 
 		updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
 
-		evt, err := event.NewOrganizationPlanMilestoneUpdateEvent(orgAggregate, request.OrganizationPlanId, baseRequest.ObjectID, request.Name, request.DurationHours, request.Order, GrpcItemsToDomainItems(request.Items), extractOrganizationPlanMilestoneFieldsMask(request.FieldsMask), request.Optional, request.Retired, *updatedAt)
+		statusDetails := model.OrganizationPlanDetails{
+			Status:    request.StatusDetails.Status,
+			UpdatedAt: request.UpdatedAt.AsTime(),
+			Comments:  request.StatusDetails.Comments,
+		}
+
+		evt, err := event.NewOrganizationPlanMilestoneUpdateEvent(
+			orgAggregate,
+			request.OrganizationPlanId,
+			baseRequest.ObjectID,
+			request.Name,
+			request.Order,
+			GrpcItemsToDomainItems(request.Items),
+			extractOrganizationPlanMilestoneFieldsMask(request.FieldsMask),
+			request.Optional,
+			request.Retired,
+			*updatedAt,
+			request.DueDate.AsTime(),
+			statusDetails,
+		)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationPlanUpdateEvent")
@@ -118,10 +137,12 @@ func extractOrganizationPlanMilestoneFieldsMask(fields []orgplanpb.OrganizationP
 			fieldsMask = append(fieldsMask, event.FieldMaskOrder)
 		case orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_OPTIONAL:
 			fieldsMask = append(fieldsMask, event.FieldMaskOptional)
-		case orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_DURATION_HOURS:
-			fieldsMask = append(fieldsMask, event.FieldMaskDurationHours)
+		case orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_DUE_DATE:
+			fieldsMask = append(fieldsMask, event.FieldMaskDueDate)
 		case orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ITEMS:
 			fieldsMask = append(fieldsMask, event.FieldMaskItems)
+		case orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_STATUS_DETAILS:
+			fieldsMask = append(fieldsMask, event.FieldMaskStatusDetails)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)

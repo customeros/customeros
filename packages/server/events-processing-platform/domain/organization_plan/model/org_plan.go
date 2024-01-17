@@ -39,7 +39,7 @@ type OrganizationPlanMilestone struct {
 	SourceFields  commonmodel.Source              `json:"source"`
 	Optional      bool                            `json:"optional"`
 	Order         int64                           `json:"order"`
-	DurationHours int64                           `json:"durationHours"`
+	DueDate       time.Time                       `json:"dueDate"`
 	Items         []OrganizationPlanMilestoneItem `json:"items"`
 	StatusDetails OrganizationPlanDetails         `json:"statusDetails"`
 }

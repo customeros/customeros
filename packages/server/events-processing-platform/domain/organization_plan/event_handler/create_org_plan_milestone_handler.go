@@ -55,7 +55,7 @@ func (h *createOrganizationPlanMilestoneHandler) Handle(ctx context.Context, bas
 
 		createdAtNotNil := utils.IfNotNilTimeWithDefault(request.CreatedAt, utils.Now())
 
-		evt, err := event.NewOrganizationPlanMilestoneCreateEvent(organizationAggregate, request.OrganizationPlanId, baseRequest.ObjectID, request.Name, request.DurationHours, request.Order, request.Items, request.Optional, baseRequest.SourceFields, createdAtNotNil)
+		evt, err := event.NewOrganizationPlanMilestoneCreateEvent(organizationAggregate, request.OrganizationPlanId, baseRequest.ObjectID, request.Name, request.Order, request.Items, request.Optional, baseRequest.SourceFields, createdAtNotNil, request.DueDate.AsTime())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationPlanMilestoneCreateEvent")

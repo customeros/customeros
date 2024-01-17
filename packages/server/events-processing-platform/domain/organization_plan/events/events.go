@@ -13,6 +13,7 @@ const (
 	FieldMaskRetired       = "retired"
 	FieldMaskOrder         = "order"
 	FieldMaskOptional      = "optional"
-	FieldMaskDurationHours = "durationHours"
+	FieldMaskDueDate       = "dueDate"
 	FieldMaskItems         = "items"
+	FieldMaskStatusDetails = "statusDetails"
 )

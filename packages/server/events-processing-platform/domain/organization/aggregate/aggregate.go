@@ -739,14 +739,14 @@ func (a *OrganizationAggregate) onOrganizationPlanMilestoneCreate(event eventsto
 	}
 
 	mstone := orgplanmodel.OrganizationPlanMilestone{
-		ID:            eventData.MilestoneId,
-		Name:          eventData.Name,
-		Order:         eventData.Order,
-		DurationHours: eventData.DurationHours,
-		CreatedAt:     eventData.CreatedAt,
-		UpdatedAt:     eventData.CreatedAt,
-		Optional:      eventData.Optional,
-		Items:         convertMilestoneItemsToObject(eventData.Items),
+		ID:        eventData.MilestoneId,
+		Name:      eventData.Name,
+		Order:     eventData.Order,
+		CreatedAt: eventData.CreatedAt,
+		DueDate:   eventData.DueDate,
+		UpdatedAt: eventData.CreatedAt,
+		Optional:  eventData.Optional,
+		Items:     convertMilestoneItemsToObject(eventData.Items),
 	}
 
 	if a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones == nil {
@@ -810,8 +810,8 @@ func (a *OrganizationAggregate) onOrganizationPlanMilestoneUpdate(evt eventstore
 	if eventData.UpdateOrder() {
 		milestone.Order = eventData.Order
 	}
-	if eventData.UpdateDurationHours() {
-		milestone.DurationHours = eventData.DurationHours
+	if eventData.UpdateDueDate() {
+		milestone.DueDate = eventData.DueDate
 	}
 	if eventData.UpdateItems() {
 		milestone.Items = eventData.Items

@@ -337,7 +337,7 @@ func MapDbNodeToOrganizationPlanMilestoneEntity(dbNode *dbtype.Node) *entity.Org
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		Order:         utils.GetInt64PropOrZero(props, "order"),
-		DurationHours: utils.GetInt64PropOrZero(props, "durationHours"),
+		DueDate:       utils.GetTimePropOrEpochStart(props, "dueDate"),
 		Optional:      utils.GetBoolPropOrFalse(props, "optional"),
 		Items:         MapOrganizationPlanMilestoneItemToEntity(props),
 		Retired:       utils.GetBoolPropOrFalse(props, "retired"),

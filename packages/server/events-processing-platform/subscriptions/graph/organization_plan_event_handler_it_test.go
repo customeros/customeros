@@ -99,7 +99,8 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, model.NotStarted.String(), orgPlan.StatusDetails.Status)
 
 	createdMilestones := neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "HAS_MILESTONE")
-	require.Equal(t, 1, createdMilestones)
+	// should be 2 => 1 master plan milestone + 1 org plan milestone
+	require.Equal(t, 2, createdMilestones)
 }
 
 // func TestOrganizationPlanEventHandler_OnCreateMilestone(t *testing.T) {
