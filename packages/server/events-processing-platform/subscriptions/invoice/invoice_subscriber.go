@@ -7,7 +7,6 @@ import (
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/opentracing/opentracing-go"
 	"strings"
@@ -187,17 +186,26 @@ func (s *InvoiceSubscriber) onInvoiceFillV1(ctx context.Context, evt eventstore.
 }
 
 func (s *InvoiceSubscriber) onInvoicePdfGeneratedV1(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceSubscriber.onInvoiceFillV1")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceSubscriber.onInvoicePdfGeneratedV1")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventID", evt.GetEventID()))
 
 	var eventData invoice.InvoicePdfGeneratedEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
+	tracing.LogObjectAsJson(span, "eventData", eventData)
 
-	//TODO CALL STRIPE
+	// TODO CALL STRIPE
+	//invcoice - contract - org
+	//get
+	//stripe
+	//id
+	//for org
+	//
+	//// webhook
+	//	invoice- > techPaymentRequested(bool)
 
 	return nil
 }
@@ -208,9 +216,7 @@ func (s *InvoiceSubscriber) CallPdfGeneratedInvoice(ctx context.Context, tenant,
 		Tenant:           tenant,
 		InvoiceId:        invoiceId,
 		RepositoryFileId: repositoryFileId,
-		SourceFields: &commonpb.SourceFields{
-			AppSource: constants.AppSourceEventProcessingPlatform,
-		},
+		AppSource:        constants.AppSourceEventProcessingPlatform,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

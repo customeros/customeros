@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"github.com/google/uuid"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	invoiceEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -14,16 +14,16 @@ import (
 
 type invoiceService struct {
 	invoicepb.UnimplementedInvoiceGrpcServiceServer
-	log            logger.Logger
-	eventHandlers  *invoiceEvents.EventHandlers
-	aggregateStore eventstore.AggregateStore
+	log                   logger.Logger
+	invoiceRequestHandler invoice.InvoiceRequestHandler
+	aggregateStore        eventstore.AggregateStore
 }
 
-func NewInvoiceService(log logger.Logger, eventHandlers *invoiceEvents.EventHandlers, aggregateStore eventstore.AggregateStore) *invoiceService {
+func NewInvoiceService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config) *invoiceService {
 	return &invoiceService{
-		log:            log,
-		eventHandlers:  eventHandlers,
-		aggregateStore: aggregateStore,
+		log:                   log,
+		invoiceRequestHandler: invoice.NewInvoiceRequestHandler(log, aggregateStore, cfg.Utils),
+		aggregateStore:        aggregateStore,
 	}
 }
 
@@ -35,11 +35,9 @@ func (s *invoiceService) NewInvoice(ctx context.Context, request *invoicepb.NewI
 
 	invoiceId := uuid.New().String()
 
-	baseRequest := eventstore.NewBaseRequest(invoiceId, request.Tenant, request.LoggedInUserId, commonmodel.SourceFromGrpc(request.SourceFields))
-
-	if err := s.eventHandlers.InvoiceNew.Handle(ctx, baseRequest, request); err != nil {
+	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, invoiceId, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(InvoiceNew.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(NewInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
@@ -56,11 +54,9 @@ func (s *invoiceService) FillInvoice(ctx context.Context, request *invoicepb.Fil
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
 	}
 
-	baseRequest := eventstore.NewBaseRequest(request.InvoiceId, request.Tenant, request.LoggedInUserId, commonmodel.SourceFromGrpc(request.SourceFields))
-
-	if err := s.eventHandlers.InvoiceFill.Handle(ctx, baseRequest, request); err != nil {
+	if _, err := s.invoiceRequestHandler.HandleWithRetry(ctx, request.Tenant, request.InvoiceId, true, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(InvoiceFill.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(FillInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
@@ -77,11 +73,9 @@ func (s *invoiceService) PdfGeneratedInvoice(ctx context.Context, request *invoi
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
 	}
 
-	baseRequest := eventstore.NewBaseRequest(request.InvoiceId, request.Tenant, request.LoggedInUserId, commonmodel.SourceFromGrpc(request.SourceFields))
-
-	if err := s.eventHandlers.InvoicePdfGenerated.Handle(ctx, baseRequest, request); err != nil {
+	if _, err := s.invoiceRequestHandler.HandleWithRetry(ctx, request.Tenant, request.InvoiceId, true, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(InvoicePay.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(PdfGeneratedInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
@@ -98,11 +92,9 @@ func (s *invoiceService) PayInvoice(ctx context.Context, request *invoicepb.PayI
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
 	}
 
-	baseRequest := eventstore.NewBaseRequest(request.InvoiceId, request.Tenant, request.LoggedInUserId, commonmodel.SourceFromGrpc(request.SourceFields))
-
-	if err := s.eventHandlers.InvoicePay.Handle(ctx, baseRequest, request); err != nil {
+	if _, err := s.invoiceRequestHandler.HandleWithRetry(ctx, request.Tenant, request.InvoiceId, true, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(InvoicePay.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(PayInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 

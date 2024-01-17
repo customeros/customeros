@@ -12,6 +12,20 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 )
 
+type Config struct {
+	ServiceName        string `env:"SERVICE_NAME" envDefault:"events-processing-platform"`
+	Logger             logger.Config
+	EventStoreConfig   eventstroredb.EventStoreConfig
+	Neo4j              config.Neo4jConfig
+	Postgres           config.PostgresConfig
+	Jaeger             tracing.JaegerConfig
+	GRPC               GRPC
+	Subscriptions      Subscriptions
+	Services           Services
+	Utils              Utils
+	EventNotifications EventNotifications
+}
+
 type GRPC struct {
 	Port        string `env:"GRPC_PORT" envDefault:":5001" validate:"required"`
 	Development bool   `env:"GRPC_DEVELOPMENT" envDefault:"false"`
@@ -211,23 +225,10 @@ type Utils struct {
 	RetriesOnOptimisticLockException int `env:"UTILS_RETRIES_ON_OPTIMISTIC_LOCK" envDefault:"5"`
 }
 
-type Events struct {
-	// not yet implemented
-	EventsToIgnore []string `env:"EVENTS_TO_IGNORE" envDefault:""`
-}
-
-type Config struct {
-	ServiceName      string `env:"SERVICE_NAME" envDefault:"events-processing-platform"`
-	Logger           logger.Config
-	EventStoreConfig eventstroredb.EventStoreConfig
-	Neo4j            config.Neo4jConfig
-	Postgres         config.PostgresConfig
-	Jaeger           tracing.JaegerConfig
-	GRPC             GRPC
-	Subscriptions    Subscriptions
-	Services         Services
-	Utils            Utils
-	Events           Events
+type EventNotifications struct {
+	EndPoint struct {
+		InvoiceReady string `env:"INVOICE_READY_URL" envDefault:""`
+	}
 }
 
 func InitConfig() (*Config, error) {
