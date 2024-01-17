@@ -41,7 +41,7 @@ func (h *createContractCommandHandler) Handle(ctx context.Context, cmd *command.
 	}
 
 	// Load or initialize the contract aggregate
-	contractAggregate, err := aggregate.LoadContractAggregate(ctx, h.es, cmd.Tenant, cmd.GetObjectID())
+	contractAggregate, err := aggregate.LoadContractAggregate(ctx, h.es, cmd.Tenant, cmd.GetObjectID(), eventstore.LoadAggregateOptions{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

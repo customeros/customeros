@@ -1,10 +1,12 @@
 package aggregate
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"strings"
 )
 
@@ -42,6 +44,28 @@ func EnrichEventWithMetadataExtended(event *eventstore.Event, span opentracing.S
 
 func AllowCheckIfEventIsRedundant(appSource, loggedInUserId string) bool {
 	return (appSource == constants.AppSourceIntegrationApp || appSource == constants.AppSourceSyncCustomerOsData) && loggedInUserId == ""
+}
+
+func LoadAggregate(ctx context.Context, eventStore eventstore.AggregateStore, agg eventstore.Aggregate, options eventstore.LoadAggregateOptions) error {
+	err := eventStore.Exists(ctx, agg.GetID())
+	if err != nil {
+		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
+			return err
+		} else {
+			return nil
+		}
+	}
+
+	if options.SkipLoadEvents {
+		if err = eventStore.LoadVersion(ctx, agg); err != nil {
+			return err
+		}
+	} else {
+		if err = eventStore.Load(ctx, agg); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func GetAggregateObjectID(aggregateID, tenant string, aggregateType eventstore.AggregateType) string {

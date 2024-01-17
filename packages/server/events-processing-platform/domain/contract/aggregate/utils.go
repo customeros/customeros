@@ -14,7 +14,7 @@ func GetContractObjectID(aggregateID, tenant string) string {
 	return aggregate.GetAggregateObjectID(aggregateID, tenant, ContractAggregateType)
 }
 
-func LoadContractAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*ContractAggregate, error) {
+func LoadContractAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string, options eventstore.LoadAggregateOptions) (*ContractAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadContractAggregate")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -22,19 +22,10 @@ func LoadContractAggregate(ctx context.Context, eventStore eventstore.AggregateS
 
 	contractAggregate := NewContractAggregateWithTenantAndID(tenant, objectID)
 
-	err := eventStore.Exists(ctx, contractAggregate.GetID())
+	err := aggregate.LoadAggregate(ctx, eventStore, contractAggregate, options)
 	if err != nil {
-		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
-			tracing.TraceErr(span, err)
-			return nil, err
-		} else {
-			return contractAggregate, nil
-		}
-	}
-
-	if err = eventStore.Load(ctx, contractAggregate); err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return nil, errors.Wrap(err, "LoadInvoiceAggregate")
 	}
 
 	return contractAggregate, nil
@@ -48,19 +39,10 @@ func LoadContractTempAggregate(ctx context.Context, eventStore eventstore.Aggreg
 
 	contractTempAggregate := NewContractTempAggregateWithTenantAndID(tenant, objectID)
 
-	err := eventStore.Exists(ctx, contractTempAggregate.GetID())
+	err := aggregate.LoadAggregate(ctx, eventStore, contractTempAggregate, eventstore.LoadAggregateOptions{SkipLoadEvents: true})
 	if err != nil {
-		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
-			tracing.TraceErr(span, err)
-			return nil, err
-		} else {
-			return contractTempAggregate, nil
-		}
-	}
-
-	if err = eventStore.LoadVersion(ctx, contractTempAggregate); err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return nil, errors.Wrap(err, "LoadInvoiceAggregate")
 	}
 
 	return contractTempAggregate, nil

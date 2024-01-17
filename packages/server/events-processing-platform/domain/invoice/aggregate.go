@@ -35,26 +35,10 @@ func LoadInvoiceAggregate(ctx context.Context, eventStore eventstore.AggregateSt
 
 	invoiceAggregate := NewInvoiceAggregateWithTenantAndID(tenant, objectID)
 
-	err := eventStore.Exists(ctx, invoiceAggregate.GetID())
+	err := aggregate.LoadAggregate(ctx, eventStore, invoiceAggregate, options)
 	if err != nil {
-		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
-			tracing.TraceErr(span, err)
-			return nil, err
-		} else {
-			return invoiceAggregate, nil
-		}
-	}
-
-	if options.SkipLoadEvents {
-		if err = eventStore.LoadVersion(ctx, invoiceAggregate); err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-	} else {
-		if err = eventStore.Load(ctx, invoiceAggregate); err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
+		tracing.TraceErr(span, err)
+		return nil, errors.Wrap(err, "LoadInvoiceAggregate")
 	}
 
 	return invoiceAggregate, nil
