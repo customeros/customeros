@@ -999,6 +999,65 @@ type InteractionSessionParticipantInput struct {
 	Type        *string `json:"type,omitempty"`
 }
 
+type Invoice struct {
+	ID               string         `json:"id"`
+	CreatedAt        time.Time      `json:"createdAt"`
+	UpdatedAt        time.Time      `json:"updatedAt"`
+	Name             string         `json:"name"`
+	Source           DataSource     `json:"source"`
+	SourceOfTruth    DataSource     `json:"sourceOfTruth"`
+	AppSource        string         `json:"appSource"`
+	DryRun           bool           `json:"dryRun"`
+	Number           string         `json:"number"`
+	Date             time.Time      `json:"date"`
+	DueDate          time.Time      `json:"dueDate"`
+	Amount           float64        `json:"amount"`
+	Vat              float64        `json:"vat"`
+	Total            float64        `json:"total"`
+	Currency         string         `json:"currency"`
+	RepositoryFileID string         `json:"repositoryFileId"`
+	Lines            []*InvoiceLine `json:"lines"`
+}
+
+func (Invoice) IsSourceFields()                   {}
+func (this Invoice) GetID() string                { return this.ID }
+func (this Invoice) GetSource() DataSource        { return this.Source }
+func (this Invoice) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this Invoice) GetAppSource() string         { return this.AppSource }
+
+func (Invoice) IsNode() {}
+
+type InvoiceLine struct {
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
+	Index     int       `json:"index"`
+	Name      string    `json:"name"`
+	Price     float64   `json:"price"`
+	Quantity  int       `json:"quantity"`
+	Amount    float64   `json:"amount"`
+	Vat       float64   `json:"vat"`
+	Total     float64   `json:"total"`
+}
+
+func (InvoiceLine) IsNode()            {}
+func (this InvoiceLine) GetID() string { return this.ID }
+
+type InvoicesPage struct {
+	Content       []*Invoice `json:"content"`
+	TotalPages    int        `json:"totalPages"`
+	TotalElements int64      `json:"totalElements"`
+}
+
+func (InvoicesPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this InvoicesPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this InvoicesPage) GetTotalElements() int64 { return this.TotalElements }
+
 type InvoicingCycle struct {
 	ID            string             `json:"id"`
 	CreatedAt     time.Time          `json:"createdAt"`

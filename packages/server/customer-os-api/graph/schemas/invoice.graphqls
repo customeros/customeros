@@ -1,0 +1,44 @@
+extend type Query {
+    invoices(pagination: Pagination, where: Filter, sort: [SortBy!]): InvoicesPage!
+}
+
+type InvoicesPage implements Pages {
+    content: [Invoice!]!
+    totalPages: Int!
+    totalElements: Int64!
+}
+
+type Invoice implements SourceFields & Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    name:               String!
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+
+    dryRun:             Boolean!
+    number:             String!
+    date:               Time!
+    dueDate:            Time!
+    amount:             Float!
+    vat:                Float!
+    total:              Float!
+    currency:           String!
+    repositoryFileId:   String!
+    lines:              [InvoiceLine!]! @goField(forceResolver: true)
+}
+
+type InvoiceLine implements Node {
+    id:                 ID!
+    createdAt:          Time!
+
+    index:              Int!
+    name:               String!
+    price:              Float!
+    quantity:           Int!
+
+    amount:             Float!
+    vat:                Float!
+    total:              Float!
+}
