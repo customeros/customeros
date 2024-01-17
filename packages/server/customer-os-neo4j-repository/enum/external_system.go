@@ -1,0 +1,43 @@
+package enum
+
+type ExternalSystemId string
+
+const (
+	Hubspot        ExternalSystemId = "hubspot"
+	ZendeskSupport ExternalSystemId = "zendesk_support"
+	CalCom         ExternalSystemId = "calcom"
+	Pipedrive      ExternalSystemId = "pipedrive"
+	Slack          ExternalSystemId = "slack"
+	Intercom       ExternalSystemId = "intercom"
+	Salesforce     ExternalSystemId = "salesforce"
+	Stripe         ExternalSystemId = "stripe"
+	Mixpanel       ExternalSystemId = "mixpanel"
+)
+
+func (e ExternalSystemId) String() string {
+	return string(e)
+}
+
+func DecodeExternalSystemId(value string) ExternalSystemId {
+	switch value {
+	case "hubspot":
+		return Hubspot
+	case "zendesk_support":
+		return ZendeskSupport
+	case "calcom":
+		return CalCom
+	case "pipedrive":
+		return Pipedrive
+	case "slack":
+		return Slack
+	case "intercom":
+		return Intercom
+	case "salesforce":
+		return Salesforce
+	case "stripe":
+		return Stripe
+	case "mixpanel":
+		return Mixpanel
+	}
+	return ""
+}

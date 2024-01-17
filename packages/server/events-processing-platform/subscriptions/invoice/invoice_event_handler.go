@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -94,12 +96,35 @@ func (h *InvoiceEventHandler) invokeInvoiceReadyWebhook(ctx context.Context, ten
 		return nil
 	}
 
-	currency := "USD"         // TODO implement currency in invoice
-	stripeCustomerId := "123" // TODO fetch stripe customer id from customer-os
+	// get organization linked to invoice
+	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
+		return err
+	}
+	organizationEntity := neo4jentity.OrganizationEntity{}
+	if organizationDbNode != nil {
+		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+	}
+
+	// get stripe customer id for organization
+	stripeCustomerId, err := h.repositories.Neo4jRepositories.ExternalSystemReadRepository.GetFirstExternalIdForLinkedEntity(ctx, tenant, neo4jenum.Stripe.String(), organizationEntity.ID, neo4jutil.NodeLabelOrganization)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting stripe customer id for organization %s: %s", organizationEntity.ID, err.Error())
+		return err
+	}
+
+	// get currency for invoice
+	currency := "USD" // TODO alexb implement currency in invoice
+
+	// convert amount to the smallest currency unit
 	amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(currency, invoice.Amount)
 	if err != nil {
 		return fmt.Errorf("error converting amount to smallest currency unit: %v", err.Error())
 	}
+
 	requestBody := RequestBodyInvoiceReady{
 		Tenant:                       tenant,
 		Currency:                     currency,
