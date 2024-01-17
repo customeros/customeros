@@ -37,7 +37,7 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	userIdCreator := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{})
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, "sf")
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"Organization": 1, "User": 2, "ExternalSystem": 1, "Opportunity": 0})
+		"Organization": 1, "User": 2, "ExternalSystemId": 1, "Opportunity": 0})
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
@@ -85,10 +85,10 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, err, "failed to execute opportunity create event handler")
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"Organization":   1,
-		"User":           2,
-		"ExternalSystem": 1,
-		"Opportunity":    1, "Opportunity_" + tenantName: 1})
+		"Organization":     1,
+		"User":             2,
+		"ExternalSystemId": 1,
+		"Opportunity":      1, "Opportunity_" + tenantName: 1})
 	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, userIdOwner, "OWNS", opportunityId)
 	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, opportunityId, "CREATED_BY", userIdCreator)
 	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "HAS_OPPORTUNITY", opportunityId)
@@ -686,7 +686,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	userIdOwnerNew := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{})
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, "sf")
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"Organization": 1, "User": 3, "ExternalSystem": 1, "Opportunity": 0})
+		"Organization": 1, "User": 3, "ExternalSystemId": 1, "Opportunity": 0})
 
 	// prepare grpc mock
 	calledEventsPlatformToRefreshRenewalSummary := false
@@ -749,10 +749,10 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	require.Nil(t, err, "failed to execute opportunity create event handler")
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"Organization":   1,
-		"User":           3,
-		"ExternalSystem": 1,
-		"Opportunity":    1, "Opportunity_" + tenantName: 1})
+		"Organization":     1,
+		"User":             3,
+		"ExternalSystemId": 1,
+		"Opportunity":      1, "Opportunity_" + tenantName: 1})
 	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, userIdOwner, "OWNS", opportunityId)
 	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, opportunityId, "CREATED_BY", userIdCreator)
 	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "HAS_OPPORTUNITY", opportunityId)
