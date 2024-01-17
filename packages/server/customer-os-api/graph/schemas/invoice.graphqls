@@ -1,5 +1,10 @@
 extend type Query {
-    invoices(pagination: Pagination, where: Filter, sort: [SortBy!]): InvoicesPage!
+    invoice(id: ID!): Invoice!
+    invoices(contractId: ID!, pagination: Pagination): InvoicesPage!
+}
+
+extend type Mutation {
+    invoice_Simulate(input: InvoiceSimulateInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type InvoicesPage implements Pages {
@@ -41,4 +46,17 @@ type InvoiceLine implements Node {
     amount:             Float!
     vat:                Float!
     total:              Float!
+}
+
+input InvoiceSimulateInput {
+    contractId:         ID!
+    date:               Time
+    lines:              [InvoiceLineInput!]!
+}
+input InvoiceLineInput {
+    serviceLineItemId:  ID
+    name:               String!
+    billed:             BilledType!
+    price:              Float!
+    quantity:           Int!
 }

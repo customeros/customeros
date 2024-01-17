@@ -17,8 +17,18 @@ func (r *invoiceResolver) Lines(ctx context.Context, obj *model.Invoice) ([]*mod
 	panic(fmt.Errorf("not implemented: Lines - lines"))
 }
 
+// InvoiceSimulate is the resolver for the invoice_Simulate field.
+func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.InvoiceSimulateInput) (string, error) {
+	panic(fmt.Errorf("not implemented: InvoiceSimulate - invoice_Simulate"))
+}
+
+// Invoice is the resolver for the invoice field.
+func (r *queryResolver) Invoice(ctx context.Context, id string) (*model.Invoice, error) {
+	panic(fmt.Errorf("not implemented: Invoice - invoice"))
+}
+
 // Invoices is the resolver for the invoices field.
-func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.InvoicesPage, error) {
+func (r *queryResolver) Invoices(ctx context.Context, contractID string, pagination *model.Pagination) (*model.InvoicesPage, error) {
 	panic(fmt.Errorf("not implemented: Invoices - invoices"))
 }
 

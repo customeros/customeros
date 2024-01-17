@@ -806,6 +806,7 @@ type ComplexityRoot struct {
 		InteractionEventLinkAttachment          func(childComplexity int, eventID string, attachmentID string) int
 		InteractionSessionCreate                func(childComplexity int, session model.InteractionSessionInput) int
 		InteractionSessionLinkAttachment        func(childComplexity int, sessionID string, attachmentID string) int
+		InvoiceSimulate                         func(childComplexity int, input model.InvoiceSimulateInput) int
 		InvoicingCycleCreate                    func(childComplexity int, input model.InvoicingCycleInput) int
 		InvoicingCycleUpdate                    func(childComplexity int, input model.InvoicingCycleUpdateInput) int
 		JobRoleCreate                           func(childComplexity int, contactID string, input model.JobRoleInput) int
@@ -1106,7 +1107,8 @@ type ComplexityRoot struct {
 		InteractionEventByEventIdentifier     func(childComplexity int, eventIdentifier string) int
 		InteractionSession                    func(childComplexity int, id string) int
 		InteractionSessionBySessionIdentifier func(childComplexity int, sessionIdentifier string) int
-		Invoices                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Invoice                               func(childComplexity int, id string) int
+		Invoices                              func(childComplexity int, contractID string, pagination *model.Pagination) int
 		InvoicingCycle                        func(childComplexity int) int
 		Issue                                 func(childComplexity int, id string) int
 		LogEntry                              func(childComplexity int, id string) int
@@ -1462,6 +1464,7 @@ type MutationResolver interface {
 	InteractionSessionLinkAttachment(ctx context.Context, sessionID string, attachmentID string) (*model.InteractionSession, error)
 	InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error)
 	InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.InteractionEvent, error)
+	InvoiceSimulate(ctx context.Context, input model.InvoiceSimulateInput) (string, error)
 	InvoicingCycleCreate(ctx context.Context, input model.InvoicingCycleInput) (*model.InvoicingCycle, error)
 	InvoicingCycleUpdate(ctx context.Context, input model.InvoicingCycleUpdateInput) (*model.InvoicingCycle, error)
 	JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error)
@@ -1624,7 +1627,8 @@ type QueryResolver interface {
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
 	InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error)
-	Invoices(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.InvoicesPage, error)
+	Invoice(ctx context.Context, id string) (*model.Invoice, error)
+	Invoices(ctx context.Context, contractID string, pagination *model.Pagination) (*model.InvoicesPage, error)
 	InvoicingCycle(ctx context.Context) (*model.InvoicingCycle, error)
 	Issue(ctx context.Context, id string) (*model.Issue, error)
 	LogEntry(ctx context.Context, id string) (*model.LogEntry, error)
@@ -5729,6 +5733,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.InteractionSessionLinkAttachment(childComplexity, args["sessionId"].(string), args["attachmentId"].(string)), true
 
+	case "Mutation.invoice_Simulate":
+		if e.complexity.Mutation.InvoiceSimulate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_invoice_Simulate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.InvoiceSimulate(childComplexity, args["input"].(model.InvoiceSimulateInput)), true
+
 	case "Mutation.invoicingCycle_Create":
 		if e.complexity.Mutation.InvoicingCycleCreate == nil {
 			break
@@ -8115,6 +8131,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.InteractionSessionBySessionIdentifier(childComplexity, args["sessionIdentifier"].(string)), true
 
+	case "Query.invoice":
+		if e.complexity.Query.Invoice == nil {
+			break
+		}
+
+		args, err := ec.field_Query_invoice_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Invoice(childComplexity, args["id"].(string)), true
+
 	case "Query.invoices":
 		if e.complexity.Query.Invoices == nil {
 			break
@@ -8125,7 +8153,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Invoices(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
+		return e.complexity.Query.Invoices(childComplexity, args["contractId"].(string), args["pagination"].(*model.Pagination)), true
 
 	case "Query.invoicingCycle":
 		if e.complexity.Query.InvoicingCycle == nil {
@@ -9153,6 +9181,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputInteractionEventParticipantInput,
 		ec.unmarshalInputInteractionSessionInput,
 		ec.unmarshalInputInteractionSessionParticipantInput,
+		ec.unmarshalInputInvoiceLineInput,
+		ec.unmarshalInputInvoiceSimulateInput,
 		ec.unmarshalInputInvoicingCycleInput,
 		ec.unmarshalInputInvoicingCycleUpdateInput,
 		ec.unmarshalInputJobRoleInput,
@@ -10705,7 +10735,12 @@ interface ExtensibleEntity implements Node {
     template: EntityTemplate
 }`, BuiltIn: false},
 	{Name: "../schemas/invoice.graphqls", Input: `extend type Query {
-    invoices(pagination: Pagination, where: Filter, sort: [SortBy!]): InvoicesPage!
+    invoice(id: ID!): Invoice!
+    invoices(contractId: ID!, pagination: Pagination): InvoicesPage!
+}
+
+extend type Mutation {
+    invoice_Simulate(input: InvoiceSimulateInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type InvoicesPage implements Pages {
@@ -10747,6 +10782,19 @@ type InvoiceLine implements Node {
     amount:             Float!
     vat:                Float!
     total:              Float!
+}
+
+input InvoiceSimulateInput {
+    contractId:         ID!
+    date:               Time
+    lines:              [InvoiceLineInput!]!
+}
+input InvoiceLineInput {
+    serviceLineItemId:  ID
+    name:               String!
+    billed:             BilledType!
+    price:              Float!
+    quantity:           Int!
 }`, BuiltIn: false},
 	{Name: "../schemas/invoicing_cycle.graphqls", Input: `extend type Mutation {
     invoicingCycle_Create(input: InvoicingCycleInput!): InvoicingCycle!  @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -13457,6 +13505,21 @@ func (ec *executionContext) field_Mutation_interactionSession_LinkAttachment_arg
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_invoice_Simulate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.InvoiceSimulateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNInvoiceSimulateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceSimulateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_invoicingCycle_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -15788,36 +15851,42 @@ func (ec *executionContext) field_Query_interactionSession_args(ctx context.Cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_invoice_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_invoices_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.Pagination
+	var arg0 string
+	if tmp, ok := rawArgs["contractId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contractId"] = arg0
+	var arg1 *model.Pagination
 	if tmp, ok := rawArgs["pagination"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
-		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg1, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["pagination"] = arg0
-	var arg1 *model.Filter
-	if tmp, ok := rawArgs["where"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
-		arg1, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["where"] = arg1
-	var arg2 []*model.SortBy
-	if tmp, ok := rawArgs["sort"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
-		arg2, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sort"] = arg2
+	args["pagination"] = arg1
 	return args, nil
 }
 
@@ -44403,6 +44472,91 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_LinkAttachmen
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_invoice_Simulate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_invoice_Simulate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().InvoiceSimulate(rctx, fc.Args["input"].(model.InvoiceSimulateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_invoice_Simulate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_invoice_Simulate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_invoicingCycle_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_invoicingCycle_Create(ctx, field)
 	if err != nil {
@@ -63115,6 +63269,97 @@ func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifie
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_invoice(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_invoice(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Invoice(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Invoice)
+	fc.Result = res
+	return ec.marshalNInvoice2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoice(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Invoice_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Invoice_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Invoice_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Invoice_name(ctx, field)
+			case "source":
+				return ec.fieldContext_Invoice_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Invoice_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Invoice_appSource(ctx, field)
+			case "dryRun":
+				return ec.fieldContext_Invoice_dryRun(ctx, field)
+			case "number":
+				return ec.fieldContext_Invoice_number(ctx, field)
+			case "date":
+				return ec.fieldContext_Invoice_date(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Invoice_dueDate(ctx, field)
+			case "amount":
+				return ec.fieldContext_Invoice_amount(ctx, field)
+			case "vat":
+				return ec.fieldContext_Invoice_vat(ctx, field)
+			case "total":
+				return ec.fieldContext_Invoice_total(ctx, field)
+			case "currency":
+				return ec.fieldContext_Invoice_currency(ctx, field)
+			case "repositoryFileId":
+				return ec.fieldContext_Invoice_repositoryFileId(ctx, field)
+			case "lines":
+				return ec.fieldContext_Invoice_lines(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Invoice", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_invoice_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_invoices(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_invoices(ctx, field)
 	if err != nil {
@@ -63129,7 +63374,7 @@ func (ec *executionContext) _Query_invoices(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Invoices(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.Query().Invoices(rctx, fc.Args["contractId"].(string), fc.Args["pagination"].(*model.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -74683,6 +74928,102 @@ func (ec *executionContext) unmarshalInputInteractionSessionParticipantInput(ctx
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputInvoiceLineInput(ctx context.Context, obj interface{}) (model.InvoiceLineInput, error) {
+	var it model.InvoiceLineInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "serviceLineItemId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceLineItemId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ServiceLineItemID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "billed":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billed"))
+			data, err := ec.unmarshalNBilledType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBilledType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Billed = data
+		case "price":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
+			data, err := ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Price = data
+		case "quantity":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Quantity = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputInvoiceSimulateInput(ctx context.Context, obj interface{}) (model.InvoiceSimulateInput, error) {
+	var it model.InvoiceSimulateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"contractId", "date", "lines"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "contractId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ContractID = data
+		case "date":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("date"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Date = data
+		case "lines":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lines"))
+			data, err := ec.unmarshalNInvoiceLineInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceLineInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Lines = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputInvoicingCycleInput(ctx context.Context, obj interface{}) (model.InvoicingCycleInput, error) {
 	var it model.InvoicingCycleInput
 	asMap := map[string]interface{}{}
@@ -84710,6 +85051,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "invoice_Simulate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_invoice_Simulate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "invoicingCycle_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_invoicingCycle_Create(ctx, field)
@@ -87891,6 +88239,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_interactionEvent_ByEventIdentifier(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "invoice":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_invoice(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -92045,6 +92415,10 @@ func (ec *executionContext) marshalNInternalType2githubᚗcomᚋopenlineᚑaiᚋ
 	return v
 }
 
+func (ec *executionContext) marshalNInvoice2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoice(ctx context.Context, sel ast.SelectionSet, v model.Invoice) graphql.Marshaler {
+	return ec._Invoice(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNInvoice2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Invoice) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -92151,6 +92525,33 @@ func (ec *executionContext) marshalNInvoiceLine2ᚖgithubᚗcomᚋopenlineᚑai�
 		return graphql.Null
 	}
 	return ec._InvoiceLine(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNInvoiceLineInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceLineInputᚄ(ctx context.Context, v interface{}) ([]*model.InvoiceLineInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.InvoiceLineInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNInvoiceLineInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceLineInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNInvoiceLineInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceLineInput(ctx context.Context, v interface{}) (*model.InvoiceLineInput, error) {
+	res, err := ec.unmarshalInputInvoiceLineInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNInvoiceSimulateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceSimulateInput(ctx context.Context, v interface{}) (model.InvoiceSimulateInput, error) {
+	res, err := ec.unmarshalInputInvoiceSimulateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNInvoicesPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicesPage(ctx context.Context, sel ast.SelectionSet, v model.InvoicesPage) graphql.Marshaler {
