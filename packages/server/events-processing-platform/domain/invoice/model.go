@@ -13,15 +13,23 @@ type Invoice struct {
 	UpdatedAt    time.Time          `json:"updatedAt"`
 	SourceFields commonmodel.Source `json:"source"`
 
-	DryRun           bool          `json:"dryRun"`
-	Number           string        `json:"number"`
-	Date             time.Time     `json:"date"`
-	DueDate          time.Time     `json:"dueDate"`
-	Amount           float64       `json:"amount"`
-	VAT              float64       `json:"vat"`
-	Total            float64       `json:"total"`
-	Lines            []InvoiceLine `json:"invoiceLines"`
-	RepositoryFileId string        `json:"repositoryFileId"`
+	DryRun           bool                    `json:"dryRun"`
+	DryRunLines      []DryRunServiceLineItem `json:"dryRunLines"`
+	Number           string                  `json:"number"`
+	Date             time.Time               `json:"date"`
+	DueDate          time.Time               `json:"dueDate"`
+	Amount           float64                 `json:"amount"`
+	VAT              float64                 `json:"vat"`
+	Total            float64                 `json:"total"`
+	Lines            []InvoiceLine           `json:"invoiceLines"`
+	RepositoryFileId string                  `json:"repositoryFileId"`
+}
+type DryRunServiceLineItem struct {
+	ServiceLineItemId string  `json:"serviceLineItemId"`
+	Name              string  `json:"name"`
+	Billed            string  `json:"billed"`
+	Price             float64 `json:"price"`
+	Quantity          int64   `json:"quantity"`
 }
 
 type InvoiceLine struct {
@@ -30,7 +38,6 @@ type InvoiceLine struct {
 	UpdatedAt    time.Time          `json:"updatedAt"`
 	SourceFields commonmodel.Source `json:"source"`
 
-	Index    int64   `json:"index"`
 	Name     string  `json:"name"`
 	Price    float64 `json:"price"`
 	Quantity int64   `json:"quantity"`

@@ -9,7 +9,6 @@ type InvoiceLineEntity struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	Index    int64
 	Name     string
 	Price    float64
 	Quantity int64

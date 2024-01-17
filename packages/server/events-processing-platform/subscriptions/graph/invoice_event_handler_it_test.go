@@ -31,23 +31,21 @@ func TestInvoiceEventHandler_OnInvoiceNew(t *testing.T) {
 	}
 
 	now := time.Now().UTC()
-	in30Days := now.AddDate(0, 0, 30)
 
 	id := uuid.New().String()
 
 	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, id)
-	timeNow := utils.Now()
 	newEvent, err := invoice.NewInvoiceNewEvent(
 		aggregate,
-		contractId,
-		false,
-		"test",
-		now,
-		in30Days,
-		timeNow,
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+		&invoicepb.NewInvoiceRequest{
+			ContractId: contractId,
+			DryRun:     false,
+			CreatedAt:  utils.ConvertTimeToTimestampPtr(&now),
+			Date:       utils.ConvertTimeToTimestampPtr(&now),
 		},
 	)
 	require.Nil(t, err)
@@ -71,12 +69,12 @@ func TestInvoiceEventHandler_OnInvoiceNew(t *testing.T) {
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), invoice.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, invoice.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), invoice.SourceOfTruth)
-	require.Equal(t, timeNow, invoice.CreatedAt)
-	require.Equal(t, timeNow, invoice.UpdatedAt)
+	require.Equal(t, now, invoice.CreatedAt)
+	require.Equal(t, now, invoice.UpdatedAt)
 	require.Equal(t, false, invoice.DryRun)
-	require.Equal(t, "test", invoice.Number)
+	require.Equal(t, 36, len(invoice.Number))
 	require.Equal(t, now, invoice.Date)
-	require.Equal(t, in30Days, invoice.DueDate)
+	require.Equal(t, now, invoice.DueDate)
 	require.Equal(t, float64(0), invoice.Amount)
 	require.Equal(t, float64(0), invoice.Vat)
 	require.Equal(t, float64(0), invoice.Amount)
@@ -115,7 +113,6 @@ func TestInvoiceEventHandler_OnInvoiceFill(t *testing.T) {
 			Total:  120,
 			Lines: []*invoicepb.InvoiceLine{
 				{
-					Index:    1,
 					Name:     "test",
 					Price:    50,
 					Quantity: 2,
@@ -158,7 +155,6 @@ func TestInvoiceEventHandler_OnInvoiceFill(t *testing.T) {
 	require.NotNil(t, dbNode)
 
 	invoiceLine := neo4jmapper.MapDbNodeToInvoiceLineEntity(dbNode)
-	require.Equal(t, int64(1), invoiceLine.Index)
 	require.Equal(t, "test", invoiceLine.Name)
 	require.Equal(t, float64(50), invoiceLine.Price)
 	require.Equal(t, int64(2), invoiceLine.Quantity)

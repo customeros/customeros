@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 import "common/source.proto";
+import "service_line_item.proto";
 
 option go_package = "api/grpc/v1/invoice;invoice_grpc_service";
 
@@ -11,8 +12,16 @@ message NewInvoiceRequest {
   string contractId = 3;
   google.protobuf.Timestamp date = 4;
   bool dryRun = 5;
-  google.protobuf.Timestamp createdAt = 6;
-  SourceFields sourceFields = 7;
+  repeated DryRunServiceLineItem dryRunServiceLineItems = 6;
+  google.protobuf.Timestamp createdAt = 7;
+  SourceFields sourceFields = 8;
+}
+message DryRunServiceLineItem {
+  string serviceLineItemId = 1;
+  string name = 3;
+  BilledType billed = 4;
+  double price = 5;
+  int64 quantity = 6;
 }
 
 message FillInvoiceRequest {
@@ -28,7 +37,6 @@ message FillInvoiceRequest {
 }
 
 message InvoiceLine {
-  int64 index = 1;
   string name = 2;
   double price = 3;
   int64 quantity = 4;

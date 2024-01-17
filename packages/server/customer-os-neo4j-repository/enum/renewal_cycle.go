@@ -32,6 +32,10 @@ func IsValidRenewalCycle(s string) bool {
 	return false
 }
 
+func (e RenewalCycle) String() string {
+	return string(e)
+}
+
 func IsFrequencyBasedRenewalCycle(renewalCycle RenewalCycle) bool {
 	return renewalCycle == RenewalCycleMonthlyRenewal ||
 		renewalCycle == RenewalCycleAnnualRenewal ||
