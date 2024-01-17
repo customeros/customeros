@@ -3,14 +3,13 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	"github.com/google/uuid"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -687,123 +686,6 @@ func TestQueryResolver_Sort_Organizations_ByOrganizationName_WithOrganizationHie
 	require.Equal(t, sub2_2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[6].ID)
 }
 
-// Deprecated
-func insertContractWithActiveRenewalOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, contract)
-	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, opportunity)
-	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contractId, opportunityId)
-	return contractId
-}
-
-// Deprecated
-func insertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, contract)
-	neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, opportunity)
-	return contractId
-}
-
-// Deprecated
-func insertServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt time.Time) string {
-	rand, _ := uuid.NewRandom()
-	id := rand.String()
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		ID:        id,
-		ParentID:  id,
-		Billed:    billedType,
-		Price:     price,
-		Quantity:  quantity,
-		StartedAt: startedAt,
-	})
-	return id
-}
-
-// Deprecated
-func insertServiceLineItemEnded(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
-	rand, _ := uuid.NewRandom()
-	id := rand.String()
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		ID:        id,
-		ParentID:  id,
-		Billed:    billedType,
-		Price:     price,
-		Quantity:  quantity,
-		StartedAt: startedAt,
-		EndedAt:   &endedAt,
-	})
-	return id
-}
-
-// Deprecated
-func insertServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
-	rand, _ := uuid.NewRandom()
-	id := rand.String()
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		ID:         id,
-		ParentID:   id,
-		Billed:     billedType,
-		Price:      price,
-		Quantity:   quantity,
-		IsCanceled: true,
-		StartedAt:  startedAt,
-		EndedAt:    &endedAt,
-	})
-	return id
-}
-
-// Deprecated
-func insertServiceLineItemWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt time.Time, parentId string) {
-	rand, _ := uuid.NewRandom()
-	id := rand.String()
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		ID:               id,
-		ParentID:         parentId,
-		Billed:           billedType,
-		Price:            price,
-		Quantity:         quantity,
-		PreviousBilled:   previousBilledType,
-		PreviousPrice:    previousPrice,
-		PreviousQuantity: previousQuantity,
-		StartedAt:        startedAt,
-	})
-}
-
-// Deprecated
-func insertServiceLineItemEndedWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
-	rand, _ := uuid.NewRandom()
-	id := rand.String()
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		ID:               id,
-		ParentID:         parentId,
-		Billed:           billedType,
-		Price:            price,
-		Quantity:         quantity,
-		PreviousBilled:   previousBilledType,
-		PreviousPrice:    previousPrice,
-		PreviousQuantity: previousQuantity,
-		StartedAt:        startedAt,
-		EndedAt:          &endedAt,
-	})
-}
-
-// Deprecated
-func insertServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.DriverWithContext, contractId string, billedType entity.BilledType, price float64, quantity int64, previousBilledType entity.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
-	rand, _ := uuid.NewRandom()
-	id := rand.String()
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		ID:               id,
-		ParentID:         parentId,
-		Billed:           billedType,
-		Price:            price,
-		Quantity:         quantity,
-		PreviousBilled:   previousBilledType,
-		PreviousPrice:    previousPrice,
-		PreviousQuantity: previousQuantity,
-		IsCanceled:       true,
-		StartedAt:        startedAt,
-		EndedAt:          &endedAt,
-	})
-}
-
 func TestQueryResolver_Search_Organization_ByOnboardingStatus(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -925,21 +807,21 @@ func TestQueryResolver_Sort_Renewals_ByRenewalDate(t *testing.T) {
 		Name: "org3",
 	})
 
-	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contractId1 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow20})
-	insertServiceLineItem(ctx, driver, contractId1, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow20})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
-	contractId2 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow10})
-	insertServiceLineItem(ctx, driver, contractId2, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 2, "Opportunity": 2})
 
@@ -984,23 +866,23 @@ func TestQueryResolver_Sort_Renewals_ByForecastAmountASC(t *testing.T) {
 		Name: "org3",
 	})
 
-	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contractId1 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100})
-	insertServiceLineItem(ctx, driver, contractId1, entity.BilledTypeAnnually, 3, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 3, 2, sli1StartedAt)
 
-	contractId2 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200})
-	insertServiceLineItem(ctx, driver, contractId2, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 2, "Opportunity": 2})
 
@@ -1046,23 +928,23 @@ func TestQueryResolver_Sort_Renewals_ByForecastAmountDESC(t *testing.T) {
 		Name: "org3",
 	})
 
-	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contractId1 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100})
-	insertServiceLineItem(ctx, driver, contractId1, entity.BilledTypeAnnually, 3, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 3, 2, sli1StartedAt)
 
-	contractId2 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200})
-	insertServiceLineItem(ctx, driver, contractId2, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 2, "Opportunity": 2})
 
@@ -1108,30 +990,30 @@ func TestQueryResolver_Sort_Renewals_ByRenewalLikelihood(t *testing.T) {
 		Name: "org3",
 	})
 
-	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contractId1 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100, RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh})
-	insertServiceLineItem(ctx, driver, contractId1, entity.BilledTypeAnnually, 3, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100, RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 3, 2, sli1StartedAt)
 
-	contractId2 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium})
-	insertServiceLineItem(ctx, driver, contractId2, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
-	contractId3 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contractId3 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow})
-	insertServiceLineItem(ctx, driver, contractId3, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: neo4jenum.RenewalLikelihoodLow})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId3, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 3, "Opportunity": 3})
 	require.Equal(t, int64(2), assert_Search_Renewals_By_Likelihood(t, []string{"HIGH_RENEWAL", "MEDIUM_RENEWAL"}).TotalElements)
@@ -1211,37 +1093,37 @@ func TestQueryResolver_Search_Renewals_By_Organization_Name(t *testing.T) {
 	org2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "test 2"})
 	orgUnnamed := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 
-	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contractId1 := insertContractWithActiveRenewalOpportunity(ctx, driver, org1, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, org1, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{})
-	insertServiceLineItem(ctx, driver, contractId1, entity.BilledTypeAnnually, 3, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 3, 2, sli1StartedAt)
 
-	contractId2 := insertContractWithActiveRenewalOpportunity(ctx, driver, org1, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, org1, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{})
-	insertServiceLineItem(ctx, driver, contractId2, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
-	contractId3 := insertContractWithActiveRenewalOpportunity(ctx, driver, orgUnnamed, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contractId3 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgUnnamed, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{})
-	insertServiceLineItem(ctx, driver, contractId3, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId3, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
-	contractId4 := insertContractWithActiveRenewalOpportunity(ctx, driver, org2, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contractId4 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, org2, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{})
-	insertServiceLineItem(ctx, driver, contractId4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId4, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 4, "Opportunity": 4})
 
@@ -1289,37 +1171,37 @@ func TestQueryResolver_Search_Renewals_ByRenewalCycle(t *testing.T) {
 		Name: "org3",
 	})
 
-	contractStartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contract2StartedAt := neo4jt.FirstTimeOfMonth(2023, 7)
+	contractStartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contract2StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
 
-	sli1StartedAt := neo4jt.FirstTimeOfMonth(2023, 6)
-	contractId1 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 6)
+	contractId1 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractStartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100, RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh})
-	insertServiceLineItem(ctx, driver, contractId1, entity.BilledTypeAnnually, 3, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow20, MaxAmount: 100, RenewalLikelihood: neo4jenum.RenewalLikelihoodHigh})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 3, 2, sli1StartedAt)
 
-	contractId2 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "MONTHLY",
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: entity.OpportunityRenewalLikelihoodMedium})
-	insertServiceLineItem(ctx, driver, contractId2, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: neo4jenum.RenewalLikelihoodMedium})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
-	contractId3 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contractId3 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "QUARTERLY",
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow})
-	insertServiceLineItem(ctx, driver, contractId3, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: neo4jenum.RenewalLikelihoodLow})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId3, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
-	contractId4 := insertContractWithActiveRenewalOpportunity(ctx, driver, organizationId3, entity.ContractEntity{
-		ContractStatus:   entity.ContractStatusLive,
+	contractId4 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
+		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contract2StartedAt,
 		RenewalCycle:     "ANNUALLY",
-	}, entity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: entity.OpportunityRenewalLikelihoodLow})
-	insertServiceLineItem(ctx, driver, contractId4, entity.BilledTypeAnnually, 12, 2, sli1StartedAt)
+	}, neo4jentity.OpportunityEntity{RenewedAt: daysFromNow10, MaxAmount: 200, RenewalLikelihood: neo4jenum.RenewalLikelihoodLow})
+	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId4, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 4, "Opportunity": 4})
 	require.Equal(t, int64(2), assert_Search_Renewals_By_Cycle(t, "MONTHLY").TotalElements)
