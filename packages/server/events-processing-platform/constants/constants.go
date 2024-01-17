@@ -5,10 +5,11 @@ const (
 	AppSourceIntegrationApp          = "integration.app"
 	AppSourceSyncCustomerOsData      = "sync-customer-os-data"
 
-	ComponentNeo4jRepository   = "neo4jRepository"
-	ComponentService           = "service"
-	ComponentCommandHandler    = "commandHandler"
-	ComponentSubscriptionGraph = "subscriptionGraph"
+	ComponentNeo4jRepository     = "neo4jRepository"
+	ComponentService             = "service"
+	ComponentCommandHandler      = "commandHandler"
+	ComponentSubscriptionGraph   = "subscriptionGraph"
+	ComponentSubscriptionInvoice = "subscriptionInvoice"
 
 	SourceOpenline  = "openline"
 	SourceWebscrape = "webscrape"
