@@ -14,7 +14,7 @@ import (
 type InvoiceWriteRepository interface {
 	InvoiceNew(ctx context.Context, tenant, contractId, id string, dryRun bool, number string, date, dueDate time.Time, source, appSource string, createdAt time.Time) error
 	InvoiceFill(ctx context.Context, tenant, id string, amount, vat, total float64, updatedAt time.Time) error
-	InvoiceFillInvoiceLine(ctx context.Context, tenant, id string, index int64, name string, price float64, quantity int64, amount, vat, total float64, createdAt time.Time) error
+	InvoiceFillInvoiceLine(ctx context.Context, tenant, id string, name string, price float64, quantity int64, amount, vat, total float64, createdAt time.Time) error
 	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string, updatedAt time.Time) error
 	SetInvoicePaymentRequested(ctx context.Context, tenant, invoiceId string) error
 }
@@ -112,7 +112,7 @@ func (r *invoiceWriteRepository) InvoiceFill(ctx context.Context, tenant, id str
 	return err
 }
 
-func (r *invoiceWriteRepository) InvoiceFillInvoiceLine(ctx context.Context, tenant, id string, index int64, name string, price float64, quantity int64, amount, vat, total float64, createdAt time.Time) error {
+func (r *invoiceWriteRepository) InvoiceFillInvoiceLine(ctx context.Context, tenant, id string, name string, price float64, quantity int64, amount, vat, total float64, createdAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoicingCycleWriteRepository.Update")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -125,7 +125,6 @@ func (r *invoiceWriteRepository) InvoiceFillInvoiceLine(ctx context.Context, ten
 								il:InvoiceLine_%s,
 								il.createdAt=$createdAt,
 								il.updatedAt=$updatedAt,
-								il.index=$index,
 								il.name=$name,
 								il.price=$price,
 								il.quantity=$quantity,
@@ -138,7 +137,6 @@ func (r *invoiceWriteRepository) InvoiceFillInvoiceLine(ctx context.Context, ten
 		"id":        id,
 		"createdAt": createdAt,
 		"updatedAt": createdAt,
-		"index":     index,
 		"name":      name,
 		"price":     price,
 		"quantity":  quantity,

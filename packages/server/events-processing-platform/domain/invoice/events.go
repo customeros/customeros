@@ -1,6 +1,8 @@
 package invoice
 
 import (
+	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
@@ -22,23 +24,40 @@ type InvoiceNewEvent struct {
 	CreatedAt    time.Time          `json:"createdAt"`
 	SourceFields commonmodel.Source `json:"sourceFields"`
 
-	DryRun  bool      `json:"dryRun"`
+	DryRun      bool                    `json:"dryRun"`
+	DryRunLines []DryRunServiceLineItem `json:"dryRunLines"`
+
 	Number  string    `json:"number"`
 	Date    time.Time `json:"date" validate:"required"`
 	DueDate time.Time `json:"dueDate" validate:"required"`
 }
 
-func NewInvoiceNewEvent(aggregate eventstore.Aggregate, contractId string, dryRun bool, number string, date, dueDate, createdAt time.Time, sourceFields commonmodel.Source) (eventstore.Event, error) {
+func NewInvoiceNewEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, request *invoicepb.NewInvoiceRequest) (eventstore.Event, error) {
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+	dateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.Date), utils.Now())
 	eventData := InvoiceNewEvent{
 		Tenant:       aggregate.GetTenant(),
-		ContractId:   contractId,
-		CreatedAt:    createdAt,
+		ContractId:   request.ContractId,
+		CreatedAt:    createdAtNotNil,
 		SourceFields: sourceFields,
 
-		DryRun:  dryRun,
-		Number:  number,
-		Date:    date,
-		DueDate: dueDate,
+		DryRun:  request.DryRun,
+		Number:  uuid.New().String(),
+		Date:    dateNotNil,
+		DueDate: dateNotNil,
+	}
+
+	if request.DryRunServiceLineItems != nil {
+		eventData.DryRunLines = make([]DryRunServiceLineItem, len(request.DryRunServiceLineItems))
+		for i, line := range request.DryRunServiceLineItems {
+			eventData.DryRunLines[i] = DryRunServiceLineItem{
+				ServiceLineItemId: line.ServiceLineItemId,
+				Name:              line.Name,
+				Billed:            line.Billed.String(),
+				Price:             line.Price,
+				Quantity:          line.Quantity,
+			}
+		}
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -66,7 +85,6 @@ type InvoiceFillEvent struct {
 
 type InvoiceLineFillEvent struct {
 	Tenant   string  `json:"tenant" validate:"required"`
-	Index    int64   `json:"index" validate:"required"`
 	Name     string  `json:"name" validate:"required"`
 	Price    float64 `json:"price" validate:"required"`
 	Quantity int64   `json:"quantity" validate:"required"`
@@ -88,7 +106,6 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, s
 	}
 	for i, line := range request.Lines {
 		eventData.Lines[i] = InvoiceLineFillEvent{
-			Index:    line.Index,
 			Name:     line.Name,
 			Price:    line.Price,
 			Quantity: line.Quantity,

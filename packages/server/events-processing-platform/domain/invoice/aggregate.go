@@ -2,7 +2,6 @@ package invoice
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -104,17 +103,10 @@ func (a *InvoiceAggregate) CreateNewInvoice(ctx context.Context, request *invoic
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	date := utils.TimestampProtoToTime(request.Date).UTC()
-	dueDate := utils.TimestampProtoToTime(request.Date).UTC()
-	createdAt := utils.TimestampProtoToTime(request.CreatedAt).UTC()
-
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	//TODO generate invoice number unique in tenant
-	number := uuid.New().String()
-
-	createEvent, err := NewInvoiceNewEvent(a, request.ContractId, request.DryRun, number, date, dueDate, createdAt, sourceFields)
+	createEvent, err := NewInvoiceNewEvent(a, sourceFields, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceNewEvent")
@@ -211,6 +203,7 @@ func (a *InvoiceAggregate) onNewInvoice(evt eventstore.Event) error {
 	a.Invoice.Date = eventData.Date
 	a.Invoice.DueDate = eventData.DueDate
 	a.Invoice.DryRun = eventData.DryRun
+	a.Invoice.DryRunLines = eventData.DryRunLines
 
 	return nil
 }
@@ -227,7 +220,6 @@ func (a *InvoiceAggregate) onFillInvoice(evt eventstore.Event) error {
 	a.Invoice.Lines = make([]InvoiceLine, len(eventData.Lines))
 	for i, line := range eventData.Lines {
 		a.Invoice.Lines[i] = InvoiceLine{
-			Index:    line.Index,
 			Name:     line.Name,
 			Price:    line.Price,
 			Quantity: line.Quantity,

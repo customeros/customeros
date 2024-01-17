@@ -40,7 +40,6 @@ func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Index:         utils.GetInt64PropOrZero(props, "index"),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
