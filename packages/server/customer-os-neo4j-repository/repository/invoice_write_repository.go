@@ -14,7 +14,6 @@ import (
 type InvoiceWriteRepository interface {
 	InvoiceNew(ctx context.Context, tenant, contractId, id string, dryRun bool, number string, date, dueDate time.Time, source, appSource string, createdAt time.Time) error
 	InvoiceFill(ctx context.Context, tenant, id string, amount, vat, total float64, updatedAt time.Time) error
-	InvoiceFillInvoiceLine(ctx context.Context, tenant, id string, name string, price float64, quantity int64, amount, vat, total float64, createdAt time.Time) error
 	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string, updatedAt time.Time) error
 	SetInvoicePaymentRequested(ctx context.Context, tenant, invoiceId string) error
 }
@@ -52,8 +51,7 @@ func (r *invoiceWriteRepository) InvoiceNew(ctx context.Context, tenant, contrac
 								i.dueDate=$dueDate,
 								i.amount=0.0,
 								i.vat=0.0,
-								i.total=0.0,
-								i.pdfGenerated=false
+								i.total=0.0
 							WITH c, i 
 							MERGE (c)-[:HAS_INVOICE]->(i) 
 							`, tenant, tenant)
@@ -112,49 +110,6 @@ func (r *invoiceWriteRepository) InvoiceFill(ctx context.Context, tenant, id str
 	return err
 }
 
-func (r *invoiceWriteRepository) InvoiceFillInvoiceLine(ctx context.Context, tenant, id string, name string, price float64, quantity int64, amount, vat, total float64, createdAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoicingCycleWriteRepository.Update")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, id)
-
-	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$id})
-							WHERE i:Invoice_%s
-							MERGE (i)-[:HAS_INVOICE_LINE]->(il:InvoiceLine {id:randomUUID()})
-							ON CREATE SET 
-								il:InvoiceLine_%s,
-								il.createdAt=$createdAt,
-								il.updatedAt=$updatedAt,
-								il.name=$name,
-								il.price=$price,
-								il.quantity=$quantity,
-								il.amount=$amount,
-								il.vat=$vat,
-								il.total=$total
-`, tenant, tenant)
-	params := map[string]any{
-		"tenant":    tenant,
-		"id":        id,
-		"createdAt": createdAt,
-		"updatedAt": createdAt,
-		"name":      name,
-		"price":     price,
-		"quantity":  quantity,
-		"amount":    amount,
-		"vat":       vat,
-		"total":     total,
-	}
-
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
-
 func (r *invoiceWriteRepository) InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string, updatedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoicingCycleWriteRepository.Update")
 	defer span.Finish()
@@ -163,7 +118,6 @@ func (r *invoiceWriteRepository) InvoicePdfGenerated(ctx context.Context, tenant
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice_%s {id:$id}) 
 							SET 
-								i.pdfGenerated=true, 
 								i.repositoryFileId=$repositoryFileId, 
 								i.updatedAt=$updatedAt`, tenant)
 	params := map[string]any{

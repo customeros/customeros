@@ -78,7 +78,7 @@ func TestInvoiceEventHandler_OnInvoiceNew(t *testing.T) {
 	require.Equal(t, float64(0), invoice.Amount)
 	require.Equal(t, float64(0), invoice.Vat)
 	require.Equal(t, float64(0), invoice.Amount)
-	require.Equal(t, false, invoice.PdfGenerated)
+	require.Equal(t, "", invoice.RepositoryFileId)
 }
 
 func TestInvoiceEventHandler_OnInvoiceFill(t *testing.T) {
@@ -147,7 +147,7 @@ func TestInvoiceEventHandler_OnInvoiceFill(t *testing.T) {
 	require.Equal(t, float64(100), invoice.Amount)
 	require.Equal(t, float64(20), invoice.Vat)
 	require.Equal(t, float64(120), invoice.Total)
-	require.Equal(t, false, invoice.PdfGenerated)
+	require.Equal(t, "", invoice.RepositoryFileId)
 
 	// verify invoice lines
 	dbNode, err = neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoiceLine)
@@ -208,5 +208,4 @@ func TestInvoiceEventHandler_OnInvoicePdfGenerated(t *testing.T) {
 	require.Equal(t, timeNow, invoice.UpdatedAt)
 
 	require.Equal(t, "test", invoice.RepositoryFileId)
-	require.Equal(t, true, invoice.PdfGenerated)
 }

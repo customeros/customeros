@@ -12,20 +12,19 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	masterPlanEntity := entity.InvoiceEntity{
+	invoiceEntity := entity.InvoiceEntity{
 		Id:               utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Currency:         enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
 		DryRun:           utils.GetBoolPropOrFalse(props, "dryRun"),
 		Number:           utils.GetStringPropOrEmpty(props, "number"),
 		Date:             utils.GetTimePropOrEpochStart(props, "date"),
 		DueDate:          utils.GetTimePropOrEpochStart(props, "dueDate"),
+		Currency:         enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
 		Amount:           utils.GetFloatPropOrZero(props, "amount"),
 		Vat:              utils.GetFloatPropOrZero(props, "vat"),
 		Total:            utils.GetFloatPropOrZero(props, "total"),
 		RepositoryFileId: utils.GetStringPropOrEmpty(props, "repositoryFileId"),
-		PdfGenerated:     utils.GetBoolPropOrFalse(props, "pdfGenerated"),
 		Source:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
@@ -33,7 +32,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 			PaymentRequestedAt: utils.GetTimePropOrNil(props, "techPaymentRequestedAt"),
 		},
 	}
-	return &masterPlanEntity
+	return &invoiceEntity
 }
 
 func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity {
@@ -41,7 +40,7 @@ func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity
 		return nil
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	masterPlanEntity := entity.InvoiceLineEntity{
+	invoiceLineEntity := entity.InvoiceLineEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -55,7 +54,7 @@ func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
-	return &masterPlanEntity
+	return &invoiceLineEntity
 }
 
 func MapDbNodeToInvoicingCycleEntity(dbNode *dbtype.Node) *entity.InvoicingCycleEntity {

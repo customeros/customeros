@@ -744,13 +744,14 @@ func CreateInvoice(ctx context.Context, driver *neo4j.DriverWithContext, tenant,
 				i.createdAt=$createdAt,
 				i.updatedAt=$updatedAt,
 				i.dryRun=$dryRun,
+				i.number=$number,
 				i.date=$date,
 				i.dueDate=$dueDate,
+				i.currency=$currency,
 				i.amount=$amount,
 				i.vat=$vat,
 				i.total=$total,
-				i.repositoryFileId=$repositoryFileId,
-				i.pdfGenerated=$pdfGenerated
+				i.repositoryFileId=$repositoryFileId
 			WITH c, i 
 			MERGE (c)-[:HAS_INVOICE]->(i) 
 				`, tenant, tenant)
@@ -768,11 +769,11 @@ func CreateInvoice(ctx context.Context, driver *neo4j.DriverWithContext, tenant,
 		"number":           invoice.Number,
 		"date":             invoice.Date,
 		"dueDate":          invoice.DueDate,
+		"currency":         invoice.Currency,
 		"amount":           invoice.Amount,
 		"vat":              invoice.Vat,
 		"total":            invoice.Total,
 		"repositoryFileId": invoice.RepositoryFileId,
-		"pdfGenerated":     invoice.PdfGenerated,
 	}
 
 	ExecuteWriteQuery(ctx, driver, query, params)

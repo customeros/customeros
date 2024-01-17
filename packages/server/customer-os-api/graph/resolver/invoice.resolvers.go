@@ -6,15 +6,31 @@ package resolver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
-// Lines is the resolver for the lines field.
-func (r *invoiceResolver) Lines(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error) {
-	panic(fmt.Errorf("not implemented: Lines - lines"))
+// InvoiceLines is the resolver for the invoiceLines field.
+func (r *invoiceResolver) InvoiceLines(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	entities, err := dataloader.For(ctx).GetInvoiceLinesForInvoice(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get invoice lines for invoice %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get invoice lines for invoice %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToInvoiceLines(entities), nil
 }
 
 // InvoiceSimulate is the resolver for the invoice_Simulate field.
@@ -24,7 +40,24 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 
 // Invoice is the resolver for the invoice field.
 func (r *queryResolver) Invoice(ctx context.Context, id string) (*model.Invoice, error) {
-	panic(fmt.Errorf("not implemented: Invoice - invoice"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.Invoice", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.invoiceID", id))
+
+	if id == "" {
+		tracing.TraceErr(span, errors.New("Missing invoice input id"))
+		graphql.AddErrorf(ctx, "Missing invoice input id")
+		return nil, nil
+	}
+
+	invoiceEntityPtr, err := r.Services.InvoiceService.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get contract by id %s", id)
+		return nil, err
+	}
+	return mapper.MapEntityToInvoice(invoiceEntityPtr), nil
 }
 
 // Invoices is the resolver for the invoices field.
@@ -36,3 +69,13 @@ func (r *queryResolver) Invoices(ctx context.Context, contractID string, paginat
 func (r *Resolver) Invoice() generated.InvoiceResolver { return &invoiceResolver{r} }
 
 type invoiceResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *invoiceResolver) Lines(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error) {
+	panic(fmt.Errorf("not implemented: Lines - lines"))
+}

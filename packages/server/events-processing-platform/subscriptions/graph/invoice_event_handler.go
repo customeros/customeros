@@ -71,7 +71,7 @@ func (h *InvoiceEventHandler) OnInvoiceFill(ctx context.Context, evt eventstore.
 	}
 
 	for _, item := range eventData.Lines {
-		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.InvoiceFillInvoiceLine(ctx, eventData.Tenant, id, item.Name, item.Price, item.Quantity, item.Amount, item.VAT, item.Total, eventData.UpdatedAt)
+		err := h.repositories.Neo4jRepositories.InvoiceLineWriteRepository.CreateInvoiceLine(ctx, eventData.Tenant, id, item.Name, item.Price, item.Quantity, item.Amount, item.VAT, item.Total, eventData.UpdatedAt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while inserting invoice line %s: %s", id, err.Error())
