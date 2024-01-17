@@ -561,7 +561,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	// Verify Contract
 	dbNode, err = neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
-	contract := neo4jmapper.MapDbNodeToContractEntity(*dbNode)
+	contract := neo4jmapper.MapDbNodeToContractEntity(dbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.True(t, contract.TriggeredOnboardingStatusChange)
 

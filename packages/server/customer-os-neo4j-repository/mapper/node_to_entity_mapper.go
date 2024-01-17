@@ -16,6 +16,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		Id:               utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Currency:         enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
 		DryRun:           utils.GetBoolPropOrFalse(props, "dryRun"),
 		Number:           utils.GetStringPropOrEmpty(props, "number"),
 		Date:             utils.GetTimePropOrEpochStart(props, "date"),
@@ -31,6 +32,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 	}
 	return &masterPlanEntity
 }
+
 func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity {
 	if dbNode == nil {
 		return nil
@@ -214,7 +216,7 @@ func MapDbNodeToBillingProfileEntity(dbNode *dbtype.Node) *entity.BillingProfile
 
 func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettingsEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.TenantSettingsEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	tenantSettingsEntity := entity.TenantSettingsEntity{
@@ -245,8 +247,11 @@ func MapDbNodeToCountryEntity(dbNode *dbtype.Node) *entity.CountryEntity {
 	return &result
 }
 
-func MapDbNodeToContractEntity(dbNode dbtype.Node) *entity.ContractEntity {
-	props := utils.GetPropsFromNode(dbNode)
+func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
 	contractStatus := enum.GetContractStatus(utils.GetStringPropOrEmpty(props, "status"))
 	contractRenewalCycle := enum.GetRenewalCycle(utils.GetStringPropOrEmpty(props, "renewalCycle"))
 
