@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"math"
@@ -130,7 +131,7 @@ func (s *dashboardService) GetDashboardViewRenewalsData(ctx context.Context, req
 			renewalRecordEntity.Organization = *s.services.OrganizationService.mapDbNodeToOrganizationEntity(v.Values[0].(dbtype.Node))
 		}
 		if v.Values[1] != nil {
-			renewalRecordEntity.Contract = *s.services.ContractService.mapDbNodeToContractEntity(v.Values[1].(dbtype.Node))
+			renewalRecordEntity.Contract = *mapper.MapDbNodeToContractEntity(v.Values[1].(dbtype.Node))
 		}
 		if v.Values[2] != nil {
 			renewalRecordEntity.Opportunity = *s.services.OpportunityService.mapDbNodeToOpportunityEntity(v.Values[2].(dbtype.Node))

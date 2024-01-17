@@ -237,47 +237,14 @@ func (r *contractReadRepository) GetContractsForInvoicing(ctx context.Context, i
 	span.LogFields(log.Object("invoiceDateTime", invoiceDateTime))
 
 	cypher := fmt.Sprintf(`
-			WITH datetime({year: $invoiceDateTime.year, month: $invoiceDateTime.month, day: $invoiceDateTime.day, hour: $invoiceDateTime.hour, minute: $invoiceDateTime.minute, second: $invoiceDateTime.second, nanosecond: $invoiceDateTime.nanosecond}) as invoiceDateTime
-			MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
+			MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)
 			WHERE 
-			  o.hide = false AND o.isCustomer = true AND (o.invoicingActive is null or o.invoicingActive = false) AND sli.startedAt < invoiceDateTime AND
-			  ((
-				(sli.billed = 'MONTHLY' AND (
-				  invoiceDateTime.day = sli.startedAt.day
-				  OR
-				  (
-					sli.startedAt.month = 2 AND sli.startedAt.day = 29 AND 
-					date({year:invoiceDateTime.year, month:2, day:28}) <= date(invoiceDateTime) AND invoiceDateTime.day = 28
-				  )
-				))
-				OR
-				(sli.billed = 'QUARTERLY' AND (
-				  (
-					date(sli.startedAt).day = date(invoiceDateTime).day AND
-					((date(invoiceDateTime).month - date(sli.startedAt).month) %s = 0 OR
-					(date(sli.startedAt).month = 2 AND date(invoiceDateTime).month = 2 AND date(sli.startedAt).day = 29 AND date(invoiceDateTime).day = 28))
-				  )
-				  OR
-				  (
-					date(sli.startedAt).month = 2 AND date(sli.startedAt).day = 29 AND
-					date(invoiceDateTime).month = 2 AND date(invoiceDateTime).day = 28 AND
-					date({year: invoiceDateTime.year, month: 2, day: 28}) <= date(invoiceDateTime)
-				  )
-				))
-				OR
-				(sli.billed = 'ANNUALLY' AND (
-				  date(sli.startedAt).month = date(invoiceDateTime).month AND
-				  date(sli.startedAt).day = date(invoiceDateTime).day AND
-				  NOT (
-					date(sli.startedAt).month = 2 AND date(sli.startedAt).day = 29 AND
-					date(invoiceDateTime).month = 2 AND date(invoiceDateTime).day = 28 AND
-					date({year: invoiceDateTime.year, month: 2, day: 28}) <= date(invoiceDateTime)
-				  )
-				))
-			  ) OR (datetime({year: sli.startedAt.year, month: sli.startedAt.month, day: sli.startedAt.day}) + duration({days: 1})) <= invoiceDateTime)
-			WITH DISTINCT(o.id) as organizationId, t.name as tenant limit 100
-			RETURN tenant, organizationId
-			`, "% 3")
+				o.hide = false AND 
+				o.isCustomer = true AND 
+				c.nextInvoiceDate is not null AND c.nextInvoiceDate <= $invoiceDateTime AND
+				c.techInvoicingStartedAt is null 
+			RETURN t.name as tenant, c.id as contractId limit 100
+			`)
 	params := map[string]any{
 		"invoiceDateTime": invoiceDateTime,
 	}

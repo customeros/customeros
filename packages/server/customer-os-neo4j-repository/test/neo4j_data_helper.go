@@ -456,38 +456,42 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id})<-[:HAS_CONTRACT]-(o)
 				SET 
 					c:Contract_%s,
-					c.name=$name,
-					c.contractUrl=$contractUrl,
 					c.source=$source,
 					c.sourceOfTruth=$sourceOfTruth,
 					c.appSource=$appSource,
+					c.createdAt=$createdAt,
+					c.updatedAt=$updatedAt,
+
+					c.name=$name,
+					c.contractUrl=$contractUrl,
 					c.status=$status,
 					c.renewalCycle=$renewalCycle,
 					c.renewalPeriods=$renewalPeriods,
 					c.signedAt=$signedAt,
 					c.serviceStartedAt=$serviceStartedAt,
 					c.endedAt=$endedAt,
-					c.createdAt=$createdAt,
-					c.updatedAt=$updatedAt
+					c.nextInvoiceDate=$nextInvoiceDate
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":               contractId,
-		"organizationId":   organizationId,
-		"tenant":           tenant,
+		"id":             contractId,
+		"organizationId": organizationId,
+		"tenant":         tenant,
+		"source":         contract.Source,
+		"sourceOfTruth":  contract.SourceOfTruth,
+		"appSource":      contract.AppSource,
+		"createdAt":      contract.CreatedAt,
+		"updatedAt":      contract.UpdatedAt,
+
 		"name":             contract.Name,
 		"contractUrl":      contract.ContractUrl,
-		"source":           contract.Source,
-		"sourceOfTruth":    contract.SourceOfTruth,
-		"appSource":        contract.AppSource,
 		"status":           contract.ContractStatus,
 		"renewalCycle":     contract.RenewalCycle,
 		"renewalPeriods":   contract.RenewalPeriods,
 		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
 		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
 		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
-		"createdAt":        contract.CreatedAt,
-		"updatedAt":        contract.UpdatedAt,
+		"nextInvoiceDate":  utils.TimePtrFirstNonNilNillableAsAny(contract.NextInvoiceDate),
 	})
 	return contractId
 }
@@ -815,6 +819,20 @@ func CreateInvoiceLine(ctx context.Context, driver *neo4j.DriverWithContext, ten
 
 	ExecuteWriteQuery(ctx, driver, query, params)
 	return invoiceLineId
+}
+
+func MarkInvoicingStarted(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, invoicingStartedAt time.Time) {
+	query := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract_%s {id:$contractId})
+				SET ct.techInvoicingStartedAt=$invoicingStartedAt
+				`, tenant)
+
+	params := map[string]any{
+		"tenant":             tenant,
+		"contractId":         contractId,
+		"invoicingStartedAt": invoicingStartedAt,
+	}
+
+	ExecuteWriteQuery(ctx, driver, query, params)
 }
 
 func FirstTimeOfMonth(year, month int) time.Time {

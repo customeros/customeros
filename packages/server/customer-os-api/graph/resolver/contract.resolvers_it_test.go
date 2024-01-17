@@ -51,7 +51,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 			}
 			require.Equal(t, timestamppb.New(expectedSignedAt), contract.SignedAt)
 			calledCreateContract = true
-			neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+			neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 				Id: contractId,
 			})
 			return &contractpb.ContractIdGrpcResponse{
@@ -85,7 +85,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	calledUpdateContract := false
 
 	contractServiceCallbacks := events_platform.MockContractServiceCallbacks{
@@ -148,7 +148,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
 	serviceLineItemId1 := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
 		Name:      "service line item 1",
@@ -224,7 +224,7 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
 	opportunityId1 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
 		Name:          "oppo 1",

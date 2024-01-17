@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
@@ -12,149 +11,147 @@ import (
 	"time"
 )
 
-func TestContractReadRepository_GetContractsForInvoicing_1_SLI_Monthly_V1(t *testing.T) {
+func TestContractReadRepository_GetContractsForInvoicing_Hidden_Organization(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	organization1Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, entity.OrganizationEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, entity.OrganizationEntity{
+		Hide:       true,
 		IsCustomer: true,
 	})
 
-	currentYear := 2023
-
-	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, organization1Id, entity.ContractEntity{})
-
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(currentYear, 1)
-	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, enum.BilledTypeMonthly, 12, 2, sli1StartedAt)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelOrganization:    1,
-		neo4jutil.NodeLabelContract:        1,
-		neo4jutil.NodeLabelServiceLineItem: 1,
+	day1 := neo4jtest.FirstTimeOfMonth(2023, 6)
+	neo4jtest.CreateContract(ctx, driver, tenantName, organizationId, entity.ContractEntity{
+		NextInvoiceDate: utils.TimePtr(day1),
 	})
 
-	//firstDayOfJanuary := time.Date(currentYear, 1, 1, 0, 0, 0, 0, time.UTC)
-	//lastDayOfJanuary := neo4jtest.LastTimeOfMonth(currentYear, 1)
-	//
-	////no invoice on the 1st of january
-	//assertNoOrganization(t, ctx, firstDayOfJanuary)
-	//assertNoOrganization(t, ctx, firstDayOfJanuary.Add(time.Hour*24).Add(-time.Nanosecond))
-	//
-	////1 invoice on first nanosecond on second day of january
-	//assertInvoiceForOrganization(t, ctx, firstDayOfJanuary.Add(time.Hour*24), tenantName, organization1Id)
-	//
-	////1 invoice on last nanosecond on second day of january
-	//assertInvoiceForOrganization(t, ctx, firstDayOfJanuary.Add(time.Hour*48).Add(-time.Nanosecond), tenantName, organization1Id)
-	//assertInvoiceForOrganization(t, ctx, firstDayOfJanuary.Add(time.Hour*120), tenantName, organization1Id)
-	//assertInvoiceForOrganization(t, ctx, lastDayOfJanuary, tenantName, organization1Id)
-	//
-	////todo mark SLI as included in an invoice in january
-	////check that the invoiced is not created anymore in january
-	//
-	//assertNoOrganization(t, ctx, firstDayOfJanuary.Add(time.Hour*24))
-	//assertNoOrganization(t, ctx, firstDayOfJanuary.Add(time.Hour*48))
-	//assertNoOrganization(t, ctx, lastDayOfJanuary)
-	//
-	////1 invoice on the 1st of every month starting with february
-	//for month := time.February; month <= time.December; month++ {
-	//	firstDayOfMonth := time.Date(currentYear, month, 1, 0, 0, 0, 0, time.UTC)
-	//	assertInvoiceForOrganization(t, ctx, firstDayOfMonth, tenantName, organization1Id)
-	//}
-	//
-	////no invoices on any other day
-	//for month := time.January; month <= time.December; month++ {
-	//	for day := 2; day <= daysInMonth(currentYear, month); day++ {
-	//		currentDate := time.Date(currentYear, month, day, 0, 0, 0, 0, time.UTC)
-	//
-	//		assertNoOrganization(t, ctx, currentDate)
-	//	}
-	//}
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		neo4jutil.NodeLabelTenant:       1,
+		neo4jutil.NodeLabelOrganization: 1,
+		neo4jutil.NodeLabelContract:     1,
+	})
+
+	day1contractsForInvoicing, err := repositories.ContractReadRepository.GetContractsForInvoicing(ctx, day1)
+	require.NoError(t, err)
+	require.Len(t, day1contractsForInvoicing, 0)
 }
 
-func TestContractReadRepository_GetContractsForInvoicing_1_SLI_Monthly_V2(t *testing.T) {
+func TestContractReadRepository_GetContractsForInvoicing_Prospect_Organization(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	organization1Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, entity.OrganizationEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, entity.OrganizationEntity{})
+
+	day1 := neo4jtest.FirstTimeOfMonth(2023, 6)
+	neo4jtest.CreateContract(ctx, driver, tenantName, organizationId, entity.ContractEntity{
+		NextInvoiceDate: utils.TimePtr(day1),
+	})
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		neo4jutil.NodeLabelTenant:       1,
+		neo4jutil.NodeLabelOrganization: 1,
+		neo4jutil.NodeLabelContract:     1,
+	})
+
+	day1contractsForInvoicing, err := repositories.ContractReadRepository.GetContractsForInvoicing(ctx, day1)
+	require.NoError(t, err)
+	require.Len(t, day1contractsForInvoicing, 0)
+}
+
+func TestContractReadRepository_GetContractsForInvoicing(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	tenant1 := "tenant1"
+	tenant2 := "tenant2"
+
+	day1 := neo4jtest.FirstTimeOfMonth(2023, 6)
+	day2 := day1.Add(24 * time.Hour)
+	day10 := day1.Add(10 * 24 * time.Hour)
+
+	neo4jtest.CreateTenant(ctx, driver, tenant1)
+	neo4jtest.CreateTenant(ctx, driver, tenant2)
+
+	organization1Id := neo4jtest.CreateOrganization(ctx, driver, tenant1, entity.OrganizationEntity{
 		IsCustomer: true,
 	})
 
-	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, organization1Id, entity.ContractEntity{})
-
-	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 1)
-	sli1EndedAt := neo4jtest.MiddleTimeOfMonth(2023, 3)
-
-	sli1Id := neo4jtest.InsertServiceLineItemEnded(ctx, driver, tenantName, contractId, enum.BilledTypeMonthly, 1, 1, sli1StartedAt, sli1EndedAt)
-	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, enum.BilledTypeMonthly, 4, 1, enum.BilledTypeMonthly, 1, 1, sli1EndedAt, sli1Id)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelOrganization:    1,
-		neo4jutil.NodeLabelContract:        1,
-		neo4jutil.NodeLabelServiceLineItem: 2,
+	contract1Id := neo4jtest.CreateContract(ctx, driver, tenant1, organization1Id, entity.ContractEntity{
+		NextInvoiceDate: utils.TimePtr(day1),
+	})
+	contract2Id := neo4jtest.CreateContract(ctx, driver, tenant1, organization1Id, entity.ContractEntity{
+		NextInvoiceDate: utils.TimePtr(day2),
 	})
 
-	//1 invoice every month on the 1st
-	//1 invoice in middle of March for proration of 4$/31 days * 15 days = 1.935483870967742 - 1$/31 days * 15 days = 0.4838709677419355
-	//
-	//currentYear := 2023
-	//for month := time.January; month <= time.December; month++ {
-	//	firstDayOfMonth := time.Date(currentYear, month, 1, 0, 0, 0, 0, time.UTC)
-	//
-	//	//first nanosecond of the month on day 1
-	//	assertInvoiceForOrganization(t, ctx, firstDayOfMonth, tenantName, organization1Id)
-	//	//last nanosecond of the month on day 1
-	//	assertInvoiceForOrganization(t, ctx, firstDayOfMonth.Add(time.Hour*24).Add(-time.Nanosecond), tenantName, organization1Id)
-	//
-	//	for day := 2; day <= daysInMonth(currentYear, month); day++ {
-	//		if month == time.March && day == 15 {
-	//			assertInvoiceForOrganization(t, ctx, time.Date(currentYear, month, day, 0, 0, 0, 0, time.UTC), tenantName, organization1Id)
-	//			continue
-	//		}
-	//
-	//		currentDate := time.Date(currentYear, month, day, 0, 0, 0, 0, time.UTC)
-	//
-	//		fmt.Sprint(currentDate)
-	//		assertNoOrganization(t, ctx, currentDate)
-	//	}
-	//}
-}
+	organization2Id := neo4jtest.CreateOrganization(ctx, driver, tenant2, entity.OrganizationEntity{
+		IsCustomer: true,
+	})
 
-func assertNoContract(t *testing.T, ctx context.Context, invoiceDate time.Time) {
-	contractsForInvoicing, err := repositories.ContractReadRepository.GetContractsForInvoicing(ctx, invoiceDate)
-	if err != nil {
-		t.Fatal(err)
+	contract3Id := neo4jtest.CreateContract(ctx, driver, tenant2, organization2Id, entity.ContractEntity{
+		NextInvoiceDate: utils.TimePtr(day10),
+	})
+	contract4Id := neo4jtest.CreateContract(ctx, driver, tenant2, organization2Id, entity.ContractEntity{
+		NextInvoiceDate: utils.TimePtr(day10),
+	})
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		neo4jutil.NodeLabelTenant:       2,
+		neo4jutil.NodeLabelOrganization: 2,
+		neo4jutil.NodeLabelContract:     4,
+	})
+
+	day1contractsForInvoicing, err := repositories.ContractReadRepository.GetContractsForInvoicing(ctx, day1)
+	require.NoError(t, err)
+	require.Len(t, day1contractsForInvoicing, 1)
+	for _, dbNode := range day1contractsForInvoicing {
+		tn, ctr := getRowData(dbNode)
+
+		require.Equal(t, tenant1, tn)
+		require.Equal(t, contract1Id, ctr)
 	}
 
-	require.Equal(t, 0, len(contractsForInvoicing))
-}
+	day2contractsForInvoicing, err := repositories.ContractReadRepository.GetContractsForInvoicing(ctx, day2)
+	require.NoError(t, err)
+	require.Len(t, day2contractsForInvoicing, 2)
+	for _, dbNode := range day1contractsForInvoicing {
+		tn, ctr := getRowData(dbNode)
 
-func assertInvoiceForContract(t *testing.T, ctx context.Context, invoiceDate time.Time, tenant, organizationId string) {
-	contractsForInvoicing, err := repositories.ContractReadRepository.GetContractsForInvoicing(ctx, invoiceDate)
-	if err != nil {
-		t.Fatal(err)
+		require.Equal(t, tenant1, tn)
+		require.Contains(t, []string{contract1Id, contract2Id}, ctr)
 	}
 
-	require.Equal(t, 1, len(contractsForInvoicing))
+	neo4jtest.MarkInvoicingStarted(ctx, driver, tenant1, contract1Id, day1.Add(12*time.Hour))
 
-	for _, dbNode := range contractsForInvoicing {
-		tn, org := getRowData(dbNode)
+	day2contractsForInvoicing, err = repositories.ContractReadRepository.GetContractsForInvoicing(ctx, day2)
+	require.NoError(t, err)
+	require.Len(t, day2contractsForInvoicing, 1)
+	for _, dbNode := range day2contractsForInvoicing {
+		tn, ctr := getRowData(dbNode)
 
-		require.Equal(t, tenant, tn)
-		require.Equal(t, organizationId, org)
+		require.Equal(t, tenant1, tn)
+		require.Equal(t, contract2Id, ctr)
 	}
-}
 
-func daysInMonth(year int, month time.Month) int {
-	return time.Date(year, month+1, 0, 0, 0, 0, 0, time.UTC).Day()
+	neo4jtest.MarkInvoicingStarted(ctx, driver, tenant1, contract2Id, day2.Add(12*time.Hour))
+
+	day10contractsForInvoicing, err := repositories.ContractReadRepository.GetContractsForInvoicing(ctx, day10)
+	require.NoError(t, err)
+	require.Len(t, day10contractsForInvoicing, 2)
+	for _, dbNode := range day10contractsForInvoicing {
+		tn, ctr := getRowData(dbNode)
+
+		require.Equal(t, tenant2, tn)
+		require.Contains(t, []string{contract3Id, contract4Id}, ctr)
+	}
 }
 
 func getRowData(props map[string]any) (string, string) {
 	tenant := utils.GetStringPropOrEmpty(props, "tenant")
-	organizationId := utils.GetStringPropOrEmpty(props, "organizationId")
+	organizationId := utils.GetStringPropOrEmpty(props, "contractId")
 
 	return tenant, organizationId
 }

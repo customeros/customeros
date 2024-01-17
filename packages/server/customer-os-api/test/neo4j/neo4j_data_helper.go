@@ -689,6 +689,7 @@ func LinkSuggestedMerge(ctx context.Context, driver *neo4j.DriverWithContext, pr
 	})
 }
 
+// Deprecated
 func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
 	var organizationId, _ = uuid.NewRandom()
 	now := time.Now().UTC()
@@ -1494,49 +1495,6 @@ func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4
 }
 
 // Deprecated
-func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, contract entity.ContractEntity) string {
-	contractId := utils.NewUUIDIfEmpty(contract.Id)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (o:Organization {id:$orgId})
-				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id})<-[:HAS_CONTRACT]-(o)
-				SET 
-					c:Contract_%s,
-					c.name=$name,
-					c.contractUrl=$contractUrl,
-					c.source=$source,
-					c.sourceOfTruth=$sourceOfTruth,
-					c.appSource=$appSource,
-					c.status=$status,
-					c.renewalCycle=$renewalCycle,
-					c.renewalPeriods=$renewalPeriods,
-					c.signedAt=$signedAt,
-					c.serviceStartedAt=$serviceStartedAt,
-					c.endedAt=$endedAt,
-					c.createdAt=$createdAt,
-					c.updatedAt=$updatedAt
-				`, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":               contractId,
-		"orgId":            orgId,
-		"tenant":           tenant,
-		"name":             contract.Name,
-		"contractUrl":      contract.ContractUrl,
-		"source":           contract.Source,
-		"sourceOfTruth":    contract.SourceOfTruth,
-		"appSource":        contract.AppSource,
-		"status":           contract.ContractStatus,
-		"renewalCycle":     contract.RenewalCycle,
-		"renewalPeriods":   contract.RenewalPeriods,
-		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
-		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
-		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
-		"createdAt":        contract.CreatedAt,
-		"updatedAt":        contract.UpdatedAt,
-	})
-	return contractId
-}
-
-// Deprecated
 func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, serviceLineItem entity.ServiceLineItemEntity) string {
 	serviceLineItemId := utils.NewUUIDIfEmpty(serviceLineItem.ID)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
@@ -1674,6 +1632,7 @@ func OpportunityCreatedBy(ctx context.Context, driver *neo4j.DriverWithContext, 
 	})
 }
 
+// Deprecated
 func OpportunityOwnedBy(ctx context.Context, driver *neo4j.DriverWithContext, opportunityId, entityId string) {
 	query := `MATCH (e:User {id:$entityId}), (op:Opportunity {id:$opportunityId})
 			MERGE (e)-[:OWNS]->(op)`

@@ -25,7 +25,7 @@ func TestQueryResolver_Opportunity(t *testing.T) {
 	creatorUserId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
 	ownerUserId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	now := utils.Now()
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
 		Name:      "test opportunity",
@@ -68,7 +68,7 @@ func TestMutationResolver_OpportunityUpdate(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{})
 	calledUpdateOpportunity := false
 
@@ -123,7 +123,7 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	ownerUserId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{})
 	calledUpdateRenewalOpportunity := false
 

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -13,6 +12,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
@@ -23,11 +24,10 @@ import (
 
 type ContractService interface {
 	Create(ctx context.Context, contract *ContractCreateData) (string, error)
-	Update(ctx context.Context, contract *entity.ContractEntity) error
-	GetById(ctx context.Context, id string) (*entity.ContractEntity, error)
-	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*entity.ContractEntities, error)
+	Update(ctx context.Context, contract *neo4jentity.ContractEntity) error
+	GetById(ctx context.Context, id string) (*neo4jentity.ContractEntity, error)
+	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.ContractEntities, error)
 	ContractsExistForTenant(ctx context.Context) (bool, error)
-	mapDbNodeToContractEntity(node dbtype.Node) *entity.ContractEntity
 	CountContracts(ctx context.Context, tenant string) (int64, error)
 }
 type contractService struct {
@@ -47,7 +47,7 @@ func NewContractService(log logger.Logger, repositories *repository.Repositories
 }
 
 type ContractCreateData struct {
-	ContractEntity    *entity.ContractEntity
+	ContractEntity    *neo4jentity.ContractEntity
 	OrganizationId    string
 	ExternalReference *entity.ExternalSystemEntity
 	Source            neo4jentity.DataSource
@@ -77,7 +77,7 @@ func (s *contractService) Create(ctx context.Context, contractDetails *ContractC
 	return contractId, nil
 }
 
-func (s *contractService) Update(ctx context.Context, contract *entity.ContractEntity) error {
+func (s *contractService) Update(ctx context.Context, contract *neo4jentity.ContractEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -119,11 +119,11 @@ func (s *contractService) Update(ctx context.Context, contract *entity.ContractE
 		RenewalPeriods: contract.RenewalPeriods,
 	}
 	switch contract.RenewalCycle {
-	case entity.RenewalCycleMonthlyRenewal:
+	case neo4jenum.RenewalCycleMonthlyRenewal:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
-	case entity.RenewalCycleQuarterlyRenewal:
+	case neo4jenum.RenewalCycleQuarterlyRenewal:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
-	case entity.RenewalCycleAnnualRenewal:
+	case neo4jenum.RenewalCycleAnnualRenewal:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
 	default:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_NONE
@@ -161,11 +161,11 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	}
 
 	switch contractDetails.ContractEntity.RenewalCycle {
-	case entity.RenewalCycleMonthlyRenewal:
+	case neo4jenum.RenewalCycleMonthlyRenewal:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
-	case entity.RenewalCycleQuarterlyRenewal:
+	case neo4jenum.RenewalCycleQuarterlyRenewal:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
-	case entity.RenewalCycleAnnualRenewal:
+	case neo4jenum.RenewalCycleAnnualRenewal:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
 	default:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_NONE
@@ -187,7 +187,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	return response.Id, err
 }
 
-func (s *contractService) GetById(ctx context.Context, contractId string) (*entity.ContractEntity, error) {
+func (s *contractService) GetById(ctx context.Context, contractId string) (*neo4jentity.ContractEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -198,11 +198,11 @@ func (s *contractService) GetById(ctx context.Context, contractId string) (*enti
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Contract with id {%s} not found", contractId))
 		return nil, wrappedErr
 	} else {
-		return s.mapDbNodeToContractEntity(*contractDbNode), nil
+		return mapper.MapDbNodeToContractEntity(*contractDbNode), nil
 	}
 }
 
-func (s *contractService) GetContractsForOrganizations(ctx context.Context, organizationIDs []string) (*entity.ContractEntities, error) {
+func (s *contractService) GetContractsForOrganizations(ctx context.Context, organizationIDs []string) (*neo4jentity.ContractEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractsForOrganizations")
 	defer span.Finish()
 	span.LogFields(log.Object("organizationIDs", organizationIDs))
@@ -211,9 +211,9 @@ func (s *contractService) GetContractsForOrganizations(ctx context.Context, orga
 	if err != nil {
 		return nil, err
 	}
-	contractEntities := make(entity.ContractEntities, 0, len(contracts))
+	contractEntities := make(neo4jentity.ContractEntities, 0, len(contracts))
 	for _, v := range contracts {
-		contractEntity := s.mapDbNodeToContractEntity(*v.Node)
+		contractEntity := mapper.MapDbNodeToContractEntity(*v.Node)
 		contractEntity.DataloaderKey = v.LinkedNodeId
 		contractEntities = append(contractEntities, *contractEntity)
 	}
@@ -229,30 +229,6 @@ func (s *contractService) ContractsExistForTenant(ctx context.Context) (bool, er
 		return false, err
 	}
 	return contractsExistForTenant, nil
-}
-
-func (s *contractService) mapDbNodeToContractEntity(dbNode dbtype.Node) *entity.ContractEntity {
-	props := utils.GetPropsFromNode(dbNode)
-	contractStatus := entity.GetContractStatus(utils.GetStringPropOrEmpty(props, "status"))
-	contractRenewalCycle := entity.GetRenewalCycle(utils.GetStringPropOrEmpty(props, "renewalCycle"))
-
-	contract := entity.ContractEntity{
-		Id:               utils.GetStringPropOrEmpty(props, "id"),
-		Name:             utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		ServiceStartedAt: utils.GetTimePropOrNil(props, "serviceStartedAt"),
-		SignedAt:         utils.GetTimePropOrNil(props, "signedAt"),
-		EndedAt:          utils.GetTimePropOrNil(props, "endedAt"),
-		ContractUrl:      utils.GetStringPropOrEmpty(props, "contractUrl"),
-		ContractStatus:   contractStatus,
-		RenewalCycle:     contractRenewalCycle,
-		RenewalPeriods:   utils.GetInt64PropOrNil(props, "renewalPeriods"),
-		Source:           neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:    neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
-	}
-	return &contract
 }
 
 func (s *contractService) CountContracts(ctx context.Context, tenant string) (int64, error) {
