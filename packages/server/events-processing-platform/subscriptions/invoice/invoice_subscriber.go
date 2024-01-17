@@ -26,21 +26,22 @@ import (
 )
 
 type InvoiceSubscriber struct {
-	log logger.Logger
-	db  *esdb.Client
-	cfg *config.Config
-
-	grpcClients *grpc_client.Clients
-	fsc         fsc.FileStoreApiService
+	log                 logger.Logger
+	db                  *esdb.Client
+	cfg                 *config.Config
+	grpcClients         *grpc_client.Clients
+	fsc                 fsc.FileStoreApiService
+	invoiceEventHandler *InvoiceEventHandler
 }
 
 func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService) *InvoiceSubscriber {
 	return &InvoiceSubscriber{
-		log:         log,
-		db:          db,
-		cfg:         cfg,
-		grpcClients: grpcClients,
-		fsc:         fsc,
+		log:                 log,
+		db:                  db,
+		cfg:                 cfg,
+		grpcClients:         grpcClients,
+		fsc:                 fsc,
+		invoiceEventHandler: NewInvoiceEventHandler(log, repositories),
 	}
 }
 
@@ -130,7 +131,7 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	case invoice.InvoiceFillV1:
 		return s.onInvoiceFillV1(ctx, evt)
 	case invoice.InvoicePdfGeneratedV1:
-		return s.onInvoicePdfGeneratedV1(ctx, evt)
+		return s.invoiceEventHandler.onInvoicePdfGeneratedV1(ctx, evt)
 	default:
 		return nil
 	}
@@ -181,31 +182,6 @@ func (s *InvoiceSubscriber) onInvoiceFillV1(ctx context.Context, evt eventstore.
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.CallPdfGeneratedInvoice")
 	}
-
-	return nil
-}
-
-func (s *InvoiceSubscriber) onInvoicePdfGeneratedV1(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceSubscriber.onInvoicePdfGeneratedV1")
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventID", evt.GetEventID()))
-
-	var eventData invoice.InvoicePdfGeneratedEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	tracing.LogObjectAsJson(span, "eventData", eventData)
-
-	// TODO CALL STRIPE
-	//invcoice - contract - org
-	//get
-	//stripe
-	//id
-	//for org
-	//
-	//// webhook
-	//	invoice- > techPaymentRequested(bool)
 
 	return nil
 }

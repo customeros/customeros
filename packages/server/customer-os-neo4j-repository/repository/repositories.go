@@ -22,6 +22,10 @@ type Repositories struct {
 	InteractionEventReadRepository    InteractionEventReadRepository
 	InteractionEventWriteRepository   InteractionEventWriteRepository
 	InteractionSessionWriteRepository InteractionSessionWriteRepository
+	InvoiceReadRepository             InvoiceReadRepository
+	InvoiceWriteRepository            InvoiceWriteRepository
+	InvoicingCycleReadRepository      InvoicingCycleReadRepository
+	InvoicingCycleWriteRepository     InvoicingCycleWriteRepository
 	IssueWriteRepository              IssueWriteRepository
 	JobRoleWriteRepository            JobRoleWriteRepository
 	LocationWriteRepository           LocationWriteRepository
@@ -43,9 +47,6 @@ type Repositories struct {
 	TimelineEventReadRepository       TimelineEventReadRepository
 	UserReadRepository                UserReadRepository
 	UserWriteRepository               UserWriteRepository
-	InvoicingCycleWriteRepository     InvoicingCycleWriteRepository
-	InvoicingCycleReadRepository      InvoicingCycleReadRepository
-	InvoiceWriteRepository            InvoiceWriteRepository
 }
 
 func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string) *Repositories {
@@ -67,6 +68,10 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		InteractionEventReadRepository:    NewInteractionEventReadRepository(driver, neo4jDatabase),
 		InteractionEventWriteRepository:   NewInteractionEventWriteRepository(driver, neo4jDatabase),
 		InteractionSessionWriteRepository: NewInteractionSessionWriteRepository(driver, neo4jDatabase),
+		InvoiceReadRepository:             NewInvoiceReadRepository(driver, neo4jDatabase),
+		InvoiceWriteRepository:            NewInvoiceWriteRepository(driver, neo4jDatabase),
+		InvoicingCycleReadRepository:      NewInvoicingCycleReadRepository(driver, neo4jDatabase),
+		InvoicingCycleWriteRepository:     NewInvoicingCycleWriteRepository(driver, neo4jDatabase),
 		IssueWriteRepository:              NewIssueWriteRepository(driver, neo4jDatabase),
 		JobRoleWriteRepository:            NewJobRoleWriteRepository(driver, neo4jDatabase),
 		LocationWriteRepository:           NewLocationWriteRepository(driver, neo4jDatabase),
@@ -88,9 +93,6 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		TimelineEventReadRepository:       NewTimelineEventReadRepository(driver, neo4jDatabase),
 		UserReadRepository:                NewUserReadRepository(driver, neo4jDatabase),
 		UserWriteRepository:               NewUserWriteRepository(driver, neo4jDatabase),
-		InvoicingCycleWriteRepository:     NewInvoicingCycleWriteRepository(driver, neo4jDatabase),
-		InvoicingCycleReadRepository:      NewInvoicingCycleReadRepository(driver, neo4jDatabase),
-		InvoiceWriteRepository:            NewInvoiceWriteRepository(driver, neo4jDatabase),
 	}
 	return &repositories
 }
