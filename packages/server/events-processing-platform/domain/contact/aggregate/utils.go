@@ -2,16 +2,15 @@ package aggregate
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
-	"strings"
 )
 
 func GetContactObjectID(aggregateID, tenant string) string {
-	return strings.ReplaceAll(aggregateID, string(ContactAggregateType)+"-"+tenant+"-", "")
+	return aggregate.GetAggregateObjectID(aggregateID, tenant, ContactAggregateType)
 }
 
 func LoadContactAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*ContactAggregate, error) {
@@ -22,17 +21,9 @@ func LoadContactAggregate(ctx context.Context, eventStore eventstore.AggregateSt
 
 	contactAggregate := NewContactAggregateWithTenantAndID(tenant, objectID)
 
-	// ErrAggregateNotFound is an expected error, in which case we return the contractAggregate without any error.
-	err := eventStore.Exists(ctx, contactAggregate.GetID())
+	err := aggregate.LoadAggregate(ctx, eventStore, contactAggregate, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
-		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
-			return nil, err
-		} else {
-			return contactAggregate, nil
-		}
-	}
-
-	if err = eventStore.Load(ctx, contactAggregate); err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 

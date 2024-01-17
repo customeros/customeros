@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 )
 
 func GetContractObjectID(aggregateID, tenant string) string {
@@ -25,7 +24,7 @@ func LoadContractAggregate(ctx context.Context, eventStore eventstore.AggregateS
 	err := aggregate.LoadAggregate(ctx, eventStore, contractAggregate, options)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, errors.Wrap(err, "LoadInvoiceAggregate")
+		return nil, err
 	}
 
 	return contractAggregate, nil
@@ -42,7 +41,7 @@ func LoadContractTempAggregate(ctx context.Context, eventStore eventstore.Aggreg
 	err := aggregate.LoadAggregate(ctx, eventStore, contractTempAggregate, eventstore.LoadAggregateOptions{SkipLoadEvents: true})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, errors.Wrap(err, "LoadInvoiceAggregate")
+		return nil, err
 	}
 
 	return contractTempAggregate, nil

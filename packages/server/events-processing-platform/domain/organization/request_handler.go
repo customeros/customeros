@@ -35,7 +35,7 @@ func (h *organizationRequestHandler) HandleWithRetry(ctx context.Context, tenant
 	tracing.LogObjectAsJson(span, "request", request)
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
-		organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, tenant, objectId, eventstore.NewLoadAggregateOptions())
+		organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, tenant, objectId, *eventstore.NewLoadAggregateOptions())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err

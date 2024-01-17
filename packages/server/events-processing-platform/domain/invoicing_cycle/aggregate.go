@@ -8,7 +8,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 const (
@@ -21,16 +20,7 @@ type InvoicingCycleAggregate struct {
 }
 
 func GetInvoicingCycleObjectID(aggregateID string, tenant string) string {
-	if tenant == "" {
-		return getInvoicingCycleObjectUUID(aggregateID)
-	}
-	return strings.ReplaceAll(aggregateID, string(InvoicingCycleAggregateType)+"-"+tenant+"-", "")
-}
-
-func getInvoicingCycleObjectUUID(aggregateID string) string {
-	parts := strings.Split(aggregateID, "-")
-	fullUUID := parts[len(parts)-5] + "-" + parts[len(parts)-4] + "-" + parts[len(parts)-3] + "-" + parts[len(parts)-2] + "-" + parts[len(parts)-1]
-	return fullUUID
+	return aggregate.GetAggregateObjectID(aggregateID, tenant, InvoicingCycleAggregateType)
 }
 
 func LoadInvoicingCycleAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*InvoicingCycleAggregate, error) {
@@ -41,17 +31,8 @@ func LoadInvoicingCycleAggregate(ctx context.Context, eventStore eventstore.Aggr
 
 	invoicingCycleAggregate := NewInvoicingCycleAggregateWithTenantAndID(tenant, objectID)
 
-	err := eventStore.Exists(ctx, invoicingCycleAggregate.GetID())
+	err := aggregate.LoadAggregate(ctx, eventStore, invoicingCycleAggregate, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
-		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
-			tracing.TraceErr(span, err)
-			return nil, err
-		} else {
-			return invoicingCycleAggregate, nil
-		}
-	}
-
-	if err = eventStore.Load(ctx, invoicingCycleAggregate); err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
