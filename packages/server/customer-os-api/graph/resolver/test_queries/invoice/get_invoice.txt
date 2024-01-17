@@ -1,0 +1,25 @@
+query GetInvoice($id: ID!) {
+invoice(id: $id) {
+    id
+    createdAt
+    updatedAt
+    dryRun
+    number
+    date
+    dueDate
+    amount
+    vat
+    total
+    currency
+    repositoryFileId
+
+    invoiceLines {
+        name
+        price
+        quantity
+        amount
+        vat
+        total
+    }
+  }
+}

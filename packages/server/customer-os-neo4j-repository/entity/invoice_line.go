@@ -19,4 +19,8 @@ type InvoiceLineEntity struct {
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
+
+	DataloaderKey string
 }
+
+type InvoiceLineEntities []InvoiceLineEntity

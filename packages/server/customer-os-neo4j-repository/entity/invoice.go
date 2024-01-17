@@ -19,7 +19,6 @@ type InvoiceEntity struct {
 	Vat              float64
 	Total            float64
 	RepositoryFileId string
-	PdfGenerated     bool
 
 	Source        DataSource
 	SourceOfTruth DataSource

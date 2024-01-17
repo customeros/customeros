@@ -1003,7 +1003,6 @@ type Invoice struct {
 	ID               string         `json:"id"`
 	CreatedAt        time.Time      `json:"createdAt"`
 	UpdatedAt        time.Time      `json:"updatedAt"`
-	Name             string         `json:"name"`
 	Source           DataSource     `json:"source"`
 	SourceOfTruth    DataSource     `json:"sourceOfTruth"`
 	AppSource        string         `json:"appSource"`
@@ -1016,7 +1015,7 @@ type Invoice struct {
 	Total            float64        `json:"total"`
 	Currency         string         `json:"currency"`
 	RepositoryFileID string         `json:"repositoryFileId"`
-	Lines            []*InvoiceLine `json:"lines"`
+	InvoiceLines     []*InvoiceLine `json:"invoiceLines"`
 }
 
 func (Invoice) IsSourceFields()                   {}
@@ -1030,7 +1029,6 @@ func (Invoice) IsNode() {}
 type InvoiceLine struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
-	Index     int       `json:"index"`
 	Name      string    `json:"name"`
 	Price     float64   `json:"price"`
 	Quantity  int       `json:"quantity"`

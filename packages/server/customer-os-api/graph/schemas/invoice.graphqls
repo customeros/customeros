@@ -17,7 +17,6 @@ type Invoice implements SourceFields & Node {
     id:                 ID!
     createdAt:          Time!
     updatedAt:          Time!
-    name:               String!
     source:             DataSource!
     sourceOfTruth:      DataSource!
     appSource:          String!
@@ -31,14 +30,13 @@ type Invoice implements SourceFields & Node {
     total:              Float!
     currency:           String!
     repositoryFileId:   String!
-    lines:              [InvoiceLine!]! @goField(forceResolver: true)
+    invoiceLines:       [InvoiceLine!]! @goField(forceResolver: true)
 }
 
 type InvoiceLine implements Node {
     id:                 ID!
     createdAt:          Time!
 
-    index:              Int!
     name:               String!
     price:              Float!
     quantity:           Int!

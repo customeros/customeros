@@ -94,6 +94,7 @@ type Loaders struct {
 	ServiceLineItemsForContract                 *dataloader.Loader
 	OpportunitiesForContract                    *dataloader.Loader
 	MasterPlanMilestonesForMasterPlan           *dataloader.Loader
+	InvoiceLinesForInvoice                      *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -191,6 +192,9 @@ type opportunityBatcher struct {
 }
 type masterPlanBatcher struct {
 	masterPlanService service.MasterPlanService
+}
+type invoiceBatcher struct {
+	invoiceService service.InvoiceService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -291,6 +295,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	masterPlanBatcher := &masterPlanBatcher{
 		masterPlanService: services.MasterPlanService,
 	}
+	invoiceBatcher := &invoiceBatcher{
+		invoiceService: services.InvoiceService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -371,6 +378,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		ServiceLineItemsForContract:                 dataloader.NewBatchedLoader(serviceLineItemBatcher.getServiceLineItemsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OpportunitiesForContract:                    dataloader.NewBatchedLoader(opportunityBatcher.getOpportunitiesForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		MasterPlanMilestonesForMasterPlan:           dataloader.NewBatchedLoader(masterPlanBatcher.getMasterPlanMilestonesForMasterPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		InvoiceLinesForInvoice:                      dataloader.NewBatchedLoader(invoiceBatcher.getInvoiceLinesForInvoice, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

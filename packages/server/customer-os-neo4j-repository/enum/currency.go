@@ -19,6 +19,7 @@ const (
 	CurrencyNZD Currency = "NZD"
 	CurrencySEK Currency = "SEK"
 	CurrencySGD Currency = "SGD"
+	CurrencyRON Currency = "RON"
 	CurrencyTRY Currency = "TRY"
 	CurrencyUSD Currency = "USD"
 	CurrencyZAR Currency = "ZAR"
@@ -68,6 +69,8 @@ func DecodeCurrency(code string) Currency {
 		return CurrencyZAR
 	case "TRY":
 		return CurrencyTRY
+	case "RON":
+		return CurrencyRON
 	default:
 		return ""
 	}
