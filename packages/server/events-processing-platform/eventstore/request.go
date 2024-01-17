@@ -4,6 +4,7 @@ import (
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 )
 
+// Deprecated
 type BaseRequest struct {
 	ObjectID       string             `json:"objectID" validate:"required"`
 	Tenant         string             `json:"tenant" validate:"required"`

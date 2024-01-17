@@ -180,9 +180,7 @@ func TestInvoiceService_PdfGeneratedInvoice(t *testing.T) {
 		InvoiceId:        invoiceId,
 		RepositoryFileId: "repository-file-id",
 		UpdatedAt:        utils.ConvertTimeToTimestampPtr(&now),
-		SourceFields: &commonpb.SourceFields{
-			AppSource: "app",
-		},
+		AppSource:        "app",
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -227,10 +225,7 @@ func TestInvoiceService_PayInvoice(t *testing.T) {
 		Total:  3,
 		Lines:  []*invoicepb.InvoiceLine{},
 	})
-	pdfGeneratedEvent, _ := invoice.NewInvoicePdfGeneratedEvent(invoiceAggregate, &now, commonmodel.Source{}, &invoicepb.PdfGeneratedInvoiceRequest{
-		InvoiceId:        invoiceId,
-		RepositoryFileId: "repository-file-id",
-	})
+	pdfGeneratedEvent, _ := invoice.NewInvoicePdfGeneratedEvent(invoiceAggregate, now, "repository-file-id")
 	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, newEvent)
 	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, fillEvent)
 	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, pdfGeneratedEvent)

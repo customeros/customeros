@@ -3,7 +3,6 @@ package invoice
 import (
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/pkg/errors"
@@ -112,19 +111,16 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, s
 }
 
 type InvoicePdfGeneratedEvent struct {
-	Tenant       string             `json:"tenant" validate:"required"`
-	UpdatedAt    time.Time          `json:"createdAt"`
-	SourceFields commonmodel.Source `json:"sourceFields"`
-
-	RepositoryFileId string `json:"repositoryFileId" validate:"required"`
+	Tenant           string    `json:"tenant" validate:"required"`
+	UpdatedAt        time.Time `json:"updatedAt"`
+	RepositoryFileId string    `json:"repositoryFileId" validate:"required"`
 }
 
-func NewInvoicePdfGeneratedEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, sourceFields commonmodel.Source, request *invoicepb.PdfGeneratedInvoiceRequest) (eventstore.Event, error) {
+func NewInvoicePdfGeneratedEvent(aggregate eventstore.Aggregate, updatedAt time.Time, repositoryFileId string) (eventstore.Event, error) {
 	eventData := InvoicePdfGeneratedEvent{
 		Tenant:           aggregate.GetTenant(),
-		UpdatedAt:        *updatedAt,
-		SourceFields:     sourceFields,
-		RepositoryFileId: request.RepositoryFileId,
+		UpdatedAt:        updatedAt,
+		RepositoryFileId: repositoryFileId,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -162,20 +158,4 @@ func NewInvoicePayEvent(aggregate eventstore.Aggregate, updatedAt *time.Time, so
 	}
 
 	return event, nil
-}
-
-type EventHandlers struct {
-	InvoiceNew          InvoiceNewHandler
-	InvoiceFill         InvoiceFillHandler
-	InvoicePdfGenerated InvoicePdfGeneratedHandler
-	InvoicePay          InvoicePayHandler
-}
-
-func NewEventHandlers(log logger.Logger, es eventstore.AggregateStore) *EventHandlers {
-	return &EventHandlers{
-		InvoiceNew:          NewInvoiceNewHandler(log, es),
-		InvoiceFill:         NewInvoiceFillHandler(log, es),
-		InvoicePdfGenerated: NewInvoicePdfGeneratedHandler(log, es),
-		InvoicePay:          NewInvoicePayHandler(log, es),
-	}
 }

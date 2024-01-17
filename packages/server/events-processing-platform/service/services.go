@@ -36,15 +36,15 @@ type Services struct {
 	CountryService            *countryService
 }
 
-func InitServices(config *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger) *Services {
+func InitServices(cfg *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger) *Services {
 	services := Services{}
 
-	services.FileStoreApiService = fsc.NewFileStoreApiService(&config.Services.FileStoreApiConfig)
+	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
 	services.CommonServices = commonService.InitServices(repositories.Drivers.GormDb, repositories.Drivers.Neo4jDriver)
 
 	//GRPC services
 	services.ContactService = NewContactService(log, commandHandlers.Contact)
-	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, config)
+	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories.Neo4jRepositories, commandHandlers.PhoneNumber)
 	services.EmailService = NewEmailService(log, repositories.Neo4jRepositories, commandHandlers.Email)
 	services.UserService = NewUserService(log, commandHandlers.User)
@@ -60,7 +60,7 @@ func InitServices(config *config.Config, repositories *repository.Repositories, 
 	services.ServiceLineItemService = NewServiceLineItemService(log, commandHandlers.ServiceLineItem, aggregateStore)
 	services.MasterPlanService = NewMasterPlanService(log, commandHandlers.MasterPlan, aggregateStore)
 	services.InvoicingCycleService = NewInvoicingCycleService(log, commandHandlers.InvoicingCycle, aggregateStore)
-	services.InvoiceService = NewInvoiceService(log, commandHandlers.Invoice, aggregateStore)
+	services.InvoiceService = NewInvoiceService(log, aggregateStore, cfg)
 	services.CountryService = NewCountryService(log, commandHandlers.Country)
 
 	return &services

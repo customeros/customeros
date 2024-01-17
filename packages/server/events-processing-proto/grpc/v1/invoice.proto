@@ -51,7 +51,7 @@ message PdfGeneratedInvoiceRequest {
   string invoiceId = 3;
   string repositoryFileId = 4;
   google.protobuf.Timestamp updatedAt = 5;
-  SourceFields sourceFields = 6;
+  string appSource = 6;
 }
 
 message InvoiceIdResponse {
