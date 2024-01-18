@@ -287,7 +287,7 @@ func (r *organizationPlanWriteRepository) UpdateMilestone(ctx context.Context, t
 		params["statusUpdatedAt"] = data.StatusDetails.UpdatedAt
 	}
 	if data.UpdateDueDate {
-		cypher += ", op.dueDate=$dueDate"
+		cypher += ", m.dueDate=$dueDate"
 		params["dueDate"] = data.DueDate
 	}
 

@@ -389,7 +389,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 	require.Equal(t, updateTime, milestone.UpdatedAt)
 	require.Equal(t, "new name", milestone.Name)
 	require.Equal(t, int64(10), milestone.Order)
-	require.Equal(t, timeNow.Add(time.Hour*24), milestone.DueDate)
+	require.Equal(t, timeNow.Add(time.Hour*48), milestone.DueDate)
 	require.Equal(t, true, milestone.Optional)
 	require.Equal(t, false, milestone.Retired) // mask not passed so we ignore this field update
 	require.Equal(t, model.MilestoneStarted.String(), milestone.StatusDetails.Status)
