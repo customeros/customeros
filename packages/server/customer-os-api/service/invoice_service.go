@@ -20,11 +20,12 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"reflect"
 	"time"
 )
 
 type InvoiceService interface {
-	GetInvoices(ctx context.Context, organizationId string, pagination *model.Pagination) (*utils.Pagination, error)
+	GetInvoices(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (string, error)
@@ -58,22 +59,38 @@ type SimulateInvoiceLineData struct {
 	Quantity          int
 }
 
-func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string, pagination *model.Pagination) (*utils.Pagination, error) {
+func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoices")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
-	span.LogFields(log.Object("pagination", pagination))
+	span.LogFields(log.Object("page", page))
+	span.LogFields(log.Object("limit", limit))
+	span.LogFields(log.Object("filter", filter))
+	span.LogFields(log.Object("sortBy", sortBy))
 
-	dbNodesWithTotalCount, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoices(ctx, common.GetTenantFromContext(ctx), organizationId, pagination.Page, pagination.Limit)
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(neo4jentity.InvoiceEntity{}))
+	if err != nil {
+		return nil, err
+	}
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(neo4jentity.InvoiceEntity{}))
+	if err != nil {
+		return nil, err
+	}
+
+	dbNodesWithTotalCount, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoices(ctx, common.GetTenantFromContext(ctx), organizationId,
+		page,
+		limit,
+		cypherFilter,
+		cypherSort)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	var paginatedResult = utils.Pagination{
-		Limit: pagination.Limit,
-		Page:  pagination.Page,
+		Limit: page,
+		Page:  limit,
 	}
 
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)

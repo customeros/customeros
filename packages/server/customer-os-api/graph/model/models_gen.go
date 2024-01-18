@@ -1628,6 +1628,7 @@ type Organization struct {
 	TimelineEventsTotalCount      int64                         `json:"timelineEventsTotalCount"`
 	Owner                         *User                         `json:"owner,omitempty"`
 	ExternalLinks                 []*ExternalSystem             `json:"externalLinks"`
+	Invoices                      *InvoicesPage                 `json:"invoices"`
 	LastTouchPointAt              *time.Time                    `json:"lastTouchPointAt,omitempty"`
 	LastTouchPointType            *LastTouchpointType           `json:"lastTouchPointType,omitempty"`
 	LastTouchPointTimelineEventID *string                       `json:"lastTouchPointTimelineEventId,omitempty"`

@@ -1,0 +1,16 @@
+query GetOrganization($organizationId: ID!) {
+  organization(id: $organizationId) {
+    id
+    invoices(pagination: { page: 0, limit: 10 }) {
+        totalPages
+        totalElements
+        content {
+          id
+          number
+          invoiceLines {
+              name
+          }
+        }
+    }
+  }
+}

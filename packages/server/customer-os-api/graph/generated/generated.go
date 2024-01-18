@@ -972,6 +972,7 @@ type ComplexityRoot struct {
 		ID                            func(childComplexity int) int
 		Industry                      func(childComplexity int) int
 		IndustryGroup                 func(childComplexity int) int
+		Invoices                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		IsCustomer                    func(childComplexity int) int
 		IsPublic                      func(childComplexity int) int
 		IssueSummaryByStatus          func(childComplexity int) int
@@ -1106,7 +1107,7 @@ type ComplexityRoot struct {
 		InteractionSession                    func(childComplexity int, id string) int
 		InteractionSessionBySessionIdentifier func(childComplexity int, sessionIdentifier string) int
 		Invoice                               func(childComplexity int, id string) int
-		Invoices                              func(childComplexity int, organizationID string, pagination *model.Pagination) int
+		Invoices                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		InvoicingCycle                        func(childComplexity int) int
 		Issue                                 func(childComplexity int, id string) int
 		LogEntry                              func(childComplexity int, id string) int
@@ -1585,6 +1586,7 @@ type OrganizationResolver interface {
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error)
 	Owner(ctx context.Context, obj *model.Organization) (*model.User, error)
 	ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error)
+	Invoices(ctx context.Context, obj *model.Organization, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.InvoicesPage, error)
 
 	LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error)
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
@@ -1626,7 +1628,7 @@ type QueryResolver interface {
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
 	InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error)
 	Invoice(ctx context.Context, id string) (*model.Invoice, error)
-	Invoices(ctx context.Context, organizationID string, pagination *model.Pagination) (*model.InvoicesPage, error)
+	Invoices(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.InvoicesPage, error)
 	InvoicingCycle(ctx context.Context) (*model.InvoicingCycle, error)
 	Issue(ctx context.Context, id string) (*model.Issue, error)
 	LogEntry(ctx context.Context, id string) (*model.LogEntry, error)
@@ -7212,6 +7214,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.IndustryGroup(childComplexity), true
 
+	case "Organization.invoices":
+		if e.complexity.Organization.Invoices == nil {
+			break
+		}
+
+		args, err := ec.field_Organization_invoices_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Organization.Invoices(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
+
 	case "Organization.isCustomer":
 		if e.complexity.Organization.IsCustomer == nil {
 			break
@@ -8137,7 +8151,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Invoices(childComplexity, args["organizationId"].(string), args["pagination"].(*model.Pagination)), true
+		return e.complexity.Query.Invoices(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
 
 	case "Query.invoicingCycle":
 		if e.complexity.Query.InvoicingCycle == nil {
@@ -10720,7 +10734,7 @@ interface ExtensibleEntity implements Node {
 }`, BuiltIn: false},
 	{Name: "../schemas/invoice.graphqls", Input: `extend type Query {
     invoice(id: ID!): Invoice!
-    invoices(organizationId: ID!, pagination: Pagination): InvoicesPage!
+    invoices(pagination: Pagination, where: Filter, sort: [SortBy!]): InvoicesPage!
 }
 
 extend type Mutation {
@@ -11407,6 +11421,7 @@ type Organization implements Node {
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     owner: User @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
+    invoices(pagination: Pagination, where: Filter, sort: [SortBy!]): InvoicesPage! @goField(forceResolver: true)
 
     lastTouchPointAt: Time
     lastTouchPointType: LastTouchpointType
@@ -15281,6 +15296,39 @@ func (ec *executionContext) field_Organization_contacts_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Organization_invoices_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pagination"] = arg0
+	var arg1 *model.Filter
+	if tmp, ok := rawArgs["where"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+		arg1, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["where"] = arg1
+	var arg2 []*model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg2, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Organization_notes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -15851,24 +15899,33 @@ func (ec *executionContext) field_Query_invoice_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_invoices_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["organizationId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["organizationId"] = arg0
-	var arg1 *model.Pagination
+	var arg0 *model.Pagination
 	if tmp, ok := rawArgs["pagination"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
-		arg1, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["pagination"] = arg1
+	args["pagination"] = arg0
+	var arg1 *model.Filter
+	if tmp, ok := rawArgs["where"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+		arg1, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["where"] = arg1
+	var arg2 []*model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg2, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort"] = arg2
 	return args, nil
 }
 
@@ -24642,6 +24699,8 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(ctx c
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -27461,6 +27520,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -34676,6 +34737,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -35427,6 +35490,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -45188,6 +45253,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -48336,6 +48403,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -48529,6 +48598,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -49236,6 +49307,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -49429,6 +49502,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -49622,6 +49697,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -50057,6 +50134,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -50250,6 +50329,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -50443,6 +50524,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -58366,6 +58449,69 @@ func (ec *executionContext) fieldContext_Organization_externalLinks(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_invoices(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_invoices(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().Invoices(rctx, obj, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InvoicesPage)
+	fc.Result = res
+	return ec.marshalNInvoicesPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoicesPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_invoices(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_InvoicesPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_InvoicesPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_InvoicesPage_totalElements(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InvoicesPage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Organization_invoices_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_lastTouchPointAt(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 	if err != nil {
@@ -58760,6 +58906,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -59044,6 +59192,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -60433,6 +60583,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -63262,7 +63414,7 @@ func (ec *executionContext) _Query_invoices(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Invoices(rctx, fc.Args["organizationId"].(string), fc.Args["pagination"].(*model.Pagination))
+		return ec.resolvers.Query().Invoices(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -64400,6 +64552,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -65931,6 +66085,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(ctx context.
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -67937,6 +68093,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "invoices":
+				return ec.fieldContext_Organization_invoices(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -86869,6 +87027,42 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._Organization_externalLinks(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "invoices":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_invoices(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

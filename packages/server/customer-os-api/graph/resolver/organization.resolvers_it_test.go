@@ -4,6 +4,7 @@ import (
 	"context"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"testing"
 	"time"
@@ -1642,4 +1643,55 @@ func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {
 	organization := organizationStruct.Organization_UpdateOnboardingStatus
 	require.Equal(t, organizationId, organization.ID)
 	require.True(t, calledEventsPlatform)
+}
+
+func TestQueryResolver_Organization_WithInvoices(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organization1Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contract1Id := neo4jtest.CreateContract(ctx, driver, tenantName, organization1Id, neo4jentity.ContractEntity{})
+	contract2Id := neo4jtest.CreateContract(ctx, driver, tenantName, organization1Id, neo4jentity.ContractEntity{})
+	invoice1Id := neo4jtest.CreateInvoice(ctx, driver, tenantName, contract1Id, neo4jentity.InvoiceEntity{
+		Number: "1",
+	})
+	invoice2Id := neo4jtest.CreateInvoice(ctx, driver, tenantName, contract2Id, neo4jentity.InvoiceEntity{
+		Number: "2",
+	})
+
+	organization2Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contrac3tId := neo4jtest.CreateContract(ctx, driver, tenantName, organization2Id, neo4jentity.ContractEntity{})
+	neo4jtest.CreateInvoice(ctx, driver, tenantName, contrac3tId, neo4jentity.InvoiceEntity{
+		Number: "3",
+	})
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		neo4jutil.NodeLabelOrganization: 2,
+		neo4jutil.NodeLabelContract:     3,
+		neo4jutil.NodeLabelInvoice:      3,
+	})
+
+	rawResponse := callGraphQL(t, "organization/get_organization_with_invoices",
+		map[string]interface{}{"organizationId": organization1Id})
+
+	var orgStruct struct {
+		Organization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &orgStruct)
+	require.Nil(t, err)
+
+	organization := orgStruct.Organization
+	require.NotNil(t, organization)
+	require.Equal(t, int64(2), organization.Invoices.TotalElements)
+	require.Equal(t, 2, len(organization.Invoices.Content))
+
+	invoice1 := organization.Invoices.Content[0]
+	require.Equal(t, invoice1Id, invoice1.ID)
+	require.Equal(t, "1", invoice1.Number)
+
+	invoice2 := organization.Invoices.Content[1]
+	require.Equal(t, invoice2Id, invoice2.ID)
+	require.Equal(t, "2", invoice2.Number)
 }

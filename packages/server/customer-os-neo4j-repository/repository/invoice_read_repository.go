@@ -14,7 +14,7 @@ import (
 type InvoiceReadRepository interface {
 	// GetInvoiceById returns the invoice node with the given id for tenant, error if not found or multiple found
 	GetInvoiceById(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
-	GetInvoices(ctx context.Context, tenant string, organizationId string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
+	GetInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 }
 
 type invoiceReadRepository struct {
@@ -33,13 +33,14 @@ func (r *invoiceReadRepository) prepareReadSession(ctx context.Context) neo4j.Se
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *invoiceReadRepository) GetInvoices(ctx context.Context, tenant string, organizationId string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {
+func (r *invoiceReadRepository) GetInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoices")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.LogFields(log.String("organizationId", organizationId))
 	span.LogFields(log.Int("skip", skip))
 	span.LogFields(log.Int("limit", limit))
+	span.LogFields(log.Object("filter", filter))
+	span.LogFields(log.Object("sorting", sorting))
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -47,14 +48,34 @@ func (r *invoiceReadRepository) GetInvoices(ctx context.Context, tenant string, 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		filterCypherStr, filterParams := filter.CypherFilterFragment("i")
+
 		countParams := map[string]any{
-			"tenant":         tenant,
-			"organizationId": organizationId,
+			"tenant": tenant,
+		}
+		queryParams := map[string]any{
+			"tenant": tenant,
+			"skip":   skip,
+			"limit":  limit,
 		}
 
+		if organizationId != "" {
+			if filterCypherStr != "" {
+				filterCypherStr += " AND "
+			} else {
+				filterCypherStr += " WHERE "
+			}
+			filterCypherStr += " o.id=$organizationId"
+			countParams["organizationId"] = organizationId
+			filterParams["organizationId"] = organizationId
+		}
+
+		utils.MergeMapToMap(filterParams, countParams)
+
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
-			" MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s {id:$organizationId})-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_INVOICE]->(i:Invoice_%s) "+
-				" RETURN count(i) as count", tenant, tenant, tenant),
+			" MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_INVOICE]->(i:Invoice_%s) "+
+				" %s "+
+				" RETURN count(i) as count", tenant, tenant, tenant, filterCypherStr),
 			countParams)
 		if err != nil {
 			return nil, err
@@ -62,19 +83,15 @@ func (r *invoiceReadRepository) GetInvoices(ctx context.Context, tenant string, 
 		count, _ := queryResult.Single(ctx)
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
-		params := map[string]any{
-			"tenant":         tenant,
-			"organizationId": organizationId,
-			"skip":           skip,
-			"limit":          limit,
-		}
+		utils.MergeMapToMap(filterParams, queryParams)
 
 		queryResult, err = tx.Run(ctx, fmt.Sprintf(
-			" MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s {id:$organizationId})-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_INVOICE]->(i:Invoice_%s) "+
+			" MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_INVOICE]->(i:Invoice_%s) "+
+				" %s "+
 				" RETURN i "+
-				" order by i.createdAt desc "+
-				" SKIP $skip LIMIT $limit", tenant, tenant, tenant),
-			params)
+				" %s "+
+				" SKIP $skip LIMIT $limit", tenant, tenant, tenant, filterCypherStr, sorting.SortingCypherFragment("i")),
+			queryParams)
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {

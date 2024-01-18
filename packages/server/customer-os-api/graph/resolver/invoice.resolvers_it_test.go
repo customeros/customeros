@@ -109,10 +109,18 @@ func TestQueryResolver_Invoices(t *testing.T) {
 		Name: "SLI 2",
 	})
 
+	invoice3Id := neo4jtest.CreateInvoice(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		CreatedAt: yesterday,
+		UpdatedAt: yesterday,
+		Number:    "11",
+	})
+	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoice3Id, neo4jentity.InvoiceLineEntity{
+		Name: "SLI 3",
+	})
+
 	rawResponse := callGraphQL(t, "invoice/get_invoices", map[string]interface{}{
-		"organizationId": organizationId,
-		"page":           0,
-		"limit":          10,
+		"page":  0,
+		"limit": 10,
 	})
 	require.Nil(t, rawResponse.Errors)
 
@@ -127,9 +135,10 @@ func TestQueryResolver_Invoices(t *testing.T) {
 	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
 
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].ID)
+	require.Equal(t, "1", invoiceStruct.Invoices.Content[0].Number)
 	require.Equal(t, "SLI 1", invoiceStruct.Invoices.Content[0].InvoiceLines[0].Name)
-	require.Equal(t, invoice2Id, invoiceStruct.Invoices.Content[1].ID)
-	require.Equal(t, "SLI 2", invoiceStruct.Invoices.Content[1].InvoiceLines[0].Name)
+	require.Equal(t, "11", invoiceStruct.Invoices.Content[1].Number)
+	require.Equal(t, "SLI 3", invoiceStruct.Invoices.Content[1].InvoiceLines[0].Name)
 }
 
 func TestQueryResolver_SimulateInvoice(t *testing.T) {
