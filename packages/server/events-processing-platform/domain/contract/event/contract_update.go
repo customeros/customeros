@@ -1,6 +1,7 @@
 package event
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -40,7 +41,7 @@ func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.Contract
 		Status:             dataFields.Status.String(),
 		Currency:           dataFields.Currency,
 		BillingCycle:       dataFields.BillingCycle.String(),
-		InvoicingStartDate: dataFields.InvoicingStartDate,
+		InvoicingStartDate: utils.ToDatePtr(dataFields.InvoicingStartDate),
 		UpdatedAt:          updatedAt,
 		Source:             source,
 	}

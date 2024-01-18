@@ -514,6 +514,9 @@ func GetTimePropOrNil(props map[string]any, key string) *time.Time {
 		switch v := props[key].(type) {
 		case time.Time:
 			return &v
+		case neo4j.Date:
+			t := v.Time()
+			return &t
 		case string:
 			t, _ := UnmarshalDateTime(v)
 			if t != nil {
@@ -575,4 +578,11 @@ func ExecuteQuery(ctx context.Context, driver neo4j.DriverWithContext, database,
 		neo4j.EagerResultTransformer,
 		neo4j.ExecuteQueryWithDatabase(database),
 		neo4j.ExecuteQueryWithBoltLogger(neo4j.ConsoleBoltLogger()))
+}
+
+func ToNeo4jDateAsAny(t *time.Time) any {
+	if t == nil {
+		return nil
+	}
+	return neo4j.DateOf(*t)
 }

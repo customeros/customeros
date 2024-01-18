@@ -124,7 +124,7 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"createdByUserId":    data.CreatedByUserId,
 		"currency":           data.Currency.String(),
 		"billingCycle":       data.BillingCycle.String(),
-		"invoicingStartDate": utils.TimePtrFirstNonNilNillableAsAny(data.InvoicingStartDate),
+		"invoicingStartDate": utils.ToNeo4jDateAsAny(data.InvoicingStartDate),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -173,7 +173,7 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 		"endedAt":            utils.TimePtrFirstNonNilNillableAsAny(data.EndedAt),
 		"currency":           data.Currency.String(),
 		"billingCycle":       data.BillingCycle.String(),
-		"invoicingStartDate": utils.TimePtrFirstNonNilNillableAsAny(data.InvoicingStartDate),
+		"invoicingStartDate": utils.ToNeo4jDateAsAny(data.InvoicingStartDate),
 		"sourceOfTruth":      data.Source,
 		"overwrite":          data.Source == constants.SourceOpenline,
 	}

@@ -2,6 +2,10 @@ module github.com/openline-ai/openline-customer-os/packages/server/customer-os-n
 
 go 1.21
 
+replace (
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
+)
+
 require (
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/neo4j/neo4j-go-driver/v5 v5.16.0
