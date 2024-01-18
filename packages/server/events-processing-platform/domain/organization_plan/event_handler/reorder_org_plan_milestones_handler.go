@@ -41,7 +41,7 @@ func (h *reorderOrganizationPlanMilestonesHandler) Handle(ctx context.Context, b
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
 		// Load or initialize the org aggregate
-		orgAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, baseRequest.Tenant, baseRequest.ObjectID, nil)
+		orgAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, baseRequest.Tenant, baseRequest.ObjectID, eventstore.LoadAggregateOptions{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
