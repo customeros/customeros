@@ -584,7 +584,7 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"endedAt":            utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
 		"nextInvoiceDate":    utils.TimePtrFirstNonNilNillableAsAny(contract.NextInvoiceDate),
 		"currency":           contract.Currency.String(),
-		"invoicingStartDate": utils.TimePtrFirstNonNilNillableAsAny(contract.InvoicingStartDate),
+		"invoicingStartDate": utils.ToNeo4jDateAsAny(contract.InvoicingStartDate),
 		"billingCycle":       contract.BillingCycle.String(),
 	})
 	return contractId
