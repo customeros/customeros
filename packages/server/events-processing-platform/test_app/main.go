@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
@@ -42,6 +43,7 @@ type Clients struct {
 	ContractClient         contractpb.ContractGrpcServiceClient
 	ServiceLineItemClient  servicelineitempb.ServiceLineItemGrpcServiceClient
 	OpportunityClient      opportunitypb.OpportunityGrpcServiceClient
+	TenantClient           tenantpb.TenantGrpcServiceClient
 }
 
 var clients *Clients
@@ -64,6 +66,7 @@ func InitClients() {
 		ContractClient:         contractpb.NewContractGrpcServiceClient(conn),
 		OpportunityClient:      opportunitypb.NewOpportunityGrpcServiceClient(conn),
 		ServiceLineItemClient:  servicelineitempb.NewServiceLineItemGrpcServiceClient(conn),
+		TenantClient:           tenantpb.NewTenantGrpcServiceClient(conn),
 	}
 }
 
@@ -103,6 +106,18 @@ func main() {
 	//testUpdateOnboardingStatus()
 	//testUpdateOrgOwner()
 	//testRefreshLastTouchpoint()
+	//testAddTenantBillingProfile()
+}
+
+func testAddTenantBillingProfile() {
+	result, err := clients.TenantClient.AddBillingProfile(context.Background(), &tenantpb.AddBillingProfileRequest{
+		Tenant: tenant,
+		Email:  "test@gmail.com",
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
 }
 
 func testRequestGenerateSummaryRequest() {

@@ -22,6 +22,7 @@ import (
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
+	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -94,4 +95,5 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	invoicingcyclepb.RegisterInvoicingCycleGrpcServiceServer(grpcServer, services.InvoicingCycleService)
 	invoicepb.RegisterInvoiceGrpcServiceServer(grpcServer, services.InvoiceService)
 	countrypb.RegisterCountryGrpcServiceServer(grpcServer, services.CountryService)
+	tenantpb.RegisterTenantGrpcServiceServer(grpcServer, services.TenantService)
 }

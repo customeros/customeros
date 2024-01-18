@@ -34,6 +34,7 @@ type Services struct {
 	OrganizationPlanService   *organizationPlanService
 	InvoicingCycleService     *invoicingCycleService
 	InvoiceService            *invoiceService
+	TenantService             *tenantService
 	CountryService            *countryService
 }
 
@@ -63,6 +64,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.OrganizationPlanService = NewOrganizationPlanService(log, commandHandlers.OrganizationPlan, aggregateStore)
 	services.InvoicingCycleService = NewInvoicingCycleService(log, commandHandlers.InvoicingCycle, aggregateStore)
 	services.InvoiceService = NewInvoiceService(log, aggregateStore, cfg)
+	services.TenantService = NewTenantService(log, aggregateStore, cfg)
 	services.CountryService = NewCountryService(log, commandHandlers.Country)
 
 	return &services
