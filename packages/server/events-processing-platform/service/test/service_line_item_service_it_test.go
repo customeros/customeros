@@ -136,7 +136,7 @@ func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
 	var eventData event.ServiceLineItemUpdateEvent
 	err = createEvent.GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
-	require.Equal(t, model.MonthlyBilled.String(), eventData.Billed)
+	require.Equal(t, model.NoneBilled.String(), eventData.Billed)
 	require.Equal(t, int64(10), eventData.Quantity)
 	require.Equal(t, 150.0004, eventData.Price)
 	require.Equal(t, "Some comments", eventData.Comments)
@@ -222,6 +222,7 @@ func TestServiceLineItemService_UpdateServiceLineItemCreateNewVersion(t *testing
 		Id:                      serviceLineItemId,
 		ContractId:              contractId,
 		Name:                    "Updated Service Line Item",
+		Billed:                  commonpb.BilledType_MONTHLY_BILLED,
 		Quantity:                10,
 		Price:                   150.0004,
 		Comments:                "Some comments",
