@@ -513,7 +513,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 
 	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	require.Equal(t, model.NoneBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, float64(200.0), serviceLineItem.Price)
 
 	// verify action
@@ -934,7 +934,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 
 	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	require.Equal(t, model.NoneBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, int64(350), serviceLineItem.Quantity)
 
 	// verify actionat
