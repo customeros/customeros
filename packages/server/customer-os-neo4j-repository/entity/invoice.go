@@ -11,7 +11,7 @@ type InvoiceEntity struct {
 	UpdatedAt time.Time
 
 	DryRun           bool
-	Number           string
+	Number           string `neo4jDb:"property:number;lookupName:NUMBER;supportCaseSensitive:false"`
 	Currency         enum.Currency
 	Date             time.Time
 	DueDate          time.Time
@@ -30,3 +30,5 @@ type InvoiceEntity struct {
 type InvoiceInternalFields struct {
 	PaymentRequestedAt *time.Time
 }
+
+type InvoiceEntities []InvoiceEntity

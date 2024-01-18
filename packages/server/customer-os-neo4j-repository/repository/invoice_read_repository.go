@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -13,6 +14,7 @@ import (
 type InvoiceReadRepository interface {
 	// GetInvoiceById returns the invoice node with the given id for tenant, error if not found or multiple found
 	GetInvoiceById(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
+	GetInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 }
 
 type invoiceReadRepository struct {
@@ -29,6 +31,76 @@ func NewInvoiceReadRepository(driver *neo4j.DriverWithContext, database string) 
 
 func (r *invoiceReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+}
+
+func (r *invoiceReadRepository) GetInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoices")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.Int("skip", skip))
+	span.LogFields(log.Int("limit", limit))
+	span.LogFields(log.Object("filter", filter))
+	span.LogFields(log.Object("sorting", sorting))
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		filterCypherStr, filterParams := filter.CypherFilterFragment("i")
+
+		countParams := map[string]any{
+			"tenant": tenant,
+		}
+		queryParams := map[string]any{
+			"tenant": tenant,
+			"skip":   skip,
+			"limit":  limit,
+		}
+
+		if organizationId != "" {
+			if filterCypherStr != "" {
+				filterCypherStr += " AND "
+			} else {
+				filterCypherStr += " WHERE "
+			}
+			filterCypherStr += " o.id=$organizationId"
+			countParams["organizationId"] = organizationId
+			filterParams["organizationId"] = organizationId
+		}
+
+		utils.MergeMapToMap(filterParams, countParams)
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			" MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_INVOICE]->(i:Invoice_%s) "+
+				" %s "+
+				" RETURN count(i) as count", tenant, tenant, tenant, filterCypherStr),
+			countParams)
+		if err != nil {
+			return nil, err
+		}
+		count, _ := queryResult.Single(ctx)
+		dbNodesWithTotalCount.Count = count.Values[0].(int64)
+
+		utils.MergeMapToMap(filterParams, queryParams)
+
+		queryResult, err = tx.Run(ctx, fmt.Sprintf(
+			" MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_INVOICE]->(i:Invoice_%s) "+
+				" %s "+
+				" RETURN i "+
+				" %s "+
+				" SKIP $skip LIMIT $limit", tenant, tenant, tenant, filterCypherStr, sorting.SortingCypherFragment("i")),
+			queryParams)
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	}
+	return dbNodesWithTotalCount, nil
 }
 
 func (r *invoiceReadRepository) GetInvoiceById(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error) {

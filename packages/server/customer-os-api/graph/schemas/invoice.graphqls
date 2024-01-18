@@ -1,6 +1,6 @@
 extend type Query {
     invoice(id: ID!): Invoice!
-    invoices(contractId: ID!, pagination: Pagination): InvoicesPage!
+    invoices(pagination: Pagination, where: Filter, sort: [SortBy!]): InvoicesPage!
 }
 
 extend type Mutation {
