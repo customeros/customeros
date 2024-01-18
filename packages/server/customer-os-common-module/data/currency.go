@@ -33,6 +33,7 @@ var currencies = []Currency{
 	{"BRL", "R$", "Brazilian Real", 100},        // Smallest unit is centavo (1 BRL = 100 centavos)
 	{"ZAR", "R", "South African Rand", 100},     // Smallest unit is cent (1 ZAR = 100 cents)
 	{"TRY", "₺", "Turkish Lira", 100},           // Smallest unit is kuruş (1 TRY = 100 kuruş)
+	{"RON", "L", "Romanian Leu", 100},           // Smallest unit is ban (1 RON = 100 bani)
 }
 
 // InSmallestCurrencyUnit converts an amount in float64 to the smallest unit of the given currency

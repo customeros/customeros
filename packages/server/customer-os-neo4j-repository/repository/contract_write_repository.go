@@ -16,31 +16,37 @@ import (
 )
 
 type ContractCreateFields struct {
-	OrganizationId   string       `json:"organizationId"`
-	Name             string       `json:"name"`
-	ContractUrl      string       `json:"contractUrl"`
-	CreatedByUserId  string       `json:"createdByUserId"`
-	ServiceStartedAt *time.Time   `json:"serviceStartedAt,omitempty"`
-	SignedAt         *time.Time   `json:"signedAt,omitempty"`
-	RenewalCycle     string       `json:"renewalCycle"`
-	RenewalPeriods   *int64       `json:"renewalPeriods,omitempty"`
-	Status           string       `json:"status"`
-	CreatedAt        time.Time    `json:"createdAt"`
-	UpdatedAt        time.Time    `json:"updatedAt"`
-	SourceFields     model.Source `json:"sourceFields"`
+	OrganizationId     string                 `json:"organizationId"`
+	Name               string                 `json:"name"`
+	ContractUrl        string                 `json:"contractUrl"`
+	CreatedByUserId    string                 `json:"createdByUserId"`
+	ServiceStartedAt   *time.Time             `json:"serviceStartedAt,omitempty"`
+	SignedAt           *time.Time             `json:"signedAt,omitempty"`
+	RenewalCycle       string                 `json:"renewalCycle"`
+	RenewalPeriods     *int64                 `json:"renewalPeriods,omitempty"`
+	Status             string                 `json:"status"`
+	CreatedAt          time.Time              `json:"createdAt"`
+	UpdatedAt          time.Time              `json:"updatedAt"`
+	SourceFields       model.Source           `json:"sourceFields"`
+	BillingCycle       neo4jenum.BillingCycle `json:"billingCycle"`
+	Currency           neo4jenum.Currency     `json:"currency"`
+	InvoicingStartDate *time.Time             `json:"invoicingStartDate,omitempty"`
 }
 
 type ContractUpdateFields struct {
-	Name             string     `json:"name"`
-	ContractUrl      string     `json:"contractUrl"`
-	Status           string     `json:"status"`
-	Source           string     `json:"source"`
-	RenewalPeriods   *int64     `json:"renewalPeriods"`
-	RenewalCycle     string     `json:"renewalCycle"`
-	UpdatedAt        time.Time  `json:"updatedAt"`
-	ServiceStartedAt *time.Time `json:"serviceStartedAt"`
-	SignedAt         *time.Time `json:"signedAt"`
-	EndedAt          *time.Time `json:"endedAt"`
+	Name               string                 `json:"name"`
+	ContractUrl        string                 `json:"contractUrl"`
+	Status             string                 `json:"status"`
+	Source             string                 `json:"source"`
+	RenewalPeriods     *int64                 `json:"renewalPeriods"`
+	RenewalCycle       string                 `json:"renewalCycle"`
+	UpdatedAt          time.Time              `json:"updatedAt"`
+	ServiceStartedAt   *time.Time             `json:"serviceStartedAt"`
+	SignedAt           *time.Time             `json:"signedAt"`
+	EndedAt            *time.Time             `json:"endedAt"`
+	BillingCycle       neo4jenum.BillingCycle `json:"billingCycle"`
+	Currency           neo4jenum.Currency     `json:"currency"`
+	InvoicingStartDate *time.Time             `json:"invoicingStartDate,omitempty"`
 }
 
 type ContractWriteRepository interface {
@@ -89,7 +95,10 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.renewalCycle=$renewalCycle,
 								ct.renewalPeriods=$renewalPeriods,
 								ct.signedAt=$signedAt,
-								ct.serviceStartedAt=$serviceStartedAt
+								ct.serviceStartedAt=$serviceStartedAt,
+								ct.currency=$currency,
+								ct.billingCycle=$billingCycle,
+								ct.invoicingStartDate=$invoicingStartDate
 							WITH ct, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""
@@ -97,22 +106,25 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
     							MERGE (ct)-[:CREATED_BY]->(u))
 							`, tenant)
 	params := map[string]any{
-		"tenant":           tenant,
-		"contractId":       contractId,
-		"orgId":            data.OrganizationId,
-		"createdAt":        data.CreatedAt,
-		"updatedAt":        data.UpdatedAt,
-		"source":           data.SourceFields.Source,
-		"sourceOfTruth":    data.SourceFields.Source,
-		"appSource":        data.SourceFields.AppSource,
-		"name":             data.Name,
-		"contractUrl":      data.ContractUrl,
-		"status":           data.Status,
-		"renewalCycle":     data.RenewalCycle,
-		"renewalPeriods":   data.RenewalPeriods,
-		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(data.SignedAt),
-		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(data.ServiceStartedAt),
-		"createdByUserId":  data.CreatedByUserId,
+		"tenant":             tenant,
+		"contractId":         contractId,
+		"orgId":              data.OrganizationId,
+		"createdAt":          data.CreatedAt,
+		"updatedAt":          data.UpdatedAt,
+		"source":             data.SourceFields.Source,
+		"sourceOfTruth":      data.SourceFields.Source,
+		"appSource":          data.SourceFields.AppSource,
+		"name":               data.Name,
+		"contractUrl":        data.ContractUrl,
+		"status":             data.Status,
+		"renewalCycle":       data.RenewalCycle,
+		"renewalPeriods":     data.RenewalPeriods,
+		"signedAt":           utils.TimePtrFirstNonNilNillableAsAny(data.SignedAt),
+		"serviceStartedAt":   utils.TimePtrFirstNonNilNillableAsAny(data.ServiceStartedAt),
+		"createdByUserId":    data.CreatedByUserId,
+		"currency":           data.Currency.String(),
+		"billingCycle":       data.BillingCycle.String(),
+		"invoicingStartDate": utils.TimePtrFirstNonNilNillableAsAny(data.ServiceStartedAt),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -141,23 +153,29 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 				ct.status = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $status ELSE ct.status END,
 				ct.renewalCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalCycle ELSE ct.renewalCycle END,
 				ct.renewalPeriods = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalPeriods ELSE ct.renewalPeriods END,
+				ct.invoicingStartDate = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $invoicingStartDate ELSE ct.invoicingStartDate END,
+				ct.currency = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $currency ELSE ct.currency END,
+				ct.billingCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $billingCycle ELSE ct.billingCycle END,
 				ct.updatedAt = $updatedAt,
 				ct.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE ct.sourceOfTruth END
 				RETURN ct`
 	params := map[string]any{
-		"tenant":           tenant,
-		"contractId":       contractId,
-		"updatedAt":        data.UpdatedAt,
-		"name":             data.Name,
-		"contractUrl":      data.ContractUrl,
-		"status":           data.Status,
-		"renewalCycle":     data.RenewalCycle,
-		"renewalPeriods":   data.RenewalPeriods,
-		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(data.SignedAt),
-		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(data.ServiceStartedAt),
-		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(data.EndedAt),
-		"sourceOfTruth":    data.Source,
-		"overwrite":        data.Source == constants.SourceOpenline,
+		"tenant":             tenant,
+		"contractId":         contractId,
+		"updatedAt":          data.UpdatedAt,
+		"name":               data.Name,
+		"contractUrl":        data.ContractUrl,
+		"status":             data.Status,
+		"renewalCycle":       data.RenewalCycle,
+		"renewalPeriods":     data.RenewalPeriods,
+		"signedAt":           utils.TimePtrFirstNonNilNillableAsAny(data.SignedAt),
+		"serviceStartedAt":   utils.TimePtrFirstNonNilNillableAsAny(data.ServiceStartedAt),
+		"endedAt":            utils.TimePtrFirstNonNilNillableAsAny(data.EndedAt),
+		"currency":           data.Currency.String(),
+		"billingCycle":       data.BillingCycle.String(),
+		"invoicingStartDate": utils.TimePtrFirstNonNilNillableAsAny(data.ServiceStartedAt),
+		"sourceOfTruth":      data.Source,
+		"overwrite":          data.Source == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

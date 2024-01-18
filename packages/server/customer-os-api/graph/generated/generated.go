@@ -225,25 +225,28 @@ type ComplexityRoot struct {
 	}
 
 	Contract struct {
-		AppSource        func(childComplexity int) int
-		ContractURL      func(childComplexity int) int
-		CreatedAt        func(childComplexity int) int
-		CreatedBy        func(childComplexity int) int
-		EndedAt          func(childComplexity int) int
-		ExternalLinks    func(childComplexity int) int
-		ID               func(childComplexity int) int
-		Name             func(childComplexity int) int
-		Opportunities    func(childComplexity int) int
-		Owner            func(childComplexity int) int
-		RenewalCycle     func(childComplexity int) int
-		RenewalPeriods   func(childComplexity int) int
-		ServiceLineItems func(childComplexity int) int
-		ServiceStartedAt func(childComplexity int) int
-		SignedAt         func(childComplexity int) int
-		Source           func(childComplexity int) int
-		SourceOfTruth    func(childComplexity int) int
-		Status           func(childComplexity int) int
-		UpdatedAt        func(childComplexity int) int
+		AppSource          func(childComplexity int) int
+		BillingCycle       func(childComplexity int) int
+		ContractURL        func(childComplexity int) int
+		CreatedAt          func(childComplexity int) int
+		CreatedBy          func(childComplexity int) int
+		Currency           func(childComplexity int) int
+		EndedAt            func(childComplexity int) int
+		ExternalLinks      func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		InvoicingStartDate func(childComplexity int) int
+		Name               func(childComplexity int) int
+		Opportunities      func(childComplexity int) int
+		Owner              func(childComplexity int) int
+		RenewalCycle       func(childComplexity int) int
+		RenewalPeriods     func(childComplexity int) int
+		ServiceLineItems   func(childComplexity int) int
+		ServiceStartedAt   func(childComplexity int) int
+		SignedAt           func(childComplexity int) int
+		Source             func(childComplexity int) int
+		SourceOfTruth      func(childComplexity int) int
+		Status             func(childComplexity int) int
+		UpdatedAt          func(childComplexity int) int
 	}
 
 	Country struct {
@@ -2490,6 +2493,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contract.AppSource(childComplexity), true
 
+	case "Contract.billingCycle":
+		if e.complexity.Contract.BillingCycle == nil {
+			break
+		}
+
+		return e.complexity.Contract.BillingCycle(childComplexity), true
+
 	case "Contract.contractUrl":
 		if e.complexity.Contract.ContractURL == nil {
 			break
@@ -2511,6 +2521,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contract.CreatedBy(childComplexity), true
 
+	case "Contract.currency":
+		if e.complexity.Contract.Currency == nil {
+			break
+		}
+
+		return e.complexity.Contract.Currency(childComplexity), true
+
 	case "Contract.endedAt":
 		if e.complexity.Contract.EndedAt == nil {
 			break
@@ -2531,6 +2548,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contract.ID(childComplexity), true
+
+	case "Contract.invoicingStartDate":
+		if e.complexity.Contract.InvoicingStartDate == nil {
+			break
+		}
+
+		return e.complexity.Contract.InvoicingStartDate(childComplexity), true
 
 	case "Contract.name":
 		if e.complexity.Contract.Name == nil {
@@ -9874,6 +9898,9 @@ type Contract implements Node {
     appSource:          String!
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
     contractUrl:        String
+    currency:           Currency
+    invoicingStartDate: Time
+    billingCycle:       ContractBillingCycle
 }
 
 input ContractInput {
@@ -9886,6 +9913,9 @@ input ContractInput {
     serviceStartedAt:   Time
     signedAt:           Time
     externalReference:  ExternalSystemReferenceInput
+    currency:           Currency
+    invoicingStartDate: Time
+    billingCycle:       ContractBillingCycle
 }
 
 input ContractUpdateInput {
@@ -9898,6 +9928,9 @@ input ContractUpdateInput {
     signedAt:           Time
     endedAt:            Time
     appSource:          String
+    currency:           Currency
+    invoicingStartDate: Time
+    billingCycle:       ContractBillingCycle
 }
 
 enum ContractRenewalCycle {
@@ -9905,6 +9938,13 @@ enum ContractRenewalCycle {
     MONTHLY_RENEWAL
     QUARTERLY_RENEWAL
     ANNUAL_RENEWAL
+}
+
+enum ContractBillingCycle {
+    NONE
+    MONTHLY_BILLING
+    QUARTERLY_BILLING
+    ANNUAL_BILLING
 }
 
 enum ContractStatus {
@@ -9919,6 +9959,28 @@ enum ContractStatus {
     codeA2: String!
     codeA3: String!
     phoneCode: String!
+}`, BuiltIn: false},
+	{Name: "../schemas/currency.graphqls", Input: `enum Currency {
+    AUD,
+    BRL,
+    CAD,
+    CHF,
+    CNY,
+    EUR,
+    GBP,
+    HKD,
+    INR,
+    JPY,
+    KRW,
+    MXN,
+    NOK,
+    NZD,
+    RON,
+    SEK,
+    SGD,
+    TRY,
+    USD,
+    ZAR
 }`, BuiltIn: false},
 	{Name: "../schemas/custom_field.graphqls", Input: `extend type Mutation {
     customFieldsMergeAndUpdateInContact(contactId : ID!, customFields: [CustomFieldInput!], fieldSets: [FieldSetInput!]): Contact!
@@ -22721,6 +22783,129 @@ func (ec *executionContext) fieldContext_Contract_contractUrl(ctx context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_currency(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_currency(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Currency, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Currency)
+	fc.Result = res
+	return ec.marshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_currency(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Currency does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_invoicingStartDate(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_invoicingStartDate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InvoicingStartDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_invoicingStartDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_billingCycle(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_billingCycle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BillingCycle, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ContractBillingCycle)
+	fc.Result = res
+	return ec.marshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractBillingCycle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_billingCycle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ContractBillingCycle does not have child fields")
 		},
 	}
 	return fc, nil
@@ -41626,6 +41811,12 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
 			case "contractUrl":
 				return ec.fieldContext_Contract_contractUrl(ctx, field)
+			case "currency":
+				return ec.fieldContext_Contract_currency(ctx, field)
+			case "invoicingStartDate":
+				return ec.fieldContext_Contract_invoicingStartDate(ctx, field)
+			case "billingCycle":
+				return ec.fieldContext_Contract_billingCycle(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
 		},
@@ -41751,6 +41942,12 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
 			case "contractUrl":
 				return ec.fieldContext_Contract_contractUrl(ctx, field)
+			case "currency":
+				return ec.fieldContext_Contract_currency(ctx, field)
+			case "invoicingStartDate":
+				return ec.fieldContext_Contract_invoicingStartDate(ctx, field)
+			case "billingCycle":
+				return ec.fieldContext_Contract_billingCycle(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
 		},
@@ -57712,6 +57909,12 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
 			case "contractUrl":
 				return ec.fieldContext_Contract_contractUrl(ctx, field)
+			case "currency":
+				return ec.fieldContext_Contract_currency(ctx, field)
+			case "invoicingStartDate":
+				return ec.fieldContext_Contract_invoicingStartDate(ctx, field)
+			case "billingCycle":
+				return ec.fieldContext_Contract_billingCycle(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
 		},
@@ -62139,6 +62342,12 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
 			case "contractUrl":
 				return ec.fieldContext_Contract_contractUrl(ctx, field)
+			case "currency":
+				return ec.fieldContext_Contract_currency(ctx, field)
+			case "invoicingStartDate":
+				return ec.fieldContext_Contract_invoicingStartDate(ctx, field)
+			case "billingCycle":
+				return ec.fieldContext_Contract_billingCycle(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
 		},
@@ -66183,6 +66392,12 @@ func (ec *executionContext) fieldContext_RenewalRecord_contract(ctx context.Cont
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
 			case "contractUrl":
 				return ec.fieldContext_Contract_contractUrl(ctx, field)
+			case "currency":
+				return ec.fieldContext_Contract_currency(ctx, field)
+			case "invoicingStartDate":
+				return ec.fieldContext_Contract_invoicingStartDate(ctx, field)
+			case "billingCycle":
+				return ec.fieldContext_Contract_billingCycle(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
 		},
@@ -73746,7 +73961,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "name", "renewalCycle", "renewalPeriods", "appSource", "contractUrl", "serviceStartedAt", "signedAt", "externalReference"}
+	fieldsInOrder := [...]string{"organizationId", "name", "renewalCycle", "renewalPeriods", "appSource", "contractUrl", "serviceStartedAt", "signedAt", "externalReference", "currency", "invoicingStartDate", "billingCycle"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -73816,6 +74031,27 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.ExternalReference = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "invoicingStartDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingStartDate"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InvoicingStartDate = data
+		case "billingCycle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
+			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractBillingCycle(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingCycle = data
 		}
 	}
 
@@ -73829,7 +74065,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource"}
+	fieldsInOrder := [...]string{"contractId", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource", "currency", "invoicingStartDate", "billingCycle"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -73899,6 +74135,27 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.AppSource = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "invoicingStartDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingStartDate"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InvoicingStartDate = data
+		case "billingCycle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
+			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractBillingCycle(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BillingCycle = data
 		}
 	}
 
@@ -79979,6 +80236,12 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "contractUrl":
 			out.Values[i] = ec._Contract_contractUrl(ctx, field, obj)
+		case "currency":
+			out.Values[i] = ec._Contract_currency(ctx, field, obj)
+		case "invoicingStartDate":
+			out.Values[i] = ec._Contract_invoicingStartDate(ctx, field, obj)
+		case "billingCycle":
+			out.Values[i] = ec._Contract_billingCycle(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -94878,6 +95141,22 @@ func (ec *executionContext) marshalOContract2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
+func (ec *executionContext) unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractBillingCycle(ctx context.Context, v interface{}) (*model.ContractBillingCycle, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ContractBillingCycle)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractBillingCycle(ctx context.Context, sel ast.SelectionSet, v *model.ContractBillingCycle) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx context.Context, v interface{}) (*model.ContractRenewalCycle, error) {
 	if v == nil {
 		return nil, nil
@@ -94899,6 +95178,22 @@ func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 		return graphql.Null
 	}
 	return ec._Country(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx context.Context, v interface{}) (*model.Currency, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.Currency)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx context.Context, sel ast.SelectionSet, v *model.Currency) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOCustomFieldDataType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDataType(ctx context.Context, v interface{}) (*model.CustomFieldDataType, error) {

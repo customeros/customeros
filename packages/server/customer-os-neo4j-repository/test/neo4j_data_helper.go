@@ -559,28 +559,33 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 					c.signedAt=$signedAt,
 					c.serviceStartedAt=$serviceStartedAt,
 					c.endedAt=$endedAt,
-					c.nextInvoiceDate=$nextInvoiceDate
+					c.nextInvoiceDate=$nextInvoiceDate,
+					c.currency=$currency,
+					c.invoicingStartDate=$invoicingStartDate,
+					c.billingCycle=$billingCycle
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":             contractId,
-		"organizationId": organizationId,
-		"tenant":         tenant,
-		"source":         contract.Source,
-		"sourceOfTruth":  contract.SourceOfTruth,
-		"appSource":      contract.AppSource,
-		"createdAt":      contract.CreatedAt,
-		"updatedAt":      contract.UpdatedAt,
-
-		"name":             contract.Name,
-		"contractUrl":      contract.ContractUrl,
-		"status":           contract.ContractStatus,
-		"renewalCycle":     contract.RenewalCycle,
-		"renewalPeriods":   contract.RenewalPeriods,
-		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
-		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
-		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
-		"nextInvoiceDate":  utils.TimePtrFirstNonNilNillableAsAny(contract.NextInvoiceDate),
+		"id":                 contractId,
+		"organizationId":     organizationId,
+		"tenant":             tenant,
+		"source":             contract.Source,
+		"sourceOfTruth":      contract.SourceOfTruth,
+		"appSource":          contract.AppSource,
+		"createdAt":          contract.CreatedAt,
+		"updatedAt":          contract.UpdatedAt,
+		"name":               contract.Name,
+		"contractUrl":        contract.ContractUrl,
+		"status":             contract.ContractStatus.String(),
+		"renewalCycle":       contract.RenewalCycle.String(),
+		"renewalPeriods":     contract.RenewalPeriods,
+		"signedAt":           utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
+		"serviceStartedAt":   utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
+		"endedAt":            utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
+		"nextInvoiceDate":    utils.TimePtrFirstNonNilNillableAsAny(contract.NextInvoiceDate),
+		"currency":           contract.Currency.String(),
+		"invoicingStartDate": utils.TimePtrFirstNonNilNillableAsAny(contract.InvoicingStartDate),
+		"billingCycle":       contract.BillingCycle.String(),
 	})
 	return contractId
 }

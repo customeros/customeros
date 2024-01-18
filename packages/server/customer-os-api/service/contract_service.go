@@ -77,6 +77,84 @@ func (s *contractService) Create(ctx context.Context, contractDetails *ContractC
 	return contractId, nil
 }
 
+func (s *contractService) createContractWithEvents(ctx context.Context, contractDetails *ContractCreateData) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.createContractWithEvents")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	createContractRequest := contractpb.CreateContractGrpcRequest{
+		Tenant:             common.GetTenantFromContext(ctx),
+		OrganizationId:     contractDetails.OrganizationId,
+		Name:               contractDetails.ContractEntity.Name,
+		ContractUrl:        contractDetails.ContractEntity.ContractUrl,
+		SignedAt:           utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.SignedAt),
+		ServiceStartedAt:   utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.ServiceStartedAt),
+		InvoicingStartDate: utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.InvoicingStartDate),
+		LoggedInUserId:     common.GetUserIdFromContext(ctx),
+		SourceFields: &commonpb.SourceFields{
+			Source:    string(contractDetails.Source),
+			AppSource: utils.StringFirstNonEmpty(contractDetails.AppSource, constants.AppSourceCustomerOsApi),
+		},
+		RenewalPeriods: contractDetails.ContractEntity.RenewalPeriods,
+	}
+
+	// prepare renewal cycle
+	switch contractDetails.ContractEntity.RenewalCycle {
+	case neo4jenum.RenewalCycleMonthlyRenewal:
+		createContractRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
+	case neo4jenum.RenewalCycleQuarterlyRenewal:
+		createContractRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
+	case neo4jenum.RenewalCycleAnnualRenewal:
+		createContractRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
+	default:
+		createContractRequest.RenewalCycle = contractpb.RenewalCycle_NONE
+	}
+
+	// prepare billing cycle
+	switch contractDetails.ContractEntity.BillingCycle {
+	case neo4jenum.BillingCycleMonthlyBilling:
+		createContractRequest.BillingCycle = contractpb.BillingCycle_MONTHLY_BILLING
+	case neo4jenum.BillingCycleQuarterlyBilling:
+		createContractRequest.BillingCycle = contractpb.BillingCycle_QUARTERLY_BILLING
+	case neo4jenum.BillingCycleAnnualBilling:
+		createContractRequest.BillingCycle = contractpb.BillingCycle_ANNUALLY_BILLING
+	default:
+		createContractRequest.BillingCycle = contractpb.BillingCycle_NONE_BILLING
+	}
+
+	// prepare currency
+	if contractDetails.ContractEntity.Currency.String() != "" {
+		createContractRequest.Currency = contractDetails.ContractEntity.Currency.String()
+	} else {
+		// if not privided, get default currency from tenant settings
+		dbNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, common.GetTenantFromContext(ctx))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+		tenantSettingsEntity := mapper.MapDbNodeToTenantSettingsEntity(dbNode)
+		if tenantSettingsEntity.DefaultCurrency.String() != "" {
+			createContractRequest.Currency = tenantSettingsEntity.DefaultCurrency.String()
+		}
+	}
+
+	// prepare external system fields
+	if contractDetails.ExternalReference != nil && contractDetails.ExternalReference.ExternalSystemId != "" {
+		createContractRequest.ExternalSystemFields = &commonpb.ExternalSystemFields{
+			ExternalSystemId: string(contractDetails.ExternalReference.ExternalSystemId),
+			ExternalId:       contractDetails.ExternalReference.Relationship.ExternalId,
+			ExternalUrl:      utils.IfNotNilString(contractDetails.ExternalReference.Relationship.ExternalUrl),
+			ExternalSource:   utils.IfNotNilString(contractDetails.ExternalReference.Relationship.ExternalSource),
+		}
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
+
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact, span)
+	return response.Id, err
+}
+
 func (s *contractService) Update(ctx context.Context, contract *neo4jentity.ContractEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.Update")
 	defer span.Finish()
@@ -104,20 +182,23 @@ func (s *contractService) Update(ctx context.Context, contract *neo4jentity.Cont
 	}
 
 	contractUpdateRequest := contractpb.UpdateContractGrpcRequest{
-		Tenant:           common.GetTenantFromContext(ctx),
-		Id:               contract.Id,
-		LoggedInUserId:   common.GetUserIdFromContext(ctx),
-		Name:             contract.Name,
-		ContractUrl:      contract.ContractUrl,
-		SignedAt:         utils.ConvertTimeToTimestampPtr(contract.SignedAt),
-		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(contract.ServiceStartedAt),
-		EndedAt:          utils.ConvertTimeToTimestampPtr(contract.EndedAt),
+		Tenant:             common.GetTenantFromContext(ctx),
+		Id:                 contract.Id,
+		LoggedInUserId:     common.GetUserIdFromContext(ctx),
+		Name:               contract.Name,
+		ContractUrl:        contract.ContractUrl,
+		SignedAt:           utils.ConvertTimeToTimestampPtr(contract.SignedAt),
+		ServiceStartedAt:   utils.ConvertTimeToTimestampPtr(contract.ServiceStartedAt),
+		InvoicingStartDate: utils.ConvertTimeToTimestampPtr(contract.InvoicingStartDate),
+		EndedAt:            utils.ConvertTimeToTimestampPtr(contract.EndedAt),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(contract.Source),
 			AppSource: utils.StringFirstNonEmpty(contract.AppSource, constants.AppSourceCustomerOsApi),
 		},
 		RenewalPeriods: contract.RenewalPeriods,
+		Currency:       contract.Currency.String(),
 	}
+	// prepare renewal cycle
 	switch contract.RenewalCycle {
 	case neo4jenum.RenewalCycleMonthlyRenewal:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
@@ -129,6 +210,18 @@ func (s *contractService) Update(ctx context.Context, contract *neo4jentity.Cont
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_NONE
 	}
 
+	// prepare billing cycle
+	switch contract.BillingCycle {
+	case neo4jenum.BillingCycleMonthlyBilling:
+		contractUpdateRequest.BillingCycle = contractpb.BillingCycle_MONTHLY_BILLING
+	case neo4jenum.BillingCycleQuarterlyBilling:
+		contractUpdateRequest.BillingCycle = contractpb.BillingCycle_QUARTERLY_BILLING
+	case neo4jenum.BillingCycleAnnualBilling:
+		contractUpdateRequest.BillingCycle = contractpb.BillingCycle_ANNUALLY_BILLING
+	default:
+		contractUpdateRequest.BillingCycle = contractpb.BillingCycle_NONE_BILLING
+	}
+
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.ContractClient.UpdateContract(ctx, &contractUpdateRequest)
 	if err != nil {
@@ -138,53 +231,6 @@ func (s *contractService) Update(ctx context.Context, contract *neo4jentity.Cont
 	}
 
 	return nil
-}
-
-func (s *contractService) createContractWithEvents(ctx context.Context, contractDetails *ContractCreateData) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.createContractWithEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	createContractRequest := contractpb.CreateContractGrpcRequest{
-		Tenant:           common.GetTenantFromContext(ctx),
-		OrganizationId:   contractDetails.OrganizationId,
-		Name:             contractDetails.ContractEntity.Name,
-		ContractUrl:      contractDetails.ContractEntity.ContractUrl,
-		SignedAt:         utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.SignedAt),
-		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.ServiceStartedAt),
-		LoggedInUserId:   common.GetUserIdFromContext(ctx),
-		SourceFields: &commonpb.SourceFields{
-			Source:    string(contractDetails.Source),
-			AppSource: utils.StringFirstNonEmpty(contractDetails.AppSource, constants.AppSourceCustomerOsApi),
-		},
-		RenewalPeriods: contractDetails.ContractEntity.RenewalPeriods,
-	}
-
-	switch contractDetails.ContractEntity.RenewalCycle {
-	case neo4jenum.RenewalCycleMonthlyRenewal:
-		createContractRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
-	case neo4jenum.RenewalCycleQuarterlyRenewal:
-		createContractRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
-	case neo4jenum.RenewalCycleAnnualRenewal:
-		createContractRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
-	default:
-		createContractRequest.RenewalCycle = contractpb.RenewalCycle_NONE
-	}
-
-	if contractDetails.ExternalReference != nil && contractDetails.ExternalReference.ExternalSystemId != "" {
-		createContractRequest.ExternalSystemFields = &commonpb.ExternalSystemFields{
-			ExternalSystemId: string(contractDetails.ExternalReference.ExternalSystemId),
-			ExternalId:       contractDetails.ExternalReference.Relationship.ExternalId,
-			ExternalUrl:      utils.IfNotNilString(contractDetails.ExternalReference.Relationship.ExternalUrl),
-			ExternalSource:   utils.IfNotNilString(contractDetails.ExternalReference.Relationship.ExternalSource),
-		}
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
-
-	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact, span)
-	return response.Id, err
 }
 
 func (s *contractService) GetById(ctx context.Context, contractId string) (*neo4jentity.ContractEntity, error) {

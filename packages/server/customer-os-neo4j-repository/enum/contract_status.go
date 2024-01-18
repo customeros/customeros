@@ -15,7 +15,7 @@ var AllContractStatuses = []ContractStatus{
 	ContractStatusEnded,
 }
 
-func GetContractStatus(s string) ContractStatus {
+func DecodeContractStatus(s string) ContractStatus {
 	if IsValidContractStatus(s) {
 		return ContractStatus(s)
 	}
@@ -29,4 +29,8 @@ func IsValidContractStatus(s string) bool {
 		}
 	}
 	return false
+}
+
+func (c ContractStatus) String() string {
+	return string(c)
 }

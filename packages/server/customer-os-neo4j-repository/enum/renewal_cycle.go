@@ -16,7 +16,7 @@ var AllRenewalCycles = []RenewalCycle{
 	RenewalCycleAnnualRenewal,
 }
 
-func GetRenewalCycle(s string) RenewalCycle {
+func DecodeRenewalCycle(s string) RenewalCycle {
 	if IsValidRenewalCycle(s) {
 		return RenewalCycle(s)
 	}
