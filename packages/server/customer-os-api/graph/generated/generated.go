@@ -10769,7 +10769,7 @@ type InvoiceLine implements Node {
 input InvoiceSimulateInput {
     contractId:         ID!
     date:               Time
-    lines:              [InvoiceLineInput!]!
+    invoiceLines:       [InvoiceLineInput!]!
 }
 input InvoiceLineInput {
     serviceLineItemId:  ID
@@ -74878,7 +74878,7 @@ func (ec *executionContext) unmarshalInputInvoiceSimulateInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "date", "lines"}
+	fieldsInOrder := [...]string{"contractId", "date", "invoiceLines"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -74899,13 +74899,13 @@ func (ec *executionContext) unmarshalInputInvoiceSimulateInput(ctx context.Conte
 				return it, err
 			}
 			it.Date = data
-		case "lines":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lines"))
+		case "invoiceLines":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoiceLines"))
 			data, err := ec.unmarshalNInvoiceLineInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceLineInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Lines = data
+			it.InvoiceLines = data
 		}
 	}
 

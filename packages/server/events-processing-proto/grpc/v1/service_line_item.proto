@@ -4,17 +4,10 @@ import "google/protobuf/timestamp.proto";
 import "common/source.proto";
 import "common/external_system.proto";
 import "common/common.proto";
+import "common/billing_type.proto";
 
-option go_package = "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item;service_line_item_grpc_service";
+option go_package = "api/grpc/v1/service_line_item;service_line_item_grpc_service";
 
-// Enum for BilledType
-enum BilledType {
-  MONTHLY_BILLED = 0;
-  ANNUALLY_BILLED = 1;
-  ONCE_BILLED = 2; // For One-Time
-  USAGE_BILLED = 3; // For Usage
-  QUARTERLY_BILLED = 4;
-}
 
 message CreateServiceLineItemGrpcRequest {
   string tenant = 1;

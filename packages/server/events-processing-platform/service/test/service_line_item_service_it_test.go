@@ -39,7 +39,7 @@ func TestServiceLineItemService_CreateServiceLineItem(t *testing.T) {
 		Tenant:         tenant,
 		LoggedInUserId: "User123",
 		ContractId:     contractId,
-		Billed:         servicelineitempb.BilledType_MONTHLY_BILLED,
+		Billed:         commonpb.BilledType_MONTHLY_BILLED,
 		Quantity:       10,
 		Price:          -1.0123456789,
 		Name:           "Test service line item",

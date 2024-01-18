@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 import "common/source.proto";
-import "service_line_item.proto";
+import "common/billing_type.proto";
 
 option go_package = "api/grpc/v1/invoice;invoice_grpc_service";
 

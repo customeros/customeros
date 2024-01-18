@@ -1049,9 +1049,9 @@ type InvoiceLineInput struct {
 }
 
 type InvoiceSimulateInput struct {
-	ContractID string              `json:"contractId"`
-	Date       *time.Time          `json:"date,omitempty"`
-	Lines      []*InvoiceLineInput `json:"lines"`
+	ContractID   string              `json:"contractId"`
+	Date         *time.Time          `json:"date,omitempty"`
+	InvoiceLines []*InvoiceLineInput `json:"invoiceLines"`
 }
 
 type InvoicesPage struct {

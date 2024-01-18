@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -36,7 +37,7 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 			require.Equal(t, string(neo4jentity.DataSourceOpenline), serviceLineItem.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, serviceLineItem.SourceFields.AppSource)
 			require.Equal(t, "Service Line Item 1", serviceLineItem.Name)
-			require.Equal(t, servicelineitempb.BilledType_MONTHLY_BILLED, serviceLineItem.Billed)
+			require.Equal(t, commonpb.BilledType_MONTHLY_BILLED, serviceLineItem.Billed)
 			require.Equal(t, int64(2), serviceLineItem.Quantity)
 			require.Equal(t, float64(30), serviceLineItem.Price)
 
@@ -88,7 +89,7 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 			require.Equal(t, string(neo4jentity.DataSourceOpenline), serviceLineItem.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, serviceLineItem.SourceFields.AppSource)
 			require.Equal(t, "Service Line Item 1", serviceLineItem.Name)
-			require.Equal(t, servicelineitempb.BilledType_MONTHLY_BILLED, serviceLineItem.Billed)
+			require.Equal(t, commonpb.BilledType_MONTHLY_BILLED, serviceLineItem.Billed)
 			require.Equal(t, int64(2), serviceLineItem.Quantity)
 			require.Equal(t, float64(30), serviceLineItem.Price)
 			require.Equal(t, "test comments", serviceLineItem.Comments)

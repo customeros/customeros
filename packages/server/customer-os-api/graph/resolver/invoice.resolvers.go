@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -35,7 +36,33 @@ func (r *invoiceResolver) InvoiceLines(ctx context.Context, obj *model.Invoice) 
 
 // InvoiceSimulate is the resolver for the invoice_Simulate field.
 func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.InvoiceSimulateInput) (string, error) {
-	panic(fmt.Errorf("not implemented: InvoiceSimulate - invoice_Simulate"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.InvoiceSimulate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request.input", input))
+
+	simulateInvoiceData := service.SimulateInvoiceData{
+		ContractId: input.ContractID,
+		Date:       input.Date,
+	}
+	for _, invoiceLine := range input.InvoiceLines {
+		simulateInvoiceData.InvoiceLines = append(simulateInvoiceData.InvoiceLines, service.SimulateInvoiceLineData{
+			ServiceLineItemID: invoiceLine.ServiceLineItemID,
+			Name:              invoiceLine.Name,
+			Billed:            mapper.MapBilledTypeFromModel(invoiceLine.Billed),
+			Price:             invoiceLine.Price,
+			Quantity:          invoiceLine.Quantity,
+		})
+	}
+
+	invoiceId, err := r.Services.InvoiceService.SimulateInvoice(ctx, &simulateInvoiceData)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to simulate invoice")
+		return "", err
+	}
+	return invoiceId, nil
 }
 
 // Invoice is the resolver for the invoice field.

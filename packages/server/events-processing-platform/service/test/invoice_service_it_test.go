@@ -9,7 +9,6 @@ import (
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -344,7 +343,7 @@ func TestInvoiceService_SimulateInvoice(t *testing.T) {
 	require.Equal(t, 1, len(eventData.DryRunLines))
 	require.Equal(t, "1", eventData.DryRunLines[0].ServiceLineItemId)
 	require.Equal(t, "name", eventData.DryRunLines[0].Name)
-	require.Equal(t, servicelineitempb.BilledType_MONTHLY_BILLED.String(), eventData.DryRunLines[0].Billed)
+	require.Equal(t, commonpb.BilledType_MONTHLY_BILLED.String(), eventData.DryRunLines[0].Billed)
 	require.Equal(t, float64(1), eventData.DryRunLines[0].Price)
 	require.Equal(t, int64(2), eventData.DryRunLines[0].Quantity)
 	require.Equal(t, "app", eventData.SourceFields.AppSource)

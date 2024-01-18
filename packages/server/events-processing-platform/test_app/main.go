@@ -627,9 +627,7 @@ func testAddContractService() {
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 	contractId := "c5486341-c7d8-47eb-b75a-4016b8e3d6d5"
 	price := 0.004
-	//quantity := 3
-	//billed := servicelineitempb.BilledType_ANNUALLY_BILLED
-	billed := servicelineitempb.BilledType_ONCE_BILLED
+	billed := commonpb.BilledType_ONCE_BILLED
 
 	result, err := clients.ServiceLineItemClient.CreateServiceLineItem(context.Background(), &servicelineitempb.CreateServiceLineItemGrpcRequest{
 		Tenant:         tenant,
