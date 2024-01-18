@@ -231,6 +231,28 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 	return &tenantSettingsEntity
 }
 
+func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBillingProfile {
+	if dbNode == nil {
+		return &entity.TenantBillingProfile{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	tenantBillingProfile := entity.TenantBillingProfile{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		LegalName:     utils.GetStringPropOrEmpty(props, "legalName"),
+		Email:         utils.GetStringPropOrEmpty(props, "email"),
+		Phone:         utils.GetStringPropOrEmpty(props, "phone"),
+		AddressLine1:  utils.GetStringPropOrEmpty(props, "addressLine1"),
+		AddressLine2:  utils.GetStringPropOrEmpty(props, "addressLine2"),
+		AddressLine3:  utils.GetStringPropOrEmpty(props, "addressLine3"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &tenantBillingProfile
+}
+
 func MapDbNodeToCountryEntity(dbNode *dbtype.Node) *entity.CountryEntity {
 	if dbNode == nil {
 		return nil
