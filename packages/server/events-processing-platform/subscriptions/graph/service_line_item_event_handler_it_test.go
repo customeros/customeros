@@ -480,6 +480,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 	updateEvent, err := event.NewServiceLineItemUpdateEvent(
 		aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId),
 		model.ServiceLineItemDataFields{
+			Billed:   model.MonthlyBilled,
 			Price:    200.0,
 			Comments: "this is the reason for change",
 		},
@@ -513,7 +514,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 
 	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.NoneBilled.String(), serviceLineItem.Billed)
+	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, float64(200.0), serviceLineItem.Price)
 
 	// verify action
