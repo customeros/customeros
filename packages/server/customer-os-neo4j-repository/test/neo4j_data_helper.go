@@ -2,13 +2,15 @@ package test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"time"
 )
 
 func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
@@ -218,6 +220,93 @@ func CreateMasterPlanMilestone(ctx context.Context, driver *neo4j.DriverWithCont
 		"retired":       masterPlanMilestone.Retired,
 	})
 	return masterPlanMilestoneId
+}
+
+func CreateOrganizationPlan(ctx context.Context, driver *neo4j.DriverWithContext, tenant, masterPlanId, orgId string, orgPlan entity.OrganizationPlanEntity) string {
+	organizationPlanId := utils.NewUUIDIfEmpty(orgPlan.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+							MERGE (t)<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(op:OrganizationPlan {id:$organizationPlanId}) 
+							ON CREATE SET 
+								op:OrganizationPlan_%s,
+								op.createdAt=$createdAt,
+								op.updatedAt=$updatedAt,
+								op.source=$source,
+								op.sourceOfTruth=$sourceOfTruth,
+								op.appSource=$appSource,
+								op.name=$name,
+								op.status=$status,
+								op.statusComments=$statusComments,
+								op.statusUpdatedAt=$statusUpdatedAt
+							`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":             tenant,
+		"organizationPlanId": organizationPlanId,
+		"name":               orgPlan.Name,
+		"createdAt":          orgPlan.CreatedAt,
+		"updatedAt":          orgPlan.UpdatedAt,
+		"source":             orgPlan.Source,
+		"sourceOfTruth":      orgPlan.SourceOfTruth,
+		"appSource":          orgPlan.AppSource,
+		"status":             orgPlan.StatusDetails.Status,
+		"statusUpdatedAt":    orgPlan.StatusDetails.UpdatedAt,
+		"statusComments":     orgPlan.StatusDetails.Comments,
+	})
+	LinkNodes(ctx, driver, organizationPlanId, masterPlanId, "ORGANIZATION_PLAN_BELONGS_TO_MASTER_PLAN")
+	LinkNodes(ctx, driver, organizationPlanId, orgId, "ORGANIZATION_PLAN_BELONGS_TO_ORGANIZATION")
+	return organizationPlanId
+}
+
+func mapMilestoneItemsToNeo4jProperties(items []entity.OrganizationPlanMilestoneItem) []string {
+	result := make([]string, len(items))
+	for i, item := range items {
+		ji, _ := json.Marshal(item)
+		result[i] = string(ji[:])
+	}
+	return result
+}
+
+func CreateOrganizationPlanMilestone(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgPlanId string, orgPlanMilestone entity.OrganizationPlanMilestoneEntity) string {
+	orgPlanMilestoneId := utils.NewUUIDIfEmpty(orgPlanMilestone.Id)
+
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(op:OrganizationPlan {id:$organizationPlanId}) 
+	MERGE (op)-[:HAS_MILESTONE]->(m:OrganizationPlanMilestone {id:$id})
+	ON CREATE SET 
+		m:OrganizationPlanMilestone_%s,
+		m.createdAt=$createdAt,
+		m.updatedAt=$updatedAt,
+		m.source=$source,
+		m.sourceOfTruth=$sourceOfTruth,
+		m.appSource=$appSource,
+		m.name=$name,
+		m.order=$order,
+		m.optional=$optional,
+		m.items=$items,
+		m.status=$status,
+		m.statusComments=$statusComments,
+		m.statusUpdatedAt=$statusUpdatedAt,
+		m.dueDate=$dueDate
+	`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":             tenant,
+		"organizationPlanId": orgPlanId,
+		"id":                 orgPlanMilestoneId,
+		"name":               orgPlanMilestone.Name,
+		"createdAt":          orgPlanMilestone.CreatedAt,
+		"updatedAt":          orgPlanMilestone.UpdatedAt,
+		"order":              orgPlanMilestone.Order,
+		"dueDate":            orgPlanMilestone.DueDate,
+		"optional":           orgPlanMilestone.Optional,
+		"items":              mapMilestoneItemsToNeo4jProperties(orgPlanMilestone.Items),
+		"retired":            orgPlanMilestone.Retired,
+		"status":             orgPlanMilestone.StatusDetails.Status,
+		"statusUpdatedAt":    orgPlanMilestone.StatusDetails.UpdatedAt,
+		"statusComments":     orgPlanMilestone.StatusDetails.Comments,
+		"source":             orgPlanMilestone.Source,
+		"sourceOfTruth":      orgPlanMilestone.SourceOfTruth,
+		"appSource":          orgPlanMilestone.AppSource,
+	})
+	return orgPlanMilestoneId
 }
 
 func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
