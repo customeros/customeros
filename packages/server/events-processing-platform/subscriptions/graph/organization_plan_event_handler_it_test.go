@@ -32,20 +32,20 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 		Name: "test org",
 	})
 	mpid := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{
-		Source:        neo4jentity.DataSource(constants.SourceOpenline),
+		Source:        constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatform,
 		Name:          "master plan name",
-		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
+		SourceOfTruth: constants.SourceOpenline,
 		CreatedAt:     timeNow,
 		UpdatedAt:     timeNow,
 		Retired:       false,
 	})
 
 	neo4jtest.CreateMasterPlanMilestone(ctx, testDatabase.Driver, tenantName, mpid, neo4jentity.MasterPlanMilestoneEntity{
-		Source:        neo4jentity.DataSource(constants.SourceOpenline),
+		Source:        constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatform,
 		Name:          "milestone name",
-		SourceOfTruth: neo4jentity.DataSource(constants.SourceOpenline),
+		SourceOfTruth: constants.SourceOpenline,
 		CreatedAt:     timeNow,
 		UpdatedAt:     timeNow,
 		Retired:       false,
@@ -96,7 +96,7 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, orgPlan.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), orgPlan.SourceOfTruth)
 	require.Equal(t, timeNow, orgPlan.CreatedAt)
-	test.AssertRecentTime(t, orgPlan.UpdatedAt)
+	require.Equal(t, timeNow, orgPlan.UpdatedAt)
 	require.Equal(t, "org plan name", orgPlan.Name)
 	require.Equal(t, model.NotStarted.String(), orgPlan.StatusDetails.Status)
 

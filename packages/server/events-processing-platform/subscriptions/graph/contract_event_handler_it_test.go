@@ -140,7 +140,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.True(t, timeNow.Equal(contract.UpdatedAt.UTC()))
 	require.True(t, timeNow.Equal(*contract.ServiceStartedAt))
 	require.True(t, timeNow.Equal(*contract.SignedAt))
-	require.True(t, timeNow.Equal(*contract.InvoicingStartDate))
+	require.True(t, utils.ToDatePtr(&timeNow).Equal(*contract.InvoicingStartDate))
 	require.Equal(t, neo4jenum.CurrencyUSD, contract.Currency)
 	require.Equal(t, neo4jenum.BillingCycleMonthlyBilling, contract.BillingCycle)
 	require.Nil(t, contract.EndedAt)
