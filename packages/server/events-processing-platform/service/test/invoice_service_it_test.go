@@ -306,10 +306,15 @@ func TestInvoiceService_SimulateInvoice(t *testing.T) {
 		DryRunServiceLineItems: []*invoicepb.DryRunServiceLineItem{
 			{
 				ServiceLineItemId: "1",
-				Name:              "name",
-				Billed:            0,
+				Name:              "name 1",
+				Billed:            commonpb.BilledType_MONTHLY_BILLED,
 				Price:             1,
 				Quantity:          2,
+			},
+			{
+				Name:     "name 2",
+				Price:    1,
+				Quantity: 2,
 			},
 		},
 	})
@@ -336,17 +341,25 @@ func TestInvoiceService_SimulateInvoice(t *testing.T) {
 	require.Equal(t, tenant, eventData.Tenant)
 	require.Equal(t, "1", eventData.ContractId)
 	require.Equal(t, now, eventData.CreatedAt)
+	require.Equal(t, "app", eventData.SourceFields.AppSource)
+	require.Equal(t, "source", eventData.SourceFields.Source)
+	require.Equal(t, "source", eventData.SourceFields.SourceOfTruth)
+
 	require.Equal(t, true, eventData.DryRun)
 	require.Equal(t, 36, len(eventData.Number))
 	require.Equal(t, now, eventData.Date)
 	require.Equal(t, now, eventData.DueDate)
-	require.Equal(t, 1, len(eventData.DryRunLines))
+	require.Equal(t, 2, len(eventData.DryRunLines))
+
 	require.Equal(t, "1", eventData.DryRunLines[0].ServiceLineItemId)
-	require.Equal(t, "name", eventData.DryRunLines[0].Name)
+	require.Equal(t, "name 1", eventData.DryRunLines[0].Name)
 	require.Equal(t, commonpb.BilledType_MONTHLY_BILLED.String(), eventData.DryRunLines[0].Billed)
 	require.Equal(t, float64(1), eventData.DryRunLines[0].Price)
 	require.Equal(t, int64(2), eventData.DryRunLines[0].Quantity)
-	require.Equal(t, "app", eventData.SourceFields.AppSource)
-	require.Equal(t, "source", eventData.SourceFields.Source)
-	require.Equal(t, "source", eventData.SourceFields.SourceOfTruth)
+
+	require.Equal(t, "", eventData.DryRunLines[1].ServiceLineItemId)
+	require.Equal(t, "name 2", eventData.DryRunLines[1].Name)
+	require.Equal(t, commonpb.BilledType_NONE_BILLED.String(), eventData.DryRunLines[1].Billed)
+	require.Equal(t, float64(1), eventData.DryRunLines[1].Price)
+	require.Equal(t, int64(2), eventData.DryRunLines[1].Quantity)
 }
