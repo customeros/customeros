@@ -14,6 +14,7 @@ import (
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	ieevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	isevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
+	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	invoicingcycleevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle"
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
@@ -25,6 +26,7 @@ import (
 	orgplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
+	tenantevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
@@ -60,6 +62,7 @@ type GraphSubscriber struct {
 	masterPlanEventHandler         *MasterPlanEventHandler
 	invoicingCycleEventHandler     *InvoicingCycleEventHandler
 	invoiceEventHandler            *InvoiceEventHandler
+	tenantEventHandler             *TenantEventHandler
 	organizationPlanEventHandler   *OrganizationPlanEventHandler
 }
 
@@ -86,6 +89,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		masterPlanEventHandler:         NewMasterPlanEventHandler(log, repositories),
 		invoicingCycleEventHandler:     NewInvoicingCycleEventHandler(log, repositories),
 		invoiceEventHandler:            NewInvoiceEventHandler(log, repositories),
+		tenantEventHandler:             NewTenantEventHandler(log, repositories),
 		organizationPlanEventHandler:   NewOrganizationPlanEventHandler(log, repositories),
 	}
 }
@@ -394,6 +398,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationPlanEventHandler.OnUpdateMilestone(ctx, evt)
 	case orgplanevent.OrganizationPlanMilestoneReorderV1:
 		return s.organizationPlanEventHandler.OnReorderMilestones(ctx, evt)
+
+	case tenantevent.TenantAddBillingProfileV1:
+		return s.tenantEventHandler.OnAddBillingProfile(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
