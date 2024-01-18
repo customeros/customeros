@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 )
 
 func MapEntityToServiceLineItem(entity *entity.ServiceLineItemEntity) *model.ServiceLineItem {
@@ -43,7 +44,7 @@ func MapServiceLineItemInputToEntity(input model.ServiceLineItemInput) *entity.S
 		billedType := MapBilledTypeFromModel(*input.Billed)
 		serviceLineItemEntity.Billed = billedType
 	} else {
-		billedType := entity.BilledTypeNone
+		billedType := neo4jenum.BilledTypeNone
 		serviceLineItemEntity.Billed = billedType
 	}
 	return &serviceLineItemEntity
@@ -71,7 +72,7 @@ func MapServiceLineItemUpdateInputToEntity(input model.ServiceLineItemUpdateInpu
 	if input.Billed != nil {
 		serviceLineItemEntity.Billed = MapBilledTypeFromModel(*input.Billed)
 	} else {
-		serviceLineItemEntity.Billed = entity.BilledTypeMonthly
+		serviceLineItemEntity.Billed = neo4jenum.BilledTypeMonthly
 	}
 	return &serviceLineItemEntity
 }

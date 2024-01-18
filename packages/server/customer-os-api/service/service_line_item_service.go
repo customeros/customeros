@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
@@ -100,18 +101,18 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 	}
 
 	switch serviceLineItemDetails.ServiceLineItemEntity.Billed {
-	case entity.BilledTypeMonthly:
-		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
-	case entity.BilledTypeQuarterly:
-		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_QUARTERLY_BILLED
-	case entity.BilledTypeAnnually:
-		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_ANNUALLY_BILLED
-	case entity.BilledTypeOnce:
-		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_ONCE_BILLED
-	case entity.BilledTypeUsage:
-		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_USAGE_BILLED
+	case neo4jenum.BilledTypeMonthly:
+		createServiceLineItemRequest.Billed = commonpb.BilledType_MONTHLY_BILLED
+	case neo4jenum.BilledTypeQuarterly:
+		createServiceLineItemRequest.Billed = commonpb.BilledType_QUARTERLY_BILLED
+	case neo4jenum.BilledTypeAnnually:
+		createServiceLineItemRequest.Billed = commonpb.BilledType_ANNUALLY_BILLED
+	case neo4jenum.BilledTypeOnce:
+		createServiceLineItemRequest.Billed = commonpb.BilledType_ONCE_BILLED
+	case neo4jenum.BilledTypeUsage:
+		createServiceLineItemRequest.Billed = commonpb.BilledType_USAGE_BILLED
 	default:
-		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
+		createServiceLineItemRequest.Billed = commonpb.BilledType_NONE_BILLED
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -166,18 +167,18 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 		},
 	}
 	switch serviceLineItem.Billed {
-	case entity.BilledTypeMonthly:
-		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
-	case entity.BilledTypeQuarterly:
-		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_QUARTERLY_BILLED
-	case entity.BilledTypeAnnually:
-		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_ANNUALLY_BILLED
-	case entity.BilledTypeOnce:
-		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_ONCE_BILLED
-	case entity.BilledTypeUsage:
-		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_USAGE_BILLED
+	case neo4jenum.BilledTypeMonthly:
+		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_MONTHLY_BILLED
+	case neo4jenum.BilledTypeQuarterly:
+		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_QUARTERLY_BILLED
+	case neo4jenum.BilledTypeAnnually:
+		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_ANNUALLY_BILLED
+	case neo4jenum.BilledTypeOnce:
+		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_ONCE_BILLED
+	case neo4jenum.BilledTypeUsage:
+		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_USAGE_BILLED
 	default:
-		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
+		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_NONE_BILLED
 	}
 	// set contract id if it's not a retroactive correction
 	if !isRetroactiveCorrection {
@@ -337,7 +338,7 @@ func (s *serviceLineItemService) mapDbNodeToServiceLineItemEntity(dbNode dbtype.
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
 		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
-		Billed:        entity.GetBilledType(utils.GetStringPropOrEmpty(props, "billed")),
+		Billed:        neo4jenum.GetBilledType(utils.GetStringPropOrEmpty(props, "billed")),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
 		Comments:      utils.GetStringPropOrEmpty(props, "comments"),

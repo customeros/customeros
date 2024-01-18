@@ -1,11 +1,15 @@
 package resolver
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
@@ -74,4 +78,79 @@ func TestQueryResolver_Invoice(t *testing.T) {
 	require.Equal(t, 100.0, invoice.InvoiceLines[0].Amount)
 	require.Equal(t, 19.0, invoice.InvoiceLines[0].Vat)
 	require.Equal(t, 119.0, invoice.InvoiceLines[0].Total)
+}
+
+func TestQueryResolver_SimulateInvoice(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	timeNow := utils.Now()
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoice(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
+
+	calledSimulateInvoice := false
+	invoiceServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
+		SimulateInvoice: func(context context.Context, request *invoicepb.SimulateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, request.Tenant)
+			require.Equal(t, testUserId, request.LoggedInUserId)
+			require.Equal(t, contractId, request.ContractId)
+			require.Equal(t, 2, len(request.DryRunServiceLineItems))
+
+			require.Equal(t, "1", request.DryRunServiceLineItems[0].ServiceLineItemId)
+			require.Equal(t, "SLI 1", request.DryRunServiceLineItems[0].Name)
+			require.Equal(t, commonpb.BilledType_MONTHLY_BILLED, request.DryRunServiceLineItems[0].Billed)
+			require.Equal(t, 100.0, request.DryRunServiceLineItems[0].Price)
+			require.Equal(t, int64(1), request.DryRunServiceLineItems[0].Quantity)
+
+			require.Equal(t, "", request.DryRunServiceLineItems[1].ServiceLineItemId)
+			require.Equal(t, "New SLI", request.DryRunServiceLineItems[1].Name)
+			require.Equal(t, commonpb.BilledType_NONE_BILLED, request.DryRunServiceLineItems[1].Billed)
+			require.Equal(t, 10.0, request.DryRunServiceLineItems[1].Price)
+			require.Equal(t, int64(5), request.DryRunServiceLineItems[1].Quantity)
+
+			require.Equal(t, constants.AppSourceCustomerOsApi, request.SourceFields.AppSource)
+			calledSimulateInvoice = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: invoiceId,
+			}, nil
+		},
+	}
+	events_platform.SetInvoiceCallbacks(&invoiceServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "invoice/simulate_invoice", map[string]interface{}{
+		"invoice": map[string]interface{}{
+			"contractId": contractId,
+			"date":       timeNow,
+			"invoiceLines": []map[string]interface{}{
+				{
+					"serviceLineItemId": "1",
+					"name":              "SLI 1",
+					"billed":            "MONTHLY",
+					"price":             100,
+					"quantity":          1,
+				},
+				{
+					"serviceLineItemId": "",
+					"billed":            "NONE",
+					"name":              "New SLI",
+					"price":             10,
+					"quantity":          5,
+				},
+			},
+		},
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	require.True(t, calledSimulateInvoice)
+
+	var invoiceStruct struct {
+		Invoice_Simulate string
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, invoiceId, invoiceStruct.Invoice_Simulate)
 }

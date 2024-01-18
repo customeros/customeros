@@ -2,6 +2,7 @@ package entity
 
 import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 )
 
@@ -14,10 +15,10 @@ type ServiceLineItemEntity struct {
 	StartedAt        time.Time
 	EndedAt          *time.Time
 	IsCanceled       bool
-	Billed           BilledType
+	Billed           neo4jenum.BilledType
 	Price            float64
 	Quantity         int64
-	PreviousBilled   BilledType
+	PreviousBilled   neo4jenum.BilledType
 	PreviousPrice    float64
 	PreviousQuantity int64
 	Comments         string

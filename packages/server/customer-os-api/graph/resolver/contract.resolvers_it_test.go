@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	"github.com/stretchr/testify/require"
@@ -154,7 +155,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Name:      "service line item 1",
 		CreatedAt: yesterday,
 		UpdatedAt: yesterday,
-		Billed:    entity.BilledTypeAnnually,
+		Billed:    neo4jenum.BilledTypeAnnually,
 		Price:     13,
 		Quantity:  2,
 		Source:    neo4jentity.DataSourceOpenline,
@@ -164,7 +165,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Name:      "service line item 2",
 		CreatedAt: now,
 		UpdatedAt: now,
-		Billed:    entity.BilledTypeUsage,
+		Billed:    neo4jenum.BilledTypeUsage,
 		Price:     255,
 		Quantity:  23,
 		Source:    neo4jentity.DataSourceOpenline,

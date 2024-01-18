@@ -44,7 +44,8 @@ func (sli ServiceLineItem) IsEnded() bool {
 type BilledType int32
 
 const (
-	MonthlyBilled BilledType = iota
+	NoneBilled BilledType = iota
+	MonthlyBilled
 	AnnuallyBilled
 	OnceBilled  // For One-Time
 	UsageBilled // For Usage-Based
@@ -52,7 +53,7 @@ const (
 )
 
 func (bt BilledType) String() string {
-	return [...]string{string(MonthlyBilledString), string(AnnuallyBilledString), string(OnceBilledString), string(UsageBilledString), string(QuarterlyBilledString)}[bt]
+	return [...]string{string(NoneBilled), string(MonthlyBilledString), string(AnnuallyBilledString), string(OnceBilledString), string(UsageBilledString), string(QuarterlyBilledString)}[bt]
 }
 
 func (bt BilledType) IsOneTime() bool {
@@ -70,6 +71,7 @@ func (bt BilledType) IsRecurrent() bool {
 type BilledString string
 
 const (
+	NoneBilledString      BilledString = ""
 	MonthlyBilledString   BilledString = "MONTHLY"
 	QuarterlyBilledString BilledString = "QUARTERLY"
 	AnnuallyBilledString  BilledString = "ANNUALLY"
