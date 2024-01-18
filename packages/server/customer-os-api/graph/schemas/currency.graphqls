@@ -1,0 +1,22 @@
+enum Currency {
+    AUD,
+    BRL,
+    CAD,
+    CHF,
+    CNY,
+    EUR,
+    GBP,
+    HKD,
+    INR,
+    JPY,
+    KRW,
+    MXN,
+    NOK,
+    NZD,
+    RON,
+    SEK,
+    SGD,
+    TRY,
+    USD,
+    ZAR
+}

@@ -14,6 +14,14 @@ enum RenewalCycle {
   QUARTERLY_RENEWAL = 3;
 }
 
+// Enum for BillingCycle
+enum BillingCycle {
+  NONE_BILLING = 0;
+  MONTHLY_BILLING = 1;
+  QUARTERLY_BILLING = 2;
+  ANNUALLY_BILLING = 3;
+}
+
 // CreateContract request message
 message CreateContractGrpcRequest {
   string tenant = 1;
@@ -30,6 +38,9 @@ message CreateContractGrpcRequest {
   ExternalSystemFields externalSystemFields = 13;
   string contractUrl = 14;
   optional int64 renewalPeriods = 15; // applicable only for yearly renewal
+  BillingCycle billingCycle = 16;
+  google.protobuf.Timestamp invoicingStartDate = 17;
+  string currency = 18;
 }
 
 message UpdateContractGrpcRequest {
@@ -46,6 +57,9 @@ message UpdateContractGrpcRequest {
   ExternalSystemFields externalSystemFields = 11;
   string contractUrl = 12;
   optional int64 renewalPeriods = 13; // applicable only for yearly renewal
+  BillingCycle billingCycle = 14;
+  google.protobuf.Timestamp invoicingStartDate = 15;
+  string currency = 16;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {

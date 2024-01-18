@@ -74,6 +74,9 @@ func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
 	a.Contract.SignedAt = eventData.SignedAt
 	a.Contract.RenewalCycle = eventData.RenewalCycle
 	a.Contract.Status = eventData.Status
+	a.Contract.Currency = eventData.Currency
+	a.Contract.BillingCycle = eventData.BillingCycle
+	a.Contract.InvoicingStartDate = eventData.InvoicingStartDate
 	a.Contract.CreatedAt = eventData.CreatedAt
 	a.Contract.UpdatedAt = eventData.UpdatedAt
 	a.Contract.Source = eventData.Source
@@ -115,6 +118,9 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	a.Contract.ServiceStartedAt = eventData.ServiceStartedAt
 	a.Contract.SignedAt = eventData.SignedAt
 	a.Contract.EndedAt = eventData.EndedAt
+	a.Contract.Currency = eventData.Currency
+	a.Contract.BillingCycle = eventData.BillingCycle
+	a.Contract.InvoicingStartDate = eventData.InvoicingStartDate
 
 	if eventData.ExternalSystem.Available() {
 		found := false

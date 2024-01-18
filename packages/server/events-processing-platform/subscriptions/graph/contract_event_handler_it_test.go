@@ -48,14 +48,17 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	createEvent, err := event.NewContractCreateEvent(
 		contractAggregate,
 		model.ContractDataFields{
-			Name:             "New Contract",
-			ContractUrl:      "http://contract.url",
-			OrganizationId:   orgId,
-			CreatedByUserId:  userIdCreator,
-			ServiceStartedAt: &timeNow,
-			SignedAt:         &timeNow,
-			RenewalCycle:     model.MonthlyRenewal,
-			Status:           model.Live,
+			Name:               "New Contract",
+			ContractUrl:        "http://contract.url",
+			OrganizationId:     orgId,
+			CreatedByUserId:    userIdCreator,
+			ServiceStartedAt:   &timeNow,
+			SignedAt:           &timeNow,
+			RenewalCycle:       model.MonthlyRenewal,
+			Status:             model.Live,
+			BillingCycle:       model.MonthlyBilling,
+			Currency:           "USD",
+			InvoicingStartDate: &timeNow,
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -137,6 +140,9 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.True(t, timeNow.Equal(contract.UpdatedAt.UTC()))
 	require.True(t, timeNow.Equal(*contract.ServiceStartedAt))
 	require.True(t, timeNow.Equal(*contract.SignedAt))
+	require.True(t, timeNow.Equal(*contract.InvoicingStartDate))
+	require.Equal(t, neo4jenum.CurrencyUSD, contract.Currency)
+	require.Equal(t, neo4jenum.BillingCycleMonthlyBilling, contract.BillingCycle)
 	require.Nil(t, contract.EndedAt)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), contract.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, contract.AppSource)
@@ -396,7 +402,7 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
 			Name:         "test contract updated",
-			RenewalCycle: model.None,
+			RenewalCycle: model.NoneRenewal,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,

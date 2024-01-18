@@ -61,17 +61,20 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 
 	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
 	data := neo4jrepository.ContractCreateFields{
-		OrganizationId:   eventData.OrganizationId,
-		Name:             eventData.Name,
-		ContractUrl:      eventData.ContractUrl,
-		CreatedByUserId:  eventData.CreatedByUserId,
-		ServiceStartedAt: eventData.ServiceStartedAt,
-		SignedAt:         eventData.SignedAt,
-		RenewalCycle:     eventData.RenewalCycle,
-		RenewalPeriods:   eventData.RenewalPeriods,
-		Status:           eventData.Status,
-		CreatedAt:        eventData.CreatedAt,
-		UpdatedAt:        eventData.UpdatedAt,
+		OrganizationId:     eventData.OrganizationId,
+		Name:               eventData.Name,
+		ContractUrl:        eventData.ContractUrl,
+		CreatedByUserId:    eventData.CreatedByUserId,
+		ServiceStartedAt:   eventData.ServiceStartedAt,
+		SignedAt:           eventData.SignedAt,
+		RenewalCycle:       eventData.RenewalCycle,
+		RenewalPeriods:     eventData.RenewalPeriods,
+		Status:             eventData.Status,
+		CreatedAt:          eventData.CreatedAt,
+		UpdatedAt:          eventData.UpdatedAt,
+		BillingCycle:       neo4jenum.DecodeBillingCycle(eventData.BillingCycle),
+		Currency:           neo4jenum.DecodeCurrency(eventData.Currency),
+		InvoicingStartDate: eventData.InvoicingStartDate,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source.Source),
 			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
@@ -143,16 +146,19 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	beforeUpdateContractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 	data := neo4jrepository.ContractUpdateFields{
-		Name:             eventData.Name,
-		ContractUrl:      eventData.ContractUrl,
-		ServiceStartedAt: eventData.ServiceStartedAt,
-		Status:           eventData.Status,
-		Source:           helper.GetSource(eventData.Source),
-		RenewalPeriods:   eventData.RenewalPeriods,
-		RenewalCycle:     eventData.RenewalCycle,
-		UpdatedAt:        eventData.UpdatedAt,
-		SignedAt:         eventData.SignedAt,
-		EndedAt:          eventData.EndedAt,
+		Name:               eventData.Name,
+		ContractUrl:        eventData.ContractUrl,
+		ServiceStartedAt:   eventData.ServiceStartedAt,
+		Status:             eventData.Status,
+		Source:             helper.GetSource(eventData.Source),
+		RenewalPeriods:     eventData.RenewalPeriods,
+		RenewalCycle:       eventData.RenewalCycle,
+		UpdatedAt:          eventData.UpdatedAt,
+		SignedAt:           eventData.SignedAt,
+		EndedAt:            eventData.EndedAt,
+		BillingCycle:       neo4jenum.DecodeBillingCycle(eventData.BillingCycle),
+		Currency:           neo4jenum.DecodeCurrency(eventData.Currency),
+		InvoicingStartDate: eventData.InvoicingStartDate,
 	}
 	updatedContractDbNode, err := h.repositories.Neo4jRepositories.ContractWriteRepository.UpdateAndReturn(ctx, eventData.Tenant, contractId, data)
 	if err != nil {

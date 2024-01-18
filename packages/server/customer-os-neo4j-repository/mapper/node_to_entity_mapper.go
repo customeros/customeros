@@ -278,9 +278,6 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	contractStatus := enum.GetContractStatus(utils.GetStringPropOrEmpty(props, "status"))
-	contractRenewalCycle := enum.GetRenewalCycle(utils.GetStringPropOrEmpty(props, "renewalCycle"))
-
 	contract := entity.ContractEntity{
 		Id:                              utils.GetStringPropOrEmpty(props, "id"),
 		Name:                            utils.GetStringPropOrEmpty(props, "name"),
@@ -290,14 +287,17 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		SignedAt:                        utils.GetTimePropOrNil(props, "signedAt"),
 		EndedAt:                         utils.GetTimePropOrNil(props, "endedAt"),
 		ContractUrl:                     utils.GetStringPropOrEmpty(props, "contractUrl"),
-		ContractStatus:                  contractStatus,
-		RenewalCycle:                    contractRenewalCycle,
+		ContractStatus:                  enum.DecodeContractStatus(utils.GetStringPropOrEmpty(props, "status")),
+		RenewalCycle:                    enum.DecodeRenewalCycle(utils.GetStringPropOrEmpty(props, "renewalCycle")),
 		RenewalPeriods:                  utils.GetInt64PropOrNil(props, "renewalPeriods"),
 		TriggeredOnboardingStatusChange: utils.GetBoolPropOrFalse(props, "triggeredOnboardingStatusChange"),
 		NextInvoiceDate:                 utils.GetTimePropOrNil(props, "nextInvoiceDate"),
 		Source:                          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:                   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:                       utils.GetStringPropOrEmpty(props, "appSource"),
+		InvoicingStartDate:              utils.GetTimePropOrNil(props, "invoicingStartDate"),
+		Currency:                        enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
+		BillingCycle:                    enum.DecodeBillingCycle(utils.GetStringPropOrEmpty(props, "billingCycle")),
 	}
 	return &contract
 }

@@ -56,10 +56,7 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 
 	contractId := uuid.New().String()
 
-	// Convert any protobuf timestamp to time.Time, if necessary
 	createdAt, updatedAt := convertCreateAndUpdateProtoTimestampsToTime(request.CreatedAt, request.UpdatedAt)
-	serviceStartedAt := utils.TimestampProtoToTimePtr(request.ServiceStartedAt)
-	signedAt := utils.TimestampProtoToTimePtr(request.SignedAt)
 
 	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)
@@ -72,14 +69,17 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 		request.Tenant,
 		request.LoggedInUserId,
 		model.ContractDataFields{
-			OrganizationId:   request.OrganizationId,
-			Name:             request.Name,
-			ContractUrl:      request.ContractUrl,
-			CreatedByUserId:  utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
-			ServiceStartedAt: serviceStartedAt,
-			SignedAt:         signedAt,
-			RenewalCycle:     model.RenewalCycle(request.RenewalCycle),
-			RenewalPeriods:   request.RenewalPeriods,
+			OrganizationId:     request.OrganizationId,
+			Name:               request.Name,
+			ContractUrl:        request.ContractUrl,
+			CreatedByUserId:    utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
+			ServiceStartedAt:   utils.TimestampProtoToTimePtr(request.ServiceStartedAt),
+			SignedAt:           utils.TimestampProtoToTimePtr(request.SignedAt),
+			RenewalCycle:       model.RenewalCycle(request.RenewalCycle),
+			RenewalPeriods:     request.RenewalPeriods,
+			Currency:           request.Currency,
+			BillingCycle:       model.BillingCycle(request.BillingCycle),
+			InvoicingStartDate: utils.TimestampProtoToTimePtr(request.InvoicingStartDate),
 		},
 		source,
 		externalSystem,
@@ -108,12 +108,6 @@ func (s *contractService) UpdateContract(ctx context.Context, request *contractp
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	// Convert any protobuf timestamp to time.Time, if necessary
-	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
-	serviceStartedAt := utils.TimestampProtoToTimePtr(request.ServiceStartedAt)
-	signedAt := utils.TimestampProtoToTimePtr(request.SignedAt)
-	endedAt := utils.TimestampProtoToTimePtr(request.EndedAt)
-
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
@@ -126,17 +120,20 @@ func (s *contractService) UpdateContract(ctx context.Context, request *contractp
 		request.Tenant,
 		request.LoggedInUserId,
 		model.ContractDataFields{
-			Name:             request.Name,
-			ServiceStartedAt: serviceStartedAt,
-			SignedAt:         signedAt,
-			EndedAt:          endedAt,
-			RenewalCycle:     model.RenewalCycle(request.RenewalCycle),
-			ContractUrl:      request.ContractUrl,
-			RenewalPeriods:   request.RenewalPeriods,
+			Name:               request.Name,
+			ServiceStartedAt:   utils.TimestampProtoToTimePtr(request.ServiceStartedAt),
+			SignedAt:           utils.TimestampProtoToTimePtr(request.SignedAt),
+			EndedAt:            utils.TimestampProtoToTimePtr(request.EndedAt),
+			RenewalCycle:       model.RenewalCycle(request.RenewalCycle),
+			ContractUrl:        request.ContractUrl,
+			RenewalPeriods:     request.RenewalPeriods,
+			Currency:           request.Currency,
+			BillingCycle:       model.BillingCycle(request.BillingCycle),
+			InvoicingStartDate: utils.TimestampProtoToTimePtr(request.InvoicingStartDate),
 		},
 		source,
 		externalSystem,
-		updatedAt,
+		utils.TimestampProtoToTimePtr(request.UpdatedAt),
 	)
 
 	if err := s.contractCommandHandlers.UpdateContract.Handle(ctx, updateContractCommand); err != nil {

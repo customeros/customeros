@@ -411,52 +411,61 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Contract struct {
-	ID               string               `json:"id"`
-	CreatedAt        time.Time            `json:"createdAt"`
-	UpdatedAt        time.Time            `json:"updatedAt"`
-	ServiceStartedAt *time.Time           `json:"serviceStartedAt,omitempty"`
-	SignedAt         *time.Time           `json:"signedAt,omitempty"`
-	EndedAt          *time.Time           `json:"endedAt,omitempty"`
-	Name             string               `json:"name"`
-	RenewalCycle     ContractRenewalCycle `json:"renewalCycle"`
-	RenewalPeriods   *int64               `json:"renewalPeriods,omitempty"`
-	Status           ContractStatus       `json:"status"`
-	ServiceLineItems []*ServiceLineItem   `json:"serviceLineItems,omitempty"`
-	Opportunities    []*Opportunity       `json:"opportunities,omitempty"`
-	Owner            *User                `json:"owner,omitempty"`
-	CreatedBy        *User                `json:"createdBy,omitempty"`
-	Source           DataSource           `json:"source"`
-	SourceOfTruth    DataSource           `json:"sourceOfTruth"`
-	AppSource        string               `json:"appSource"`
-	ExternalLinks    []*ExternalSystem    `json:"externalLinks"`
-	ContractURL      *string              `json:"contractUrl,omitempty"`
+	ID                 string                `json:"id"`
+	CreatedAt          time.Time             `json:"createdAt"`
+	UpdatedAt          time.Time             `json:"updatedAt"`
+	ServiceStartedAt   *time.Time            `json:"serviceStartedAt,omitempty"`
+	SignedAt           *time.Time            `json:"signedAt,omitempty"`
+	EndedAt            *time.Time            `json:"endedAt,omitempty"`
+	Name               string                `json:"name"`
+	RenewalCycle       ContractRenewalCycle  `json:"renewalCycle"`
+	RenewalPeriods     *int64                `json:"renewalPeriods,omitempty"`
+	Status             ContractStatus        `json:"status"`
+	ServiceLineItems   []*ServiceLineItem    `json:"serviceLineItems,omitempty"`
+	Opportunities      []*Opportunity        `json:"opportunities,omitempty"`
+	Owner              *User                 `json:"owner,omitempty"`
+	CreatedBy          *User                 `json:"createdBy,omitempty"`
+	Source             DataSource            `json:"source"`
+	SourceOfTruth      DataSource            `json:"sourceOfTruth"`
+	AppSource          string                `json:"appSource"`
+	ExternalLinks      []*ExternalSystem     `json:"externalLinks"`
+	ContractURL        *string               `json:"contractUrl,omitempty"`
+	Currency           *Currency             `json:"currency,omitempty"`
+	InvoicingStartDate *time.Time            `json:"invoicingStartDate,omitempty"`
+	BillingCycle       *ContractBillingCycle `json:"billingCycle,omitempty"`
 }
 
 func (Contract) IsNode()            {}
 func (this Contract) GetID() string { return this.ID }
 
 type ContractInput struct {
-	OrganizationID    string                        `json:"organizationId"`
-	Name              *string                       `json:"name,omitempty"`
-	RenewalCycle      *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
-	RenewalPeriods    *int64                        `json:"renewalPeriods,omitempty"`
-	AppSource         *string                       `json:"appSource,omitempty"`
-	ContractURL       *string                       `json:"contractUrl,omitempty"`
-	ServiceStartedAt  *time.Time                    `json:"serviceStartedAt,omitempty"`
-	SignedAt          *time.Time                    `json:"signedAt,omitempty"`
-	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	OrganizationID     string                        `json:"organizationId"`
+	Name               *string                       `json:"name,omitempty"`
+	RenewalCycle       *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
+	RenewalPeriods     *int64                        `json:"renewalPeriods,omitempty"`
+	AppSource          *string                       `json:"appSource,omitempty"`
+	ContractURL        *string                       `json:"contractUrl,omitempty"`
+	ServiceStartedAt   *time.Time                    `json:"serviceStartedAt,omitempty"`
+	SignedAt           *time.Time                    `json:"signedAt,omitempty"`
+	ExternalReference  *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	Currency           *Currency                     `json:"currency,omitempty"`
+	InvoicingStartDate *time.Time                    `json:"invoicingStartDate,omitempty"`
+	BillingCycle       *ContractBillingCycle         `json:"billingCycle,omitempty"`
 }
 
 type ContractUpdateInput struct {
-	ContractID       string                `json:"contractId"`
-	Name             *string               `json:"name,omitempty"`
-	ContractURL      *string               `json:"contractUrl,omitempty"`
-	RenewalCycle     *ContractRenewalCycle `json:"renewalCycle,omitempty"`
-	RenewalPeriods   *int64                `json:"renewalPeriods,omitempty"`
-	ServiceStartedAt *time.Time            `json:"serviceStartedAt,omitempty"`
-	SignedAt         *time.Time            `json:"signedAt,omitempty"`
-	EndedAt          *time.Time            `json:"endedAt,omitempty"`
-	AppSource        *string               `json:"appSource,omitempty"`
+	ContractID         string                `json:"contractId"`
+	Name               *string               `json:"name,omitempty"`
+	ContractURL        *string               `json:"contractUrl,omitempty"`
+	RenewalCycle       *ContractRenewalCycle `json:"renewalCycle,omitempty"`
+	RenewalPeriods     *int64                `json:"renewalPeriods,omitempty"`
+	ServiceStartedAt   *time.Time            `json:"serviceStartedAt,omitempty"`
+	SignedAt           *time.Time            `json:"signedAt,omitempty"`
+	EndedAt            *time.Time            `json:"endedAt,omitempty"`
+	AppSource          *string               `json:"appSource,omitempty"`
+	Currency           *Currency             `json:"currency,omitempty"`
+	InvoicingStartDate *time.Time            `json:"invoicingStartDate,omitempty"`
+	BillingCycle       *ContractBillingCycle `json:"billingCycle,omitempty"`
 }
 
 type Country struct {
@@ -2417,6 +2426,51 @@ func (e ComparisonOperator) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type ContractBillingCycle string
+
+const (
+	ContractBillingCycleNone             ContractBillingCycle = "NONE"
+	ContractBillingCycleMonthlyBilling   ContractBillingCycle = "MONTHLY_BILLING"
+	ContractBillingCycleQuarterlyBilling ContractBillingCycle = "QUARTERLY_BILLING"
+	ContractBillingCycleAnnualBilling    ContractBillingCycle = "ANNUAL_BILLING"
+)
+
+var AllContractBillingCycle = []ContractBillingCycle{
+	ContractBillingCycleNone,
+	ContractBillingCycleMonthlyBilling,
+	ContractBillingCycleQuarterlyBilling,
+	ContractBillingCycleAnnualBilling,
+}
+
+func (e ContractBillingCycle) IsValid() bool {
+	switch e {
+	case ContractBillingCycleNone, ContractBillingCycleMonthlyBilling, ContractBillingCycleQuarterlyBilling, ContractBillingCycleAnnualBilling:
+		return true
+	}
+	return false
+}
+
+func (e ContractBillingCycle) String() string {
+	return string(e)
+}
+
+func (e *ContractBillingCycle) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ContractBillingCycle(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ContractBillingCycle", str)
+	}
+	return nil
+}
+
+func (e ContractBillingCycle) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type ContractRenewalCycle string
 
 const (
@@ -2504,6 +2558,83 @@ func (e *ContractStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ContractStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Currency string
+
+const (
+	CurrencyAud Currency = "AUD"
+	CurrencyBrl Currency = "BRL"
+	CurrencyCad Currency = "CAD"
+	CurrencyChf Currency = "CHF"
+	CurrencyCny Currency = "CNY"
+	CurrencyEur Currency = "EUR"
+	CurrencyGbp Currency = "GBP"
+	CurrencyHkd Currency = "HKD"
+	CurrencyInr Currency = "INR"
+	CurrencyJpy Currency = "JPY"
+	CurrencyKrw Currency = "KRW"
+	CurrencyMxn Currency = "MXN"
+	CurrencyNok Currency = "NOK"
+	CurrencyNzd Currency = "NZD"
+	CurrencyRon Currency = "RON"
+	CurrencySek Currency = "SEK"
+	CurrencySgd Currency = "SGD"
+	CurrencyTry Currency = "TRY"
+	CurrencyUsd Currency = "USD"
+	CurrencyZar Currency = "ZAR"
+)
+
+var AllCurrency = []Currency{
+	CurrencyAud,
+	CurrencyBrl,
+	CurrencyCad,
+	CurrencyChf,
+	CurrencyCny,
+	CurrencyEur,
+	CurrencyGbp,
+	CurrencyHkd,
+	CurrencyInr,
+	CurrencyJpy,
+	CurrencyKrw,
+	CurrencyMxn,
+	CurrencyNok,
+	CurrencyNzd,
+	CurrencyRon,
+	CurrencySek,
+	CurrencySgd,
+	CurrencyTry,
+	CurrencyUsd,
+	CurrencyZar,
+}
+
+func (e Currency) IsValid() bool {
+	switch e {
+	case CurrencyAud, CurrencyBrl, CurrencyCad, CurrencyChf, CurrencyCny, CurrencyEur, CurrencyGbp, CurrencyHkd, CurrencyInr, CurrencyJpy, CurrencyKrw, CurrencyMxn, CurrencyNok, CurrencyNzd, CurrencyRon, CurrencySek, CurrencySgd, CurrencyTry, CurrencyUsd, CurrencyZar:
+		return true
+	}
+	return false
+}
+
+func (e Currency) String() string {
+	return string(e)
+}
+
+func (e *Currency) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Currency(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Currency", str)
+	}
+	return nil
+}
+
+func (e Currency) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

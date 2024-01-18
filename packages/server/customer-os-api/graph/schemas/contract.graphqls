@@ -26,6 +26,9 @@ type Contract implements Node {
     appSource:          String!
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
     contractUrl:        String
+    currency:           Currency
+    invoicingStartDate: Time
+    billingCycle:       ContractBillingCycle
 }
 
 input ContractInput {
@@ -38,6 +41,9 @@ input ContractInput {
     serviceStartedAt:   Time
     signedAt:           Time
     externalReference:  ExternalSystemReferenceInput
+    currency:           Currency
+    invoicingStartDate: Time
+    billingCycle:       ContractBillingCycle
 }
 
 input ContractUpdateInput {
@@ -50,6 +56,9 @@ input ContractUpdateInput {
     signedAt:           Time
     endedAt:            Time
     appSource:          String
+    currency:           Currency
+    invoicingStartDate: Time
+    billingCycle:       ContractBillingCycle
 }
 
 enum ContractRenewalCycle {
@@ -57,6 +66,13 @@ enum ContractRenewalCycle {
     MONTHLY_RENEWAL
     QUARTERLY_RENEWAL
     ANNUAL_RENEWAL
+}
+
+enum ContractBillingCycle {
+    NONE
+    MONTHLY_BILLING
+    QUARTERLY_BILLING
+    ANNUAL_BILLING
 }
 
 enum ContractStatus {
