@@ -1106,7 +1106,7 @@ type ComplexityRoot struct {
 		InteractionSession                    func(childComplexity int, id string) int
 		InteractionSessionBySessionIdentifier func(childComplexity int, sessionIdentifier string) int
 		Invoice                               func(childComplexity int, id string) int
-		Invoices                              func(childComplexity int, contractID string, pagination *model.Pagination) int
+		Invoices                              func(childComplexity int, organizationID string, pagination *model.Pagination) int
 		InvoicingCycle                        func(childComplexity int) int
 		Issue                                 func(childComplexity int, id string) int
 		LogEntry                              func(childComplexity int, id string) int
@@ -1626,7 +1626,7 @@ type QueryResolver interface {
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
 	InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error)
 	Invoice(ctx context.Context, id string) (*model.Invoice, error)
-	Invoices(ctx context.Context, contractID string, pagination *model.Pagination) (*model.InvoicesPage, error)
+	Invoices(ctx context.Context, organizationID string, pagination *model.Pagination) (*model.InvoicesPage, error)
 	InvoicingCycle(ctx context.Context) (*model.InvoicingCycle, error)
 	Issue(ctx context.Context, id string) (*model.Issue, error)
 	LogEntry(ctx context.Context, id string) (*model.LogEntry, error)
@@ -8137,7 +8137,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Invoices(childComplexity, args["contractId"].(string), args["pagination"].(*model.Pagination)), true
+		return e.complexity.Query.Invoices(childComplexity, args["organizationId"].(string), args["pagination"].(*model.Pagination)), true
 
 	case "Query.invoicingCycle":
 		if e.complexity.Query.InvoicingCycle == nil {
@@ -10720,7 +10720,7 @@ interface ExtensibleEntity implements Node {
 }`, BuiltIn: false},
 	{Name: "../schemas/invoice.graphqls", Input: `extend type Query {
     invoice(id: ID!): Invoice!
-    invoices(contractId: ID!, pagination: Pagination): InvoicesPage!
+    invoices(organizationId: ID!, pagination: Pagination): InvoicesPage!
 }
 
 extend type Mutation {
@@ -15852,14 +15852,14 @@ func (ec *executionContext) field_Query_invoices_args(ctx context.Context, rawAr
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["contractId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["contractId"] = arg0
+	args["organizationId"] = arg0
 	var arg1 *model.Pagination
 	if tmp, ok := rawArgs["pagination"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
@@ -63262,7 +63262,7 @@ func (ec *executionContext) _Query_invoices(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Invoices(rctx, fc.Args["contractId"].(string), fc.Args["pagination"].(*model.Pagination))
+		return ec.resolvers.Query().Invoices(rctx, fc.Args["organizationId"].(string), fc.Args["pagination"].(*model.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

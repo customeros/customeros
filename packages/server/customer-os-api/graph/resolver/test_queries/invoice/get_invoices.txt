@@ -1,0 +1,13 @@
+query GetInvoice($organizationId: ID!, $page: Int!, $limit: Int!) {
+  invoices(organizationId: $organizationId, pagination: {page: $page, limit: $limit}) {
+      totalPages
+      totalElements
+      content {
+        id
+        number
+        invoiceLines {
+            name
+        }
+      }
+  }
+}

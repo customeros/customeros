@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -23,6 +24,7 @@ import (
 )
 
 type InvoiceService interface {
+	GetInvoices(ctx context.Context, organizationId string, pagination *model.Pagination) (*utils.Pagination, error)
 	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (string, error)
@@ -54,6 +56,35 @@ type SimulateInvoiceLineData struct {
 	Billed            enum.BilledType
 	Price             float64
 	Quantity          int
+}
+
+func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string, pagination *model.Pagination) (*utils.Pagination, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoices")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId))
+	span.LogFields(log.Object("pagination", pagination))
+
+	dbNodesWithTotalCount, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoices(ctx, common.GetTenantFromContext(ctx), organizationId, pagination.Page, pagination.Limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var paginatedResult = utils.Pagination{
+		Limit: pagination.Limit,
+		Page:  pagination.Page,
+	}
+
+	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
+
+	invoices := make(neo4jentity.InvoiceEntities, 0, len(dbNodesWithTotalCount.Nodes))
+
+	for _, v := range dbNodesWithTotalCount.Nodes {
+		invoices = append(invoices, *mapper.MapDbNodeToInvoiceEntity(v))
+	}
+	paginatedResult.SetRows(&invoices)
+	return &paginatedResult, nil
 }
 
 func (s *invoiceService) GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error) {

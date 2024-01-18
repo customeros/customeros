@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
+	"time"
 )
 
 func TestQueryResolver_Invoice(t *testing.T) {
@@ -78,6 +79,57 @@ func TestQueryResolver_Invoice(t *testing.T) {
 	require.Equal(t, 100.0, invoice.InvoiceLines[0].Amount)
 	require.Equal(t, 19.0, invoice.InvoiceLines[0].Vat)
 	require.Equal(t, 119.0, invoice.InvoiceLines[0].Total)
+}
+
+func TestQueryResolver_Invoices(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	timeNow := utils.Now()
+	yesterday := timeNow.Add(-24 * time.Hour)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+
+	invoice1Id := neo4jtest.CreateInvoice(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		CreatedAt: timeNow,
+		UpdatedAt: timeNow,
+		Number:    "1",
+	})
+	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoice1Id, neo4jentity.InvoiceLineEntity{
+		Name: "SLI 1",
+	})
+
+	invoice2Id := neo4jtest.CreateInvoice(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		CreatedAt: yesterday,
+		UpdatedAt: yesterday,
+		Number:    "2",
+	})
+	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoice2Id, neo4jentity.InvoiceLineEntity{
+		Name: "SLI 2",
+	})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices", map[string]interface{}{
+		"organizationId": organizationId,
+		"page":           0,
+		"limit":          10,
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
+
+	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].ID)
+	require.Equal(t, "SLI 1", invoiceStruct.Invoices.Content[0].InvoiceLines[0].Name)
+	require.Equal(t, invoice2Id, invoiceStruct.Invoices.Content[1].ID)
+	require.Equal(t, "SLI 2", invoiceStruct.Invoices.Content[1].InvoiceLines[0].Name)
 }
 
 func TestQueryResolver_SimulateInvoice(t *testing.T) {

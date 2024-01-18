@@ -44,6 +44,14 @@ func MapEntityToInvoiceLine(entity *neo4jentity.InvoiceLineEntity) *model.Invoic
 	}
 }
 
+func MapEntitiesToInvoices(entities *neo4jentity.InvoiceEntities) []*model.Invoice {
+	var output []*model.Invoice
+	for _, v := range *entities {
+		output = append(output, MapEntityToInvoice(&v))
+	}
+	return output
+}
+
 func MapEntitiesToInvoiceLines(entities *neo4jentity.InvoiceLineEntities) []*model.InvoiceLine {
 	var output []*model.InvoiceLine
 	for _, v := range *entities {

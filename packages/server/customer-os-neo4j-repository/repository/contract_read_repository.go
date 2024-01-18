@@ -237,12 +237,11 @@ func (r *contractReadRepository) GetContractsForInvoicing(ctx context.Context, i
 	span.LogFields(log.Object("invoiceDateTime", invoiceDateTime))
 
 	cypher := fmt.Sprintf(`
-			MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)
+			MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
 			WHERE 
-				o.hide = false AND 
-				o.isCustomer = true AND 
-				c.nextInvoiceDate is not null AND c.nextInvoiceDate <= $invoiceDateTime AND
-				c.techInvoicingStartedAt is null 
+				o.hide = false AND c.status = 'LIVE' AND
+				sli.id = sli.parentId AND
+				(sli.techPaidUntil is null OR sli.techPaidUntil <= $invoiceDateTime) and tech.techInvoicingStartedAt is null
 			RETURN t.name as tenant, c.id as contractId limit 100
 			`)
 	params := map[string]any{

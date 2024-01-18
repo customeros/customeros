@@ -30,3 +30,5 @@ type InvoiceEntity struct {
 type InvoiceInternalFields struct {
 	PaymentRequestedAt *time.Time
 }
+
+type InvoiceEntities []InvoiceEntity
