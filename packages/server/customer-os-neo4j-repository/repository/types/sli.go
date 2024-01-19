@@ -8,4 +8,5 @@ type SLI struct {
 	Price       float64
 	Quantity    int64
 	StartedAt   time.Time
+	ContractId  string
 }
