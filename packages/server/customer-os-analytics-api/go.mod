@@ -3,7 +3,7 @@ module github.com/openline-ai/openline-customer-os/packages/server/customer-os-a
 go 1.20
 
 require (
-	github.com/99designs/gqlgen v0.17.42
+	github.com/99designs/gqlgen v0.17.43
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-testfixtures/testfixtures/v3 v3.8.1
@@ -12,7 +12,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.27.0
-	github.com/vektah/gqlparser/v2 v2.5.10
+	github.com/vektah/gqlparser/v2 v2.5.11
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/gorm v1.25.5
 )
