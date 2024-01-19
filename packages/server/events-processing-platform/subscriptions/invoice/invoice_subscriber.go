@@ -181,6 +181,10 @@ func (s *InvoiceSubscriber) onInvoiceFillV1(ctx context.Context, evt eventstore.
 		"InvoiceTotal":          "123.00",
 		"InvoicePaid":           "50.00",
 		"InvoiceAmountDue":      "73.00",
+		"InvoiceLineItems": []map[string]string{
+			{"Name": "Item 1", "Description": "Quantity increased", "Quantity": "1", "UnitPrice": "123.00", "Amount": "123.00"},
+			{"Name": "Item 2", "Description": "Price decreased", "Quantity": "2", "UnitPrice": "22.00", "Amount": "44.00"},
+		},
 	}
 	data["ProviderLogoExtension"] = GetFileExtensionFromUrl(data["ProviderLogoUrl"].(string))
 

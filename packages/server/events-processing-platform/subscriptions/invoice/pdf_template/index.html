@@ -107,23 +107,15 @@
                 </div>
               </div>
             </div>
+
             <div class="invoice-printed-frame3613">
+
               <div class="invoice-printed-frame44407">
                 <div class="invoice-printed-column">
                   <div class="invoice-printed-tableheadercell">
                     <div class="invoice-printed-tableheader">
                       <span class="invoice-printed-text024 TextsmSemibold">
                         <span>Service</span>
-                      </span>
-                    </div>
-                  </div>
-                  <div class="invoice-printed-tablecell">
-                    <div class="invoice-printed-textandsupportingtext">
-                      <span class="invoice-printed-text026 TextsmMedium">
-                        <span>Professional tier</span>
-                      </span>
-                      <span class="invoice-printed-text028 TextsmRegular">
-                        <span>Qty decreased from 15 → 10</span>
                       </span>
                     </div>
                   </div>
@@ -137,26 +129,12 @@
                         </span>
                       </div>
                     </div>
-                    <div class="invoice-printed-tablecell1">
-                      <div class="invoice-printed-textandsupportingtext1">
-                        <span class="invoice-printed-text032 TextsmRegular">
-                          <span>10</span>
-                        </span>
-                      </div>
-                    </div>
                   </div>
                   <div class="invoice-printed-column2">
                     <div class="invoice-printed-tableheadercell2">
                       <div class="invoice-printed-tableheader2">
                         <span class="invoice-printed-text034 TextsmSemibold">
                           <span>Unit Price</span>
-                        </span>
-                      </div>
-                    </div>
-                    <div class="invoice-printed-tablecell2">
-                      <div class="invoice-printed-textandsupportingtext2">
-                        <span class="invoice-printed-text036 TextsmRegular">
-                          <span>$50.00</span>
                         </span>
                       </div>
                     </div>
@@ -169,16 +147,56 @@
                         </span>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {{range .InvoiceLineItems}}
+              <div class="invoice-printed-frame44407">
+                <div class="invoice-printed-column">
+                  <div class="invoice-printed-tablecell">
+                    <div class="invoice-printed-textandsupportingtext">
+                      <span class="invoice-printed-text026 TextsmMedium">
+                        <span>{{.Name}}</span>
+                      </span>
+                      <span class="invoice-printed-text028 TextsmRegular">
+                        <span>{{.Description}}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="invoice-printed-frame44408">
+                  <div class="invoice-printed-column1">
+                    <div class="invoice-printed-tablecell1">
+                      <div class="invoice-printed-textandsupportingtext1">
+                        <span class="invoice-printed-text032 TextsmRegular">
+                          <span>{{.Quantity}}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="invoice-printed-column2">
+                    <div class="invoice-printed-tablecell2">
+                      <div class="invoice-printed-textandsupportingtext2">
+                        <span class="invoice-printed-text036 TextsmRegular">
+                           <span>{{.UnitPrice}}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="invoice-printed-column3">
                     <div class="invoice-printed-tablecell3">
                       <div class="invoice-printed-textandsupportingtext3">
                         <span class="invoice-printed-text040 TextsmRegular">
-                          <span>$500.00</span>
+                          <span>{{.Amount}}</span>
                         </span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+              {{end}}
+
               <div class="invoice-printed-frame3612">
                 <div class="invoice-printed-frame36201">
                   <span class="invoice-printed-text042 TextsmMedium">
