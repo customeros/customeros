@@ -27,8 +27,8 @@ func NewInvoiceService(log logger.Logger, aggregateStore eventstore.AggregateSto
 	}
 }
 
-func (s *invoiceService) NewInvoice(ctx context.Context, request *invoicepb.NewInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.NewInvoice")
+func (s *invoiceService) NewOnCycleInvoiceForContract(ctx context.Context, request *invoicepb.NewOnCycleInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.NewOnCycleInvoiceForContract")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
@@ -37,7 +37,7 @@ func (s *invoiceService) NewInvoice(ctx context.Context, request *invoicepb.NewI
 
 	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, invoiceId, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(NewInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(NewOnCycleInvoiceForContract) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 

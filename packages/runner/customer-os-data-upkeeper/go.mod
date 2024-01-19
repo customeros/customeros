@@ -2,7 +2,9 @@ module github.com/openline-ai/openline-customer-os/packages/runner/customer-os-d
 
 go 1.21
 
-//replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../../server/events-processing-proto
+replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../../server/events-processing-proto
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../../server/customer-os-common-module
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../../server/customer-os-neo4j-repository
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1

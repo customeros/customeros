@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
@@ -19,6 +20,7 @@ import (
 
 type ContractService interface {
 	UpkeepContracts()
+	ResyncContract(ctx context.Context, tenant, contractId string)
 }
 
 type contractService struct {
@@ -91,7 +93,7 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 				s.log.Errorf("Error refreshing contract status: %s", err.Error())
 				grpcErr, ok := status.FromError(err)
 				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
-					s.resyncContract(ctx, record.Tenant, record.ContractId)
+					s.ResyncContract(ctx, record.Tenant, record.ContractId)
 				}
 			} else {
 				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkStatusRenewalRequested(ctx, record.Tenant, record.ContractId)
@@ -144,7 +146,7 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 				s.log.Errorf("Error rollout renewal opportunity: %s", err.Error())
 				grpcErr, ok := status.FromError(err)
 				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
-					s.resyncContract(ctx, record.Tenant, record.ContractId)
+					s.ResyncContract(ctx, record.Tenant, record.ContractId)
 				}
 			} else {
 				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkRolloutRenewalRequested(ctx, record.Tenant, record.ContractId)
@@ -203,7 +205,7 @@ func (s *contractService) closeEndedContractOpportunityRenewals(ctx context.Cont
 	}
 }
 
-func (s *contractService) resyncContract(ctx context.Context, tenant, contractId string) {
+func (s *contractService) ResyncContract(ctx context.Context, tenant, contractId string) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.resyncContract")
 	defer span.Finish()
 
@@ -217,26 +219,43 @@ func (s *contractService) resyncContract(ctx context.Context, tenant, contractId
 	props := utils.GetPropsFromNode(*contractDbNode)
 
 	request := contractpb.UpdateContractGrpcRequest{
-		Tenant:           tenant,
-		Id:               contractId,
-		Name:             utils.GetStringPropOrEmpty(props, "name"),
-		ContractUrl:      utils.GetStringPropOrEmpty(props, "contractUrl"),
-		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "serviceStartedAt")),
-		SignedAt:         utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "signedAt")),
-		EndedAt:          utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "endedAt")),
+		Tenant:             tenant,
+		Id:                 contractId,
+		Name:               utils.GetStringPropOrEmpty(props, "name"),
+		ContractUrl:        utils.GetStringPropOrEmpty(props, "contractUrl"),
+		ServiceStartedAt:   utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "serviceStartedAt")),
+		SignedAt:           utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "signedAt")),
+		EndedAt:            utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "endedAt")),
+		Currency:           utils.GetStringPropOrEmpty(props, "currency"),
+		InvoicingStartDate: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "invoicingStartDate")),
 		SourceFields: &commonpb.SourceFields{
 			Source:    utils.GetStringPropOrEmpty(props, "sourceOfTruth"),
 			AppSource: constants.AppSourceDataUpkeeper,
 		},
 	}
+
 	switch utils.GetStringPropOrEmpty(props, "renewalCycle") {
-	case "MONTHLY":
+	case neo4jenum.RenewalCycleMonthlyRenewal.String():
 		request.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
-	case "ANNUALLY":
+	case neo4jenum.RenewalCycleQuarterlyRenewal.String():
+		request.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
+	case neo4jenum.RenewalCycleAnnualRenewal.String():
 		request.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
 	default:
 		request.RenewalCycle = contractpb.RenewalCycle_NONE
 	}
+
+	switch utils.GetStringPropOrEmpty(props, "billingCycle") {
+	case neo4jenum.BillingCycleMonthlyBilling.String():
+		request.BillingCycle = contractpb.BillingCycle_MONTHLY_BILLING
+	case neo4jenum.BillingCycleQuarterlyBilling.String():
+		request.BillingCycle = contractpb.BillingCycle_QUARTERLY_BILLING
+	case neo4jenum.BillingCycleAnnualBilling.String():
+		request.BillingCycle = contractpb.BillingCycle_ANNUALLY_BILLING
+	default:
+		request.BillingCycle = contractpb.BillingCycle_NONE_BILLING
+	}
+
 	_, err = s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &request)
 	if err != nil {
 		tracing.TraceErr(span, err)

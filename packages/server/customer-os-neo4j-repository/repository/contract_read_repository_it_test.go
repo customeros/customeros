@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
@@ -11,147 +12,296 @@ import (
 	"time"
 )
 
-func TestContractReadRepository_GetContractsForInvoicing_Hidden_Organization(t *testing.T) {
+func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	tenant := "tenant1"
 
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, entity.OrganizationEntity{
-		Hide:       true,
-		IsCustomer: true,
+	referenceDate := utils.Now()
+
+	neo4jtest.CreateTenant(ctx, driver, tenant)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+		InvoicingEnabled: true,
+		DefaultCurrency:  neo4jenum.CurrencyUSD,
 	})
-
-	day1 := neo4jtest.FirstTimeOfMonth(2023, 6)
-	neo4jtest.CreateContract(ctx, driver, tenantName, organizationId, entity.ContractEntity{
-		NextInvoiceDate: utils.TimePtr(day1),
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &referenceDate,
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelTenant:       1,
-		neo4jutil.NodeLabelOrganization: 1,
-		neo4jutil.NodeLabelContract:     1,
+		neo4jutil.NodeLabelTenant:         1,
+		neo4jutil.NodeLabelTenantSettings: 1,
+		neo4jutil.NodeLabelOrganization:   1,
+		neo4jutil.NodeLabelContract:       1,
 	})
 
-	day1contractsForInvoicing, err := repositories.ContractReadRepository.GetContractsForInvoicing(ctx, day1)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOnCycleInvoices(ctx, referenceDate)
 	require.NoError(t, err)
-	require.Len(t, day1contractsForInvoicing, 0)
+	require.Len(t, result, 1)
+	props := utils.GetPropsFromNode(*result[0].Node)
+	require.Equal(t, contractId, props["id"])
 }
 
-func TestContractReadRepository_GetContractsForInvoicing_Prospect_Organization(t *testing.T) {
+func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_OrganizationIsHidden(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	tenant := "tenant1"
+	referenceDate := utils.Now()
 
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, entity.OrganizationEntity{})
+	neo4jtest.CreateTenant(ctx, driver, tenant)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+		InvoicingEnabled: true,
+		DefaultCurrency:  neo4jenum.CurrencyUSD,
+	})
 
-	day1 := neo4jtest.FirstTimeOfMonth(2023, 6)
-	neo4jtest.CreateContract(ctx, driver, tenantName, organizationId, entity.ContractEntity{
-		NextInvoiceDate: utils.TimePtr(day1),
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
+	organizationHidden := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{
+		Hide: true,
+	})
+
+	contractId := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleQuarterlyBilling,
+		InvoicingStartDate: &referenceDate,
+	})
+	neo4jtest.CreateContract(ctx, driver, tenant, organizationHidden, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &referenceDate,
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelTenant:       1,
-		neo4jutil.NodeLabelOrganization: 1,
-		neo4jutil.NodeLabelContract:     1,
+		neo4jutil.NodeLabelTenant:         1,
+		neo4jutil.NodeLabelTenantSettings: 1,
+		neo4jutil.NodeLabelOrganization:   2,
+		neo4jutil.NodeLabelContract:       2,
 	})
 
-	day1contractsForInvoicing, err := repositories.ContractReadRepository.GetContractsForInvoicing(ctx, day1)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOnCycleInvoices(ctx, referenceDate)
 	require.NoError(t, err)
-	require.Len(t, day1contractsForInvoicing, 0)
+	require.Len(t, result, 1)
+	props := utils.GetPropsFromNode(*result[0].Node)
+	require.Equal(t, contractId, props["id"])
 }
 
-func TestContractReadRepository_GetContractsForInvoicing(t *testing.T) {
+func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_InvoicingNodeEnabled(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
-	tenant1 := "tenant1"
-	tenant2 := "tenant2"
+	tenant := "tenant1"
+	tenantNok := "tenant2"
+	referenceDate := utils.Now()
 
-	day1 := neo4jtest.FirstTimeOfMonth(2023, 6)
-	day2 := day1.Add(24 * time.Hour)
-	day10 := day1.Add(10 * 24 * time.Hour)
-
-	neo4jtest.CreateTenant(ctx, driver, tenant1)
-	neo4jtest.CreateTenant(ctx, driver, tenant2)
-
-	organization1Id := neo4jtest.CreateOrganization(ctx, driver, tenant1, entity.OrganizationEntity{
-		IsCustomer: true,
+	neo4jtest.CreateTenant(ctx, driver, tenant)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+		InvoicingEnabled: true,
+		DefaultCurrency:  neo4jenum.CurrencyUSD,
 	})
 
-	contract1Id := neo4jtest.CreateContract(ctx, driver, tenant1, organization1Id, entity.ContractEntity{
-		NextInvoiceDate: utils.TimePtr(day1),
-	})
-	contract2Id := neo4jtest.CreateContract(ctx, driver, tenant1, organization1Id, entity.ContractEntity{
-		NextInvoiceDate: utils.TimePtr(day2),
-	})
-
-	organization2Id := neo4jtest.CreateOrganization(ctx, driver, tenant2, entity.OrganizationEntity{
-		IsCustomer: true,
+	neo4jtest.CreateTenant(ctx, driver, tenantNok)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenantNok, entity.TenantSettingsEntity{
+		InvoicingEnabled: false,
+		DefaultCurrency:  neo4jenum.CurrencyUSD,
 	})
 
-	contract3Id := neo4jtest.CreateContract(ctx, driver, tenant2, organization2Id, entity.ContractEntity{
-		NextInvoiceDate: utils.TimePtr(day10),
-	})
-	contract4Id := neo4jtest.CreateContract(ctx, driver, tenant2, organization2Id, entity.ContractEntity{
-		NextInvoiceDate: utils.TimePtr(day10),
-	})
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelTenant:       2,
-		neo4jutil.NodeLabelOrganization: 2,
-		neo4jutil.NodeLabelContract:     4,
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleAnnualBilling,
+		InvoicingStartDate: &referenceDate,
 	})
 
-	day1contractsForInvoicing, err := repositories.ContractReadRepository.GetContractsForInvoicing(ctx, day1)
+	organizationIdNok := neo4jtest.CreateOrganization(ctx, driver, tenantNok, entity.OrganizationEntity{})
+	neo4jtest.CreateContract(ctx, driver, tenantNok, organizationIdNok, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &referenceDate,
+	})
+
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOnCycleInvoices(ctx, referenceDate)
 	require.NoError(t, err)
-	require.Len(t, day1contractsForInvoicing, 1)
-	for _, dbNode := range day1contractsForInvoicing {
-		tn, ctr := getRowData(dbNode)
-
-		require.Equal(t, tenant1, tn)
-		require.Equal(t, contract1Id, ctr)
-	}
-
-	day2contractsForInvoicing, err := repositories.ContractReadRepository.GetContractsForInvoicing(ctx, day2)
-	require.NoError(t, err)
-	require.Len(t, day2contractsForInvoicing, 2)
-	for _, dbNode := range day1contractsForInvoicing {
-		tn, ctr := getRowData(dbNode)
-
-		require.Equal(t, tenant1, tn)
-		require.Contains(t, []string{contract1Id, contract2Id}, ctr)
-	}
-
-	neo4jtest.MarkInvoicingStarted(ctx, driver, tenant1, contract1Id, day1.Add(12*time.Hour))
-
-	day2contractsForInvoicing, err = repositories.ContractReadRepository.GetContractsForInvoicing(ctx, day2)
-	require.NoError(t, err)
-	require.Len(t, day2contractsForInvoicing, 1)
-	for _, dbNode := range day2contractsForInvoicing {
-		tn, ctr := getRowData(dbNode)
-
-		require.Equal(t, tenant1, tn)
-		require.Equal(t, contract2Id, ctr)
-	}
-
-	neo4jtest.MarkInvoicingStarted(ctx, driver, tenant1, contract2Id, day2.Add(12*time.Hour))
-
-	day10contractsForInvoicing, err := repositories.ContractReadRepository.GetContractsForInvoicing(ctx, day10)
-	require.NoError(t, err)
-	require.Len(t, day10contractsForInvoicing, 2)
-	for _, dbNode := range day10contractsForInvoicing {
-		tn, ctr := getRowData(dbNode)
-
-		require.Equal(t, tenant2, tn)
-		require.Contains(t, []string{contract3Id, contract4Id}, ctr)
-	}
+	require.Len(t, result, 1)
+	props := utils.GetPropsFromNode(*result[0].Node)
+	require.Equal(t, contractId, props["id"])
 }
 
-func getRowData(props map[string]any) (string, string) {
-	tenant := utils.GetStringPropOrEmpty(props, "tenant")
-	organizationId := utils.GetStringPropOrEmpty(props, "contractId")
+func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_MissingCurrency(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
 
-	return tenant, organizationId
+	tenant := "tenant1"
+	referenceDate := utils.Now()
+
+	neo4jtest.CreateTenant(ctx, driver, tenant)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+		InvoicingEnabled: true,
+	})
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		Currency:           neo4jenum.CurrencyAUD,
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &referenceDate,
+	})
+	neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &referenceDate,
+	})
+
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOnCycleInvoices(ctx, referenceDate)
+	require.NoError(t, err)
+	require.Len(t, result, 1)
+	props := utils.GetPropsFromNode(*result[0].Node)
+	require.Equal(t, contractId, props["id"])
+}
+
+func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_MissingBillingCycle(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	tenant := "tenant"
+	referenceDate := utils.Now()
+
+	neo4jtest.CreateTenant(ctx, driver, tenant)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+		InvoicingEnabled: true,
+		DefaultCurrency:  neo4jenum.CurrencyUSD,
+	})
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &referenceDate,
+	})
+	neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		InvoicingStartDate: &referenceDate,
+	})
+
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOnCycleInvoices(ctx, referenceDate)
+	require.NoError(t, err)
+	require.Len(t, result, 1)
+	props := utils.GetPropsFromNode(*result[0].Node)
+	require.Equal(t, contractId, props["id"])
+}
+
+func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_CheckByNextInvoiceDate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	tenant := "tenant"
+	referenceDate := utils.Now()
+	tomorrow := referenceDate.Add(24 * time.Hour)
+	yesterday := referenceDate.Add(-24 * time.Hour)
+
+	neo4jtest.CreateTenant(ctx, driver, tenant)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+		InvoicingEnabled: true,
+		DefaultCurrency:  neo4jenum.CurrencyUSD,
+	})
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
+	contractIdYesterday := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &referenceDate,
+		NextInvoiceDate:    &yesterday,
+	})
+	contractIdToday := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &referenceDate,
+		NextInvoiceDate:    &referenceDate,
+	})
+	contractIdTomorrow := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &referenceDate,
+		NextInvoiceDate:    &tomorrow,
+	})
+
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOnCycleInvoices(ctx, referenceDate)
+	require.NoError(t, err)
+	require.Len(t, result, 2)
+	props1 := utils.GetPropsFromNode(*result[0].Node)
+	props2 := utils.GetPropsFromNode(*result[1].Node)
+	contractId1 := utils.GetStringPropOrEmpty(props1, "id")
+	contractId2 := utils.GetStringPropOrEmpty(props2, "id")
+	require.ElementsMatch(t, []string{contractIdToday, contractIdYesterday}, []string{contractId1, contractId2})
+	require.NotContains(t, []string{contractIdTomorrow}, []string{contractId1, contractId2})
+}
+
+func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_CheckByInvoicingStartDate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	tenant := "tenant"
+	today := utils.Now()
+	tomorrow := today.Add(24 * time.Hour)
+	yesterday := today.Add(-24 * time.Hour)
+
+	neo4jtest.CreateTenant(ctx, driver, tenant)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+		InvoicingEnabled: true,
+		DefaultCurrency:  neo4jenum.CurrencyUSD,
+	})
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
+	contractIdYesterday := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &yesterday,
+	})
+	contractIdToday := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &today,
+	})
+	contractIdTomorrow := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &tomorrow,
+	})
+	contractIdNoInvoicingStartDate := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle: neo4jenum.BillingCycleMonthlyBilling,
+	})
+
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOnCycleInvoices(ctx, today)
+	require.NoError(t, err)
+	require.Len(t, result, 2)
+	props1 := utils.GetPropsFromNode(*result[0].Node)
+	props2 := utils.GetPropsFromNode(*result[1].Node)
+	contractId1 := utils.GetStringPropOrEmpty(props1, "id")
+	contractId2 := utils.GetStringPropOrEmpty(props2, "id")
+	require.ElementsMatch(t, []string{contractIdToday, contractIdYesterday}, []string{contractId1, contractId2})
+	require.NotContains(t, []string{contractIdTomorrow, contractIdNoInvoicingStartDate}, []string{contractId1, contractId2})
+}
+
+func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_CheckByContractEndDate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	tenant := "tenant"
+	today := utils.Now()
+	tomorrow := today.Add(24 * time.Hour)
+	yesterday := today.Add(-24 * time.Hour)
+
+	neo4jtest.CreateTenant(ctx, driver, tenant)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+		InvoicingEnabled: true,
+		DefaultCurrency:  neo4jenum.CurrencyUSD,
+	})
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
+	contractIdYesterday := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &today,
+		EndedAt:            &yesterday,
+	})
+	contractIdToday := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &today,
+		EndedAt:            &today,
+	})
+	contractIdTomorrow := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate: &today,
+		EndedAt:            &tomorrow,
+	})
+
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOnCycleInvoices(ctx, today)
+	require.NoError(t, err)
+	require.Len(t, result, 1)
+	props1 := utils.GetPropsFromNode(*result[0].Node)
+	contractId1 := utils.GetStringPropOrEmpty(props1, "id")
+	require.ElementsMatch(t, []string{contractIdTomorrow}, []string{contractId1})
+	require.NotContains(t, []string{contractIdToday, contractIdYesterday}, []string{contractId1})
 }

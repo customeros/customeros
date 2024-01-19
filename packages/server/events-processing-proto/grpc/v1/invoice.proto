@@ -6,14 +6,16 @@ import "common/billing_type.proto";
 
 option go_package = "api/grpc/v1/invoice;invoice_grpc_service";
 
-message NewInvoiceRequest {
-  string tenant = 1;
+message NewOnCycleInvoiceForContractRequest {
+  string tenant = 1; // mandatory
   string loggedInUserId = 2;
-  string contractId = 3;
-  google.protobuf.Timestamp date = 4;
+  string contractId = 3; // mandatory
   bool dryRun = 5;
   google.protobuf.Timestamp createdAt = 7;
   SourceFields sourceFields = 8;
+  google.protobuf.Timestamp invoicePeriodStart = 9; // mandatory
+  google.protobuf.Timestamp invoicePeriodEnd = 10; // mandatory
+  string currency = 11; // mandatory
 }
 
 message FillInvoiceRequest {
@@ -76,7 +78,7 @@ message InvoiceIdResponse {
 }
 
 service InvoiceGrpcService {
-  rpc NewInvoice(NewInvoiceRequest) returns (InvoiceIdResponse);
+  rpc NewOnCycleInvoiceForContract(NewOnCycleInvoiceForContractRequest) returns (InvoiceIdResponse);
   rpc FillInvoice(FillInvoiceRequest) returns (InvoiceIdResponse);
   rpc PdfGeneratedInvoice(PdfGeneratedInvoiceRequest) returns (InvoiceIdResponse);
   rpc PayInvoice(PayInvoiceRequest) returns (InvoiceIdResponse);

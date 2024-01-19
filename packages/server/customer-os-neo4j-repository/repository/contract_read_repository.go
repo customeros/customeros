@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -20,7 +21,7 @@ type ContractReadRepository interface {
 	GetContractsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	TenantsHasAtLeastOneContract(ctx context.Context, tenant string) (bool, error)
 	CountContracts(ctx context.Context, tenant string) (int64, error)
-	GetContractsForInvoicing(ctx context.Context, invoiceDateTime time.Time) ([]map[string]any, error)
+	GetContractsToGenerateOnCycleInvoices(ctx context.Context, invoiceDateTime time.Time) ([]*utils.DbNodeAndTenant, error)
 }
 
 type contractReadRepository struct {
@@ -230,23 +231,28 @@ func (r *contractReadRepository) CountContracts(ctx context.Context, tenant stri
 	return contractsCount, nil
 }
 
-func (r *contractReadRepository) GetContractsForInvoicing(ctx context.Context, invoiceDateTime time.Time) ([]map[string]any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContractsForInvoicing")
+func (r *contractReadRepository) GetContractsToGenerateOnCycleInvoices(ctx context.Context, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsToGenerateOnCycleInvoices")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, "")
-	span.LogFields(log.Object("invoiceDateTime", invoiceDateTime))
+	span.LogFields(log.Object("referenceTime", referenceTime))
 
-	cypher := fmt.Sprintf(`
-			MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)
+	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)
 			WHERE 
-				o.hide = false AND 
-				o.isCustomer = true AND 
-				c.nextInvoiceDate is not null AND c.nextInvoiceDate <= $invoiceDateTime AND
-				c.techInvoicingStartedAt is null 
-			RETURN t.name as tenant, c.id as contractId limit 100
-			`)
+				ts.invoicingEnabled = true AND
+				(o.hide = false OR o.hide IS NULL) AND
+				(c.currency <> "" OR ts.defaultCurrency <> "") AND
+				(c.billingCycle IN $validBillingCycles) AND
+				(c.nextInvoiceDate IS NULL OR date(c.nextInvoiceDate) <= date($referenceTime)) AND
+				(date(c.invoicingStartDate) <= date($referenceTime)) AND
+				(c.endedAt IS NULL OR date(c.endedAt) > date(coalesce(c.nextInvoiceDate, c.invoicingStartDate))) AND
+				(c.techInvoicingStartedAt IS NULL OR c.techInvoicingStartedAt + duration({hours: 12}) < $referenceTime)
+			RETURN c, t.name limit 100`
 	params := map[string]any{
-		"invoiceDateTime": invoiceDateTime,
+		"referenceTime": referenceTime,
+		"validBillingCycles": []string{
+			neo4jenum.BillingCycleMonthlyBilling.String(), neo4jenum.BillingCycleQuarterlyBilling.String(), neo4jenum.BillingCycleAnnualBilling.String(),
+		},
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -259,17 +265,13 @@ func (r *contractReadRepository) GetContractsForInvoicing(ctx context.Context, i
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Collect(ctx)
+		return utils.ExtractAllRecordsAsDbNodeAndTenant(ctx, queryResult, err)
 
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
-
-	response := make([]map[string]any, 0)
-
-	for _, v := range result.([]*neo4j.Record) {
-		response = append(response, v.AsMap())
-	}
-	return response, nil
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndTenant))))
+	return result.([]*utils.DbNodeAndTenant), err
 }

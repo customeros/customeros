@@ -378,7 +378,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case invoicingcycleevent.InvoicingCycleUpdateV1:
 		return s.invoicingCycleEventHandler.OnUpdate(ctx, evt)
 
-	case invoiceevents.InvoiceNewV1:
+	case invoiceevents.InvoiceCreateV1:
 		return s.invoiceEventHandler.OnInvoiceNew(ctx, evt)
 	case invoiceevents.InvoiceFillV1:
 		return s.invoiceEventHandler.OnInvoiceFill(ctx, evt)

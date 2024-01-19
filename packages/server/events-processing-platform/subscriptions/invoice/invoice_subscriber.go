@@ -127,7 +127,7 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	}
 
 	switch evt.GetEventType() {
-	case invoice.InvoiceNewV1:
+	case invoice.InvoiceCreateV1:
 		return s.invoiceEventHandler.onInvoiceNewV1(ctx, evt)
 	case invoice.InvoiceFillV1:
 		return s.onInvoiceFillV1(ctx, evt)

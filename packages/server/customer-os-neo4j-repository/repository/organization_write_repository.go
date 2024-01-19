@@ -105,7 +105,6 @@ type OrganizationWriteRepository interface {
 	UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error
 	WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error
 	UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error
-	UpdateInvoicingActive(ctx context.Context, tenant, organizationId string, invoicingActive bool, updatedAt time.Time) error
 }
 
 type organizationWriteRepository struct {
@@ -651,33 +650,6 @@ func (r *organizationWriteRepository) UpdateOnboardingStatus(ctx context.Context
 		"comments":       comments,
 		"updatedAt":      updatedAt,
 		"now":            utils.Now(),
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
-
-func (r *organizationWriteRepository) UpdateInvoicingActive(ctx context.Context, tenant, organizationId string, invoicingActive bool, updatedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateInvoicingActive")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-				SET org.invoicingActive=$invoicingActive,
-					org.invoicedAt=$invoicedAt,
-					org.updatedAt=$updatedAt`
-	params := map[string]any{
-		"tenant":          tenant,
-		"organizationId":  organizationId,
-		"invoicingActive": invoicingActive,
-		"invoicedAt":      updatedAt,
-		"updatedAt":       updatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

@@ -51,6 +51,23 @@ func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	})
 }
 
+func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, settings entity.TenantSettingsEntity) {
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
+				MERGE (t)-[:HAS_SETTINGS]->(s:TenantSettings {id:randomUUID()})
+				ON CREATE SET
+					s:TenantSettings_%s,
+					s.createdAt=$createdAt,
+					s.invoicingEnabled=$invoicingEnabled,
+					s.tenant=$tenant,
+					s.defaultCurrency=$defaultCurrency`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":           tenant,
+		"invoicingEnabled": settings.InvoicingEnabled,
+		"createdAt":        settings.CreatedAt,
+		"defaultCurrency":  settings.DefaultCurrency,
+	})
+}
+
 func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, workspace string, provider string, tenant string) {
 	query := `MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)-[:HAS_WORKSPACE]->(w:Workspace {name:$workspace, provider:$provider})`
@@ -559,9 +576,9 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 					c.signedAt=$signedAt,
 					c.serviceStartedAt=$serviceStartedAt,
 					c.endedAt=$endedAt,
-					c.nextInvoiceDate=$nextInvoiceDate,
 					c.currency=$currency,
 					c.invoicingStartDate=$invoicingStartDate,
+					c.nextInvoiceDate=$nextInvoiceDate,
 					c.billingCycle=$billingCycle
 				`, tenant)
 
@@ -582,9 +599,9 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"signedAt":           utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
 		"serviceStartedAt":   utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
 		"endedAt":            utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
-		"nextInvoiceDate":    utils.TimePtrFirstNonNilNillableAsAny(contract.NextInvoiceDate),
 		"currency":           contract.Currency.String(),
 		"invoicingStartDate": utils.ToNeo4jDateAsAny(contract.InvoicingStartDate),
+		"nextInvoiceDate":    utils.ToNeo4jDateAsAny(contract.NextInvoiceDate),
 		"billingCycle":       contract.BillingCycle.String(),
 	})
 	return contractId

@@ -35,17 +35,17 @@ func TestInvoiceEventHandler_OnInvoiceNew(t *testing.T) {
 	id := uuid.New().String()
 
 	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, id)
-	newEvent, err := invoice.NewInvoiceNewEvent(
+	newEvent, err := invoice.NewInvoiceCreateEvent(
 		aggregate,
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatform,
 		},
-		&invoicepb.NewInvoiceRequest{
-			ContractId: contractId,
-			DryRun:     false,
-			CreatedAt:  utils.ConvertTimeToTimestampPtr(&now),
-			Date:       utils.ConvertTimeToTimestampPtr(&now),
+		&invoicepb.NewOnCycleInvoiceForContractRequest{
+			ContractId:         contractId,
+			DryRun:             false,
+			CreatedAt:          utils.ConvertTimeToTimestampPtr(&now),
+			InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&now),
 		},
 	)
 	require.Nil(t, err)

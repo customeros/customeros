@@ -22,8 +22,8 @@ type ContractEntity struct {
 	AppSource          string
 	ContractUrl        string
 	InvoicingStartDate *time.Time
-	BillingCycle       enum.BillingCycle
 	NextInvoiceDate    *time.Time
+	BillingCycle       enum.BillingCycle
 	Currency           enum.Currency
 
 	TriggeredOnboardingStatusChange bool

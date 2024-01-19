@@ -26,15 +26,15 @@ func TestInvoiceService_NewInvoice(t *testing.T) {
 	require.Nil(t, err, "Failed to get grpc connection")
 	invoiceServiceClient := invoicepb.NewInvoiceGrpcServiceClient(grpcConnection)
 
-	response, err := invoiceServiceClient.NewInvoice(ctx, &invoicepb.NewInvoiceRequest{
+	response, err := invoiceServiceClient.NewOnCycleInvoiceForContract(ctx, &invoicepb.NewOnCycleInvoiceForContractRequest{
 		Tenant:     tenant,
 		ContractId: "1",
 		SourceFields: &commonpb.SourceFields{
 			AppSource: "app",
 			Source:    "source",
 		},
-		CreatedAt: utils.ConvertTimeToTimestampPtr(&now),
-		Date:      utils.ConvertTimeToTimestampPtr(&now),
+		CreatedAt:          utils.ConvertTimeToTimestampPtr(&now),
+		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&now),
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -46,10 +46,10 @@ func TestInvoiceService_NewInvoice(t *testing.T) {
 	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, response.Id)
 	eventList := eventsMap[invoiceAggregate.ID]
 	require.Equal(t, 1, len(eventList))
-	require.Equal(t, invoice.InvoiceNewV1, eventList[0].GetEventType())
+	require.Equal(t, invoice.InvoiceCreateV1, eventList[0].GetEventType())
 	require.Equal(t, string(invoice.InvoiceAggregateType)+"-"+tenant+"-"+invoiceId, eventList[0].GetAggregateID())
 
-	var eventData invoice.InvoiceNewEvent
+	var eventData invoice.InvoiceCreateEvent
 	err = eventList[0].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 
@@ -78,10 +78,10 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
 
-	newEvent, _ := invoice.NewInvoiceNewEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewInvoiceRequest{
-		ContractId: "1",
-		CreatedAt:  utils.ConvertTimeToTimestampPtr(&now),
-		Date:       utils.ConvertTimeToTimestampPtr(&now),
+	newEvent, _ := invoice.NewInvoiceCreateEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewOnCycleInvoiceForContractRequest{
+		ContractId:         "1",
+		CreatedAt:          utils.ConvertTimeToTimestampPtr(&now),
+		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&now),
 	})
 	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, newEvent)
 	aggregateStore.Save(ctx, invoiceAggregate)
@@ -126,7 +126,7 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 	eventList := eventsMap[invoiceAggregate.ID]
 	require.Equal(t, 2, len(eventList))
 
-	require.Equal(t, invoice.InvoiceNewV1, eventList[0].GetEventType())
+	require.Equal(t, invoice.InvoiceCreateV1, eventList[0].GetEventType())
 	require.Equal(t, invoice.InvoiceFillV1, eventList[1].GetEventType())
 	require.Equal(t, string(invoice.InvoiceAggregateType)+"-"+tenant+"-"+invoiceId, eventList[1].GetAggregateID())
 
@@ -159,10 +159,10 @@ func TestInvoiceService_PdfGeneratedInvoice(t *testing.T) {
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
 
-	newEvent, _ := invoice.NewInvoiceNewEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewInvoiceRequest{
-		ContractId: "1",
-		CreatedAt:  utils.ConvertTimeToTimestampPtr(&now),
-		Date:       utils.ConvertTimeToTimestampPtr(&now),
+	newEvent, _ := invoice.NewInvoiceCreateEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewOnCycleInvoiceForContractRequest{
+		ContractId:         "1",
+		CreatedAt:          utils.ConvertTimeToTimestampPtr(&now),
+		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&now),
 	})
 	fillEvent, _ := invoice.NewInvoiceFillEvent(invoiceAggregate, &now, commonmodel.Source{}, &invoicepb.FillInvoiceRequest{
 		Amount: 1,
@@ -200,7 +200,7 @@ func TestInvoiceService_PdfGeneratedInvoice(t *testing.T) {
 	eventList := eventsMap[invoiceAggregate.ID]
 	require.Equal(t, 3, len(eventList))
 
-	require.Equal(t, invoice.InvoiceNewV1, eventList[0].GetEventType())
+	require.Equal(t, invoice.InvoiceCreateV1, eventList[0].GetEventType())
 	require.Equal(t, invoice.InvoiceFillV1, eventList[1].GetEventType())
 	require.Equal(t, invoice.InvoicePdfGeneratedV1, eventList[2].GetEventType())
 	require.Equal(t, string(invoice.InvoiceAggregateType)+"-"+tenant+"-"+invoiceId, eventList[1].GetAggregateID())
@@ -224,10 +224,10 @@ func TestInvoiceService_PayInvoice(t *testing.T) {
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
 
-	newEvent, _ := invoice.NewInvoiceNewEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewInvoiceRequest{
-		ContractId: "1",
-		CreatedAt:  utils.ConvertTimeToTimestampPtr(&now),
-		Date:       utils.ConvertTimeToTimestampPtr(&now),
+	newEvent, _ := invoice.NewInvoiceCreateEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewOnCycleInvoiceForContractRequest{
+		ContractId:         "1",
+		CreatedAt:          utils.ConvertTimeToTimestampPtr(&now),
+		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&now),
 	})
 	fillEvent, _ := invoice.NewInvoiceFillEvent(invoiceAggregate, &now, commonmodel.Source{}, &invoicepb.FillInvoiceRequest{
 		Amount: 1,
@@ -268,7 +268,7 @@ func TestInvoiceService_PayInvoice(t *testing.T) {
 	eventList := eventsMap[invoiceAggregate.ID]
 	require.Equal(t, 4, len(eventList))
 
-	require.Equal(t, invoice.InvoiceNewV1, eventList[0].GetEventType())
+	require.Equal(t, invoice.InvoiceCreateV1, eventList[0].GetEventType())
 	require.Equal(t, invoice.InvoiceFillV1, eventList[1].GetEventType())
 	require.Equal(t, invoice.InvoicePdfGeneratedV1, eventList[2].GetEventType())
 	require.Equal(t, invoice.InvoicePayV1, eventList[3].GetEventType())
@@ -330,10 +330,10 @@ func TestInvoiceService_SimulateInvoice(t *testing.T) {
 
 	require.Equal(t, 1, len(eventList))
 
-	require.Equal(t, invoice.InvoiceNewV1, eventList[0].GetEventType())
+	require.Equal(t, invoice.InvoiceCreateV1, eventList[0].GetEventType())
 	require.Equal(t, string(invoice.InvoiceAggregateType)+"-temp-"+tenant+"-"+invoiceId, eventList[0].GetAggregateID())
 
-	var eventData invoice.InvoiceNewEvent
+	var eventData invoice.InvoiceCreateEvent
 	err = eventList[0].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 
