@@ -467,16 +467,25 @@ func GetBoolPropOrNil(props map[string]any, key string) *bool {
 
 func GetFloatPropOrNil(props map[string]any, key string) *float64 {
 	if props[key] != nil {
-		f := props[key].(float64)
-		return &f
+		switch v := props[key].(type) {
+		case float64:
+			return &v
+		case int64:
+			f := float64(v)
+			return &f
+		}
 	}
 	return nil
 }
 
 func GetFloatPropOrZero(props map[string]any, key string) float64 {
 	if props[key] != nil {
-		f := props[key].(float64)
-		return f
+		switch v := props[key].(type) {
+		case float64:
+			return v
+		case int64:
+			return float64(v)
+		}
 	}
 	return float64(0)
 }
