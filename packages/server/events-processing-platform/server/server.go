@@ -2,14 +2,16 @@ package server
 
 import (
 	"context"
-	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/invoice"
-	"google.golang.org/grpc"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/invoice"
+	"google.golang.org/grpc"
 
 	"github.com/labstack/echo/v4"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
@@ -117,6 +119,10 @@ func (server *Server) Start(parentCtx context.Context) error {
 	//Server.runHealthCheck(ctx)
 
 	server.Services = service.InitServices(server.Config, server.Repositories, server.AggregateStore, server.CommandHandlers, server.Log)
+
+	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories, server.Log, server.AggregateStore)
+	eventBufferWatcher.Start(ctx)
+	defer eventBufferWatcher.Stop()
 
 	// Setting up gRPC client
 	df := grpc_client.NewDialFactory(server.Config)
