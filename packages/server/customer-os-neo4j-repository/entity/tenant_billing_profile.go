@@ -18,3 +18,5 @@ type TenantBillingProfile struct {
 	SourceOfTruth DataSource
 	AppSource     string
 }
+
+type TenantBillingProfiles []TenantBillingProfile

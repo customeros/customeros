@@ -2,7 +2,10 @@ package invoice
 
 import (
 	"context"
+	"fmt"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
@@ -31,6 +34,7 @@ type InvoiceSubscriber struct {
 	cfg                 *config.Config
 	grpcClients         *grpc_client.Clients
 	fsc                 fsc.FileStoreApiService
+	repositories        *repository.Repositories
 	invoiceEventHandler *InvoiceEventHandler
 }
 
@@ -41,6 +45,7 @@ func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config
 		cfg:                 cfg,
 		grpcClients:         grpcClients,
 		fsc:                 fsc,
+		repositories:        repositories,
 		invoiceEventHandler: NewInvoiceEventHandler(log, repositories, &cfg.EventNotifications, grpcClients),
 	}
 }
@@ -158,35 +163,94 @@ func (s *InvoiceSubscriber) onInvoiceFillV1(ctx context.Context, evt eventstore.
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	//TODO build invoice PDF
-	//load tenant billing details ( logo, address, etc ) from neo4j
-	//load billing profile for organization from neo4j
-	//load invoice from neo4j for invoice date and due date
-	//take the data from InvoiceFillEvent to fill the invoice
+	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 
-	// Define your invoice data
+	var invoiceEntity *neo4jentity.InvoiceEntity
+	var tenantSettingsEntity *neo4jentity.TenantSettingsEntity
+	var tenantBillingProfileEntity *neo4jentity.TenantBillingProfile
+	var organization *neo4jentity.OrganizationEntity
+	//var organizationBillingProfile *neo4jentity.BillingProfileEntity
+
+	//load invoice
+	invoiceNode, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetInvoice")
+	}
+	if invoiceNode != nil {
+		invoiceEntity = mapper.MapDbNodeToInvoiceEntity(invoiceNode)
+	} else {
+		return errors.New("invoiceNode is nil")
+	}
+
+	//load tenant settings from neo4j
+	tenantSettings, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetTenantSettings")
+	}
+	if tenantSettings != nil {
+		tenantSettingsEntity = mapper.MapDbNodeToTenantSettingsEntity(tenantSettings)
+	} else {
+		return errors.New("tenantSettings is nil")
+	}
+
+	//load tenant billing profile from neo4j
+	tenantBillingProfiles, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, eventData.Tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetTenantSettings")
+	}
+	if tenantBillingProfiles == nil || len(tenantBillingProfiles) > 0 {
+		tenantBillingProfileEntity = mapper.MapDbNodeToTenantBillingProfileEntity(tenantBillingProfiles[0])
+	} else {
+		return errors.New("tenantBillingProfiles is nil or empty")
+	}
+
+	//load organization from neo4j
+	organizationNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetOrganizationByInvoiceId")
+	}
+	if organizationNode != nil {
+		organization = mapper.MapDbNodeToOrganizationEntity(organizationNode)
+	} else {
+		return errors.New("organizationNode is nil")
+	}
+
+	//todo load billing profile for organization
+
+	currencyAndSymbol := tenantSettingsEntity.DefaultCurrency.String() + tenantSettingsEntity.DefaultCurrency.Symbol()
+
 	data := map[string]interface{}{
-		"CustomerName":          "John Doe",
-		"CustomerAddress":       "12 Stardust Street Skyline, SK 98765, nited States, invoices@robertinc.com",
-		"ProviderLogoUrl":       "https://static.wikia.nocookie.net/fictionalcompanies/images/c/c2/ACME_Corporation.png",
+		"CustomerName":          organization.Name,
+		"CustomerAddress":       "TODO",
+		"ProviderLogoUrl":       tenantSettingsEntity.LogoUrl,
 		"ProviderLogoExtension": "",
-		"ProviderName":          "XYZ Company",
-		"ProviderAddress":       "29 Maple Lane, Springfield, Haven County, San Francisco • 89302, United States",
-		"InvoiceNumber":         "123456",
-		"InvoiceIssueDate":      "22.01.2024",
-		"InvoiceDueDate":        "22.01.2024",
-		"InvoiceCurrency":       "US$",
-		"InvoiceSubtotal":       "123.00",
-		"InvoiceTax":            "0.00",
-		"InvoiceTotal":          "123.00",
-		"InvoicePaid":           "50.00",
-		"InvoiceAmountDue":      "73.00",
-		"InvoiceLineItems": []map[string]string{
-			{"Name": "Item 1", "Description": "Quantity increased", "Quantity": "1", "UnitPrice": "123.00", "Amount": "123.00"},
-			{"Name": "Item 2", "Description": "Price decreased", "Quantity": "2", "UnitPrice": "22.00", "Amount": "44.00"},
-		},
+		"ProviderName":          tenantBillingProfileEntity.LegalName,
+		"ProviderAddress":       tenantBillingProfileEntity.AddressLine1 + ", " + tenantBillingProfileEntity.AddressLine2 + ", " + tenantBillingProfileEntity.AddressLine3,
+		"InvoiceNumber":         invoiceEntity.Number,
+		"InvoiceIssueDate":      "TODO",
+		"InvoiceDueDate":        "TODO",
+		"InvoiceCurrency":       currencyAndSymbol,
+		"InvoiceSubtotal":       currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.Total),
+		"InvoiceTax":            currencyAndSymbol + "0.00",
+		"InvoiceTotal":          currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.Total),
+		"InvoiceAmountDue":      currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.Total),
+		"InvoiceLineItems":      []map[string]string{},
 	}
 	data["ProviderLogoExtension"] = GetFileExtensionFromUrl(data["ProviderLogoUrl"].(string))
+
+	for _, line := range eventData.Lines {
+		data["InvoiceLineItems"] = append(data["InvoiceLineItems"].([]map[string]string), map[string]string{
+			"Name":        line.Name,
+			"Description": line.Name,
+			"Quantity":    fmt.Sprintf("%d", line.Quantity),
+			"UnitPrice":   fmt.Sprintf("%.2f", line.Price),
+			"Amount":      fmt.Sprintf("%.2f", line.Amount),
+		})
+	}
 
 	//prepare the temp html file
 	tmpInvoiceFile, err := os.CreateTemp("", "invoice_*.html")

@@ -115,6 +115,17 @@ func main() {
 }
 
 func testCreateInvoice() {
+	_, err := clients.TenantClient.AddBillingProfile(context.Background(), &tenantpb.AddBillingProfileRequest{
+		Tenant:       tenant,
+		Email:        "test@gmail.com",
+		LegalName:    "My awesome company",
+		AddressLine1: "On a street",
+		AddressLine2: "Down the road",
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+
 	organization, err := clients.OrganizationClient.UpsertOrganization(context.Background(), &organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant: tenant,
 	})
@@ -122,7 +133,7 @@ func testCreateInvoice() {
 		log.Fatalf("Failed: %v", err.Error())
 	}
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	contract, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
 		Tenant:         tenant,
@@ -132,7 +143,7 @@ func testCreateInvoice() {
 		log.Fatalf("Failed: %v", err.Error())
 	}
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	result, err := clients.InvoiceClient.NewOnCycleInvoiceForContract(context.Background(), &invoicepb.NewOnCycleInvoiceForContractRequest{
 		Tenant:             tenant,
