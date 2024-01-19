@@ -77,11 +77,11 @@ func (eb *EventBufferWatcher) Park(
 	eventBuffer := entity.EventBuffer{
 		Tenant:             tenant,
 		UUID:               uuid,
-		ExpiryTimestamp:    expiryTimestamp,
+		ExpiryTimestamp:    expiryTimestamp.UTC(),
 		EventID:            evt.EventID,
 		EventType:          evt.EventType,
 		EventData:          evt.Data,
-		EventTimestamp:     evt.Timestamp,
+		EventTimestamp:     evt.Timestamp.UTC(),
 		EventAggregateID:   evt.AggregateID,
 		EventAggregateType: string(evt.AggregateType),
 		EventVersion:       evt.Version,
