@@ -134,12 +134,12 @@ func testCreateInvoice() {
 
 	time.Sleep(3 * time.Second)
 
-	result, err := clients.InvoiceClient.NewInvoice(context.Background(), &invoicepb.NewInvoiceRequest{
-		Tenant:     tenant,
-		ContractId: contract.Id,
-		CreatedAt:  timestamppb.New(utils.Now()),
-		Date:       timestamppb.New(utils.Now()),
-		DryRun:     true,
+	result, err := clients.InvoiceClient.NewOnCycleInvoiceForContract(context.Background(), &invoicepb.NewOnCycleInvoiceForContractRequest{
+		Tenant:             tenant,
+		ContractId:         contract.Id,
+		CreatedAt:          timestamppb.New(utils.Now()),
+		InvoicePeriodStart: timestamppb.New(utils.Now()),
+		DryRun:             true,
 		SourceFields: &commonpb.SourceFields{
 			AppSource: "test",
 		},
