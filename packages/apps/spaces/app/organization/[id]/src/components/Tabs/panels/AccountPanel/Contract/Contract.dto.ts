@@ -1,35 +1,48 @@
 import { SelectOption } from '@shared/types/SelectOptions';
-import { ContractUpdateInput, ContractRenewalCycle } from '@graphql/types';
-import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import {
+  ContractUpdateInput,
+  ContractRenewalCycle,
+  ContractBillingCycle,
+} from '@graphql/types';
+import {
+  billingFrequencyOptions,
+  contractBillingCycleOptions,
+} from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
 export interface TimeToRenewalData {
   name?: string;
   endedAt?: Date;
   signedAt?: Date;
   serviceStartedAt?: Date;
+  invoicingStartDate?: Date;
   organizationName?: string;
   contractUrl?: string | null;
   renewalPeriods?: number | null;
   renewalCycle?: ContractRenewalCycle;
+  billingCycle?: ContractBillingCycle | null;
 }
 export interface TimeToRenewalForm {
   name?: string;
   endedAt?: Date;
   signedAt?: Date;
   serviceStartedAt?: Date;
+  invoicingStartDate?: Date;
   contractUrl?: string | null;
   renewalPeriods?: string | null;
+  billingCycle?: SelectOption<ContractBillingCycle> | null;
   renewalCycle?: SelectOption<ContractRenewalCycle | 'MULTI_YEAR'> | null;
 }
 
 export class ContractDTO implements TimeToRenewalForm {
   signedAt?: Date;
   endedAt?: Date;
+  invoicingStartDate?: Date;
   serviceStartedAt?: Date;
   renewalCycle?: SelectOption<ContractRenewalCycle | 'MULTI_YEAR'> | null;
   name?: string;
   contractUrl?: string | null;
   renewalPeriods?: string | null;
+  billingCycle?: SelectOption<ContractBillingCycle> | null;
 
   constructor(data?: TimeToRenewalData | null) {
     this.renewalCycle =
@@ -38,8 +51,14 @@ export class ContractDTO implements TimeToRenewalForm {
           ? value === 'MULTI_YEAR'
           : value === data?.renewalCycle,
       ) ?? undefined;
+    this.billingCycle =
+      [...contractBillingCycleOptions].find(
+        ({ value }) => value === data?.billingCycle,
+      ) ?? undefined;
     this.signedAt = data?.signedAt && new Date(data.signedAt);
     this.endedAt = data?.endedAt && new Date(data.endedAt);
+    this.invoicingStartDate =
+      data?.invoicingStartDate && new Date(data.invoicingStartDate);
     this.serviceStartedAt =
       data?.serviceStartedAt && new Date(data.serviceStartedAt);
     this.name = data?.name?.length
@@ -65,9 +84,10 @@ export class ContractDTO implements TimeToRenewalForm {
     data: TimeToRenewalForm,
   ): Omit<ContractUpdateInput, 'contractId'> {
     return {
-      serviceStartedAt: data?.serviceStartedAt,
       signedAt: data?.signedAt,
       endedAt: data?.endedAt,
+      invoicingStartDate: data?.invoicingStartDate,
+      billingCycle: data?.billingCycle?.value,
       renewalCycle:
         data?.renewalCycle?.value === 'MULTI_YEAR'
           ? ContractRenewalCycle.AnnualRenewal

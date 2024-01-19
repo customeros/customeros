@@ -21,6 +21,9 @@ query getContracts($id: ID!) {
       renewalPeriods
       status
       contractUrl
+      billingCycle
+      invoicingStartDate
+      currency
       opportunities {
         id
         comments
@@ -33,6 +36,7 @@ query getContracts($id: ID!) {
         renewalUpdatedByUserId
         renewalUpdatedByUserAt
         renewedAt
+
         owner {
           id
           firstName

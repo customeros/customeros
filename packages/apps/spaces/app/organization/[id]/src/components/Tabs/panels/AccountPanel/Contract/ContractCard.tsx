@@ -29,10 +29,10 @@ import { ContractSubtitle } from '@organization/src/components/Tabs/panels/Accou
 import { UrlInput } from './UrlInput';
 import { Services } from './Services/Services';
 import { FormPeriodInput } from './PeriodInput';
-import { billingFrequencyOptions } from '../utils';
 import { RenewalARRCard } from './RenewalARR/RenewalARRCard';
 import { ContractDTO, TimeToRenewalForm } from './Contract.dto';
 import { ContractStatusSelect } from './contractStatuses/ContractStatusSelect';
+import { billingFrequencyOptions, contractBillingCycleOptions } from '../utils';
 
 interface ContractCardProps {
   data: Contract;
@@ -370,37 +370,43 @@ export const ContractCard = ({
               calendarIconHidden
             />
           </Flex>
-          <Flex
-            gap='4'
-            flexGrow={0}
-            mb={state.values.renewalCycle?.value === 'MULTI_YEAR' ? '2' : '0'}
-          >
-            <DatePicker
-              label='Service starts'
-              placeholder='Start date'
-              formId={formId}
-              name='serviceStartedAt'
-              inset='120% auto auto 0px'
-              maxDate={state.values.endedAt}
-              calendarIconHidden
-            />
+          <Flex gap='4' flexGrow={0} mb={2}>
             <FormSelect
-              label='Renewal cycle'
-              placeholder='Renewal cycle'
+              label='Contract renews'
+              placeholder='Contract renews'
               isLabelVisible
               name='renewalCycle'
               formId={formId}
               options={billingFrequencyOptions}
             />
+            {state.values.renewalCycle?.value === 'MULTI_YEAR' && (
+              <FormPeriodInput
+                formId={formId}
+                label='Renews every'
+                name='renewalPeriods'
+                placeholder='Renews every'
+              />
+            )}
           </Flex>
-          {state.values.renewalCycle?.value === 'MULTI_YEAR' && (
-            <FormPeriodInput
+          <Flex gap='4' flexGrow={0} mb={2}>
+            <DatePicker
+              label='Invoicing starts'
+              placeholder='Invoicing starts'
+              minDate={state.values.serviceStartedAt}
               formId={formId}
-              label='Renews every'
-              name='renewalPeriods'
-              placeholder='Renews every'
+              name='invoicingStartDate'
+              inset='120% auto auto 0px'
+              calendarIconHidden
             />
-          )}
+            <FormSelect
+              label='Billing period'
+              placeholder='Billing period'
+              isLabelVisible
+              name='billingCycle'
+              formId={formId}
+              options={contractBillingCycleOptions}
+            />
+          </Flex>
         </CardBody>
       )}
       <CardFooter p='0' mt={1} w='full' flexDir='column'>
