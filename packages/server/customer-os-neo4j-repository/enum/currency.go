@@ -75,3 +75,50 @@ func DecodeCurrency(code string) Currency {
 		return ""
 	}
 }
+
+func (e Currency) Symbol() string {
+	switch e {
+	case CurrencyUSD:
+		return "$"
+	case CurrencyEUR:
+		return "€"
+	case CurrencyGBP:
+		return "£"
+	case CurrencyJPY:
+		return "¥"
+	case CurrencyAUD:
+		return "A$"
+	case CurrencyCAD:
+		return "C$"
+	case CurrencyCHF:
+		return "Fr"
+	case CurrencyCNY:
+		return "¥"
+	case CurrencySEK:
+		return "kr"
+	case CurrencyNZD:
+		return "NZ$"
+	case CurrencyKRW:
+		return "₩"
+	case CurrencySGD:
+		return "S$"
+	case CurrencyNOK:
+		return "kr"
+	case CurrencyMXN:
+		return "Mex$"
+	case CurrencyINR:
+		return "₹"
+	case CurrencyHKD:
+		return "HK$"
+	case CurrencyBRL:
+		return "R$"
+	case CurrencyZAR:
+		return "R"
+	case CurrencyTRY:
+		return "₺"
+	case CurrencyRON:
+		return "L"
+	default:
+		return ""
+	}
+}
