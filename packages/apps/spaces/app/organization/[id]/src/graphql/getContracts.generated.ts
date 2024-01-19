@@ -56,6 +56,9 @@ export type GetContractsQuery = {
       renewalPeriods?: any | null;
       status: Types.ContractStatus;
       contractUrl?: string | null;
+      billingCycle?: Types.ContractBillingCycle | null;
+      invoicingStartDate?: any | null;
+      currency?: Types.Currency | null;
       opportunities?: Array<{
         __typename?: 'Opportunity';
         id: string;
@@ -121,6 +124,9 @@ export const GetContractsDocument = `
       renewalPeriods
       status
       contractUrl
+      billingCycle
+      invoicingStartDate
+      currency
       opportunities {
         id
         comments

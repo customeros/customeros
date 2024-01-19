@@ -459,12 +459,15 @@ export type ContactsPage = Pages & {
 export type Contract = Node & {
   __typename?: 'Contract';
   appSource: Scalars['String']['output'];
+  billingCycle?: Maybe<ContractBillingCycle>;
   contractUrl?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
+  currency?: Maybe<Currency>;
   endedAt?: Maybe<Scalars['Time']['output']>;
   externalLinks: Array<ExternalSystem>;
   id: Scalars['ID']['output'];
+  invoicingStartDate?: Maybe<Scalars['Time']['output']>;
   name: Scalars['String']['output'];
   opportunities?: Maybe<Array<Opportunity>>;
   owner?: Maybe<User>;
@@ -479,10 +482,20 @@ export type Contract = Node & {
   updatedAt: Scalars['Time']['output'];
 };
 
+export enum ContractBillingCycle {
+  AnnualBilling = 'ANNUAL_BILLING',
+  MonthlyBilling = 'MONTHLY_BILLING',
+  None = 'NONE',
+  QuarterlyBilling = 'QUARTERLY_BILLING',
+}
+
 export type ContractInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
+  billingCycle?: InputMaybe<ContractBillingCycle>;
   contractUrl?: InputMaybe<Scalars['String']['input']>;
+  currency?: InputMaybe<Currency>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
+  invoicingStartDate?: InputMaybe<Scalars['Time']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   organizationId: Scalars['ID']['input'];
   renewalCycle?: InputMaybe<ContractRenewalCycle>;
@@ -507,9 +520,12 @@ export enum ContractStatus {
 
 export type ContractUpdateInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
+  billingCycle?: InputMaybe<ContractBillingCycle>;
   contractId: Scalars['ID']['input'];
   contractUrl?: InputMaybe<Scalars['String']['input']>;
+  currency?: InputMaybe<Currency>;
   endedAt?: InputMaybe<Scalars['Time']['input']>;
+  invoicingStartDate?: InputMaybe<Scalars['Time']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   renewalCycle?: InputMaybe<ContractRenewalCycle>;
   renewalPeriods?: InputMaybe<Scalars['Int64']['input']>;
@@ -525,6 +541,29 @@ export type Country = {
   name: Scalars['String']['output'];
   phoneCode: Scalars['String']['output'];
 };
+
+export enum Currency {
+  Aud = 'AUD',
+  Brl = 'BRL',
+  Cad = 'CAD',
+  Chf = 'CHF',
+  Cny = 'CNY',
+  Eur = 'EUR',
+  Gbp = 'GBP',
+  Hkd = 'HKD',
+  Inr = 'INR',
+  Jpy = 'JPY',
+  Krw = 'KRW',
+  Mxn = 'MXN',
+  Nok = 'NOK',
+  Nzd = 'NZD',
+  Ron = 'RON',
+  Sek = 'SEK',
+  Sgd = 'SGD',
+  Try = 'TRY',
+  Usd = 'USD',
+  Zar = 'ZAR',
+}
 
 /**
  * Describes a custom, user-defined field associated with a `Contact`.
@@ -1235,6 +1274,60 @@ export enum InternalType {
   Upsell = 'UPSELL',
 }
 
+export type Invoice = Node &
+  SourceFields & {
+    __typename?: 'Invoice';
+    amount: Scalars['Float']['output'];
+    appSource: Scalars['String']['output'];
+    createdAt: Scalars['Time']['output'];
+    currency: Scalars['String']['output'];
+    date: Scalars['Time']['output'];
+    dryRun: Scalars['Boolean']['output'];
+    dueDate: Scalars['Time']['output'];
+    id: Scalars['ID']['output'];
+    invoiceLines: Array<InvoiceLine>;
+    number: Scalars['String']['output'];
+    repositoryFileId: Scalars['String']['output'];
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    total: Scalars['Float']['output'];
+    updatedAt: Scalars['Time']['output'];
+    vat: Scalars['Float']['output'];
+  };
+
+export type InvoiceLine = Node & {
+  __typename?: 'InvoiceLine';
+  amount: Scalars['Float']['output'];
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  quantity: Scalars['Int']['output'];
+  total: Scalars['Float']['output'];
+  vat: Scalars['Float']['output'];
+};
+
+export type InvoiceLineInput = {
+  billed: BilledType;
+  name: Scalars['String']['input'];
+  price: Scalars['Float']['input'];
+  quantity: Scalars['Int']['input'];
+  serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type InvoiceSimulateInput = {
+  contractId: Scalars['ID']['input'];
+  date?: InputMaybe<Scalars['Time']['input']>;
+  invoiceLines: Array<InvoiceLineInput>;
+};
+
+export type InvoicesPage = Pages & {
+  __typename?: 'InvoicesPage';
+  content: Array<Invoice>;
+  totalElements: Scalars['Int64']['output'];
+  totalPages: Scalars['Int']['output'];
+};
+
 export type InvoicingCycle = Node &
   SourceFields & {
     __typename?: 'InvoicingCycle';
@@ -1699,6 +1792,7 @@ export type Mutation = {
   interactionEvent_LinkAttachment: InteractionEvent;
   interactionSession_Create: InteractionSession;
   interactionSession_LinkAttachment: InteractionSession;
+  invoice_Simulate: Scalars['ID']['output'];
   invoicingCycle_Create: InvoicingCycle;
   invoicingCycle_Update: InvoicingCycle;
   jobRole_Create: JobRole;
@@ -2039,6 +2133,10 @@ export type MutationInteractionSession_CreateArgs = {
 export type MutationInteractionSession_LinkAttachmentArgs = {
   attachmentId: Scalars['ID']['input'];
   sessionId: Scalars['ID']['input'];
+};
+
+export type MutationInvoice_SimulateArgs = {
+  input: InvoiceSimulateInput;
 };
 
 export type MutationInvoicingCycle_CreateArgs = {
@@ -2586,6 +2684,7 @@ export type Organization = Node & {
   id: Scalars['ID']['output'];
   industry?: Maybe<Scalars['String']['output']>;
   industryGroup?: Maybe<Scalars['String']['output']>;
+  invoices: InvoicesPage;
   isCustomer?: Maybe<Scalars['Boolean']['output']>;
   isPublic?: Maybe<Scalars['Boolean']['output']>;
   issueSummaryByStatus: Array<IssueSummaryByStatus>;
@@ -2623,6 +2722,12 @@ export type Organization = Node & {
 };
 
 export type OrganizationContactsArgs = {
+  pagination?: InputMaybe<Pagination>;
+  sort?: InputMaybe<Array<SortBy>>;
+  where?: InputMaybe<Filter>;
+};
+
+export type OrganizationInvoicesArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
@@ -2942,6 +3047,8 @@ export type Query = {
   interactionEvent_ByEventIdentifier: InteractionEvent;
   interactionSession: InteractionSession;
   interactionSession_BySessionIdentifier: InteractionSession;
+  invoice: Invoice;
+  invoices: InvoicesPage;
   invoicingCycle: InvoicingCycle;
   issue: Issue;
   logEntry: LogEntry;
@@ -3075,6 +3182,16 @@ export type QueryInteractionSessionArgs = {
 
 export type QueryInteractionSession_BySessionIdentifierArgs = {
   sessionIdentifier: Scalars['String']['input'];
+};
+
+export type QueryInvoiceArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryInvoicesArgs = {
+  pagination?: InputMaybe<Pagination>;
+  sort?: InputMaybe<Array<SortBy>>;
+  where?: InputMaybe<Filter>;
 };
 
 export type QueryIssueArgs = {
