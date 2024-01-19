@@ -16,6 +16,13 @@ message AddBillingProfileRequest {
   string addressLine1 = 8;
   string addressLine2 = 9;
   string addressLine3 = 10;
+  string domesticPaymentsBankName = 11;
+  string domesticPaymentsAccountNumber = 12;
+  string domesticPaymentsSortCode = 13;
+  string internationalPaymentsSwiftBic = 14;
+  string internationalPaymentsBankName = 15;
+  string internationalPaymentsBankAddress = 16;
+  string internationalPaymentsInstructions = 17;
 }
 
 message IdResponse {
