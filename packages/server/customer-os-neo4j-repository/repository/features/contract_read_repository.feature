@@ -22,4 +22,4 @@ Feature: Contract Read
     Examples:
       | inserted_slis | actual_number_of_SlIs |
       | 2            | 2         |
-      | 1            | 13         |
+      | 1            | 1         |
