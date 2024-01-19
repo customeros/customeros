@@ -48,7 +48,7 @@ func (r *invoiceWriteRepository) InvoiceNew(ctx context.Context, tenant, contrac
 								i.dryRun=$dryRun,
 								i.number=$number,
 								i.date=$date,
-								i.dueDate=$dueDate,
+								i.dueDate=$dueDate
 							WITH c, i 
 							MERGE (c)-[:HAS_INVOICE]->(i) 
 							`, tenant, tenant)
