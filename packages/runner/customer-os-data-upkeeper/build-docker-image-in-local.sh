@@ -14,6 +14,6 @@ cp -r ../../server/events-processing-proto/* tmp-sources/events-processing-proto
 
 cp Dockerfile tmp-sources/Dockerfile
 
-docker build -t aa tmp-sources/.
+docker build --no-cache -t aa tmp-sources/.
 
 rm -rf tmp-sources
