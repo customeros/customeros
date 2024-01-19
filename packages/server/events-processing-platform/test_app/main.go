@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"log"
+	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -27,7 +29,7 @@ import (
 const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
 const appSource = "test_app"
 
-var tenant = "openline"
+var tenant = "openlineai"
 var orgId = "ceae019f-d1e3-49b3-87c5-35ebb68a5ff1"
 
 type Clients struct {
@@ -44,6 +46,7 @@ type Clients struct {
 	ServiceLineItemClient  servicelineitempb.ServiceLineItemGrpcServiceClient
 	OpportunityClient      opportunitypb.OpportunityGrpcServiceClient
 	TenantClient           tenantpb.TenantGrpcServiceClient
+	InvoiceClient          invoicepb.InvoiceGrpcServiceClient
 }
 
 var clients *Clients
@@ -67,6 +70,7 @@ func InitClients() {
 		OpportunityClient:      opportunitypb.NewOpportunityGrpcServiceClient(conn),
 		ServiceLineItemClient:  servicelineitempb.NewServiceLineItemGrpcServiceClient(conn),
 		TenantClient:           tenantpb.NewTenantGrpcServiceClient(conn),
+		InvoiceClient:          invoicepb.NewInvoiceGrpcServiceClient(conn),
 	}
 }
 
@@ -107,6 +111,43 @@ func main() {
 	//testUpdateOrgOwner()
 	//testRefreshLastTouchpoint()
 	//testAddTenantBillingProfile()
+	testCreateInvoice()
+}
+
+func testCreateInvoice() {
+	organization, err := clients.OrganizationClient.UpsertOrganization(context.Background(), &organizationpb.UpsertOrganizationGrpcRequest{
+		Tenant: tenant,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+
+	time.Sleep(3 * time.Second)
+
+	contract, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: organization.Id,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+
+	time.Sleep(3 * time.Second)
+
+	result, err := clients.InvoiceClient.NewInvoice(context.Background(), &invoicepb.NewInvoiceRequest{
+		Tenant:     tenant,
+		ContractId: contract.Id,
+		CreatedAt:  timestamppb.New(utils.Now()),
+		Date:       timestamppb.New(utils.Now()),
+		DryRun:     true,
+		SourceFields: &commonpb.SourceFields{
+			AppSource: "test",
+		},
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
 }
 
 func testAddTenantBillingProfile() {

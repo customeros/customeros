@@ -103,12 +103,12 @@ func (h *InvoiceEventHandler) onInvoiceNewV1(ctx context.Context, evt eventstore
 		}
 	}
 
-	amount := 0.0
-	vat := 0.0
-	total := 0.0
+	amount := 1.1
+	vat := 2.2
+	total := 3.3
 	invoiceLines := []*invoicepb.InvoiceLine{}
 
-	err = h.callFillInvoice(ctx, eventData.Tenant, evt.GetAggregateID(), amount, vat, total, invoiceLines, span)
+	err = h.callFillInvoice(ctx, eventData.Tenant, invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant), amount, vat, total, invoiceLines, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceNewV1.CallFillInvoice")

@@ -1,14 +1,14 @@
 package invoice
 
 import (
-	"bytes"
 	"context"
-	"github.com/jung-kurt/gofpdf"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/opentracing/opentracing-go"
+	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
@@ -140,6 +140,13 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	return nil
 }
 
+type InvoiceData struct {
+	CustomerName  string
+	ProviderName  string
+	InvoiceNumber string
+	// Add more fields as needed
+}
+
 func (s *InvoiceSubscriber) onInvoiceFillV1(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceSubscriber.onInvoiceFillV1")
 	defer span.Finish()
@@ -157,18 +164,55 @@ func (s *InvoiceSubscriber) onInvoiceFillV1(ctx context.Context, evt eventstore.
 	//load invoice from neo4j for invoice date and due date
 	//take the data from InvoiceFillEvent to fill the invoice
 
-	pdf := gofpdf.New("P", "mm", "A4", "")
-	pdf.AddPage()
-	pdf.SetFont("Arial", "B", 16)
-	pdf.Cell(40, 10, "Hello, World!")
+	// Define your invoice data
+	data := map[string]interface{}{
+		"CustomerName":          "John Doe",
+		"CustomerAddress":       "12 Stardust Street Skyline, SK 98765, nited States, invoices@robertinc.com",
+		"ProviderLogoUrl":       "https://static.wikia.nocookie.net/fictionalcompanies/images/c/c2/ACME_Corporation.png",
+		"ProviderLogoExtension": "",
+		"ProviderName":          "XYZ Company",
+		"ProviderAddress":       "29 Maple Lane, Springfield, Haven County, San Francisco • 89302, United States",
+		"InvoiceNumber":         "123456",
+		"InvoiceIssueDate":      "22.01.2024",
+		"InvoiceDueDate":        "22.01.2024",
+		"InvoiceCurrency":       "US$",
+		"InvoiceSubtotal":       "123.00",
+		"InvoiceTax":            "0.00",
+		"InvoiceTotal":          "123.00",
+		"InvoicePaid":           "50.00",
+		"InvoiceAmountDue":      "73.00",
+	}
+	data["ProviderLogoExtension"] = GetFileExtensionFromUrl(data["ProviderLogoUrl"].(string))
 
-	w := &bytes.Buffer{}
-	if err := pdf.Output(w); err != nil {
+	//prepare the temp html file
+	tmpInvoiceFile, err := os.CreateTemp("", "invoice_*.html")
+	if err != nil {
+		return errors.Wrap(err, "ioutil.TempFile")
+	}
+	defer os.Remove(tmpInvoiceFile.Name()) // Delete the temporary HTML file when done
+	defer tmpInvoiceFile.Close()
+
+	//fill the template with data and store it in temp
+	err = FillInvoiceHtmlTemplate(tmpInvoiceFile, data)
+	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "pdf.Output")
+		return errors.Wrap(err, "FillInvoiceHtmlTemplate")
 	}
 
-	fileDTO, err := s.fsc.UploadSingleFileBytes(eventData.Tenant, w.Bytes())
+	//convert the temp to pdf
+	pdfBytes, err := ConvertInvoiceHtmlToPdf(s.cfg.Subscriptions.InvoiceSubscription.PdfConverterUrl, tmpInvoiceFile, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "ConvertInvoiceHtmlToPdf")
+	}
+
+	// Save the PDF file to disk
+	err = ioutil.WriteFile("output.pdf", *pdfBytes, 0644)
+	if err != nil {
+		return errors.Wrap(err, "ioutil.WriteFile")
+	}
+
+	fileDTO, err := s.fsc.UploadSingleFileBytes(eventData.Tenant, *pdfBytes)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.UploadSingleFileBytes")
