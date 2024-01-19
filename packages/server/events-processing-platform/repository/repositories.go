@@ -35,7 +35,7 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		EventBufferRepository:   repository.NewEventBufferRepository(gormDb),
 	}
 
-	err := gormDb.AutoMigrate(&entity.CustomerOsIds{})
+	err := gormDb.AutoMigrate(&entity.CustomerOsIds{}, &entity.EventBuffer{})
 	if err != nil {
 		panic(err)
 	}

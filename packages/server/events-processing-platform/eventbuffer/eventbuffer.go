@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -51,7 +52,7 @@ func (eb *EventBufferWatcher) Start(ctx context.Context) {
 			case <-eb.signalChannel:
 				// Shutdown goroutine
 				eb.logger.Info("EventBufferWatcher.Dispatch: Got signal, exiting...")
-				os.Exit(0)
+				runtime.Goexit()
 			}
 		}
 	}(eb.ticker)
@@ -62,6 +63,8 @@ func (eb *EventBufferWatcher) Stop() {
 	eb.signalChannel <- syscall.SIGTERM // TODO get the signal from the caller
 	eb.ticker.Stop()
 	eb.logger.Info("EventBufferWatcher stopped")
+	close(eb.signalChannel)
+	eb.signalChannel = nil
 }
 
 func (eb *EventBufferWatcher) Park(
@@ -74,11 +77,11 @@ func (eb *EventBufferWatcher) Park(
 	eventBuffer := entity.EventBuffer{
 		Tenant:             tenant,
 		UUID:               uuid,
-		ExpiryTimestamp:    expiryTimestamp,
+		ExpiryTimestamp:    expiryTimestamp.UTC(),
 		EventID:            evt.EventID,
 		EventType:          evt.EventType,
 		EventData:          evt.Data,
-		EventTimestamp:     evt.Timestamp,
+		EventTimestamp:     evt.Timestamp.UTC(),
 		EventAggregateID:   evt.AggregateID,
 		EventAggregateType: string(evt.AggregateType),
 		EventVersion:       evt.Version,
@@ -130,7 +133,7 @@ func (eb *EventBufferWatcher) HandleEvent(ctx context.Context, eventBuffer entit
 		EventID:       eventBuffer.EventID,
 		EventType:     eventBuffer.EventType,
 		Data:          eventBuffer.EventData,
-		Timestamp:     eventBuffer.EventTimestamp,
+		Timestamp:     eventBuffer.EventTimestamp.UTC(),
 		AggregateType: eventstore.AggregateType(eventBuffer.EventAggregateType),
 		AggregateID:   eventBuffer.EventAggregateID,
 		Version:       eventBuffer.EventVersion,
