@@ -2,14 +2,16 @@ package server
 
 import (
 	"context"
-	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/invoice"
-	"google.golang.org/grpc"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/invoice"
+	"google.golang.org/grpc"
 
 	"github.com/labstack/echo/v4"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
@@ -111,7 +113,12 @@ func (server *Server) Start(parentCtx context.Context) error {
 	server.Repositories = repository.InitRepos(&neo4jDriver, server.Config.Neo4j.Database, postgresDb.GormDB)
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
-	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, server.Repositories)
+
+	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories, server.Log, server.AggregateStore)
+	eventBufferWatcher.Start(ctx)
+	defer eventBufferWatcher.Stop()
+
+	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, server.Repositories, eventBufferWatcher)
 
 	//Server.runMetrics(cancel)
 	//Server.runHealthCheck(ctx)

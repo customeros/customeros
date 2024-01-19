@@ -1,8 +1,9 @@
 package events
 
 import (
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"time"
+
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -40,6 +41,7 @@ const (
 	OrganizationRefreshArrV1                       = "V1_ORGANIZATION_REFRESH_ARR"
 	OrganizationRefreshRenewalSummaryV1            = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
 	OrganizationUpdateOnboardingStatusV1           = "V1_ORGANIZATION_UPDATE_ONBOARDING_STATUS"
+	OrganizationUpdateOwnerNotificationV1          = "V1_ORGANIZATION_UPDATE_OWNER_NOTIFICATION"
 	OrganizationUpdateOwnerV1                      = "V1_ORGANIZATION_UPDATE_OWNER"
 	OrganizationCreateBillingProfileV1             = "V1_ORGANIZATION_CREATE_BILLING_PROFILE"
 	OrganizationUpdateBillingProfileV1             = "V1_ORGANIZATION_UPDATE_BILLING_PROFILE"
@@ -497,6 +499,26 @@ func NewOrganizationOwnerUpdateEvent(aggregate eventstore.Aggregate, ownerUserId
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateOwnerV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationOwnerUpdateEvent")
+	}
+	return event, nil
+}
+
+func NewOrganizationOwnerUpdateNotificationEvent(aggregate eventstore.Aggregate, ownerUserId, actorUserId, organizationId string, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationOwnerUpdateEvent{
+		Tenant:         aggregate.GetTenant(),
+		UpdatedAt:      updatedAt,
+		OwnerUserId:    ownerUserId,
+		OrganizationId: organizationId,
+		ActorUserId:    actorUserId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationOwnerUpdateEvent")
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateOwnerNotificationV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationOwnerUpdateEvent")
 	}

@@ -20,6 +20,7 @@ type Repositories struct {
 	Neo4jRepositories       *neo4jrepository.Repositories
 	CommonRepositories      *cmn_repository.Repositories
 	CustomerOsIdsRepository repository.CustomerOsIdsRepository
+	EventBufferRepository   repository.EventBufferRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *gorm.DB) *Repositories {
@@ -31,6 +32,7 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		Neo4jRepositories:       neo4jrepository.InitNeo4jRepositories(driver, neo4jDatabase),
 		CommonRepositories:      cmn_repository.InitRepositories(gormDb, driver),
 		CustomerOsIdsRepository: repository.NewCustomerOsIdsRepository(gormDb),
+		EventBufferRepository:   repository.NewEventBufferRepository(gormDb),
 	}
 
 	err := gormDb.AutoMigrate(&entity.CustomerOsIds{})
