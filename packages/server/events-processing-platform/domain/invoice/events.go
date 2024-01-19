@@ -12,13 +12,13 @@ import (
 )
 
 const (
-	InvoiceNewV1          = "V1_INVOICE_NEW"
+	InvoiceCreateV1       = "V1_INVOICE_CREATE"
 	InvoiceFillV1         = "V1_INVOICE_FILL"
 	InvoicePdfGeneratedV1 = "V1_INVOICE_PDF_GENERATED"
 	InvoicePayV1          = "V1_INVOICE_PAY"
 )
 
-type InvoiceNewEvent struct {
+type InvoiceCreateEvent struct {
 	Tenant       string             `json:"tenant" validate:"required"`
 	ContractId   string             `json:"organizationId" validate:"required"`
 	CreatedAt    time.Time          `json:"createdAt"`
@@ -32,10 +32,10 @@ type InvoiceNewEvent struct {
 	DueDate time.Time `json:"dueDate" validate:"required"`
 }
 
-func NewInvoiceNewEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, request *invoicepb.NewInvoiceRequest) (eventstore.Event, error) {
+func NewInvoiceCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, request *invoicepb.NewOnCycleInvoiceForContractRequest) (eventstore.Event, error) {
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
-	dateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.Date), utils.Now())
-	eventData := InvoiceNewEvent{
+	dateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.InvoicePeriodStart), utils.Now())
+	eventData := InvoiceCreateEvent{
 		Tenant:       aggregate.GetTenant(),
 		ContractId:   request.ContractId,
 		CreatedAt:    createdAtNotNil,
@@ -48,12 +48,12 @@ func NewInvoiceNewEvent(aggregate eventstore.Aggregate, sourceFields commonmodel
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate InvoiceNewEvent")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate InvoiceCreateEvent")
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, InvoiceNewV1)
+	event := eventstore.NewBaseEvent(aggregate, InvoiceCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InvoiceNewEvent")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InvoiceCreateEvent")
 	}
 
 	return event, nil
@@ -62,7 +62,7 @@ func NewInvoiceNewEvent(aggregate eventstore.Aggregate, sourceFields commonmodel
 func SimulateInvoiceNewEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, request *invoicepb.SimulateInvoiceRequest) (eventstore.Event, error) {
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	dateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.Date), utils.Now())
-	eventData := InvoiceNewEvent{
+	eventData := InvoiceCreateEvent{
 		Tenant:       aggregate.GetTenant(),
 		ContractId:   request.ContractId,
 		CreatedAt:    createdAtNotNil,
@@ -86,12 +86,12 @@ func SimulateInvoiceNewEvent(aggregate eventstore.Aggregate, sourceFields common
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate InvoiceNewEvent")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate InvoiceCreateEvent")
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, InvoiceNewV1)
+	event := eventstore.NewBaseEvent(aggregate, InvoiceCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InvoiceNewEvent")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InvoiceCreateEvent")
 	}
 
 	return event, nil

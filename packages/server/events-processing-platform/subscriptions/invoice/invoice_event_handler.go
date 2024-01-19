@@ -57,7 +57,7 @@ func (h *InvoiceEventHandler) onInvoiceNewV1(ctx context.Context, evt eventstore
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData invoice.InvoiceNewEvent
+	var eventData invoice.InvoiceCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

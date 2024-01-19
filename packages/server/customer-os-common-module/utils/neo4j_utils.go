@@ -56,6 +56,11 @@ type DbNodeAndId struct {
 	LinkedNodeId string
 }
 
+type DbNodeAndTenant struct {
+	Node   *dbtype.Node
+	Tenant string
+}
+
 type DbPropsAndId struct {
 	Props        map[string]any
 	LinkedNodeId string
@@ -226,6 +231,24 @@ func ExtractAllRecordsAsDbNodeAndId(ctx context.Context, result neo4j.ResultWith
 		element := new(DbNodeAndId)
 		element.Node = NodePtr(v.Values[0].(neo4j.Node))
 		element.LinkedNodeId = v.Values[1].(string)
+		output = append(output, element)
+	}
+	return output, nil
+}
+
+func ExtractAllRecordsAsDbNodeAndTenant(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*DbNodeAndTenant, error) {
+	if err != nil {
+		return nil, err
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	output := make([]*DbNodeAndTenant, 0)
+	for _, v := range records {
+		element := new(DbNodeAndTenant)
+		element.Node = NodePtr(v.Values[0].(neo4j.Node))
+		element.Tenant = v.Values[1].(string)
 		output = append(output, element)
 	}
 	return output, nil

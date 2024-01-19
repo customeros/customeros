@@ -58,8 +58,8 @@ func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any) (any,
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *invoicepb.NewInvoiceRequest:
-		return nil, a.CreateNewInvoice(ctx, r)
+	case *invoicepb.NewOnCycleInvoiceForContractRequest:
+		return nil, a.CreateNewInvoiceForContract(ctx, r)
 	case *invoicepb.FillInvoiceRequest:
 		return nil, a.FillInvoice(ctx, r)
 	case *invoicepb.PdfGeneratedInvoiceRequest:
@@ -96,8 +96,8 @@ func (a *InvoiceAggregate) CreatePdfGeneratedEvent(ctx context.Context, request 
 	return a.Apply(event)
 }
 
-func (a *InvoiceAggregate) CreateNewInvoice(ctx context.Context, request *invoicepb.NewInvoiceRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.CreateNewInvoice")
+func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, request *invoicepb.NewOnCycleInvoiceForContractRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.CreateNewInvoiceForContract")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
@@ -106,10 +106,10 @@ func (a *InvoiceAggregate) CreateNewInvoice(ctx context.Context, request *invoic
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	createEvent, err := NewInvoiceNewEvent(a, sourceFields, request)
+	createEvent, err := NewInvoiceCreateEvent(a, sourceFields, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "InvoiceNewEvent")
+		return errors.Wrap(err, "InvoiceCreateEvent")
 	}
 	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
 		Tenant: request.Tenant,
@@ -172,8 +172,8 @@ func (a *InvoiceAggregate) PayInvoice(ctx context.Context, request *invoicepb.Pa
 
 func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
-	case InvoiceNewV1:
-		return a.onNewInvoice(evt)
+	case InvoiceCreateV1:
+		return a.onNewInvoiceForContract(evt)
 	case InvoiceFillV1:
 		return a.onFillInvoice(evt)
 	case InvoicePdfGeneratedV1:
@@ -187,8 +187,8 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 	}
 }
 
-func (a *InvoiceAggregate) onNewInvoice(evt eventstore.Event) error {
-	var eventData InvoiceNewEvent
+func (a *InvoiceAggregate) onNewInvoiceForContract(evt eventstore.Event) error {
+	var eventData InvoiceCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
