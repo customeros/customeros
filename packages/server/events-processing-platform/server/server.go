@@ -113,16 +113,17 @@ func (server *Server) Start(parentCtx context.Context) error {
 	server.Repositories = repository.InitRepos(&neo4jDriver, server.Config.Neo4j.Database, postgresDb.GormDB)
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
-	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, server.Repositories)
+
+	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories, server.Log, server.AggregateStore)
+	eventBufferWatcher.Start(ctx)
+	defer eventBufferWatcher.Stop()
+
+	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, server.Repositories, eventBufferWatcher)
 
 	//Server.runMetrics(cancel)
 	//Server.runHealthCheck(ctx)
 
 	server.Services = service.InitServices(server.Config, server.Repositories, server.AggregateStore, server.CommandHandlers, server.Log)
-
-	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories, server.Log, server.AggregateStore)
-	eventBufferWatcher.Start(ctx)
-	defer eventBufferWatcher.Stop()
 
 	// Setting up gRPC client
 	df := grpc_client.NewDialFactory(server.Config)

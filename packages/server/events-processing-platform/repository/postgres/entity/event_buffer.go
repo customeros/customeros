@@ -6,7 +6,7 @@ import (
 
 type EventBuffer struct {
 	Tenant          string    `gorm:"column:tenant;size:50"`
-	UUID            string    `gorm:"column:uuid;size:50;primaryKey"`
+	UUID            string    `gorm:"column:uuid;size:250;primaryKey"`
 	ExpiryTimestamp time.Time `gorm:"column:expiry_timestamp;"`
 	CreatedDate     time.Time `gorm:"default:current_timestamp"`
 	// event store Event fields

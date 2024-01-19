@@ -21,6 +21,7 @@ import (
 	phonenumbercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
 	servicelineitemcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/command_handler"
 	usercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -51,11 +52,13 @@ type CommandHandlers struct {
 func NewCommandHandlers(log logger.Logger,
 	cfg *config.Config,
 	aggregateStore eventstore.AggregateStore,
-	repositories *repository.Repositories) *CommandHandlers {
+	repositories *repository.Repositories,
+	eventBufferWatcher *eventbuffer.EventBufferWatcher,
+) *CommandHandlers {
 
 	return &CommandHandlers{
 		Contact:            contactcmdhandler.NewCommandHandlers(log, aggregateStore),
-		Organization:       organizationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore, repositories),
+		Organization:       organizationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore, repositories, eventBufferWatcher),
 		InteractionEvent:   iecmdhandler.NewCommandHandlers(log, aggregateStore),
 		InteractionSession: iscmdhandler.NewCommandHandlers(log, aggregateStore),
 		PhoneNumber:        phonenumbercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),

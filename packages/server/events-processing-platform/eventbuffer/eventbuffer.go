@@ -23,6 +23,7 @@ type EventBufferWatcher struct {
 	logger        logger.Logger
 	es            eventstore.AggregateStore
 	signalChannel chan os.Signal
+	ticker        *time.Ticker
 }
 
 func NewEventBufferWatcher(repositories *repository.Repositories, logger logger.Logger, es eventstore.AggregateStore) *EventBufferWatcher {
@@ -33,7 +34,7 @@ func NewEventBufferWatcher(repositories *repository.Repositories, logger logger.
 func (eb *EventBufferWatcher) Start(ctx context.Context) {
 	eb.logger.Info("EventBufferWatcher started")
 
-	ticker := time.NewTicker(time.Second * 30)
+	eb.ticker = time.NewTicker(time.Second * 30)
 	eb.signalChannel = make(chan os.Signal, 1)
 	signal.Notify(eb.signalChannel, syscall.SIGTERM, syscall.SIGINT)
 
@@ -53,11 +54,13 @@ func (eb *EventBufferWatcher) Start(ctx context.Context) {
 				os.Exit(0)
 			}
 		}
-	}(ticker)
+	}(eb.ticker)
 }
 
 // Stop stops the EventBufferWatcher
 func (eb *EventBufferWatcher) Stop() {
+	eb.signalChannel <- syscall.SIGTERM // TODO get the signal from the caller
+	eb.ticker.Stop()
 	eb.logger.Info("EventBufferWatcher stopped")
 }
 

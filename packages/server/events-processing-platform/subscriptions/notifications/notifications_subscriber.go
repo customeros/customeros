@@ -118,7 +118,7 @@ func (s *NotificationsSubscriber) When(ctx context.Context, evt eventstore.Event
 
 	switch evt.GetEventType() {
 
-	case orgevents.OrganizationUpdateOwnerV1:
+	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		return s.orgEventHandler.OnOrganizationUpdateOwner(ctx, evt)
 
 	default:
