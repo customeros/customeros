@@ -17,6 +17,8 @@ var (
 
 const tenantName = "openline"
 
+type ctxKey struct{}
+
 func TestMain(m *testing.M) {
 	neo4jContainer, driver = neo4jtest.InitTestNeo4jDB()
 	defer func(dbContainer testcontainers.Container, driver neo4j.DriverWithContext, ctx context.Context) {
