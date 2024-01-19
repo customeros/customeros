@@ -239,18 +239,25 @@ func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBi
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	tenantBillingProfile := entity.TenantBillingProfile{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		LegalName:     utils.GetStringPropOrEmpty(props, "legalName"),
-		Email:         utils.GetStringPropOrEmpty(props, "email"),
-		Phone:         utils.GetStringPropOrEmpty(props, "phone"),
-		AddressLine1:  utils.GetStringPropOrEmpty(props, "addressLine1"),
-		AddressLine2:  utils.GetStringPropOrEmpty(props, "addressLine2"),
-		AddressLine3:  utils.GetStringPropOrEmpty(props, "addressLine3"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Id:                                utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:                         utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:                         utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		LegalName:                         utils.GetStringPropOrEmpty(props, "legalName"),
+		Email:                             utils.GetStringPropOrEmpty(props, "email"),
+		Phone:                             utils.GetStringPropOrEmpty(props, "phone"),
+		AddressLine1:                      utils.GetStringPropOrEmpty(props, "addressLine1"),
+		AddressLine2:                      utils.GetStringPropOrEmpty(props, "addressLine2"),
+		AddressLine3:                      utils.GetStringPropOrEmpty(props, "addressLine3"),
+		DomesticPaymentsBankName:          utils.GetStringPropOrEmpty(props, "domesticPaymentsBankName"),
+		DomesticPaymentsAccountNumber:     utils.GetStringPropOrEmpty(props, "domesticPaymentsAccountNumber"),
+		DomesticPaymentsSortCode:          utils.GetStringPropOrEmpty(props, "domesticPaymentsSortCode"),
+		InternationalPaymentsSwiftBic:     utils.GetStringPropOrEmpty(props, "internationalPaymentsSwiftBic"),
+		InternationalPaymentsBankName:     utils.GetStringPropOrEmpty(props, "internationalPaymentsBankName"),
+		InternationalPaymentsBankAddress:  utils.GetStringPropOrEmpty(props, "internationalPaymentsBankAddress"),
+		InternationalPaymentsInstructions: utils.GetStringPropOrEmpty(props, "internationalPaymentsInstructions"),
+		Source:                            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:                     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:                         utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &tenantBillingProfile
 }

@@ -31,13 +31,20 @@ func TestTenantService_AddBillingProfile(t *testing.T) {
 			AppSource: "app",
 			Source:    "source",
 		},
-		CreatedAt:    utils.ConvertTimeToTimestampPtr(&now),
-		Email:        "email",
-		Phone:        "phone",
-		AddressLine1: "addressLine1",
-		AddressLine2: "addressLine2",
-		AddressLine3: "addressLine3",
-		LegalName:    "legalName",
+		CreatedAt:                         utils.ConvertTimeToTimestampPtr(&now),
+		Email:                             "email",
+		Phone:                             "phone",
+		AddressLine1:                      "addressLine1",
+		AddressLine2:                      "addressLine2",
+		AddressLine3:                      "addressLine3",
+		LegalName:                         "legalName",
+		DomesticPaymentsBankName:          "domesticPaymentsBankName",
+		DomesticPaymentsAccountNumber:     "domesticPaymentsAccountNumber",
+		DomesticPaymentsSortCode:          "domesticPaymentsSortCode",
+		InternationalPaymentsSwiftBic:     "internationalPaymentsSwiftBic",
+		InternationalPaymentsBankName:     "internationalPaymentsBankName",
+		InternationalPaymentsBankAddress:  "internationalPaymentsBankAddress",
+		InternationalPaymentsInstructions: "internationalPaymentsInstructions",
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -66,6 +73,13 @@ func TestTenantService_AddBillingProfile(t *testing.T) {
 	require.Equal(t, "addressLine2", eventData.AddressLine2)
 	require.Equal(t, "addressLine3", eventData.AddressLine3)
 	require.Equal(t, "legalName", eventData.LegalName)
+	require.Equal(t, "domesticPaymentsBankName", eventData.DomesticPaymentsBankName)
+	require.Equal(t, "domesticPaymentsAccountNumber", eventData.DomesticPaymentsAccountNumber)
+	require.Equal(t, "domesticPaymentsSortCode", eventData.DomesticPaymentsSortCode)
+	require.Equal(t, "internationalPaymentsSwiftBic", eventData.InternationalPaymentsSwiftBic)
+	require.Equal(t, "internationalPaymentsBankName", eventData.InternationalPaymentsBankName)
+	require.Equal(t, "internationalPaymentsBankAddress", eventData.InternationalPaymentsBankAddress)
+	require.Equal(t, "internationalPaymentsInstructions", eventData.InternationalPaymentsInstructions)
 	require.Equal(t, "app", eventData.SourceFields.AppSource)
 	require.Equal(t, "source", eventData.SourceFields.Source)
 	require.Equal(t, "source", eventData.SourceFields.SourceOfTruth)

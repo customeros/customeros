@@ -13,15 +13,22 @@ import (
 )
 
 type TenantBillingProfileCreateFields struct {
-	Id           string       `json:"id"`
-	CreatedAt    time.Time    `json:"createdAt"`
-	SourceFields model.Source `json:"sourceFields"`
-	Email        string       `json:"email"`
-	Phone        string       `json:"phone"`
-	LegalName    string       `json:"legalName"`
-	AddressLine1 string       `json:"addressLine1"`
-	AddressLine2 string       `json:"addressLine2"`
-	AddressLine3 string       `json:"addressLine3"`
+	Id                                string       `json:"id"`
+	CreatedAt                         time.Time    `json:"createdAt"`
+	SourceFields                      model.Source `json:"sourceFields"`
+	Email                             string       `json:"email"`
+	Phone                             string       `json:"phone"`
+	LegalName                         string       `json:"legalName"`
+	AddressLine1                      string       `json:"addressLine1"`
+	AddressLine2                      string       `json:"addressLine2"`
+	AddressLine3                      string       `json:"addressLine3"`
+	DomesticPaymentsBankName          string       `json:"domesticPaymentsBankName"`
+	DomesticPaymentsAccountNumber     string       `json:"domesticPaymentsAccountNumber"`
+	DomesticPaymentsSortCode          string       `json:"domesticPaymentsSortCode"`
+	InternationalPaymentsSwiftBic     string       `json:"internationalPaymentsSwiftBic"`
+	InternationalPaymentsBankName     string       `json:"internationalPaymentsBankName"`
+	InternationalPaymentsBankAddress  string       `json:"internationalPaymentsBankAddress"`
+	InternationalPaymentsInstructions string       `json:"internationalPaymentsInstructions"`
 }
 
 type TenantWriteRepository interface {
@@ -52,22 +59,36 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 								tbp.legalName=$legalName,	
 								tbp.addressLine1=$addressLine1,	
 								tbp.addressLine2=$addressLine2,
-								tbp.addressLine3=$addressLine3
+								tbp.addressLine3=$addressLine3,
+								tbp.domesticPaymentsBankName=$domesticPaymentsBankName,
+								tbp.domesticPaymentsAccountNumber=$domesticPaymentsAccountNumber,
+								tbp.domesticPaymentsSortCode=$domesticPaymentsSortCode,
+								tbp.internationalPaymentsSwiftBic=$internationalPaymentsSwiftBic,
+								tbp.internationalPaymentsBankName=$internationalPaymentsBankName,
+								tbp.internationalPaymentsBankAddress=$internationalPaymentsBankAddress,
+								tbp.internationalPaymentsInstructions=$internationalPaymentsInstructions
 							`, tenant)
 	params := map[string]any{
-		"tenant":           tenant,
-		"billingProfileId": data.Id,
-		"createdAt":        data.CreatedAt,
-		"updatedAt":        data.CreatedAt,
-		"source":           data.SourceFields.Source,
-		"sourceOfTruth":    data.SourceFields.Source,
-		"appSource":        data.SourceFields.AppSource,
-		"email":            data.Email,
-		"phone":            data.Phone,
-		"legalName":        data.LegalName,
-		"addressLine1":     data.AddressLine1,
-		"addressLine2":     data.AddressLine2,
-		"addressLine3":     data.AddressLine3,
+		"tenant":                            tenant,
+		"billingProfileId":                  data.Id,
+		"createdAt":                         data.CreatedAt,
+		"updatedAt":                         data.CreatedAt,
+		"source":                            data.SourceFields.Source,
+		"sourceOfTruth":                     data.SourceFields.Source,
+		"appSource":                         data.SourceFields.AppSource,
+		"email":                             data.Email,
+		"phone":                             data.Phone,
+		"legalName":                         data.LegalName,
+		"addressLine1":                      data.AddressLine1,
+		"addressLine2":                      data.AddressLine2,
+		"addressLine3":                      data.AddressLine3,
+		"domesticPaymentsBankName":          data.DomesticPaymentsBankName,
+		"domesticPaymentsAccountNumber":     data.DomesticPaymentsAccountNumber,
+		"domesticPaymentsSortCode":          data.DomesticPaymentsSortCode,
+		"internationalPaymentsSwiftBic":     data.InternationalPaymentsSwiftBic,
+		"internationalPaymentsBankName":     data.InternationalPaymentsBankName,
+		"internationalPaymentsBankAddress":  data.InternationalPaymentsBankAddress,
+		"internationalPaymentsInstructions": data.InternationalPaymentsInstructions,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

@@ -82,7 +82,7 @@ func (a *TenantAggregate) AddBillingProfile(ctx context.Context, request *tenant
 
 	billingProfileId := uuid.New().String()
 
-	addBillingProfileEvent, err := event.NewCreateTenantBillingProfileEvent(a, sourceFields, billingProfileId, request.Email, request.Phone, request.AddressLine1, request.AddressLine2, request.AddressLine3, request.LegalName, createdAtNotNil)
+	addBillingProfileEvent, err := event.NewCreateTenantBillingProfileEvent(a, sourceFields, billingProfileId, request, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "CreateTenantBillingProfileEvent")
@@ -117,15 +117,22 @@ func (a *TenantAggregate) onAddBillingProfile(evt eventstore.Event) error {
 		return nil
 	}
 	tenantBillingProfile := TenantBillingProfile{
-		Id:           eventData.Id,
-		CreatedAt:    eventData.CreatedAt,
-		Email:        eventData.Email,
-		Phone:        eventData.Phone,
-		AddressLine1: eventData.AddressLine1,
-		AddressLine2: eventData.AddressLine2,
-		AddressLine3: eventData.AddressLine3,
-		LegalName:    eventData.LegalName,
-		SourceFields: eventData.SourceFields,
+		Id:                                eventData.Id,
+		CreatedAt:                         eventData.CreatedAt,
+		Email:                             eventData.Email,
+		Phone:                             eventData.Phone,
+		AddressLine1:                      eventData.AddressLine1,
+		AddressLine2:                      eventData.AddressLine2,
+		AddressLine3:                      eventData.AddressLine3,
+		LegalName:                         eventData.LegalName,
+		DomesticPaymentsBankName:          eventData.DomesticPaymentsBankName,
+		DomesticPaymentsAccountNumber:     eventData.DomesticPaymentsAccountNumber,
+		DomesticPaymentsSortCode:          eventData.DomesticPaymentsSortCode,
+		InternationalPaymentsSwiftBic:     eventData.InternationalPaymentsSwiftBic,
+		InternationalPaymentsBankName:     eventData.InternationalPaymentsBankName,
+		InternationalPaymentsBankAddress:  eventData.InternationalPaymentsBankAddress,
+		InternationalPaymentsInstructions: eventData.InternationalPaymentsInstructions,
+		SourceFields:                      eventData.SourceFields,
 	}
 	a.TenantDetails.BillingProfiles = append(a.TenantDetails.BillingProfiles, &tenantBillingProfile)
 
