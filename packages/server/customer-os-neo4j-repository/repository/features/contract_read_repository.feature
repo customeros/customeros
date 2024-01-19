@@ -16,7 +16,6 @@ Feature: Contract Read
     Given a tenant was created
     And the organization with the id a55e0812-ba4b-4f3d-853b-73323cb3cdd6 was created
     And a contract with the id f181e1fb-3675-427c-9d4b-ebd61386d4ad was created for the organization having the id a55e0812-ba4b-4f3d-853b-73323cb3cdd6
-#    Given <number_of_sli> SLIs were inserted in the database
     When <inserted_slis> SLIs are inserted in the database for the contract f181e1fb-3675-427c-9d4b-ebd61386d4ad
     Then <actual_number_of_SlIs> should exist in the neo4j database
 
