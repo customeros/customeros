@@ -1,0 +1,68 @@
+import { useRouter, useSearchParams } from 'next/navigation';
+
+import { MasterPlansQuery } from '@settings/graphql/masterPlans.generated';
+
+import { Flex } from '@ui/layout/Flex';
+import { Button } from '@ui/form/Button';
+import { Collapse } from '@ui/transitions/Collapse';
+import { ChevronDown } from '@ui/media/icons/ChevronDown';
+import { ChevronRight } from '@ui/media/icons/ChevronRight';
+
+import { MasterPlans } from './MasterPlans';
+
+interface RetiredMasterPlansProps {
+  isLoading?: boolean;
+  retiredPlans?: MasterPlansQuery['masterPlans'];
+}
+
+export const RetiredMasterPlans = ({
+  isLoading,
+  retiredPlans,
+}: RetiredMasterPlansProps) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isOpen = searchParams?.get('show') === 'retired';
+
+  const toggle = () => {
+    const newParams = new URLSearchParams(searchParams ?? '');
+    newParams.set('show', isOpen ? 'active' : 'retired');
+
+    router.push(`?${newParams.toString()}`);
+  };
+
+  return (
+    <Flex flexDir='column' flex={isOpen ? 1 : 0}>
+      <Button
+        mt='4'
+        w='full'
+        size='sm'
+        variant='ghost'
+        onClick={toggle}
+        justifyContent='space-between'
+        rightIcon={
+          isOpen ? (
+            <ChevronDown color='gray.400' />
+          ) : (
+            <ChevronRight color='gray.400' />
+          )
+        }
+        colorScheme='gray'
+        sx={{
+          '> span': {
+            '> span': {
+              ml: 1,
+              color: 'gray.500',
+            },
+          },
+        }}
+      >
+        <span>
+          Retired plans<span>• {retiredPlans?.length}</span>
+        </span>
+      </Button>
+      <Collapse in={isOpen} animateOpacity>
+        <MasterPlans isLoading={isLoading} masterPlans={retiredPlans} />
+      </Collapse>
+    </Flex>
+  );
+};

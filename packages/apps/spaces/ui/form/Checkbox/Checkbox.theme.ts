@@ -114,7 +114,7 @@ export const Checkbox = helpers.defineMultiStyleConfig({
       },
       _disabled: {
         boxShadow: 'unset',
-        borderColor: 'gray.200',
+        borderColor: 'gray.300',
         _focus: {
           boxShadow: 'unset',
         },
@@ -148,7 +148,7 @@ export const Checkbox = helpers.defineMultiStyleConfig({
           },
         },
         _hover: {
-          borderColor: 'gray.200',
+          borderColor: 'gray.300',
           boxShadow: 'unset',
         },
       },
