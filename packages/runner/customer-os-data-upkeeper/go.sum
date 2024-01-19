@@ -50,6 +50,8 @@ github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-m
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240116074012-2ae9ef1920a3/go.mod h1:ova7bi/MhMkdmMILShbHOBNmK7va54bDBCTVDIVA+D0=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240116163256-ea40f6e7f50d h1:iVWBd5n5IAofVT8TgVqG9kK7eP4Y95WNSDyGzZY+PVI=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240116163256-ea40f6e7f50d/go.mod h1:ova7bi/MhMkdmMILShbHOBNmK7va54bDBCTVDIVA+D0=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240119163410-d54ea4de58cc h1:4SwQrkx+CRe7u7jh3AIVI/5Qo7TT74AMPs1QXK2ZoiI=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240119163410-d54ea4de58cc/go.mod h1:ova7bi/MhMkdmMILShbHOBNmK7va54bDBCTVDIVA+D0=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240115123849-8b144c5b990b h1:/tC1DTCtIF3zTz0eXuEDc08nKVswtYkbih4mLk1NIFo=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240115123849-8b144c5b990b/go.mod h1:/Df6Vz3idaFOijAtQCmVslvH1wRxgJchzj1MYysioRE=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240115191456-ec9a6149e20d h1:en+noLNeXTmJXLGOxCMRJeVu3rrsVGBzZ7UyOPGOrco=
