@@ -9,15 +9,16 @@ import (
 
 var contextData map[string]interface{}
 
-func TestFeatures(t *testing.T) {
+func TestFeaturesContractRead(t *testing.T) {
 	contextData = make(map[string]interface{})
-	contextData["testingInstance"] = t
+	//contextData["testingInstance"] = t
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeScenario,
 		Options: &godog.Options{
-			Format:   "pretty",
-			Paths:    []string{"features"},
-			TestingT: t,
+			Format:        "pretty",
+			Paths:         []string{"features"},
+			TestingT:      t,
+			StopOnFailure: false,
 		},
 	}
 
@@ -27,8 +28,20 @@ func TestFeatures(t *testing.T) {
 }
 
 func InitializeScenario(sc *godog.ScenarioContext) {
-	sc.Step(`^(\d+) SLIs were inserted in the database$`, SlisWereInserted)
+	t := &testing.T{}
+	contextData["testingInstance"] = t
+	ctx := context.WithValue(context.Background(), "testingInstance", t)
+	//ctx := context.Background()
+	//sc.Step(`^a tenant was created$`, TenantWasInserted)
+	sc.Step(`^(\d+) SLIs are inserted in the database$`, SlisWereInserted)
 	sc.Step(`^(\d+) should exist in the neo4j database$`, SlisShouldExist)
+	sc.Step(`^the following SLIs are inserted in the database$`, func(table *godog.Table) (context.Context, error) {
+		//ctx, _ = CustomSlisWereInserted(ctx, table)
+		//return ctx, nil
+		return CustomSlisWereInserted(ctx, table)
+
+	})
+	sc.Step(`^the SLIs should exist in the neo4j database in a consistent format$`, CustomSlisShouldExist)
 	sc.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
 		//tearDownTestCase(ctx)
 		neo4jtest.CleanupAllData(ctx, driver)
