@@ -52,6 +52,8 @@ github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-m
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240116163256-ea40f6e7f50d/go.mod h1:ova7bi/MhMkdmMILShbHOBNmK7va54bDBCTVDIVA+D0=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240119163410-d54ea4de58cc h1:4SwQrkx+CRe7u7jh3AIVI/5Qo7TT74AMPs1QXK2ZoiI=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240119163410-d54ea4de58cc/go.mod h1:ova7bi/MhMkdmMILShbHOBNmK7va54bDBCTVDIVA+D0=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240119171429-e0244d505849 h1:dDN9i5Iq70tinw5KHkKOEPu36VdOzYaz/+4onhDefEo=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240119171429-e0244d505849/go.mod h1:ova7bi/MhMkdmMILShbHOBNmK7va54bDBCTVDIVA+D0=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240115123849-8b144c5b990b h1:/tC1DTCtIF3zTz0eXuEDc08nKVswtYkbih4mLk1NIFo=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240115123849-8b144c5b990b/go.mod h1:/Df6Vz3idaFOijAtQCmVslvH1wRxgJchzj1MYysioRE=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240115191456-ec9a6149e20d h1:en+noLNeXTmJXLGOxCMRJeVu3rrsVGBzZ7UyOPGOrco=
@@ -60,6 +62,8 @@ github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-re
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240116074012-2ae9ef1920a3/go.mod h1:/Df6Vz3idaFOijAtQCmVslvH1wRxgJchzj1MYysioRE=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240116163256-ea40f6e7f50d h1:py0xMU5Xfi0YSko8ZlaKHMmwhZ/WCU5C7D3xm3tKsxM=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240116163256-ea40f6e7f50d/go.mod h1:/Df6Vz3idaFOijAtQCmVslvH1wRxgJchzj1MYysioRE=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240119171429-e0244d505849 h1:cWoGPxOyiNQcZHR6dsfPB9oBHb0bZrcCBP3WoZQgInk=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240119171429-e0244d505849/go.mod h1:k+nT0Vylur0cg3+n5DsYkFV8IMfKbRh8x/yaxl/0cg8=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20231223141039-1ccda1d986b4 h1:hc3QAjLLTCjN+2wtydJGru5edgPu5BKzOoBayGcm4ps=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20231223141039-1ccda1d986b4/go.mod h1:IsC9IawrEeGaGY0HeIPwgs4DSUbpSFdxo8EFhn175Qo=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240115075335-37286199f15a h1:QotjDqGKQmPQ1LzhXNRRZlVP1d63gjkdvc7bBsR20Z8=
@@ -70,6 +74,8 @@ github.com/openline-ai/openline-customer-os/packages/server/events-processing-pr
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240116074012-2ae9ef1920a3/go.mod h1:EEFsow2ZeEQNCSVe4Qmz5r6BrYhXuYgit9TF+sdV9tU=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240116163256-ea40f6e7f50d h1:VzP7KA1OU5Cei3/pwxKGn2E6FLbZplhW6kEL5nNQGP0=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240116163256-ea40f6e7f50d/go.mod h1:EEFsow2ZeEQNCSVe4Qmz5r6BrYhXuYgit9TF+sdV9tU=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240119171429-e0244d505849 h1:b//VYlr/r8hfyGeiI2PAXEAXKNOOjkiYFBJSLL7roiw=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240119171429-e0244d505849/go.mod h1:EEFsow2ZeEQNCSVe4Qmz5r6BrYhXuYgit9TF+sdV9tU=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=

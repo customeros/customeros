@@ -3,17 +3,11 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/events_processing_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"time"
 )
 
@@ -38,94 +32,94 @@ func NewInvoiceService(cfg *config.Config, log logger.Logger, repositories *repo
 }
 
 func (s *invoiceService) GenerateInvoices() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateInvoices")
-	defer span.Finish()
-
-	if s.eventsProcessingClient == nil {
-		s.log.Warn("eventsProcessingClient is nil. Will not update next cycle date.")
-		return
-	}
-
-	referenceTime := utils.Now()
-	dryRun := false
-	tenantDefaultCurrencies := make(map[string]neo4jenum.Currency)
-
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateOnCycleInvoices(ctx, referenceTime)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting contracts for invoicing: %v", err)
-			return
-		}
-
-		// no contracts found
-		if len(records) == 0 {
-			return
-		}
-
-		//process records
-		for _, record := range records {
-			contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
-			tenant := record.Tenant
-
-			currency := contract.Currency.String()
-			if currency == "" {
-				currency = s.getTenantDefaultCurrency(ctx, tenant, tenantDefaultCurrencies).String()
-			}
-
-			var invoicePeriodStart, invoicePeriodEnd time.Time
-			if contract.NextInvoiceDate != nil {
-				invoicePeriodStart = *contract.NextInvoiceDate
-			} else {
-				invoicePeriodStart = *contract.InvoicingStartDate
-			}
-			invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycle)
-
-			readyToRequestInvoice := invoicePeriodEnd.After(invoicePeriodStart)
-			if readyToRequestInvoice {
-				_, err = s.eventsProcessingClient.InvoiceClient.NewOnCycleInvoiceForContract(ctx, &invoicepb.NewOnCycleInvoiceForContractRequest{
-					Tenant:             record.Tenant,
-					ContractId:         contract.Id,
-					Currency:           currency,
-					InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
-					InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
-					DryRun:             dryRun,
-					SourceFields: &commonpb.SourceFields{
-						AppSource: constants.AppSourceDataUpkeeper,
-						Source:    neo4jentity.DataSourceOpenline.String(),
-					},
-				})
-
-				if err != nil {
-					tracing.TraceErr(span, err)
-					s.log.Errorf("Error generating invoice for contract %s: %s", contract.Id, err.Error())
-				}
-			}
-			// mark invoicing started as long dry run is false
-			nextInvoiceDate := contract.NextInvoiceDate
-			if !dryRun {
-				nextInvoiceDate = utils.ToPtr(invoicePeriodEnd.AddDate(0, 0, 1))
-			}
-			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkInvoicingStarted(ctx, tenant, contract.Id, utils.Now(), nextInvoiceDate)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
-			}
-		}
-		//sleep for async processing, then check again
-		time.Sleep(5 * time.Second)
-	}
+	//ctx, cancel := context.WithCancel(context.Background())
+	//defer cancel() // Cancel context on exit
+	//
+	//span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateInvoices")
+	//defer span.Finish()
+	//
+	//if s.eventsProcessingClient == nil {
+	//	s.log.Warn("eventsProcessingClient is nil. Will not update next cycle date.")
+	//	return
+	//}
+	//
+	//referenceTime := utils.Now()
+	//dryRun := false
+	//tenantDefaultCurrencies := make(map[string]neo4jenum.Currency)
+	//
+	//for {
+	//	select {
+	//	case <-ctx.Done():
+	//		s.log.Infof("Context cancelled, stopping")
+	//		return
+	//	default:
+	//		// continue as normal
+	//	}
+	//
+	//	records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateOnCycleInvoices(ctx, referenceTime)
+	//	if err != nil {
+	//		tracing.TraceErr(span, err)
+	//		s.log.Errorf("Error getting contracts for invoicing: %v", err)
+	//		return
+	//	}
+	//
+	//	// no contracts found
+	//	if len(records) == 0 {
+	//		return
+	//	}
+	//
+	//	//process records
+	//	for _, record := range records {
+	//		contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
+	//		tenant := record.Tenant
+	//
+	//		currency := contract.Currency.String()
+	//		if currency == "" {
+	//			currency = s.getTenantDefaultCurrency(ctx, tenant, tenantDefaultCurrencies).String()
+	//		}
+	//
+	//		var invoicePeriodStart, invoicePeriodEnd time.Time
+	//		if contract.NextInvoiceDate != nil {
+	//			invoicePeriodStart = *contract.NextInvoiceDate
+	//		} else {
+	//			invoicePeriodStart = *contract.InvoicingStartDate
+	//		}
+	//		invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycle)
+	//
+	//		readyToRequestInvoice := invoicePeriodEnd.After(invoicePeriodStart)
+	//		if readyToRequestInvoice {
+	//			_, err = s.eventsProcessingClient.InvoiceClient.NewOnCycleInvoiceForContract(ctx, &invoicepb.NewOnCycleInvoiceForContractRequest{
+	//				Tenant:             record.Tenant,
+	//				ContractId:         contract.Id,
+	//				Currency:           currency,
+	//				InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
+	//				InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
+	//				DryRun:             dryRun,
+	//				SourceFields: &commonpb.SourceFields{
+	//					AppSource: constants.AppSourceDataUpkeeper,
+	//					Source:    neo4jentity.DataSourceOpenline.String(),
+	//				},
+	//			})
+	//
+	//			if err != nil {
+	//				tracing.TraceErr(span, err)
+	//				s.log.Errorf("Error generating invoice for contract %s: %s", contract.Id, err.Error())
+	//			}
+	//		}
+	//		// mark invoicing started as long dry run is false
+	//		nextInvoiceDate := contract.NextInvoiceDate
+	//		if !dryRun {
+	//			nextInvoiceDate = utils.ToPtr(invoicePeriodEnd.AddDate(0, 0, 1))
+	//		}
+	//		err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkInvoicingStarted(ctx, tenant, contract.Id, utils.Now(), nextInvoiceDate)
+	//		if err != nil {
+	//			tracing.TraceErr(span, err)
+	//			s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
+	//		}
+	//	}
+	//	//sleep for async processing, then check again
+	//	time.Sleep(5 * time.Second)
+	//}
 }
 
 func calculateInvoiceCycleEnd(start time.Time, cycle neo4jenum.BillingCycle) time.Time {

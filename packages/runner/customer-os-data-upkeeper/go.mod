@@ -2,19 +2,17 @@ module github.com/openline-ai/openline-customer-os/packages/runner/customer-os-d
 
 go 1.21
 
-replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../../server/events-processing-proto
-
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../../server/customer-os-common-module
-
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../../server/customer-os-neo4j-repository
+//replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../../server/events-processing-proto
+//replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../../server/customer-os-common-module
+//replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../../server/customer-os-neo4j-repository
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.16.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240116163256-ea40f6e7f50d
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240119171429-e0244d505849
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240119171429-e0244d505849
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240116163256-ea40f6e7f50d
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240119171429-e0244d505849
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/robfig/cron v1.2.0
 	github.com/stretchr/testify v1.8.4
