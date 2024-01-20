@@ -21,16 +21,19 @@ func TestQueryResolver_Invoice(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	timeNow := utils.Now()
+	yesterday := timeNow.Add(-24 * time.Hour)
+	tomorrow := timeNow.Add(24 * time.Hour)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
-	invoiceId := neo4jtest.CreateInvoice(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
 		CreatedAt:        timeNow,
 		UpdatedAt:        timeNow,
 		DryRun:           false,
 		Number:           "1",
 		Currency:         "RON",
-		Date:             timeNow,
+		PeriodStartDate:  yesterday,
+		PeriodEndDate:    tomorrow,
 		DueDate:          timeNow,
 		Amount:           100,
 		Vat:              19,
@@ -65,7 +68,8 @@ func TestQueryResolver_Invoice(t *testing.T) {
 	require.Equal(t, false, invoice.DryRun)
 	require.Equal(t, "1", invoice.Number)
 	require.Equal(t, "RON", invoice.Currency)
-	require.Equal(t, timeNow, invoice.Date)
+	require.Equal(t, yesterday, invoice.PeriodStartDate)
+	require.Equal(t, tomorrow, invoice.PeriodEndDate)
 	require.Equal(t, timeNow, invoice.DueDate)
 	require.Equal(t, 100.0, invoice.Amount)
 	require.Equal(t, 19.0, invoice.Vat)
@@ -91,7 +95,7 @@ func TestQueryResolver_Invoices(t *testing.T) {
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
 
-	invoice1Id := neo4jtest.CreateInvoice(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
 		CreatedAt: timeNow,
 		UpdatedAt: timeNow,
 		Number:    "1",
@@ -100,7 +104,7 @@ func TestQueryResolver_Invoices(t *testing.T) {
 		Name: "SLI 1",
 	})
 
-	invoice2Id := neo4jtest.CreateInvoice(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
 		CreatedAt: yesterday,
 		UpdatedAt: yesterday,
 		Number:    "2",
@@ -109,7 +113,7 @@ func TestQueryResolver_Invoices(t *testing.T) {
 		Name: "SLI 2",
 	})
 
-	invoice3Id := neo4jtest.CreateInvoice(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+	invoice3Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
 		CreatedAt: yesterday,
 		UpdatedAt: yesterday,
 		Number:    "11",
@@ -149,7 +153,7 @@ func TestQueryResolver_SimulateInvoice(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{})
-	invoiceId := neo4jtest.CreateInvoice(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
 
 	calledSimulateInvoice := false
 	invoiceServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
