@@ -1653,16 +1653,16 @@ func TestQueryResolver_Organization_WithInvoices(t *testing.T) {
 	organization1Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contract1Id := neo4jtest.CreateContract(ctx, driver, tenantName, organization1Id, neo4jentity.ContractEntity{})
 	contract2Id := neo4jtest.CreateContract(ctx, driver, tenantName, organization1Id, neo4jentity.ContractEntity{})
-	invoice1Id := neo4jtest.CreateInvoice(ctx, driver, tenantName, contract1Id, neo4jentity.InvoiceEntity{
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract1Id, neo4jentity.InvoiceEntity{
 		Number: "1",
 	})
-	invoice2Id := neo4jtest.CreateInvoice(ctx, driver, tenantName, contract2Id, neo4jentity.InvoiceEntity{
+	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract2Id, neo4jentity.InvoiceEntity{
 		Number: "2",
 	})
 
 	organization2Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contrac3tId := neo4jtest.CreateContract(ctx, driver, tenantName, organization2Id, neo4jentity.ContractEntity{})
-	neo4jtest.CreateInvoice(ctx, driver, tenantName, contrac3tId, neo4jentity.InvoiceEntity{
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contrac3tId, neo4jentity.InvoiceEntity{
 		Number: "3",
 	})
 

@@ -145,7 +145,7 @@ func testCreateInvoice() {
 
 	time.Sleep(2 * time.Second)
 
-	result, err := clients.InvoiceClient.NewOnCycleInvoiceForContract(context.Background(), &invoicepb.NewOnCycleInvoiceForContractRequest{
+	result, err := clients.InvoiceClient.NewInvoiceForContract(context.Background(), &invoicepb.NewInvoiceForContractRequest{
 		Tenant:             tenant,
 		ContractId:         contract.Id,
 		CreatedAt:          timestamppb.New(utils.Now()),
