@@ -866,7 +866,7 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 				i.repositoryFileId=$repositoryFileId
 			WITH c, i 
 			MERGE (c)-[:HAS_INVOICE]->(i) 
-				`, tenant, tenant)
+				`, tenant)
 
 	params := map[string]any{
 		"id":               invoiceId,
