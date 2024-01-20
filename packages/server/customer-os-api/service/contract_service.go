@@ -113,13 +113,13 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	// prepare billing cycle
 	switch contractDetails.ContractEntity.BillingCycle {
 	case neo4jenum.BillingCycleMonthlyBilling:
-		createContractRequest.BillingCycle = contractpb.BillingCycle_MONTHLY_BILLING
+		createContractRequest.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
 	case neo4jenum.BillingCycleQuarterlyBilling:
-		createContractRequest.BillingCycle = contractpb.BillingCycle_QUARTERLY_BILLING
-	case neo4jenum.BillingCycleAnnualBilling:
-		createContractRequest.BillingCycle = contractpb.BillingCycle_ANNUALLY_BILLING
+		createContractRequest.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
+	case neo4jenum.BillingCycleAnnuallyBilling:
+		createContractRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
 	default:
-		createContractRequest.BillingCycle = contractpb.BillingCycle_NONE_BILLING
+		createContractRequest.BillingCycle = commonpb.BillingCycle_NONE_BILLING
 	}
 
 	// prepare currency
@@ -213,13 +213,13 @@ func (s *contractService) Update(ctx context.Context, contract *neo4jentity.Cont
 	// prepare billing cycle
 	switch contract.BillingCycle {
 	case neo4jenum.BillingCycleMonthlyBilling:
-		contractUpdateRequest.BillingCycle = contractpb.BillingCycle_MONTHLY_BILLING
+		contractUpdateRequest.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
 	case neo4jenum.BillingCycleQuarterlyBilling:
-		contractUpdateRequest.BillingCycle = contractpb.BillingCycle_QUARTERLY_BILLING
-	case neo4jenum.BillingCycleAnnualBilling:
-		contractUpdateRequest.BillingCycle = contractpb.BillingCycle_ANNUALLY_BILLING
+		contractUpdateRequest.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
+	case neo4jenum.BillingCycleAnnuallyBilling:
+		contractUpdateRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
 	default:
-		contractUpdateRequest.BillingCycle = contractpb.BillingCycle_NONE_BILLING
+		contractUpdateRequest.BillingCycle = commonpb.BillingCycle_NONE_BILLING
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)

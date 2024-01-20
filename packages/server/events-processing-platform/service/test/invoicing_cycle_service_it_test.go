@@ -14,7 +14,7 @@ import (
 )
 
 func TestInvoicingCycleService_CreateInvoicingCycle(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// setup test environment
@@ -62,7 +62,7 @@ func TestInvoicingCycleService_CreateInvoicingCycle(t *testing.T) {
 }
 
 func TestInvoicingCycleService_UpdateInvoicingCycle(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// setup test environment

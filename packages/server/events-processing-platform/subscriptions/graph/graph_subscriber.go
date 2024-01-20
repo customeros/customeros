@@ -378,12 +378,14 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case invoicingcycleevent.InvoicingCycleUpdateV1:
 		return s.invoicingCycleEventHandler.OnUpdate(ctx, evt)
 
-	case invoiceevents.InvoiceCreateV1:
-		return s.invoiceEventHandler.OnInvoiceCreateV1(ctx, evt)
-	case invoiceevents.InvoiceFillV1: //TODO alexb to be reviewed
-		return s.invoiceEventHandler.OnInvoiceFill(ctx, evt)
+	case invoiceevents.InvoiceCreateForContractV1:
+		return s.invoiceEventHandler.OnInvoiceCreateForContractV1(ctx, evt)
+	case invoiceevents.InvoiceFillV1:
+		return s.invoiceEventHandler.OnInvoiceFillV1(ctx, evt)
 	case invoiceevents.InvoicePdfGeneratedV1: //TODO alexb to be reviewed
 		return s.invoiceEventHandler.OnInvoicePdfGenerated(ctx, evt)
+	case invoiceevents.InvoicePdfRequestedV1:
+		return nil
 	case invoiceevents.InvoicePayV1:
 		return nil // do nothing yet
 

@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type ServiceLineItemEntity struct {
 	Id            string
 	CreatedAt     time.Time

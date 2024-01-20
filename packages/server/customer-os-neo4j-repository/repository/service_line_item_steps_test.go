@@ -18,7 +18,7 @@ func CustomSlisWereInserted(ctx context.Context, table *godog.Table) (context.Co
 	sliArray := tableMappers.SliToTable(table)
 
 	for i := 0; i < len(table.Rows)-1; i++ {
-		sliArray[i].Id = test.InsertServiceLineItem(ctx, driver, tenantName, sliArray[i].ContractId, enum.GetBilledType(sliArray[i].BillingType), sliArray[i].Price, sliArray[i].Quantity, sliArray[i].StartedAt)
+		sliArray[i].Id = test.InsertServiceLineItem(ctx, driver, tenantName, sliArray[i].ContractId, enum.DecodeBilledType(sliArray[i].BillingType), sliArray[i].Price, sliArray[i].Quantity, sliArray[i].StartedAt)
 	}
 	return context.WithValue(ctx, ctxKey{}, sliArray), nil
 }

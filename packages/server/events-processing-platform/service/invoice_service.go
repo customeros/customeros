@@ -69,7 +69,7 @@ func (s *invoiceService) NewInvoiceForContract(ctx context.Context, request *inv
 }
 
 func (s *invoiceService) FillInvoice(ctx context.Context, request *invoicepb.FillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.FillInvoiceRequest")
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.FillInvoice")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)

@@ -5,14 +5,30 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
+type InvoiceLineCreateFields struct {
+	CreatedAt               time.Time       `json:"createdAt"`
+	SourceFields            model.Source    `json:"sourceFields"`
+	Name                    string          `json:"name"`
+	Price                   float64         `json:"price"`
+	Quantity                int64           `json:"quantity"`
+	Amount                  float64         `json:"amount"`
+	VAT                     float64         `json:"vat"`
+	TotalAmount             float64         `json:"totalAmount"`
+	ServiceLineItemId       string          `json:"serviceLineItemId"`
+	ServiceLineItemParentId string          `json:"serviceLineItemParentId"`
+	BilledType              enum.BilledType `json:"billedType"`
+}
+
 type InvoiceLineWriteRepository interface {
-	CreateInvoiceLine(ctx context.Context, tenant, id string, name string, price float64, quantity int64, amount, vat, total float64, createdAt time.Time) error
+	CreateInvoiceLine(ctx context.Context, tenant, invoiceId, invoiceLineId string, data InvoiceLineCreateFields) error
 }
 
 type invoiceLineWriteRepository struct {
@@ -27,15 +43,14 @@ func NewInvoiceLineWriteRepository(driver *neo4j.DriverWithContext, database str
 	}
 }
 
-func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tenant, id string, name string, price float64, quantity int64, amount, vat, total float64, createdAt time.Time) error {
+func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tenant, invoiceId, invoiceLineId string, data InvoiceLineCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceLineWriteRepository.CreateInvoiceLine")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, id)
+	span.SetTag(tracing.SpanTagEntityId, invoiceLineId)
 
-	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$id})
-							WHERE i:Invoice_%s
-							MERGE (i)-[:HAS_INVOICE_LINE]->(il:InvoiceLine {id:randomUUID()})
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
+							MERGE (i)-[:HAS_INVOICE_LINE]->(il:InvoiceLine {id:$invoiceLineId})
 							ON CREATE SET 
 								il:InvoiceLine_%s,
 								il.createdAt=$createdAt,
@@ -45,19 +60,31 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tena
 								il.quantity=$quantity,
 								il.amount=$amount,
 								il.vat=$vat,
-								il.total=$total
-`, tenant, tenant)
+								il.totalAmount=$totalAmount,
+								il.billedType=$billedType,
+								il.source=$source,
+								il.appSource=$appSource,
+								il.sourceOfTruth=$sourceOfTruth,
+								il.serviceLineItemId=$serviceLineItemId,
+								il.serviceLineItemParentId=$serviceLineItemParentId`, tenant)
 	params := map[string]any{
-		"tenant":    tenant,
-		"id":        id,
-		"createdAt": createdAt,
-		"updatedAt": createdAt,
-		"name":      name,
-		"price":     price,
-		"quantity":  quantity,
-		"amount":    amount,
-		"vat":       vat,
-		"total":     total,
+		"tenant":                  tenant,
+		"invoiceId":               invoiceId,
+		"invoiceLineId":           invoiceLineId,
+		"createdAt":               data.CreatedAt,
+		"updatedAt":               data.CreatedAt,
+		"name":                    data.Name,
+		"price":                   data.Price,
+		"quantity":                data.Quantity,
+		"amount":                  data.Amount,
+		"vat":                     data.VAT,
+		"totalAmount":             data.TotalAmount,
+		"billedType":              data.BilledType.String(),
+		"source":                  data.SourceFields.Source,
+		"appSource":               data.SourceFields.AppSource,
+		"sourceOfTruth":           data.SourceFields.Source,
+		"serviceLineItemId":       data.ServiceLineItemId,
+		"serviceLineItemParentId": data.ServiceLineItemParentId,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

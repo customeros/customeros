@@ -108,7 +108,7 @@ func (bc BillingCycle) String() string {
 	case QuarterlyBilling:
 		return string(enum.BillingCycleQuarterlyBilling)
 	case AnnuallyBilling:
-		return string(enum.BillingCycleAnnualBilling)
+		return string(enum.BillingCycleAnnuallyBilling)
 	default:
 		return ""
 	}

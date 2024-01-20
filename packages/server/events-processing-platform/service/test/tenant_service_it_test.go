@@ -13,7 +13,7 @@ import (
 )
 
 func TestTenantService_AddBillingProfile(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// setup test environment

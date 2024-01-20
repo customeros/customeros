@@ -37,18 +37,18 @@ func TestQueryResolver_Invoice(t *testing.T) {
 		DueDate:          timeNow,
 		Amount:           100,
 		Vat:              19,
-		Total:            119,
+		TotalAmount:      119,
 		RepositoryFileId: "ABC",
 	})
 
 	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoiceId, neo4jentity.InvoiceLineEntity{
-		CreatedAt: timeNow,
-		Name:      "SLI 1",
-		Price:     100,
-		Quantity:  1,
-		Amount:    100,
-		Vat:       19,
-		Total:     119,
+		CreatedAt:   timeNow,
+		Name:        "SLI 1",
+		Price:       100,
+		Quantity:    1,
+		Amount:      100,
+		Vat:         19,
+		TotalAmount: 119,
 	})
 
 	rawResponse := callGraphQL(t, "invoice/get_invoice", map[string]interface{}{"id": invoiceId})

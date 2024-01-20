@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/publicsuffix"
+	"math"
 	"net/url"
 	"reflect"
 	"runtime"
@@ -284,6 +285,12 @@ func Float64PtrEquals(a, b *float64) bool {
 		return *a == *b
 	}
 	return false
+}
+
+func TruncateFloat64(input float64, decimals int) float64 {
+	multiplier := math.Pow(10, float64(decimals))
+	truncated := math.Trunc(input*multiplier) / multiplier
+	return truncated
 }
 
 func FormatCurrencyAmount(value float64) string {

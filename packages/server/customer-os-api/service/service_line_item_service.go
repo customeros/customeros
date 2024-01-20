@@ -338,7 +338,7 @@ func (s *serviceLineItemService) mapDbNodeToServiceLineItemEntity(dbNode dbtype.
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
 		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
-		Billed:        neo4jenum.GetBilledType(utils.GetStringPropOrEmpty(props, "billed")),
+		Billed:        neo4jenum.DecodeBilledType(utils.GetStringPropOrEmpty(props, "billed")),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
 		Comments:      utils.GetStringPropOrEmpty(props, "comments"),

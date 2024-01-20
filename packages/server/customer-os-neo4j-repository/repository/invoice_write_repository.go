@@ -14,19 +14,34 @@ import (
 )
 
 type InvoiceCreateFields struct {
-	ContractId      string             `json:"contractId"`
-	Currency        neo4jenum.Currency `json:"currency"`
-	DryRun          bool               `json:"dryRun"`
-	InvoiceNumber   string             `json:"invoiceNumber"`
-	PeriodStartDate time.Time          `json:"periodStartDate"`
-	PeriodEndDate   time.Time          `json:"periodEndDate"`
-	CreatedAt       time.Time          `json:"createdAt"`
-	SourceFields    model.Source       `json:"sourceFields"`
+	ContractId      string                 `json:"contractId"`
+	Currency        neo4jenum.Currency     `json:"currency"`
+	DryRun          bool                   `json:"dryRun"`
+	InvoiceNumber   string                 `json:"invoiceNumber"`
+	PeriodStartDate time.Time              `json:"periodStartDate"`
+	PeriodEndDate   time.Time              `json:"periodEndDate"`
+	CreatedAt       time.Time              `json:"createdAt"`
+	SourceFields    model.Source           `json:"sourceFields"`
+	BillingCycle    neo4jenum.BillingCycle `json:"billingCycle"`
+}
+
+type InvoiceFillFields struct {
+	Amount          float64                `json:"amount"`
+	VAT             float64                `json:"vat"`
+	TotalAmount     float64                `json:"totalAmount"`
+	UpdatedAt       time.Time              `json:"updatedAt"`
+	ContractId      string                 `json:"contractId"`
+	Currency        neo4jenum.Currency     `json:"currency"`
+	DryRun          bool                   `json:"dryRun"`
+	InvoiceNumber   string                 `json:"invoiceNumber"`
+	PeriodStartDate time.Time              `json:"periodStartDate"`
+	PeriodEndDate   time.Time              `json:"periodEndDate"`
+	BillingCycle    neo4jenum.BillingCycle `json:"billingCycle"`
 }
 
 type InvoiceWriteRepository interface {
 	CreateInvoiceForContract(ctx context.Context, tenant, invoiceId string, data InvoiceCreateFields) error
-	InvoiceFill(ctx context.Context, tenant, id string, amount, vat, total float64, updatedAt time.Time) error
+	InvoiceFill(ctx context.Context, tenant, invoiceId string, data InvoiceFillFields) error
 	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string, updatedAt time.Time) error
 	SetInvoicePaymentRequested(ctx context.Context, tenant, invoiceId string) error
 }
@@ -64,7 +79,8 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 								i.number=$number,
 								i.currency=$currency,
 								i.periodStartDate=$periodStart,
-								i.periodEndDate=$periodEnd
+								i.periodEndDate=$periodEnd,
+								i.billingCycle=$billingCycle
 							WITH c, i 
 							MERGE (c)-[:HAS_INVOICE]->(i) 
 							`, tenant)
@@ -82,6 +98,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"currency":      data.Currency.String(),
 		"periodStart":   data.PeriodStartDate,
 		"periodEnd":     data.PeriodEndDate,
+		"billingCycle":  data.BillingCycle.String(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -93,25 +110,45 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 	return err
 }
 
-func (r *invoiceWriteRepository) InvoiceFill(ctx context.Context, tenant, id string, amount, vat, total float64, updatedAt time.Time) error {
+func (r *invoiceWriteRepository) InvoiceFill(ctx context.Context, tenant, invoiceId string, data InvoiceFillFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.InvoiceFill")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, id)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$id}) 
-							SET i.updatedAt=$updatedAt,
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
+							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId}) 
+							ON CREATE SET
+								i:Invoice_%s,
+								i.currency=$currency,
+								i.dryRun=$dryRun,
+								i.number=$number,
+								i.currency=$currency,
+								i.periodStartDate=$periodStart,
+								i.periodEndDate=$periodEnd,
+								i.billingCycle=$billingCycle
+							SET 
+								i.updatedAt=$updatedAt,
 								i.amount=$amount,
 								i.vat=$vat,
-								i.total=$total
-	`
+								i.totalAmount=$totalAmount
+							WITH c, i 
+							MERGE (c)-[:HAS_INVOICE]->(i) 
+							`, tenant)
 	params := map[string]any{
-		"tenant":    tenant,
-		"id":        id,
-		"updatedAt": updatedAt,
-		"amount":    amount,
-		"vat":       vat,
-		"total":     total,
+		"tenant":       tenant,
+		"contractId":   data.ContractId,
+		"invoiceId":    invoiceId,
+		"updatedAt":    data.UpdatedAt,
+		"amount":       data.Amount,
+		"vat":          data.VAT,
+		"totalAmount":  data.TotalAmount,
+		"dryRun":       data.DryRun,
+		"number":       data.InvoiceNumber,
+		"currency":     data.Currency.String(),
+		"periodStart":  data.PeriodStartDate,
+		"periodEnd":    data.PeriodEndDate,
+		"billingCycle": data.BillingCycle.String(),
 	}
 
 	span.LogFields(log.String("cypher", cypher))

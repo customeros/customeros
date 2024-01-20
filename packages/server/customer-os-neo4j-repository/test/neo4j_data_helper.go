@@ -862,7 +862,7 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 				i.currency=$currency,
 				i.amount=$amount,
 				i.vat=$vat,
-				i.total=$total,
+				i.totalAmount=$totalAmount,
 				i.repositoryFileId=$repositoryFileId
 			WITH c, i 
 			MERGE (c)-[:HAS_INVOICE]->(i) 
@@ -885,7 +885,7 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 		"currency":         invoice.Currency,
 		"amount":           invoice.Amount,
 		"vat":              invoice.Vat,
-		"total":            invoice.Total,
+		"totalAmount":      invoice.TotalAmount,
 		"repositoryFileId": invoice.RepositoryFileId,
 	}
 
@@ -909,7 +909,7 @@ func CreateInvoiceLine(ctx context.Context, driver *neo4j.DriverWithContext, ten
 					il.quantity=$quantity,
 					il.amount=$amount,
 					il.vat=$vat,
-					il.total=$total
+					il.totalAmount=$totalAmount
 				`, tenant)
 
 	params := map[string]any{
@@ -926,7 +926,7 @@ func CreateInvoiceLine(ctx context.Context, driver *neo4j.DriverWithContext, ten
 		"quantity":      invoiceLine.Quantity,
 		"amount":        invoiceLine.Amount,
 		"vat":           invoiceLine.Vat,
-		"total":         invoiceLine.Total,
+		"totalAmount":   invoiceLine.TotalAmount,
 	}
 
 	ExecuteWriteQuery(ctx, driver, query, params)

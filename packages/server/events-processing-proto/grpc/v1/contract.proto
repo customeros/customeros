@@ -3,6 +3,7 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 import "common/source.proto";
 import "common/external_system.proto";
+import "common/billing_cycle.proto";
 
 option go_package = "api/grpc/v1/contract;contract_grpc_service";
 
@@ -12,14 +13,6 @@ enum RenewalCycle {
   MONTHLY_RENEWAL = 1;
   ANNUALLY_RENEWAL = 2;
   QUARTERLY_RENEWAL = 3;
-}
-
-// Enum for BillingCycle
-enum BillingCycle {
-  NONE_BILLING = 0;
-  MONTHLY_BILLING = 1;
-  QUARTERLY_BILLING = 2;
-  ANNUALLY_BILLING = 3;
 }
 
 // CreateContract request message

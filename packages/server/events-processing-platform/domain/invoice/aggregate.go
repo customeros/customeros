@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -113,8 +114,9 @@ func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, requ
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	periodStartDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodStart)
 	periodEndDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodEnd)
+	billingCycle := BillingCycle(request.BillingCycle)
 
-	createEvent, err := NewInvoiceCreateEvent(a, sourceFields, request.ContractId, request.Currency, invoiceNumber, request.DryRun, createdAtNotNil, *periodStartDate, *periodEndDate)
+	createEvent, err := NewInvoiceForContractCreateEvent(a, sourceFields, request.ContractId, request.Currency, invoiceNumber, billingCycle.String(), request.DryRun, createdAtNotNil, *periodStartDate, *periodEndDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceCreateEvent")
@@ -135,10 +137,37 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
+	if a.Invoice == nil {
+		err := errors.New("invoice is nil")
+		tracing.TraceErr(span, err)
+		return err
+	}
 
-	fillEvent, err := NewInvoiceFillEvent(a, utils.TimestampProtoToTimePtr(request.UpdatedAt), sourceFields, request)
+	// prepare invoice lines
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
+	var invoiceLines []InvoiceLineEvent
+
+	for _, line := range request.InvoiceLines {
+		invoiceLines = append(invoiceLines, InvoiceLineEvent{
+			Id:        uuid.New().String(),
+			CreatedAt: updatedAtNotNil,
+			SourceFields: commonmodel.Source{
+				Source:    constants.SourceOpenline,
+				AppSource: request.AppSource,
+			},
+			Name:                    line.Name,
+			Price:                   line.Price,
+			Quantity:                line.Quantity,
+			Amount:                  line.Amount,
+			VAT:                     line.Vat,
+			TotalAmount:             line.Total,
+			ServiceLineItemId:       line.ServiceLineItemId,
+			ServiceLineItemParentId: line.ServiceLineItemParentId,
+			BilledType:              BilledType(line.BilledType).String(),
+		})
+	}
+
+	fillEvent, err := NewInvoiceFillEvent(a, updatedAtNotNil, *a.Invoice, request.Amount, request.Vat, request.Total, invoiceLines)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceFillEvent")
@@ -147,7 +176,7 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 	aggregate.EnrichEventWithMetadataExtended(&fillEvent, span, aggregate.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
-		App:    request.SourceFields.AppSource,
+		App:    request.AppSource,
 	})
 
 	return a.Apply(fillEvent)
@@ -180,7 +209,7 @@ func (a *InvoiceAggregate) PayInvoice(ctx context.Context, request *invoicepb.Pa
 
 func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
-	case InvoiceCreateV1:
+	case InvoiceCreateForContractV1:
 		return a.onInvoiceCreateEvent(evt)
 	case InvoiceFillV1:
 		return a.onFillInvoice(evt)
@@ -196,7 +225,7 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 }
 
 func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
-	var eventData InvoiceCreateEvent
+	var eventData InvoiceForContractCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -211,6 +240,7 @@ func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
 	a.Invoice.Currency = eventData.Currency
 	a.Invoice.PeriodStartDate = eventData.PeriodStartDate
 	a.Invoice.PeriodEndDate = eventData.PeriodEndDate
+	a.Invoice.BillingCycle = eventData.BillingCycle
 
 	return nil
 }
@@ -221,19 +251,25 @@ func (a *InvoiceAggregate) onFillInvoice(evt eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 
+	a.Invoice.UpdatedAt = eventData.UpdatedAt
 	a.Invoice.Amount = eventData.Amount
 	a.Invoice.VAT = eventData.VAT
-	a.Invoice.Total = eventData.Total
-	a.Invoice.Lines = make([]InvoiceLine, len(eventData.Lines))
-	for i, line := range eventData.Lines {
-		a.Invoice.Lines[i] = InvoiceLine{
-			Name:     line.Name,
-			Price:    line.Price,
-			Quantity: line.Quantity,
-			Amount:   line.Amount,
-			VAT:      line.VAT,
-			Total:    line.Total,
-		}
+	a.Invoice.TotalAmount = eventData.TotalAmount
+	for _, line := range eventData.InvoiceLines {
+		a.Invoice.InvoiceLines = append(a.Invoice.InvoiceLines, InvoiceLine{
+			Name:                    line.Name,
+			Price:                   line.Price,
+			Quantity:                line.Quantity,
+			Amount:                  line.Amount,
+			VAT:                     line.VAT,
+			TotalAmount:             line.TotalAmount,
+			ServiceLineItemId:       line.ServiceLineItemId,
+			ServiceLineItemParentId: line.ServiceLineItemParentId,
+			CreatedAt:               line.CreatedAt,
+			UpdatedAt:               line.CreatedAt,
+			SourceFields:            line.SourceFields,
+			BilledType:              line.BilledType,
+		})
 	}
 
 	return nil

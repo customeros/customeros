@@ -108,7 +108,7 @@ func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_InvoicingN
 
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
-		BillingCycle:       neo4jenum.BillingCycleAnnualBilling,
+		BillingCycle:       neo4jenum.BillingCycleAnnuallyBilling,
 		InvoicingStartDate: &referenceDate,
 	})
 
