@@ -1017,7 +1017,8 @@ type Invoice struct {
 	AppSource        string         `json:"appSource"`
 	DryRun           bool           `json:"dryRun"`
 	Number           string         `json:"number"`
-	Date             time.Time      `json:"date"`
+	PeriodStartDate  time.Time      `json:"periodStartDate"`
+	PeriodEndDate    time.Time      `json:"periodEndDate"`
 	DueDate          time.Time      `json:"dueDate"`
 	Amount           float64        `json:"amount"`
 	Vat              float64        `json:"vat"`
@@ -1058,9 +1059,10 @@ type InvoiceLineInput struct {
 }
 
 type InvoiceSimulateInput struct {
-	ContractID   string              `json:"contractId"`
-	Date         *time.Time          `json:"date,omitempty"`
-	InvoiceLines []*InvoiceLineInput `json:"invoiceLines"`
+	ContractID      string              `json:"contractId"`
+	PeriodStartDate *time.Time          `json:"periodStartDate,omitempty"`
+	PeriodEndDate   *time.Time          `json:"periodEndDate,omitempty"`
+	InvoiceLines    []*InvoiceLineInput `json:"invoiceLines"`
 }
 
 type InvoicesPage struct {

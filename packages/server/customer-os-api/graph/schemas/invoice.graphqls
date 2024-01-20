@@ -23,7 +23,8 @@ type Invoice implements SourceFields & Node {
 
     dryRun:             Boolean!
     number:             String!
-    date:               Time!
+    periodStartDate:    Time!
+    periodEndDate:      Time!
     dueDate:            Time!
     amount:             Float!
     vat:                Float!
@@ -48,7 +49,8 @@ type InvoiceLine implements Node {
 
 input InvoiceSimulateInput {
     contractId:         ID!
-    date:               Time
+    periodStartDate:    Time
+    periodEndDate:      Time
     invoiceLines:       [InvoiceLineInput!]!
 }
 input InvoiceLineInput {

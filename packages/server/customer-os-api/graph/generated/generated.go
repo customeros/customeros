@@ -554,12 +554,13 @@ type ComplexityRoot struct {
 		AppSource        func(childComplexity int) int
 		CreatedAt        func(childComplexity int) int
 		Currency         func(childComplexity int) int
-		Date             func(childComplexity int) int
 		DryRun           func(childComplexity int) int
 		DueDate          func(childComplexity int) int
 		ID               func(childComplexity int) int
 		InvoiceLines     func(childComplexity int) int
 		Number           func(childComplexity int) int
+		PeriodEndDate    func(childComplexity int) int
+		PeriodStartDate  func(childComplexity int) int
 		RepositoryFileID func(childComplexity int) int
 		Source           func(childComplexity int) int
 		SourceOfTruth    func(childComplexity int) int
@@ -4012,13 +4013,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Invoice.Currency(childComplexity), true
 
-	case "Invoice.date":
-		if e.complexity.Invoice.Date == nil {
-			break
-		}
-
-		return e.complexity.Invoice.Date(childComplexity), true
-
 	case "Invoice.dryRun":
 		if e.complexity.Invoice.DryRun == nil {
 			break
@@ -4053,6 +4047,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Invoice.Number(childComplexity), true
+
+	case "Invoice.periodEndDate":
+		if e.complexity.Invoice.PeriodEndDate == nil {
+			break
+		}
+
+		return e.complexity.Invoice.PeriodEndDate(childComplexity), true
+
+	case "Invoice.periodStartDate":
+		if e.complexity.Invoice.PeriodStartDate == nil {
+			break
+		}
+
+		return e.complexity.Invoice.PeriodStartDate(childComplexity), true
 
 	case "Invoice.repositoryFileId":
 		if e.complexity.Invoice.RepositoryFileID == nil {
@@ -10819,7 +10827,8 @@ type Invoice implements SourceFields & Node {
 
     dryRun:             Boolean!
     number:             String!
-    date:               Time!
+    periodStartDate:    Time!
+    periodEndDate:      Time!
     dueDate:            Time!
     amount:             Float!
     vat:                Float!
@@ -10844,7 +10853,8 @@ type InvoiceLine implements Node {
 
 input InvoiceSimulateInput {
     contractId:         ID!
-    date:               Time
+    periodStartDate:    Time
+    periodEndDate:      Time
     invoiceLines:       [InvoiceLineInput!]!
 }
 input InvoiceLineInput {
@@ -32510,8 +32520,8 @@ func (ec *executionContext) fieldContext_Invoice_number(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_date(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_date(ctx, field)
+func (ec *executionContext) _Invoice_periodStartDate(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_periodStartDate(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -32524,7 +32534,7 @@ func (ec *executionContext) _Invoice_date(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Date, nil
+		return obj.PeriodStartDate, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -32541,7 +32551,51 @@ func (ec *executionContext) _Invoice_date(ctx context.Context, field graphql.Col
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_date(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Invoice_periodStartDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_periodEndDate(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_periodEndDate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PeriodEndDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_periodEndDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Invoice",
 		Field:      field,
@@ -33287,8 +33341,10 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 				return ec.fieldContext_Invoice_dryRun(ctx, field)
 			case "number":
 				return ec.fieldContext_Invoice_number(ctx, field)
-			case "date":
-				return ec.fieldContext_Invoice_date(ctx, field)
+			case "periodStartDate":
+				return ec.fieldContext_Invoice_periodStartDate(ctx, field)
+			case "periodEndDate":
+				return ec.fieldContext_Invoice_periodEndDate(ctx, field)
 			case "dueDate":
 				return ec.fieldContext_Invoice_dueDate(ctx, field)
 			case "amount":
@@ -63575,8 +63631,10 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 				return ec.fieldContext_Invoice_dryRun(ctx, field)
 			case "number":
 				return ec.fieldContext_Invoice_number(ctx, field)
-			case "date":
-				return ec.fieldContext_Invoice_date(ctx, field)
+			case "periodStartDate":
+				return ec.fieldContext_Invoice_periodStartDate(ctx, field)
+			case "periodEndDate":
+				return ec.fieldContext_Invoice_periodEndDate(ctx, field)
 			case "dueDate":
 				return ec.fieldContext_Invoice_dueDate(ctx, field)
 			case "amount":
@@ -75293,7 +75351,7 @@ func (ec *executionContext) unmarshalInputInvoiceSimulateInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "date", "invoiceLines"}
+	fieldsInOrder := [...]string{"contractId", "periodStartDate", "periodEndDate", "invoiceLines"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -75307,13 +75365,20 @@ func (ec *executionContext) unmarshalInputInvoiceSimulateInput(ctx context.Conte
 				return it, err
 			}
 			it.ContractID = data
-		case "date":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("date"))
+		case "periodStartDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("periodStartDate"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Date = data
+			it.PeriodStartDate = data
+		case "periodEndDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("periodEndDate"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PeriodEndDate = data
 		case "invoiceLines":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoiceLines"))
 			data, err := ec.unmarshalNInvoiceLineInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceLineInputᚄ(ctx, v)
@@ -83109,8 +83174,13 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "date":
-			out.Values[i] = ec._Invoice_date(ctx, field, obj)
+		case "periodStartDate":
+			out.Values[i] = ec._Invoice_periodStartDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "periodEndDate":
+			out.Values[i] = ec._Invoice_periodEndDate(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
