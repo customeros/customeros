@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InvoiceGrpcServiceClient interface {
-	NewOnCycleInvoiceForContract(ctx context.Context, in *NewOnCycleInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
+	NewInvoiceForContract(ctx context.Context, in *NewInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	FillInvoice(ctx context.Context, in *FillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PdfGeneratedInvoice(ctx context.Context, in *PdfGeneratedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PayInvoice(ctx context.Context, in *PayInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
@@ -37,9 +37,9 @@ func NewInvoiceGrpcServiceClient(cc grpc.ClientConnInterface) InvoiceGrpcService
 	return &invoiceGrpcServiceClient{cc}
 }
 
-func (c *invoiceGrpcServiceClient) NewOnCycleInvoiceForContract(ctx context.Context, in *NewOnCycleInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
+func (c *invoiceGrpcServiceClient) NewInvoiceForContract(ctx context.Context, in *NewInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
 	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/NewOnCycleInvoiceForContract", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/NewInvoiceForContract", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c *invoiceGrpcServiceClient) SimulateInvoice(ctx context.Context, in *Simu
 // All implementations should embed UnimplementedInvoiceGrpcServiceServer
 // for forward compatibility
 type InvoiceGrpcServiceServer interface {
-	NewOnCycleInvoiceForContract(context.Context, *NewOnCycleInvoiceForContractRequest) (*InvoiceIdResponse, error)
+	NewInvoiceForContract(context.Context, *NewInvoiceForContractRequest) (*InvoiceIdResponse, error)
 	FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error)
 	PdfGeneratedInvoice(context.Context, *PdfGeneratedInvoiceRequest) (*InvoiceIdResponse, error)
 	PayInvoice(context.Context, *PayInvoiceRequest) (*InvoiceIdResponse, error)
@@ -97,8 +97,8 @@ type InvoiceGrpcServiceServer interface {
 type UnimplementedInvoiceGrpcServiceServer struct {
 }
 
-func (UnimplementedInvoiceGrpcServiceServer) NewOnCycleInvoiceForContract(context.Context, *NewOnCycleInvoiceForContractRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NewOnCycleInvoiceForContract not implemented")
+func (UnimplementedInvoiceGrpcServiceServer) NewInvoiceForContract(context.Context, *NewInvoiceForContractRequest) (*InvoiceIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NewInvoiceForContract not implemented")
 }
 func (UnimplementedInvoiceGrpcServiceServer) FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FillInvoice not implemented")
@@ -124,20 +124,20 @@ func RegisterInvoiceGrpcServiceServer(s grpc.ServiceRegistrar, srv InvoiceGrpcSe
 	s.RegisterService(&InvoiceGrpcService_ServiceDesc, srv)
 }
 
-func _InvoiceGrpcService_NewOnCycleInvoiceForContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NewOnCycleInvoiceForContractRequest)
+func _InvoiceGrpcService_NewInvoiceForContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NewInvoiceForContractRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).NewOnCycleInvoiceForContract(ctx, in)
+		return srv.(InvoiceGrpcServiceServer).NewInvoiceForContract(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/NewOnCycleInvoiceForContract",
+		FullMethod: "/InvoiceGrpcService/NewInvoiceForContract",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).NewOnCycleInvoiceForContract(ctx, req.(*NewOnCycleInvoiceForContractRequest))
+		return srv.(InvoiceGrpcServiceServer).NewInvoiceForContract(ctx, req.(*NewInvoiceForContractRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -222,8 +222,8 @@ var InvoiceGrpcService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*InvoiceGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "NewOnCycleInvoiceForContract",
-			Handler:    _InvoiceGrpcService_NewOnCycleInvoiceForContract_Handler,
+			MethodName: "NewInvoiceForContract",
+			Handler:    _InvoiceGrpcService_NewInvoiceForContract_Handler,
 		},
 		{
 			MethodName: "FillInvoice",

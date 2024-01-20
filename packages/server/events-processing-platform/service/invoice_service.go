@@ -4,12 +4,16 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type invoiceService struct {
@@ -27,11 +31,31 @@ func NewInvoiceService(log logger.Logger, aggregateStore eventstore.AggregateSto
 	}
 }
 
-func (s *invoiceService) NewOnCycleInvoiceForContract(ctx context.Context, request *invoicepb.NewOnCycleInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.NewOnCycleInvoiceForContract")
+func (s *invoiceService) NewInvoiceForContract(ctx context.Context, request *invoicepb.NewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.NewInvoiceForContract")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.Currency == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("currency"))
+	} else if request.InvoicePeriodStart == nil {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoicePeriodStart"))
+	} else if request.InvoicePeriodEnd == nil {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoicePeriodEnd"))
+	} else if request.ContractId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("contractId"))
+	}
+
+	// Check if the contract aggregate exists
+	contractExists, err := s.checkContractExists(ctx, request.Tenant, request.ContractId)
+	if err != nil {
+		s.log.Error(err, "error checking contract existence")
+		return nil, status.Errorf(codes.Internal, "error checking contract existence: %v", err)
+	}
+	if !contractExists {
+		return nil, status.Errorf(codes.NotFound, "contract with ID %s not found", request.ContractId)
+	}
 
 	invoiceId := uuid.New().String()
 
@@ -116,4 +140,18 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, request *invoicepb
 	}
 
 	return &invoicepb.InvoiceIdResponse{Id: invoiceId}, nil
+}
+
+func (s *invoiceService) checkContractExists(ctx context.Context, tenant, contractId string) (bool, error) {
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenant, contractId)
+	err := s.aggregateStore.Exists(ctx, contractAggregate.GetID())
+	if err != nil {
+		if errors.Is(err, eventstore.ErrAggregateNotFound) {
+			return false, nil
+		} else {
+			return false, err
+		}
+	}
+
+	return true, nil // The contract exists
 }

@@ -1,7 +1,6 @@
 package invoice
 
 import (
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -19,32 +18,28 @@ const (
 )
 
 type InvoiceCreateEvent struct {
-	Tenant       string             `json:"tenant" validate:"required"`
-	ContractId   string             `json:"organizationId" validate:"required"`
-	CreatedAt    time.Time          `json:"createdAt"`
-	SourceFields commonmodel.Source `json:"sourceFields"`
-
-	DryRun      bool                    `json:"dryRun"`
-	DryRunLines []DryRunServiceLineItem `json:"dryRunLines"`
-
-	Number  string    `json:"number"`
-	Date    time.Time `json:"date" validate:"required"`
-	DueDate time.Time `json:"dueDate" validate:"required"`
+	Tenant          string             `json:"tenant" validate:"required"`
+	ContractId      string             `json:"organizationId" validate:"required"`
+	CreatedAt       time.Time          `json:"createdAt"`
+	SourceFields    commonmodel.Source `json:"sourceFields"`
+	DryRun          bool               `json:"dryRun"`
+	InvoiceNumber   string             `json:"invoiceNumber"`
+	Currency        string             `json:"currency"`
+	PeriodStartDate time.Time          `json:"periodStartDate"`
+	PeriodEndDate   time.Time          `json:"periodEndDate"`
 }
 
-func NewInvoiceCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, request *invoicepb.NewOnCycleInvoiceForContractRequest) (eventstore.Event, error) {
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
-	dateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.InvoicePeriodStart), utils.Now())
+func NewInvoiceCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, contractId, currency, invoiceNumber string, dryRun bool, createdAt, periodStartDate, periodEndDate time.Time) (eventstore.Event, error) {
 	eventData := InvoiceCreateEvent{
-		Tenant:       aggregate.GetTenant(),
-		ContractId:   request.ContractId,
-		CreatedAt:    createdAtNotNil,
-		SourceFields: sourceFields,
-
-		DryRun:  request.DryRun,
-		Number:  uuid.New().String(), // todo logic for number generation
-		Date:    dateNotNil,
-		DueDate: dateNotNil,
+		Tenant:          aggregate.GetTenant(),
+		ContractId:      contractId,
+		CreatedAt:       createdAt,
+		SourceFields:    sourceFields,
+		Currency:        currency,
+		InvoiceNumber:   invoiceNumber,
+		DryRun:          dryRun,
+		PeriodStartDate: periodStartDate,
+		PeriodEndDate:   periodEndDate,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -61,29 +56,29 @@ func NewInvoiceCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmo
 
 func SimulateInvoiceNewEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, request *invoicepb.SimulateInvoiceRequest) (eventstore.Event, error) {
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
-	dateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.Date), utils.Now())
+	//dateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.Date), utils.Now())
 	eventData := InvoiceCreateEvent{
 		Tenant:       aggregate.GetTenant(),
 		ContractId:   request.ContractId,
 		CreatedAt:    createdAtNotNil,
 		SourceFields: sourceFields,
 
-		DryRun:  true,
-		Number:  uuid.New().String(),
-		Date:    dateNotNil,
-		DueDate: dateNotNil,
+		DryRun: true,
+		//Number:  uuid.New().String(),
+		//Date:    dateNotNil,
+		//DueDate: dateNotNil,
 	}
 
-	eventData.DryRunLines = make([]DryRunServiceLineItem, len(request.DryRunServiceLineItems))
-	for i, line := range request.DryRunServiceLineItems {
-		eventData.DryRunLines[i] = DryRunServiceLineItem{
-			ServiceLineItemId: line.ServiceLineItemId,
-			Name:              line.Name,
-			Billed:            line.Billed.String(),
-			Price:             line.Price,
-			Quantity:          line.Quantity,
-		}
-	}
+	//eventData.DryRunLines = make([]DryRunServiceLineItem, len(request.DryRunServiceLineItems))
+	//for i, line := range request.DryRunServiceLineItems {
+	//	eventData.DryRunLines[i] = DryRunServiceLineItem{
+	//		ServiceLineItemId: line.ServiceLineItemId,
+	//		Name:              line.Name,
+	//		Billed:            line.Billed.String(),
+	//		Price:             line.Price,
+	//		Quantity:          line.Quantity,
+	//	}
+	//}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "failed to validate InvoiceCreateEvent")

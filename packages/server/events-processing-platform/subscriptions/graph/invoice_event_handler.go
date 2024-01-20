@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -35,18 +34,19 @@ func (h *InvoiceEventHandler) OnInvoiceNew(ctx context.Context, evt eventstore.E
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	id := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, id)
-
-	source := helper.GetSource(eventData.SourceFields.Source)
-	appSource := helper.GetAppSource(eventData.SourceFields.AppSource)
-	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.InvoiceNew(ctx, eventData.Tenant, eventData.ContractId, id, eventData.DryRun, eventData.Number, eventData.Date, eventData.DueDate, source, appSource, eventData.CreatedAt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while saving invoice %s: %s", id, err.Error())
-		return err
-	}
-	return err
+	//id := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
+	//span.SetTag(tracing.SpanTagEntityId, id)
+	//
+	//source := helper.GetSource(eventData.SourceFields.Source)
+	//appSource := helper.GetAppSource(eventData.SourceFields.AppSource)
+	//err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.InvoiceNew(ctx, eventData.Tenant, eventData.ContractId, id, eventData.DryRun, eventData.Number, eventData.Date, eventData.DueDate, source, appSource, eventData.CreatedAt)
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//	h.log.Errorf("Error while saving invoice %s: %s", id, err.Error())
+	//	return err
+	//}
+	//return err
+	return nil
 }
 
 func (h *InvoiceEventHandler) OnInvoiceFill(ctx context.Context, evt eventstore.Event) error {

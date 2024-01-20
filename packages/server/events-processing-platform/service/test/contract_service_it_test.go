@@ -18,7 +18,6 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
-	"time"
 )
 
 func TestContractService_CreateContract(t *testing.T) {
@@ -34,7 +33,7 @@ func TestContractService_CreateContract(t *testing.T) {
 	aggregateStore.Save(ctx, organizationAggregate)
 	grpcConnection, _ := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	contractClient := contractpb.NewContractGrpcServiceClient(grpcConnection)
-	timeNow := time.Now()
+	timeNow := utils.Now()
 	response, err := contractClient.CreateContract(ctx, &contractpb.CreateContractGrpcRequest{
 		Tenant:           tenant,
 		Name:             "New Contract",
@@ -103,7 +102,7 @@ func TestContractService_CreateContract_ServiceStartedInFuture(t *testing.T) {
 	contractClient := contractpb.NewContractGrpcServiceClient(grpcConnection)
 
 	// Create a future date
-	futureDate := time.Now().AddDate(0, 1, 0) // 1 month into the future
+	futureDate := utils.Now().AddDate(0, 1, 0) // 1 month into the future
 
 	// Call CreateContract with future ServiceStartedAt
 	response, err := contractClient.CreateContract(ctx, &contractpb.CreateContractGrpcRequest{
