@@ -2,6 +2,9 @@ package graph
 
 import (
 	"context"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -23,8 +26,8 @@ func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Reposito
 	}
 }
 
-func (h *InvoiceEventHandler) OnInvoiceNew(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.OnInvoiceNew")
+func (h *InvoiceEventHandler) OnInvoiceCreateV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.OnInvoiceCreateV1")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -34,19 +37,29 @@ func (h *InvoiceEventHandler) OnInvoiceNew(ctx context.Context, evt eventstore.E
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	//id := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
-	//span.SetTag(tracing.SpanTagEntityId, id)
-	//
-	//source := helper.GetSource(eventData.SourceFields.Source)
-	//appSource := helper.GetAppSource(eventData.SourceFields.AppSource)
-	//err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.InvoiceNew(ctx, eventData.Tenant, eventData.ContractId, id, eventData.DryRun, eventData.Number, eventData.Date, eventData.DueDate, source, appSource, eventData.CreatedAt)
-	//if err != nil {
-	//	tracing.TraceErr(span, err)
-	//	h.log.Errorf("Error while saving invoice %s: %s", id, err.Error())
-	//	return err
-	//}
-	//return err
-	return nil
+	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	data := neo4jrepository.InvoiceCreateFields{
+		ContractId:      eventData.ContractId,
+		Currency:        neo4jenum.DecodeCurrency(eventData.Currency),
+		DryRun:          eventData.DryRun,
+		InvoiceNumber:   eventData.InvoiceNumber,
+		PeriodStartDate: eventData.PeriodStartDate,
+		PeriodEndDate:   eventData.PeriodEndDate,
+		CreatedAt:       eventData.CreatedAt,
+		SourceFields: neo4jmodel.Source{
+			Source:    eventData.SourceFields.Source,
+			AppSource: eventData.SourceFields.AppSource,
+		},
+	}
+	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.CreateInvoiceForContract(ctx, eventData.Tenant, invoiceId, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while saving invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+	return err
 }
 
 func (h *InvoiceEventHandler) OnInvoiceFill(ctx context.Context, evt eventstore.Event) error {

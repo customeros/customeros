@@ -842,10 +842,10 @@ func InsertServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.
 	})
 }
 
-func CreateInvoice(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, invoice entity.InvoiceEntity) string {
+func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, invoice entity.InvoiceEntity) string {
 	invoiceId := utils.NewUUIDIfEmpty(invoice.Id)
 	query := fmt.Sprintf(`
-			MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s {id:$contractId})
+			MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 			MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$id}) 
 			ON CREATE SET 
 				i:Invoice_%s,
@@ -856,7 +856,8 @@ func CreateInvoice(ctx context.Context, driver *neo4j.DriverWithContext, tenant,
 				i.updatedAt=$updatedAt,
 				i.dryRun=$dryRun,
 				i.number=$number,
-				i.date=$date,
+				i.periodStartDate=$periodStartDate,
+				i.periodEndDate=$periodEndDate,
 				i.dueDate=$dueDate,
 				i.currency=$currency,
 				i.amount=$amount,
@@ -878,7 +879,8 @@ func CreateInvoice(ctx context.Context, driver *neo4j.DriverWithContext, tenant,
 		"updatedAt":        invoice.UpdatedAt,
 		"dryRun":           invoice.DryRun,
 		"number":           invoice.Number,
-		"date":             invoice.Date,
+		"periodStartDate":  invoice.PeriodStartDate,
+		"periodEndDate":    invoice.PeriodEndDate,
 		"dueDate":          invoice.DueDate,
 		"currency":         invoice.Currency,
 		"amount":           invoice.Amount,
