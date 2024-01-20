@@ -95,13 +95,13 @@ func (h *InvoiceEventHandler) onInvoiceNewV1(ctx context.Context, evt eventstore
 	}
 	// TODO temp code ends here
 
-	if eventData.DryRun {
-		if eventData.DryRunLines == nil || len(eventData.DryRunLines) == 0 {
-			//todo compute invoice based on current SLI items in neo4j
-		} else {
-			//todo compute invoice based on SLI items from event
-		}
-	}
+	//if eventData.DryRun {
+	//if eventData.DryRunLines == nil || len(eventData.DryRunLines) == 0 {
+	//	//todo compute invoice based on current SLI items in neo4j
+	//} else {
+	//	//todo compute invoice based on SLI items from event
+	//}
+	//}
 
 	amount := 1.1
 	vat := 2.2

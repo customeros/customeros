@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
-	"time"
 )
 
 func TestServiceLineItemService_CreateServiceLineItem(t *testing.T) {
@@ -34,7 +33,7 @@ func TestServiceLineItemService_CreateServiceLineItem(t *testing.T) {
 	serviceLineItemClient := servicelineitempb.NewServiceLineItemGrpcServiceClient(grpcConnection)
 
 	// Prepare request
-	timeNow := time.Now()
+	timeNow := utils.Now()
 	createRequest := &servicelineitempb.CreateServiceLineItemGrpcRequest{
 		Tenant:         tenant,
 		LoggedInUserId: "User123",

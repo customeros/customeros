@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -58,7 +59,7 @@ func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any) (any,
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *invoicepb.NewOnCycleInvoiceForContractRequest:
+	case *invoicepb.NewInvoiceForContractRequest:
 		return nil, a.CreateNewInvoiceForContract(ctx, r)
 	case *invoicepb.FillInvoiceRequest:
 		return nil, a.FillInvoice(ctx, r)
@@ -96,7 +97,7 @@ func (a *InvoiceAggregate) CreatePdfGeneratedEvent(ctx context.Context, request 
 	return a.Apply(event)
 }
 
-func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, request *invoicepb.NewOnCycleInvoiceForContractRequest) error {
+func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, request *invoicepb.NewInvoiceForContractRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.CreateNewInvoiceForContract")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
@@ -106,7 +107,14 @@ func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, requ
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	createEvent, err := NewInvoiceCreateEvent(a, sourceFields, request)
+	// TODO add here logic to generate invoice number
+	invoiceNumber := uuid.New().String()
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+	periodStartDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodStart)
+	periodEndDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodEnd)
+
+	createEvent, err := NewInvoiceCreateEvent(a, sourceFields, request.ContractId, request.Currency, invoiceNumber, request.DryRun, createdAtNotNil, *periodStartDate, *periodEndDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceCreateEvent")
@@ -173,7 +181,7 @@ func (a *InvoiceAggregate) PayInvoice(ctx context.Context, request *invoicepb.Pa
 func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case InvoiceCreateV1:
-		return a.onNewInvoiceForContract(evt)
+		return a.onInvoiceCreateEvent(evt)
 	case InvoiceFillV1:
 		return a.onFillInvoice(evt)
 	case InvoicePdfGeneratedV1:
@@ -187,7 +195,7 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 	}
 }
 
-func (a *InvoiceAggregate) onNewInvoiceForContract(evt eventstore.Event) error {
+func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
 	var eventData InvoiceCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
@@ -198,12 +206,11 @@ func (a *InvoiceAggregate) onNewInvoiceForContract(evt eventstore.Event) error {
 	a.Invoice.UpdatedAt = eventData.CreatedAt
 	a.Invoice.ContractId = eventData.ContractId
 	a.Invoice.SourceFields = eventData.SourceFields
-
-	a.Invoice.Number = eventData.Number
-	a.Invoice.Date = eventData.Date
-	a.Invoice.DueDate = eventData.DueDate
+	a.Invoice.InvoiceNumber = eventData.InvoiceNumber
 	a.Invoice.DryRun = eventData.DryRun
-	a.Invoice.DryRunLines = eventData.DryRunLines
+	a.Invoice.Currency = eventData.Currency
+	a.Invoice.PeriodStartDate = eventData.PeriodStartDate
+	a.Invoice.PeriodEndDate = eventData.PeriodEndDate
 
 	return nil
 }

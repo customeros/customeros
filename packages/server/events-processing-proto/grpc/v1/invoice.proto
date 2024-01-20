@@ -6,7 +6,7 @@ import "common/billing_type.proto";
 
 option go_package = "api/grpc/v1/invoice;invoice_grpc_service";
 
-message NewOnCycleInvoiceForContractRequest {
+message NewInvoiceForContractRequest {
   string tenant = 1; // mandatory
   string loggedInUserId = 2;
   string contractId = 3; // mandatory
@@ -78,7 +78,7 @@ message InvoiceIdResponse {
 }
 
 service InvoiceGrpcService {
-  rpc NewOnCycleInvoiceForContract(NewOnCycleInvoiceForContractRequest) returns (InvoiceIdResponse);
+  rpc NewInvoiceForContract(NewInvoiceForContractRequest) returns (InvoiceIdResponse);
   rpc FillInvoice(FillInvoiceRequest) returns (InvoiceIdResponse);
   rpc PdfGeneratedInvoice(PdfGeneratedInvoiceRequest) returns (InvoiceIdResponse);
   rpc PayInvoice(PayInvoiceRequest) returns (InvoiceIdResponse);
