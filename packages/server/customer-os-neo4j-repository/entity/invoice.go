@@ -13,7 +13,8 @@ type InvoiceEntity struct {
 	DryRun           bool
 	Number           string `neo4jDb:"property:number;lookupName:NUMBER;supportCaseSensitive:false"`
 	Currency         enum.Currency
-	Date             time.Time
+	PeriodStartDate  time.Time
+	PeriodEndDate    time.Time
 	DueDate          time.Time
 	Amount           float64
 	Vat              float64

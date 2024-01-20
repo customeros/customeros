@@ -5,14 +5,27 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
+type InvoiceCreateFields struct {
+	ContractId      string             `json:"contractId"`
+	Currency        neo4jenum.Currency `json:"currency"`
+	DryRun          bool               `json:"dryRun"`
+	InvoiceNumber   string             `json:"invoiceNumber"`
+	PeriodStartDate time.Time          `json:"periodStartDate"`
+	PeriodEndDate   time.Time          `json:"periodEndDate"`
+	CreatedAt       time.Time          `json:"createdAt"`
+	SourceFields    model.Source       `json:"sourceFields"`
+}
+
 type InvoiceWriteRepository interface {
-	InvoiceNew(ctx context.Context, tenant, contractId, id string, dryRun bool, number string, date, dueDate time.Time, source, appSource string, createdAt time.Time) error
+	CreateInvoiceForContract(ctx context.Context, tenant, invoiceId string, data InvoiceCreateFields) error
 	InvoiceFill(ctx context.Context, tenant, id string, amount, vat, total float64, updatedAt time.Time) error
 	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string, updatedAt time.Time) error
 	SetInvoicePaymentRequested(ctx context.Context, tenant, invoiceId string) error
@@ -30,41 +43,45 @@ func NewInvoiceWriteRepository(driver *neo4j.DriverWithContext, database string)
 	}
 }
 
-func (r *invoiceWriteRepository) InvoiceNew(ctx context.Context, tenant, contractId, id string, dryRun bool, number string, date, dueDate time.Time, source, appSource string, createdAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.InvoiceNew")
+func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, tenant, invoiceId string, data InvoiceCreateFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.CreateInvoiceForContract")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, id)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	tracing.LogObjectAsJson(span, "data", data)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract_%s {id:$contractId})
-							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$id}) 
-							ON CREATE SET 
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
+							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId}) 
+							ON CREATE SET
+								i.updatedAt=$updatedAt
+							SET 
 								i:Invoice_%s,
 								i.createdAt=$createdAt,
-								i.updatedAt=$updatedAt,
 								i.source=$source,
 								i.sourceOfTruth=$sourceOfTruth,
 								i.appSource=$appSource,
 								i.dryRun=$dryRun,
 								i.number=$number,
-								i.date=$date,
-								i.dueDate=$dueDate
+								i.currency=$currency,
+								i.periodStartDate=$periodStart,
+								i.periodEndDate=$periodEnd
 							WITH c, i 
 							MERGE (c)-[:HAS_INVOICE]->(i) 
-							`, tenant, tenant)
+							`, tenant)
 	params := map[string]any{
 		"tenant":        tenant,
-		"contractId":    contractId,
-		"id":            id,
-		"createdAt":     createdAt,
-		"updatedAt":     createdAt,
-		"source":        source,
-		"sourceOfTruth": source,
-		"appSource":     appSource,
-		"dryRun":        dryRun,
-		"number":        number,
-		"date":          date,
-		"dueDate":       dueDate,
+		"contractId":    data.ContractId,
+		"invoiceId":     invoiceId,
+		"createdAt":     data.CreatedAt,
+		"updatedAt":     data.CreatedAt,
+		"source":        data.SourceFields.Source,
+		"sourceOfTruth": data.SourceFields.Source,
+		"appSource":     data.SourceFields.AppSource,
+		"dryRun":        data.DryRun,
+		"number":        data.InvoiceNumber,
+		"currency":      data.Currency.String(),
+		"periodStart":   data.PeriodStartDate,
+		"periodEnd":     data.PeriodEndDate,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
