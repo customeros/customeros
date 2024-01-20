@@ -83,7 +83,7 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant neo4jentity.TenantE
 			ts.tenant=$name,
 		  	ts.createdAt=$now,
 			ts.updatedAt=$now,
-			ts.invoiceEnabled=$invoicingEnabled
+			ts.invoicingEnabled=$invoicingEnabled
 		 RETURN t`
 	params := map[string]any{
 		"name":             tenant.Name,
