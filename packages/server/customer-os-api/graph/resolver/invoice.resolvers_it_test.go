@@ -186,8 +186,8 @@ func TestQueryResolver_SimulateInvoice(t *testing.T) {
 
 	rawResponse := callGraphQL(t, "invoice/simulate_invoice", map[string]interface{}{
 		"invoice": map[string]interface{}{
-			"contractId": contractId,
-			"date":       timeNow,
+			"contractId":      contractId,
+			"periodStartDate": timeNow,
 			"invoiceLines": []map[string]interface{}{
 				{
 					"serviceLineItemId": "1",

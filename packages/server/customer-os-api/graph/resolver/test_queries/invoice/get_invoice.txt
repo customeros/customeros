@@ -5,7 +5,8 @@ invoice(id: $id) {
     updatedAt
     dryRun
     number
-    date
+    periodStartDate
+    periodEndDate
     dueDate
     amount
     vat
