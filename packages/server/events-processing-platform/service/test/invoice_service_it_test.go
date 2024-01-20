@@ -94,7 +94,7 @@ func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 //	aggregateStore := eventstoret.NewTestAggregateStore()
 //	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
 //
-//	newEvent, _ := invoice.NewInvoiceCreateEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewOnCycleInvoiceForContractRequest{
+//	newEvent, _ := invoice.NewInvoiceCreateEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewInvoiceForContractRequest{
 //		ContractId:         "1",
 //		CreatedAt:          utils.ConvertTimeToTimestampPtr(&now),
 //		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&now),
@@ -175,7 +175,7 @@ func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 //	aggregateStore := eventstoret.NewTestAggregateStore()
 //	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
 //
-//	newEvent, _ := invoice.NewInvoiceCreateEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewOnCycleInvoiceForContractRequest{
+//	newEvent, _ := invoice.NewInvoiceCreateEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewInvoiceForContractRequest{
 //		ContractId:         "1",
 //		CreatedAt:          utils.ConvertTimeToTimestampPtr(&now),
 //		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&now),
@@ -240,7 +240,7 @@ func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 //	aggregateStore := eventstoret.NewTestAggregateStore()
 //	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
 //
-//	newEvent, _ := invoice.NewInvoiceCreateEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewOnCycleInvoiceForContractRequest{
+//	newEvent, _ := invoice.NewInvoiceCreateEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewInvoiceForContractRequest{
 //		ContractId:         "1",
 //		CreatedAt:          utils.ConvertTimeToTimestampPtr(&now),
 //		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&now),
