@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	contractaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
@@ -66,10 +68,10 @@ func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 
 	// Validate event data
 	createEvent := eventList[0]
-	require.Equal(t, invoice.InvoiceCreateV1, createEvent.GetEventType())
+	require.Equal(t, invoice.InvoiceCreateForContractV1, createEvent.GetEventType())
 	require.Equal(t, string(invoice.InvoiceAggregateType)+"-"+tenant+"-"+invoiceId, eventList[0].GetAggregateID())
 
-	var eventData invoice.InvoiceCreateEvent
+	var eventData invoice.InvoiceForContractCreateEvent
 	err = createEvent.GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 	require.Equal(t, contractId, eventData.ContractId)
@@ -82,86 +84,88 @@ func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 	require.Equal(t, nextWeek, eventData.PeriodEndDate)
 }
 
-//func TestInvoiceService_FillInvoice(t *testing.T) {
-//	ctx := context.TODO()
-//	defer tearDownTestCase(ctx, testDatabase)(t)
-//
-//	// setup test environment
-//	tenant := "ziggy"
-//	invoiceId := "invoice-id"
-//	now := utils.Now()
-//
-//	aggregateStore := eventstoret.NewTestAggregateStore()
-//	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
-//
-//	newEvent, _ := invoice.NewInvoiceCreateEvent(invoiceAggregate, commonmodel.Source{}, &invoicepb.NewInvoiceForContractRequest{
-//		ContractId:         "1",
-//		CreatedAt:          utils.ConvertTimeToTimestampPtr(&now),
-//		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&now),
-//	})
-//	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, newEvent)
-//	aggregateStore.Save(ctx, invoiceAggregate)
-//
-//	// prepare connection to grpc server
-//	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
-//	require.Nil(t, err)
-//	invoiceClient := invoicepb.NewInvoiceGrpcServiceClient(grpcConnection)
-//
-//	// Execute the command
-//	response, err := invoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
-//		Tenant:         tenant,
-//		LoggedInUserId: "user-id",
-//		InvoiceId:      invoiceId,
-//		Amount:         1,
-//		Vat:            2,
-//		Total:          3,
-//		Lines: []*invoicepb.InvoiceLine{
-//			{
-//				Name:     "name",
-//				Price:    2,
-//				Quantity: 3,
-//				Amount:   4,
-//				Vat:      5,
-//				Total:    6,
-//			},
-//		},
-//		UpdatedAt: utils.ConvertTimeToTimestampPtr(&now),
-//		SourceFields: &commonpb.SourceFields{
-//			AppSource: "app",
-//		},
-//	})
-//	require.Nil(t, err)
-//	require.NotNil(t, response)
-//
-//	// verify
-//	require.Equal(t, invoiceId, response.Id)
-//
-//	eventsMap := aggregateStore.GetEventMap()
-//	require.Equal(t, 1, len(eventsMap))
-//
-//	eventList := eventsMap[invoiceAggregate.ID]
-//	require.Equal(t, 2, len(eventList))
-//
-//	require.Equal(t, invoice.InvoiceCreateV1, eventList[0].GetEventType())
-//	require.Equal(t, invoice.InvoiceFillV1, eventList[1].GetEventType())
-//	require.Equal(t, string(invoice.InvoiceAggregateType)+"-"+tenant+"-"+invoiceId, eventList[1].GetAggregateID())
-//
-//	var eventData invoice.InvoiceFillEvent
-//	err = eventList[1].GetJsonData(&eventData)
-//	require.Nil(t, err, "Failed to unmarshal event data")
-//
-//	require.Equal(t, float64(1), eventData.Amount)
-//	require.Equal(t, float64(2), eventData.VAT)
-//	require.Equal(t, float64(3), eventData.Total)
-//	require.Equal(t, 1, len(eventData.Lines))
-//
-//	require.Equal(t, "name", eventData.Lines[0].Name)
-//	require.Equal(t, float64(2), eventData.Lines[0].Price)
-//	require.Equal(t, int64(3), eventData.Lines[0].Quantity)
-//	require.Equal(t, float64(4), eventData.Lines[0].Amount)
-//	require.Equal(t, float64(5), eventData.Lines[0].VAT)
-//	require.Equal(t, float64(6), eventData.Lines[0].Total)
-//}
+func TestInvoiceService_FillInvoice(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// setup test environment
+	tenant := "ziggy"
+	invoiceId := "invoice-id"
+	now := utils.Now()
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
+
+	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, commonmodel.Source{}, "contract-1", "USD", "1", "MONTHLY_BILLED", false, now, now, now)
+	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, newEvent)
+	aggregateStore.Save(ctx, invoiceAggregate)
+
+	// prepare connection to grpc server
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	invoiceClient := invoicepb.NewInvoiceGrpcServiceClient(grpcConnection)
+
+	// Execute the command
+	response, err := invoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
+		Tenant:         tenant,
+		LoggedInUserId: "user-id",
+		InvoiceId:      invoiceId,
+		Amount:         1.01,
+		Vat:            2.02,
+		Total:          3.03,
+		InvoiceLines: []*invoicepb.InvoiceLine{
+			{
+				Name:                    "name",
+				Price:                   2.02,
+				Quantity:                3,
+				Amount:                  4.04,
+				Vat:                     5.05,
+				Total:                   6.06,
+				ServiceLineItemId:       "service-line-item-id",
+				ServiceLineItemParentId: "service-line-item-parent-id",
+				BilledType:              commonpb.BilledType_MONTHLY_BILLED,
+			},
+		},
+		UpdatedAt: utils.ConvertTimeToTimestampPtr(&now),
+		AppSource: "test",
+	})
+	require.Nil(t, err)
+	require.NotNil(t, response)
+
+	// verify
+	require.Equal(t, invoiceId, response.Id)
+
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+
+	eventList := eventsMap[invoiceAggregate.ID]
+	require.Equal(t, 2, len(eventList))
+
+	require.Equal(t, invoice.InvoiceCreateForContractV1, eventList[0].GetEventType())
+	require.Equal(t, invoice.InvoiceFillV1, eventList[1].GetEventType())
+	require.Equal(t, string(invoice.InvoiceAggregateType)+"-"+tenant+"-"+invoiceId, eventList[1].GetAggregateID())
+
+	var eventData invoice.InvoiceFillEvent
+	err = eventList[1].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	require.Equal(t, float64(1.01), eventData.Amount)
+	require.Equal(t, float64(2.02), eventData.VAT)
+	require.Equal(t, float64(3.03), eventData.TotalAmount)
+	require.Equal(t, "contract-1", eventData.ContractId)
+	require.Equal(t, "USD", eventData.Currency)
+	require.Equal(t, 1, len(eventData.InvoiceLines))
+	require.Equal(t, "name", eventData.InvoiceLines[0].Name)
+	require.Equal(t, float64(2.02), eventData.InvoiceLines[0].Price)
+	require.Equal(t, int64(3), eventData.InvoiceLines[0].Quantity)
+	require.Equal(t, float64(4.04), eventData.InvoiceLines[0].Amount)
+	require.Equal(t, float64(5.05), eventData.InvoiceLines[0].VAT)
+	require.Equal(t, float64(6.06), eventData.InvoiceLines[0].TotalAmount)
+	require.Equal(t, "service-line-item-id", eventData.InvoiceLines[0].ServiceLineItemId)
+	require.Equal(t, "service-line-item-parent-id", eventData.InvoiceLines[0].ServiceLineItemParentId)
+	require.Equal(t, neo4jenum.BilledTypeMonthly.String(), eventData.InvoiceLines[0].BilledType)
+}
+
 //
 //func TestInvoiceService_PdfGeneratedInvoice(t *testing.T) {
 //	ctx := context.TODO()
@@ -216,7 +220,7 @@ func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 //	eventList := eventsMap[invoiceAggregate.ID]
 //	require.Equal(t, 3, len(eventList))
 //
-//	require.Equal(t, invoice.InvoiceCreateV1, eventList[0].GetEventType())
+//	require.Equal(t, invoice.InvoiceCreateForContractV1, eventList[0].GetEventType())
 //	require.Equal(t, invoice.InvoiceFillV1, eventList[1].GetEventType())
 //	require.Equal(t, invoice.InvoicePdfGeneratedV1, eventList[2].GetEventType())
 //	require.Equal(t, string(invoice.InvoiceAggregateType)+"-"+tenant+"-"+invoiceId, eventList[1].GetAggregateID())
@@ -284,7 +288,7 @@ func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 //	eventList := eventsMap[invoiceAggregate.ID]
 //	require.Equal(t, 4, len(eventList))
 //
-//	require.Equal(t, invoice.InvoiceCreateV1, eventList[0].GetEventType())
+//	require.Equal(t, invoice.InvoiceCreateForContractV1, eventList[0].GetEventType())
 //	require.Equal(t, invoice.InvoiceFillV1, eventList[1].GetEventType())
 //	require.Equal(t, invoice.InvoicePdfGeneratedV1, eventList[2].GetEventType())
 //	require.Equal(t, invoice.InvoicePayV1, eventList[3].GetEventType())
@@ -346,7 +350,7 @@ func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 //
 //	require.Equal(t, 1, len(eventList))
 //
-//	require.Equal(t, invoice.InvoiceCreateV1, eventList[0].GetEventType())
+//	require.Equal(t, invoice.InvoiceCreateForContractV1, eventList[0].GetEventType())
 //	require.Equal(t, string(invoice.InvoiceAggregateType)+"-temp-"+tenant+"-"+invoiceId, eventList[0].GetAggregateID())
 //
 //	var eventData invoice.InvoiceCreateEvent

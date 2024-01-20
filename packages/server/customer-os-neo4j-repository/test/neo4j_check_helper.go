@@ -115,6 +115,21 @@ func GetFirstNodeByLabel(ctx context.Context, driver *neo4j.DriverWithContext, l
 	return &node, nil
 }
 
+func GetAllNodesByLabel(ctx context.Context, driver *neo4j.DriverWithContext, label string) ([]*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *driver)
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		result, err := tx.Run(ctx, fmt.Sprintf(`MATCH (n:%s) RETURN n`, label), map[string]interface{}{})
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, result, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return queryResult.([]*dbtype.Node), nil
+}
+
 func GetRelationship(ctx context.Context, driver *neo4j.DriverWithContext, fromNodeId, toNodeId string) (*dbtype.Relationship, error) {
 	session := utils.NewNeo4jReadSession(ctx, *driver)
 	defer session.Close(ctx)

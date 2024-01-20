@@ -10,7 +10,7 @@ var contractBillingCycleByModel = map[model.ContractBillingCycle]neo4jenum.Billi
 	model.ContractBillingCycleNone:             neo4jenum.BillingCycleNone,
 	model.ContractBillingCycleMonthlyBilling:   neo4jenum.BillingCycleMonthlyBilling,
 	model.ContractBillingCycleQuarterlyBilling: neo4jenum.BillingCycleQuarterlyBilling,
-	model.ContractBillingCycleAnnualBilling:    neo4jenum.BillingCycleAnnualBilling,
+	model.ContractBillingCycleAnnualBilling:    neo4jenum.BillingCycleAnnuallyBilling,
 }
 
 var contractBillingCycleByValue = utils.ReverseMap(contractBillingCycleByModel)

@@ -94,7 +94,7 @@ func (s *invoiceService) GenerateInvoices() {
 
 			readyToRequestInvoice := invoicePeriodEnd.After(invoicePeriodStart)
 			if readyToRequestInvoice {
-				_, err = s.eventsProcessingClient.InvoiceClient.NewOnCycleInvoiceForContract(ctx, &invoicepb.NewOnCycleInvoiceForContractRequest{
+				newInvoiceRequest := invoicepb.NewInvoiceForContractRequest{
 					Tenant:             record.Tenant,
 					ContractId:         contract.Id,
 					Currency:           currency,
@@ -105,7 +105,14 @@ func (s *invoiceService) GenerateInvoices() {
 						AppSource: constants.AppSourceDataUpkeeper,
 						Source:    neo4jentity.DataSourceOpenline.String(),
 					},
-				})
+				}
+				// TODO alexb send billing cycle
+				//switch contract.BillingCycle {
+				//case neo4jenum.BillingCycleMonthlyBilling:
+				//	newInvoiceRequest.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
+				//
+				//}
+				_, err = s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
 
 				if err != nil {
 					tracing.TraceErr(span, err)

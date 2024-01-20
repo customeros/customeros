@@ -52,12 +52,12 @@ func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Reposito
 	}
 }
 
-func (h *InvoiceEventHandler) onInvoiceNewV1(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoiceNewV1")
+func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoiceCreateForContractV1")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData invoice.InvoiceCreateEvent
+	var eventData invoice.InvoiceForContractCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -66,71 +66,132 @@ func (h *InvoiceEventHandler) onInvoiceNewV1(ctx context.Context, evt eventstore
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
-	// get currency
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
+	sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetAllForContract(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error getting contract %s: %s", eventData.ContractId, err.Error())
+		h.log.Errorf("Error getting service line items for contract %s: %s", eventData.ContractId, err.Error())
 		return err
 	}
-	if contractDbNode == nil {
-		err = errors.Errorf("Contract %s not found", eventData.ContractId)
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error getting contract %s: %s", eventData.ContractId, err.Error())
-		return err
+	sliEntities := make(neo4jentity.ServiceLineItemEntities, len(sliDbNodes))
+	for _, sliDbNode := range sliDbNodes {
+		sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
+		if sliEntity != nil {
+			sliEntities = append(sliEntities, *neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode))
+		}
 	}
-	//contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-	// TODO use currency from above contract. For now, use default currency
-	// TODO temp code starts here to defaut tenant currency
-	tenantSettingsDbNode, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error getting tenant settings for tenant %s: %s", eventData.Tenant, err.Error())
-		return err
-	}
-	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
-	currency := tenantSettingsEntity.DefaultCurrency.String()
-	if currency == "" {
-		currency = neo4jenum.CurrencyUSD.String()
-	}
-	// TODO temp code ends here
 
-	//if eventData.DryRun {
-	//if eventData.DryRunLines == nil || len(eventData.DryRunLines) == 0 {
-	//	//todo compute invoice based on current SLI items in neo4j
-	//} else {
-	//	//todo compute invoice based on SLI items from event
-	//}
-	//}
-
-	amount := 1.1
-	vat := 2.2
-	total := 3.3
+	amount, vat, totalAmount := float64(0), float64(0), float64(0)
 	invoiceLines := []*invoicepb.InvoiceLine{}
 
-	err = h.callFillInvoice(ctx, eventData.Tenant, invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant), amount, vat, total, invoiceLines, span)
+	referenceTime := eventData.PeriodStartDate
+	for _, sliEntity := range sliEntities {
+		// skip for now one time and usage SLIs
+		if sliEntity.Billed == neo4jenum.BilledTypeOnce || sliEntity.Billed == neo4jenum.BilledTypeUsage {
+			continue
+		}
+		// skip SLI if of None type
+		if sliEntity.Billed == neo4jenum.BilledTypeNone {
+			continue
+		}
+		// skip SLI if ended on the reference time
+		if sliEntity.EndedAt != nil && sliEntity.EndedAt.Before(referenceTime) {
+			continue
+		}
+		// skip SLI if not active on the reference time
+		if !sliEntity.IsActiveAt(referenceTime) {
+			continue
+		}
+		// process monthly, quarterly and annually SLIs
+		if sliEntity.Billed == neo4jenum.BilledTypeMonthly || sliEntity.Billed == neo4jenum.BilledTypeQuarterly || sliEntity.Billed == neo4jenum.BilledTypeAnnually {
+			calculatedSLIAmount := calculateSLIAmountForCycleInvoicing(sliEntity.Quantity, sliEntity.Price, sliEntity.Billed, neo4jenum.DecodeBillingCycle(eventData.BillingCycle))
+			calculatedSLIAmount = utils.TruncateFloat64(amount, 2)
+			amount += calculatedSLIAmount
+			vat += float64(0)
+			invoiceLine := invoicepb.InvoiceLine{
+				Name:                    sliEntity.Name,
+				Price:                   sliEntity.Price,
+				Quantity:                sliEntity.Quantity,
+				Amount:                  calculatedSLIAmount,
+				Total:                   calculatedSLIAmount,
+				Vat:                     float64(0),
+				ServiceLineItemId:       sliEntity.ID,
+				ServiceLineItemParentId: sliEntity.ParentID,
+			}
+			switch sliEntity.Billed {
+			case neo4jenum.BilledTypeMonthly:
+				invoiceLine.BilledType = commonpb.BilledType_MONTHLY_BILLED
+			case neo4jenum.BilledTypeQuarterly:
+				invoiceLine.BilledType = commonpb.BilledType_QUARTERLY_BILLED
+			case neo4jenum.BilledTypeAnnually:
+				invoiceLine.BilledType = commonpb.BilledType_ANNUALLY_BILLED
+			}
+			invoiceLines = append(invoiceLines, &invoiceLine)
+			continue
+		}
+		// if remained any unprocessed SLI log an error
+		err = errors.Errorf("Unprocessed SLI %s", sliEntity.ID)
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error processing SLI during invoicing %s: %s", sliEntity.ID, err.Error())
+	}
+	totalAmount = amount + vat
+
+	err = h.callFillInvoice(ctx, eventData.Tenant, invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant), amount, vat, totalAmount, invoiceLines, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceNewV1.CallFillInvoice")
+		return err
 	}
-
 	return nil
+}
+
+func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
+	sliAmount := float64(quantity) * price
+	if sliAmount == 0 {
+		return sliAmount
+	}
+	switch cycle {
+	case neo4jenum.BillingCycleMonthlyBilling:
+		switch billed {
+		case neo4jenum.BilledTypeMonthly:
+			return sliAmount
+		case neo4jenum.BilledTypeQuarterly:
+			return sliAmount / 3
+		case neo4jenum.BilledTypeAnnually:
+			return sliAmount / 12
+		}
+	case neo4jenum.BillingCycleQuarterlyBilling:
+		switch billed {
+		case neo4jenum.BilledTypeMonthly:
+			return sliAmount * 3
+		case neo4jenum.BilledTypeQuarterly:
+			return sliAmount
+		case neo4jenum.BilledTypeAnnually:
+			return sliAmount / 4
+		}
+	case neo4jenum.BillingCycleAnnuallyBilling:
+		switch billed {
+		case neo4jenum.BilledTypeMonthly:
+			return sliAmount * 12
+		case neo4jenum.BilledTypeQuarterly:
+			return sliAmount * 4
+		case neo4jenum.BilledTypeAnnually:
+			return sliAmount
+		}
+	}
+	return float64(0)
 }
 
 func (s *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
 	_, err := s.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
-		Tenant:    tenant,
-		InvoiceId: invoiceId,
-		Amount:    amount,
-		Vat:       vat,
-		Total:     total,
-		Lines:     invoiceLines,
-		UpdatedAt: utils.ConvertTimeToTimestampPtr(&now),
-		SourceFields: &commonpb.SourceFields{
-			AppSource: constants.AppSourceEventProcessingPlatform,
-		},
+		Tenant:       tenant,
+		InvoiceId:    invoiceId,
+		Amount:       amount,
+		Vat:          vat,
+		Total:        total,
+		InvoiceLines: invoiceLines,
+		UpdatedAt:    utils.ConvertTimeToTimestampPtr(&now),
+		AppSource:    constants.AppSourceEventProcessingPlatform,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

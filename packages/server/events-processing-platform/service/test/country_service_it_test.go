@@ -12,7 +12,7 @@ import (
 )
 
 func TestCountryService_CreateCountry(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstoret.NewTestAggregateStore()

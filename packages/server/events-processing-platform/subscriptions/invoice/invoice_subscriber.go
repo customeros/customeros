@@ -132,17 +132,17 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	}
 
 	switch evt.GetEventType() {
-	case invoice.InvoiceCreateV1:
-		return s.invoiceEventHandler.onInvoiceNewV1(ctx, evt)
+	case invoice.InvoiceCreateForContractV1:
+		return s.invoiceEventHandler.onInvoiceCreateForContractV1(ctx, evt)
 	case invoice.InvoiceFillV1:
+		return nil
+	case invoice.InvoicePdfRequestedV1:
 		return s.onInvoiceFillV1(ctx, evt)
 	case invoice.InvoicePdfGeneratedV1:
 		return s.invoiceEventHandler.onInvoicePdfGeneratedV1(ctx, evt)
 	default:
 		return nil
 	}
-
-	return nil
 }
 
 type InvoiceData struct {
@@ -234,10 +234,10 @@ func (s *InvoiceSubscriber) onInvoiceFillV1(ctx context.Context, evt eventstore.
 		"InvoiceIssueDate":                  "TODO",
 		"InvoiceDueDate":                    "TODO",
 		"InvoiceCurrency":                   currencyAndSymbol,
-		"InvoiceSubtotal":                   currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.Total),
+		"InvoiceSubtotal":                   currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 		"InvoiceTax":                        currencyAndSymbol + "0.00",
-		"InvoiceTotal":                      currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.Total),
-		"InvoiceAmountDue":                  currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.Total),
+		"InvoiceTotal":                      currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
+		"InvoiceAmountDue":                  currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 		"InvoiceLineItems":                  []map[string]string{},
 		"DomesticPaymentsBankName":          tenantBillingProfileEntity.DomesticPaymentsBankName,
 		"DomesticPaymentsAccountNumber":     tenantBillingProfileEntity.DomesticPaymentsAccountNumber,
@@ -249,7 +249,7 @@ func (s *InvoiceSubscriber) onInvoiceFillV1(ctx context.Context, evt eventstore.
 	}
 	data["ProviderLogoExtension"] = GetFileExtensionFromUrl(data["ProviderLogoUrl"].(string))
 
-	for _, line := range eventData.Lines {
+	for _, line := range eventData.InvoiceLines {
 		data["InvoiceLineItems"] = append(data["InvoiceLineItems"].([]map[string]string), map[string]string{
 			"Name":        line.Name,
 			"Description": line.Name,

@@ -20,7 +20,7 @@ var AllBilledTypes = []BilledType{
 	BilledTypeUsage,
 }
 
-func GetBilledType(s string) BilledType {
+func DecodeBilledType(s string) BilledType {
 	if IsValidBilledType(s) {
 		return BilledType(s)
 	}
@@ -34,4 +34,8 @@ func IsValidBilledType(s string) bool {
 		}
 	}
 	return false
+}
+
+func (bt BilledType) String() string {
+	return string(bt)
 }

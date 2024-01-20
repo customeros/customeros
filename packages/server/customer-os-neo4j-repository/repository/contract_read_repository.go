@@ -251,7 +251,7 @@ func (r *contractReadRepository) GetContractsToGenerateOnCycleInvoices(ctx conte
 	params := map[string]any{
 		"referenceTime": referenceTime,
 		"validBillingCycles": []string{
-			neo4jenum.BillingCycleMonthlyBilling.String(), neo4jenum.BillingCycleQuarterlyBilling.String(), neo4jenum.BillingCycleAnnualBilling.String(),
+			neo4jenum.BillingCycleMonthlyBilling.String(), neo4jenum.BillingCycleQuarterlyBilling.String(), neo4jenum.BillingCycleAnnuallyBilling.String(),
 		},
 	}
 	span.LogFields(log.String("query", cypher))

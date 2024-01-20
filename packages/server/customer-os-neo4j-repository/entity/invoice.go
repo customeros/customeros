@@ -18,8 +18,9 @@ type InvoiceEntity struct {
 	DueDate          time.Time
 	Amount           float64
 	Vat              float64
-	Total            float64
+	TotalAmount      float64
 	RepositoryFileId string
+	BillingCycle     enum.BillingCycle
 
 	Source        DataSource
 	SourceOfTruth DataSource

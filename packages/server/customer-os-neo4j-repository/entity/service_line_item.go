@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 )
@@ -24,4 +25,18 @@ type ServiceLineItemEntity struct {
 	SourceOfTruth    DataSource
 	AppSource        string
 	ParentID         string
+}
+
+type ServiceLineItemEntities []ServiceLineItemEntity
+
+func (sli ServiceLineItemEntity) IsEnded() bool {
+	return sli.EndedAt != nil && sli.EndedAt.Before(utils.Now())
+}
+
+func (sli ServiceLineItemEntity) IsParent() bool {
+	return sli.ParentID == sli.ID
+}
+
+func (sli ServiceLineItemEntity) IsActiveAt(referenceTime time.Time) bool {
+	return (sli.StartedAt.Equal(referenceTime) || sli.StartedAt.Before(referenceTime)) && (sli.EndedAt == nil || sli.EndedAt.After(referenceTime))
 }

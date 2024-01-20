@@ -6,14 +6,14 @@ const (
 	BillingCycleNone             BillingCycle = ""
 	BillingCycleMonthlyBilling   BillingCycle = "MONTHLY"
 	BillingCycleQuarterlyBilling BillingCycle = "QUARTERLY"
-	BillingCycleAnnualBilling    BillingCycle = "ANNUALLY"
+	BillingCycleAnnuallyBilling  BillingCycle = "ANNUALLY"
 )
 
 var AllBillingCycles = []BillingCycle{
 	BillingCycleNone,
 	BillingCycleMonthlyBilling,
 	BillingCycleQuarterlyBilling,
-	BillingCycleAnnualBilling,
+	BillingCycleAnnuallyBilling,
 }
 
 func DecodeBillingCycle(s string) BillingCycle {

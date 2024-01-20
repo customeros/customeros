@@ -24,9 +24,10 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		PeriodEndDate:    utils.GetTimePropOrEpochStart(props, "periodEndDate"),
 		DueDate:          utils.GetTimePropOrEpochStart(props, "dueDate"),
 		Currency:         enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
+		BillingCycle:     enum.DecodeBillingCycle(utils.GetStringPropOrEmpty(props, "billingCycle")),
 		Amount:           utils.GetFloatPropOrZero(props, "amount"),
 		Vat:              utils.GetFloatPropOrZero(props, "vat"),
-		Total:            utils.GetFloatPropOrZero(props, "total"),
+		TotalAmount:      utils.GetFloatPropOrZero(props, "totalAmount"),
 		RepositoryFileId: utils.GetStringPropOrEmpty(props, "repositoryFileId"),
 		Source:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
@@ -44,18 +45,21 @@ func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	invoiceLineEntity := entity.InvoiceLineEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		Price:         utils.GetFloatPropOrZero(props, "price"),
-		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
-		Amount:        utils.GetFloatPropOrZero(props, "amount"),
-		Vat:           utils.GetFloatPropOrZero(props, "vat"),
-		Total:         utils.GetFloatPropOrZero(props, "total"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Id:                      utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:               utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:               utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Name:                    utils.GetStringPropOrEmpty(props, "name"),
+		Price:                   utils.GetFloatPropOrZero(props, "price"),
+		Quantity:                utils.GetInt64PropOrZero(props, "quantity"),
+		Amount:                  utils.GetFloatPropOrZero(props, "amount"),
+		Vat:                     utils.GetFloatPropOrZero(props, "vat"),
+		TotalAmount:             utils.GetFloatPropOrZero(props, "totalAmount"),
+		Source:                  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:               utils.GetStringPropOrEmpty(props, "appSource"),
+		ServiceLineItemId:       utils.GetStringPropOrEmpty(props, "serviceLineItemId"),
+		ServiceLineItemParentId: utils.GetStringPropOrEmpty(props, "serviceLineItemParentId"),
+		BilledType:              enum.DecodeBilledType(utils.GetStringPropOrEmpty(props, "billedType")),
 	}
 	return &invoiceLineEntity
 }
@@ -374,4 +378,29 @@ func MapOrganizationPlanMilestoneItemToEntity(props map[string]any) []entity.Org
 		itemArray = append(itemArray, itemEntity)
 	}
 	return itemArray
+}
+
+func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *entity.ServiceLineItemEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	serviceLineItem := entity.ServiceLineItemEntity{
+		ID:            utils.GetStringPropOrEmpty(props, "id"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
+		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Billed:        enum.DecodeBilledType(utils.GetStringPropOrEmpty(props, "billed")),
+		Price:         utils.GetFloatPropOrZero(props, "price"),
+		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
+		Comments:      utils.GetStringPropOrEmpty(props, "comments"),
+		ParentID:      utils.GetStringPropOrEmpty(props, "parentId"),
+		IsCanceled:    utils.GetBoolPropOrFalse(props, "isCanceled"),
+	}
+	return &serviceLineItem
 }
