@@ -106,12 +106,14 @@ func (s *invoiceService) GenerateInvoices() {
 						Source:    neo4jentity.DataSourceOpenline.String(),
 					},
 				}
-				// TODO alexb send billing cycle
-				//switch contract.BillingCycle {
-				//case neo4jenum.BillingCycleMonthlyBilling:
-				//	newInvoiceRequest.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
-				//
-				//}
+				switch contract.BillingCycle {
+				case neo4jenum.BillingCycleMonthlyBilling:
+					newInvoiceRequest.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
+				case neo4jenum.BillingCycleQuarterlyBilling:
+					newInvoiceRequest.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
+				case neo4jenum.BillingCycleAnnuallyBilling:
+					newInvoiceRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
+				}
 				_, err = s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
 
 				if err != nil {
@@ -142,7 +144,7 @@ func calculateInvoiceCycleEnd(start time.Time, cycle neo4jenum.BillingCycle) tim
 		end = start.AddDate(0, 1, 0)
 	case neo4jenum.BillingCycleQuarterlyBilling:
 		end = start.AddDate(0, 3, 0)
-	case neo4jenum.BillingCycleAnnualBilling:
+	case neo4jenum.BillingCycleAnnuallyBilling:
 		end = start.AddDate(1, 0, 0)
 	default:
 		return start

@@ -44,6 +44,13 @@ message InvoiceLine {
   string serviceLineItemParentId = 9;
 }
 
+ message GenerateInvoicePdfRequest {
+   string tenant = 1;
+   string loggedInUserId = 2;
+   string invoiceId = 3;
+   string appSource = 4;
+ }
+
 message PayInvoiceRequest {
   string tenant = 1;
   string loggedInUserId = 2;
@@ -86,6 +93,7 @@ message InvoiceIdResponse {
 service InvoiceGrpcService {
   rpc NewInvoiceForContract(NewInvoiceForContractRequest) returns (InvoiceIdResponse);
   rpc FillInvoice(FillInvoiceRequest) returns (InvoiceIdResponse);
+  rpc GenerateInvoicePdf(GenerateInvoicePdfRequest) returns (InvoiceIdResponse);
   rpc PdfGeneratedInvoice(PdfGeneratedInvoiceRequest) returns (InvoiceIdResponse);
   rpc PayInvoice(PayInvoiceRequest) returns (InvoiceIdResponse);
   rpc SimulateInvoice(SimulateInvoiceRequest) returns (InvoiceIdResponse);

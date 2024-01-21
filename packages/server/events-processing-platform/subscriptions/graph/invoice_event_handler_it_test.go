@@ -11,6 +11,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/mocked_grpc"
+	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
@@ -104,10 +106,27 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		neo4jutil.NodeLabelInvoiceLine:  0,
 	})
 
+	// prepare grpc mock
+	calledGenerateInvoicePdfGrpcRequest := false
+	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		GenerateInvoicePdf: func(context context.Context, inv *invoicepb.GenerateInvoicePdfRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, invoiceId, inv.InvoiceId)
+			require.Equal(t, "", inv.LoggedInUserId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			calledGenerateInvoicePdfGrpcRequest = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: invoiceId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
+
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
 		log:          testLogger,
 		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	timeNow := utils.Now()
@@ -227,6 +246,8 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, "service-line-item-id-2", secondInvoiceLine.ServiceLineItemId)
 	require.Equal(t, "service-line-item-parent-id-2", secondInvoiceLine.ServiceLineItemParentId)
 	require.Equal(t, neo4jenum.BilledTypeAnnually, secondInvoiceLine.BilledType)
+
+	require.True(t, calledGenerateInvoicePdfGrpcRequest)
 }
 
 func TestInvoiceEventHandler_OnInvoicePdfGenerated(t *testing.T) {

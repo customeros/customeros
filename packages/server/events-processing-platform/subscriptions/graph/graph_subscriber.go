@@ -85,7 +85,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		serviceLineItemEventHandler:    NewServiceLineItemEventHandler(log, repositories, grpcClients),
 		masterPlanEventHandler:         NewMasterPlanEventHandler(log, repositories),
 		invoicingCycleEventHandler:     NewInvoicingCycleEventHandler(log, repositories),
-		invoiceEventHandler:            NewInvoiceEventHandler(log, repositories),
+		invoiceEventHandler:            NewInvoiceEventHandler(log, repositories, grpcClients),
 		tenantEventHandler:             NewTenantEventHandler(log, repositories),
 		organizationPlanEventHandler:   NewOrganizationPlanEventHandler(log, repositories),
 	}
@@ -382,7 +382,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.invoiceEventHandler.OnInvoiceCreateForContractV1(ctx, evt)
 	case invoiceevents.InvoiceFillV1:
 		return s.invoiceEventHandler.OnInvoiceFillV1(ctx, evt)
-	case invoiceevents.InvoicePdfGeneratedV1: //TODO alexb to be reviewed
+	case invoiceevents.InvoicePdfGeneratedV1: //TODO to be reviewed and adjusted
 		return s.invoiceEventHandler.OnInvoicePdfGenerated(ctx, evt)
 	case invoiceevents.InvoicePdfRequestedV1:
 		return nil

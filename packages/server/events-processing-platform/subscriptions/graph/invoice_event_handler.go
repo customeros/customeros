@@ -5,12 +5,15 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
@@ -18,12 +21,14 @@ import (
 type InvoiceEventHandler struct {
 	log          logger.Logger
 	repositories *repository.Repositories
+	grpcClients  *grpc_client.Clients
 }
 
-func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Repositories) *InvoiceEventHandler {
+func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *InvoiceEventHandler {
 	return &InvoiceEventHandler{
 		log:          log,
 		repositories: repositories,
+		grpcClients:  grpcClients,
 	}
 }
 
@@ -123,11 +128,14 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		}
 	}
 
-	// TODO remove technical flag from contract
+	err = h.callGeneratePdfRequestGRPC(ctx, eventData.Tenant, invoiceId, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while calling generate pdf request for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
 
-	// TODO here generate request for invoice pdf generation
-
-	return err
+	return nil
 }
 
 func (h *InvoiceEventHandler) OnInvoicePdfGenerated(ctx context.Context, evt eventstore.Event) error {
@@ -151,4 +159,19 @@ func (h *InvoiceEventHandler) OnInvoicePdfGenerated(ctx context.Context, evt eve
 		return err
 	}
 	return err
+}
+
+func (s *InvoiceEventHandler) callGeneratePdfRequestGRPC(ctx context.Context, tenant, invoiceId string, span opentracing.Span) error {
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := s.grpcClients.InvoiceClient.GenerateInvoicePdf(ctx, &invoicepb.GenerateInvoicePdfRequest{
+		Tenant:    tenant,
+		InvoiceId: invoiceId,
+		AppSource: constants.AppSourceEventProcessingPlatform,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error sending the generate pdf request for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+	return nil
 }
