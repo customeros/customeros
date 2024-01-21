@@ -64,6 +64,8 @@ func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any) (any,
 		return nil, a.CreateNewInvoiceForContract(ctx, r)
 	case *invoicepb.FillInvoiceRequest:
 		return nil, a.FillInvoice(ctx, r)
+	case *invoicepb.GenerateInvoicePdfRequest:
+		return nil, a.CreatePdfRequestedEvent(ctx, r)
 	case *invoicepb.PdfGeneratedInvoiceRequest:
 		return nil, a.CreatePdfGeneratedEvent(ctx, r)
 	case *invoicepb.PayInvoiceRequest:
@@ -182,6 +184,28 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 	return a.Apply(fillEvent)
 }
 
+func (a *InvoiceAggregate) CreatePdfRequestedEvent(ctx context.Context, r *invoicepb.GenerateInvoicePdfRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.CreatePdfRequestedEvent")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := NewInvoicePdfRequestedEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewInvoicePdfRequestedEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: r.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    r.AppSource,
+	})
+
+	return a.Apply(event)
+}
+
 func (a *InvoiceAggregate) PayInvoice(ctx context.Context, request *invoicepb.PayInvoiceRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.PayInvoice")
 	defer span.Finish()
@@ -217,6 +241,8 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		return a.onPdfGeneratedInvoice(evt)
 	case InvoicePayV1:
 		return a.onPayInvoice(evt)
+	case InvoicePdfRequestedV1:
+		return nil
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()

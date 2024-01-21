@@ -247,13 +247,13 @@ func (s *contractService) ResyncContract(ctx context.Context, tenant, contractId
 
 	switch utils.GetStringPropOrEmpty(props, "billingCycle") {
 	case neo4jenum.BillingCycleMonthlyBilling.String():
-		request.BillingCycle = contractpb.BillingCycle_MONTHLY_BILLING
+		request.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
 	case neo4jenum.BillingCycleQuarterlyBilling.String():
-		request.BillingCycle = contractpb.BillingCycle_QUARTERLY_BILLING
-	case neo4jenum.BillingCycleAnnualBilling.String():
-		request.BillingCycle = contractpb.BillingCycle_ANNUALLY_BILLING
+		request.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
+	case neo4jenum.BillingCycleAnnuallyBilling.String():
+		request.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
 	default:
-		request.BillingCycle = contractpb.BillingCycle_NONE_BILLING
+		request.BillingCycle = commonpb.BillingCycle_NONE_BILLING
 	}
 
 	_, err = s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &request)

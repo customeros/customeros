@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type InvoiceGrpcServiceClient interface {
 	NewInvoiceForContract(ctx context.Context, in *NewInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	FillInvoice(ctx context.Context, in *FillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
+	GenerateInvoicePdf(ctx context.Context, in *GenerateInvoicePdfRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PdfGeneratedInvoice(ctx context.Context, in *PdfGeneratedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PayInvoice(ctx context.Context, in *PayInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	SimulateInvoice(ctx context.Context, in *SimulateInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
@@ -49,6 +50,15 @@ func (c *invoiceGrpcServiceClient) NewInvoiceForContract(ctx context.Context, in
 func (c *invoiceGrpcServiceClient) FillInvoice(ctx context.Context, in *FillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
 	out := new(InvoiceIdResponse)
 	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/FillInvoice", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *invoiceGrpcServiceClient) GenerateInvoicePdf(ctx context.Context, in *GenerateInvoicePdfRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
+	out := new(InvoiceIdResponse)
+	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/GenerateInvoicePdf", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +98,7 @@ func (c *invoiceGrpcServiceClient) SimulateInvoice(ctx context.Context, in *Simu
 type InvoiceGrpcServiceServer interface {
 	NewInvoiceForContract(context.Context, *NewInvoiceForContractRequest) (*InvoiceIdResponse, error)
 	FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error)
+	GenerateInvoicePdf(context.Context, *GenerateInvoicePdfRequest) (*InvoiceIdResponse, error)
 	PdfGeneratedInvoice(context.Context, *PdfGeneratedInvoiceRequest) (*InvoiceIdResponse, error)
 	PayInvoice(context.Context, *PayInvoiceRequest) (*InvoiceIdResponse, error)
 	SimulateInvoice(context.Context, *SimulateInvoiceRequest) (*InvoiceIdResponse, error)
@@ -102,6 +113,9 @@ func (UnimplementedInvoiceGrpcServiceServer) NewInvoiceForContract(context.Conte
 }
 func (UnimplementedInvoiceGrpcServiceServer) FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FillInvoice not implemented")
+}
+func (UnimplementedInvoiceGrpcServiceServer) GenerateInvoicePdf(context.Context, *GenerateInvoicePdfRequest) (*InvoiceIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GenerateInvoicePdf not implemented")
 }
 func (UnimplementedInvoiceGrpcServiceServer) PdfGeneratedInvoice(context.Context, *PdfGeneratedInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PdfGeneratedInvoice not implemented")
@@ -156,6 +170,24 @@ func _InvoiceGrpcService_FillInvoice_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(InvoiceGrpcServiceServer).FillInvoice(ctx, req.(*FillInvoiceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InvoiceGrpcService_GenerateInvoicePdf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GenerateInvoicePdfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvoiceGrpcServiceServer).GenerateInvoicePdf(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/InvoiceGrpcService/GenerateInvoicePdf",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvoiceGrpcServiceServer).GenerateInvoicePdf(ctx, req.(*GenerateInvoicePdfRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -228,6 +260,10 @@ var InvoiceGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FillInvoice",
 			Handler:    _InvoiceGrpcService_FillInvoice_Handler,
+		},
+		{
+			MethodName: "GenerateInvoicePdf",
+			Handler:    _InvoiceGrpcService_GenerateInvoicePdf_Handler,
 		},
 		{
 			MethodName: "PdfGeneratedInvoice",
