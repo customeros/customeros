@@ -55,6 +55,7 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 		PeriodStartDate: eventData.PeriodStartDate,
 		PeriodEndDate:   eventData.PeriodEndDate,
 		CreatedAt:       eventData.CreatedAt,
+		Status:          neo4jenum.InvoiceStatusDraft,
 		SourceFields: neo4jmodel.Source{
 			Source:    eventData.SourceFields.Source,
 			AppSource: eventData.SourceFields.AppSource,
@@ -95,6 +96,7 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		PeriodStartDate: eventData.PeriodStartDate,
 		PeriodEndDate:   eventData.PeriodEndDate,
 		BillingCycle:    neo4jenum.DecodeBillingCycle(eventData.BillingCycle),
+		Status:          neo4jenum.DecodeInvoiceStatus(eventData.Status),
 	}
 	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.InvoiceFill(ctx, eventData.Tenant, invoiceId, data)
 	if err != nil {

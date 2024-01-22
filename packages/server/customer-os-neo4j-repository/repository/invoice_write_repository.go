@@ -14,29 +14,31 @@ import (
 )
 
 type InvoiceCreateFields struct {
-	ContractId      string                 `json:"contractId"`
-	Currency        neo4jenum.Currency     `json:"currency"`
-	DryRun          bool                   `json:"dryRun"`
-	InvoiceNumber   string                 `json:"invoiceNumber"`
-	PeriodStartDate time.Time              `json:"periodStartDate"`
-	PeriodEndDate   time.Time              `json:"periodEndDate"`
-	CreatedAt       time.Time              `json:"createdAt"`
-	SourceFields    model.Source           `json:"sourceFields"`
-	BillingCycle    neo4jenum.BillingCycle `json:"billingCycle"`
+	ContractId      string                  `json:"contractId"`
+	Currency        neo4jenum.Currency      `json:"currency"`
+	DryRun          bool                    `json:"dryRun"`
+	InvoiceNumber   string                  `json:"invoiceNumber"`
+	PeriodStartDate time.Time               `json:"periodStartDate"`
+	PeriodEndDate   time.Time               `json:"periodEndDate"`
+	CreatedAt       time.Time               `json:"createdAt"`
+	SourceFields    model.Source            `json:"sourceFields"`
+	BillingCycle    neo4jenum.BillingCycle  `json:"billingCycle"`
+	Status          neo4jenum.InvoiceStatus `json:"status"`
 }
 
 type InvoiceFillFields struct {
-	Amount          float64                `json:"amount"`
-	VAT             float64                `json:"vat"`
-	TotalAmount     float64                `json:"totalAmount"`
-	UpdatedAt       time.Time              `json:"updatedAt"`
-	ContractId      string                 `json:"contractId"`
-	Currency        neo4jenum.Currency     `json:"currency"`
-	DryRun          bool                   `json:"dryRun"`
-	InvoiceNumber   string                 `json:"invoiceNumber"`
-	PeriodStartDate time.Time              `json:"periodStartDate"`
-	PeriodEndDate   time.Time              `json:"periodEndDate"`
-	BillingCycle    neo4jenum.BillingCycle `json:"billingCycle"`
+	Amount          float64                 `json:"amount"`
+	VAT             float64                 `json:"vat"`
+	TotalAmount     float64                 `json:"totalAmount"`
+	UpdatedAt       time.Time               `json:"updatedAt"`
+	ContractId      string                  `json:"contractId"`
+	Currency        neo4jenum.Currency      `json:"currency"`
+	DryRun          bool                    `json:"dryRun"`
+	InvoiceNumber   string                  `json:"invoiceNumber"`
+	PeriodStartDate time.Time               `json:"periodStartDate"`
+	PeriodEndDate   time.Time               `json:"periodEndDate"`
+	BillingCycle    neo4jenum.BillingCycle  `json:"billingCycle"`
+	Status          neo4jenum.InvoiceStatus `json:"status"`
 }
 
 type InvoiceWriteRepository interface {
@@ -69,6 +71,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId}) 
 							ON CREATE SET
 								i.updatedAt=$updatedAt
+								i.status=$status
 							SET 
 								i:Invoice_%s,
 								i.createdAt=$createdAt,
@@ -99,6 +102,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"periodStart":   data.PeriodStartDate,
 		"periodEnd":     data.PeriodEndDate,
 		"billingCycle":  data.BillingCycle.String(),
+		"status":        data.Status.String(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -131,7 +135,8 @@ func (r *invoiceWriteRepository) InvoiceFill(ctx context.Context, tenant, invoic
 								i.updatedAt=$updatedAt,
 								i.amount=$amount,
 								i.vat=$vat,
-								i.totalAmount=$totalAmount
+								i.totalAmount=$totalAmount,
+								i.status=$status
 							WITH c, i 
 							MERGE (c)-[:HAS_INVOICE]->(i) 
 							`, tenant)
@@ -149,6 +154,7 @@ func (r *invoiceWriteRepository) InvoiceFill(ctx context.Context, tenant, invoic
 		"periodStart":  data.PeriodStartDate,
 		"periodEnd":    data.PeriodEndDate,
 		"billingCycle": data.BillingCycle.String(),
+		"status":       data.Status.String(),
 	}
 
 	span.LogFields(log.String("cypher", cypher))

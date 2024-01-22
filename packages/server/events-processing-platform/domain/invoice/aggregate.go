@@ -169,7 +169,8 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 		})
 	}
 
-	fillEvent, err := NewInvoiceFillEvent(a, updatedAtNotNil, *a.Invoice, request.Amount, request.Vat, request.Total, invoiceLines)
+	invoiceStatus := InvoiceStatus(request.Status).String()
+	fillEvent, err := NewInvoiceFillEvent(a, updatedAtNotNil, *a.Invoice, invoiceStatus, request.Amount, request.Vat, request.Total, invoiceLines)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceFillEvent")
@@ -281,6 +282,9 @@ func (a *InvoiceAggregate) onFillInvoice(evt eventstore.Event) error {
 	a.Invoice.Amount = eventData.Amount
 	a.Invoice.VAT = eventData.VAT
 	a.Invoice.TotalAmount = eventData.TotalAmount
+	if eventData.Status != "" {
+		a.Invoice.Status = eventData.Status
+	}
 	for _, line := range eventData.InvoiceLines {
 		a.Invoice.InvoiceLines = append(a.Invoice.InvoiceLines, InvoiceLine{
 			Name:                    line.Name,

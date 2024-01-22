@@ -21,6 +21,7 @@ type InvoiceEntity struct {
 	TotalAmount      float64
 	RepositoryFileId string
 	BillingCycle     enum.BillingCycle
+	Status           enum.InvoiceStatus
 
 	Source        DataSource
 	SourceOfTruth DataSource

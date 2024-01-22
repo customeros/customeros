@@ -26,6 +26,7 @@ type Invoice struct {
 	RepositoryFileId string                  `json:"repositoryFileId"`
 	DryRunLines      []DryRunServiceLineItem `json:"dryRunLines"`
 	BillingCycle     string                  `json:"billingCycle"`
+	Status           string                  `json:"status"`
 }
 
 type DryRunServiceLineItem struct {
@@ -104,6 +105,31 @@ func (bt BilledType) String() string {
 		return string(neo4jenum.BilledTypeOnce)
 	case UsageBilled:
 		return string(neo4jenum.BilledTypeUsage)
+	default:
+		return ""
+	}
+}
+
+type InvoiceStatus int32
+
+const (
+	NoneInvoiceStatus InvoiceStatus = iota
+	DraftInvoiceStatus
+	DueInvoiceStatus
+	PaidInvoiceStatus
+)
+
+// This function provides a string representation of the BillingCyckle enum.
+func (is InvoiceStatus) String() string {
+	switch is {
+	case NoneInvoiceStatus:
+		return ""
+	case DraftInvoiceStatus:
+		return string(neo4jenum.InvoiceStatusDraft)
+	case DueInvoiceStatus:
+		return string(neo4jenum.InvoiceStatusDue)
+	case PaidInvoiceStatus:
+		return string(neo4jenum.InvoiceStatusPaid)
 	default:
 		return ""
 	}

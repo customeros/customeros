@@ -1,0 +1,23 @@
+package mapper
+
+import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+)
+
+var invoiceStatusByModel = map[model.InvoiceStatus]neo4jenum.InvoiceStatus{
+	model.InvoiceStatusDraft: neo4jenum.InvoiceStatusDraft,
+	model.InvoiceStatusDue:   neo4jenum.InvoiceStatusDue,
+	model.InvoiceStatusPaid:  neo4jenum.InvoiceStatusPaid,
+}
+
+var invoiceStatusByValue = utils.ReverseMap(invoiceStatusByModel)
+
+func MapInvoiceStatusFromModel(input model.InvoiceStatus) neo4jenum.InvoiceStatus {
+	return invoiceStatusByModel[input]
+}
+
+func MapInvoiceStatusToModel(input neo4jenum.InvoiceStatus) model.InvoiceStatus {
+	return invoiceStatusByValue[input]
+}

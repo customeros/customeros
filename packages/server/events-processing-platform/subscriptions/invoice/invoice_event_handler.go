@@ -198,6 +198,7 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 		InvoiceLines: invoiceLines,
 		UpdatedAt:    utils.ConvertTimeToTimestampPtr(&now),
 		AppSource:    constants.AppSourceEventProcessingPlatform,
+		Status:       invoicepb.InvoiceStatus_INVOICE_STATUS_DUE,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
