@@ -78,7 +78,7 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 		h.log.Errorf("Error getting service line items for contract %s: %s", eventData.ContractId, err.Error())
 		return err
 	}
-	sliEntities := make(neo4jentity.ServiceLineItemEntities, len(sliDbNodes))
+	var sliEntities neo4jentity.ServiceLineItemEntities
 	for _, sliDbNode := range sliDbNodes {
 		sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
 		if sliEntity != nil {
@@ -110,7 +110,7 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 		// process monthly, quarterly and annually SLIs
 		if sliEntity.Billed == neo4jenum.BilledTypeMonthly || sliEntity.Billed == neo4jenum.BilledTypeQuarterly || sliEntity.Billed == neo4jenum.BilledTypeAnnually {
 			calculatedSLIAmount := calculateSLIAmountForCycleInvoicing(sliEntity.Quantity, sliEntity.Price, sliEntity.Billed, neo4jenum.DecodeBillingCycle(eventData.BillingCycle))
-			calculatedSLIAmount = utils.TruncateFloat64(amount, 2)
+			calculatedSLIAmount = utils.TruncateFloat64(calculatedSLIAmount, 2)
 			amount += calculatedSLIAmount
 			vat += float64(0)
 			invoiceLine := invoicepb.InvoiceLine{
@@ -336,7 +336,7 @@ func (h *InvoiceEventHandler) invokeInvoiceReadyWebhook(ctx context.Context, ten
 	return nil
 }
 
-func (s *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt eventstore.Event) error {
+func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceSubscriber.generateInvoicePDFV1")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -356,7 +356,7 @@ func (s *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	//var organizationBillingProfile *neo4jentity.BillingProfileEntity
 
 	//load invoice
-	invoiceNode, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
+	invoiceNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetInvoice")
@@ -368,7 +368,7 @@ func (s *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	//load tenant settings from neo4j
-	tenantSettings, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
+	tenantSettings, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetTenantSettings")
@@ -380,7 +380,7 @@ func (s *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	//load tenant billing profile from neo4j
-	tenantBillingProfiles, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, eventData.Tenant)
+	tenantBillingProfiles, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, eventData.Tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetTenantSettings")
@@ -392,7 +392,7 @@ func (s *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	//load organization from neo4j
-	organizationNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, eventData.Tenant, invoiceId)
+	organizationNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetOrganizationByInvoiceId")
@@ -459,7 +459,7 @@ func (s *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	//convert the temp to pdf
-	pdfBytes, err := ConvertInvoiceHtmlToPdf(s.cfg.Subscriptions.InvoiceSubscription.PdfConverterUrl, tmpInvoiceFile, data)
+	pdfBytes, err := ConvertInvoiceHtmlToPdf(h.cfg.Subscriptions.InvoiceSubscription.PdfConverterUrl, tmpInvoiceFile, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "ConvertInvoiceHtmlToPdf")
@@ -471,7 +471,7 @@ func (s *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		return errors.Wrap(err, "ioutil.WriteFile")
 	}
 
-	fileDTO, err := s.fsc.UploadSingleFileBytes(eventData.Tenant, *pdfBytes)
+	fileDTO, err := h.fsc.UploadSingleFileBytes(eventData.Tenant, *pdfBytes)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.UploadSingleFileBytes")
@@ -481,7 +481,7 @@ func (s *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		return errors.New("fileDTO.Id is empty")
 	}
 
-	err = s.callPdfGeneratedInvoice(ctx, eventData.Tenant, evt.GetAggregateID(), fileDTO.Id, span)
+	err = h.callPdfGeneratedInvoice(ctx, eventData.Tenant, evt.GetAggregateID(), fileDTO.Id, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.CallPdfGeneratedInvoice")

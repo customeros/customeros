@@ -80,7 +80,6 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant neo4jentity.TenantE
 		WITH t
 		MERGE (t)-[:HAS_SETTINGS]->(ts:TenantSettings {tenant:$name})
 		ON CREATE SET
-			ts.tenant=$name,
 		  	ts.createdAt=$now,
 			ts.updatedAt=$now,
 			ts.invoicingEnabled=$invoicingEnabled

@@ -11,9 +11,9 @@ import (
 type InvoiceFillEvent struct {
 	Tenant          string             `json:"tenant" validate:"required"`
 	UpdatedAt       time.Time          `json:"updatedAt"`
-	Amount          float64            `json:"amount" validate:"required"`
-	VAT             float64            `json:"vat" validate:"required"`
-	TotalAmount     float64            `json:"totalAmount" validate:"required"`
+	Amount          float64            `json:"amount"`
+	VAT             float64            `json:"vat"`
+	TotalAmount     float64            `json:"totalAmount" `
 	InvoiceLines    []InvoiceLineEvent `json:"invoiceLines" validate:"required"`
 	ContractId      string             `json:"contractId"`
 	DryRun          bool               `json:"dryRun"`
