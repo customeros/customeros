@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -37,6 +38,10 @@ func (s *masterPlanService) CreateMasterPlan(ctx context.Context, request *maste
 	tracing.LogObjectAsJson(span, "request", request)
 
 	masterPlanId := uuid.New().String()
+
+	if request.FromCOSTemplate {
+		return s.CreateDefaultMasterPlan(ctx, masterPlanId, request)
+	}
 
 	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
 
@@ -176,7 +181,7 @@ func (s *masterPlanService) UpdateMasterPlanMilestone(ctx context.Context, reque
 
 func extractMasterPlanFieldsMask(fields []masterplanpb.MasterPlanFieldMask) []string {
 	fieldsMask := make([]string, 0)
-	if fields == nil || len(fields) == 0 {
+	if len(fields) == 0 {
 		return fieldsMask
 	}
 	if containsMasterPlanMaskFieldAll(fields) {
@@ -204,7 +209,7 @@ func containsMasterPlanMaskFieldAll(fields []masterplanpb.MasterPlanFieldMask) b
 
 func extractMasterPlanMilestoneFieldsMask(fields []masterplanpb.MasterPlanMilestoneFieldMask) []string {
 	fieldsMask := make([]string, 0)
-	if fields == nil || len(fields) == 0 {
+	if len(fields) == 0 {
 		return fieldsMask
 	}
 	if containsMasterPlanMilestoneMaskFieldAll(fields) {
@@ -270,4 +275,59 @@ func (s *masterPlanService) ReorderMasterPlanMilestones(ctx context.Context, req
 	}
 
 	return &masterplanpb.MasterPlanIdGrpcResponse{Id: request.MasterPlanId}, nil
+}
+
+func (s *masterPlanService) CreateDefaultMasterPlan(ctx context.Context, masterPlanId string, request *masterplanpb.CreateMasterPlanGrpcRequest) (*masterplanpb.MasterPlanIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "MasterPlanService.CreateDefaultMasterPlan")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
+
+	sourceFields := commonmodel.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+
+	DEFAULT_MASTER_PLAN := model.NewDefaultMasterPlan(masterPlanId, createdAt)
+
+	createMasterPlanCommand := command.NewCreateMasterPlanCommand(
+		masterPlanId,
+		request.Tenant,
+		request.LoggedInUserId,
+		DEFAULT_MASTER_PLAN.Name,
+		sourceFields,
+		createdAt,
+	)
+
+	if err := s.masterPlanCommandHandlers.CreateMasterPlan.Handle(ctx, createMasterPlanCommand); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(CreateMasterPlan.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+	// Create Default Milestones
+	for _, milestone := range DEFAULT_MASTER_PLAN.Milestones {
+
+		createMasterPlanMilestoneCommand := command.NewCreateMasterPlanMilestoneCommand(
+			DEFAULT_MASTER_PLAN.ID,
+			request.Tenant,
+			request.LoggedInUserId,
+			milestone.ID,
+			milestone.Name,
+			milestone.Order,
+			milestone.DurationHours,
+			milestone.Items,
+			milestone.Optional,
+			sourceFields,
+			createdAt,
+		)
+
+		if err := s.masterPlanCommandHandlers.CreateMasterPlanMilestone.Handle(ctx, createMasterPlanMilestoneCommand); err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("(CreateMasterPlanMilestone.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+			return nil, grpcerr.ErrResponse(err)
+		}
+	}
+
+	// Return the ID of the newly created master plan
+	return &masterplanpb.MasterPlanIdGrpcResponse{Id: masterPlanId}, nil
 }
