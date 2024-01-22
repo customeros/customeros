@@ -32,6 +32,7 @@ type Invoice implements SourceFields & Node {
     currency:           String!
     repositoryFileId:   String!
     invoiceLines:       [InvoiceLine!]! @goField(forceResolver: true)
+    status:             InvoiceStatus
 }
 
 type InvoiceLine implements Node {
@@ -59,4 +60,10 @@ input InvoiceLineInput {
     billed:             BilledType!
     price:              Float!
     quantity:           Int!
+}
+
+enum InvoiceStatus {
+    DRAFT
+    DUE
+    PAID
 }

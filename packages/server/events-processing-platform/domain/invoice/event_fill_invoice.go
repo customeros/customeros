@@ -22,9 +22,10 @@ type InvoiceFillEvent struct {
 	PeriodStartDate time.Time          `json:"periodStartDate"`
 	PeriodEndDate   time.Time          `json:"periodEndDate"`
 	BillingCycle    string             `json:"billingCycle"`
+	Status          string             `json:"status"`
 }
 
-func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, invoice Invoice, amount, vat, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
+func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, invoice Invoice, status string, amount, vat, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
 	eventData := InvoiceFillEvent{
 		Tenant:          aggregate.GetTenant(),
 		UpdatedAt:       updatedAt,
@@ -39,6 +40,7 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, in
 		PeriodEndDate:   invoice.PeriodEndDate,
 		InvoiceNumber:   invoice.InvoiceNumber,
 		DryRun:          invoice.DryRun,
+		Status:          status,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

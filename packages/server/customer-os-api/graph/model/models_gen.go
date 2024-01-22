@@ -1026,6 +1026,7 @@ type Invoice struct {
 	Currency         string         `json:"currency"`
 	RepositoryFileID string         `json:"repositoryFileId"`
 	InvoiceLines     []*InvoiceLine `json:"invoiceLines"`
+	Status           *InvoiceStatus `json:"status,omitempty"`
 }
 
 func (Invoice) IsSourceFields()                   {}
@@ -3252,6 +3253,49 @@ func (e *InternalType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e InternalType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type InvoiceStatus string
+
+const (
+	InvoiceStatusDraft InvoiceStatus = "DRAFT"
+	InvoiceStatusDue   InvoiceStatus = "DUE"
+	InvoiceStatusPaid  InvoiceStatus = "PAID"
+)
+
+var AllInvoiceStatus = []InvoiceStatus{
+	InvoiceStatusDraft,
+	InvoiceStatusDue,
+	InvoiceStatusPaid,
+}
+
+func (e InvoiceStatus) IsValid() bool {
+	switch e {
+	case InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusPaid:
+		return true
+	}
+	return false
+}
+
+func (e InvoiceStatus) String() string {
+	return string(e)
+}
+
+func (e *InvoiceStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = InvoiceStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid InvoiceStatus", str)
+	}
+	return nil
+}
+
+func (e InvoiceStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
