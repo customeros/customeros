@@ -278,7 +278,7 @@ export const OrganizationTimeline: FC = () => {
               );
             }
             default:
-              return null;
+              return <div>not supported</div>;
           }
         }}
         components={{

@@ -41,10 +41,11 @@ export type GetOrganizationInvoicesQuery = {
         __typename?: 'Invoice';
         id: string;
         number: string;
-        date: any;
         dueDate: any;
         total: number;
         currency: string;
+        createdAt: any;
+        status?: Types.InvoiceStatus | null;
         dryRun: boolean;
         invoiceLines: Array<{
           __typename?: 'InvoiceLine';
@@ -69,10 +70,11 @@ export const GetOrganizationInvoicesDocument = `
         id
         id
         number
-        date
         dueDate
         total
         currency
+        createdAt
+        status
         dryRun
         invoiceLines {
           id
@@ -186,7 +188,7 @@ useGetOrganizationInvoicesQuery.fetcher = (
 useGetOrganizationInvoicesQuery.mutateCacheEntry =
   (
     queryClient: QueryClient,
-    variables: GetOrganizationInvoicesQueryVariables,
+    variables?: GetOrganizationInvoicesQueryVariables,
   ) =>
   (
     mutator: (
@@ -204,7 +206,7 @@ useGetOrganizationInvoicesQuery.mutateCacheEntry =
 useInfiniteGetOrganizationInvoicesQuery.mutateCacheEntry =
   (
     queryClient: QueryClient,
-    variables: GetOrganizationInvoicesQueryVariables,
+    variables?: GetOrganizationInvoicesQueryVariables,
   ) =>
   (
     mutator: (

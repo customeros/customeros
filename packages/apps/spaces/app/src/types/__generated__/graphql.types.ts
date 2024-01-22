@@ -458,18 +458,24 @@ export type ContactsPage = Pages & {
 
 export type Contract = Node & {
   __typename?: 'Contract';
+  addressLine1?: Maybe<Scalars['String']['output']>;
+  addressLine2?: Maybe<Scalars['String']['output']>;
   appSource: Scalars['String']['output'];
   billingCycle?: Maybe<ContractBillingCycle>;
   contractUrl?: Maybe<Scalars['String']['output']>;
+  country?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
   currency?: Maybe<Currency>;
   endedAt?: Maybe<Scalars['Time']['output']>;
   externalLinks: Array<ExternalSystem>;
   id: Scalars['ID']['output'];
+  invoiceEmail?: Maybe<Scalars['String']['output']>;
   invoicingStartDate?: Maybe<Scalars['Time']['output']>;
+  locality?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   opportunities?: Maybe<Array<Opportunity>>;
+  organizationLegalName?: Maybe<Scalars['String']['output']>;
   owner?: Maybe<User>;
   renewalCycle: ContractRenewalCycle;
   renewalPeriods?: Maybe<Scalars['Int64']['output']>;
@@ -480,6 +486,7 @@ export type Contract = Node & {
   sourceOfTruth: DataSource;
   status: ContractStatus;
   updatedAt: Scalars['Time']['output'];
+  zip?: Maybe<Scalars['String']['output']>;
 };
 
 export enum ContractBillingCycle {
@@ -519,18 +526,26 @@ export enum ContractStatus {
 }
 
 export type ContractUpdateInput = {
+  addressLine1?: InputMaybe<Scalars['String']['input']>;
+  addressLine2?: InputMaybe<Scalars['String']['input']>;
   appSource?: InputMaybe<Scalars['String']['input']>;
   billingCycle?: InputMaybe<ContractBillingCycle>;
   contractId: Scalars['ID']['input'];
   contractUrl?: InputMaybe<Scalars['String']['input']>;
+  country?: InputMaybe<Scalars['String']['input']>;
   currency?: InputMaybe<Currency>;
   endedAt?: InputMaybe<Scalars['Time']['input']>;
+  invoiceEmail?: InputMaybe<Scalars['String']['input']>;
   invoicingStartDate?: InputMaybe<Scalars['Time']['input']>;
+  locality?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  organizationLegalName?: InputMaybe<Scalars['String']['input']>;
+  patch?: InputMaybe<Scalars['Boolean']['input']>;
   renewalCycle?: InputMaybe<ContractRenewalCycle>;
   renewalPeriods?: InputMaybe<Scalars['Int64']['input']>;
   serviceStartedAt?: InputMaybe<Scalars['Time']['input']>;
   signedAt?: InputMaybe<Scalars['Time']['input']>;
+  zip?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Country = {
@@ -1744,6 +1759,19 @@ export type MeetingsPage = Pages & {
   totalPages: Scalars['Int']['output'];
 };
 
+export type MilestoneItem = {
+  __typename?: 'MilestoneItem';
+  status: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+};
+
+export type MilestoneItemInput = {
+  status: Scalars['String']['input'];
+  text: Scalars['String']['input'];
+  updatedAt: Scalars['Time']['input'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   analysis_Create: Analysis;
@@ -1842,6 +1870,14 @@ export type Mutation = {
   note_Update: Note;
   opportunityRenewalUpdate: Opportunity;
   opportunityUpdate: Opportunity;
+  organizationPlanMilestone_BulkUpdate: Array<OrganizationPlanMilestone>;
+  organizationPlanMilestone_Create: OrganizationPlanMilestone;
+  organizationPlanMilestone_Duplicate: OrganizationPlanMilestone;
+  organizationPlanMilestone_Reorder: Scalars['ID']['output'];
+  organizationPlanMilestone_Update: OrganizationPlanMilestone;
+  organizationPlan_Create: OrganizationPlan;
+  organizationPlan_Duplicate: OrganizationPlan;
+  organizationPlan_Update: OrganizationPlan;
   organization_AddNewLocation: Location;
   organization_AddSocial: Social;
   organization_AddSubsidiary: Organization;
@@ -2335,6 +2371,39 @@ export type MutationOpportunityUpdateArgs = {
   input: OpportunityUpdateInput;
 };
 
+export type MutationOrganizationPlanMilestone_BulkUpdateArgs = {
+  input: Array<OrganizationPlanMilestoneUpdateInput>;
+};
+
+export type MutationOrganizationPlanMilestone_CreateArgs = {
+  input: OrganizationPlanMilestoneInput;
+};
+
+export type MutationOrganizationPlanMilestone_DuplicateArgs = {
+  id: Scalars['ID']['input'];
+  organizationPlanId: Scalars['ID']['input'];
+};
+
+export type MutationOrganizationPlanMilestone_ReorderArgs = {
+  input: OrganizationPlanMilestoneReorderInput;
+};
+
+export type MutationOrganizationPlanMilestone_UpdateArgs = {
+  input: OrganizationPlanMilestoneUpdateInput;
+};
+
+export type MutationOrganizationPlan_CreateArgs = {
+  input: OrganizationPlanInput;
+};
+
+export type MutationOrganizationPlan_DuplicateArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationOrganizationPlan_UpdateArgs = {
+  input: OrganizationPlanUpdateInput;
+};
+
 export type MutationOrganization_AddNewLocationArgs = {
   organizationId: Scalars['ID']['input'];
 };
@@ -2813,6 +2882,80 @@ export type OrganizationParticipant = {
   type?: Maybe<Scalars['String']['output']>;
 };
 
+export type OrganizationPlan = Node &
+  SourceFields & {
+    __typename?: 'OrganizationPlan';
+    appSource: Scalars['String']['output'];
+    createdAt: Scalars['Time']['output'];
+    id: Scalars['ID']['output'];
+    milestones: Array<OrganizationPlanMilestone>;
+    name: Scalars['String']['output'];
+    retired: Scalars['Boolean']['output'];
+    retiredMilestones: Array<OrganizationPlanMilestone>;
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    statusDetails: StatusDetails;
+    updatedAt: Scalars['Time']['output'];
+  };
+
+export type OrganizationPlanInput = {
+  masterPlanId?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type OrganizationPlanMilestone = Node &
+  SourceFields & {
+    __typename?: 'OrganizationPlanMilestone';
+    appSource: Scalars['String']['output'];
+    createdAt: Scalars['Time']['output'];
+    dueDate: Scalars['Time']['output'];
+    id: Scalars['ID']['output'];
+    items: Array<MilestoneItem>;
+    name: Scalars['String']['output'];
+    optional: Scalars['Boolean']['output'];
+    order: Scalars['Int64']['output'];
+    retired: Scalars['Boolean']['output'];
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    statusDetails: StatusDetails;
+    updatedAt: Scalars['Time']['output'];
+  };
+
+export type OrganizationPlanMilestoneInput = {
+  createdAt: Scalars['Time']['input'];
+  dueDate: Scalars['Time']['input'];
+  items: Array<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  optional: Scalars['Boolean']['input'];
+  order: Scalars['Int64']['input'];
+  organizationPlanId: Scalars['ID']['input'];
+};
+
+export type OrganizationPlanMilestoneReorderInput = {
+  orderedIds: Array<Scalars['ID']['input']>;
+  organizationPlanId: Scalars['ID']['input'];
+};
+
+export type OrganizationPlanMilestoneUpdateInput = {
+  dueDate: Scalars['Time']['input'];
+  id: Scalars['ID']['input'];
+  items: Array<MilestoneItemInput>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  optional?: InputMaybe<Scalars['Boolean']['input']>;
+  order?: InputMaybe<Scalars['Int64']['input']>;
+  organizationPlanId: Scalars['ID']['input'];
+  retired?: InputMaybe<Scalars['Boolean']['input']>;
+  statusDetails: StatusDetailsInput;
+  updatedAt: Scalars['Time']['input'];
+};
+
+export type OrganizationPlanUpdateInput = {
+  id: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  retired?: InputMaybe<Scalars['Boolean']['input']>;
+  statusDetails: StatusDetailsInput;
+};
+
 export type OrganizationUpdateInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   domains?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -3081,6 +3224,8 @@ export type Query = {
   meeting: Meeting;
   opportunity?: Maybe<Opportunity>;
   organization?: Maybe<Organization>;
+  organizationPlan: OrganizationPlan;
+  organizationPlans: Array<OrganizationPlan>;
   organization_DistinctOwners: Array<User>;
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;
@@ -3244,6 +3389,14 @@ export type QueryOpportunityArgs = {
 
 export type QueryOrganizationArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryOrganizationPlanArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryOrganizationPlansArgs = {
+  retired?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type QueryOrganizationsArgs = {
@@ -3465,6 +3618,19 @@ export type State = {
   country: Country;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+};
+
+export type StatusDetails = {
+  __typename?: 'StatusDetails';
+  status: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+};
+
+export type StatusDetailsInput = {
+  status: Scalars['String']['input'];
+  text: Scalars['String']['input'];
+  updatedAt: Scalars['Time']['input'];
 };
 
 export type SuggestedMergeOrganization = {

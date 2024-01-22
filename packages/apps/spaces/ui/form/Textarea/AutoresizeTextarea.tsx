@@ -7,6 +7,7 @@ import {
   FormControl,
   TextareaProps,
   VisuallyHidden,
+  FormLabelProps,
 } from '@chakra-ui/react';
 
 import { InputGroup, InputLeftElement } from '../InputGroup';
@@ -19,13 +20,14 @@ export interface AutoresizeTextareaProps
     > {
   label?: string;
   isLabelVisible?: boolean;
+  labelProps?: FormLabelProps;
   leftElement?: React.ReactNode;
 }
 
 export const AutoresizeTextarea = forwardRef<
   HTMLTextAreaElement,
   AutoresizeTextareaProps
->(({ leftElement, isLabelVisible, label = '', ...props }, ref) => {
+>(({ leftElement, isLabelVisible, labelProps, label = '', ...props }, ref) => {
   return (
     <FormControl>
       {isLabelVisible ? (
@@ -35,6 +37,7 @@ export const AutoresizeTextarea = forwardRef<
           fontSize='sm'
           mb={0}
           mt={2}
+          {...labelProps}
         >
           {label}
         </FormLabel>

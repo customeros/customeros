@@ -6,8 +6,10 @@ import { debounce } from 'lodash';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
+import { useDisclosure } from '@ui/utils';
 import { FormInput } from '@ui/form/Input';
 import { Check } from '@ui/media/icons/Check';
+import { File02 } from '@ui/media/icons/File02';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { IconButton } from '@ui/form/IconButton';
@@ -25,8 +27,9 @@ import {
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
 import { ContractSubtitle } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractSubtitle';
+import { BillingDetails } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/BillingDetails/BillingDetails';
+import { ServiceLineItemsModal } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/ServiceLineItemsModal';
 
-import { UrlInput } from './UrlInput';
 import { Services } from './Services/Services';
 import { FormPeriodInput } from './PeriodInput';
 import { RenewalARRCard } from './RenewalARR/RenewalARRCard';
@@ -50,6 +53,16 @@ export const ContractCard = ({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isExpanded, setIsExpanded] = useState(!data?.signedAt);
   const formId = `contract-form-${data.id}`;
+  const { onOpen, onClose, isOpen } = useDisclosure({
+    id: 'billing-details-modal',
+  });
+  const {
+    onOpen: onServiceLineItemsOpen,
+    onClose: onServiceLineItemClose,
+    isOpen: isServceItemsModalOpen,
+  } = useDisclosure({
+    id: 'service-line-items-modal',
+  });
 
   const client = getGraphQLClient();
   const updateContract = useUpdateContractMutation(client, {
@@ -309,11 +322,13 @@ export const ContractCard = ({
                 id='edit-contract-icon'
               />
             )}
-            <UrlInput
-              formId={formId}
-              url={data?.contractUrl}
-              contractId={data?.id}
-              onSubmit={updateContract.mutate}
+
+            <IconButton
+              aria-label='Edit billing details'
+              size='xs'
+              variant='ghost'
+              icon={<File02 color='gray.400' />}
+              onClick={() => onOpen()}
             />
 
             <ContractStatusSelect status={data.status} />
@@ -427,9 +442,23 @@ export const ContractCard = ({
         </Collapse>
 
         <Services
-          contractId={data.id}
           data={data?.serviceLineItems}
+          onModalOpen={onServiceLineItemsOpen}
+        />
+        <BillingDetails
+          isOpen={isOpen}
+          contractId={data.id}
+          onClose={onClose}
+          organizationName={organizationName}
+          data={data}
+        />
+        <ServiceLineItemsModal
+          isOpen={isServceItemsModalOpen}
+          contractId={data.id}
+          onClose={onServiceLineItemClose}
           contractName={data.name}
+          serviceLineItems={data?.serviceLineItems ?? []}
+          organizationName={organizationName}
         />
       </CardFooter>
     </Card>

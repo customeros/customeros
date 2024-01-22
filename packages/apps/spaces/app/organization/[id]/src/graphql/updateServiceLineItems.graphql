@@ -1,0 +1,3 @@
+mutation updateServices($input: ServiceLineItemBulkUpdateInput!) {
+    serviceLineItemBulkUpdate(input: $input)
+}

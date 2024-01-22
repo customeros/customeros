@@ -45,20 +45,42 @@ declare module '@tanstack/table-core' {
 
 interface TableProps<T extends object> {
   data: T[];
+  rowHeight?: number;
   isLoading?: boolean;
   totalItems?: number;
+  borderColor?: string;
   sorting?: SortingState;
   canFetchMore?: boolean;
   onFetchMore?: () => void;
+  fullRowSelection?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: ColumnDef<T, any>[];
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
+  contentHeight?: number | string;
   onSortingChange?: OnChangeFn<SortingState>;
   tableRef: MutableRefObject<TableInstance<T> | null>;
   // REASON: Typing TValue is too exhaustive and has no benefit
   renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
 }
+
+const fullRowSelectionStyle = {
+  '&:after': {
+    content: '""',
+    height: '2px',
+    width: '100%',
+    background: 'gray.200',
+    bottom: '0px',
+    position: 'absolute',
+  },
+  '&:before': {
+    content: '""',
+    height: '2px',
+    width: '100%',
+    background: 'gray.200',
+    position: 'absolute',
+  },
+};
 
 export const Table = <T extends object>({
   data,
@@ -73,6 +95,10 @@ export const Table = <T extends object>({
   renderTableActions,
   enableRowSelection,
   enableTableActions,
+  fullRowSelection,
+  rowHeight = 64,
+  contentHeight,
+  borderColor,
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -84,7 +110,7 @@ export const Table = <T extends object>({
       sorting: _sorting ?? sorting,
     },
     manualSorting: true,
-    enableRowSelection,
+    enableRowSelection: enableRowSelection || fullRowSelection,
     enableColumnFilters: true,
     enableSortingRemoval: false,
     getCoreRowModel: getCoreRowModel<T>(),
@@ -99,7 +125,7 @@ export const Table = <T extends object>({
     count: !data.length && isLoading ? 40 : totalItems,
     overscan: 30,
     getScrollElement: () => scrollElementRef.current,
-    estimateSize: () => 64,
+    estimateSize: () => rowHeight,
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
@@ -136,7 +162,11 @@ export const Table = <T extends object>({
 
   return (
     <Flex w='100%' flexDir='column' position='relative'>
-      <TContent ref={scrollElementRef}>
+      <TContent
+        ref={scrollElementRef}
+        height={contentHeight}
+        borderColor={borderColor}
+      >
         <THeader
           top='0'
           position='sticky'
@@ -196,28 +226,47 @@ export const Table = <T extends object>({
                 top={`${virtualRow.start}px`}
                 ref={rowVirtualizer.measureElement}
                 bg={virtualRow.index % 2 === 0 ? 'gray.25' : 'white'}
-                _hover={{
-                  '& .row-select-checkbox': {
-                    opacity: '1',
-                    visibility: 'visible',
-                  },
-                }}
+                _hover={
+                  fullRowSelection
+                    ? {
+                        '&': {
+                          cursor: fullRowSelection ? 'pointer' : 'default',
+                          ...fullRowSelectionStyle,
+                        },
+                      }
+                    : {
+                        '& .row-select-checkbox': {
+                          opacity: '1',
+                          visibility: 'visible',
+                        },
+                      }
+                }
+                sx={
+                  fullRowSelection && row?.getIsSelected()
+                    ? fullRowSelectionStyle
+                    : undefined
+                }
+                onClick={
+                  fullRowSelection ? row?.getToggleSelectedHandler() : undefined
+                }
               >
                 <TCell pl='2' pr='0' maxW='fit-content'>
-                  <Flex
-                    align='center'
-                    flexDir='row'
-                    h='full'
-                    opacity={enableRowSelection ? 1 : 0}
-                    pointerEvents={enableRowSelection ? 'auto' : 'none'}
-                  >
-                    <MemoizedCheckbox
-                      key={`checkbox-${virtualRow.index}`}
-                      isSelected={row?.getIsSelected()}
-                      isDisabled={!row || !row?.getCanSelect()}
-                      onChange={row?.getToggleSelectedHandler()}
-                    />
-                  </Flex>
+                  {!fullRowSelection && (
+                    <Flex
+                      align='center'
+                      flexDir='row'
+                      h='full'
+                      opacity={enableRowSelection ? 1 : 0}
+                      pointerEvents={enableRowSelection ? 'auto' : 'none'}
+                    >
+                      <MemoizedCheckbox
+                        key={`checkbox-${virtualRow.index}`}
+                        isSelected={row?.getIsSelected()}
+                        isDisabled={!row || !row?.getCanSelect()}
+                        onChange={row?.getToggleSelectedHandler()}
+                      />
+                    </Flex>
+                  )}
                 </TCell>
                 {(row ?? skeletonRow).getAllCells()?.map((cell, index) => {
                   return (
@@ -314,37 +363,39 @@ const TCell = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
   );
 });
 
-const TContent = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
-  return (
-    <Flex
-      ref={ref}
-      bg='gray.25'
-      overflow='auto'
-      flexDir='column'
-      borderStyle='hidden'
-      borderTop='1px solid'
-      borderColor='gray.200'
-      height='calc(100vh - 48px)'
-      sx={{
-        '&::-webkit-scrollbar': {
-          width: '8px',
-          height: '8px',
-          background: 'transparent',
-        },
-        '&::-webkit-scrollbar-track': {
-          width: '8px',
-          height: '8px',
-          background: 'transparent',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: 'gray.500',
-          borderRadius: '8px',
-        },
-      }}
-      {...props}
-    />
-  );
-});
+const TContent = forwardRef<HTMLDivElement, FlexProps>(
+  ({ height, borderColor, ...props }, ref) => {
+    return (
+      <Flex
+        ref={ref}
+        bg='gray.25'
+        overflow='auto'
+        flexDir='column'
+        borderStyle='hidden'
+        borderTop='1px solid'
+        borderColor={borderColor ? borderColor : 'gray.200'}
+        height={height ? height : 'calc(100vh - 48px)'}
+        sx={{
+          '&::-webkit-scrollbar': {
+            width: '8px',
+            height: '8px',
+            background: 'transparent',
+          },
+          '&::-webkit-scrollbar-track': {
+            width: '8px',
+            height: '8px',
+            background: 'transparent',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'gray.500',
+            borderRadius: '8px',
+          },
+        }}
+        {...props}
+      />
+    );
+  },
+);
 
 const THeader = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
   return (
