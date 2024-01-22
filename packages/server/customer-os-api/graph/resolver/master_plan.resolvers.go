@@ -94,6 +94,29 @@ func (r *mutationResolver) MasterPlanCreate(ctx context.Context, input model.Mas
 	return mapper.MapEntityToMasterPlan(createdMasterPlanEntity), nil
 }
 
+// MasterPlanCreateDefault is the resolver for the masterPlan_CreateDefault field.
+func (r *mutationResolver) MasterPlanCreateDefault(ctx context.Context, input model.MasterPlanInput) (*model.MasterPlan, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanCreateDefault", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	masterPlanId, err := r.Services.MasterPlanService.CreateDefaultMasterPlan(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create default master plan")
+		return &model.MasterPlan{ID: masterPlanId}, err
+	}
+	createdMasterPlanEntity, err := r.Services.MasterPlanService.GetMasterPlanById(ctx, masterPlanId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Master plan details not yet available. Master plan id: %s", masterPlanId)
+		return &model.MasterPlan{ID: masterPlanId}, nil
+	}
+	span.LogFields(log.String("response.masterPlanId", masterPlanId))
+	return mapper.MapEntityToMasterPlan(createdMasterPlanEntity), nil
+}
+
 // MasterPlanUpdate is the resolver for the masterPlan_Update field.
 func (r *mutationResolver) MasterPlanUpdate(ctx context.Context, input model.MasterPlanUpdateInput) (*model.MasterPlan, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanUpdate", graphql.GetOperationContext(ctx))
