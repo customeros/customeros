@@ -70,7 +70,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId}) 
 							ON CREATE SET
-								i.updatedAt=$updatedAt
+								i.updatedAt=$updatedAt,
 								i.status=$status
 							SET 
 								i:Invoice_%s,

@@ -138,6 +138,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		invoice.Invoice{
 			ContractId: contractId,
 		},
+		neo4jenum.InvoiceStatusDue.String(),
 		100,
 		20,
 		120,
@@ -202,6 +203,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, float64(100), invoiceEntity.Amount)
 	require.Equal(t, float64(20), invoiceEntity.Vat)
 	require.Equal(t, float64(120), invoiceEntity.TotalAmount)
+	require.Equal(t, neo4jenum.InvoiceStatusDue, invoiceEntity.Status)
 
 	// verify invoice lines
 	dbNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoiceLine)
