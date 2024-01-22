@@ -263,18 +263,6 @@ func (s *serviceLineItemService) UpdateServiceLineItemSet(ctx context.Context, r
 	}
 
 	// Validate service line item set
-	if len(request.ServiceLineItems) == 0 {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("serviceLineItems"))
-	}
-
-	// Validate service line item set
-	for _, item := range request.ServiceLineItems {
-		if item.ContractId == "" {
-			return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("contractId"))
-		}
-	}
-
-	// Validate service line item set
 	if request.UpdatedAt == nil {
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("updatedAt"))
 	}
@@ -286,6 +274,19 @@ func (s *serviceLineItemService) UpdateServiceLineItemSet(ctx context.Context, r
 	source.FromGrpc(request.SourceFields)
 	allIds := make([]string, 0)
 	for _, item := range request.ServiceLineItems {
+		if item.ContractId == "" {
+			return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("contractId"))
+		}
+		// Check if the contract aggregate exists prior to closing the service line item
+		contractExists, err := s.checkContractExists(ctx, request.Tenant, item.ContractId)
+		if err != nil {
+			s.log.Error(err, "error checking contract existence")
+			return nil, status.Errorf(codes.Internal, "error checking contract existence: %v", err)
+		}
+		if !contractExists {
+			return nil, status.Errorf(codes.NotFound, "contract with ID %s not found", item.ContractId)
+		}
+		// Create SLI case
 		if item.Id == "" {
 			item.Id = uuid.New().String()
 			createCommand := command.NewCreateServiceLineItemCommand(
@@ -312,7 +313,7 @@ func (s *serviceLineItemService) UpdateServiceLineItemSet(ctx context.Context, r
 				s.log.Errorf("(CreateServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 				return nil, grpcerr.ErrResponse(err)
 			}
-		} else {
+		} else { // Update SLI case
 			if item.IsRetroactiveCorrection {
 				updateServiceLineItemCommand := command.NewUpdateServiceLineItemCommand(
 					item.Id,
@@ -336,21 +337,6 @@ func (s *serviceLineItemService) UpdateServiceLineItemSet(ctx context.Context, r
 				}
 			} else {
 				versionDate := utils.NowPtr()
-
-				// Validate contract ID
-				if item.ContractId == "" {
-					return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("contractId"))
-				}
-
-				// Check if the contract aggregate exists prior to closing the service line item
-				contractExists, err := s.checkContractExists(ctx, request.Tenant, item.ContractId)
-				if err != nil {
-					s.log.Error(err, "error checking contract existence")
-					return nil, status.Errorf(codes.Internal, "error checking contract existence: %v", err)
-				}
-				if !contractExists {
-					return nil, status.Errorf(codes.NotFound, "contract with ID %s not found", item.ContractId)
-				}
 
 				//Close service line item
 				closeSliCommand := command.NewCloseServiceLineItemCommand(item.Id, request.Tenant, request.LoggedInUserId, source.AppSource, false,
