@@ -2,12 +2,13 @@ package aggregate
 
 import (
 	"context"
+	"strings"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"strings"
 )
 
 // GetServiceLineItemObjectID generates the object ID for a service line item.

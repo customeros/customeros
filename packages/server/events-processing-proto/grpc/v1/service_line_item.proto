@@ -56,9 +56,37 @@ message CloseServiceLineItemGrpcRequest {
   google.protobuf.Timestamp endedAt = 6;
 }
 
+message ServiceLineItemData {
+  string id = 1;
+  string tenant = 2;
+  string name = 3;
+  double price = 4;
+  int64 quantity = 5;
+  BilledType billed = 6;
+  string contractId = 7;
+  string comments = 8;
+  bool isRetroactiveCorrection = 9;
+}
+
+message UpdateServiceLineItemSetGrpcRequest {
+  repeated ServiceLineItemData serviceLineItems = 1;
+  google.protobuf.Timestamp createdAt = 2;
+  google.protobuf.Timestamp updatedAt = 3;
+  google.protobuf.Timestamp startedAt = 4;
+  google.protobuf.Timestamp endedAt = 5;
+  SourceFields sourceFields = 6;
+  string tenant = 7;
+  string loggedInUserId = 8;
+}
+
 // Service line item response message
 message ServiceLineItemIdGrpcResponse {
   string id = 1;
+}
+
+// Service line item response message
+message ServiceLineItemIdSetGrpcResponse {
+  repeated string ids = 1;
 }
 
 // Service definition
@@ -67,4 +95,5 @@ service ServiceLineItemGrpcService {
   rpc UpdateServiceLineItem(UpdateServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
   rpc DeleteServiceLineItem(DeleteServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
   rpc CloseServiceLineItem(CloseServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
+  rpc UpdateServiceLineItemSet(UpdateServiceLineItemSetGrpcRequest) returns (ServiceLineItemIdSetGrpcResponse);
 }
