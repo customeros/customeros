@@ -61,11 +61,6 @@ message ServiceLineItemIdGrpcResponse {
   string id = 1;
 }
 
-// Service line item response message
-message ServiceLineItemIdSetGrpcResponse {
-  repeated string ids = 1;
-}
-
 // Service definition
 service ServiceLineItemGrpcService {
   rpc CreateServiceLineItem(CreateServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
