@@ -1927,6 +1927,33 @@ type ServiceLineItem struct {
 func (ServiceLineItem) IsNode()            {}
 func (this ServiceLineItem) GetID() string { return this.ID }
 
+type ServiceLineItemBulkUpdateInput struct {
+	ServiceLineItems []*ServiceLineItemBulkUpdateItem `json:"serviceLineItems"`
+	CreatedAt        *time.Time                       `json:"createdAt,omitempty"`
+	UpdatedAt        *time.Time                       `json:"updatedAt,omitempty"`
+	StartedAt        *time.Time                       `json:"startedAt,omitempty"`
+	EndedAt          *time.Time                       `json:"endedAt,omitempty"`
+	Source           DataSource                       `json:"source"`
+	SourceOfTruth    DataSource                       `json:"sourceOfTruth"`
+	AppSource        string                           `json:"appSource"`
+	Tenant           *string                          `json:"tenant,omitempty"`
+	LoggedInUserID   *string                          `json:"loggedInUserId,omitempty"`
+}
+
+type ServiceLineItemBulkUpdateItem struct {
+	ServiceLineItemID       string                        `json:"serviceLineItemId"`
+	Tenant                  *string                       `json:"tenant,omitempty"`
+	Name                    *string                       `json:"name,omitempty"`
+	Billed                  *BilledType                   `json:"billed,omitempty"`
+	Price                   *float64                      `json:"price,omitempty"`
+	Quantity                *int64                        `json:"quantity,omitempty"`
+	Comments                *string                       `json:"comments,omitempty"`
+	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	IsRetroactiveCorrection *bool                         `json:"isRetroactiveCorrection,omitempty"`
+	IsCanceled              *bool                         `json:"isCanceled,omitempty"`
+	ContractID              *string                       `json:"contractId,omitempty"`
+}
+
 type ServiceLineItemCloseInput struct {
 	ID      string     `json:"id"`
 	EndedAt *time.Time `json:"endedAt,omitempty"`

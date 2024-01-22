@@ -17,6 +17,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -103,6 +104,37 @@ func (r *mutationResolver) ServiceLineItemClose(ctx context.Context, input model
 		return input.ID, nil
 	}
 	return input.ID, nil
+}
+
+// ServiceLineItemBulkUpdate is the resolver for the serviceLineItemBulkUpdate field.
+func (r *mutationResolver) ServiceLineItemBulkUpdate(ctx context.Context, input model.ServiceLineItemBulkUpdateInput) ([]*string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemBulkUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request.input", input))
+
+	sliEntities := service.MapServiceLineItemBulkItemsToData(input.ServiceLineItems)
+
+	updatedServiceLineItemIds, err := r.Services.ServiceLineItemService.CreateOrUpdateInBulk(ctx, &service.SLIBulkReq{
+		ServiceLineItems: sliEntities,
+		SourceFields: &commonpb.SourceFields{
+			Source:        string(input.Source),
+			SourceOfTruth: string(input.SourceOfTruth),
+			AppSource:     input.AppSource,
+		},
+		StartedAt:      input.StartedAt,
+		EndedAt:        input.EndedAt,
+		CreatedAt:      input.CreatedAt,
+		UpdatedAt:      input.UpdatedAt,
+		Tenant:         *input.Tenant,
+		LoggedInUserId: *input.LoggedInUserID,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "failed to bulk update service line items")
+		return nil, nil
+	}
+	return updatedServiceLineItemIds, nil
 }
 
 // ServiceLineItem is the resolver for the serviceLineItem field.
