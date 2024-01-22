@@ -269,9 +269,6 @@ func (s *serviceLineItemService) UpdateServiceLineItemSet(ctx context.Context, r
 
 	// Validate service line item set
 	for _, item := range request.ServiceLineItems {
-		if item.Id == "" {
-			return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
-		}
 		if item.ContractId == "" {
 			return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("contractId"))
 		}
