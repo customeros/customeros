@@ -3,10 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -20,7 +23,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type ServiceLineItemService interface {
@@ -30,6 +32,7 @@ type ServiceLineItemService interface {
 	GetById(ctx context.Context, id string) (*entity.ServiceLineItemEntity, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*entity.ServiceLineItemEntities, error)
 	Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error
+	CreateOrUpdateInBulk(ctx context.Context, serviceLineItemsReq *SLIBulkReq) ([]*string, error)
 }
 type serviceLineItemService struct {
 	log          logger.Logger
@@ -348,4 +351,126 @@ func (s *serviceLineItemService) mapDbNodeToServiceLineItemEntity(dbNode dbtype.
 		ParentID:      utils.GetStringPropOrEmpty(props, "parentId"),
 	}
 	return &serviceLineItem
+}
+
+type SLIBulkData struct {
+	Id                      string
+	Tenant                  string
+	Name                    string
+	Price                   float64
+	Quantity                int64
+	Billed                  neo4jenum.BilledType
+	ContractId              string
+	Comments                string
+	IsRetroactiveCorrection bool
+	isCanceled              bool
+}
+
+type SLIBulkReq struct {
+	ServiceLineItems []*SLIBulkData
+	CreatedAt        *time.Time
+	UpdatedAt        *time.Time
+	StartedAt        *time.Time
+	EndedAt          *time.Time
+	SourceFields     *commonpb.SourceFields
+	Tenant           string
+	LoggedInUserId   string
+}
+
+func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, serviceLineItemsReq *SLIBulkReq) ([]*string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.CreateOrUpdateInBulk")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("serviceLineItems", serviceLineItemsReq))
+
+	if len(serviceLineItemsReq.ServiceLineItems) == 0 {
+		return []*string{}, nil
+	}
+
+	responseIds := make([]*string, 0, len(serviceLineItemsReq.ServiceLineItems))
+	source := neo4jentity.DataSource(serviceLineItemsReq.SourceFields.Source)
+	appSource := serviceLineItemsReq.SourceFields.AppSource
+	sourceOfTruth := neo4jentity.DataSource(serviceLineItemsReq.SourceFields.Source)
+
+	for _, serviceLineItem := range serviceLineItemsReq.ServiceLineItems {
+		if serviceLineItem.Id == "" {
+			itemId, err := s.Create(ctx, &ServiceLineItemCreateData{
+				ServiceLineItemEntity: &entity.ServiceLineItemEntity{
+					Name:          serviceLineItem.Name,
+					Price:         serviceLineItem.Price,
+					Quantity:      serviceLineItem.Quantity,
+					Billed:        serviceLineItem.Billed,
+					Comments:      serviceLineItem.Comments,
+					Source:        source,
+					SourceOfTruth: sourceOfTruth,
+					AppSource:     appSource,
+					IsCanceled:    serviceLineItem.isCanceled,
+				},
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error from events processing: %s", err.Error())
+				return []*string{}, err
+			}
+			responseIds = append(responseIds, &itemId)
+
+		} else {
+			err := s.Update(ctx, &entity.ServiceLineItemEntity{
+				ID:            serviceLineItem.Id,
+				Name:          serviceLineItem.Name,
+				Price:         serviceLineItem.Price,
+				Quantity:      serviceLineItem.Quantity,
+				Comments:      serviceLineItem.Comments,
+				Billed:        serviceLineItem.Billed,
+				Source:        source,
+				SourceOfTruth: sourceOfTruth,
+				AppSource:     appSource,
+			}, serviceLineItem.IsRetroactiveCorrection)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error from events processing: %s", err.Error())
+				return []*string{}, err
+			}
+		}
+	}
+
+	return responseIds, nil
+}
+
+func MapServiceLineItemBulkItemsToData(input []*model.ServiceLineItemBulkUpdateItem) []*SLIBulkData {
+	arr := make([]*SLIBulkData, 0, len(input))
+	for _, item := range input {
+		arr = append(arr, MapServiceLineItemBulkItemToData(item))
+	}
+	return arr
+}
+
+func MapServiceLineItemBulkItemToData(input *model.ServiceLineItemBulkUpdateItem) *SLIBulkData {
+	billed := neo4jenum.BilledTypeNone
+	switch *input.Billed {
+	case model.BilledTypeMonthly:
+		billed = neo4jenum.BilledTypeMonthly
+	case model.BilledTypeQuarterly:
+		billed = neo4jenum.BilledTypeQuarterly
+	case model.BilledTypeAnnually:
+		billed = neo4jenum.BilledTypeAnnually
+	case model.BilledTypeOnce:
+		billed = neo4jenum.BilledTypeOnce
+	case model.BilledTypeUsage:
+		billed = neo4jenum.BilledTypeUsage
+	default:
+		billed = neo4jenum.BilledTypeNone
+	}
+	return &SLIBulkData{
+		Id:                      input.ServiceLineItemID,
+		Tenant:                  *input.Tenant,
+		Name:                    *input.Name,
+		Price:                   *input.Price,
+		Quantity:                *input.Quantity,
+		Billed:                  billed,
+		ContractId:              *input.ContractID,
+		Comments:                *input.Comments,
+		IsRetroactiveCorrection: *input.IsRetroactiveCorrection,
+		isCanceled:              *input.IsCanceled,
+	}
 }

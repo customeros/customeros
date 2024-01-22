@@ -1,9 +1,10 @@
 package model
 
 import (
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"time"
 )
 
 // ServiceLineItem represents the state of a service line item aggregate.
