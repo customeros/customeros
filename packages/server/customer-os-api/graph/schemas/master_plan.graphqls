@@ -5,6 +5,7 @@ extend type Mutation {
     masterPlan_Duplicate(id: ID!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Create(input: MasterPlanMilestoneInput!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Update(input: MasterPlanMilestoneUpdateInput!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    masterPlanMilestone_BulkUpdate(input: [MasterPlanMilestoneUpdateInput!]!): [MasterPlanMilestone!]!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Reorder(input: MasterPlanMilestoneReorderInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Duplicate(masterPlanId: ID!, id: ID!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }

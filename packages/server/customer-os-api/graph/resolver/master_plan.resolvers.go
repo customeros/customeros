@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"errors"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -211,6 +212,37 @@ func (r *mutationResolver) MasterPlanMilestoneUpdate(ctx context.Context, input 
 		return nil, nil
 	}
 	return mapper.MapEntityToMasterPlanMilestone(updatedMasterPlanMilestoneEntity), nil
+}
+
+// MasterPlanMilestoneBulkUpdate is the resolver for the masterPlanMilestone_BulkUpdate field.
+func (r *mutationResolver) MasterPlanMilestoneBulkUpdate(ctx context.Context, input []*model.MasterPlanMilestoneUpdateInput) ([]*model.MasterPlanMilestone, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanMilestoneBulkUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+	var updatedMasterPlanMilestoneEntities []*model.MasterPlanMilestone
+	var err error
+	for _, mpms := range input {
+		err = r.Services.MasterPlanService.UpdateMasterPlanMilestone(ctx, mpms.MasterPlanID, mpms.ID, mpms.Name,
+			mpms.Order, mpms.DurationHours, mpms.Items, mpms.Optional, mpms.Retired)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to update master plan milestone")
+			err = errors.Join(err)
+		}
+
+		updatedMasterPlanMilestoneEntity, errr := r.Services.MasterPlanService.GetMasterPlanMilestoneById(ctx, mpms.ID)
+		if errr != nil {
+			tracing.TraceErr(span, errr)
+			graphql.AddErrorf(ctx, "Failed to get master plan milestone with id %s", mpms.ID)
+			err = errors.Join(errr)
+		}
+		updatedMasterPlanMilestoneEntities = append(updatedMasterPlanMilestoneEntities, mapper.MapEntityToMasterPlanMilestone(updatedMasterPlanMilestoneEntity))
+	}
+	if err != nil {
+		return nil, err
+	}
+	return updatedMasterPlanMilestoneEntities, nil
 }
 
 // MasterPlanMilestoneReorder is the resolver for the masterPlanMilestone_Reorder field.
