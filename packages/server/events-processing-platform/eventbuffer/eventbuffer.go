@@ -74,6 +74,9 @@ func (eb *EventBufferWatcher) Park(
 	uuid string,
 	expiryTimestamp time.Time,
 ) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.Park")
+	defer span.Finish()
+	tracing.LogObjectAsJson(span, "parkedEvent", uuid)
 	eventBuffer := entity.EventBuffer{
 		Tenant:             tenant,
 		UUID:               uuid,
@@ -87,11 +90,18 @@ func (eb *EventBufferWatcher) Park(
 		EventVersion:       evt.Version,
 		EventMetadata:      evt.Metadata,
 	}
-	return eb.repositories.EventBufferRepository.Upsert(eventBuffer)
+	err := eb.repositories.EventBufferRepository.Upsert(eventBuffer)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		eb.logger.Errorf("EventBufferWatcher.Park: error upserting event buffer: %s", err.Error())
+	}
+	return err
 }
 
 // Dispatch dispatches all expired events from event_buffer table, and delete them after dispatching
 func (eb *EventBufferWatcher) Dispatch(ctx context.Context) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.Dispatch")
+	defer span.Finish()
 	now := time.Now().UTC()
 	eventBuffers, err := eb.repositories.EventBufferRepository.GetByExpired(now)
 	if err != nil {
@@ -100,10 +110,12 @@ func (eb *EventBufferWatcher) Dispatch(ctx context.Context) error {
 	if len(eventBuffers) == 0 {
 		return nil
 	}
+	tracing.LogObjectAsJson(span, "expiredEvents", eventBuffers)
 	for _, eventBuffer := range eventBuffers {
-		err := eb.HandleEvent(ctx, eventBuffer)
-		if err != nil {
-			return err
+		if err := eb.HandleEvent(ctx, eventBuffer); err != nil {
+			tracing.TraceErr(span, err)
+			eb.logger.Errorf("EventBufferWatcher.Dispatch: error handling event: %s", err.Error())
+			continue
 		}
 		err = eb.repositories.EventBufferRepository.Delete(eventBuffer)
 		if err != nil {
@@ -146,9 +158,12 @@ func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Ev
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.handleEvent")
 	defer span.Finish()
 	switch evt.EventType {
-	case orgevents.OrganizationUpdateOwnerV1:
+	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		var data orgevents.OrganizationOwnerUpdateEvent
-		json.Unmarshal(evt.Data, &data)
+		if err := json.Unmarshal(evt.Data, &data); err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 		organizationAggregate, err := orgaggregate.LoadOrganizationAggregate(ctx, eb.es, data.Tenant, data.OrganizationId, eventstore.LoadAggregateOptions{})
 		if err != nil {
 			tracing.TraceErr(span, err)
