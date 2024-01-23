@@ -24,7 +24,7 @@ func (i *Loaders) GetOrganizationPlanMilestonesForOrganizationPlan(ctx context.C
 }
 
 func (b *organizationPlanBatcher) getOrganizationPlanMilestonesForOrganizationPlans(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanBatcher.getMasterPlanMilestonesForMasterPlans")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "organizationPlanBatcher.getOrganizationPlanMilestonesForOrganizationPlans")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys.length", len(keys)))
@@ -62,10 +62,10 @@ func (b *organizationPlanBatcher) getOrganizationPlanMilestonesForOrganizationPl
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: neo4jentity.MasterPlanMilestoneEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.OrganizationPlanMilestoneEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.MasterPlanMilestoneEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationPlanMilestoneEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
