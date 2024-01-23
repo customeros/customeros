@@ -12,12 +12,16 @@ import { MasterPlans } from './MasterPlans';
 
 interface RetiredMasterPlansProps {
   isLoading?: boolean;
+  activePlanFallbackId?: string;
+  retiredPlanFallbackId?: string;
   retiredPlans?: MasterPlansQuery['masterPlans'];
 }
 
 export const RetiredMasterPlans = ({
   isLoading,
   retiredPlans,
+  activePlanFallbackId,
+  retiredPlanFallbackId,
 }: RetiredMasterPlansProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -26,6 +30,11 @@ export const RetiredMasterPlans = ({
   const toggle = () => {
     const newParams = new URLSearchParams(searchParams ?? '');
     newParams.set('show', isOpen ? 'active' : 'retired');
+
+    newParams.set(
+      'planId',
+      isOpen ? activePlanFallbackId ?? '' : retiredPlanFallbackId ?? '',
+    );
 
     router.push(`?${newParams.toString()}`);
   };

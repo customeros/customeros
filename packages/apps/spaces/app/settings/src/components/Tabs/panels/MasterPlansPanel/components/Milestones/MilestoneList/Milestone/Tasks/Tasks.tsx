@@ -10,9 +10,11 @@ import { Task } from './Task';
 
 interface TasksProps {
   formId: string;
+  defaultValue: string[];
+  isActiveItem?: boolean;
 }
 
-export const Tasks = ({ formId }: TasksProps) => {
+export const Tasks = ({ formId, isActiveItem, defaultValue }: TasksProps) => {
   const { getInputProps } = useField('items', formId);
   const { value, onChange, onBlur } = getInputProps();
 
@@ -27,15 +29,18 @@ export const Tasks = ({ formId }: TasksProps) => {
 
   return (
     <VStack align='flex-start' spacing='1'>
-      {(value as string[])?.map((item, idx, arr) => (
-        <Task
-          key={idx}
-          index={idx}
-          value={item}
-          formId={formId}
-          isLast={idx === arr.length - 1}
-        />
-      ))}
+      {(!isActiveItem ? (value as string[]) : defaultValue)?.map(
+        (item, idx, arr) => (
+          <Task
+            key={idx}
+            index={idx}
+            formId={formId}
+            defaultValue={item}
+            isActiveItem={isActiveItem}
+            isLast={idx === arr.length - 1}
+          />
+        ),
+      )}
       <Button
         ml='-12px'
         size='sm'

@@ -389,7 +389,7 @@ useGetRenewalsQuery.fetcher = (
   );
 
 useGetRenewalsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetRenewalsQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetRenewalsQueryVariables) =>
   (mutator: (cacheEntry: GetRenewalsQuery) => GetRenewalsQuery) => {
     const cacheKey = useGetRenewalsQuery.getKey(variables);
     const previousEntries =
@@ -400,7 +400,7 @@ useGetRenewalsQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetRenewalsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetRenewalsQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetRenewalsQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetRenewalsQuery>,

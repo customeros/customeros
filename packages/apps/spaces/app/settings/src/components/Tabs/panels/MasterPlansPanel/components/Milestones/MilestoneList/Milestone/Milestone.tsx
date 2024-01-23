@@ -1,8 +1,8 @@
 import { useForm } from 'react-inverted-form';
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useMemo, useState, useEffect, MutableRefObject } from 'react';
 
-import { useMergeRefs } from 'rooks';
 import isEqual from 'lodash/isEqual';
+import { useMergeRefs } from 'rooks';
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
 
@@ -14,17 +14,19 @@ import { Collapse } from '@ui/transitions/Collapse';
 import { Card, CardBody } from '@ui/presentation/Card';
 import { HandleDrag } from '@ui/media/icons/HandleDrag';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
-import { FormInput, FormResizableInput } from '@ui/form/Input';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { CheckSquareBroken } from '@ui/media/icons/CheckSquareBroken';
 
 import { Tasks } from './Tasks';
-import { MilestoneDatum } from './types';
+import { MilestoneDatum } from '../../types';
 import { MilestoneMenu } from './MilestoneMenu';
+import { MilestoneName } from './MilestoneName';
+import { MilestoneDuration } from './MilestoneDuration';
 
 type MilestoneForm = {
   id: string;
   name: string;
+  order: number;
   items: string[];
   duration: number;
   optional: boolean;
@@ -40,6 +42,7 @@ interface MilestoneProps {
   onDuplicate?: (id: string) => void;
   onMakeOptional?: (id: string) => void;
   onSync?: (milestone: MilestoneDatum) => void;
+  shouldFocusNameRef?: MutableRefObject<boolean>;
 }
 
 export const Milestone = ({
@@ -52,9 +55,9 @@ export const Milestone = ({
   onDuplicate,
   isActiveItem,
   onMakeOptional,
+  shouldFocusNameRef,
 }: MilestoneProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const nameInputRef = useRef<HTMLInputElement>(null);
   const [isHovered, setIsHovered] = useState(false);
 
   const {
@@ -76,7 +79,13 @@ export const Milestone = ({
 
   const defaultValues = useMemo(
     () => mapMilestoneToForm(milestone),
-    [milestone.id],
+    [
+      milestone.id,
+      milestone.name,
+      milestone.order,
+      milestone.optional,
+      JSON.stringify(milestone.items),
+    ],
   );
   const formId = `${milestone.id}-milestone-form`;
 
@@ -89,6 +98,9 @@ export const Milestone = ({
         if (!isEqual(nextMilestone, milestone)) {
           onSync?.(nextMilestone);
         }
+
+        if (shouldFocusNameRef && shouldFocusNameRef.current !== null)
+          shouldFocusNameRef.current = false;
       }
 
       return next;
@@ -100,7 +112,7 @@ export const Milestone = ({
       opacity: isDragging || isHovered || isOpen ? 1 : 0,
       transition: 'opacity 0.2s ease-out',
     }),
-    [isHovered, isOpen],
+    [isDragging, isHovered, isOpen],
   );
 
   const handleToggle = () => onToggle?.(milestone.id);
@@ -109,15 +121,14 @@ export const Milestone = ({
   const handleMakeOptional = () => onMakeOptional?.(milestone.id);
 
   useEffect(() => {
-    if (isLast && nameInputRef?.current) {
-      nameInputRef?.current?.focus();
-      setTimeout(() => nameInputRef?.current?.select(), 0);
-    }
-  }, [isLast]);
-
-  useEffect(() => {
     setDefaultValues(defaultValues);
-  }, [milestone.id]);
+  }, [
+    milestone.id,
+    milestone.name,
+    milestone.order,
+    milestone.optional,
+    JSON.stringify(milestone.items),
+  ]);
 
   useOutsideClick({ ref: cardRef, handler: handleToggle, enabled: isOpen });
 
@@ -128,7 +139,9 @@ export const Milestone = ({
       variant='outlinedElevated'
       transition={transition}
       transform={transformStyle}
-      opacity={isDragging ? 0.4 : undefined}
+      cursor={isActiveItem ? 'grabbing' : undefined}
+      boxShadow={isDragging ? 'unset' : undefined}
+      borderColor={isDragging ? 'gray.100' : undefined}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -137,6 +150,7 @@ export const Milestone = ({
           <Flex align='center'>
             <Flex
               left='1'
+              cursor='grab'
               position='absolute'
               ref={setActivatorNodeRef}
               {...listeners}
@@ -145,14 +159,14 @@ export const Milestone = ({
             >
               <HandleDrag color='gray.400' />
             </Flex>
-            <FormInput
-              name='name'
+            <MilestoneName
               formId={formId}
-              ref={nameInputRef}
-              variant='unstyled'
-              fontWeight='medium'
-              borderRadius='unset'
-              placeholder='Milestone name'
+              isLast={isLast}
+              isMilestoneOpen={isOpen}
+              isActiveItem={isActiveItem}
+              defaultValue={milestone.name}
+              onToggleMilestone={handleToggle}
+              shouldFocus={isLast && shouldFocusNameRef?.current}
             />
             <IconButton
               size='xs'
@@ -173,36 +187,20 @@ export const Milestone = ({
             <MilestoneMenu
               onRetire={handleRetire}
               onDuplicate={handleDuplicate}
+              isOptional={milestone.optional}
               onMakeOptional={handleMakeOptional}
               {...hoveredProps}
             />
           </Flex>
 
           <Flex align='center' justify='space-between' mb='2'>
-            <Flex align='center' gap='1'>
-              <Text
-                as='label'
-                fontSize='sm'
-                color='gray.500'
-                whiteSpace='nowrap'
-                htmlFor='duration-input'
-              >
-                Max duration:
-              </Text>
-              <FormResizableInput
-                min={1}
-                size='sm'
-                type='number'
-                name='duration'
-                formId={formId}
-                variant='unstyled'
-                id='duration-input'
-                borderRadius='unset'
-              />
-              <Text fontSize='sm' color='gray.500' whiteSpace='nowrap'>
-                {state.values?.duration === 1 ? 'day' : 'days'}
-              </Text>
-            </Flex>
+            <MilestoneDuration
+              formId={formId}
+              isMilestoneOpen={isOpen}
+              isActiveItem={isActiveItem}
+              onToggleMilestone={handleToggle}
+              defaultValue={state.values.duration ?? milestone.durationHours}
+            />
             {!!milestone?.items?.length && (
               <Flex align='center' gap='1.5' mr='0.25' {...hoveredProps}>
                 <CheckSquareBroken color='gray.400' />
@@ -214,10 +212,25 @@ export const Milestone = ({
           </Flex>
 
           <Collapse in={isOpen} animateOpacity style={{ overflow: 'visible' }}>
-            <Tasks formId={formId} />
+            <Tasks
+              formId={formId}
+              isActiveItem={isActiveItem}
+              defaultValue={milestone.items}
+            />
           </Collapse>
         </Flex>
       </CardBody>
+      {isDragging && (
+        <Flex
+          position='absolute'
+          top='0'
+          left='0'
+          right='0'
+          bottom='0'
+          bg='gray.100'
+          borderRadius='7px'
+        />
+      )}
     </Card>
   );
 };
@@ -229,8 +242,9 @@ const mapMilestoneToForm = (
     id: milestone?.id ?? '',
     name: milestone?.name ?? '',
     items: milestone?.items ?? [],
+    order: milestone?.order ?? 0,
     optional: milestone?.optional ?? false,
-    duration: milestone?.durationHours ?? 0,
+    duration: milestone?.durationHours ? milestone?.durationHours / 24 : 1,
   };
 };
 
@@ -240,8 +254,8 @@ const mapFormToMilestone = (formValues: MilestoneForm): MilestoneDatum => {
     name: formValues.name,
     items: formValues.items,
     optional: formValues.optional,
-    durationHours: formValues.duration,
-    order: 0,
+    durationHours: formValues.duration * 24,
+    order: formValues.order,
     retired: false,
   };
 };

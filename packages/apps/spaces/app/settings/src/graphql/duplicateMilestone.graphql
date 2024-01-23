@@ -1,0 +1,11 @@
+mutation duplicateMilestone($masterPlanId: ID!, $id: ID!) {
+  masterPlanMilestone_Duplicate(masterPlanId: $masterPlanId, id: $id) {
+    id
+    name
+    order
+    durationHours
+    optional
+    items
+    retired
+  }
+}

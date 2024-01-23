@@ -118,7 +118,7 @@ useGetTagsQuery.fetcher = (
   );
 
 useGetTagsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetTagsQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetTagsQueryVariables) =>
   (mutator: (cacheEntry: GetTagsQuery) => GetTagsQuery) => {
     const cacheKey = useGetTagsQuery.getKey(variables);
     const previousEntries = queryClient.getQueryData<GetTagsQuery>(cacheKey);
@@ -128,7 +128,7 @@ useGetTagsQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetTagsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetTagsQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetTagsQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetTagsQuery>,

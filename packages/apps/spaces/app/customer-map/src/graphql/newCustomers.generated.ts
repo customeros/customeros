@@ -148,7 +148,7 @@ useNewCustomersQuery.fetcher = (
   );
 
 useNewCustomersQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: NewCustomersQueryVariables) =>
+  (queryClient: QueryClient, variables?: NewCustomersQueryVariables) =>
   (mutator: (cacheEntry: NewCustomersQuery) => NewCustomersQuery) => {
     const cacheKey = useNewCustomersQuery.getKey(variables);
     const previousEntries =
@@ -159,7 +159,7 @@ useNewCustomersQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteNewCustomersQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: NewCustomersQueryVariables) =>
+  (queryClient: QueryClient, variables?: NewCustomersQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<NewCustomersQuery>,

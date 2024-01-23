@@ -182,7 +182,7 @@ useGlobalCacheQuery.fetcher = (
   );
 
 useGlobalCacheQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GlobalCacheQueryVariables) =>
+  (queryClient: QueryClient, variables?: GlobalCacheQueryVariables) =>
   (mutator: (cacheEntry: GlobalCacheQuery) => GlobalCacheQuery) => {
     const cacheKey = useGlobalCacheQuery.getKey(variables);
     const previousEntries =
@@ -193,7 +193,7 @@ useGlobalCacheQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGlobalCacheQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GlobalCacheQueryVariables) =>
+  (queryClient: QueryClient, variables?: GlobalCacheQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GlobalCacheQuery>,

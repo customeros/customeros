@@ -157,7 +157,7 @@ useOnboardingCompletionQuery.fetcher = (
   );
 
 useOnboardingCompletionQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: OnboardingCompletionQueryVariables) =>
+  (queryClient: QueryClient, variables?: OnboardingCompletionQueryVariables) =>
   (
     mutator: (
       cacheEntry: OnboardingCompletionQuery,
@@ -172,7 +172,7 @@ useOnboardingCompletionQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteOnboardingCompletionQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: OnboardingCompletionQueryVariables) =>
+  (queryClient: QueryClient, variables?: OnboardingCompletionQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<OnboardingCompletionQuery>,

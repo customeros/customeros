@@ -148,7 +148,7 @@ useTimeToOnboardQuery.fetcher = (
   );
 
 useTimeToOnboardQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: TimeToOnboardQueryVariables) =>
+  (queryClient: QueryClient, variables?: TimeToOnboardQueryVariables) =>
   (mutator: (cacheEntry: TimeToOnboardQuery) => TimeToOnboardQuery) => {
     const cacheKey = useTimeToOnboardQuery.getKey(variables);
     const previousEntries =
@@ -159,7 +159,7 @@ useTimeToOnboardQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteTimeToOnboardQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: TimeToOnboardQueryVariables) =>
+  (queryClient: QueryClient, variables?: TimeToOnboardQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<TimeToOnboardQuery>,

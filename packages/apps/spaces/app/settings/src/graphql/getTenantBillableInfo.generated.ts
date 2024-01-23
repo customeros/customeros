@@ -145,7 +145,7 @@ useGetBillableInfoQuery.fetcher = (
   );
 
 useGetBillableInfoQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetBillableInfoQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetBillableInfoQueryVariables) =>
   (mutator: (cacheEntry: GetBillableInfoQuery) => GetBillableInfoQuery) => {
     const cacheKey = useGetBillableInfoQuery.getKey(variables);
     const previousEntries =
@@ -156,7 +156,7 @@ useGetBillableInfoQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetBillableInfoQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetBillableInfoQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetBillableInfoQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetBillableInfoQuery>,

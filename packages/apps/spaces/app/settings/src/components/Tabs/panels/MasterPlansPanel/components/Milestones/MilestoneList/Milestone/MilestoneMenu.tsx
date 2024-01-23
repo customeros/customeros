@@ -9,6 +9,7 @@ import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
 interface MilestoneMenuProps {
   opacity?: number;
   transition?: string;
+  isOptional?: boolean;
   onRetire?: () => void;
   onDuplicate?: () => void;
   onMakeOptional?: () => void;
@@ -16,6 +17,7 @@ interface MilestoneMenuProps {
 
 export const MilestoneMenu = ({
   onRetire,
+  isOptional,
   onDuplicate,
   onMakeOptional,
   ...buttonProps
@@ -28,14 +30,14 @@ export const MilestoneMenu = ({
         as={IconButton}
         size='xs'
         variant='ghost'
-        aria-label='Milestone Options'
+        aria-label='Add milestones'
         icon={<DotsVertical color='gray.400' />}
         {...buttonProps}
         opacity={isOpen ? 1 : buttonProps.opacity}
       />
-      <MenuList>
+      <MenuList minW='10rem'>
         <MenuItem onClick={onMakeOptional} icon={<Divider color='gray.500' />}>
-          Make optional
+          {!isOptional ? 'Make optional' : 'Make default'}
         </MenuItem>
         <MenuItem onClick={onDuplicate} icon={<Copy03 color='gray.500' />}>
           Duplicate

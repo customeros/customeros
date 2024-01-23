@@ -1,14 +1,13 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useMemo, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import {
   MasterPlansQuery,
   useMasterPlansQuery,
 } from '@settings/graphql/masterPlans.generated';
 
-import { Flex } from '@ui/layout/Flex';
 import { Grid, GridItem } from '@ui/layout/Grid';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
@@ -20,6 +19,7 @@ import {
 } from './components';
 
 export const MasterPlansPanel = () => {
+  const router = useRouter();
   const client = getGraphQLClient();
   const { data, isLoading } = useMasterPlansQuery(client);
 
@@ -49,11 +49,22 @@ export const MasterPlansPanel = () => {
     return activePlans;
   }, [data?.masterPlans, showRetired]);
 
-  if (!plans) return <Flex>No master plan created yet</Flex>;
-  if (!planId) return <Flex>Select a master plan</Flex>;
-
   const selectedPlan = plans.find((plan) => plan?.id === planId);
   const selectedMilestones = selectedPlan?.milestones ?? [];
+
+  useEffect(() => {
+    if (!planId) {
+      const newParams = new URLSearchParams(searchParams ?? '');
+      const firstId = showRetired
+        ? retiredPlans?.[0]?.id
+        : activePlans?.[0]?.id;
+
+      if (!firstId) return;
+
+      newParams.set('planId', firstId);
+      router.push(`/settings?${newParams.toString()}`);
+    }
+  }, [showRetired, planId]);
 
   return (
     <Grid templateColumns='1fr 2fr' h='full'>
@@ -65,12 +76,24 @@ export const MasterPlansPanel = () => {
         borderRightColor='gray.200'
       >
         <ActiveMasterPlans isLoading={isLoading} activePlans={activePlans} />
-        <RetiredMasterPlans isLoading={isLoading} retiredPlans={retiredPlans} />
+        <RetiredMasterPlans
+          isLoading={isLoading}
+          retiredPlans={retiredPlans}
+          activePlanFallbackId={activePlans[0]?.id}
+          retiredPlanFallbackId={retiredPlans[0]?.id}
+        />
       </GridItem>
 
       <GridItem p='4'>
-        <MasterPlanDetails name={selectedPlan?.name ?? 'Unnamed master plan'} />
-        <Milestones milestones={selectedMilestones} />
+        {planId && (
+          <>
+            <MasterPlanDetails
+              id={planId}
+              name={selectedPlan?.name ?? 'Unnamed master plan'}
+            />
+            <Milestones milestones={selectedMilestones} />
+          </>
+        )}
       </GridItem>
     </Grid>
   );

@@ -252,7 +252,7 @@ useGetContractsQuery.fetcher = (
   );
 
 useGetContractsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetContractsQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetContractsQueryVariables) =>
   (mutator: (cacheEntry: GetContractsQuery) => GetContractsQuery) => {
     const cacheKey = useGetContractsQuery.getKey(variables);
     const previousEntries =
@@ -263,7 +263,7 @@ useGetContractsQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetContractsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetContractsQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetContractsQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetContractsQuery>,
