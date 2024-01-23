@@ -90,7 +90,12 @@ func (eb *EventBufferWatcher) Park(
 		EventVersion:       evt.Version,
 		EventMetadata:      evt.Metadata,
 	}
-	return eb.repositories.EventBufferRepository.Upsert(eventBuffer)
+	err := eb.repositories.EventBufferRepository.Upsert(eventBuffer)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		eb.logger.Errorf("EventBufferWatcher.Park: error upserting event buffer: %s", err.Error())
+	}
+	return err
 }
 
 // Dispatch dispatches all expired events from event_buffer table, and delete them after dispatching
@@ -107,9 +112,10 @@ func (eb *EventBufferWatcher) Dispatch(ctx context.Context) error {
 	}
 	tracing.LogObjectAsJson(span, "expiredEvents", eventBuffers)
 	for _, eventBuffer := range eventBuffers {
-		err := eb.HandleEvent(ctx, eventBuffer)
-		if err != nil {
-			return err
+		if err := eb.HandleEvent(ctx, eventBuffer); err != nil {
+			tracing.TraceErr(span, err)
+			eb.logger.Errorf("EventBufferWatcher.Dispatch: error handling event: %s", err.Error())
+			continue
 		}
 		err = eb.repositories.EventBufferRepository.Delete(eventBuffer)
 		if err != nil {
@@ -154,7 +160,10 @@ func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Ev
 	switch evt.EventType {
 	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		var data orgevents.OrganizationOwnerUpdateEvent
-		json.Unmarshal(evt.Data, &data)
+		if err := json.Unmarshal(evt.Data, &data); err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 		organizationAggregate, err := orgaggregate.LoadOrganizationAggregate(ctx, eb.es, data.Tenant, data.OrganizationId, eventstore.LoadAggregateOptions{})
 		if err != nil {
 			tracing.TraceErr(span, err)
