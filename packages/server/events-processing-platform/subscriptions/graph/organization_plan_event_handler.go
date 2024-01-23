@@ -59,24 +59,6 @@ func (h *OrganizationPlanEventHandler) OnCreate(ctx context.Context, evt eventst
 		return err
 	}
 
-	// pull MasterPlan from Neo4j, for each milestone create org plan milestone
-	masterPlanMilestonesNode, err := h.repositories.Neo4jRepositories.MasterPlanReadRepository.GetMasterPlanMilestonesForMasterPlan(ctx, eventData.Tenant, masterPlanId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while getting master plan milestones %s: %s", masterPlanId, err.Error())
-		return err
-	}
-
-	masterPlanMilestones := convertMasterPlanMilestonesToOrganizationPlanMilestones(masterPlanMilestonesNode, eventData.CreatedAt)
-	h.log.Info("masterPlanMilestones", masterPlanMilestones)
-
-	err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.CreateBulkMilestones(ctx, eventData.Tenant, eventData.OrganizationPlanId, source, appSource, masterPlanMilestones, eventData.CreatedAt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while saving organization plan milestones %s: %s", eventData.OrganizationPlanId, err.Error())
-		return err
-	}
-
 	// Link org plan to master plan
 	err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.LinkWithMasterPlan(ctx, eventData.Tenant, eventData.OrganizationPlanId, masterPlanId, eventData.CreatedAt)
 	if err != nil {

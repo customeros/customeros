@@ -3,10 +3,6 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/net/publicsuffix"
 	"math"
 	"net/url"
 	"reflect"
@@ -14,6 +10,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/net/publicsuffix"
 )
 
 type Pair[T, U any] struct {

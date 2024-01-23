@@ -1475,6 +1475,18 @@ func (this MeetingsPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
 
+type MilestoneItem struct {
+	Status    string    `json:"status"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	Text      string    `json:"text"`
+}
+
+type MilestoneItemInput struct {
+	Status    string    `json:"status"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	Text      string    `json:"text"`
+}
+
 type Mutation struct {
 }
 
@@ -1707,6 +1719,92 @@ func (OrganizationParticipant) IsInteractionEventParticipant() {}
 func (OrganizationParticipant) IsIssueParticipant() {}
 
 func (OrganizationParticipant) IsMeetingParticipant() {}
+
+type OrganizationPlan struct {
+	ID                string                       `json:"id"`
+	CreatedAt         time.Time                    `json:"createdAt"`
+	UpdatedAt         time.Time                    `json:"updatedAt"`
+	Name              string                       `json:"name"`
+	Source            DataSource                   `json:"source"`
+	SourceOfTruth     DataSource                   `json:"sourceOfTruth"`
+	AppSource         string                       `json:"appSource"`
+	Retired           bool                         `json:"retired"`
+	Milestones        []*OrganizationPlanMilestone `json:"milestones"`
+	RetiredMilestones []*OrganizationPlanMilestone `json:"retiredMilestones"`
+	StatusDetails     *StatusDetails               `json:"statusDetails"`
+}
+
+func (OrganizationPlan) IsSourceFields()                   {}
+func (this OrganizationPlan) GetID() string                { return this.ID }
+func (this OrganizationPlan) GetSource() DataSource        { return this.Source }
+func (this OrganizationPlan) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this OrganizationPlan) GetAppSource() string         { return this.AppSource }
+
+func (OrganizationPlan) IsNode() {}
+
+type OrganizationPlanInput struct {
+	Name         *string `json:"name,omitempty"`
+	MasterPlanID *string `json:"masterPlanId,omitempty"`
+}
+
+type OrganizationPlanMilestone struct {
+	ID            string           `json:"id"`
+	CreatedAt     time.Time        `json:"createdAt"`
+	UpdatedAt     time.Time        `json:"updatedAt"`
+	Name          string           `json:"name"`
+	Source        DataSource       `json:"source"`
+	SourceOfTruth DataSource       `json:"sourceOfTruth"`
+	AppSource     string           `json:"appSource"`
+	Order         int64            `json:"order"`
+	DueDate       time.Time        `json:"dueDate"`
+	Optional      bool             `json:"optional"`
+	Items         []*MilestoneItem `json:"items"`
+	Retired       bool             `json:"retired"`
+	StatusDetails *StatusDetails   `json:"statusDetails"`
+}
+
+func (OrganizationPlanMilestone) IsSourceFields()                   {}
+func (this OrganizationPlanMilestone) GetID() string                { return this.ID }
+func (this OrganizationPlanMilestone) GetSource() DataSource        { return this.Source }
+func (this OrganizationPlanMilestone) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this OrganizationPlanMilestone) GetAppSource() string         { return this.AppSource }
+
+func (OrganizationPlanMilestone) IsNode() {}
+
+type OrganizationPlanMilestoneInput struct {
+	OrganizationPlanID string    `json:"organizationPlanId"`
+	Name               *string   `json:"name,omitempty"`
+	Order              int64     `json:"order"`
+	DueDate            time.Time `json:"dueDate"`
+	CreatedAt          time.Time `json:"createdAt"`
+	Optional           bool      `json:"optional"`
+	Items              []string  `json:"items"`
+}
+
+type OrganizationPlanMilestoneReorderInput struct {
+	OrganizationPlanID string   `json:"organizationPlanId"`
+	OrderedIds         []string `json:"orderedIds"`
+}
+
+type OrganizationPlanMilestoneUpdateInput struct {
+	OrganizationPlanID string                `json:"organizationPlanId"`
+	ID                 string                `json:"id"`
+	Name               *string               `json:"name,omitempty"`
+	Order              *int64                `json:"order,omitempty"`
+	DueDate            time.Time             `json:"dueDate"`
+	UpdatedAt          time.Time             `json:"updatedAt"`
+	Optional           *bool                 `json:"optional,omitempty"`
+	Retired            *bool                 `json:"retired,omitempty"`
+	Items              []*MilestoneItemInput `json:"items"`
+	StatusDetails      *StatusDetailsInput   `json:"statusDetails"`
+}
+
+type OrganizationPlanUpdateInput struct {
+	ID            string              `json:"id"`
+	Name          *string             `json:"name,omitempty"`
+	Retired       *bool               `json:"retired,omitempty"`
+	StatusDetails *StatusDetailsInput `json:"statusDetails"`
+}
 
 type OrganizationUpdateInput struct {
 	ID          string  `json:"id"`
@@ -2026,6 +2124,18 @@ type State struct {
 	Country *Country `json:"country"`
 	Name    string   `json:"name"`
 	Code    string   `json:"code"`
+}
+
+type StatusDetails struct {
+	Status    string    `json:"status"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	Text      string    `json:"text"`
+}
+
+type StatusDetailsInput struct {
+	Status    string    `json:"status"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	Text      string    `json:"text"`
 }
 
 type SuggestedMergeOrganization struct {
