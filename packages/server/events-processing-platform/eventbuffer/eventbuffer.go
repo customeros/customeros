@@ -152,7 +152,7 @@ func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Ev
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.handleEvent")
 	defer span.Finish()
 	switch evt.EventType {
-	case orgevents.OrganizationUpdateOwnerV1:
+	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		var data orgevents.OrganizationOwnerUpdateEvent
 		json.Unmarshal(evt.Data, &data)
 		organizationAggregate, err := orgaggregate.LoadOrganizationAggregate(ctx, eb.es, data.Tenant, data.OrganizationId, eventstore.LoadAggregateOptions{})
