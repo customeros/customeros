@@ -241,7 +241,7 @@ useGetIssuesQuery.fetcher = (
   );
 
 useGetIssuesQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetIssuesQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetIssuesQueryVariables) =>
   (mutator: (cacheEntry: GetIssuesQuery) => GetIssuesQuery) => {
     const cacheKey = useGetIssuesQuery.getKey(variables);
     const previousEntries = queryClient.getQueryData<GetIssuesQuery>(cacheKey);
@@ -251,7 +251,7 @@ useGetIssuesQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetIssuesQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetIssuesQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetIssuesQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetIssuesQuery>,

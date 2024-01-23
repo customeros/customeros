@@ -170,7 +170,7 @@ useMasterPlansQuery.fetcher = (
   );
 
 useMasterPlansQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: MasterPlansQueryVariables) =>
+  (queryClient: QueryClient, variables?: MasterPlansQueryVariables) =>
   (mutator: (cacheEntry: MasterPlansQuery) => MasterPlansQuery) => {
     const cacheKey = useMasterPlansQuery.getKey(variables);
     const previousEntries =
@@ -181,7 +181,7 @@ useMasterPlansQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteMasterPlansQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: MasterPlansQueryVariables) =>
+  (queryClient: QueryClient, variables?: MasterPlansQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<MasterPlansQuery>,

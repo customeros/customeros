@@ -132,7 +132,7 @@ useGetContractServicesQuery.fetcher = (
   );
 
 useGetContractServicesQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetContractServicesQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetContractServicesQueryVariables) =>
   (
     mutator: (cacheEntry: GetContractServicesQuery) => GetContractServicesQuery,
   ) => {
@@ -145,7 +145,7 @@ useGetContractServicesQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetContractServicesQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetContractServicesQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetContractServicesQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetContractServicesQuery>,

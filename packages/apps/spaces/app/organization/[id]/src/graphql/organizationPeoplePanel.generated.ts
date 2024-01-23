@@ -244,7 +244,7 @@ useOrganizationPeoplePanelQuery.fetcher = (
 useOrganizationPeoplePanelQuery.mutateCacheEntry =
   (
     queryClient: QueryClient,
-    variables: OrganizationPeoplePanelQueryVariables,
+    variables?: OrganizationPeoplePanelQueryVariables,
   ) =>
   (
     mutator: (
@@ -262,7 +262,7 @@ useOrganizationPeoplePanelQuery.mutateCacheEntry =
 useInfiniteOrganizationPeoplePanelQuery.mutateCacheEntry =
   (
     queryClient: QueryClient,
-    variables: OrganizationPeoplePanelQueryVariables,
+    variables?: OrganizationPeoplePanelQueryVariables,
   ) =>
   (
     mutator: (

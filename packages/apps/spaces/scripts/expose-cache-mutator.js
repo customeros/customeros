@@ -44,7 +44,7 @@ function template(name, options = { infinite: false }) {
     : queryName; // GetOrganizationsQuery
 
   return `${hookName}.mutateCacheEntry =
-  (queryClient: QueryClient, variables: ${variablesType}) =>
+  (queryClient: QueryClient, variables?: ${variablesType}) =>
   (mutator: (cacheEntry: ${queryType}) => ${queryType}) => {
     const cacheKey = ${hookName}.getKey(variables);
     const previousEntries =

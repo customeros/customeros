@@ -157,7 +157,7 @@ useGrossRevenueRetentionQuery.fetcher = (
   );
 
 useGrossRevenueRetentionQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GrossRevenueRetentionQueryVariables) =>
+  (queryClient: QueryClient, variables?: GrossRevenueRetentionQueryVariables) =>
   (
     mutator: (
       cacheEntry: GrossRevenueRetentionQuery,
@@ -172,7 +172,7 @@ useGrossRevenueRetentionQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGrossRevenueRetentionQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GrossRevenueRetentionQueryVariables) =>
+  (queryClient: QueryClient, variables?: GrossRevenueRetentionQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GrossRevenueRetentionQuery>,

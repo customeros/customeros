@@ -958,7 +958,7 @@ useGetTimelineEventsQuery.fetcher = (
   );
 
 useGetTimelineEventsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetTimelineEventsQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetTimelineEventsQueryVariables) =>
   (mutator: (cacheEntry: GetTimelineEventsQuery) => GetTimelineEventsQuery) => {
     const cacheKey = useGetTimelineEventsQuery.getKey(variables);
     const previousEntries =
@@ -969,7 +969,7 @@ useGetTimelineEventsQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetTimelineEventsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetTimelineEventsQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetTimelineEventsQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetTimelineEventsQuery>,

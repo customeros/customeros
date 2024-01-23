@@ -1281,15 +1281,17 @@ export type Invoice = Node &
     appSource: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
     currency: Scalars['String']['output'];
-    date: Scalars['Time']['output'];
     dryRun: Scalars['Boolean']['output'];
     dueDate: Scalars['Time']['output'];
     id: Scalars['ID']['output'];
     invoiceLines: Array<InvoiceLine>;
     number: Scalars['String']['output'];
+    periodEndDate: Scalars['Time']['output'];
+    periodStartDate: Scalars['Time']['output'];
     repositoryFileId: Scalars['String']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
+    status?: Maybe<InvoiceStatus>;
     total: Scalars['Float']['output'];
     updatedAt: Scalars['Time']['output'];
     vat: Scalars['Float']['output'];
@@ -1317,9 +1319,16 @@ export type InvoiceLineInput = {
 
 export type InvoiceSimulateInput = {
   contractId: Scalars['ID']['input'];
-  date?: InputMaybe<Scalars['Time']['input']>;
   invoiceLines: Array<InvoiceLineInput>;
+  periodEndDate?: InputMaybe<Scalars['Time']['input']>;
+  periodStartDate?: InputMaybe<Scalars['Time']['input']>;
 };
+
+export enum InvoiceStatus {
+  Draft = 'DRAFT',
+  Due = 'DUE',
+  Paid = 'PAID',
+}
 
 export type InvoicesPage = Pages & {
   __typename?: 'InvoicesPage';
@@ -1806,11 +1815,13 @@ export type Mutation = {
   logEntry_RemoveTag: Scalars['ID']['output'];
   logEntry_ResetTags: Scalars['ID']['output'];
   logEntry_Update: Scalars['ID']['output'];
+  masterPlanMilestone_BulkUpdate: Array<MasterPlanMilestone>;
   masterPlanMilestone_Create: MasterPlanMilestone;
   masterPlanMilestone_Duplicate: MasterPlanMilestone;
   masterPlanMilestone_Reorder: Scalars['ID']['output'];
   masterPlanMilestone_Update: MasterPlanMilestone;
   masterPlan_Create: MasterPlan;
+  masterPlan_CreateDefault: MasterPlan;
   masterPlan_Duplicate: MasterPlan;
   masterPlan_Update: MasterPlan;
   meeting_AddNewLocation: Location;
@@ -1860,6 +1871,7 @@ export type Mutation = {
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
   player_Merge: Result;
+  serviceLineItemBulkUpdate: Array<Maybe<Scalars['ID']['output']>>;
   serviceLineItemCreate: ServiceLineItem;
   serviceLineItemUpdate: ServiceLineItem;
   serviceLineItem_Close: Scalars['ID']['output'];
@@ -2201,6 +2213,10 @@ export type MutationLogEntry_UpdateArgs = {
   input: LogEntryUpdateInput;
 };
 
+export type MutationMasterPlanMilestone_BulkUpdateArgs = {
+  input: Array<MasterPlanMilestoneUpdateInput>;
+};
+
 export type MutationMasterPlanMilestone_CreateArgs = {
   input: MasterPlanMilestoneInput;
 };
@@ -2219,6 +2235,10 @@ export type MutationMasterPlanMilestone_UpdateArgs = {
 };
 
 export type MutationMasterPlan_CreateArgs = {
+  input: MasterPlanInput;
+};
+
+export type MutationMasterPlan_CreateDefaultArgs = {
   input: MasterPlanInput;
 };
 
@@ -2446,6 +2466,10 @@ export type MutationPhoneNumberUpdateInUserArgs = {
 export type MutationPlayer_MergeArgs = {
   input: PlayerInput;
   userId: Scalars['ID']['input'];
+};
+
+export type MutationServiceLineItemBulkUpdateArgs = {
+  input: ServiceLineItemBulkUpdateInput;
 };
 
 export type MutationServiceLineItemCreateArgs = {
@@ -3334,6 +3358,33 @@ export type ServiceLineItem = Node & {
   sourceOfTruth: DataSource;
   startedAt: Scalars['Time']['output'];
   updatedAt: Scalars['Time']['output'];
+};
+
+export type ServiceLineItemBulkUpdateInput = {
+  appSource: Scalars['String']['input'];
+  createdAt?: InputMaybe<Scalars['Time']['input']>;
+  endedAt?: InputMaybe<Scalars['Time']['input']>;
+  loggedInUserId?: InputMaybe<Scalars['String']['input']>;
+  serviceLineItems: Array<InputMaybe<ServiceLineItemBulkUpdateItem>>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  startedAt?: InputMaybe<Scalars['Time']['input']>;
+  tenant?: InputMaybe<Scalars['String']['input']>;
+  updatedAt?: InputMaybe<Scalars['Time']['input']>;
+};
+
+export type ServiceLineItemBulkUpdateItem = {
+  billed?: InputMaybe<BilledType>;
+  comments?: InputMaybe<Scalars['String']['input']>;
+  contractId?: InputMaybe<Scalars['String']['input']>;
+  externalReference?: InputMaybe<ExternalSystemReferenceInput>;
+  isCanceled?: InputMaybe<Scalars['Boolean']['input']>;
+  isRetroactiveCorrection?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  price?: InputMaybe<Scalars['Float']['input']>;
+  quantity?: InputMaybe<Scalars['Int64']['input']>;
+  serviceLineItemId: Scalars['ID']['input'];
+  tenant?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ServiceLineItemCloseInput = {

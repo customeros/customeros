@@ -137,7 +137,7 @@ useCustomerMapQuery.fetcher = (
   );
 
 useCustomerMapQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: CustomerMapQueryVariables) =>
+  (queryClient: QueryClient, variables?: CustomerMapQueryVariables) =>
   (mutator: (cacheEntry: CustomerMapQuery) => CustomerMapQuery) => {
     const cacheKey = useCustomerMapQuery.getKey(variables);
     const previousEntries =
@@ -148,7 +148,7 @@ useCustomerMapQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteCustomerMapQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: CustomerMapQueryVariables) =>
+  (queryClient: QueryClient, variables?: CustomerMapQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<CustomerMapQuery>,

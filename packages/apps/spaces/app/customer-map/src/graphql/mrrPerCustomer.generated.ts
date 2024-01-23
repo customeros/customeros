@@ -148,7 +148,7 @@ useMrrPerCustomerQuery.fetcher = (
   );
 
 useMrrPerCustomerQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: MrrPerCustomerQueryVariables) =>
+  (queryClient: QueryClient, variables?: MrrPerCustomerQueryVariables) =>
   (mutator: (cacheEntry: MrrPerCustomerQuery) => MrrPerCustomerQuery) => {
     const cacheKey = useMrrPerCustomerQuery.getKey(variables);
     const previousEntries =
@@ -159,7 +159,7 @@ useMrrPerCustomerQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteMrrPerCustomerQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: MrrPerCustomerQueryVariables) =>
+  (queryClient: QueryClient, variables?: MrrPerCustomerQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<MrrPerCustomerQuery>,

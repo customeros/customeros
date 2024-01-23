@@ -165,7 +165,7 @@ useGetContactsEmailListQuery.fetcher = (
   );
 
 useGetContactsEmailListQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetContactsEmailListQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetContactsEmailListQueryVariables) =>
   (
     mutator: (
       cacheEntry: GetContactsEmailListQuery,
@@ -180,7 +180,7 @@ useGetContactsEmailListQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetContactsEmailListQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetContactsEmailListQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetContactsEmailListQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetContactsEmailListQuery>,

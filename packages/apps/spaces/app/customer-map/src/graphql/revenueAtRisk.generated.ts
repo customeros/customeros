@@ -139,7 +139,7 @@ useRevenueAtRiskQuery.fetcher = (
   );
 
 useRevenueAtRiskQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: RevenueAtRiskQueryVariables) =>
+  (queryClient: QueryClient, variables?: RevenueAtRiskQueryVariables) =>
   (mutator: (cacheEntry: RevenueAtRiskQuery) => RevenueAtRiskQuery) => {
     const cacheKey = useRevenueAtRiskQuery.getKey(variables);
     const previousEntries =
@@ -150,7 +150,7 @@ useRevenueAtRiskQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteRevenueAtRiskQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: RevenueAtRiskQueryVariables) =>
+  (queryClient: QueryClient, variables?: RevenueAtRiskQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<RevenueAtRiskQuery>,

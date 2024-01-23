@@ -131,7 +131,7 @@ useGetOrganizationNameQuery.fetcher = (
   );
 
 useGetOrganizationNameQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetOrganizationNameQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetOrganizationNameQueryVariables) =>
   (
     mutator: (cacheEntry: GetOrganizationNameQuery) => GetOrganizationNameQuery,
   ) => {
@@ -144,7 +144,7 @@ useGetOrganizationNameQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetOrganizationNameQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetOrganizationNameQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetOrganizationNameQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetOrganizationNameQuery>,
