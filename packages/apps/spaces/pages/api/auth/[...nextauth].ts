@@ -38,6 +38,23 @@ export const authOptions: AuthOptions = {
         token.accessToken = account.access_token;
         token.id = (profile as GoogleProfile)?.id;
         token.playerIdentityId = account.providerAccountId;
+        token.email = (profile as GoogleProfile)?.email;
+
+        // Check if the email is available in the profile
+        if (profile && profile.email) {
+          token.email = profile.email;
+        } else {
+          // If the email is not available in the profile, fetch it from Microsoft Graph API
+          const graphApiResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+            headers: {
+              Authorization: `Bearer ${token.accessToken}`,
+            },
+          });
+          const graphApiData = await graphApiResponse.json();
+
+          if (graphApiData && graphApiData.userPrincipalName) {
+            token.email = graphApiData.userPrincipalName;
+          }}
 
         const oAuthToken: OAuthToken = {
           accessToken: account?.access_token ?? '',
