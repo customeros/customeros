@@ -13,8 +13,11 @@ import (
 )
 
 type LocationRepository interface {
+	// Deprecated
 	GetMatchedLocationIdForOrganizationBySource(ctx context.Context, organizationId, externalSystem string) (string, error)
+	// Deprecated
 	GetMatchedLocationIdForContactBySource(ctx context.Context, contactId, externalSystem string) (string, error)
+	// Deprecated
 	GetById(ctx context.Context, locationId string) (*dbtype.Node, error)
 }
 

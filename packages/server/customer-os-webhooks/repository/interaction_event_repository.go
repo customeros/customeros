@@ -13,8 +13,11 @@ import (
 )
 
 type InteractionEventRepository interface {
+	// Deprecated
 	GetMatchedInteractionEventId(ctx context.Context, tenant, externalId, externalSystem, externalSourceEntity string) (string, error)
+	// Deprecated
 	GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalId, externalSystem string) (string, error)
+	// Deprecated
 	GetById(ctx context.Context, tenant, interactionEventId string) (*dbtype.Node, error)
 }
 

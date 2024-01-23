@@ -12,11 +12,17 @@ import (
 )
 
 type OrganizationRepository interface {
+	// Deprecated
 	GetById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
+	// Deprecated
 	GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId, customerOsId string, domains []string) (string, error)
+	// Deprecated
 	GetOrganizationIdById(ctx context.Context, tenant, id string) (string, error)
+	// Deprecated
 	GetOrganizationIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
+	// Deprecated
 	GetOrganizationIdByDomain(ctx context.Context, tenant, domain string) (string, error)
+	// Deprecated
 	IsDomainUsedByOrganization(ctx context.Context, tenant, domain, skipOrganizationIds string) (bool, error)
 }
 

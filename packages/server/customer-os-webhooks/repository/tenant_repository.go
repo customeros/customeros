@@ -11,6 +11,7 @@ import (
 )
 
 type TenantRepository interface {
+	// Deprecated
 	GetTenant(ctx context.Context, tenant string) (*dbtype.Node, error)
 }
 

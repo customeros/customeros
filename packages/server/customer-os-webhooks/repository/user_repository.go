@@ -11,9 +11,13 @@ import (
 )
 
 type UserRepository interface {
+	// Deprecated
 	GetMatchedUserId(ctx context.Context, tenant, externalSystem, externalId, email string) (string, error)
+	// Deprecated
 	GetUserIdById(ctx context.Context, tenant, id string) (string, error)
+	// Deprecated
 	GetUserIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
+	// Deprecated
 	GetUserIdByExternalIdSecond(ctx context.Context, tenant, externalIdSecond, externalSystemId string) (string, error)
 }
 

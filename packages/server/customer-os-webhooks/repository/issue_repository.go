@@ -13,8 +13,11 @@ import (
 )
 
 type IssueRepository interface {
+	// Deprecated
 	GetById(ctx context.Context, tenant, issueId string) (*dbtype.Node, error)
+	// Deprecated
 	GetMatchedIssueId(ctx context.Context, tenant, externalSystem, externalId string) (string, error)
+	// Deprecated
 	GetIssueIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
 }
 
