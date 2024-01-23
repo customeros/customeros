@@ -98,7 +98,7 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		BillingCycle:    neo4jenum.DecodeBillingCycle(eventData.BillingCycle),
 		Status:          neo4jenum.DecodeInvoiceStatus(eventData.Status),
 	}
-	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.InvoiceFill(ctx, eventData.Tenant, invoiceId, data)
+	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.FillInvoice(ctx, eventData.Tenant, invoiceId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while filling invocie with details %s: %s", invoiceId, err.Error())
@@ -134,6 +134,35 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while calling generate pdf request for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (h *InvoiceEventHandler) OnInvoiceUpdateV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.OnInvoiceUpdateV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData invoice.InvoiceUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	data := neo4jrepository.InvoiceUpdateFields{
+		UpdatedAt:    eventData.UpdatedAt,
+		Status:       neo4jenum.DecodeInvoiceStatus(eventData.Status),
+		UpdateStatus: eventData.UpdateStatus(),
+	}
+	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while updating invoice %s: %s", invoiceId, err.Error())
 		return err
 	}
 

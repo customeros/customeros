@@ -124,8 +124,6 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	switch evt.GetEventType() {
 	case invoice.InvoiceCreateForContractV1:
 		return s.invoiceEventHandler.onInvoiceCreateForContractV1(ctx, evt)
-	case invoice.InvoiceFillV1:
-		return nil
 	case invoice.InvoicePdfRequestedV1:
 		return s.invoiceEventHandler.generateInvoicePDFV1(ctx, evt)
 	case invoice.InvoicePdfGeneratedV1:
@@ -133,11 +131,4 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	default:
 		return nil
 	}
-}
-
-type InvoiceData struct {
-	CustomerName  string
-	ProviderName  string
-	InvoiceNumber string
-	// Add more fields as needed
 }

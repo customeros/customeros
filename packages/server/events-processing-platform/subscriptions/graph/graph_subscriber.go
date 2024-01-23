@@ -388,6 +388,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case invoiceevents.InvoicePayV1:
 		return nil // do nothing yet
+	case invoiceevents.InvoiceUpdateV1:
+		return s.invoiceEventHandler.OnInvoiceUpdateV1(ctx, evt)
 
 	case orgplanevent.OrganizationPlanCreateV1:
 		return s.organizationPlanEventHandler.OnCreate(ctx, evt)

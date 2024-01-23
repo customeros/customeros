@@ -41,11 +41,18 @@ type InvoiceFillFields struct {
 	Status          neo4jenum.InvoiceStatus `json:"status"`
 }
 
+type InvoiceUpdateFields struct {
+	UpdatedAt    time.Time               `json:"updatedAt"`
+	Status       neo4jenum.InvoiceStatus `json:"status"`
+	UpdateStatus bool                    `json:"updateStatus"`
+}
+
 type InvoiceWriteRepository interface {
 	CreateInvoiceForContract(ctx context.Context, tenant, invoiceId string, data InvoiceCreateFields) error
-	InvoiceFill(ctx context.Context, tenant, invoiceId string, data InvoiceFillFields) error
+	FillInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceFillFields) error
 	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string, updatedAt time.Time) error
 	SetInvoicePaymentRequested(ctx context.Context, tenant, invoiceId string) error
+	UpdateInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceUpdateFields) error
 }
 
 type invoiceWriteRepository struct {
@@ -114,8 +121,8 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 	return err
 }
 
-func (r *invoiceWriteRepository) InvoiceFill(ctx context.Context, tenant, invoiceId string, data InvoiceFillFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.InvoiceFill")
+func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceFillFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.FillInvoice")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
@@ -155,6 +162,34 @@ func (r *invoiceWriteRepository) InvoiceFill(ctx context.Context, tenant, invoic
 		"periodEnd":    data.PeriodEndDate,
 		"billingCycle": data.BillingCycle.String(),
 		"status":       data.Status.String(),
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *invoiceWriteRepository) UpdateInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceUpdateFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.UpdateInvoice")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
+				SET i.updatedAt=$updatedAt`
+	params := map[string]any{
+		"tenant":    tenant,
+		"invoiceId": invoiceId,
+		"updatedAt": data.UpdatedAt,
+	}
+	if data.UpdateStatus {
+		cypher += `, i.status=$status`
+		params["status"] = data.Status.String()
 	}
 
 	span.LogFields(log.String("cypher", cypher))

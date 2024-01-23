@@ -14,6 +14,11 @@ enum InvoiceStatus {
   INVOICE_STATUS_PAID = 3;
 }
 
+enum InvoiceFieldMask {
+  INVOICE_FIELD_NONE = 0; // No property, ignored by the server
+  INVOICE_FIELD_STATUS = 1;
+}
+
 message NewInvoiceForContractRequest {
   string tenant = 1; // mandatory
   string loggedInUserId = 2;
@@ -94,6 +99,16 @@ message DryRunServiceLineItem {
   int64 quantity = 6;
 }
 
+message UpdateInvoiceRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string invoiceId = 3;
+  google.protobuf.Timestamp updatedAt = 4;
+  string appSource = 5;
+  InvoiceStatus status = 6;
+  repeated InvoiceFieldMask fieldsMask = 7;
+}
+
 message InvoiceIdResponse {
   string id = 1;
 }
@@ -105,4 +120,5 @@ service InvoiceGrpcService {
   rpc PdfGeneratedInvoice(PdfGeneratedInvoiceRequest) returns (InvoiceIdResponse);
   rpc PayInvoice(PayInvoiceRequest) returns (InvoiceIdResponse);
   rpc SimulateInvoice(SimulateInvoiceRequest) returns (InvoiceIdResponse);
+  rpc UpdateInvoice(UpdateInvoiceRequest) returns (InvoiceIdResponse);
 }

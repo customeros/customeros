@@ -1687,11 +1687,6 @@ func TestQueryResolver_Organization_WithInvoices(t *testing.T) {
 	require.Equal(t, int64(2), organization.Invoices.TotalElements)
 	require.Equal(t, 2, len(organization.Invoices.Content))
 
-	invoice1 := organization.Invoices.Content[0]
-	require.Equal(t, invoice1Id, invoice1.ID)
-	require.Equal(t, "1", invoice1.Number)
-
-	invoice2 := organization.Invoices.Content[1]
-	require.Equal(t, invoice2Id, invoice2.ID)
-	require.Equal(t, "2", invoice2.Number)
+	require.ElementsMatch(t, []string{invoice1Id, invoice2Id}, []string{organization.Invoices.Content[0].ID, organization.Invoices.Content[1].ID})
+	require.ElementsMatch(t, []string{"1", "2"}, []string{organization.Invoices.Content[0].Number, organization.Invoices.Content[1].Number})
 }

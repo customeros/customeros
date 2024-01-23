@@ -15,6 +15,11 @@ const (
 	InvoicePdfRequestedV1      = "V1_INVOICE_PDF_REQUESTED"
 	InvoicePdfGeneratedV1      = "V1_INVOICE_PDF_GENERATED"
 	InvoicePayV1               = "V1_INVOICE_PAY"
+	InvoiceUpdateV1            = "V1_INVOICE_UPDATE"
+)
+
+const (
+	FieldMaskStatus = "status"
 )
 
 func SimulateInvoiceNewEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, request *invoicepb.SimulateInvoiceRequest) (eventstore.Event, error) {

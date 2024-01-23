@@ -125,6 +125,25 @@ func (s *invoiceService) PdfGeneratedInvoice(ctx context.Context, request *invoi
 	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
 }
 
+func (s *invoiceService) UpdateInvoice(ctx context.Context, request *invoicepb.UpdateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.UpdateInvoice")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.InvoiceId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
+	}
+
+	if _, err := s.invoiceRequestHandler.HandleWithRetry(ctx, request.Tenant, request.InvoiceId, true, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
+}
+
 func (s *invoiceService) PayInvoice(ctx context.Context, request *invoicepb.PayInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.PayInvoiceRequest")
 	defer span.Finish()
