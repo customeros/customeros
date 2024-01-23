@@ -70,6 +70,8 @@ func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any) (any,
 		return nil, a.CreatePdfGeneratedEvent(ctx, r)
 	case *invoicepb.PayInvoiceRequest:
 		return nil, a.PayInvoice(ctx, r)
+	case *invoicepb.UpdateInvoiceRequest:
+		return nil, a.UpdateInvoice(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -207,6 +209,38 @@ func (a *InvoiceAggregate) CreatePdfRequestedEvent(ctx context.Context, r *invoi
 	return a.Apply(event)
 }
 
+func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.UpdateInvoiceRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.UpdateInvoice")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), utils.Now())
+	var fieldsMask []string
+	for _, field := range r.FieldsMask {
+		if field == invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS {
+			fieldsMask = append(fieldsMask, FieldMaskStatus)
+		}
+	}
+	fieldsMask = utils.RemoveDuplicates(fieldsMask)
+	status := InvoiceStatus(r.Status).String()
+
+	event, err := NewInvoiceUpdateEvent(a, updatedAtNotNil, fieldsMask, status)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewUpdateInvoiceEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: r.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    r.AppSource,
+	})
+
+	return a.Apply(event)
+}
+
 func (a *InvoiceAggregate) PayInvoice(ctx context.Context, request *invoicepb.PayInvoiceRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.PayInvoice")
 	defer span.Finish()
@@ -244,6 +278,8 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		return a.onPayInvoice(evt)
 	case InvoicePdfRequestedV1:
 		return nil
+	case InvoiceUpdateV1:
+		return a.onUpdateInvoice(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -312,6 +348,19 @@ func (a *InvoiceAggregate) onPdfGeneratedInvoice(evt eventstore.Event) error {
 	}
 
 	a.Invoice.RepositoryFileId = eventData.RepositoryFileId
+
+	return nil
+}
+
+func (a *InvoiceAggregate) onUpdateInvoice(evt eventstore.Event) error {
+	var eventData InvoiceUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if eventData.UpdateStatus() {
+		a.Invoice.Status = eventData.Status
+	}
 
 	return nil
 }

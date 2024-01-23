@@ -292,9 +292,63 @@ func TestInvoiceEventHandler_OnInvoicePdfGenerated(t *testing.T) {
 	require.NotNil(t, dbNode)
 
 	// verify
-	invoice := neo4jmapper.MapDbNodeToInvoiceEntity(dbNode)
-	require.Equal(t, id, invoice.Id)
-	require.Equal(t, timeNow, invoice.UpdatedAt)
+	invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(dbNode)
+	require.Equal(t, id, invoiceEntity.Id)
+	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
 
-	require.Equal(t, "test", invoice.RepositoryFileId)
+	require.Equal(t, "test", invoiceEntity.RepositoryFileId)
+}
+
+func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelInvoice:      1,
+		neo4jutil.NodeLabelOrganization: 1,
+		neo4jutil.NodeLabelContract:     1,
+	})
+
+	// Prepare the event handler
+	eventHandler := &InvoiceEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+
+	timeNow := utils.Now()
+
+	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, invoiceId)
+	updateEvent, err := invoice.NewInvoiceUpdateEvent(
+		aggregate,
+		timeNow,
+		[]string{invoice.FieldMaskStatus},
+		neo4jenum.InvoiceStatusPaid.String(),
+	)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = eventHandler.OnInvoiceUpdateV1(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelInvoice:                    1,
+		neo4jutil.NodeLabelInvoice + "_" + tenantName: 1,
+	})
+
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoice, invoiceId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+
+	// verify invoice node
+	invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(dbNode)
+	require.Equal(t, invoiceId, invoiceEntity.Id)
+	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
+	require.Equal(t, neo4jenum.InvoiceStatusPaid, invoiceEntity.Status)
 }
