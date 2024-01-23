@@ -1,0 +1,109 @@
+extend type Mutation {
+    organizationPlan_Create(input: OrganizationPlanInput!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlan_Update(input: OrganizationPlanUpdateInput!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlan_Duplicate(id: ID!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlanMilestone_Create(input: OrganizationPlanMilestoneInput!): OrganizationPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlanMilestone_Update(input: OrganizationPlanMilestoneUpdateInput!): OrganizationPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlanMilestone_BulkUpdate(input: [OrganizationPlanMilestoneUpdateInput!]!): [OrganizationPlanMilestone!]!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlanMilestone_Reorder(input: OrganizationPlanMilestoneReorderInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlanMilestone_Duplicate(organizationPlanId: ID!, id: ID!): OrganizationPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Query {
+    organizationPlan(id: ID!): OrganizationPlan! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlans(retired: Boolean): [OrganizationPlan!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type OrganizationPlan implements SourceFields & Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    name:               String!
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+    retired:            Boolean!
+    milestones:         [OrganizationPlanMilestone!]! @goField(forceResolver: true)
+    retiredMilestones:  [OrganizationPlanMilestone!]! @goField(forceResolver: true)
+    statusDetails:      StatusDetails!
+}
+
+type OrganizationPlanMilestone implements SourceFields & Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    name:               String!
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+    order:              Int64!
+    dueDate:            Time!
+    optional:           Boolean!
+    items:              [MilestoneItem!]!
+    retired:            Boolean!
+    statusDetails:      StatusDetails!
+}
+
+type StatusDetails {
+    status: String!
+    updatedAt: Time!
+    text: String!
+}
+
+type MilestoneItem {
+    status: String!
+    updatedAt: Time!
+    text: String!
+}
+
+input StatusDetailsInput {
+    status: String!
+    updatedAt: Time!
+    text: String!
+}
+
+input OrganizationPlanInput {
+    name: String
+    masterPlanId: String
+}
+
+input OrganizationPlanUpdateInput {
+    id: ID!
+    name: String
+    retired: Boolean
+    statusDetails: StatusDetailsInput!
+}
+
+input OrganizationPlanMilestoneInput {
+    organizationPlanId: ID!
+    name: String
+    order: Int64!
+    dueDate: Time!
+    createdAt: Time!
+    optional: Boolean!
+    items: [String!]!
+}
+
+input MilestoneItemInput {
+    status: String!
+    updatedAt: Time!
+    text: String!
+}
+
+input OrganizationPlanMilestoneUpdateInput {
+    organizationPlanId: ID!
+    id: ID!
+    name: String
+    order: Int64
+    dueDate: Time!
+    updatedAt: Time!
+    optional: Boolean
+    retired: Boolean
+    items: [MilestoneItemInput!]!
+    statusDetails: StatusDetailsInput!
+}
+
+input OrganizationPlanMilestoneReorderInput {
+    organizationPlanId: ID!
+    orderedIds: [ID!]!
+}
