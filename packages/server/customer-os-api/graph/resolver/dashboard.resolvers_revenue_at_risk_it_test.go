@@ -388,7 +388,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_2_Opportuniti
 	})
 
 	contractServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
-	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractServiceStartedAt,
 	})
@@ -440,7 +440,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_2_Opportuniti
 	})
 
 	contractServiceStartedAt := neo4jtest.FirstTimeOfMonth(2023, 8)
-	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &contractServiceStartedAt,
 	})

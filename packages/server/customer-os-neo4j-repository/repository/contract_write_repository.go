@@ -34,19 +34,44 @@ type ContractCreateFields struct {
 }
 
 type ContractUpdateFields struct {
-	Name               string                 `json:"name"`
-	ContractUrl        string                 `json:"contractUrl"`
-	Status             string                 `json:"status"`
-	Source             string                 `json:"source"`
-	RenewalPeriods     *int64                 `json:"renewalPeriods"`
-	RenewalCycle       string                 `json:"renewalCycle"`
-	UpdatedAt          time.Time              `json:"updatedAt"`
-	ServiceStartedAt   *time.Time             `json:"serviceStartedAt"`
-	SignedAt           *time.Time             `json:"signedAt"`
-	EndedAt            *time.Time             `json:"endedAt"`
-	BillingCycle       neo4jenum.BillingCycle `json:"billingCycle"`
-	Currency           neo4jenum.Currency     `json:"currency"`
-	InvoicingStartDate *time.Time             `json:"invoicingStartDate,omitempty"`
+	Name                        string                 `json:"name"`
+	ContractUrl                 string                 `json:"contractUrl"`
+	Status                      string                 `json:"status"`
+	Source                      string                 `json:"source"`
+	RenewalPeriods              *int64                 `json:"renewalPeriods"`
+	RenewalCycle                string                 `json:"renewalCycle"`
+	UpdatedAt                   time.Time              `json:"updatedAt"`
+	ServiceStartedAt            *time.Time             `json:"serviceStartedAt"`
+	SignedAt                    *time.Time             `json:"signedAt"`
+	EndedAt                     *time.Time             `json:"endedAt"`
+	BillingCycle                neo4jenum.BillingCycle `json:"billingCycle"`
+	Currency                    neo4jenum.Currency     `json:"currency"`
+	InvoicingStartDate          *time.Time             `json:"invoicingStartDate,omitempty"`
+	AddressLine1                string                 `json:"addressLine1"`
+	AddressLine2                string                 `json:"addressLine2"`
+	Locality                    string                 `json:"locality"`
+	Country                     string                 `json:"country"`
+	Zip                         string                 `json:"zip"`
+	OrganizationLegalName       string                 `json:"organizationLegalName"`
+	InvoiceEmail                string                 `json:"invoiceEmail"`
+	UpdateName                  bool                   `json:"updateName"`
+	UpdateContractUrl           bool                   `json:"updateContractUrl"`
+	UpdateStatus                bool                   `json:"updateStatus"`
+	UpdateRenewalPeriods        bool                   `json:"updateRenewalPeriods"`
+	UpdateRenewalCycle          bool                   `json:"updateRenewalCycle"`
+	UpdateServiceStartedAt      bool                   `json:"updateServiceStartedAt"`
+	UpdateSignedAt              bool                   `json:"updateSignedAt"`
+	UpdateEndedAt               bool                   `json:"updateEndedAt"`
+	UpdateBillingCycle          bool                   `json:"updateBillingCycle"`
+	UpdateCurrency              bool                   `json:"updateCurrency"`
+	UpdateInvoicingStartDate    bool                   `json:"updateInvoicingStartDate"`
+	UpdateAddressLine1          bool                   `json:"updateAddressLine1"`
+	UpdateAddressLine2          bool                   `json:"updateAddressLine2"`
+	UpdateLocality              bool                   `json:"updateLocality"`
+	UpdateCountry               bool                   `json:"updateCountry"`
+	UpdateZip                   bool                   `json:"updateZip"`
+	UpdateOrganizationLegalName bool                   `json:"updateOrganizationLegalName"`
+	UpdateInvoiceEmail          bool                   `json:"updateInvoiceEmail"`
 }
 
 type ContractWriteRepository interface {
@@ -145,38 +170,89 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
 				SET 
-				ct.name = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR ct.name is null OR ct.name = '' THEN $name ELSE ct.name END,	
-				ct.contractUrl = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR ct.contractUrl is null OR ct.contractUrl = '' THEN $contractUrl ELSE ct.contractUrl END,	
-				ct.signedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $signedAt ELSE ct.signedAt END,
-				ct.endedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $endedAt ELSE ct.endedAt END,
-				ct.serviceStartedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $serviceStartedAt ELSE ct.serviceStartedAt END,
-				ct.status = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $status ELSE ct.status END,
-				ct.renewalCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalCycle ELSE ct.renewalCycle END,
-				ct.renewalPeriods = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalPeriods ELSE ct.renewalPeriods END,
-				ct.invoicingStartDate = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $invoicingStartDate ELSE ct.invoicingStartDate END,
-				ct.currency = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $currency ELSE ct.currency END,
-				ct.billingCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $billingCycle ELSE ct.billingCycle END,
 				ct.updatedAt = $updatedAt,
 				ct.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE ct.sourceOfTruth END
 				RETURN ct`
 	params := map[string]any{
-		"tenant":             tenant,
-		"contractId":         contractId,
-		"updatedAt":          data.UpdatedAt,
-		"name":               data.Name,
-		"contractUrl":        data.ContractUrl,
-		"status":             data.Status,
-		"renewalCycle":       data.RenewalCycle,
-		"renewalPeriods":     data.RenewalPeriods,
-		"signedAt":           utils.TimePtrFirstNonNilNillableAsAny(data.SignedAt),
-		"serviceStartedAt":   utils.TimePtrFirstNonNilNillableAsAny(data.ServiceStartedAt),
-		"endedAt":            utils.TimePtrFirstNonNilNillableAsAny(data.EndedAt),
-		"currency":           data.Currency.String(),
-		"billingCycle":       data.BillingCycle.String(),
-		"invoicingStartDate": utils.ToNeo4jDateAsAny(data.InvoicingStartDate),
-		"sourceOfTruth":      data.Source,
-		"overwrite":          data.Source == constants.SourceOpenline,
+		"tenant":        tenant,
+		"contractId":    contractId,
+		"updatedAt":     data.UpdatedAt,
+		"sourceOfTruth": data.Source,
+		"overwrite":     data.Source == constants.SourceOpenline,
 	}
+	if data.UpdateName {
+		cypher += `, ct.name = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR ct.name is null OR ct.name = '' THEN $name ELSE ct.name END `
+		params["name"] = data.Name
+	}
+	if data.UpdateContractUrl {
+		cypher += `, ct.contractUrl = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR ct.contractUrl is null OR ct.contractUrl = '' THEN $contractUrl ELSE ct.contractUrl END `
+		params["contractUrl"] = data.ContractUrl
+	}
+	if data.UpdateStatus {
+		cypher += `, ct.status = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $status ELSE ct.status END `
+		params["status"] = data.Status
+	}
+	if data.UpdateRenewalPeriods {
+		cypher += `, ct.renewalPeriods = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalPeriods ELSE ct.renewalPeriods END `
+		params["renewalPeriods"] = data.RenewalPeriods
+	}
+	if data.UpdateRenewalCycle {
+		cypher += `, ct.renewalCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalCycle ELSE ct.renewalCycle END `
+		params["renewalCycle"] = data.RenewalCycle
+	}
+	if data.UpdateServiceStartedAt {
+		cypher += `, ct.serviceStartedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $serviceStartedAt ELSE ct.serviceStartedAt END `
+		params["serviceStartedAt"] = utils.TimePtrFirstNonNilNillableAsAny(data.ServiceStartedAt)
+	}
+	if data.UpdateSignedAt {
+		cypher += `, ct.signedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $signedAt ELSE ct.signedAt END `
+		params["signedAt"] = utils.TimePtrFirstNonNilNillableAsAny(data.SignedAt)
+	}
+	if data.UpdateEndedAt {
+		cypher += `, ct.endedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $endedAt ELSE ct.endedAt END `
+		params["endedAt"] = utils.TimePtrFirstNonNilNillableAsAny(data.EndedAt)
+	}
+	if data.UpdateBillingCycle {
+		cypher += `, ct.billingCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $billingCycle ELSE ct.billingCycle END `
+		params["billingCycle"] = data.BillingCycle.String()
+	}
+	if data.UpdateCurrency {
+		cypher += `, ct.currency = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $currency ELSE ct.currency END `
+		params["currency"] = data.Currency.String()
+	}
+	if data.UpdateInvoicingStartDate {
+		cypher += `, ct.invoicingStartDate = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $invoicingStartDate ELSE ct.invoicingStartDate END `
+		params["invoicingStartDate"] = utils.ToNeo4jDateAsAny(data.InvoicingStartDate)
+	}
+	if data.UpdateAddressLine1 {
+		cypher += `, ct.addressLine1 = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $addressLine1 ELSE ct.addressLine1 END `
+		params["addressLine1"] = data.AddressLine1
+	}
+	if data.UpdateAddressLine2 {
+		cypher += `, ct.addressLine2 = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $addressLine2 ELSE ct.addressLine2 END `
+		params["addressLine2"] = data.AddressLine2
+	}
+	if data.UpdateLocality {
+		cypher += `, ct.locality = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $locality ELSE ct.locality END `
+		params["locality"] = data.Locality
+	}
+	if data.UpdateCountry {
+		cypher += `, ct.country = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $country ELSE ct.country END `
+		params["country"] = data.Country
+	}
+	if data.UpdateZip {
+		cypher += `, ct.zip = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $zip ELSE ct.zip END `
+		params["zip"] = data.Zip
+	}
+	if data.UpdateOrganizationLegalName {
+		cypher += `, ct.organizationLegalName = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $organizationLegalName ELSE ct.organizationLegalName END `
+		params["organizationLegalName"] = data.OrganizationLegalName
+	}
+	if data.UpdateInvoiceEmail {
+		cypher += `, ct.invoiceEmail = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $invoiceEmail ELSE ct.invoiceEmail END `
+		params["invoiceEmail"] = data.InvoiceEmail
+	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 

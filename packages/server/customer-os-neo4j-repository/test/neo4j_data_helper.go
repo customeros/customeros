@@ -556,7 +556,7 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return locationId
 }
 
-func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity) string {
+func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity) string {
 	contractId := utils.NewUUIDIfEmpty(contract.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (o:Organization {id:$organizationId})
 				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id})<-[:HAS_CONTRACT]-(o)
@@ -579,30 +579,44 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 					c.currency=$currency,
 					c.invoicingStartDate=$invoicingStartDate,
 					c.nextInvoiceDate=$nextInvoiceDate,
-					c.billingCycle=$billingCycle
+					c.billingCycle=$billingCycle,
+					c.addressLine1=$addressLine1,
+					c.addressLine2=$addressLine2,
+					c.zip=$zip,
+					c.locality=$locality,
+					c.country=$country,
+					c.organizationLegalName=$organizationLegalName,
+					c.invoiceEmail=$invoiceEmail
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":                 contractId,
-		"organizationId":     organizationId,
-		"tenant":             tenant,
-		"source":             contract.Source,
-		"sourceOfTruth":      contract.SourceOfTruth,
-		"appSource":          contract.AppSource,
-		"createdAt":          contract.CreatedAt,
-		"updatedAt":          contract.UpdatedAt,
-		"name":               contract.Name,
-		"contractUrl":        contract.ContractUrl,
-		"status":             contract.ContractStatus.String(),
-		"renewalCycle":       contract.RenewalCycle.String(),
-		"renewalPeriods":     contract.RenewalPeriods,
-		"signedAt":           utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
-		"serviceStartedAt":   utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
-		"endedAt":            utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
-		"currency":           contract.Currency.String(),
-		"invoicingStartDate": utils.ToNeo4jDateAsAny(contract.InvoicingStartDate),
-		"nextInvoiceDate":    utils.ToNeo4jDateAsAny(contract.NextInvoiceDate),
-		"billingCycle":       contract.BillingCycle.String(),
+		"id":                    contractId,
+		"organizationId":        organizationId,
+		"tenant":                tenant,
+		"source":                contract.Source,
+		"sourceOfTruth":         contract.SourceOfTruth,
+		"appSource":             contract.AppSource,
+		"createdAt":             contract.CreatedAt,
+		"updatedAt":             contract.UpdatedAt,
+		"name":                  contract.Name,
+		"contractUrl":           contract.ContractUrl,
+		"status":                contract.ContractStatus.String(),
+		"renewalCycle":          contract.RenewalCycle.String(),
+		"renewalPeriods":        contract.RenewalPeriods,
+		"signedAt":              utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
+		"serviceStartedAt":      utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
+		"endedAt":               utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
+		"currency":              contract.Currency.String(),
+		"invoicingStartDate":    utils.ToNeo4jDateAsAny(contract.InvoicingStartDate),
+		"nextInvoiceDate":       utils.ToNeo4jDateAsAny(contract.NextInvoiceDate),
+		"billingCycle":          contract.BillingCycle.String(),
+		"addressLine1":          contract.AddressLine1,
+		"addressLine2":          contract.AddressLine2,
+		"zip":                   contract.Zip,
+		"locality":              contract.Locality,
+		"country":               contract.Country,
+		"organizationLegalName": contract.OrganizationLegalName,
+		"invoiceEmail":          contract.InvoiceEmail,
 	})
 	return contractId
 }
@@ -734,13 +748,13 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 }
 
 func InsertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
-	contractId := CreateContract(ctx, driver, tenant, organizationId, contract)
+	contractId := CreateContractForOrganization(ctx, driver, tenant, organizationId, contract)
 	CreateOpportunityForContract(ctx, driver, tenant, contractId, opportunity)
 	return contractId
 }
 
 func InsertContractWithActiveRenewalOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
-	contractId := CreateContract(ctx, driver, tenant, organizationId, contract)
+	contractId := CreateContractForOrganization(ctx, driver, tenant, organizationId, contract)
 	opportunityId := CreateOpportunityForContract(ctx, driver, tenant, contractId, opportunity)
 	ActiveRenewalOpportunityForContract(ctx, driver, tenant, contractId, opportunityId)
 	return contractId

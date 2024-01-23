@@ -200,7 +200,7 @@ func TestQueryResolver_GCliCache_HasContracts_True(t *testing.T) {
 	})
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))

@@ -26,7 +26,7 @@ func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices(t *testing
 		DefaultCurrency:  neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &referenceDate,
 	})
@@ -63,11 +63,11 @@ func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_Organizati
 		Hide: true,
 	})
 
-	contractId := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleQuarterlyBilling,
 		InvoicingStartDate: &referenceDate,
 	})
-	neo4jtest.CreateContract(ctx, driver, tenant, organizationHidden, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationHidden, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &referenceDate,
 	})
@@ -107,13 +107,13 @@ func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_InvoicingN
 	})
 
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleAnnuallyBilling,
 		InvoicingStartDate: &referenceDate,
 	})
 
 	organizationIdNok := neo4jtest.CreateOrganization(ctx, driver, tenantNok, entity.OrganizationEntity{})
-	neo4jtest.CreateContract(ctx, driver, tenantNok, organizationIdNok, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenantNok, organizationIdNok, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &referenceDate,
 	})
@@ -137,12 +137,12 @@ func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_MissingCur
 		InvoicingEnabled: true,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		Currency:           neo4jenum.CurrencyAUD,
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &referenceDate,
 	})
-	neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &referenceDate,
 	})
@@ -167,11 +167,11 @@ func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_MissingBil
 		DefaultCurrency:  neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &referenceDate,
 	})
-	neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		InvoicingStartDate: &referenceDate,
 	})
 
@@ -197,17 +197,17 @@ func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_CheckByNex
 		DefaultCurrency:  neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractIdYesterday := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &referenceDate,
 		NextInvoiceDate:    &yesterday,
 	})
-	contractIdToday := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdToday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &referenceDate,
 		NextInvoiceDate:    &referenceDate,
 	})
-	contractIdTomorrow := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdTomorrow := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &referenceDate,
 		NextInvoiceDate:    &tomorrow,
@@ -239,19 +239,19 @@ func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_CheckByInv
 		DefaultCurrency:  neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractIdYesterday := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &yesterday,
 	})
-	contractIdToday := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdToday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &today,
 	})
-	contractIdTomorrow := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdTomorrow := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &tomorrow,
 	})
-	contractIdNoInvoicingStartDate := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdNoInvoicingStartDate := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle: neo4jenum.BillingCycleMonthlyBilling,
 	})
 
@@ -281,17 +281,17 @@ func TestContractReadRepository_GetContractsToGenerateOnCycleInvoices_CheckByCon
 		DefaultCurrency:  neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractIdYesterday := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &today,
 		EndedAt:            &yesterday,
 	})
-	contractIdToday := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdToday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &today,
 		EndedAt:            &today,
 	})
-	contractIdTomorrow := neo4jtest.CreateContract(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdTomorrow := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
 		BillingCycle:       neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate: &today,
 		EndedAt:            &tomorrow,

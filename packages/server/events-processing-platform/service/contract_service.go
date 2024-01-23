@@ -3,7 +3,9 @@ package service
 import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
@@ -23,14 +25,16 @@ type contractService struct {
 	contractpb.UnimplementedContractGrpcServiceServer
 	log                     logger.Logger
 	contractCommandHandlers *command_handler.CommandHandlers
+	contractRequestHandler  contract.ContractRequestHandler
 	aggregateStore          eventstore.AggregateStore
 }
 
-func NewContractService(log logger.Logger, commandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore) *contractService {
+func NewContractService(log logger.Logger, commandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config) *contractService {
 	return &contractService{
 		log:                     log,
 		contractCommandHandlers: commandHandlers,
 		aggregateStore:          aggregateStore,
+		contractRequestHandler:  contract.NewContractRequestHandler(log, aggregateStore, cfg.Utils),
 	}
 }
 
@@ -75,10 +79,10 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 			CreatedByUserId:    utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
 			ServiceStartedAt:   utils.TimestampProtoToTimePtr(request.ServiceStartedAt),
 			SignedAt:           utils.TimestampProtoToTimePtr(request.SignedAt),
-			RenewalCycle:       model.RenewalCycle(request.RenewalCycle),
+			RenewalCycle:       model.RenewalCycle(request.RenewalCycle).String(),
 			RenewalPeriods:     request.RenewalPeriods,
 			Currency:           request.Currency,
-			BillingCycle:       model.BillingCycle(request.BillingCycle),
+			BillingCycle:       model.BillingCycle(request.BillingCycle).String(),
 			InvoicingStartDate: utils.TimestampProtoToTimePtr(request.InvoicingStartDate),
 		},
 		source,
@@ -108,35 +112,9 @@ func (s *contractService) UpdateContract(ctx context.Context, request *contractp
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	externalSystem := commonmodel.ExternalSystem{}
-	externalSystem.FromGrpc(request.ExternalSystemFields)
-
-	source := commonmodel.Source{}
-	source.FromGrpc(request.SourceFields)
-
 	// Create update contract command
-	updateContractCommand := command.NewUpdateContractCommand(
-		request.Id,
-		request.Tenant,
-		request.LoggedInUserId,
-		model.ContractDataFields{
-			Name:               request.Name,
-			ServiceStartedAt:   utils.TimestampProtoToTimePtr(request.ServiceStartedAt),
-			SignedAt:           utils.TimestampProtoToTimePtr(request.SignedAt),
-			EndedAt:            utils.TimestampProtoToTimePtr(request.EndedAt),
-			RenewalCycle:       model.RenewalCycle(request.RenewalCycle),
-			ContractUrl:        request.ContractUrl,
-			RenewalPeriods:     request.RenewalPeriods,
-			Currency:           request.Currency,
-			BillingCycle:       model.BillingCycle(request.BillingCycle),
-			InvoicingStartDate: utils.TimestampProtoToTimePtr(request.InvoicingStartDate),
-		},
-		source,
-		externalSystem,
-		utils.TimestampProtoToTimePtr(request.UpdatedAt),
-	)
 
-	if err := s.contractCommandHandlers.UpdateContract.Handle(ctx, updateContractCommand); err != nil {
+	if _, err := s.contractRequestHandler.HandleWithRetry(ctx, request.Tenant, request.Id, true, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)

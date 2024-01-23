@@ -1524,7 +1524,7 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "org name"})
 	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "just another org"})
-	contractId1 := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+	contractId1 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		Name:             "contract 1",
 		CreatedAt:        now,
 		UpdatedAt:        now,
@@ -1537,7 +1537,7 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 		Source:           neo4jentity.DataSourceOpenline,
 		AppSource:        "test1",
 	})
-	contractId2 := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 		Name:             "contract 2",
 		CreatedAt:        yesterday,
 		UpdatedAt:        yesterday,
@@ -1550,7 +1550,7 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 		Source:           neo4jentity.DataSourceOpenline,
 		AppSource:        "test2",
 	})
-	contractId3 := neo4jtest.CreateContract(ctx, driver, tenantName, orgId2, neo4jentity.ContractEntity{})
+	contractId3 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId2, neo4jentity.ContractEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization":           2,
@@ -1651,8 +1651,8 @@ func TestQueryResolver_Organization_WithInvoices(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organization1Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contract1Id := neo4jtest.CreateContract(ctx, driver, tenantName, organization1Id, neo4jentity.ContractEntity{})
-	contract2Id := neo4jtest.CreateContract(ctx, driver, tenantName, organization1Id, neo4jentity.ContractEntity{})
+	contract1Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization1Id, neo4jentity.ContractEntity{})
+	contract2Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization1Id, neo4jentity.ContractEntity{})
 	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract1Id, neo4jentity.InvoiceEntity{
 		Number: "1",
 	})
@@ -1661,7 +1661,7 @@ func TestQueryResolver_Organization_WithInvoices(t *testing.T) {
 	})
 
 	organization2Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contrac3tId := neo4jtest.CreateContract(ctx, driver, tenantName, organization2Id, neo4jentity.ContractEntity{})
+	contrac3tId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization2Id, neo4jentity.ContractEntity{})
 	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contrac3tId, neo4jentity.InvoiceEntity{
 		Number: "3",
 	})

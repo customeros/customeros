@@ -8,7 +8,7 @@ import (
 )
 
 func ContractWasInserted(ctx context.Context, contractId, organizationId string) {
-	cid := test.CreateContract(ctx, driver, tenantName, organizationId, entity.ContractEntity{
+	cid := test.CreateContractForOrganization(ctx, driver, tenantName, organizationId, entity.ContractEntity{
 		Id: contractId,
 	})
 	fmt.Sprintf(cid)
