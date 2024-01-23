@@ -74,6 +74,9 @@ func (eb *EventBufferWatcher) Park(
 	uuid string,
 	expiryTimestamp time.Time,
 ) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.Park")
+	defer span.Finish()
+	tracing.LogObjectAsJson(span, "parkedEvent", uuid)
 	eventBuffer := entity.EventBuffer{
 		Tenant:             tenant,
 		UUID:               uuid,
@@ -92,6 +95,8 @@ func (eb *EventBufferWatcher) Park(
 
 // Dispatch dispatches all expired events from event_buffer table, and delete them after dispatching
 func (eb *EventBufferWatcher) Dispatch(ctx context.Context) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.Dispatch")
+	defer span.Finish()
 	now := time.Now().UTC()
 	eventBuffers, err := eb.repositories.EventBufferRepository.GetByExpired(now)
 	if err != nil {
@@ -100,6 +105,7 @@ func (eb *EventBufferWatcher) Dispatch(ctx context.Context) error {
 	if len(eventBuffers) == 0 {
 		return nil
 	}
+	tracing.LogObjectAsJson(span, "expiredEvents", eventBuffers)
 	for _, eventBuffer := range eventBuffers {
 		err := eb.HandleEvent(ctx, eventBuffer)
 		if err != nil {
