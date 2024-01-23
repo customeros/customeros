@@ -22,7 +22,6 @@ import (
 const APP_SOURCE = "user-admin-api"
 
 func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
-
 	personalEmailProviders, err := services.CommonServices.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 	if err != nil {
 		panic(err)
@@ -76,9 +75,9 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			return
 		}
 
+		// Handle Google provider
 		if signInRequest.Provider == "google" {
 			if isRequestEnablingOAuthSync(signInRequest) {
-				//TODO Move this logic to a service
 				var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
 				if oauthToken == nil {
 					oauthToken = &entity.OAuthTokenEntity{}
@@ -101,11 +100,34 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				}
 				services.AuthServices.OAuthTokenService.Save(*oauthToken)
 			}
+		} else if signInRequest.Provider == "azure-ad" {
+			var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
+			if oauthToken == nil {
+				oauthToken = &entity.OAuthTokenEntity{}
+			}
+			oauthToken.Provider = signInRequest.Provider
+			oauthToken.TenantName = *tenantName
+			oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
+			oauthToken.EmailAddress = signInRequest.Email
+			oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
+			oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
+			oauthToken.IdToken = signInRequest.OAuthToken.IdToken
+			oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
+			oauthToken.Scope = signInRequest.OAuthToken.Scope
+			oauthToken.NeedsManualRefresh = false
+			services.AuthServices.OAuthTokenService.Save(*oauthToken)
+		} else {
+			log.Printf("Unsupported provider: %s", signInRequest.Provider)
+			ginContext.JSON(http.StatusBadRequest, gin.H{
+				"result": fmt.Sprintf("Unsupported provider: %s", signInRequest.Provider),
+			})
+			return
 		}
 
 		ginContext.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
-	rg.POST("/google/revoke", func(ginContext *gin.Context) {
+
+	rg.POST("/revoke", func(ginContext *gin.Context) {
 		log.Printf("revoke oauth token")
 
 		apiKey := ginContext.GetHeader("X-Openline-Api-Key")
@@ -126,30 +148,51 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 		}
 		log.Printf("parsed json: %v", revokeRequest)
 
-		var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(revokeRequest.ProviderAccountId, "google")
-
-		var resp *http.Response
-		var err error
-
-		if oauthToken.RefreshToken != "" {
-			url := fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
-			resp, err = http.Get(url)
-			if err != nil {
-				ginContext.JSON(http.StatusInternalServerError, gin.H{})
-				return
-			}
+		var provider string
+		switch revokeRequest.ProviderAccountId {
+		case "google":
+			provider = "google"
+		case "azure-ad":
+			provider = "azure-ad"
+		default:
+			log.Printf("Unsupported provider: %s", revokeRequest.ProviderAccountId)
+			ginContext.JSON(http.StatusBadRequest, gin.H{
+				"result": fmt.Sprintf("Unsupported provider: %s", revokeRequest.ProviderAccountId),
+			})
+			return
 		}
 
-		if resp == nil || resp.StatusCode == 200 {
-			err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(revokeRequest.ProviderAccountId, "google")
-			if err != nil {
-				ginContext.JSON(http.StatusInternalServerError, gin.H{})
-				return
+		var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(revokeRequest.ProviderAccountId, provider)
+
+		if oauthToken.RefreshToken != "" {
+			// Handle revocation based on provider
+			var revocationURL string
+			switch provider {
+			case "google":
+				revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
+			case "azure-ad":
+				revocationURL = fmt.Sprintf("https://graph.microsoft.com/v1.0/me/revokeSignInSessions")
 			}
-		} else {
-			if resp != nil && resp.StatusCode != 200 {
-				ginContext.JSON(http.StatusInternalServerError, gin.H{})
-				return
+
+			if revocationURL != "" {
+				resp, err := http.Get(revocationURL)
+				if err != nil {
+					ginContext.JSON(http.StatusInternalServerError, gin.H{})
+					return
+				}
+
+				if resp.StatusCode == http.StatusOK {
+					// Successfully revoked, delete the token
+					err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(revokeRequest.ProviderAccountId, provider)
+					if err != nil {
+						ginContext.JSON(http.StatusInternalServerError, gin.H{})
+						return
+					}
+				} else {
+					// Revocation failed
+					ginContext.JSON(http.StatusInternalServerError, gin.H{})
+					return
+				}
 			}
 		}
 
