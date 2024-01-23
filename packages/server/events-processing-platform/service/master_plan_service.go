@@ -176,7 +176,7 @@ func (s *masterPlanService) UpdateMasterPlanMilestone(ctx context.Context, reque
 
 func extractMasterPlanFieldsMask(fields []masterplanpb.MasterPlanFieldMask) []string {
 	fieldsMask := make([]string, 0)
-	if fields == nil || len(fields) == 0 {
+	if len(fields) == 0 {
 		return fieldsMask
 	}
 	if containsMasterPlanMaskFieldAll(fields) {
@@ -204,7 +204,7 @@ func containsMasterPlanMaskFieldAll(fields []masterplanpb.MasterPlanFieldMask) b
 
 func extractMasterPlanMilestoneFieldsMask(fields []masterplanpb.MasterPlanMilestoneFieldMask) []string {
 	fieldsMask := make([]string, 0)
-	if fields == nil || len(fields) == 0 {
+	if len(fields) == 0 {
 		return fieldsMask
 	}
 	if containsMasterPlanMilestoneMaskFieldAll(fields) {

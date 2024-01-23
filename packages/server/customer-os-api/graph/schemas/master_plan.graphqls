@@ -1,5 +1,6 @@
 extend type Mutation {
     masterPlan_Create(input: MasterPlanInput!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    masterPlan_CreateDefault(input: MasterPlanInput!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlan_Update(input: MasterPlanUpdateInput!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlan_Duplicate(id: ID!): MasterPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     masterPlanMilestone_Create(input: MasterPlanMilestoneInput!): MasterPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
@@ -32,6 +33,7 @@ type MasterPlanService interface {
 	GetMasterPlanMilestonesForMasterPlans(ctx context.Context, masterPlanIds []string) (*neo4jentity.MasterPlanMilestoneEntities, error)
 	ReorderMasterPlanMilestones(ctx context.Context, masterPlanId string, masterPlanMilestoneIds []string) error
 	DuplicateMasterPlanMilestone(ctx context.Context, masterPlanId, sourceMasterPlanMilestoneId string) (string, error)
+	CreateDefaultMasterPlan(ctx context.Context) (string, error)
 }
 type masterPlanService struct {
 	log          logger.Logger
@@ -458,4 +460,67 @@ func (s *masterPlanService) DuplicateMasterPlan(ctx context.Context, sourceMaste
 	}
 
 	return response.Id, nil
+}
+
+func (s *masterPlanService) CreateDefaultMasterPlan(ctx context.Context) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanService.CreateDefaultMasterPlan")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	grpcRequest := masterplanpb.CreateMasterPlanGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		SourceFields: &commonpb.SourceFields{
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		},
+		Name: "Default Master Plan",
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := s.grpcClients.MasterPlanClient.CreateMasterPlan(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return "", err
+	}
+
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
+	mid := response.Id
+
+	milestones := []string{"milestone1", "milestone2", "milestone3"}
+
+	for _, milestone := range milestones {
+		grpcRequestCreateMilestone := NewDefaultMasterPlanMilestone(mid, milestone, common.GetUserIdFromContext(ctx), common.GetTenantFromContext(ctx), 1, []string{"item1", "item2"})
+		_, err = s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequestCreateMilestone)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error from events processing: %s", err.Error())
+		}
+	}
+	return response.Id, nil
+}
+
+func NewDefaultMasterPlanMilestone(
+	mid,
+	name,
+	loggedInUserId,
+	tenant string,
+	order int64,
+	items []string,
+) masterplanpb.CreateMasterPlanMilestoneGrpcRequest {
+	return masterplanpb.CreateMasterPlanMilestoneGrpcRequest{
+		Name:           name,
+		Optional:       false,
+		Order:          order,
+		DurationHours:  24,
+		Items:          items,
+		MasterPlanId:   mid,
+		LoggedInUserId: loggedInUserId,
+		SourceFields: &commonpb.SourceFields{
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		},
+		Tenant: tenant,
+	}
 }
