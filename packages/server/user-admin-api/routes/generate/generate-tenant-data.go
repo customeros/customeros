@@ -40,20 +40,29 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 
 		//users creation
 		for _, user := range sourceData.Users {
-			_, err := services.CustomerOsClient.CreateUser(&cosModel.UserInput{
-				FirstName: user.FirstName,
-				LastName:  user.LastName,
-				Email: cosModel.EmailInput{
-					Email: user.Email,
-				},
-				AppSource:       &appSource,
-				ProfilePhotoURL: user.ProfilePhotoURL,
-			}, tenant, []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner})
+			userResponse, err := services.CustomerOsClient.GetUserByEmail(tenant, user.Email)
 			if err != nil {
 				context.JSON(500, gin.H{
 					"error": err.Error(),
 				})
 				return
+			}
+			if userResponse == nil {
+				_, err := services.CustomerOsClient.CreateUser(&cosModel.UserInput{
+					FirstName: user.FirstName,
+					LastName:  user.LastName,
+					Email: cosModel.EmailInput{
+						Email: user.Email,
+					},
+					AppSource:       &appSource,
+					ProfilePhotoURL: user.ProfilePhotoURL,
+				}, tenant, []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner})
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
 			}
 		}
 
