@@ -187,7 +187,7 @@ func (r *invoiceWriteRepository) UpdateInvoice(ctx context.Context, tenant, invo
 		"invoiceId": invoiceId,
 		"updatedAt": data.UpdatedAt,
 	}
-	if data.UpdateStatus {
+	if data.UpdateStatus && data.Status.String() != "" {
 		cypher += `, i.status=$status`
 		params["status"] = data.Status.String()
 	}

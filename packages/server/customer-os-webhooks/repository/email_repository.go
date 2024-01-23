@@ -13,8 +13,11 @@ import (
 )
 
 type EmailRepository interface {
+	// Deprecated
 	Exists(ctx context.Context, tenant, email string) (bool, error)
+	// Deprecated
 	GetById(ctx context.Context, emailId string) (*dbtype.Node, error)
+	// Deprecated
 	GetByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
 }
 
