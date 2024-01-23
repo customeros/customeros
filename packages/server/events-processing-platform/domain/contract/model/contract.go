@@ -9,41 +9,55 @@ import (
 
 // Contract represents the state of a contract aggregate.
 type Contract struct {
-	ID                 string                       `json:"id"`
-	Tenant             string                       `json:"tenant"`
-	OrganizationId     string                       `json:"organizationId"`
-	Name               string                       `json:"name"`
-	ContractUrl        string                       `json:"contractUrl"`
-	CreatedByUserId    string                       `json:"createdByUserId"`
-	CreatedAt          time.Time                    `json:"createdAt"`
-	UpdatedAt          time.Time                    `json:"updatedAt"`
-	ServiceStartedAt   *time.Time                   `json:"serviceStartedAt,omitempty"`
-	SignedAt           *time.Time                   `json:"signedAt,omitempty"`
-	EndedAt            *time.Time                   `json:"endedAt,omitempty"`
-	RenewalCycle       string                       `json:"renewalCycle"`
-	RenewalPeriods     *int64                       `json:"renewalPeriods"`
-	Status             string                       `json:"status"`
-	Source             commonmodel.Source           `json:"source"`
-	ExternalSystems    []commonmodel.ExternalSystem `json:"externalSystems"`
-	Currency           string                       `json:"currency"`
-	BillingCycle       string                       `json:"billingCycle"`
-	InvoicingStartDate *time.Time                   `json:"invoicingStartDate,omitempty"`
+	ID                    string                       `json:"id"`
+	Tenant                string                       `json:"tenant"`
+	OrganizationId        string                       `json:"organizationId"`
+	Name                  string                       `json:"name"`
+	ContractUrl           string                       `json:"contractUrl"`
+	CreatedByUserId       string                       `json:"createdByUserId"`
+	CreatedAt             time.Time                    `json:"createdAt"`
+	UpdatedAt             time.Time                    `json:"updatedAt"`
+	ServiceStartedAt      *time.Time                   `json:"serviceStartedAt,omitempty"`
+	SignedAt              *time.Time                   `json:"signedAt,omitempty"`
+	EndedAt               *time.Time                   `json:"endedAt,omitempty"`
+	RenewalCycle          string                       `json:"renewalCycle"`
+	RenewalPeriods        *int64                       `json:"renewalPeriods"`
+	Status                string                       `json:"status"`
+	Source                commonmodel.Source           `json:"source"`
+	ExternalSystems       []commonmodel.ExternalSystem `json:"externalSystems"`
+	Currency              string                       `json:"currency"`
+	BillingCycle          string                       `json:"billingCycle"`
+	InvoicingStartDate    *time.Time                   `json:"invoicingStartDate,omitempty"`
+	AddressLine1          string                       `json:"addressLine1"`
+	AddressLine2          string                       `json:"addressLine2"`
+	Locality              string                       `json:"locality"`
+	Country               string                       `json:"country"`
+	Zip                   string                       `json:"zip"`
+	OrganizationLegalName string                       `json:"organizationLegalName"`
+	InvoiceEmail          string                       `json:"invoiceEmail"`
 }
 
 type ContractDataFields struct {
-	OrganizationId     string
-	Name               string
-	ContractUrl        string
-	CreatedByUserId    string
-	ServiceStartedAt   *time.Time
-	SignedAt           *time.Time
-	EndedAt            *time.Time
-	RenewalCycle       RenewalCycle
-	RenewalPeriods     *int64
-	Status             ContractStatus
-	BillingCycle       BillingCycle
-	Currency           string
-	InvoicingStartDate *time.Time
+	OrganizationId        string
+	Name                  string
+	ContractUrl           string
+	CreatedByUserId       string
+	ServiceStartedAt      *time.Time
+	SignedAt              *time.Time
+	EndedAt               *time.Time
+	RenewalCycle          string
+	RenewalPeriods        *int64
+	Status                ContractStatus
+	BillingCycle          string
+	Currency              string
+	InvoicingStartDate    *time.Time
+	AddressLine1          string `json:"addressLine1"`
+	AddressLine2          string `json:"addressLine2"`
+	Locality              string `json:"locality"`
+	Country               string `json:"country"`
+	Zip                   string `json:"zip"`
+	OrganizationLegalName string `json:"organizationLegalName"`
+	InvoiceEmail          string `json:"invoiceEmail"`
 }
 
 // ContractStatus represents the status of a contract.
@@ -78,11 +92,11 @@ func (rc RenewalCycle) String() string {
 	case NoneRenewal:
 		return ""
 	case MonthlyRenewal:
-		return string(enum.RenewalCycleMonthlyRenewal)
+		return enum.RenewalCycleMonthlyRenewal.String()
 	case QuarterlyRenewal:
-		return string(enum.RenewalCycleQuarterlyRenewal)
+		return enum.RenewalCycleQuarterlyRenewal.String()
 	case AnnuallyRenewal:
-		return string(enum.RenewalCycleAnnualRenewal)
+		return enum.RenewalCycleAnnualRenewal.String()
 	default:
 		return ""
 	}

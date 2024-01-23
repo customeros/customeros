@@ -7,26 +7,32 @@ import (
 )
 
 type ContractEntity struct {
-	Id                 string
-	Name               string
-	CreatedAt          time.Time
-	UpdatedAt          time.Time
-	ServiceStartedAt   *time.Time
-	SignedAt           *time.Time
-	EndedAt            *time.Time
-	RenewalCycle       enum.RenewalCycle
-	RenewalPeriods     *int64
-	ContractStatus     enum.ContractStatus
-	Source             DataSource
-	SourceOfTruth      DataSource
-	AppSource          string
-	ContractUrl        string
-	InvoicingStartDate *time.Time
-	NextInvoiceDate    *time.Time
-	BillingCycle       enum.BillingCycle
-	Currency           enum.Currency
-
+	Id                              string
+	Name                            string
+	CreatedAt                       time.Time
+	UpdatedAt                       time.Time
+	ServiceStartedAt                *time.Time
+	SignedAt                        *time.Time
+	EndedAt                         *time.Time
+	RenewalCycle                    enum.RenewalCycle
+	RenewalPeriods                  *int64
+	ContractStatus                  enum.ContractStatus
+	Source                          DataSource
+	SourceOfTruth                   DataSource
+	AppSource                       string
+	ContractUrl                     string
+	InvoicingStartDate              *time.Time
+	NextInvoiceDate                 *time.Time
+	BillingCycle                    enum.BillingCycle
+	Currency                        enum.Currency
 	TriggeredOnboardingStatusChange bool
+	AddressLine1                    string
+	AddressLine2                    string
+	Zip                             string
+	Locality                        string
+	Country                         string
+	OrganizationLegalName           string
+	InvoiceEmail                    string
 
 	DataloaderKey string
 }

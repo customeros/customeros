@@ -27,7 +27,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := uuid.New().String()
 	calledCreateContract := false
 
@@ -62,7 +62,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 			require.Equal(t, timestamppb.New(expectedInvoicingStartDate), contract.InvoicingStartDate)
 
 			calledCreateContract = true
-			neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+			neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
 				Id: contractId,
 			})
 			return &contractpb.ContractIdGrpcResponse{
@@ -95,8 +95,8 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	calledUpdateContract := false
 
 	contractServiceCallbacks := events_platform.MockContractServiceCallbacks{
@@ -158,8 +158,16 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	yesterday := now.Add(time.Duration(-24) * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
+		AddressLine1:          "address line 1",
+		AddressLine2:          "address line 2",
+		Zip:                   "zip",
+		Locality:              "locality",
+		Country:               "country",
+		OrganizationLegalName: "organization legal name",
+		InvoiceEmail:          "invoice email",
+	})
 
 	serviceLineItemId1 := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
 		Name:      "service line item 1",
@@ -199,11 +207,19 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &contractStruct)
 	require.Nil(t, err)
 
-	contract := contractStruct.Contract
-	require.NotNil(t, contract)
-	require.Equal(t, 2, len(contract.ServiceLineItems))
+	contractEntity := contractStruct.Contract
+	require.NotNil(t, contractEntity)
+	require.Equal(t, contractId, contractEntity.ID)
+	require.Equal(t, "address line 1", *contractEntity.AddressLine1)
+	require.Equal(t, "address line 2", *contractEntity.AddressLine2)
+	require.Equal(t, "zip", *contractEntity.Zip)
+	require.Equal(t, "locality", *contractEntity.Locality)
+	require.Equal(t, "country", *contractEntity.Country)
+	require.Equal(t, "organization legal name", *contractEntity.OrganizationLegalName)
+	require.Equal(t, "invoice email", *contractEntity.InvoiceEmail)
+	require.Equal(t, 2, len(contractEntity.ServiceLineItems))
 
-	firstServiceLineItem := contract.ServiceLineItems[0]
+	firstServiceLineItem := contractEntity.ServiceLineItems[0]
 	require.Equal(t, serviceLineItemId1, firstServiceLineItem.ID)
 	require.Equal(t, "service line item 1", firstServiceLineItem.Name)
 	require.Equal(t, yesterday, firstServiceLineItem.CreatedAt)
@@ -214,7 +230,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, firstServiceLineItem.Source)
 	require.Equal(t, "test1", firstServiceLineItem.AppSource)
 
-	secondServiceLineItem := contract.ServiceLineItems[1]
+	secondServiceLineItem := contractEntity.ServiceLineItems[1]
 	require.Equal(t, serviceLineItemId2, secondServiceLineItem.ID)
 	require.Equal(t, "service line item 2", secondServiceLineItem.Name)
 	require.Equal(t, now, secondServiceLineItem.CreatedAt)
@@ -234,8 +250,8 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 	yesterday := now.Add(time.Duration(-24) * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContract(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
 	opportunityId1 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
 		Name:          "oppo 1",

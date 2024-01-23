@@ -29,6 +29,13 @@ type Contract implements Node {
     currency:           Currency
     invoicingStartDate: Time
     billingCycle:       ContractBillingCycle
+    addressLine1:       String
+    addressLine2:       String
+    locality:           String
+    country:            String
+    zip:                String
+    organizationLegalName: String
+    invoiceEmail:       String
 }
 
 input ContractInput {
@@ -59,6 +66,13 @@ input ContractUpdateInput {
     currency:           Currency
     invoicingStartDate: Time
     billingCycle:       ContractBillingCycle
+    addressLine1:       String
+    addressLine2:       String
+    locality:           String
+    country:            String
+    zip:                String
+    organizationLegalName: String
+    invoiceEmail:       String
 }
 
 enum ContractRenewalCycle {

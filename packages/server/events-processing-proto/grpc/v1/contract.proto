@@ -15,6 +15,27 @@ enum RenewalCycle {
   QUARTERLY_RENEWAL = 3;
 }
 
+enum ContractFieldMask {
+  CONTRACT_FIELD_NONE = 0; // No property, ignored by the server
+  CONTRACT_FIELD_NAME = 1;
+  CONTRACT_FIELD_SERVICE_STARTED_AT = 2;
+  CONTRACT_FIELD_SIGNED_AT = 3;
+  CONTRACT_FIELD_ENDED_AT = 4;
+  CONTRACT_FIELD_RENEWAL_CYCLE = 5;
+  CONTRACT_FIELD_CONTRACT_URL = 6;
+  CONTRACT_FIELD_RENEWAL_PERIODS = 7;
+  CONTRACT_FIELD_BILLING_CYCLE = 8;
+  CONTRACT_FIELD_INVOICING_START_DATE = 9;
+  CONTRACT_FIELD_CURRENCY = 10;
+  CONTRACT_FIELD_ADDRESS_LINE_1 = 11;
+  CONTRACT_FIELD_ADDRESS_LINE_2 = 12;
+  CONTRACT_FIELD_LOCALITY = 13;
+  CONTRACT_FIELD_COUNTRY = 14;
+  CONTRACT_FIELD_ZIP = 15;
+  CONTRACT_FIELD_ORGANIZATION_LEGAL_NAME = 16;
+  CONTRACT_FIELD_INVOICE_EMAIL = 17;
+}
+
 // CreateContract request message
 message CreateContractGrpcRequest {
   string tenant = 1;
@@ -53,6 +74,14 @@ message UpdateContractGrpcRequest {
   BillingCycle billingCycle = 14;
   google.protobuf.Timestamp invoicingStartDate = 15;
   string currency = 16;
+  string addressLine1 = 17;
+  string addressLine2 = 18;
+  string locality = 19;
+  string country = 20;
+  string zip = 21;
+  string organizationLegalName = 22;
+  string invoiceEmail = 23;
+  repeated ContractFieldMask fieldsMask = 24;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {

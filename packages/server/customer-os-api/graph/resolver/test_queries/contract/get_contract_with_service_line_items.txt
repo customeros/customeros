@@ -1,6 +1,13 @@
 query GetContract($contractId: ID!) {
   contract(id: $contractId) {
     id
+    addressLine1
+    addressLine2
+    locality
+    country
+    zip
+    organizationLegalName
+    invoiceEmail
     serviceLineItems {
       id
       createdAt

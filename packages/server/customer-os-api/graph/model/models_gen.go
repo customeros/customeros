@@ -411,28 +411,35 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Contract struct {
-	ID                 string                `json:"id"`
-	CreatedAt          time.Time             `json:"createdAt"`
-	UpdatedAt          time.Time             `json:"updatedAt"`
-	ServiceStartedAt   *time.Time            `json:"serviceStartedAt,omitempty"`
-	SignedAt           *time.Time            `json:"signedAt,omitempty"`
-	EndedAt            *time.Time            `json:"endedAt,omitempty"`
-	Name               string                `json:"name"`
-	RenewalCycle       ContractRenewalCycle  `json:"renewalCycle"`
-	RenewalPeriods     *int64                `json:"renewalPeriods,omitempty"`
-	Status             ContractStatus        `json:"status"`
-	ServiceLineItems   []*ServiceLineItem    `json:"serviceLineItems,omitempty"`
-	Opportunities      []*Opportunity        `json:"opportunities,omitempty"`
-	Owner              *User                 `json:"owner,omitempty"`
-	CreatedBy          *User                 `json:"createdBy,omitempty"`
-	Source             DataSource            `json:"source"`
-	SourceOfTruth      DataSource            `json:"sourceOfTruth"`
-	AppSource          string                `json:"appSource"`
-	ExternalLinks      []*ExternalSystem     `json:"externalLinks"`
-	ContractURL        *string               `json:"contractUrl,omitempty"`
-	Currency           *Currency             `json:"currency,omitempty"`
-	InvoicingStartDate *time.Time            `json:"invoicingStartDate,omitempty"`
-	BillingCycle       *ContractBillingCycle `json:"billingCycle,omitempty"`
+	ID                    string                `json:"id"`
+	CreatedAt             time.Time             `json:"createdAt"`
+	UpdatedAt             time.Time             `json:"updatedAt"`
+	ServiceStartedAt      *time.Time            `json:"serviceStartedAt,omitempty"`
+	SignedAt              *time.Time            `json:"signedAt,omitempty"`
+	EndedAt               *time.Time            `json:"endedAt,omitempty"`
+	Name                  string                `json:"name"`
+	RenewalCycle          ContractRenewalCycle  `json:"renewalCycle"`
+	RenewalPeriods        *int64                `json:"renewalPeriods,omitempty"`
+	Status                ContractStatus        `json:"status"`
+	ServiceLineItems      []*ServiceLineItem    `json:"serviceLineItems,omitempty"`
+	Opportunities         []*Opportunity        `json:"opportunities,omitempty"`
+	Owner                 *User                 `json:"owner,omitempty"`
+	CreatedBy             *User                 `json:"createdBy,omitempty"`
+	Source                DataSource            `json:"source"`
+	SourceOfTruth         DataSource            `json:"sourceOfTruth"`
+	AppSource             string                `json:"appSource"`
+	ExternalLinks         []*ExternalSystem     `json:"externalLinks"`
+	ContractURL           *string               `json:"contractUrl,omitempty"`
+	Currency              *Currency             `json:"currency,omitempty"`
+	InvoicingStartDate    *time.Time            `json:"invoicingStartDate,omitempty"`
+	BillingCycle          *ContractBillingCycle `json:"billingCycle,omitempty"`
+	AddressLine1          *string               `json:"addressLine1,omitempty"`
+	AddressLine2          *string               `json:"addressLine2,omitempty"`
+	Locality              *string               `json:"locality,omitempty"`
+	Country               *string               `json:"country,omitempty"`
+	Zip                   *string               `json:"zip,omitempty"`
+	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
+	InvoiceEmail          *string               `json:"invoiceEmail,omitempty"`
 }
 
 func (Contract) IsNode()            {}
@@ -454,18 +461,25 @@ type ContractInput struct {
 }
 
 type ContractUpdateInput struct {
-	ContractID         string                `json:"contractId"`
-	Name               *string               `json:"name,omitempty"`
-	ContractURL        *string               `json:"contractUrl,omitempty"`
-	RenewalCycle       *ContractRenewalCycle `json:"renewalCycle,omitempty"`
-	RenewalPeriods     *int64                `json:"renewalPeriods,omitempty"`
-	ServiceStartedAt   *time.Time            `json:"serviceStartedAt,omitempty"`
-	SignedAt           *time.Time            `json:"signedAt,omitempty"`
-	EndedAt            *time.Time            `json:"endedAt,omitempty"`
-	AppSource          *string               `json:"appSource,omitempty"`
-	Currency           *Currency             `json:"currency,omitempty"`
-	InvoicingStartDate *time.Time            `json:"invoicingStartDate,omitempty"`
-	BillingCycle       *ContractBillingCycle `json:"billingCycle,omitempty"`
+	ContractID            string                `json:"contractId"`
+	Name                  *string               `json:"name,omitempty"`
+	ContractURL           *string               `json:"contractUrl,omitempty"`
+	RenewalCycle          *ContractRenewalCycle `json:"renewalCycle,omitempty"`
+	RenewalPeriods        *int64                `json:"renewalPeriods,omitempty"`
+	ServiceStartedAt      *time.Time            `json:"serviceStartedAt,omitempty"`
+	SignedAt              *time.Time            `json:"signedAt,omitempty"`
+	EndedAt               *time.Time            `json:"endedAt,omitempty"`
+	AppSource             *string               `json:"appSource,omitempty"`
+	Currency              *Currency             `json:"currency,omitempty"`
+	InvoicingStartDate    *time.Time            `json:"invoicingStartDate,omitempty"`
+	BillingCycle          *ContractBillingCycle `json:"billingCycle,omitempty"`
+	AddressLine1          *string               `json:"addressLine1,omitempty"`
+	AddressLine2          *string               `json:"addressLine2,omitempty"`
+	Locality              *string               `json:"locality,omitempty"`
+	Country               *string               `json:"country,omitempty"`
+	Zip                   *string               `json:"zip,omitempty"`
+	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
+	InvoiceEmail          *string               `json:"invoiceEmail,omitempty"`
 }
 
 type Country struct {
