@@ -35,7 +35,7 @@ require (
 	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3
 	golang.org/x/net v0.20.0
 	golang.org/x/sync v0.6.0
-	google.golang.org/grpc v1.60.1
+	google.golang.org/grpc v1.61.0
 	google.golang.org/protobuf v1.32.0
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/gorm v1.25.5
