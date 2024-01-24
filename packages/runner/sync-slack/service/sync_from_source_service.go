@@ -212,14 +212,14 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 	}
 
 	// get new messages
-	channelMessages, err := s.slackService.FetchNewMessagesFromSlackChannel(ctx, token, slackStngs.ChannelId, slackStngs.GetSyncStartDate(), currentSyncTime)
+	channelMessages, err := s.slackService.FetchNewMessagesFromSlackChannel(ctx, slackStngs.Tenant, token, slackStngs.ChannelId, slackStngs.GetSyncStartDate(), currentSyncTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// get channel messages with thread replies
-	channelMessagesWithReplies, err := s.slackService.FetchMessagesFromSlackChannelWithReplies(ctx, token, slackStngs.ChannelId, currentSyncTime, slackStngs.LookbackWindow)
+	channelMessagesWithReplies, err := s.slackService.FetchMessagesFromSlackChannelWithReplies(ctx, slackStngs.Tenant, token, slackStngs.ChannelId, currentSyncTime, slackStngs.LookbackWindow)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

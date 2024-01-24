@@ -8,6 +8,7 @@ import (
 
 const (
 	SpanTagComponent = "component"
+	SpanTagTenant    = "tenant"
 )
 
 const ComponentNeo4jRepository = "neo4jRepository"

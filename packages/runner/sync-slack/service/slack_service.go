@@ -22,8 +22,8 @@ type SlackService interface {
 	AuthTest(ctx context.Context, token string) (*slack.AuthTestResponse, error)
 	FetchUserIdsFromSlackChannel(ctx context.Context, token, channelId string) ([]string, error)
 	FetchUserInfo(ctx context.Context, token, userId string) (*slack.User, error)
-	FetchNewMessagesFromSlackChannel(ctx context.Context, token, channelId string, from, to time.Time) ([]slack.Message, error)
-	FetchMessagesFromSlackChannelWithReplies(ctx context.Context, token, channelId string, to time.Time, lookbackWindow int) ([]slack.Message, error)
+	FetchNewMessagesFromSlackChannel(ctx context.Context, tenant, token, channelId string, from, to time.Time) ([]slack.Message, error)
+	FetchMessagesFromSlackChannelWithReplies(ctx context.Context, tenant, token, channelId string, to time.Time, lookbackWindow int) ([]slack.Message, error)
 	FetchNewThreadMessages(ctx context.Context, token, channelId, parentTs string, from, to time.Time) ([]slack.Message, error)
 	GetMessagePermalink(ctx context.Context, token, channelId, messageTs string) (string, error)
 }
@@ -142,9 +142,10 @@ func (s *slackService) FetchUserInfo(ctx context.Context, token, userId string) 
 	return slackUser, nil
 }
 
-func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, token, channelId string, from, to time.Time) ([]slack.Message, error) {
+func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, tenant, token, channelId string, from, to time.Time) ([]slack.Message, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchNewMessagesFromSlackChannel")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("channelId", channelId), log.Object("from", from), log.Object("to", to))
 
 	client := slack.New(token)
@@ -194,9 +195,10 @@ func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, tok
 	return messages, nil
 }
 
-func (s *slackService) FetchMessagesFromSlackChannelWithReplies(ctx context.Context, token, channelId string, to time.Time, lookbackWindow int) ([]slack.Message, error) {
+func (s *slackService) FetchMessagesFromSlackChannelWithReplies(ctx context.Context, tenant, token, channelId string, to time.Time, lookbackWindow int) ([]slack.Message, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchMessagesFromSlackChannelWithReplies")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("channelId", channelId), log.Int("lookBackWindowDays", lookbackWindow), log.Object("to", to))
 
 	client := slack.New(token)
