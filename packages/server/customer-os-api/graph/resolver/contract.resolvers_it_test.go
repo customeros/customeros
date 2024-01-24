@@ -125,6 +125,16 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 				t.Fatalf("Failed to parse expected timestamp: %v", err)
 			}
 			require.Equal(t, timestamppb.New(expectedEndedAt), contract.EndedAt)
+			require.Equal(t, commonpb.BillingCycle_ANNUALLY_BILLING, contract.BillingCycle)
+			require.Equal(t, "USD", contract.Currency)
+			require.Equal(t, "test address line 1", contract.AddressLine1)
+			require.Equal(t, "test address line 2", contract.AddressLine2)
+			require.Equal(t, "test locality", contract.Locality)
+			require.Equal(t, "test country", contract.Country)
+			require.Equal(t, "test zip", contract.Zip)
+			require.Equal(t, "test organization legal name", contract.OrganizationLegalName)
+			require.Equal(t, "test invoice email", contract.InvoiceEmail)
+			require.Equal(t, 16, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,

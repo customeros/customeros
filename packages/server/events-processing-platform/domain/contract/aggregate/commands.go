@@ -119,9 +119,21 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 	source := utils.StringFirstNonEmpty(sourceFields.Source, a.Contract.Source.SourceOfTruth)
 
 	signedAt := utils.TimestampProtoToTimePtr(request.SignedAt)
+	if signedAt != nil && signedAt.Equal(time.Time{}) {
+		signedAt = nil
+	}
 	endedAt := utils.TimestampProtoToTimePtr(request.EndedAt)
+	if endedAt != nil && endedAt.Equal(time.Time{}) {
+		endedAt = nil
+	}
 	serviceStartedAt := utils.TimestampProtoToTimePtr(request.ServiceStartedAt)
+	if serviceStartedAt != nil && serviceStartedAt.Equal(time.Time{}) {
+		serviceStartedAt = nil
+	}
 	invoicingStartDate := utils.TimestampProtoToTimePtr(request.InvoicingStartDate)
+	if invoicingStartDate != nil && invoicingStartDate.Equal(time.Time{}) {
+		invoicingStartDate = nil
+	}
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
 
 	dataFields := model.ContractDataFields{
@@ -129,12 +141,12 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		ServiceStartedAt:      serviceStartedAt,
 		SignedAt:              signedAt,
 		EndedAt:               endedAt,
+		InvoicingStartDate:    invoicingStartDate,
 		RenewalCycle:          model.RenewalCycle(request.RenewalCycle).String(),
 		ContractUrl:           request.ContractUrl,
 		RenewalPeriods:        request.RenewalPeriods,
 		Currency:              request.Currency,
 		BillingCycle:          model.BillingCycle(request.BillingCycle).String(),
-		InvoicingStartDate:    invoicingStartDate,
 		AddressLine1:          request.AddressLine1,
 		AddressLine2:          request.AddressLine2,
 		Locality:              request.Locality,

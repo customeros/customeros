@@ -462,6 +462,7 @@ type ContractInput struct {
 
 type ContractUpdateInput struct {
 	ContractID            string                `json:"contractId"`
+	Patch                 *bool                 `json:"patch,omitempty"`
 	Name                  *string               `json:"name,omitempty"`
 	ContractURL           *string               `json:"contractUrl,omitempty"`
 	RenewalCycle          *ContractRenewalCycle `json:"renewalCycle,omitempty"`

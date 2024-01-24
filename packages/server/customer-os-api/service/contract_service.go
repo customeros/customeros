@@ -6,14 +6,16 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
@@ -24,7 +26,7 @@ import (
 
 type ContractService interface {
 	Create(ctx context.Context, contract *ContractCreateData) (string, error)
-	Update(ctx context.Context, contract *neo4jentity.ContractEntity) error
+	Update(ctx context.Context, input model.ContractUpdateInput) error
 	GetById(ctx context.Context, id string) (*neo4jentity.ContractEntity, error)
 	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.ContractEntities, error)
 	ContractsExistForTenant(ctx context.Context) (bool, error)
@@ -132,7 +134,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 			tracing.TraceErr(span, err)
 			return "", err
 		}
-		tenantSettingsEntity := mapper.MapDbNodeToTenantSettingsEntity(dbNode)
+		tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
 		if tenantSettingsEntity.DefaultCurrency.String() != "" {
 			createContractRequest.Currency = tenantSettingsEntity.DefaultCurrency.String()
 		}
@@ -155,71 +157,135 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	return response.Id, err
 }
 
-func (s *contractService) Update(ctx context.Context, contract *neo4jentity.ContractEntity) error {
+func (s *contractService) Update(ctx context.Context, input model.ContractUpdateInput) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("contract", contract))
+	tracing.LogObjectAsJson(span, "input", input)
 
-	if contract == nil {
-		err := fmt.Errorf("(ContractService.Update) contract entity is nil")
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	} else if contract.Id == "" {
+	if input.ContractID == "" {
 		err := fmt.Errorf("(ContractService.Update) contract id is missing")
 		s.log.Error(err.Error())
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	contractExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), contract.Id, neo4jutil.NodeLabelContract)
+	contractExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.ContractID, neo4jutil.NodeLabelContract)
 	if !contractExists {
-		err := fmt.Errorf("(ContractService.Update) contract with id {%s} not found", contract.Id)
+		err := fmt.Errorf("(ContractService.Update) contract with id {%s} not found", input.ContractID)
 		s.log.Error(err.Error())
 		tracing.TraceErr(span, err)
 		return err
 	}
 
+	fieldMask := []contractpb.ContractFieldMask{}
 	contractUpdateRequest := contractpb.UpdateContractGrpcRequest{
 		Tenant:             common.GetTenantFromContext(ctx),
-		Id:                 contract.Id,
+		Id:                 input.ContractID,
 		LoggedInUserId:     common.GetUserIdFromContext(ctx),
-		Name:               contract.Name,
-		ContractUrl:        contract.ContractUrl,
-		SignedAt:           utils.ConvertTimeToTimestampPtr(contract.SignedAt),
-		ServiceStartedAt:   utils.ConvertTimeToTimestampPtr(contract.ServiceStartedAt),
-		InvoicingStartDate: utils.ConvertTimeToTimestampPtr(contract.InvoicingStartDate),
-		EndedAt:            utils.ConvertTimeToTimestampPtr(contract.EndedAt),
+		Name:               utils.IfNotNilString(input.Name),
+		ContractUrl:        utils.IfNotNilString(input.ContractURL),
+		SignedAt:           utils.ConvertTimeToTimestampPtr(input.SignedAt),
+		ServiceStartedAt:   utils.ConvertTimeToTimestampPtr(input.ServiceStartedAt),
+		InvoicingStartDate: utils.ConvertTimeToTimestampPtr(input.InvoicingStartDate),
+		EndedAt:            utils.ConvertTimeToTimestampPtr(input.EndedAt),
 		SourceFields: &commonpb.SourceFields{
-			Source:    string(contract.Source),
-			AppSource: utils.StringFirstNonEmpty(contract.AppSource, constants.AppSourceCustomerOsApi),
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: utils.StringFirstNonEmpty(utils.IfNotNilString(input.AppSource), constants.AppSourceCustomerOsApi),
 		},
-		RenewalPeriods: contract.RenewalPeriods,
-		Currency:       contract.Currency.String(),
+		RenewalPeriods:        input.RenewalPeriods,
+		AddressLine1:          utils.IfNotNilString(input.AddressLine1),
+		AddressLine2:          utils.IfNotNilString(input.AddressLine2),
+		Locality:              utils.IfNotNilString(input.Locality),
+		Country:               utils.IfNotNilString(input.Country),
+		Zip:                   utils.IfNotNilString(input.Zip),
+		OrganizationLegalName: utils.IfNotNilString(input.OrganizationLegalName),
+		InvoiceEmail:          utils.IfNotNilString(input.InvoiceEmail),
+	}
+	if input.Currency != nil {
+		contractUpdateRequest.Currency = mapper.MapCurrencyFromModel(*input.Currency).String()
 	}
 	// prepare renewal cycle
-	switch contract.RenewalCycle {
-	case neo4jenum.RenewalCycleMonthlyRenewal:
-		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
-	case neo4jenum.RenewalCycleQuarterlyRenewal:
-		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
-	case neo4jenum.RenewalCycleAnnualRenewal:
-		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
-	default:
-		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_NONE
+	if input.RenewalCycle != nil {
+		switch *input.RenewalCycle {
+		case model.ContractRenewalCycleMonthlyRenewal:
+			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
+		case model.ContractRenewalCycleQuarterlyRenewal:
+			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
+		case model.ContractRenewalCycleAnnualRenewal:
+			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
+		default:
+			contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_NONE
+		}
 	}
 
 	// prepare billing cycle
-	switch contract.BillingCycle {
-	case neo4jenum.BillingCycleMonthlyBilling:
-		contractUpdateRequest.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
-	case neo4jenum.BillingCycleQuarterlyBilling:
-		contractUpdateRequest.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
-	case neo4jenum.BillingCycleAnnuallyBilling:
-		contractUpdateRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
-	default:
-		contractUpdateRequest.BillingCycle = commonpb.BillingCycle_NONE_BILLING
+	if input.BillingCycle != nil {
+		switch *input.BillingCycle {
+		case model.ContractBillingCycleMonthlyBilling:
+			contractUpdateRequest.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
+		case model.ContractBillingCycleQuarterlyBilling:
+			contractUpdateRequest.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
+		case model.ContractBillingCycleAnnualBilling:
+			contractUpdateRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
+		default:
+			contractUpdateRequest.BillingCycle = commonpb.BillingCycle_NONE_BILLING
+		}
+	}
+
+	if input.Patch != nil && *input.Patch {
+		if input.Name != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_NAME)
+		}
+		if input.ContractURL != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CONTRACT_URL)
+		}
+		if input.RenewalCycle != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_RENEWAL_CYCLE)
+		}
+		if input.RenewalPeriods != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_RENEWAL_PERIODS)
+		}
+		if input.ServiceStartedAt != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_SERVICE_STARTED_AT)
+		}
+		if input.SignedAt != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_SIGNED_AT)
+		}
+		if input.EndedAt != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ENDED_AT)
+		}
+		if input.InvoicingStartDate != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_START_DATE)
+		}
+		if input.Currency != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CURRENCY)
+		}
+		if input.BillingCycle != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE)
+		}
+		if input.AddressLine1 != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ADDRESS_LINE_1)
+		}
+		if input.AddressLine2 != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ADDRESS_LINE_2)
+		}
+		if input.Locality != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LOCALITY)
+		}
+		if input.Country != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_COUNTRY)
+		}
+		if input.Zip != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ZIP)
+		}
+		if input.OrganizationLegalName != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ORGANIZATION_LEGAL_NAME)
+		}
+		if input.InvoiceEmail != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL)
+		}
+		contractUpdateRequest.FieldsMask = fieldMask
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -244,7 +310,7 @@ func (s *contractService) GetById(ctx context.Context, contractId string) (*neo4
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Contract with id {%s} not found", contractId))
 		return nil, wrappedErr
 	} else {
-		return mapper.MapDbNodeToContractEntity(contractDbNode), nil
+		return neo4jmapper.MapDbNodeToContractEntity(contractDbNode), nil
 	}
 }
 
@@ -259,7 +325,7 @@ func (s *contractService) GetContractsForOrganizations(ctx context.Context, orga
 	}
 	contractEntities := make(neo4jentity.ContractEntities, 0, len(contracts))
 	for _, v := range contracts {
-		contractEntity := mapper.MapDbNodeToContractEntity(v.Node)
+		contractEntity := neo4jmapper.MapDbNodeToContractEntity(v.Node)
 		contractEntity.DataloaderKey = v.LinkedNodeId
 		contractEntities = append(contractEntities, *contractEntity)
 	}
