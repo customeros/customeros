@@ -62,8 +62,8 @@ export const MasterPlanDetails = ({
           if (masterPlan) {
             masterPlan.name = input.name ?? '';
 
-            if (input.retired !== null) {
-              masterPlan.retired = input.retired ?? false;
+            if (input.retired !== null && input.retired !== undefined) {
+              masterPlan.retired = input.retired;
             }
           }
         });
@@ -72,12 +72,15 @@ export const MasterPlanDetails = ({
       return { previousEntries };
     },
     onError: (_, __, context) => {
+      if (context?.previousEntries) {
+        queryClient.setQueryData(queryKey, context.previousEntries);
+      }
       toastError(
         `We couldn't update master plan`,
         'master-plan-details-update',
       );
     },
-    onSettled: (_, __, { input }) => {
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
     },
   });
@@ -141,7 +144,7 @@ export const MasterPlanDetails = ({
       });
     },
     500,
-    [id],
+    [id, isRetired],
   );
 
   const { setDefaultValues } = useForm<MasterPlanForm>({

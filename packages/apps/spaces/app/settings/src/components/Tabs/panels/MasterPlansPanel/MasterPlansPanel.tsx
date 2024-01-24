@@ -53,6 +53,8 @@ export const MasterPlansPanel = () => {
   const selectedPlan = plans.find((plan) => plan?.id === planId);
   const selectedMilestones = selectedPlan?.milestones ?? [];
 
+  // console.log('here', selectedPlan);
+
   useEffect(() => {
     if (!planId) {
       const newParams = new URLSearchParams(searchParams ?? '');
