@@ -2044,15 +2044,7 @@ func (this ServiceLineItem) GetID() string { return this.ID }
 
 type ServiceLineItemBulkUpdateInput struct {
 	ServiceLineItems []*ServiceLineItemBulkUpdateItem `json:"serviceLineItems"`
-	CreatedAt        *time.Time                       `json:"createdAt,omitempty"`
-	UpdatedAt        *time.Time                       `json:"updatedAt,omitempty"`
-	StartedAt        *time.Time                       `json:"startedAt,omitempty"`
-	EndedAt          *time.Time                       `json:"endedAt,omitempty"`
-	Source           DataSource                       `json:"source"`
-	SourceOfTruth    DataSource                       `json:"sourceOfTruth"`
-	AppSource        string                           `json:"appSource"`
-	Tenant           *string                          `json:"tenant,omitempty"`
-	LoggedInUserID   *string                          `json:"loggedInUserId,omitempty"`
+	InvoiceNote      *string                          `json:"invoiceNote,omitempty"`
 }
 
 type ServiceLineItemBulkUpdateItem struct {
@@ -2065,7 +2057,6 @@ type ServiceLineItemBulkUpdateItem struct {
 	Comments                *string                       `json:"comments,omitempty"`
 	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 	IsRetroactiveCorrection *bool                         `json:"isRetroactiveCorrection,omitempty"`
-	IsCanceled              *bool                         `json:"isCanceled,omitempty"`
 	ContractID              *string                       `json:"contractId,omitempty"`
 }
 
