@@ -201,6 +201,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		Zip:                   utils.IfNotNilString(input.Zip),
 		OrganizationLegalName: utils.IfNotNilString(input.OrganizationLegalName),
 		InvoiceEmail:          utils.IfNotNilString(input.InvoiceEmail),
+		InvoiceNote:           utils.IfNotNilString(input.InvoiceNote),
 	}
 	if input.Currency != nil {
 		contractUpdateRequest.Currency = mapper.MapCurrencyFromModel(*input.Currency).String()
@@ -284,6 +285,9 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		}
 		if input.InvoiceEmail != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL)
+		}
+		if input.InvoiceNote != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE)
 		}
 		contractUpdateRequest.FieldsMask = fieldMask
 	}

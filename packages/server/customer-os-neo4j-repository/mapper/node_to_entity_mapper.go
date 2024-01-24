@@ -318,6 +318,7 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		Country:                         utils.GetStringPropOrEmpty(props, "country"),
 		OrganizationLegalName:           utils.GetStringPropOrEmpty(props, "organizationLegalName"),
 		InvoiceEmail:                    utils.GetStringPropOrEmpty(props, "invoiceEmail"),
+		InvoiceNote:                     utils.GetStringPropOrEmpty(props, "invoiceNote"),
 	}
 	return &contract
 }

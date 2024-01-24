@@ -67,14 +67,14 @@ input ServiceLineItemBulkUpdateItem {
 }
 
 input ServiceLineItemBulkUpdateInput {
-    serviceLineItems:  [ServiceLineItemBulkUpdateItem]!
-	createdAt:          Time
-	updatedAt:          Time
-	startedAt:          Time
+    serviceLineItems: [ServiceLineItemBulkUpdateItem]!
+	createdAt:        Time
+	updatedAt:        Time
+	startedAt:        Time
 	endedAt:          Time
-    source:             DataSource!
-    sourceOfTruth:      DataSource!
-    appSource:          String!
+    source:           DataSource!
+    sourceOfTruth:    DataSource!
+    appSource:        String!
 	tenant:           String
 	loggedInUserId:   String
 }

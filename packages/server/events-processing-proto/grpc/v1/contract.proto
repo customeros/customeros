@@ -34,6 +34,7 @@ enum ContractFieldMask {
   CONTRACT_FIELD_ZIP = 15;
   CONTRACT_FIELD_ORGANIZATION_LEGAL_NAME = 16;
   CONTRACT_FIELD_INVOICE_EMAIL = 17;
+  CONTRACT_FIELD_INVOICE_NOTE = 18;
 }
 
 // CreateContract request message
@@ -82,6 +83,7 @@ message UpdateContractGrpcRequest {
   string organizationLegalName = 22;
   string invoiceEmail = 23;
   repeated ContractFieldMask fieldsMask = 24;
+  string invoiceNote = 25;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {
