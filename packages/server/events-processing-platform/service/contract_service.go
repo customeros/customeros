@@ -112,9 +112,7 @@ func (s *contractService) UpdateContract(ctx context.Context, request *contractp
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	// Create update contract command
-
-	if _, err := s.contractRequestHandler.HandleWithRetry(ctx, request.Tenant, request.Id, true, request); err != nil {
+	if _, err := s.contractRequestHandler.HandleWithRetry(ctx, request.Tenant, request.Id, false, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)

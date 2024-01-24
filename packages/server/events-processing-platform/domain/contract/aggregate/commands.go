@@ -178,7 +178,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 	}
 
 	// Set renewal periods
-	if isUpdated(event.FieldMaskRenewalCycle, fieldsMask) {
+	if !isUpdated(event.FieldMaskRenewalCycle, fieldsMask) {
 		dataFields.RenewalCycle = a.Contract.RenewalCycle
 	}
 
