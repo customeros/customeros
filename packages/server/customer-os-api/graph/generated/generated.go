@@ -10447,6 +10447,7 @@ input ContractInput {
 
 input ContractUpdateInput {
     contractId:         ID!
+    patch:              Boolean
     name:               String
     contractUrl:        String
     renewalCycle:       ContractRenewalCycle
@@ -78187,7 +78188,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource", "currency", "invoicingStartDate", "billingCycle", "addressLine1", "addressLine2", "locality", "country", "zip", "organizationLegalName", "invoiceEmail"}
+	fieldsInOrder := [...]string{"contractId", "patch", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource", "currency", "invoicingStartDate", "billingCycle", "addressLine1", "addressLine2", "locality", "country", "zip", "organizationLegalName", "invoiceEmail"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -78201,6 +78202,13 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.ContractID = data
+		case "patch":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("patch"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Patch = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)

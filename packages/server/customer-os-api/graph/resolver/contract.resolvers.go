@@ -129,7 +129,7 @@ func (r *mutationResolver) ContractUpdate(ctx context.Context, input model.Contr
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contractId", input.ContractID))
 
-	err := r.Services.ContractService.Update(ctx, mapper.MapContractUpdateInputToEntity(input))
+	err := r.Services.ContractService.Update(ctx, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update contract %s", input.ContractID)

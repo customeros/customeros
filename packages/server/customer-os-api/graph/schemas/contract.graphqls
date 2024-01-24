@@ -55,6 +55,7 @@ input ContractInput {
 
 input ContractUpdateInput {
     contractId:         ID!
+    patch:              Boolean
     name:               String
     contractUrl:        String
     renewalCycle:       ContractRenewalCycle
