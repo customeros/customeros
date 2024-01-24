@@ -172,7 +172,7 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 				SET 
 				ct.updatedAt = $updatedAt,
 				ct.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE ct.sourceOfTruth END
-				RETURN ct`
+				`
 	params := map[string]any{
 		"tenant":        tenant,
 		"contractId":    contractId,
@@ -252,6 +252,7 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 		cypher += `, ct.invoiceEmail = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $invoiceEmail ELSE ct.invoiceEmail END `
 		params["invoiceEmail"] = data.InvoiceEmail
 	}
+	cypher += ` RETURN ct`
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
