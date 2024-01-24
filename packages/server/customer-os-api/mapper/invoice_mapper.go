@@ -24,7 +24,7 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 		DueDate:          entity.DueDate,
 		Amount:           entity.Amount,
 		Vat:              entity.Vat,
-		Total:            entity.TotalAmount,
+		TotalAmount:      entity.TotalAmount,
 		Currency:         entity.Currency.String(),
 		RepositoryFileID: entity.RepositoryFileId,
 		Status:           utils.ToPtr(MapInvoiceStatusToModel(entity.Status)),
@@ -36,14 +36,14 @@ func MapEntityToInvoiceLine(entity *neo4jentity.InvoiceLineEntity) *model.Invoic
 		return nil
 	}
 	return &model.InvoiceLine{
-		ID:        entity.Id,
-		CreatedAt: entity.CreatedAt,
-		Name:      entity.Name,
-		Price:     entity.Price,
-		Quantity:  int(entity.Quantity),
-		Amount:    entity.Amount,
-		Vat:       entity.Vat,
-		Total:     entity.TotalAmount,
+		ID:          entity.Id,
+		CreatedAt:   entity.CreatedAt,
+		Name:        entity.Name,
+		Price:       entity.Price,
+		Quantity:    int(entity.Quantity),
+		Amount:      entity.Amount,
+		Vat:         entity.Vat,
+		TotalAmount: entity.TotalAmount,
 	}
 }
 

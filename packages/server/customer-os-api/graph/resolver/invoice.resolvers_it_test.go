@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
@@ -73,7 +74,7 @@ func TestQueryResolver_Invoice(t *testing.T) {
 	require.Equal(t, timeNow, invoice.DueDate)
 	require.Equal(t, 100.0, invoice.Amount)
 	require.Equal(t, 19.0, invoice.Vat)
-	require.Equal(t, 119.0, invoice.Total)
+	require.Equal(t, 119.0, invoice.TotalAmount)
 	require.Equal(t, "ABC", invoice.RepositoryFileID)
 
 	require.Equal(t, 1, len(invoice.InvoiceLines))
@@ -82,7 +83,7 @@ func TestQueryResolver_Invoice(t *testing.T) {
 	require.Equal(t, 1, invoice.InvoiceLines[0].Quantity)
 	require.Equal(t, 100.0, invoice.InvoiceLines[0].Amount)
 	require.Equal(t, 19.0, invoice.InvoiceLines[0].Vat)
-	require.Equal(t, 119.0, invoice.InvoiceLines[0].Total)
+	require.Equal(t, 119.0, invoice.InvoiceLines[0].TotalAmount)
 }
 
 func TestQueryResolver_Invoices(t *testing.T) {
@@ -218,4 +219,52 @@ func TestQueryResolver_SimulateInvoice(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, invoiceId, invoiceStruct.Invoice_Simulate)
+}
+
+func TestQueryResolver_InvoicesForOrganization(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organization1Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contract1Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization1Id, neo4jentity.ContractEntity{})
+	contract2Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization1Id, neo4jentity.ContractEntity{})
+	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract1Id, neo4jentity.InvoiceEntity{
+		Number: "1",
+	})
+	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract2Id, neo4jentity.InvoiceEntity{
+		Number: "2",
+	})
+
+	organization2Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contrac3tId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization2Id, neo4jentity.ContractEntity{})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contrac3tId, neo4jentity.InvoiceEntity{
+		Number: "3",
+	})
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		neo4jutil.NodeLabelOrganization: 2,
+		neo4jutil.NodeLabelContract:     3,
+		neo4jutil.NodeLabelInvoice:      3,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/get_invoices_for_organization", map[string]interface{}{
+		"page":           0,
+		"limit":          10,
+		"organizationId": organization1Id,
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoices model.InvoicesPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
+	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
+
+	require.ElementsMatch(t, []string{invoice1Id, invoice2Id}, []string{invoiceStruct.Invoices.Content[0].ID, invoiceStruct.Invoices.Content[1].ID})
+	require.ElementsMatch(t, []string{"1", "2"}, []string{invoiceStruct.Invoices.Content[0].Number, invoiceStruct.Invoices.Content[1].Number})
 }

@@ -947,30 +947,6 @@ func (r *organizationResolver) ExternalLinks(ctx context.Context, obj *model.Org
 	return mapper.MapEntitiesToExternalSystems(entities), nil
 }
 
-// Invoices is the resolver for the invoices field.
-func (r *organizationResolver) Invoices(ctx context.Context, obj *model.Organization, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.InvoicesPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.Invoices", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	if pagination == nil {
-		pagination = &model.Pagination{Page: 0, Limit: 0}
-	}
-	span.LogFields(log.Int("request.pagination.page", pagination.Page), log.Int("request.pagination.limit", pagination.Limit))
-
-	paginatedResult, err := r.Services.InvoiceService.GetInvoices(ctx, obj.ID, pagination.Page, pagination.Limit, where, sort)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get invoices")
-		return nil, nil
-	}
-	return &model.InvoicesPage{
-		Content:       mapper.MapEntitiesToInvoices(paginatedResult.Rows.(*neo4jentity.InvoiceEntities)),
-		TotalPages:    paginatedResult.TotalPages,
-		TotalElements: paginatedResult.TotalRows,
-	}, err
-}
-
 // LastTouchPointTimelineEvent is the resolver for the lastTouchPointTimelineEvent field.
 func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
