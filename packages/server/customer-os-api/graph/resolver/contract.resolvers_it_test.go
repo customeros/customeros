@@ -135,7 +135,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, "test organization legal name", contract.OrganizationLegalName)
 			require.Equal(t, "test invoice email", contract.InvoiceEmail)
 			require.Equal(t, "test invoice note", contract.InvoiceNote)
-			require.Equal(t, 16, len(contract.FieldsMask))
+			require.Equal(t, 17, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,
