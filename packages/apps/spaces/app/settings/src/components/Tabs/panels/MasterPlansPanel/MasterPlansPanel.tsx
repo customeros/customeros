@@ -85,10 +85,11 @@ export const MasterPlansPanel = () => {
       </GridItem>
 
       <GridItem p='4'>
-        {planId && (
+        {planId && selectedPlan && (
           <>
             <MasterPlanDetails
               id={planId}
+              isRetired={selectedPlan?.retired}
               name={selectedPlan?.name ?? 'Unnamed master plan'}
             />
             <Milestones milestones={selectedMilestones} />
