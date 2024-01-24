@@ -39,7 +39,7 @@ func TestEventBufferWatcher(t *testing.T) {
 		Data:          []byte("example-event-data"),
 		EventID:       "example-event-id",
 		Timestamp:     timeNow,
-		AggregateType: "example-event-aggregate-type",
+		AggregateType: "very-large-example-event-aggregate-type-with-over-40-characters-long-2-very-large-example-event-aggregate-type-with-over-40-characters-long",
 		AggregateID:   "example-event-aggregate-id",
 	}
 	tenant := "example-tenant"
