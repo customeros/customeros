@@ -49,6 +49,7 @@ export const MilestoneDuration = ({
           variant='unstyled'
           borderRadius='unset'
           onClick={handleClick}
+          defaultValue={defaultValue}
         />
       )}
       <Text fontSize='sm' color='gray.500' whiteSpace='nowrap'>

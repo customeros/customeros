@@ -9,6 +9,7 @@ import { useUpdateMasterPlanMutation } from '@settings/graphql/updateMasterPlan.
 import { useDuplicateMasterPlanMutation } from '@settings/graphql/duplicateMasterPlan.generated';
 
 import { Flex } from '@ui/layout/Flex';
+import { Button } from '@ui/form/Button';
 import { FormInput } from '@ui/form/Input';
 import { toastError } from '@ui/presentation/Toast';
 import { useThrottle } from '@shared/hooks/useThrottle';
@@ -19,6 +20,7 @@ import { MasterPlanMenu } from './MasterPlanMenu';
 interface MasterPlanDetailsProps {
   id: string;
   name: string;
+  isRetired?: boolean;
 }
 
 type MasterPlanForm = {
@@ -27,7 +29,11 @@ type MasterPlanForm = {
 
 const formId = 'master-plan-details-form';
 
-export const MasterPlanDetails = ({ id, name }: MasterPlanDetailsProps) => {
+export const MasterPlanDetails = ({
+  id,
+  name,
+  isRetired,
+}: MasterPlanDetailsProps) => {
   const router = useRouter();
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
@@ -38,46 +44,21 @@ export const MasterPlanDetails = ({ id, name }: MasterPlanDetailsProps) => {
   const goToPlan = (id: string, options: { retired?: boolean } = {}) => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
     params.set('planId', id);
-    if (options?.retired) {
-      params.set('show', 'retired');
-    }
+    params.set('show', options?.retired ? 'retired' : 'active');
 
     router.push(`/settings?${params.toString()}`);
   };
 
   const updateMasterPlan = useUpdateMasterPlanMutation(client, {
-    onMutate: ({ input }) => {
-      queryClient.cancelQueries({ queryKey });
-
-      const { previousEntries } = useMasterPlansQuery.mutateCacheEntry(
-        queryClient,
-      )((cacheEntry) => {
-        return produce(cacheEntry, (draft) => {
-          const masterPlan = draft?.masterPlans?.find((plan) => plan.id === id);
-
-          if (masterPlan) {
-            masterPlan.name = input.name ?? '';
-
-            if (input.retired) {
-              masterPlan.retired = input.retired;
-            }
-          }
-        });
-      });
-
-      return { previousEntries };
-    },
     onError: (_, __, context) => {
-      if (context?.previousEntries) {
-        queryClient.setQueryData(queryKey, context.previousEntries);
-      }
       toastError(
         `We couldn't update master plan`,
         'master-plan-details-update',
       );
     },
-    onSettled: () => {
+    onSettled: (_, __, { input }) => {
       queryClient.invalidateQueries({ queryKey });
+      goToPlan(input.id, { retired: input.retired ?? false });
     },
   });
 
@@ -102,7 +83,6 @@ export const MasterPlanDetails = ({ id, name }: MasterPlanDetailsProps) => {
             draft.masterPlans?.push({
               ...masterPlan,
               id: `${masterPlan.id}-${sameNameCount}`,
-              // name: `${masterPlan.name} (copy)`,
             });
           }
         });
@@ -156,6 +136,8 @@ export const MasterPlanDetails = ({ id, name }: MasterPlanDetailsProps) => {
     },
   });
 
+  const isLoading = updateMasterPlan.isPending || duplicateMasterPlan.isPending;
+
   const handleRetire = () => {
     updateMasterPlan.mutate({
       input: {
@@ -163,11 +145,19 @@ export const MasterPlanDetails = ({ id, name }: MasterPlanDetailsProps) => {
         retired: true,
       },
     });
-    goToPlan(id, { retired: true });
   };
 
   const handleDuplicate = () => {
     duplicateMasterPlan.mutate({ id });
+  };
+
+  const handleReactivate = () => {
+    updateMasterPlan.mutate({
+      input: {
+        id,
+        retired: false,
+      },
+    });
   };
 
   useEffect(() => {
@@ -180,10 +170,26 @@ export const MasterPlanDetails = ({ id, name }: MasterPlanDetailsProps) => {
         name='name'
         formId={formId}
         variant='unstyled'
+        defaultValue={name}
         borderRadius='unset'
         fontWeight='semibold'
       />
-      <MasterPlanMenu onRetire={handleRetire} onDuplicate={handleDuplicate} />
+      {isRetired ? (
+        <Button
+          size='xs'
+          variant='outline'
+          isLoading={isLoading}
+          onClick={handleReactivate}
+        >
+          Reactivate
+        </Button>
+      ) : (
+        <MasterPlanMenu
+          isLoading={isLoading}
+          onRetire={handleRetire}
+          onDuplicate={handleDuplicate}
+        />
+      )}
     </Flex>
   );
 };

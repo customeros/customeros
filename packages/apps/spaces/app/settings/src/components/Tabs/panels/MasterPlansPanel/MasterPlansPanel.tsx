@@ -92,6 +92,7 @@ export const MasterPlansPanel = () => {
           <>
             <MasterPlanDetails
               id={planId}
+              isRetired={selectedPlan?.retired}
               name={selectedPlan?.name ?? 'Unnamed master plan'}
             />
             <Milestones milestones={selectedMilestones} />
