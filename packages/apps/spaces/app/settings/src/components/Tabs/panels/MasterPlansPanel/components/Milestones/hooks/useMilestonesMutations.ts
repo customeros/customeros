@@ -47,7 +47,7 @@ export const useMilestonesMutations = () => {
             retired: false,
             name: input?.name ?? '',
             order: lastMilestone?.order ? lastMilestone?.order + 1 : 0,
-            id: `${currentMilestonesCount + 1}`,
+            id: `temp-${currentMilestonesCount + 1}`,
           });
         });
       });

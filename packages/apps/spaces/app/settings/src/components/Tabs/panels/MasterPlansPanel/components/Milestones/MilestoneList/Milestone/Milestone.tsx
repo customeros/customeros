@@ -10,6 +10,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { useOutsideClick } from '@ui/utils';
 import { IconButton } from '@ui/form/IconButton';
+import { pulseOpacity } from '@ui/utils/keyframes';
 import { Collapse } from '@ui/transitions/Collapse';
 import { Card, CardBody } from '@ui/presentation/Card';
 import { HandleDrag } from '@ui/media/icons/HandleDrag';
@@ -59,6 +60,7 @@ export const Milestone = ({
 }: MilestoneProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const isMutating = milestone.id.startsWith('temp');
 
   const {
     attributes,
@@ -141,9 +143,15 @@ export const Milestone = ({
       transform={transformStyle}
       cursor={isActiveItem ? 'grabbing' : undefined}
       boxShadow={isDragging ? 'unset' : undefined}
+      pointerEvents={isMutating ? 'none' : undefined}
       borderColor={isDragging ? 'gray.100' : undefined}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      animation={
+        isMutating
+          ? `${pulseOpacity} 0.7s infinite alternate ease-in-out`
+          : 'unset'
+      }
     >
       <CardBody pl='6'>
         <Flex flexDir='column' justify='flex-start'>
@@ -166,7 +174,7 @@ export const Milestone = ({
               isActiveItem={isActiveItem}
               defaultValue={milestone.name}
               onToggleMilestone={handleToggle}
-              shouldFocus={isLast && shouldFocusNameRef?.current}
+              shouldFocus={!isMutating && isLast && shouldFocusNameRef?.current}
             />
             <IconButton
               size='xs'

@@ -50,6 +50,27 @@ export const MasterPlanDetails = ({
   };
 
   const updateMasterPlan = useUpdateMasterPlanMutation(client, {
+    onMutate: ({ input }) => {
+      queryClient.cancelQueries({ queryKey });
+
+      const { previousEntries } = useMasterPlansQuery.mutateCacheEntry(
+        queryClient,
+      )((cacheEntry) => {
+        return produce(cacheEntry, (draft) => {
+          const masterPlan = draft?.masterPlans?.find((plan) => plan.id === id);
+
+          if (masterPlan) {
+            masterPlan.name = input.name ?? '';
+
+            if (input.retired !== null) {
+              masterPlan.retired = input.retired ?? false;
+            }
+          }
+        });
+      });
+
+      return { previousEntries };
+    },
     onError: (_, __, context) => {
       toastError(
         `We couldn't update master plan`,
@@ -58,7 +79,6 @@ export const MasterPlanDetails = ({
     },
     onSettled: (_, __, { input }) => {
       queryClient.invalidateQueries({ queryKey });
-      goToPlan(input.id, { retired: input.retired ?? false });
     },
   });
 
@@ -145,6 +165,7 @@ export const MasterPlanDetails = ({
         retired: true,
       },
     });
+    goToPlan(id, { retired: true });
   };
 
   const handleDuplicate = () => {
@@ -158,6 +179,7 @@ export const MasterPlanDetails = ({
         retired: false,
       },
     });
+    goToPlan(id, { retired: false });
   };
 
   useEffect(() => {
@@ -170,7 +192,6 @@ export const MasterPlanDetails = ({
         name='name'
         formId={formId}
         variant='unstyled'
-        defaultValue={name}
         borderRadius='unset'
         fontWeight='semibold'
       />
@@ -184,11 +205,7 @@ export const MasterPlanDetails = ({
           Reactivate
         </Button>
       ) : (
-        <MasterPlanMenu
-          isLoading={isLoading}
-          onRetire={handleRetire}
-          onDuplicate={handleDuplicate}
-        />
+        <MasterPlanMenu onRetire={handleRetire} onDuplicate={handleDuplicate} />
       )}
     </Flex>
   );
