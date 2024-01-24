@@ -100,27 +100,71 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 
 	if eventData.Source != a.Contract.Source.SourceOfTruth && a.Contract.Source.SourceOfTruth == constants.SourceOpenline {
 		// Update fields only if they are empty
-		if a.Contract.Name == "" {
+		if a.Contract.Name == "" && eventData.UpdateName() {
 			a.Contract.Name = eventData.Name
 		}
-		if a.Contract.ContractUrl == "" {
+		if a.Contract.ContractUrl == "" && eventData.UpdateContractUrl() {
 			a.Contract.ContractUrl = eventData.ContractUrl
 		}
 	} else {
 		// Update fields unconditionally
-		a.Contract.Name = eventData.Name
-		a.Contract.ContractUrl = eventData.ContractUrl
+		if eventData.UpdateName() {
+			a.Contract.Name = eventData.Name
+		}
+		if eventData.UpdateContractUrl() {
+			a.Contract.ContractUrl = eventData.ContractUrl
+		}
 	}
 
 	a.Contract.UpdatedAt = eventData.UpdatedAt
-	a.Contract.RenewalCycle = eventData.RenewalCycle
-	a.Contract.Status = eventData.Status
-	a.Contract.ServiceStartedAt = eventData.ServiceStartedAt
-	a.Contract.SignedAt = eventData.SignedAt
-	a.Contract.EndedAt = eventData.EndedAt
-	a.Contract.Currency = eventData.Currency
-	a.Contract.BillingCycle = eventData.BillingCycle
-	a.Contract.InvoicingStartDate = eventData.InvoicingStartDate
+	if eventData.UpdateRenewalCycle() {
+		a.Contract.RenewalCycle = eventData.RenewalCycle
+	}
+	if eventData.UpdateStatus() {
+		a.Contract.Status = eventData.Status
+	}
+	if eventData.UpdateServiceStartedAt() {
+		a.Contract.ServiceStartedAt = eventData.ServiceStartedAt
+	}
+	if eventData.UpdateSignedAt() {
+		a.Contract.SignedAt = eventData.SignedAt
+	}
+	if eventData.UpdateEndedAt() {
+		a.Contract.EndedAt = eventData.EndedAt
+	}
+	if eventData.UpdateCurrency() {
+		a.Contract.Currency = eventData.Currency
+	}
+	if eventData.UpdateBillingCycle() {
+		a.Contract.BillingCycle = eventData.BillingCycle
+	}
+	if eventData.UpdateInvoicingStartDate() {
+		a.Contract.InvoicingStartDate = eventData.InvoicingStartDate
+	}
+	if eventData.UpdateAddressLine1() {
+		a.Contract.AddressLine1 = eventData.AddressLine1
+	}
+	if eventData.UpdateAddressLine2() {
+		a.Contract.AddressLine2 = eventData.AddressLine2
+	}
+	if eventData.UpdateLocality() {
+		a.Contract.Locality = eventData.Locality
+	}
+	if eventData.UpdateCountry() {
+		a.Contract.Country = eventData.Country
+	}
+	if eventData.UpdateZip() {
+		a.Contract.Zip = eventData.Zip
+	}
+	if eventData.UpdateOrganizationLegalName() {
+		a.Contract.OrganizationLegalName = eventData.OrganizationLegalName
+	}
+	if eventData.UpdateInvoiceEmail() {
+		a.Contract.InvoiceEmail = eventData.InvoiceEmail
+	}
+	if eventData.UpdateInvoiceNote() {
+		a.Contract.InvoiceNote = eventData.InvoiceNote
+	}
 
 	if eventData.ExternalSystem.Available() {
 		found := false

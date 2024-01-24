@@ -35,6 +35,7 @@ type Contract struct {
 	Zip                   string                       `json:"zip"`
 	OrganizationLegalName string                       `json:"organizationLegalName"`
 	InvoiceEmail          string                       `json:"invoiceEmail"`
+	InvoiceNote           string                       `json:"invoiceNote"`
 }
 
 type ContractDataFields struct {
@@ -58,6 +59,7 @@ type ContractDataFields struct {
 	Zip                   string `json:"zip"`
 	OrganizationLegalName string `json:"organizationLegalName"`
 	InvoiceEmail          string `json:"invoiceEmail"`
+	InvoiceNote           string `json:"invoiceNote"`
 }
 
 // ContractStatus represents the status of a contract.

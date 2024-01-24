@@ -154,6 +154,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		Zip:                   request.Zip,
 		OrganizationLegalName: request.OrganizationLegalName,
 		InvoiceEmail:          request.InvoiceEmail,
+		InvoiceNote:           request.InvoiceNote,
 	}
 	fieldsMask := extractFieldsMask(request.FieldsMask)
 
@@ -316,6 +317,8 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 			fieldsMask = append(fieldsMask, event.FieldMaskOrganizationLegalName)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL:
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoiceEmail)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE:
+			fieldsMask = append(fieldsMask, event.FieldMaskInvoiceNote)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)

@@ -239,6 +239,7 @@ type ComplexityRoot struct {
 		ExternalLinks         func(childComplexity int) int
 		ID                    func(childComplexity int) int
 		InvoiceEmail          func(childComplexity int) int
+		InvoiceNote           func(childComplexity int) int
 		InvoicingStartDate    func(childComplexity int) int
 		Locality              func(childComplexity int) int
 		Name                  func(childComplexity int) int
@@ -2656,6 +2657,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contract.InvoiceEmail(childComplexity), true
+
+	case "Contract.invoiceNote":
+		if e.complexity.Contract.InvoiceNote == nil {
+			break
+		}
+
+		return e.complexity.Contract.InvoiceNote(childComplexity), true
 
 	case "Contract.invoicingStartDate":
 		if e.complexity.Contract.InvoicingStartDate == nil {
@@ -10414,6 +10422,7 @@ type Contract implements Node {
     zip:                String
     organizationLegalName: String
     invoiceEmail:       String
+    invoiceNote:        String
 }
 
 input ContractInput {
@@ -10452,6 +10461,7 @@ input ContractUpdateInput {
     zip:                String
     organizationLegalName: String
     invoiceEmail:       String
+    invoiceNote:        String
 }
 
 enum ContractRenewalCycle {
@@ -12581,14 +12591,14 @@ input ServiceLineItemBulkUpdateItem {
 }
 
 input ServiceLineItemBulkUpdateInput {
-    serviceLineItems:  [ServiceLineItemBulkUpdateItem]!
-	createdAt:          Time
-	updatedAt:          Time
-	startedAt:          Time
+    serviceLineItems: [ServiceLineItemBulkUpdateItem]!
+	createdAt:        Time
+	updatedAt:        Time
+	startedAt:        Time
 	endedAt:          Time
-    source:             DataSource!
-    sourceOfTruth:      DataSource!
-    appSource:          String!
+    source:           DataSource!
+    sourceOfTruth:    DataSource!
+    appSource:        String!
 	tenant:           String
 	loggedInUserId:   String
 }
@@ -24035,6 +24045,47 @@ func (ec *executionContext) _Contract_invoiceEmail(ctx context.Context, field gr
 }
 
 func (ec *executionContext) fieldContext_Contract_invoiceEmail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_invoiceNote(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_invoiceNote(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InvoiceNote, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_invoiceNote(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Contract",
 		Field:      field,
@@ -43180,6 +43231,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_organizationLegalName(ctx, field)
 			case "invoiceEmail":
 				return ec.fieldContext_Contract_invoiceEmail(ctx, field)
+			case "invoiceNote":
+				return ec.fieldContext_Contract_invoiceNote(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
 		},
@@ -43325,6 +43378,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_organizationLegalName(ctx, field)
 			case "invoiceEmail":
 				return ec.fieldContext_Contract_invoiceEmail(ctx, field)
+			case "invoiceNote":
+				return ec.fieldContext_Contract_invoiceNote(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
 		},
@@ -60455,6 +60510,8 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_organizationLegalName(ctx, field)
 			case "invoiceEmail":
 				return ec.fieldContext_Contract_invoiceEmail(ctx, field)
+			case "invoiceNote":
+				return ec.fieldContext_Contract_invoiceNote(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
 		},
@@ -65969,6 +66026,8 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_organizationLegalName(ctx, field)
 			case "invoiceEmail":
 				return ec.fieldContext_Contract_invoiceEmail(ctx, field)
+			case "invoiceNote":
+				return ec.fieldContext_Contract_invoiceNote(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
 		},
@@ -70251,6 +70310,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_contract(ctx context.Cont
 				return ec.fieldContext_Contract_organizationLegalName(ctx, field)
 			case "invoiceEmail":
 				return ec.fieldContext_Contract_invoiceEmail(ctx, field)
+			case "invoiceNote":
+				return ec.fieldContext_Contract_invoiceNote(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
 		},
@@ -78048,7 +78109,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "patch", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource", "currency", "invoicingStartDate", "billingCycle", "addressLine1", "addressLine2", "locality", "country", "zip", "organizationLegalName", "invoiceEmail"}
+	fieldsInOrder := [...]string{"contractId", "patch", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource", "currency", "invoicingStartDate", "billingCycle", "addressLine1", "addressLine2", "locality", "country", "zip", "organizationLegalName", "invoiceEmail", "invoiceNote"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -78195,6 +78256,13 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.InvoiceEmail = data
+		case "invoiceNote":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoiceNote"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InvoiceNote = data
 		}
 	}
 
@@ -84874,6 +84942,8 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = ec._Contract_organizationLegalName(ctx, field, obj)
 		case "invoiceEmail":
 			out.Values[i] = ec._Contract_invoiceEmail(ctx, field, obj)
+		case "invoiceNote":
+			out.Values[i] = ec._Contract_invoiceNote(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

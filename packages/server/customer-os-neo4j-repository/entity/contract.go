@@ -33,6 +33,7 @@ type ContractEntity struct {
 	Country                         string
 	OrganizationLegalName           string
 	InvoiceEmail                    string
+	InvoiceNote                     string
 
 	DataloaderKey string
 }

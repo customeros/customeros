@@ -54,6 +54,7 @@ type ContractUpdateFields struct {
 	Zip                         string                 `json:"zip"`
 	OrganizationLegalName       string                 `json:"organizationLegalName"`
 	InvoiceEmail                string                 `json:"invoiceEmail"`
+	InvoiceNote                 string                 `json:"invoiceNote"`
 	UpdateName                  bool                   `json:"updateName"`
 	UpdateContractUrl           bool                   `json:"updateContractUrl"`
 	UpdateStatus                bool                   `json:"updateStatus"`
@@ -72,6 +73,7 @@ type ContractUpdateFields struct {
 	UpdateZip                   bool                   `json:"updateZip"`
 	UpdateOrganizationLegalName bool                   `json:"updateOrganizationLegalName"`
 	UpdateInvoiceEmail          bool                   `json:"updateInvoiceEmail"`
+	UpdateInvoiceNote           bool                   `json:"updateInvoiceNote"`
 }
 
 type ContractWriteRepository interface {
@@ -251,6 +253,10 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 	if data.UpdateInvoiceEmail {
 		cypher += `, ct.invoiceEmail = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $invoiceEmail ELSE ct.invoiceEmail END `
 		params["invoiceEmail"] = data.InvoiceEmail
+	}
+	if data.UpdateInvoiceNote {
+		cypher += `, ct.invoiceNote = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $invoiceNote ELSE ct.invoiceNote END `
+		params["invoiceNote"] = data.InvoiceNote
 	}
 	cypher += ` RETURN ct`
 

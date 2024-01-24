@@ -134,6 +134,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, "test zip", contract.Zip)
 			require.Equal(t, "test organization legal name", contract.OrganizationLegalName)
 			require.Equal(t, "test invoice email", contract.InvoiceEmail)
+			require.Equal(t, "test invoice note", contract.InvoiceNote)
 			require.Equal(t, 16, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
@@ -177,6 +178,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Country:               "country",
 		OrganizationLegalName: "organization legal name",
 		InvoiceEmail:          "invoice email",
+		InvoiceNote:           "invoice note",
 	})
 
 	serviceLineItemId1 := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
@@ -227,6 +229,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.Equal(t, "country", *contractEntity.Country)
 	require.Equal(t, "organization legal name", *contractEntity.OrganizationLegalName)
 	require.Equal(t, "invoice email", *contractEntity.InvoiceEmail)
+	require.Equal(t, "invoice note", *contractEntity.InvoiceNote)
 	require.Equal(t, 2, len(contractEntity.ServiceLineItems))
 
 	firstServiceLineItem := contractEntity.ServiceLineItems[0]

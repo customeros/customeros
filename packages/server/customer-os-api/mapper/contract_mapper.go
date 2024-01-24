@@ -37,6 +37,7 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		Locality:              &entity.Locality,
 		OrganizationLegalName: &entity.OrganizationLegalName,
 		InvoiceEmail:          &entity.InvoiceEmail,
+		InvoiceNote:           &entity.InvoiceNote,
 	}
 }
 

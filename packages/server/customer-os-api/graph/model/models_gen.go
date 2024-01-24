@@ -440,6 +440,7 @@ type Contract struct {
 	Zip                   *string               `json:"zip,omitempty"`
 	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
 	InvoiceEmail          *string               `json:"invoiceEmail,omitempty"`
+	InvoiceNote           *string               `json:"invoiceNote,omitempty"`
 }
 
 func (Contract) IsNode()            {}
@@ -481,6 +482,7 @@ type ContractUpdateInput struct {
 	Zip                   *string               `json:"zip,omitempty"`
 	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
 	InvoiceEmail          *string               `json:"invoiceEmail,omitempty"`
+	InvoiceNote           *string               `json:"invoiceNote,omitempty"`
 }
 
 type Country struct {
