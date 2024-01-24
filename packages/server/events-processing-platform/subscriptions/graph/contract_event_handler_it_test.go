@@ -158,7 +158,8 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		Name:        "test contract",
 		ContractUrl: "http://contract.url",
 	})
@@ -178,6 +179,24 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 		},
 	}
 	mocked_grpc.SetOpportunityCallbacks(&opportunityServiceRefreshCallbacks)
+
+	calledEventsPlatformForOnboardingStatusChange := false
+	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED, org.OnboardingStatus)
+			require.Equal(t, "", org.LoggedInUserId)
+			require.Equal(t, "", org.Comments)
+			require.Equal(t, contractId, org.CausedByContractId)
+			calledEventsPlatformForOnboardingStatusChange = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
@@ -231,6 +250,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 
 	// Verify call to events platform
 	require.True(t, calledEventsPlatformCreateRenewalOpportunity)
+	require.True(t, calledEventsPlatformForOnboardingStatusChange)
 }
 
 func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
