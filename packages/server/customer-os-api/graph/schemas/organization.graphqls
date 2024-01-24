@@ -76,7 +76,6 @@ type Organization implements Node {
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     owner: User @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
-    invoices(pagination: Pagination, where: Filter, sort: [SortBy!]): InvoicesPage! @goField(forceResolver: true)
 
     lastTouchPointAt: Time
     lastTouchPointType: LastTouchpointType

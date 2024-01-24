@@ -1037,7 +1037,7 @@ type Invoice struct {
 	DueDate          time.Time      `json:"dueDate"`
 	Amount           float64        `json:"amount"`
 	Vat              float64        `json:"vat"`
-	Total            float64        `json:"total"`
+	TotalAmount      float64        `json:"totalAmount"`
 	Currency         string         `json:"currency"`
 	RepositoryFileID string         `json:"repositoryFileId"`
 	InvoiceLines     []*InvoiceLine `json:"invoiceLines"`
@@ -1053,14 +1053,14 @@ func (this Invoice) GetAppSource() string         { return this.AppSource }
 func (Invoice) IsNode() {}
 
 type InvoiceLine struct {
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
-	Name      string    `json:"name"`
-	Price     float64   `json:"price"`
-	Quantity  int       `json:"quantity"`
-	Amount    float64   `json:"amount"`
-	Vat       float64   `json:"vat"`
-	Total     float64   `json:"total"`
+	ID          string    `json:"id"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Name        string    `json:"name"`
+	Price       float64   `json:"price"`
+	Quantity    int       `json:"quantity"`
+	Amount      float64   `json:"amount"`
+	Vat         float64   `json:"vat"`
+	TotalAmount float64   `json:"totalAmount"`
 }
 
 func (InvoiceLine) IsNode()            {}
@@ -1667,7 +1667,6 @@ type Organization struct {
 	TimelineEventsTotalCount      int64                         `json:"timelineEventsTotalCount"`
 	Owner                         *User                         `json:"owner,omitempty"`
 	ExternalLinks                 []*ExternalSystem             `json:"externalLinks"`
-	Invoices                      *InvoicesPage                 `json:"invoices"`
 	LastTouchPointAt              *time.Time                    `json:"lastTouchPointAt,omitempty"`
 	LastTouchPointType            *LastTouchpointType           `json:"lastTouchPointType,omitempty"`
 	LastTouchPointTimelineEventID *string                       `json:"lastTouchPointTimelineEventId,omitempty"`
