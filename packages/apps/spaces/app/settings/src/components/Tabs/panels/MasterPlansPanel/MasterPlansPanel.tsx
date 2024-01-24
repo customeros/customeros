@@ -3,13 +3,12 @@
 import { useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { Grid, GridItem } from '@ui/layout/Grid';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import {
   MasterPlansQuery,
   useMasterPlansQuery,
-} from '@settings/graphql/masterPlans.generated';
-
-import { Grid, GridItem } from '@ui/layout/Grid';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+} from '@shared/graphql/masterPlans.generated';
 
 import {
   Milestones,
@@ -63,7 +62,7 @@ export const MasterPlansPanel = () => {
       if (!firstId) return;
 
       newParams.set('planId', firstId);
-      router.push(`/settings?${newParams.toString()}`);
+      router.replace(`/settings?${newParams.toString()}`);
     }
   }, [showRetired, planId]);
 
