@@ -54,9 +54,9 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 			CreatedByUserId:    userIdCreator,
 			ServiceStartedAt:   &timeNow,
 			SignedAt:           &timeNow,
-			RenewalCycle:       model.MonthlyRenewal,
+			RenewalCycle:       model.MonthlyRenewal.String(),
 			Status:             model.Live,
-			BillingCycle:       model.MonthlyBilling,
+			BillingCycle:       model.MonthlyBilling.String(),
 			Currency:           "USD",
 			InvoicingStartDate: &timeNow,
 		},
@@ -197,12 +197,13 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 			ServiceStartedAt: &yesterday,
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
-			RenewalCycle:     model.MonthlyRenewal,
+			RenewalCycle:     model.MonthlyRenewal.String(),
 			Status:           model.Live,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		now)
+		now,
+		[]string{})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -277,11 +278,12 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
 			Name:         "test contract updated",
-			RenewalCycle: model.MonthlyRenewal,
+			RenewalCycle: model.MonthlyRenewal.String(),
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		utils.Now())
+		utils.Now(),
+		[]string{})
 	require.Nil(t, err)
 
 	// EXECUTE
@@ -337,11 +339,12 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
 			Name:         "test contract updated",
-			RenewalCycle: model.AnnuallyRenewal,
+			RenewalCycle: model.AnnuallyRenewal.String(),
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		utils.Now())
+		utils.Now(),
+		[]string{})
 	require.Nil(t, err)
 
 	// EXECUTE
@@ -402,11 +405,12 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
 			Name:         "test contract updated",
-			RenewalCycle: model.NoneRenewal,
+			RenewalCycle: model.NoneRenewal.String(),
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		utils.Now())
+		utils.Now(),
+		[]string{})
 	require.Nil(t, err)
 
 	// EXECUTE
@@ -492,12 +496,13 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
 			Name:             "test contract updated",
-			RenewalCycle:     model.MonthlyRenewal,
+			RenewalCycle:     model.MonthlyRenewal.String(),
 			ServiceStartedAt: &now,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		utils.Now())
+		utils.Now(),
+		[]string{})
 	require.Nil(t, err)
 
 	// EXECUTE
@@ -592,12 +597,13 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 			ServiceStartedAt: &yesterday,
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
-			RenewalCycle:     model.MonthlyRenewal,
+			RenewalCycle:     model.MonthlyRenewal.String(),
 			Status:           model.Live,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		now)
+		now,
+		[]string{})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -665,12 +671,13 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 			ServiceStartedAt: &yesterday,
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
-			RenewalCycle:     model.MonthlyRenewal,
+			RenewalCycle:     model.MonthlyRenewal.String(),
 			Status:           model.Live,
 		},
 		commonmodel.ExternalSystem{},
 		"hubspot",
-		now)
+		now,
+		[]string{})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
