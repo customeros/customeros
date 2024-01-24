@@ -76,6 +76,7 @@ func InitClients() {
 
 func main() {
 	InitClients()
+
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
 	//testCreateOrganization()
@@ -111,7 +112,7 @@ func main() {
 	//testUpdateOrgOwner()
 	//testRefreshLastTouchpoint()
 	//testAddTenantBillingProfile()
-	testCreateInvoice()
+	//testCreateInvoice()
 }
 
 func testCreateInvoice() {

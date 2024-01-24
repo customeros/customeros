@@ -38,7 +38,7 @@ func LoadOrganizationTempAggregate(ctx context.Context, eventStore eventstore.Ag
 
 	organizationTempAggregate := NewOrganizationTempAggregateWithTenantAndID(tenant, objectID)
 
-	err := aggregate.LoadAggregate(ctx, eventStore, organizationTempAggregate, *eventstore.NewLoadAggregateOptions())
+	err := aggregate.LoadAggregate(ctx, eventStore, organizationTempAggregate, opts)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
