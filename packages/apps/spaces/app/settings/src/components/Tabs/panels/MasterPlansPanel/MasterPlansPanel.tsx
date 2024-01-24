@@ -13,6 +13,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 import {
   Milestones,
+  NoMasterPlans,
   ActiveMasterPlans,
   MasterPlanDetails,
   RetiredMasterPlans,
@@ -66,6 +67,8 @@ export const MasterPlansPanel = () => {
     }
   }, [showRetired, planId]);
 
+  if (!data?.masterPlans?.length) return <NoMasterPlans />;
+
   return (
     <Grid templateColumns='1fr 2fr' h='full'>
       <GridItem
@@ -85,7 +88,7 @@ export const MasterPlansPanel = () => {
       </GridItem>
 
       <GridItem p='4'>
-        {planId && (
+        {planId && selectedPlan && (
           <>
             <MasterPlanDetails
               id={planId}

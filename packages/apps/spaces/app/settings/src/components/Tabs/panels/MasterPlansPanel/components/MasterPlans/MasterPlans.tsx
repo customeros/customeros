@@ -59,10 +59,6 @@ const LoadingMasterplans = () => {
   );
 };
 
-const NoMasterplans = () => {
-  return <Flex>No master plans created yet</Flex>;
-};
-
 interface MasterPlansProps {
   isLoading?: boolean;
   masterPlans?: MasterPlansQuery['masterPlans'];
@@ -70,11 +66,10 @@ interface MasterPlansProps {
 
 export const MasterPlans = ({ masterPlans, isLoading }: MasterPlansProps) => {
   if (isLoading) return <LoadingMasterplans />;
-  if (!masterPlans) return <NoMasterplans />;
 
   return (
     <VStack align='flex-start' overflowY='auto' h='calc(100vh - 100px)'>
-      {masterPlans.map(({ id, name }) => (
+      {masterPlans?.map(({ id, name }) => (
         <MasterPlanItem key={id} id={id}>
           {name}
         </MasterPlanItem>
