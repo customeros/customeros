@@ -12591,6 +12591,7 @@ input ServiceLineItemBulkUpdateItem {
 
 input ServiceLineItemBulkUpdateInput {
     serviceLineItems: [ServiceLineItemBulkUpdateItem]!
+    contractId: ID!
     invoiceNote: String
 }
 
@@ -81617,7 +81618,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"serviceLineItems", "invoiceNote"}
+	fieldsInOrder := [...]string{"serviceLineItems", "contractId", "invoiceNote"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -81631,6 +81632,13 @@ func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateInput(ctx con
 				return it, err
 			}
 			it.ServiceLineItems = data
+		case "contractId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ContractID = data
 		case "invoiceNote":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoiceNote"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)

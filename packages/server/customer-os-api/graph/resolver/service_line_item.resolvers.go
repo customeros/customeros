@@ -122,9 +122,10 @@ func (r *mutationResolver) ServiceLineItemBulkUpdate(ctx context.Context, input 
 		return nil, nil
 	}
 
-	if input.InvoiceNote != nil {
+	if input.InvoiceNote != nil && input.ContractID != "" {
 		err = r.Services.ContractService.Update(ctx, model.ContractUpdateInput{
 			Patch:       utils.ToPtr(true),
+			ContractID:  input.ContractID,
 			InvoiceNote: input.InvoiceNote,
 		})
 		if err != nil {

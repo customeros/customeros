@@ -67,6 +67,7 @@ input ServiceLineItemBulkUpdateItem {
 
 input ServiceLineItemBulkUpdateInput {
     serviceLineItems: [ServiceLineItemBulkUpdateItem]!
+    contractId: ID!
     invoiceNote: String
 }
 

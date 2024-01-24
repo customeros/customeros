@@ -2044,6 +2044,7 @@ func (this ServiceLineItem) GetID() string { return this.ID }
 
 type ServiceLineItemBulkUpdateInput struct {
 	ServiceLineItems []*ServiceLineItemBulkUpdateItem `json:"serviceLineItems"`
+	ContractID       string                           `json:"contractId"`
 	InvoiceNote      *string                          `json:"invoiceNote,omitempty"`
 }
 
