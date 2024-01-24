@@ -231,6 +231,7 @@ func TestContractService_UpdateContract(t *testing.T) {
 		SignedAt:         timestamppb.New(timeNow),
 		EndedAt:          timestamppb.New(timeNow.AddDate(0, 1, 0)),
 		RenewalCycle:     contractpb.RenewalCycle_MONTHLY_RENEWAL,
+		Currency:         "USD",
 		SourceFields: &commonpb.SourceFields{
 			Source:    constants.SourceOpenline,
 			AppSource: "unit-test",
@@ -276,4 +277,5 @@ func TestContractService_UpdateContract(t *testing.T) {
 	require.True(t, timeNow.AddDate(0, 1, 0).Equal(*eventData.EndedAt))
 	require.Equal(t, constants.SourceOpenline, eventData.Source)
 	require.Equal(t, "ExternalSystemID", eventData.ExternalSystem.ExternalSystemId)
+	require.Equal(t, "USD", eventData.Currency)
 }

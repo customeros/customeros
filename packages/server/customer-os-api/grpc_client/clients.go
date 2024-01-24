@@ -10,6 +10,7 @@ import (
 	log_entry_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
 	master_plan_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
 	opportunity_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
+	organization_plan_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/org_plan"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	service_line_item_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
@@ -18,19 +19,20 @@ import (
 )
 
 type Clients struct {
-	ContactClient         contact_grpc_service.ContactGrpcServiceClient
-	OrganizationClient    organization_grpc_service.OrganizationGrpcServiceClient
-	PhoneNumberClient     phone_number_grpc_service.PhoneNumberGrpcServiceClient
-	EmailClient           email_grpc_service.EmailGrpcServiceClient
-	UserClient            user_grpc_service.UserGrpcServiceClient
-	JobRoleClient         job_role_grpc_service.JobRoleGrpcServiceClient
-	LogEntryClient        log_entry_grpc_service.LogEntryGrpcServiceClient
-	ContractClient        contract_grpc_service.ContractGrpcServiceClient
-	ServiceLineItemClient service_line_item_grpc_service.ServiceLineItemGrpcServiceClient
-	OpportunityClient     opportunity_grpc_service.OpportunityGrpcServiceClient
-	MasterPlanClient      master_plan_grpc_service.MasterPlanGrpcServiceClient
-	InvoicingCycleClient  invoicing_cycle_grpc_service.InvoicingCycleGrpcServiceClient
-	InvoiceClient         invoice_grpc_service.InvoiceGrpcServiceClient
+	ContactClient          contact_grpc_service.ContactGrpcServiceClient
+	OrganizationClient     organization_grpc_service.OrganizationGrpcServiceClient
+	PhoneNumberClient      phone_number_grpc_service.PhoneNumberGrpcServiceClient
+	EmailClient            email_grpc_service.EmailGrpcServiceClient
+	UserClient             user_grpc_service.UserGrpcServiceClient
+	JobRoleClient          job_role_grpc_service.JobRoleGrpcServiceClient
+	LogEntryClient         log_entry_grpc_service.LogEntryGrpcServiceClient
+	ContractClient         contract_grpc_service.ContractGrpcServiceClient
+	ServiceLineItemClient  service_line_item_grpc_service.ServiceLineItemGrpcServiceClient
+	OpportunityClient      opportunity_grpc_service.OpportunityGrpcServiceClient
+	MasterPlanClient       master_plan_grpc_service.MasterPlanGrpcServiceClient
+	InvoicingCycleClient   invoicing_cycle_grpc_service.InvoicingCycleGrpcServiceClient
+	InvoiceClient          invoice_grpc_service.InvoiceGrpcServiceClient
+	OrganizationPlanClient organization_plan_grpc_service.OrganizationPlanGrpcServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Clients {
@@ -38,19 +40,20 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		return &Clients{}
 	}
 	clients := Clients{
-		ContactClient:         contact_grpc_service.NewContactGrpcServiceClient(conn),
-		OrganizationClient:    organization_grpc_service.NewOrganizationGrpcServiceClient(conn),
-		PhoneNumberClient:     phone_number_grpc_service.NewPhoneNumberGrpcServiceClient(conn),
-		EmailClient:           email_grpc_service.NewEmailGrpcServiceClient(conn),
-		UserClient:            user_grpc_service.NewUserGrpcServiceClient(conn),
-		JobRoleClient:         job_role_grpc_service.NewJobRoleGrpcServiceClient(conn),
-		LogEntryClient:        log_entry_grpc_service.NewLogEntryGrpcServiceClient(conn),
-		ContractClient:        contract_grpc_service.NewContractGrpcServiceClient(conn),
-		ServiceLineItemClient: service_line_item_grpc_service.NewServiceLineItemGrpcServiceClient(conn),
-		OpportunityClient:     opportunity_grpc_service.NewOpportunityGrpcServiceClient(conn),
-		MasterPlanClient:      master_plan_grpc_service.NewMasterPlanGrpcServiceClient(conn),
-		InvoicingCycleClient:  invoicing_cycle_grpc_service.NewInvoicingCycleGrpcServiceClient(conn),
-		InvoiceClient:         invoice_grpc_service.NewInvoiceGrpcServiceClient(conn),
+		ContactClient:          contact_grpc_service.NewContactGrpcServiceClient(conn),
+		OrganizationClient:     organization_grpc_service.NewOrganizationGrpcServiceClient(conn),
+		PhoneNumberClient:      phone_number_grpc_service.NewPhoneNumberGrpcServiceClient(conn),
+		EmailClient:            email_grpc_service.NewEmailGrpcServiceClient(conn),
+		UserClient:             user_grpc_service.NewUserGrpcServiceClient(conn),
+		JobRoleClient:          job_role_grpc_service.NewJobRoleGrpcServiceClient(conn),
+		LogEntryClient:         log_entry_grpc_service.NewLogEntryGrpcServiceClient(conn),
+		ContractClient:         contract_grpc_service.NewContractGrpcServiceClient(conn),
+		ServiceLineItemClient:  service_line_item_grpc_service.NewServiceLineItemGrpcServiceClient(conn),
+		OpportunityClient:      opportunity_grpc_service.NewOpportunityGrpcServiceClient(conn),
+		MasterPlanClient:       master_plan_grpc_service.NewMasterPlanGrpcServiceClient(conn),
+		InvoicingCycleClient:   invoicing_cycle_grpc_service.NewInvoicingCycleGrpcServiceClient(conn),
+		InvoiceClient:          invoice_grpc_service.NewInvoiceGrpcServiceClient(conn),
+		OrganizationPlanClient: organization_plan_grpc_service.NewOrganizationPlanGrpcServiceClient(conn),
 	}
 	return &clients
 }

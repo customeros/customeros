@@ -216,7 +216,7 @@ useOrganizationQuery.fetcher = (
   );
 
 useOrganizationQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: OrganizationQueryVariables) =>
+  (queryClient: QueryClient, variables?: OrganizationQueryVariables) =>
   (mutator: (cacheEntry: OrganizationQuery) => OrganizationQuery) => {
     const cacheKey = useOrganizationQuery.getKey(variables);
     const previousEntries =
@@ -227,7 +227,7 @@ useOrganizationQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteOrganizationQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: OrganizationQueryVariables) =>
+  (queryClient: QueryClient, variables?: OrganizationQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<OrganizationQuery>,

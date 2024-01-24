@@ -98,7 +98,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		events.OrganizationRefreshLastTouchpointV1,
 		events.OrganizationRefreshArrV1,
 		events.OrganizationRefreshRenewalSummaryV1,
-		events.OrganizationRequestScrapeByWebsiteV1:
+		events.OrganizationRequestScrapeByWebsiteV1,
+		events.OrganizationUpdateOwnerNotificationV1:
 		return nil
 	case orgplanevents.OrganizationPlanCreateV1:
 		return a.onOrganizationPlanCreate(event)

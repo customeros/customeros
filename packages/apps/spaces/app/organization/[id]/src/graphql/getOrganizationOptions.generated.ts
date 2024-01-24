@@ -164,7 +164,10 @@ useGetOrganizationOptionsQuery.fetcher = (
   );
 
 useGetOrganizationOptionsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetOrganizationOptionsQueryVariables) =>
+  (
+    queryClient: QueryClient,
+    variables?: GetOrganizationOptionsQueryVariables,
+  ) =>
   (
     mutator: (
       cacheEntry: GetOrganizationOptionsQuery,
@@ -179,7 +182,10 @@ useGetOrganizationOptionsQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetOrganizationOptionsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetOrganizationOptionsQueryVariables) =>
+  (
+    queryClient: QueryClient,
+    variables?: GetOrganizationOptionsQueryVariables,
+  ) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetOrganizationOptionsQuery>,

@@ -1,0 +1,5 @@
+mutation duplicateMasterPlan($id: ID!) {
+  masterPlan_Duplicate(id: $id) {
+    id
+  }
+}

@@ -9,7 +9,6 @@ import (
 // CommandHandlers acts as a container for all command handlers.
 type CommandHandlers struct {
 	CreateContract                        CreateContractCommandHandler
-	UpdateContract                        UpdateContractCommandHandler
 	RefreshContractStatus                 RefreshContractStatusCommandHandler
 	RolloutRenewalOpportunityOnExpiration RolloutRenewalOpportunityOnExpirationCommandHandler
 }
@@ -17,7 +16,6 @@ type CommandHandlers struct {
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
 	return &CommandHandlers{
 		CreateContract:                        NewCreateContractCommandHandler(log, es),
-		UpdateContract:                        NewUpdateContractCommandHandler(log, es, cfg.Utils),
 		RefreshContractStatus:                 NewRefreshContractStatusCommandHandler(log, es, cfg.Utils),
 		RolloutRenewalOpportunityOnExpiration: NewRolloutRenewalOpportunityOnExpirationCommandHandler(log, es, cfg.Utils),
 	}

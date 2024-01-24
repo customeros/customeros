@@ -54,9 +54,9 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 			CreatedByUserId:    userIdCreator,
 			ServiceStartedAt:   &timeNow,
 			SignedAt:           &timeNow,
-			RenewalCycle:       model.MonthlyRenewal,
+			RenewalCycle:       model.MonthlyRenewal.String(),
 			Status:             model.Live,
-			BillingCycle:       model.MonthlyBilling,
+			BillingCycle:       model.MonthlyBilling.String(),
 			Currency:           "USD",
 			InvoicingStartDate: &timeNow,
 		},
@@ -158,7 +158,8 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, neo4jentity.ContractEntity{
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		Name:        "test contract",
 		ContractUrl: "http://contract.url",
 	})
@@ -179,6 +180,24 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	}
 	mocked_grpc.SetOpportunityCallbacks(&opportunityServiceRefreshCallbacks)
 
+	calledEventsPlatformForOnboardingStatusChange := false
+	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
+		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, org.AppSource)
+			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED, org.OnboardingStatus)
+			require.Equal(t, "", org.LoggedInUserId)
+			require.Equal(t, "", org.Comments)
+			require.Equal(t, contractId, org.CausedByContractId)
+			calledEventsPlatformForOnboardingStatusChange = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: orgId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
 		log:          testLogger,
@@ -197,12 +216,13 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 			ServiceStartedAt: &yesterday,
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
-			RenewalCycle:     model.MonthlyRenewal,
+			RenewalCycle:     model.MonthlyRenewal.String(),
 			Status:           model.Live,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		now)
+		now,
+		[]string{})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -230,6 +250,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 
 	// Verify call to events platform
 	require.True(t, calledEventsPlatformCreateRenewalOpportunity)
+	require.True(t, calledEventsPlatformForOnboardingStatusChange)
 }
 
 func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
@@ -277,11 +298,12 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
 			Name:         "test contract updated",
-			RenewalCycle: model.MonthlyRenewal,
+			RenewalCycle: model.MonthlyRenewal.String(),
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		utils.Now())
+		utils.Now(),
+		[]string{})
 	require.Nil(t, err)
 
 	// EXECUTE
@@ -337,11 +359,12 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
 			Name:         "test contract updated",
-			RenewalCycle: model.AnnuallyRenewal,
+			RenewalCycle: model.AnnuallyRenewal.String(),
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		utils.Now())
+		utils.Now(),
+		[]string{})
 	require.Nil(t, err)
 
 	// EXECUTE
@@ -359,7 +382,7 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	// prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		RenewalCycle: neo4jenum.RenewalCycleMonthlyRenewal,
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
@@ -402,11 +425,12 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
 			Name:         "test contract updated",
-			RenewalCycle: model.NoneRenewal,
+			RenewalCycle: model.NoneRenewal.String(),
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		utils.Now())
+		utils.Now(),
+		[]string{})
 	require.Nil(t, err)
 
 	// EXECUTE
@@ -492,12 +516,13 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
 			Name:             "test contract updated",
-			RenewalCycle:     model.MonthlyRenewal,
+			RenewalCycle:     model.MonthlyRenewal.String(),
 			ServiceStartedAt: &now,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		utils.Now())
+		utils.Now(),
+		[]string{})
 	require.Nil(t, err)
 
 	// EXECUTE
@@ -592,12 +617,13 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 			ServiceStartedAt: &yesterday,
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
-			RenewalCycle:     model.MonthlyRenewal,
+			RenewalCycle:     model.MonthlyRenewal.String(),
 			Status:           model.Live,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		now)
+		now,
+		[]string{})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -665,12 +691,13 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 			ServiceStartedAt: &yesterday,
 			SignedAt:         &daysAgo2,
 			EndedAt:          &tomorrow,
-			RenewalCycle:     model.MonthlyRenewal,
+			RenewalCycle:     model.MonthlyRenewal.String(),
 			Status:           model.Live,
 		},
 		commonmodel.ExternalSystem{},
 		"hubspot",
-		now)
+		now,
+		[]string{})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -704,7 +731,7 @@ func TestContractEventHandler_OnUpdateStatus_Ended(t *testing.T) {
 	// Prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		Name:           "test contract",
 		ContractStatus: neo4jenum.ContractStatusDraft,
 	})
@@ -781,7 +808,7 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	// Prepare neo4j data
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContract(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{
 		Name:           "test contract",
 		ContractStatus: neo4jenum.ContractStatusDraft,
 	})

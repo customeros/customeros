@@ -134,7 +134,7 @@ useGetCanAccessOrganizationQuery.fetcher = (
 useGetCanAccessOrganizationQuery.mutateCacheEntry =
   (
     queryClient: QueryClient,
-    variables: GetCanAccessOrganizationQueryVariables,
+    variables?: GetCanAccessOrganizationQueryVariables,
   ) =>
   (
     mutator: (
@@ -155,7 +155,7 @@ useGetCanAccessOrganizationQuery.mutateCacheEntry =
 useInfiniteGetCanAccessOrganizationQuery.mutateCacheEntry =
   (
     queryClient: QueryClient,
-    variables: GetCanAccessOrganizationQueryVariables,
+    variables?: GetCanAccessOrganizationQueryVariables,
   ) =>
   (
     mutator: (

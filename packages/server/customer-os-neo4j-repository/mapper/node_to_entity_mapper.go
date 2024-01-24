@@ -311,6 +311,13 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		InvoicingStartDate:              utils.GetTimePropOrNil(props, "invoicingStartDate"),
 		Currency:                        enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
 		BillingCycle:                    enum.DecodeBillingCycle(utils.GetStringPropOrEmpty(props, "billingCycle")),
+		AddressLine1:                    utils.GetStringPropOrEmpty(props, "addressLine1"),
+		AddressLine2:                    utils.GetStringPropOrEmpty(props, "addressLine2"),
+		Zip:                             utils.GetStringPropOrEmpty(props, "zip"),
+		Locality:                        utils.GetStringPropOrEmpty(props, "locality"),
+		Country:                         utils.GetStringPropOrEmpty(props, "country"),
+		OrganizationLegalName:           utils.GetStringPropOrEmpty(props, "organizationLegalName"),
+		InvoiceEmail:                    utils.GetStringPropOrEmpty(props, "invoiceEmail"),
 	}
 	return &contract
 }

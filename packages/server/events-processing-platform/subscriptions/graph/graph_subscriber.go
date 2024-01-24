@@ -2,6 +2,8 @@ package graph
 
 import (
 	"context"
+	"strings"
+
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
@@ -31,7 +33,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"golang.org/x/sync/errgroup"
-	"strings"
 
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -404,6 +405,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	case tenantevent.TenantAddBillingProfileV1:
 		return s.tenantEventHandler.OnAddBillingProfile(ctx, evt)
+
+	case orgevents.OrganizationUpdateOwnerNotificationV1:
+		return nil
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)

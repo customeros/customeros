@@ -150,7 +150,7 @@ useRetentionRateQuery.fetcher = (
   );
 
 useRetentionRateQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: RetentionRateQueryVariables) =>
+  (queryClient: QueryClient, variables?: RetentionRateQueryVariables) =>
   (mutator: (cacheEntry: RetentionRateQuery) => RetentionRateQuery) => {
     const cacheKey = useRetentionRateQuery.getKey(variables);
     const previousEntries =
@@ -161,7 +161,7 @@ useRetentionRateQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteRetentionRateQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: RetentionRateQueryVariables) =>
+  (queryClient: QueryClient, variables?: RetentionRateQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<RetentionRateQuery>,

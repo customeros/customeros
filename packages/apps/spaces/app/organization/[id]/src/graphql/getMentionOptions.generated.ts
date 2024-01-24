@@ -153,7 +153,7 @@ useGetMentionOptionsQuery.fetcher = (
   );
 
 useGetMentionOptionsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetMentionOptionsQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetMentionOptionsQueryVariables) =>
   (mutator: (cacheEntry: GetMentionOptionsQuery) => GetMentionOptionsQuery) => {
     const cacheKey = useGetMentionOptionsQuery.getKey(variables);
     const previousEntries =
@@ -164,7 +164,7 @@ useGetMentionOptionsQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteGetMentionOptionsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: GetMentionOptionsQueryVariables) =>
+  (queryClient: QueryClient, variables?: GetMentionOptionsQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<GetMentionOptionsQuery>,

@@ -142,7 +142,7 @@ useOrganizationAccountDetailsQuery.fetcher = (
 useOrganizationAccountDetailsQuery.mutateCacheEntry =
   (
     queryClient: QueryClient,
-    variables: OrganizationAccountDetailsQueryVariables,
+    variables?: OrganizationAccountDetailsQueryVariables,
   ) =>
   (
     mutator: (
@@ -163,7 +163,7 @@ useOrganizationAccountDetailsQuery.mutateCacheEntry =
 useInfiniteOrganizationAccountDetailsQuery.mutateCacheEntry =
   (
     queryClient: QueryClient,
-    variables: OrganizationAccountDetailsQueryVariables,
+    variables?: OrganizationAccountDetailsQueryVariables,
   ) =>
   (
     mutator: (

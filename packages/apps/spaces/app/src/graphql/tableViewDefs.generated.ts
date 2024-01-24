@@ -185,7 +185,7 @@ useTableViewDefsQuery.fetcher = (
   );
 
 useTableViewDefsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: TableViewDefsQueryVariables) =>
+  (queryClient: QueryClient, variables?: TableViewDefsQueryVariables) =>
   (mutator: (cacheEntry: TableViewDefsQuery) => TableViewDefsQuery) => {
     const cacheKey = useTableViewDefsQuery.getKey(variables);
     const previousEntries =
@@ -196,7 +196,7 @@ useTableViewDefsQuery.mutateCacheEntry =
     return { previousEntries };
   };
 useInfiniteTableViewDefsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables: TableViewDefsQueryVariables) =>
+  (queryClient: QueryClient, variables?: TableViewDefsQueryVariables) =>
   (
     mutator: (
       cacheEntry: InfiniteData<TableViewDefsQuery>,
