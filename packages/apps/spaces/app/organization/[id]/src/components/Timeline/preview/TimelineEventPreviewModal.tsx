@@ -1,16 +1,18 @@
 import { VirtuosoHandle } from 'react-virtuoso';
 
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
+import { IssuePreviewModal } from '@organization/src/components/Timeline/events/issue/IssuePreviewModal';
+import { InvoicePreviewModal } from '@organization/src/components/Timeline/events/invoice/InvoicePreviewModal';
+import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
+import { LogEntryPreviewModal } from '@organization/src/components/Timeline/events/logEntry/LogEntryPreviewModal';
 import {
   Issue,
   Action,
   Meeting,
+  Invoice,
   InteractionEvent,
   ExternalSystemType,
 } from '@graphql/types';
-import { IssuePreviewModal } from '@organization/src/components/Timeline/events/issue/IssuePreviewModal';
-import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
-import { LogEntryPreviewModal } from '@organization/src/components/Timeline/events/logEntry/LogEntryPreviewModal';
 import { IntercomThreadPreviewModal } from '@organization/src/components/Timeline/events/intercom/IntercomThreadPreviewModal';
 import { useTimelineEventPreviewStateContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { LogEntryUpdateModalContextProvider } from '@organization/src/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
@@ -36,12 +38,14 @@ export const TimelineEventPreviewModal = ({
     | Meeting
     | Action
     | Issue
+    | Pick<Invoice, 'id' | '__typename'>
     | LogEntryWithAliases;
   const isMeeting = event?.__typename === 'Meeting';
   const isAction = event?.__typename === 'Action';
   const isLogEntry = event?.__typename === 'LogEntry';
   const isInteraction = event?.__typename === 'InteractionEvent';
   const isIssue = event?.__typename === 'Issue';
+  const isInvoice = event?.__typename === 'Invoice';
   const isSlack =
     isInteraction &&
     event?.channel === 'CHAT' &&
@@ -72,6 +76,7 @@ export const TimelineEventPreviewModal = ({
         {isAction && <ActionPreviewModal type={event.actionType} />}
         {isLogEntry && <LogEntryPreviewModal />}
         {isIssue && <IssuePreviewModal />}
+        {isInvoice && <InvoicePreviewModal />}
       </TimelinePreviewBackdrop>
     </LogEntryUpdateModalContextProvider>
   );

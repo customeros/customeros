@@ -5,28 +5,22 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type UpdateMeetingMutationVariables = Types.Exact<{
   meetingId: Types.Scalars['ID']['input'];
   meeting: Types.MeetingUpdateInput;
 }>;
 
-export type UpdateMeetingMutation = {
-  __typename?: 'Mutation';
-  meeting_Update: { __typename?: 'Meeting'; id: string };
-};
+
+export type UpdateMeetingMutation = { __typename?: 'Mutation', meeting_Update: { __typename?: 'Meeting', id: string } };
+
+
 
 export const UpdateMeetingDocument = `
     mutation updateMeeting($meetingId: ID!, $meeting: MeetingUpdateInput!) {
@@ -36,44 +30,24 @@ export const UpdateMeetingDocument = `
 }
     `;
 
-export const useUpdateMeetingMutation = <TError = unknown, TContext = unknown>(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    UpdateMeetingMutation,
-    TError,
-    UpdateMeetingMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) => {
-  return useMutation<
-    UpdateMeetingMutation,
-    TError,
-    UpdateMeetingMutationVariables,
-    TContext
-  >({
+export const useUpdateMeetingMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<UpdateMeetingMutation, TError, UpdateMeetingMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<UpdateMeetingMutation, TError, UpdateMeetingMutationVariables, TContext>(
+      {
     mutationKey: ['updateMeeting'],
-    mutationFn: (variables?: UpdateMeetingMutationVariables) =>
-      fetcher<UpdateMeetingMutation, UpdateMeetingMutationVariables>(
-        client,
-        UpdateMeetingDocument,
-        variables,
-        headers,
-      )(),
-    ...options,
-  });
-};
+    mutationFn: (variables?: UpdateMeetingMutationVariables) => fetcher<UpdateMeetingMutation, UpdateMeetingMutationVariables>(client, UpdateMeetingDocument, variables, headers)(),
+    ...options
+  }
+    )};
 
 useUpdateMeetingMutation.getKey = () => ['updateMeeting'];
 
-useUpdateMeetingMutation.fetcher = (
-  client: GraphQLClient,
-  variables: UpdateMeetingMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<UpdateMeetingMutation, UpdateMeetingMutationVariables>(
-    client,
-    UpdateMeetingDocument,
-    variables,
-    headers,
-  );
+
+useUpdateMeetingMutation.fetcher = (client: GraphQLClient, variables: UpdateMeetingMutationVariables, headers?: RequestInit['headers']) => fetcher<UpdateMeetingMutation, UpdateMeetingMutationVariables>(client, UpdateMeetingDocument, variables, headers);

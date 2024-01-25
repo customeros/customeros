@@ -13,6 +13,7 @@ import { Image } from '@ui/media/Image';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { GridItem } from '@ui/layout/Grid';
+import { Receipt } from '@ui/media/icons/Receipt';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { mockedTableDefs } from '@shared/util/tableDefs.mock';
@@ -164,14 +165,30 @@ export const RootSidenav = () => {
             />
           )}
         />
+        ś
       </VStack>
 
       <VStack spacing='2' w='full'>
         {(globalCache?.isOwner || showMyViewsItems) && (
           <Flex w='full' justify='flex-start' pl='3.5'>
-            <Text color='gray.500'>My views</Text>
+            <Text color='gray.500' fontSize='sm'>
+              My views
+            </Text>
           </Flex>
         )}
+
+        <SidenavItem
+          label='Invoices'
+          isActive={checkIsActive('invoices')}
+          onClick={() => handleItemClick('invoices')}
+          icon={
+            <Receipt
+              color={checkIsActive('invoices') ? 'gray.700' : 'gray.500'}
+              boxSize='5'
+            />
+          }
+        />
+
         {globalCache?.isOwner && (
           <SidenavItem
             label='My portfolio'

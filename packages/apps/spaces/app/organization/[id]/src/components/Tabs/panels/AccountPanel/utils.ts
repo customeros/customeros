@@ -72,3 +72,7 @@ export const billedTypeOptions: SelectOption<BilledType>[] = [
   { label: 'Quarterly', value: BilledType.Quarterly },
   { label: 'Annually', value: BilledType.Annually },
 ];
+
+export const currencyOptions: SelectOption<string>[] = [
+  { label: 'United States Dollar', value: 'USD' },
+];

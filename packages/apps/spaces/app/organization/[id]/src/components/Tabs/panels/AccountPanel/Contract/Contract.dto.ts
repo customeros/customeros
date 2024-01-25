@@ -16,6 +16,7 @@ export interface TimeToRenewalData {
   invoicingStartDate?: Date;
   organizationName?: string;
   contractUrl?: string | null;
+
   renewalPeriods?: number | null;
   renewalCycle?: ContractRenewalCycle;
   billingCycle?: ContractBillingCycle | null;
@@ -27,6 +28,8 @@ export interface TimeToRenewalForm {
   invoicingStartDate?: Date;
   contractUrl?: string | null;
   renewalPeriods?: string | null;
+  country?: SelectOption<string> | null;
+  organizationLegalName?: string | null;
   billingCycle?: SelectOption<ContractBillingCycle> | null;
   renewalCycle?: SelectOption<ContractRenewalCycle | 'MULTI_YEAR'> | null;
 }
