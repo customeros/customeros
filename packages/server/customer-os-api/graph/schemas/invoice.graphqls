@@ -33,6 +33,7 @@ type Invoice implements SourceFields & Node {
     repositoryFileId:   String!
     invoiceLines:       [InvoiceLine!]! @goField(forceResolver: true)
     status:             InvoiceStatus
+    note:               String
 }
 
 type InvoiceLine implements Node {

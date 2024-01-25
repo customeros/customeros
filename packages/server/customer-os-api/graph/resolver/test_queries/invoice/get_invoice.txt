@@ -13,6 +13,7 @@ invoice(id: $id) {
     totalAmount
     currency
     repositoryFileId
+    note
 
     invoiceLines {
         name

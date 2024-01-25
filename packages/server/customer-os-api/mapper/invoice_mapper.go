@@ -10,7 +10,7 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 	if entity == nil {
 		return nil
 	}
-	return &model.Invoice{
+	invoice := model.Invoice{
 		ID:               entity.Id,
 		CreatedAt:        entity.CreatedAt,
 		UpdatedAt:        entity.UpdatedAt,
@@ -29,6 +29,10 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 		RepositoryFileID: entity.RepositoryFileId,
 		Status:           utils.ToPtr(MapInvoiceStatusToModel(entity.Status)),
 	}
+	if entity.Note != "" {
+		invoice.Note = utils.ToPtr(entity.Note)
+	}
+	return &invoice
 }
 
 func MapEntityToInvoiceLine(entity *neo4jentity.InvoiceLineEntity) *model.InvoiceLine {

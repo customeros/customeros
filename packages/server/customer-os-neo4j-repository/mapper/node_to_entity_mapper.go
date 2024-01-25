@@ -33,6 +33,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
 		Status:           enum.DecodeInvoiceStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Note:             utils.GetStringPropOrEmpty(props, "note"),
 		InvoiceInternalFields: entity.InvoiceInternalFields{
 			PaymentRequestedAt: utils.GetTimePropOrNil(props, "techPaymentRequestedAt"),
 		},

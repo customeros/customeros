@@ -27,6 +27,7 @@ type Invoice struct {
 	DryRunLines      []DryRunServiceLineItem `json:"dryRunLines"`
 	BillingCycle     string                  `json:"billingCycle"`
 	Status           string                  `json:"status"`
+	Note             string                  `json:"note"`
 }
 
 type DryRunServiceLineItem struct {
