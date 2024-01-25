@@ -404,7 +404,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationPlanEventHandler.OnReorderMilestones(ctx, evt)
 
 	case tenantevent.TenantAddBillingProfileV1:
-		return s.tenantEventHandler.OnAddBillingProfile(ctx, evt)
+		return s.tenantEventHandler.OnAddBillingProfileV1(ctx, evt)
+	case tenantevent.TenantUpdateBillingProfileV1:
+		return s.tenantEventHandler.OnUpdateBillingProfileV1(ctx, evt)
 
 	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		return nil

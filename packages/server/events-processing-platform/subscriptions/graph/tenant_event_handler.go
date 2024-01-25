@@ -27,8 +27,8 @@ func NewTenantEventHandler(log logger.Logger, repositories *repository.Repositor
 	}
 }
 
-func (h *TenantEventHandler) OnAddBillingProfile(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantEventHandler.OnAddBillingProfile")
+func (h *TenantEventHandler) OnAddBillingProfileV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantEventHandler.OnAddBillingProfileV1")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -68,6 +68,54 @@ func (h *TenantEventHandler) OnAddBillingProfile(ctx context.Context, evt events
 		InternationalPaymentsInstructions: eventData.InternationalPaymentsInstructions,
 	}
 	err := h.repositories.Neo4jRepositories.TenantWriteRepository.CreateTenantBillingProfile(ctx, tenantName, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return err
+}
+
+func (h *TenantEventHandler) OnUpdateBillingProfileV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantEventHandler.OnAddBillingProfileV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.TenantBillingProfileUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	tenantName := tenant.GetTenantName(evt.GetAggregateID())
+	span.SetTag(tracing.SpanTagEntityId, tenantName)
+
+	data := neo4jrepository.TenantBillingProfileUpdateFields{
+		Id:                                  eventData.Id,
+		UpdatedAt:                           eventData.UpdatedAt,
+		Email:                               eventData.Email,
+		Phone:                               eventData.Phone,
+		LegalName:                           eventData.LegalName,
+		AddressLine1:                        eventData.AddressLine1,
+		AddressLine2:                        eventData.AddressLine2,
+		AddressLine3:                        eventData.AddressLine3,
+		Locality:                            eventData.Locality,
+		Country:                             eventData.Country,
+		Zip:                                 eventData.Zip,
+		DomesticPaymentsBankInfo:            eventData.DomesticPaymentsBankInfo,
+		InternationalPaymentsBankInfo:       eventData.InternationalPaymentsBankInfo,
+		UpdateEmail:                         eventData.UpdateEmail(),
+		UpdatePhone:                         eventData.UpdatePhone(),
+		UpdateAddressLine1:                  eventData.UpdateAddressLine1(),
+		UpdateAddressLine2:                  eventData.UpdateAddressLine2(),
+		UpdateAddressLine3:                  eventData.UpdateAddressLine3(),
+		UpdateLocality:                      eventData.UpdateLocality(),
+		UpdateCountry:                       eventData.UpdateCountry(),
+		UpdateZip:                           eventData.UpdateZip(),
+		UpdateLegalName:                     eventData.UpdateLegalName(),
+		UpdateDomesticPaymentsBankInfo:      eventData.UpdateDomesticPaymentsBankInfo(),
+		UpdateInternationalPaymentsBankInfo: eventData.UpdateInternationalPaymentsBankInfo(),
+	}
+	err := h.repositories.Neo4jRepositories.TenantWriteRepository.UpdateTenantBillingProfile(ctx, tenantName, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

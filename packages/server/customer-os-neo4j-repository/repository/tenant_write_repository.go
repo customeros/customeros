@@ -36,13 +36,48 @@ type TenantBillingProfileCreateFields struct {
 	InternationalPaymentsInstructions string       `json:"internationalPaymentsInstructions"`
 }
 
+type TenantBillingProfileUpdateFields struct {
+	Id                                  string    `json:"id"`
+	UpdatedAt                           time.Time `json:"updatedAt"`
+	Email                               string    `json:"email"`
+	Phone                               string    `json:"phone"`
+	LegalName                           string    `json:"legalName"`
+	AddressLine1                        string    `json:"addressLine1"`
+	AddressLine2                        string    `json:"addressLine2"`
+	AddressLine3                        string    `json:"addressLine3"`
+	Locality                            string    `json:"locality"`
+	Country                             string    `json:"country"`
+	Zip                                 string    `json:"zip"`
+	DomesticPaymentsBankInfo            string    `json:"domesticPaymentsBankInfo"`
+	InternationalPaymentsBankInfo       string    `json:"internationalPaymentsBankInfo"`
+	UpdateEmail                         bool      `json:"updateEmail"`
+	UpdatePhone                         bool      `json:"updatePhone"`
+	UpdateLegalName                     bool      `json:"updateLegalName"`
+	UpdateAddressLine1                  bool      `json:"updateAddressLine1"`
+	UpdateAddressLine2                  bool      `json:"updateAddressLine2"`
+	UpdateAddressLine3                  bool      `json:"updateAddressLine3"`
+	UpdateLocality                      bool      `json:"updateLocality"`
+	UpdateCountry                       bool      `json:"updateCountry"`
+	UpdateZip                           bool      `json:"updateZip"`
+	UpdateDomesticPaymentsBankInfo      bool      `json:"updateDomesticPaymentsBankInfo"`
+	UpdateInternationalPaymentsBankInfo bool      `json:"updateInternationalPaymentsBankInfo"`
+}
+
 type TenantWriteRepository interface {
 	CreateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileCreateFields) error
+	UpdateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileUpdateFields) error
 }
 
 type tenantWriteRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
+}
+
+func NewTenantWriteRepository(driver *neo4j.DriverWithContext, database string) TenantWriteRepository {
+	return &tenantWriteRepository{
+		driver:   driver,
+		database: database,
+	}
 }
 
 func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileCreateFields) error {
@@ -115,9 +150,72 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 	return err
 }
 
-func NewTenantWriteRepository(driver *neo4j.DriverWithContext, database string) TenantWriteRepository {
-	return &tenantWriteRepository{
-		driver:   driver,
-		database: database,
+func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileUpdateFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.UpdateTenantBillingProfile")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.LogObjectAsJson(span, "data", data)
+
+	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile {id:$billingProfileId}) 
+							SET tbp.updatedAt=$updatedAt
+							
+							`
+	params := map[string]any{
+		"tenant":           tenant,
+		"billingProfileId": data.Id,
+		"updatedAt":        data.UpdatedAt,
 	}
+	if data.UpdateEmail {
+		cypher += `,tbp.email=$email`
+		params["email"] = data.Email
+	}
+	if data.UpdatePhone {
+		cypher += `,tbp.phone=$phone`
+		params["phone"] = data.Phone
+	}
+	if data.UpdateLegalName {
+		cypher += `,tbp.legalName=$legalName`
+		params["legalName"] = data.LegalName
+	}
+	if data.UpdateAddressLine1 {
+		cypher += `,tbp.addressLine1=$addressLine1`
+		params["addressLine1"] = data.AddressLine1
+	}
+	if data.UpdateAddressLine2 {
+		cypher += `,tbp.addressLine2=$addressLine2`
+		params["addressLine2"] = data.AddressLine2
+	}
+	if data.UpdateAddressLine3 {
+		cypher += `,tbp.addressLine3=$addressLine3`
+		params["addressLine3"] = data.AddressLine3
+	}
+	if data.UpdateLocality {
+		cypher += `,tbp.locality=$locality`
+		params["locality"] = data.Locality
+	}
+	if data.UpdateCountry {
+		cypher += `,tbp.country=$country`
+		params["country"] = data.Country
+	}
+	if data.UpdateZip {
+		cypher += `,tbp.zip=$zip`
+		params["zip"] = data.Zip
+	}
+	if data.UpdateDomesticPaymentsBankInfo {
+		cypher += `,tbp.domesticPaymentsBankInfo=$domesticPaymentsBankInfo`
+		params["domesticPaymentsBankInfo"] = data.DomesticPaymentsBankInfo
+	}
+	if data.UpdateInternationalPaymentsBankInfo {
+		cypher += `,tbp.internationalPaymentsBankInfo=$internationalPaymentsBankInfo`
+		params["internationalPaymentsBankInfo"] = data.InternationalPaymentsBankInfo
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
 }
