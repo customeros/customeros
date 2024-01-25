@@ -3,14 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"math/rand"
@@ -20,6 +20,7 @@ type TenantService interface {
 	GetTenantForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*neo4jentity.TenantEntity, error)
 	GetTenantForUserEmail(ctx context.Context, email string) (*neo4jentity.TenantEntity, error)
 	Merge(ctx context.Context, tenantEntity neo4jentity.TenantEntity) (*neo4jentity.TenantEntity, error)
+	GetTenantBillingProfiles(ctx context.Context) (*neo4jentity.TenantBillingProfileEntities, error)
 }
 
 type tenantService struct {
@@ -55,7 +56,7 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.Tena
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("Merge: %w", err)
 	}
-	return s.mapDbNodeToTenantEntity(tenant), nil
+	return neo4jmapper.MapDbNodeToTenantEntity(tenant), nil
 }
 
 func (s *tenantService) GetTenantForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*neo4jentity.TenantEntity, error) {
@@ -70,7 +71,7 @@ func (s *tenantService) GetTenantForWorkspace(ctx context.Context, workspaceEnti
 		return nil, fmt.Errorf("GetTenantForWorkspace: %w", err)
 	}
 
-	return s.mapDbNodeToTenantEntity(tenant), nil
+	return neo4jmapper.MapDbNodeToTenantEntity(tenant), nil
 }
 
 func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string) (*neo4jentity.TenantEntity, error) {
@@ -85,23 +86,24 @@ func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string)
 		return nil, fmt.Errorf("GetTenantForWorkspace: %w", err)
 	}
 
-	return s.mapDbNodeToTenantEntity(tenant), nil
+	return neo4jmapper.MapDbNodeToTenantEntity(tenant), nil
 }
 
-func (s *tenantService) mapDbNodeToTenantEntity(dbNode *dbtype.Node) *neo4jentity.TenantEntity {
+func (s *tenantService) GetTenantBillingProfiles(ctx context.Context) (*neo4jentity.TenantBillingProfileEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantBillingProfiles")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
 
-	if dbNode == nil {
-		return nil
+	dbNodes, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("GetTenantBillingProfiles: %w", err)
 	}
 
-	props := utils.GetPropsFromNode(*dbNode)
-	tenant := neo4jentity.TenantEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		Name:      utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:    neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+	tenantBillingProfiles := neo4jentity.TenantBillingProfileEntities{}
+	for _, dbNode := range dbNodes {
+		tenantBillingProfiles = append(tenantBillingProfiles, *neo4jmapper.MapDbNodeToTenantBillingProfileEntity(dbNode))
 	}
-	return &tenant
+
+	return &tenantBillingProfiles, nil
 }

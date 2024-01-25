@@ -1,0 +1,16 @@
+query GetTenantBillingProfiles {
+  tenantBillingProfiles{
+    id
+    email
+    phone
+    addressLine1
+    addressLine2
+    addressLine3
+    locality
+    country
+    zip
+    legalName
+    domesticPaymentsBankInfo
+    internationalPaymentsBankInfo
+  }
+}

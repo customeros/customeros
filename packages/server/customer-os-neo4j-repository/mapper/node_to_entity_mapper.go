@@ -224,6 +224,22 @@ func MapDbNodeToBillingProfileEntity(dbNode *dbtype.Node) *entity.BillingProfile
 	return &billingProfileEntity
 }
 
+func MapDbNodeToTenantEntity(dbNode *dbtype.Node) *entity.TenantEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	tenant := entity.TenantEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+	}
+	return &tenant
+}
+
 func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettingsEntity {
 	if dbNode == nil {
 		return &entity.TenantSettingsEntity{}
@@ -239,12 +255,12 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 	return &tenantSettingsEntity
 }
 
-func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBillingProfile {
+func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBillingProfileEntity {
 	if dbNode == nil {
-		return &entity.TenantBillingProfile{}
+		return &entity.TenantBillingProfileEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	tenantBillingProfile := entity.TenantBillingProfile{
+	tenantBillingProfile := entity.TenantBillingProfileEntity{
 		Id:                                utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:                         utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:                         utils.GetTimePropOrEpochStart(props, "updatedAt"),

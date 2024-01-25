@@ -352,7 +352,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 
 	var invoiceEntity *neo4jentity.InvoiceEntity
 	var tenantSettingsEntity *neo4jentity.TenantSettingsEntity
-	var tenantBillingProfileEntity *neo4jentity.TenantBillingProfile
+	var tenantBillingProfileEntity *neo4jentity.TenantBillingProfileEntity
 	var organization *neo4jentity.OrganizationEntity
 	//var organizationBillingProfile *neo4jentity.BillingProfileEntity
 
