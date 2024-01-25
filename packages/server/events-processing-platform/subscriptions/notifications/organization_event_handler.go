@@ -167,10 +167,14 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
 
 	payload := map[string]interface{}{
-		"html":    html,
-		"subject": fmt.Sprintf("%s %s added you as an owner", actor.FirstName, actor.LastName),
-		"email":   email.Email,
-		"orgName": org.Name,
+		"html":           html,
+		"subject":        fmt.Sprintf("%s %s added you as an owner", actor.FirstName, actor.LastName),
+		"email":          email.Email,
+		"orgName":        org.Name,
+		"userFirstName":  user.FirstName,
+		"actorFirstName": actor.FirstName,
+		"actorLastName":  actor.LastName,
+		"orgLink":        fmt.Sprintf("%s/organization/%s", h.cfg.Subscriptions.NotificationsSubscription.RedirectUrl, orgId),
 	}
 
 	overrides := map[string]interface{}{
