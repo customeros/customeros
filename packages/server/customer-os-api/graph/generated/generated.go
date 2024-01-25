@@ -1180,7 +1180,7 @@ type ComplexityRoot struct {
 		OrganizationDistinctOwners            func(childComplexity int) int
 		OrganizationPlan                      func(childComplexity int, id string) int
 		OrganizationPlans                     func(childComplexity int, retired *bool) int
-		OrganizationPlansForOrg               func(childComplexity int, organizationID string) int
+		OrganizationPlansForOrganization      func(childComplexity int, organizationID string) int
 		Organizations                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		PhoneNumber                           func(childComplexity int, id string) int
 		PlayerByAuthIDProvider                func(childComplexity int, authID string, provider string) int
@@ -1746,7 +1746,7 @@ type QueryResolver interface {
 	Organization(ctx context.Context, id string) (*model.Organization, error)
 	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
 	OrganizationPlan(ctx context.Context, id string) (*model.OrganizationPlan, error)
-	OrganizationPlansForOrg(ctx context.Context, organizationID string) ([]*model.OrganizationPlan, error)
+	OrganizationPlansForOrganization(ctx context.Context, organizationID string) ([]*model.OrganizationPlan, error)
 	OrganizationPlans(ctx context.Context, retired *bool) ([]*model.OrganizationPlan, error)
 	PhoneNumber(ctx context.Context, id string) (*model.PhoneNumber, error)
 	PlayerByAuthIDProvider(ctx context.Context, authID string, provider string) (*model.Player, error)
@@ -8791,17 +8791,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.OrganizationPlans(childComplexity, args["retired"].(*bool)), true
 
-	case "Query.organizationPlansForOrg":
-		if e.complexity.Query.OrganizationPlansForOrg == nil {
+	case "Query.organizationPlansForOrganization":
+		if e.complexity.Query.OrganizationPlansForOrganization == nil {
 			break
 		}
 
-		args, err := ec.field_Query_organizationPlansForOrg_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_organizationPlansForOrganization_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.OrganizationPlansForOrg(childComplexity, args["organizationId"].(string)), true
+		return e.complexity.Query.OrganizationPlansForOrganization(childComplexity, args["organizationId"].(string)), true
 
 	case "Query.organizations":
 		if e.complexity.Query.Organizations == nil {
@@ -12367,7 +12367,7 @@ enum LastTouchpointType {
 
 extend type Query {
     organizationPlan(id: ID!): OrganizationPlan! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organizationPlansForOrg(organizationId: ID!): [OrganizationPlan!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlansForOrganization(organizationId: ID!): [OrganizationPlan!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizationPlans(retired: Boolean): [OrganizationPlan!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -17112,7 +17112,7 @@ func (ec *executionContext) field_Query_organizationPlan_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_organizationPlansForOrg_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_organizationPlansForOrganization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -68945,8 +68945,8 @@ func (ec *executionContext) fieldContext_Query_organizationPlan(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_organizationPlansForOrg(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_organizationPlansForOrg(ctx, field)
+func (ec *executionContext) _Query_organizationPlansForOrganization(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_organizationPlansForOrganization(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -68960,7 +68960,7 @@ func (ec *executionContext) _Query_organizationPlansForOrg(ctx context.Context, 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().OrganizationPlansForOrg(rctx, fc.Args["organizationId"].(string))
+			return ec.resolvers.Query().OrganizationPlansForOrganization(rctx, fc.Args["organizationId"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
@@ -69006,7 +69006,7 @@ func (ec *executionContext) _Query_organizationPlansForOrg(ctx context.Context, 
 	return ec.marshalNOrganizationPlan2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPlanᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_organizationPlansForOrg(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_organizationPlansForOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -69047,7 +69047,7 @@ func (ec *executionContext) fieldContext_Query_organizationPlansForOrg(ctx conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_organizationPlansForOrg_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_organizationPlansForOrganization_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -95118,7 +95118,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "organizationPlansForOrg":
+		case "organizationPlansForOrganization":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -95127,7 +95127,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_organizationPlansForOrg(ctx, field)
+				res = ec._Query_organizationPlansForOrganization(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

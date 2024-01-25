@@ -301,9 +301,9 @@ func (r *queryResolver) OrganizationPlan(ctx context.Context, id string) (*model
 	return mapper.MapEntityToOrganizationPlan(orgPlanEntity), nil
 }
 
-// OrganizationPlansForOrg is the resolver for the organizationPlansForOrg field.
-func (r *queryResolver) OrganizationPlansForOrg(ctx context.Context, organizationID string) ([]*model.OrganizationPlan, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationPlansForOrg", graphql.GetOperationContext(ctx))
+// OrganizationPlansForOrganization is the resolver for the organizationPlansForOrganization field.
+func (r *queryResolver) OrganizationPlansForOrganization(ctx context.Context, organizationID string) ([]*model.OrganizationPlan, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationPlansForOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, organizationID)
