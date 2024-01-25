@@ -1760,8 +1760,9 @@ func (this OrganizationPlan) GetAppSource() string         { return this.AppSour
 func (OrganizationPlan) IsNode() {}
 
 type OrganizationPlanInput struct {
-	Name         *string `json:"name,omitempty"`
-	MasterPlanID *string `json:"masterPlanId,omitempty"`
+	Name           *string `json:"name,omitempty"`
+	MasterPlanID   *string `json:"masterPlanId,omitempty"`
+	OrganizationID string  `json:"organizationId"`
 }
 
 type OrganizationPlanMilestone struct {

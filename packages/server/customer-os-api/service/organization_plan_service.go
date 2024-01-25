@@ -25,7 +25,7 @@ import (
 )
 
 type OrganizationPlanService interface {
-	CreateOrganizationPlan(ctx context.Context, name, masterPlanId string) (string, error)
+	CreateOrganizationPlan(ctx context.Context, name, masterPlanId, orgId string) (string, error)
 	UpdateOrganizationPlan(ctx context.Context, id string, name *string, retired *bool, statusDetails *model.StatusDetailsInput) error
 	DuplicateOrganizationPlan(ctx context.Context, sourceOrganizationPlanId string) (string, error)
 	GetOrganizationPlanById(ctx context.Context, organizationPlanId string) (*neo4jentity.OrganizationPlanEntity, error)
@@ -36,6 +36,7 @@ type OrganizationPlanService interface {
 	GetOrganizationPlanMilestonesForOrganizationPlans(ctx context.Context, organizationPlanIds []string) (*neo4jentity.OrganizationPlanMilestoneEntities, error)
 	ReorderOrganizationPlanMilestones(ctx context.Context, organizationPlanId string, organizationPlanMilestoneIds []string) error
 	DuplicateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, sourceOrganizationPlanMilestoneId string) (string, error)
+	GetOrganizationPlansForOrganization(ctx context.Context, organizationId string) (*neo4jentity.OrganizationPlanEntities, error)
 }
 type organizationPlanService struct {
 	log          logger.Logger
@@ -51,7 +52,7 @@ func NewOrganizationPlanService(log logger.Logger, repositories *repository.Repo
 	}
 }
 
-func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, name, masterPlanId string) (string, error) {
+func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, name, masterPlanId, orgId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.CreateOrganizationPlan")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -66,7 +67,7 @@ func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, na
 			AppSource: constants.AppSourceCustomerOsApi,
 		},
 		MasterPlanId: masterPlanId,
-		// OrgId:        "TODO",
+		OrgId:        orgId,
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -481,6 +482,30 @@ func (s *organizationPlanService) DuplicateOrganizationPlan(ctx context.Context,
 	}
 
 	return response.Id, nil
+}
+
+func (s *organizationPlanService) GetOrganizationPlansForOrganization(ctx context.Context, organizationId string) (*neo4jentity.OrganizationPlanEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.GetOrganizationPlanForOrganization")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	organizationPlanDbNodes, err := s.repositories.Neo4jRepositories.OrganizationPlanReadRepository.GetOrganizationPlansForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if len(organizationPlanDbNodes) == 0 {
+		err = errors.New(fmt.Sprintf("Organization plan for organization with id {%s} not found", organizationId))
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	organizationPlanEntities := make(neo4jentity.OrganizationPlanEntities, 0, len(organizationPlanDbNodes))
+	for _, v := range organizationPlanDbNodes {
+		organizationPlanEntities = append(organizationPlanEntities, *neo4jmapper.MapDbNodeToOrganizationPlanEntity(v))
+	}
+	return &organizationPlanEntities, nil
 }
 
 //////////////////////////////////////////

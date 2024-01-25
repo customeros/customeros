@@ -50,7 +50,7 @@ func (h *createOrganizationPlanHandler) Handle(ctx context.Context, baseRequest 
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(request.CreatedAt, utils.Now())
 
-	createEvent, err := event.NewOrganizationPlanCreateEvent(organizationAggregate, baseRequest.ObjectID, request.MasterPlanId, request.Name, baseRequest.SourceFields, createdAtNotNil)
+	createEvent, err := event.NewOrganizationPlanCreateEvent(organizationAggregate, baseRequest.ObjectID, request.MasterPlanId, request.OrgId, request.Name, baseRequest.SourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationPlanCreateEvent")

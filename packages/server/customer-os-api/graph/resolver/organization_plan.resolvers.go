@@ -27,7 +27,7 @@ func (r *mutationResolver) OrganizationPlanCreate(ctx context.Context, input mod
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 	// Create empty organization plan
-	orgPlanId, err := r.Services.OrganizationPlanService.CreateOrganizationPlan(ctx, utils.IfNotNilString(input.Name), *input.MasterPlanID)
+	orgPlanId, err := r.Services.OrganizationPlanService.CreateOrganizationPlan(ctx, utils.IfNotNilString(input.Name), *input.MasterPlanID, input.OrganizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create organization plan")
@@ -301,6 +301,22 @@ func (r *queryResolver) OrganizationPlan(ctx context.Context, id string) (*model
 	return mapper.MapEntityToOrganizationPlan(orgPlanEntity), nil
 }
 
+// OrganizationPlansForOrganization is the resolver for the organizationPlansForOrganization field.
+func (r *queryResolver) OrganizationPlansForOrganization(ctx context.Context, organizationID string) ([]*model.OrganizationPlan, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationPlansForOrganization", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, organizationID)
+
+	orgPlanEntities, err := r.Services.OrganizationPlanService.GetOrganizationPlansForOrganization(ctx, organizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get Org plans for organization %s", organizationID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToOrganizationPlans(orgPlanEntities), nil
+}
+
 // OrganizationPlans is the resolver for the organizationPlans field.
 func (r *queryResolver) OrganizationPlans(ctx context.Context, retired *bool) ([]*model.OrganizationPlan, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationPlans", graphql.GetOperationContext(ctx))
@@ -310,7 +326,7 @@ func (r *queryResolver) OrganizationPlans(ctx context.Context, retired *bool) ([
 	orgPlanEntities, err := r.Services.OrganizationPlanService.GetOrganizationPlans(ctx, retired)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get Master plans")
+		graphql.AddErrorf(ctx, "Failed to get Organization plans")
 		return nil, nil
 	}
 	return mapper.MapEntitiesToOrganizationPlans(orgPlanEntities), nil

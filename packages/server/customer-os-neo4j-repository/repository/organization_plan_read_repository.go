@@ -18,6 +18,7 @@ type OrganizationPlanReadRepository interface {
 	GetOrganizationPlansOrderByCreatedAt(ctx context.Context, tenant string, returnRetired *bool) ([]*dbtype.Node, error)
 	GetOrganizationPlanMilestonesForOrganizationPlans(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetMaxOrderForOrganizationPlanMilestones(ctx context.Context, tenant, organizationPlanId string) (int64, error)
+	GetOrganizationPlansForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
 }
 
 type organizationPlanReadRepository struct {
@@ -229,4 +230,32 @@ func (r *organizationPlanReadRepository) GetOrganizationPlanMilestoneByPlanAndId
 	}
 	span.LogFields(log.Bool("result.found", result != nil))
 	return result.(*dbtype.Node), nil
+}
+
+func (r *organizationPlanReadRepository) GetOrganizationPlansForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetOrganizationPlansForOrganization")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(op:OrganizationPlan)-[:ORGANIZATION_PLAN_BELONGS_TO_ORGANIZATION]->(o:Organization {id:$organizationId}) RETURN op`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	return result.([]*dbtype.Node), nil
 }

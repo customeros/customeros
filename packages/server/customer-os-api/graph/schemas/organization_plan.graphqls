@@ -11,6 +11,7 @@ extend type Mutation {
 
 extend type Query {
     organizationPlan(id: ID!): OrganizationPlan! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlansForOrganization(organizationId: ID!): [OrganizationPlan!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizationPlans(retired: Boolean): [OrganizationPlan!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -65,6 +66,7 @@ input StatusDetailsInput {
 input OrganizationPlanInput {
     name: String
     masterPlanId: String
+    organizationId: ID!
 }
 
 input OrganizationPlanUpdateInput {
