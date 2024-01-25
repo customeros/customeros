@@ -14,6 +14,11 @@ type TenantBillingProfile struct {
 	AddressLine1                      string
 	AddressLine2                      string
 	AddressLine3                      string
+	Locality                          string
+	Country                           string
+	Zip                               string
+	DomesticPaymentsBankInfo          string
+	InternationalPaymentsBankInfo     string
 	DomesticPaymentsBankName          string
 	DomesticPaymentsAccountNumber     string
 	DomesticPaymentsSortCode          string
