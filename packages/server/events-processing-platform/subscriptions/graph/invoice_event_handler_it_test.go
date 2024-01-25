@@ -140,6 +140,15 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		invoice.Invoice{
 			ContractId: contractId,
 		},
+		"a",
+		"b",
+		"c",
+		"d",
+		"e",
+		"f",
+		"g",
+		"h",
+		"note abc",
 		neo4jenum.InvoiceStatusDue.String(),
 		100,
 		20,
@@ -205,6 +214,15 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, float64(100), invoiceEntity.Amount)
 	require.Equal(t, float64(20), invoiceEntity.Vat)
 	require.Equal(t, float64(120), invoiceEntity.TotalAmount)
+	require.Equal(t, "a", invoiceEntity.DomesticPaymentsBankInfo)
+	require.Equal(t, "b", invoiceEntity.InternationalPaymentsBankInfo)
+	require.Equal(t, "c", invoiceEntity.CustomerName)
+	require.Equal(t, "d", invoiceEntity.CustomerAddress)
+	require.Equal(t, "e", invoiceEntity.CustomerEmail)
+	require.Equal(t, "f", invoiceEntity.ProviderLogoUrl)
+	require.Equal(t, "g", invoiceEntity.ProviderName)
+	require.Equal(t, "h", invoiceEntity.ProviderAddress)
+	require.Equal(t, "note abc", invoiceEntity.Note)
 	require.Equal(t, neo4jenum.InvoiceStatusDue, invoiceEntity.Status)
 
 	// verify invoice lines

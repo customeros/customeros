@@ -141,7 +141,63 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 	}
 	totalAmount = amount + vat
 
-	err = h.callFillInvoice(ctx, eventData.Tenant, invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant), amount, vat, totalAmount, invoiceLines, span)
+	var contractEntity *neo4jentity.ContractEntity
+	var tenantSettingsEntity *neo4jentity.TenantSettingsEntity
+	var tenantBillingProfileEntity *neo4jentity.TenantBillingProfileEntity
+
+	//load contract from neo4j
+	contract, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetContractById")
+	}
+	if contract != nil {
+		contractEntity = neo4jmapper.MapDbNodeToContractEntity(contract)
+	} else {
+		return errors.New("contract is nil")
+	}
+
+	//load tenant settings from neo4j
+	tenantSettings, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetTenantSettings")
+	}
+	if tenantSettings != nil {
+		tenantSettingsEntity = neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettings)
+	} else {
+		return errors.New("tenantSettings is nil")
+	}
+
+	//load tenant billing profile from neo4j
+	tenantBillingProfiles, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, eventData.Tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetTenantSettings")
+	}
+	if tenantBillingProfiles == nil || len(tenantBillingProfiles) > 0 {
+		tenantBillingProfileEntity = neo4jmapper.MapDbNodeToTenantBillingProfileEntity(tenantBillingProfiles[0])
+	} else {
+		return errors.New("tenantBillingProfiles is nil or empty")
+	}
+
+	err = h.callFillInvoice(ctx,
+		eventData.Tenant,
+		invoiceId,
+		contractEntity.InvoiceNote,
+		tenantBillingProfileEntity.DomesticPaymentsBankInfo,
+		tenantBillingProfileEntity.InternationalPaymentsBankInfo,
+		contractEntity.OrganizationLegalName,
+		contractEntity.AddressLine1+", "+contractEntity.AddressLine2+", "+contractEntity.Zip+", "+contractEntity.Locality+", "+", "+contractEntity.Country,
+		contractEntity.InvoiceEmail,
+		tenantSettingsEntity.LogoUrl,
+		tenantBillingProfileEntity.LegalName,
+		tenantBillingProfileEntity.AddressLine1+", "+tenantBillingProfileEntity.AddressLine2+", "+tenantBillingProfileEntity.AddressLine3+", "+tenantBillingProfileEntity.Zip+", "+tenantBillingProfileEntity.Locality+", "+tenantBillingProfileEntity.Country,
+		amount,
+		vat,
+		totalAmount,
+		invoiceLines,
+		span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -186,12 +242,25 @@ func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed n
 	return float64(0)
 }
 
-func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
+func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, domesticPaymentsBankInfo, internationalPaymentsBankInfo, customerName, customerAddress, customerEmail, providerLogoUrl, providerName, providerAddress, note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
 	_, err := h.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
-		Tenant:       tenant,
-		InvoiceId:    invoiceId,
+		Tenant:                        tenant,
+		InvoiceId:                     invoiceId,
+		Note:                          note,
+		DomesticPaymentsBankInfo:      domesticPaymentsBankInfo,
+		InternationalPaymentsBankInfo: internationalPaymentsBankInfo,
+		Customer: &invoicepb.FillInvoiceCustomer{
+			Name:    customerName,
+			Address: customerAddress,
+			Email:   customerEmail,
+		},
+		Provider: &invoicepb.FillInvoiceProvider{
+			LogoUrl: providerLogoUrl,
+			Name:    providerName,
+			Address: providerAddress,
+		},
 		Amount:       amount,
 		Vat:          vat,
 		Total:        total,
@@ -351,10 +420,6 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 
 	var invoiceEntity *neo4jentity.InvoiceEntity
-	var tenantSettingsEntity *neo4jentity.TenantSettingsEntity
-	var tenantBillingProfileEntity *neo4jentity.TenantBillingProfileEntity
-	var organization *neo4jentity.OrganizationEntity
-	//var organizationBillingProfile *neo4jentity.BillingProfileEntity
 
 	//load invoice
 	invoiceNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
@@ -368,71 +433,29 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		return errors.New("invoiceNode is nil")
 	}
 
-	//load tenant settings from neo4j
-	tenantSettings, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetTenantSettings")
-	}
-	if tenantSettings != nil {
-		tenantSettingsEntity = neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettings)
-	} else {
-		return errors.New("tenantSettings is nil")
-	}
-
-	//load tenant billing profile from neo4j
-	tenantBillingProfiles, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, eventData.Tenant)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetTenantSettings")
-	}
-	if tenantBillingProfiles == nil || len(tenantBillingProfiles) > 0 {
-		tenantBillingProfileEntity = neo4jmapper.MapDbNodeToTenantBillingProfileEntity(tenantBillingProfiles[0])
-	} else {
-		return errors.New("tenantBillingProfiles is nil or empty")
-	}
-
-	//load organization from neo4j
-	organizationNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, eventData.Tenant, invoiceId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetOrganizationByInvoiceId")
-	}
-	if organizationNode != nil {
-		organization = neo4jmapper.MapDbNodeToOrganizationEntity(organizationNode)
-	} else {
-		return errors.New("organizationNode is nil")
-	}
-
-	//todo load billing profile for organization
-
-	currencyAndSymbol := tenantSettingsEntity.DefaultCurrency.String() + tenantSettingsEntity.DefaultCurrency.Symbol()
+	currencyAndSymbol := invoiceEntity.Currency.String() + "" + invoiceEntity.Currency.Symbol()
 
 	data := map[string]interface{}{
-		"CustomerName":                      organization.Name,
-		"CustomerAddress":                   "TODO",
-		"ProviderLogoUrl":                   tenantSettingsEntity.LogoUrl,
-		"ProviderLogoExtension":             "",
-		"ProviderName":                      tenantBillingProfileEntity.LegalName,
-		"ProviderAddress":                   tenantBillingProfileEntity.AddressLine1 + ", " + tenantBillingProfileEntity.AddressLine2 + ", " + tenantBillingProfileEntity.AddressLine3,
-		"InvoiceNumber":                     invoiceEntity.Number,
-		"InvoiceIssueDate":                  "TODO",
-		"InvoiceDueDate":                    "TODO",
-		"InvoiceCurrency":                   currencyAndSymbol,
-		"InvoiceSubtotal":                   currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
-		"InvoiceTax":                        currencyAndSymbol + "0.00",
-		"InvoiceTotal":                      currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
-		"InvoiceAmountDue":                  currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
-		"InvoiceLineItems":                  []map[string]string{},
-		"DomesticPaymentsBankName":          tenantBillingProfileEntity.DomesticPaymentsBankName,
-		"DomesticPaymentsAccountNumber":     tenantBillingProfileEntity.DomesticPaymentsAccountNumber,
-		"DomesticPaymentsSortCode":          tenantBillingProfileEntity.DomesticPaymentsSortCode,
-		"InternationalPaymentsSwiftBic":     tenantBillingProfileEntity.InternationalPaymentsSwiftBic,
-		"InternationalPaymentsBankName":     tenantBillingProfileEntity.InternationalPaymentsBankName,
-		"InternationalPaymentsBankAddress":  tenantBillingProfileEntity.InternationalPaymentsBankAddress,
-		"InternationalPaymentsInstructions": tenantBillingProfileEntity.InternationalPaymentsInstructions,
+		"CustomerName":                  invoiceEntity.CustomerName,
+		"CustomerAddress":               invoiceEntity.CustomerAddress,
+		"CustomerEmail":                 invoiceEntity.CustomerEmail,
+		"ProviderLogoUrl":               invoiceEntity.ProviderLogoUrl,
+		"ProviderLogoExtension":         GetFileExtensionFromUrl(invoiceEntity.ProviderLogoUrl),
+		"ProviderName":                  invoiceEntity.ProviderName,
+		"ProviderAddress":               invoiceEntity.ProviderAddress,
+		"InvoiceNumber":                 invoiceEntity.Number,
+		"InvoiceIssueDate":              invoiceEntity.CreatedAt.Format("dd-MMM-yyy"),
+		"InvoiceDueDate":                invoiceEntity.DueDate.Format("dd-MMM-yyy"),
+		"InvoiceCurrency":               currencyAndSymbol,
+		"InvoiceSubtotal":               currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
+		"InvoiceTax":                    currencyAndSymbol + "0.00",
+		"InvoiceTotal":                  currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
+		"InvoiceAmountDue":              currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
+		"InvoiceLineItems":              []map[string]string{},
+		"Note":                          invoiceEntity.Note,
+		"DomesticPaymentsBankInfo":      invoiceEntity.DomesticPaymentsBankInfo,
+		"InternationalPaymentsBankInfo": invoiceEntity.InternationalPaymentsBankInfo,
 	}
-	data["ProviderLogoExtension"] = GetFileExtensionFromUrl(data["ProviderLogoUrl"].(string))
 
 	for _, line := range eventData.InvoiceLines {
 		data["InvoiceLineItems"] = append(data["InvoiceLineItems"].([]map[string]string), map[string]string{

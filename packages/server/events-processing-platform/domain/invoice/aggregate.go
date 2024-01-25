@@ -172,7 +172,7 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 	}
 
 	invoiceStatus := InvoiceStatus(request.Status).String()
-	fillEvent, err := NewInvoiceFillEvent(a, updatedAtNotNil, *a.Invoice, invoiceStatus, request.Amount, request.Vat, request.Total, invoiceLines)
+	fillEvent, err := NewInvoiceFillEvent(a, updatedAtNotNil, *a.Invoice, request.DomesticPaymentsBankInfo, request.InternationalPaymentsBankInfo, request.Customer.Name, request.Customer.Address, request.Customer.Email, request.Provider.LogoUrl, request.Provider.Name, request.Provider.Address, request.Note, invoiceStatus, request.Amount, request.Vat, request.Total, invoiceLines)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceFillEvent")

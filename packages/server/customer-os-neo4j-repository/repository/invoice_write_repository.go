@@ -28,18 +28,27 @@ type InvoiceCreateFields struct {
 }
 
 type InvoiceFillFields struct {
-	Amount          float64                 `json:"amount"`
-	VAT             float64                 `json:"vat"`
-	TotalAmount     float64                 `json:"totalAmount"`
-	UpdatedAt       time.Time               `json:"updatedAt"`
-	ContractId      string                  `json:"contractId"`
-	Currency        neo4jenum.Currency      `json:"currency"`
-	DryRun          bool                    `json:"dryRun"`
-	InvoiceNumber   string                  `json:"invoiceNumber"`
-	PeriodStartDate time.Time               `json:"periodStartDate"`
-	PeriodEndDate   time.Time               `json:"periodEndDate"`
-	BillingCycle    neo4jenum.BillingCycle  `json:"billingCycle"`
-	Status          neo4jenum.InvoiceStatus `json:"status"`
+	Amount                        float64                 `json:"amount"`
+	VAT                           float64                 `json:"vat"`
+	TotalAmount                   float64                 `json:"totalAmount"`
+	UpdatedAt                     time.Time               `json:"updatedAt"`
+	ContractId                    string                  `json:"contractId"`
+	Currency                      neo4jenum.Currency      `json:"currency"`
+	DryRun                        bool                    `json:"dryRun"`
+	InvoiceNumber                 string                  `json:"invoiceNumber"`
+	PeriodStartDate               time.Time               `json:"periodStartDate"`
+	PeriodEndDate                 time.Time               `json:"periodEndDate"`
+	BillingCycle                  neo4jenum.BillingCycle  `json:"billingCycle"`
+	Status                        neo4jenum.InvoiceStatus `json:"status"`
+	Note                          string                  `json:"note"`
+	DomesticPaymentsBankInfo      string                  `json:"domesticPaymentsBankInfo"`
+	InternationalPaymentsBankInfo string                  `json:"internationalPaymentsBankInfo"`
+	CustomerName                  string                  `json:"customerName"`
+	CustomerAddress               string                  `json:"customerAddress"`
+	CustomerEmail                 string                  `json:"customerEmail"`
+	ProviderLogoUrl               string                  `json:"providerLogoUrl"`
+	ProviderName                  string                  `json:"providerName"`
+	ProviderAddress               string                  `json:"providerAddress"`
 }
 
 type InvoiceUpdateFields struct {
@@ -140,31 +149,58 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.currency=$currency,
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
-								i.billingCycle=$billingCycle
+								i.billingCycle=$billingCycle,
+								i.note=$note,
+								i.domesticPaymentsBankInfo=$domesticPaymentsBankInfo,
+								i.internationalPaymentsBankInfo=$internationalPaymentsBankInfo,
+								i.customerName=$customerName,
+								i.customerAddress=$customerAddress,
+								i.customerEmail=$customerEmail,
+								i.providerLogoUrl=$providerLogoUrl,
+								i.providerName=$providerName,
+								i.providerAddress=$providerAddress
 							SET 
 								i.updatedAt=$updatedAt,
 								i.amount=$amount,
 								i.vat=$vat,
 								i.totalAmount=$totalAmount,
-								i.status=$status
+								i.status=$status,
+								i.note=$note,
+								i.domesticPaymentsBankInfo=$domesticPaymentsBankInfo,
+								i.internationalPaymentsBankInfo=$internationalPaymentsBankInfo,
+								i.customerName=$customerName,
+								i.customerAddress=$customerAddress,
+								i.customerEmail=$customerEmail,
+								i.providerLogoUrl=$providerLogoUrl,
+								i.providerName=$providerName,
+								i.providerAddress=$providerAddress
 							WITH c, i 
 							MERGE (c)-[:HAS_INVOICE]->(i) 
 							`, tenant)
 	params := map[string]any{
-		"tenant":       tenant,
-		"contractId":   data.ContractId,
-		"invoiceId":    invoiceId,
-		"updatedAt":    data.UpdatedAt,
-		"amount":       data.Amount,
-		"vat":          data.VAT,
-		"totalAmount":  data.TotalAmount,
-		"dryRun":       data.DryRun,
-		"number":       data.InvoiceNumber,
-		"currency":     data.Currency.String(),
-		"periodStart":  data.PeriodStartDate,
-		"periodEnd":    data.PeriodEndDate,
-		"billingCycle": data.BillingCycle.String(),
-		"status":       data.Status.String(),
+		"tenant":                        tenant,
+		"contractId":                    data.ContractId,
+		"invoiceId":                     invoiceId,
+		"updatedAt":                     data.UpdatedAt,
+		"amount":                        data.Amount,
+		"vat":                           data.VAT,
+		"totalAmount":                   data.TotalAmount,
+		"dryRun":                        data.DryRun,
+		"number":                        data.InvoiceNumber,
+		"currency":                      data.Currency.String(),
+		"periodStart":                   data.PeriodStartDate,
+		"periodEnd":                     data.PeriodEndDate,
+		"billingCycle":                  data.BillingCycle.String(),
+		"status":                        data.Status.String(),
+		"note":                          data.Note,
+		"domesticPaymentsBankInfo":      data.DomesticPaymentsBankInfo,
+		"internationalPaymentsBankInfo": data.InternationalPaymentsBankInfo,
+		"customerName":                  data.CustomerName,
+		"customerAddress":               data.CustomerAddress,
+		"customerEmail":                 data.CustomerEmail,
+		"providerLogoUrl":               data.ProviderLogoUrl,
+		"providerName":                  data.ProviderName,
+		"providerAddress":               data.ProviderAddress,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

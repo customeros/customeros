@@ -91,21 +91,21 @@
   font-size: 14px;
   font-style: normal;
   font-family: Barlow;
-  font-weight: 600px;
+  font-weight: 600;
   font-stretch: normal;
 }
 .TextsmMedium {
   font-size: 14px;
   font-style: normal;
   font-family: Barlow;
-  font-weight: 500px;
+  font-weight: 500;
   font-stretch: normal;
 }
 .TextxsRegular {
   font-size: 12px;
   font-style: normal;
   font-family: Barlow;
-  font-weight: 400px;
+  font-weight: 400;
   font-stretch: normal;
 }
 .Heading {
@@ -116,17 +116,20 @@
   text-transform: none;
   text-decoration: none;
 }
-.DisplaysmBold {
+.DisplaysmMedium {
   font-size: 30px;
   font-style: normal;
   font-family: Barlow;
-  font-weight: 700px;
+  font-weight: 500;
   font-stretch: normal;
 }
 .TextsmRegular {
   font-size: 14px;
   font-style: normal;
   font-family: Barlow;
-  font-weight: 400px;
+  font-weight: 400;
   font-stretch: normal;
+}
+.TextAlignRight {
+  text-align: right;
 }

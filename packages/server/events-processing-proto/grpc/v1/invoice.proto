@@ -44,6 +44,23 @@ message FillInvoiceRequest {
   google.protobuf.Timestamp updatedAt = 8;
   string appSource = 9;
   InvoiceStatus status = 10;
+  string Note = 11;
+  string DomesticPaymentsBankInfo = 12;
+  string InternationalPaymentsBankInfo = 13;
+  FillInvoiceCustomer Customer = 14;
+  FillInvoiceProvider Provider = 15;
+}
+
+message FillInvoiceCustomer {
+  string Name = 1;
+  string Address = 2;
+  string Email = 3;
+}
+
+message FillInvoiceProvider {
+  string LogoUrl = 1;
+  string Name = 2;
+  string Address = 3;
 }
 
 message InvoiceLine {
