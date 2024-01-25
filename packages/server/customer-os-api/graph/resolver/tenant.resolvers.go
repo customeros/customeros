@@ -7,13 +7,13 @@ package resolver
 import (
 	"context"
 	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 )
 
 // TenantMerge is the resolver for the tenant_Merge field.
@@ -27,6 +27,60 @@ func (r *mutationResolver) TenantMerge(ctx context.Context, tenant model.TenantI
 		return "", fmt.Errorf("TenantMerge: %w", err)
 	}
 	return newTenant.Name, nil
+}
+
+// TenantAddBillingProfile is the resolver for the tenant_AddBillingProfile field.
+func (r *mutationResolver) TenantAddBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (*model.TenantBillingProfile, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantAddBillingProfile", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	profileId, err := r.Services.TenantService.CreateTenantBillingProfile(ctx, input)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create tenant billing profile")
+		return &model.TenantBillingProfile{ID: profileId}, err
+	}
+
+	createdTenantBillingProfileEntity, err := r.Services.TenantService.GetTenantBillingProfile(ctx, profileId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Tenant billing profile not yet available.")
+		return &model.TenantBillingProfile{ID: profileId}, nil
+	}
+	span.LogFields(log.String("response.tenantBillingProfileId", profileId))
+	return mapper.MapEntityToTenantBillingProfile(createdTenantBillingProfileEntity), nil
+}
+
+// TenantUpdateBillingProfile is the resolver for the tenant_UpdateBillingProfile field.
+func (r *mutationResolver) TenantUpdateBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) (*model.TenantBillingProfile, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantUpdateBillingProfile", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	if input.ID == "" {
+		err := errors.New("missing tenant billing profile id")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Missing tenant billing profile id")
+		return nil, nil
+	}
+
+	err := r.Services.TenantService.UpdateTenantBillingProfile(ctx, input)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update master plan")
+		return nil, err
+	}
+
+	updatedTenantBillingProfileEntity, err := r.Services.TenantService.GetTenantBillingProfile(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch tenant billing profile details")
+		return nil, nil
+	}
+	return mapper.MapEntityToTenantBillingProfile(updatedTenantBillingProfileEntity), nil
 }
 
 // Tenant is the resolver for the tenant field.

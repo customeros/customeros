@@ -8,6 +8,8 @@ extend type Query {
 
 extend type Mutation {
     tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
+    tenant_AddBillingProfile(input: TenantBillingProfileInput!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tenant_UpdateBillingProfile(input: TenantBillingProfileUpdateInput!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type TenantBillingProfile implements SourceFields & Node {
@@ -33,4 +35,34 @@ type TenantBillingProfile implements SourceFields & Node {
 input TenantInput {
     name: String!
     appSource: String
+}
+
+input TenantBillingProfileInput {
+    email:              String
+    phone:              String
+    addressLine1:       String
+    addressLine2:       String
+    addressLine3:       String
+    locality:           String
+    country:            String
+    zip:                String
+    legalName:          String
+    domesticPaymentsBankInfo:      String
+    internationalPaymentsBankInfo: String
+}
+
+input TenantBillingProfileUpdateInput {
+    id:                 ID!
+    patch:              Boolean
+    email:              String
+    phone:              String
+    addressLine1:       String
+    addressLine2:       String
+    addressLine3:       String
+    locality:           String
+    country:            String
+    zip:                String
+    legalName:          String
+    domesticPaymentsBankInfo:      String
+    internationalPaymentsBankInfo: String
 }

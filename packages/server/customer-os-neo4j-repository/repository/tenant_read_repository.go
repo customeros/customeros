@@ -16,6 +16,7 @@ type TenantReadRepository interface {
 	GetTenantForUserEmail(ctx context.Context, email string) (*dbtype.Node, error)
 	GetTenantSettings(ctx context.Context, tenant string) (*dbtype.Node, error)
 	GetTenantBillingProfiles(ctx context.Context, tenant string) ([]*dbtype.Node, error)
+	GetTenantBillingProfileById(ctx context.Context, tenant, id string) (*dbtype.Node, error)
 }
 
 type tenantReadRepository struct {
@@ -209,4 +210,36 @@ func (r *tenantReadRepository) GetTenantBillingProfiles(ctx context.Context, ten
 		return nil, nil
 	}
 	return result.([]*dbtype.Node), nil
+}
+
+func (r *tenantReadRepository) GetTenantBillingProfileById(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantBillingProfileById")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile {id:$id})
+			RETURN tbp`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     id,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		span.LogFields(log.Bool("result.found", false))
+		return nil, err
+	}
+
+	span.LogFields(log.Bool("result.found", result != nil))
+	return result.(*dbtype.Node), nil
 }

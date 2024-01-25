@@ -6,11 +6,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"math/rand"
@@ -21,17 +27,22 @@ type TenantService interface {
 	GetTenantForUserEmail(ctx context.Context, email string) (*neo4jentity.TenantEntity, error)
 	Merge(ctx context.Context, tenantEntity neo4jentity.TenantEntity) (*neo4jentity.TenantEntity, error)
 	GetTenantBillingProfiles(ctx context.Context) (*neo4jentity.TenantBillingProfileEntities, error)
+	GetTenantBillingProfile(ctx context.Context, id string) (*neo4jentity.TenantBillingProfileEntity, error)
+	CreateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (string, error)
+	UpdateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) error
 }
 
 type tenantService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
+	grpcClients  *grpc_client.Clients
 }
 
-func NewTenantService(log logger.Logger, repository *repository.Repositories) TenantService {
+func NewTenantService(log logger.Logger, repository *repository.Repositories, grpcClients *grpc_client.Clients) TenantService {
 	return &tenantService{
 		log:          log,
 		repositories: repository,
+		grpcClients:  grpcClients,
 	}
 }
 
@@ -106,4 +117,146 @@ func (s *tenantService) GetTenantBillingProfiles(ctx context.Context) (*neo4jent
 	}
 
 	return &tenantBillingProfiles, nil
+}
+
+func (s *tenantService) GetTenantBillingProfile(ctx context.Context, id string) (*neo4jentity.TenantBillingProfileEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantBillingProfile")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	span.LogFields(log.String("id", id))
+
+	dbNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfileById(ctx, common.GetTenantFromContext(ctx), id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("GetTenantBillingProfile: %w", err)
+	}
+
+	return neo4jmapper.MapDbNodeToTenantBillingProfileEntity(dbNode), nil
+}
+
+func (s *tenantService) CreateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.CreateTenantBillingProfile")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	grpcRequest := tenantpb.AddBillingProfileRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		SourceFields: &commonpb.SourceFields{
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		},
+		Email:                         utils.IfNotNilString(input.Email),
+		Phone:                         utils.IfNotNilString(input.Phone),
+		LegalName:                     utils.IfNotNilString(input.LegalName),
+		AddressLine1:                  utils.IfNotNilString(input.AddressLine1),
+		AddressLine2:                  utils.IfNotNilString(input.AddressLine2),
+		AddressLine3:                  utils.IfNotNilString(input.AddressLine3),
+		Locality:                      utils.IfNotNilString(input.Locality),
+		Country:                       utils.IfNotNilString(input.Country),
+		Zip:                           utils.IfNotNilString(input.Zip),
+		DomesticPaymentsBankInfo:      utils.IfNotNilString(input.DomesticPaymentsBankInfo),
+		InternationalPaymentsBankInfo: utils.IfNotNilString(input.InternationalPaymentsBankInfo),
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := s.grpcClients.TenantClient.AddBillingProfile(ctx, &grpcRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return "", err
+	}
+
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelTenantBillingProfile, span)
+
+	return response.Id, nil
+}
+
+func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.UpdateTenantBillingProfile")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	if input.ID == "" {
+		err := fmt.Errorf("(TenantService.UpdateTenantBillingProfile) billing profile id is missing")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	billingProfileExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.ID, neo4jutil.NodeLabelTenantBillingProfile)
+	if !billingProfileExists {
+		err := fmt.Errorf("(TenantService.UpdateTenantBillingProfile) tenant billing profile with id {%s} not found", input.ID)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	var fieldMask []tenantpb.TenantBillingProfileFieldMask
+	updateRequest := tenantpb.UpdateBillingProfileRequest{
+		Tenant:                        common.GetTenantFromContext(ctx),
+		Id:                            input.ID,
+		LoggedInUserId:                common.GetUserIdFromContext(ctx),
+		AppSource:                     constants.AppSourceCustomerOsApi,
+		Email:                         utils.IfNotNilString(input.Email),
+		Phone:                         utils.IfNotNilString(input.Phone),
+		LegalName:                     utils.IfNotNilString(input.LegalName),
+		AddressLine1:                  utils.IfNotNilString(input.AddressLine1),
+		AddressLine2:                  utils.IfNotNilString(input.AddressLine2),
+		AddressLine3:                  utils.IfNotNilString(input.AddressLine3),
+		Locality:                      utils.IfNotNilString(input.Locality),
+		Country:                       utils.IfNotNilString(input.Country),
+		Zip:                           utils.IfNotNilString(input.Zip),
+		DomesticPaymentsBankInfo:      utils.IfNotNilString(input.DomesticPaymentsBankInfo),
+		InternationalPaymentsBankInfo: utils.IfNotNilString(input.InternationalPaymentsBankInfo),
+	}
+
+	if input.Patch != nil && *input.Patch {
+		if input.Email != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_EMAIL)
+		}
+		if input.Phone != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_PHONE)
+		}
+		if input.LegalName != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LEGAL_NAME)
+		}
+		if input.AddressLine1 != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_1)
+		}
+		if input.AddressLine2 != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_2)
+		}
+		if input.AddressLine3 != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_3)
+		}
+		if input.Locality != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LOCALITY)
+		}
+		if input.Country != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_COUNTRY)
+		}
+		if input.Zip != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ZIP)
+		}
+		if input.DomesticPaymentsBankInfo != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_DOMESTIC_PAYMENTS_BANK_INFO)
+		}
+		if input.InternationalPaymentsBankInfo != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO)
+		}
+		updateRequest.FieldsMask = fieldMask
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := s.grpcClients.TenantClient.UpdateBillingProfile(ctx, &updateRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
 }

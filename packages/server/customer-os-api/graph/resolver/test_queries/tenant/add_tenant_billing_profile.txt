@@ -1,0 +1,18 @@
+mutation AddBillingProfile() {
+tenant_AddBillingProfile(
+    input: {
+        email: "email"
+        phone: "phone"
+        addressLine1: "addressLine1"
+        addressLine2: "addressLine2"
+        addressLine3: "addressLine3"
+        locality: "locality"
+        country: "country"
+        zip: "zip"
+        legalName: "legalName"
+        domesticPaymentsBankInfo: "domesticPaymentsBankInfo"
+        internationalPaymentsBankInfo: "internationalPaymentsBankInfo"
+    }) {
+    id
+  }
+}

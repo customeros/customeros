@@ -57,7 +57,6 @@ func (r *masterPlanReadRepository) GetMasterPlanById(ctx context.Context, tenant
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-
 	})
 	if err != nil {
 		span.LogFields(log.Bool("result.found", false))

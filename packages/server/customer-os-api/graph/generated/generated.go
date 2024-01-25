@@ -913,7 +913,9 @@ type ComplexityRoot struct {
 		TagCreate                               func(childComplexity int, input model.TagInput) int
 		TagDelete                               func(childComplexity int, id string) int
 		TagUpdate                               func(childComplexity int, input model.TagUpdateInput) int
+		TenantAddBillingProfile                 func(childComplexity int, input model.TenantBillingProfileInput) int
 		TenantMerge                             func(childComplexity int, tenant model.TenantInput) int
+		TenantUpdateBillingProfile              func(childComplexity int, input model.TenantBillingProfileUpdateInput) int
 		UserAddRole                             func(childComplexity int, id string, role model.Role) int
 		UserAddRoleInTenant                     func(childComplexity int, id string, tenant string, role model.Role) int
 		UserCreate                              func(childComplexity int, input model.UserInput) int
@@ -1643,6 +1645,8 @@ type MutationResolver interface {
 	TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error)
 	TagDelete(ctx context.Context, id string) (*model.Result, error)
 	TenantMerge(ctx context.Context, tenant model.TenantInput) (string, error)
+	TenantAddBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (*model.TenantBillingProfile, error)
+	TenantUpdateBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) (*model.TenantBillingProfile, error)
 	UserCreate(ctx context.Context, input model.UserInput) (*model.User, error)
 	UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error)
 	UserAddRole(ctx context.Context, id string, role model.Role) (*model.User, error)
@@ -7003,6 +7007,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.TagUpdate(childComplexity, args["input"].(model.TagUpdateInput)), true
 
+	case "Mutation.tenant_AddBillingProfile":
+		if e.complexity.Mutation.TenantAddBillingProfile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_tenant_AddBillingProfile_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TenantAddBillingProfile(childComplexity, args["input"].(model.TenantBillingProfileInput)), true
+
 	case "Mutation.tenant_Merge":
 		if e.complexity.Mutation.TenantMerge == nil {
 			break
@@ -7014,6 +7030,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.TenantMerge(childComplexity, args["tenant"].(model.TenantInput)), true
+
+	case "Mutation.tenant_UpdateBillingProfile":
+		if e.complexity.Mutation.TenantUpdateBillingProfile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_tenant_UpdateBillingProfile_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TenantUpdateBillingProfile(childComplexity, args["input"].(model.TenantBillingProfileUpdateInput)), true
 
 	case "Mutation.user_AddRole":
 		if e.complexity.Mutation.UserAddRole == nil {
@@ -9926,6 +9954,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputTagIdOrNameInput,
 		ec.unmarshalInputTagInput,
 		ec.unmarshalInputTagUpdateInput,
+		ec.unmarshalInputTenantBillingProfileInput,
+		ec.unmarshalInputTenantBillingProfileUpdateInput,
 		ec.unmarshalInputTenantInput,
 		ec.unmarshalInputTimeRange,
 		ec.unmarshalInputUserInput,
@@ -12870,6 +12900,8 @@ input TagIdOrNameInput {
 
 extend type Mutation {
     tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
+    tenant_AddBillingProfile(input: TenantBillingProfileInput!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tenant_UpdateBillingProfile(input: TenantBillingProfileUpdateInput!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type TenantBillingProfile implements SourceFields & Node {
@@ -12895,6 +12927,36 @@ type TenantBillingProfile implements SourceFields & Node {
 input TenantInput {
     name: String!
     appSource: String
+}
+
+input TenantBillingProfileInput {
+    email:              String
+    phone:              String
+    addressLine1:       String
+    addressLine2:       String
+    addressLine3:       String
+    locality:           String
+    country:            String
+    zip:                String
+    legalName:          String
+    domesticPaymentsBankInfo:      String
+    internationalPaymentsBankInfo: String
+}
+
+input TenantBillingProfileUpdateInput {
+    id:                 ID!
+    patch:              Boolean
+    email:              String
+    phone:              String
+    addressLine1:       String
+    addressLine2:       String
+    addressLine3:       String
+    locality:           String
+    country:            String
+    zip:                String
+    legalName:          String
+    domesticPaymentsBankInfo:      String
+    internationalPaymentsBankInfo: String
 }`, BuiltIn: false},
 	{Name: "../schemas/tenant_billable.graphqls", Input: `extend type Query {
     billableInfo: TenantBillableInfo! @hasRole(roles: [USER, ADMIN])
@@ -16128,6 +16190,21 @@ func (ec *executionContext) field_Mutation_tag_Update_args(ctx context.Context, 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_tenant_AddBillingProfile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.TenantBillingProfileInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNTenantBillingProfileInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfileInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_tenant_Merge_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -16140,6 +16217,21 @@ func (ec *executionContext) field_Mutation_tenant_Merge_args(ctx context.Context
 		}
 	}
 	args["tenant"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_tenant_UpdateBillingProfile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.TenantBillingProfileUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNTenantBillingProfileUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfileUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -55762,6 +55854,248 @@ func (ec *executionContext) fieldContext_Mutation_tenant_Merge(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_tenant_AddBillingProfile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_tenant_AddBillingProfile(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().TenantAddBillingProfile(rctx, fc.Args["input"].(model.TenantBillingProfileInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.TenantBillingProfile); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.TenantBillingProfile`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.TenantBillingProfile)
+	fc.Result = res
+	return ec.marshalNTenantBillingProfile2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfile(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_tenant_AddBillingProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_TenantBillingProfile_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_TenantBillingProfile_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_TenantBillingProfile_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_TenantBillingProfile_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_TenantBillingProfile_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_TenantBillingProfile_appSource(ctx, field)
+			case "email":
+				return ec.fieldContext_TenantBillingProfile_email(ctx, field)
+			case "phone":
+				return ec.fieldContext_TenantBillingProfile_phone(ctx, field)
+			case "addressLine1":
+				return ec.fieldContext_TenantBillingProfile_addressLine1(ctx, field)
+			case "addressLine2":
+				return ec.fieldContext_TenantBillingProfile_addressLine2(ctx, field)
+			case "addressLine3":
+				return ec.fieldContext_TenantBillingProfile_addressLine3(ctx, field)
+			case "locality":
+				return ec.fieldContext_TenantBillingProfile_locality(ctx, field)
+			case "country":
+				return ec.fieldContext_TenantBillingProfile_country(ctx, field)
+			case "zip":
+				return ec.fieldContext_TenantBillingProfile_zip(ctx, field)
+			case "legalName":
+				return ec.fieldContext_TenantBillingProfile_legalName(ctx, field)
+			case "domesticPaymentsBankInfo":
+				return ec.fieldContext_TenantBillingProfile_domesticPaymentsBankInfo(ctx, field)
+			case "internationalPaymentsBankInfo":
+				return ec.fieldContext_TenantBillingProfile_internationalPaymentsBankInfo(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TenantBillingProfile", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_tenant_AddBillingProfile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_tenant_UpdateBillingProfile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_tenant_UpdateBillingProfile(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().TenantUpdateBillingProfile(rctx, fc.Args["input"].(model.TenantBillingProfileUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.TenantBillingProfile); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.TenantBillingProfile`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.TenantBillingProfile)
+	fc.Result = res
+	return ec.marshalNTenantBillingProfile2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfile(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_tenant_UpdateBillingProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_TenantBillingProfile_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_TenantBillingProfile_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_TenantBillingProfile_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_TenantBillingProfile_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_TenantBillingProfile_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_TenantBillingProfile_appSource(ctx, field)
+			case "email":
+				return ec.fieldContext_TenantBillingProfile_email(ctx, field)
+			case "phone":
+				return ec.fieldContext_TenantBillingProfile_phone(ctx, field)
+			case "addressLine1":
+				return ec.fieldContext_TenantBillingProfile_addressLine1(ctx, field)
+			case "addressLine2":
+				return ec.fieldContext_TenantBillingProfile_addressLine2(ctx, field)
+			case "addressLine3":
+				return ec.fieldContext_TenantBillingProfile_addressLine3(ctx, field)
+			case "locality":
+				return ec.fieldContext_TenantBillingProfile_locality(ctx, field)
+			case "country":
+				return ec.fieldContext_TenantBillingProfile_country(ctx, field)
+			case "zip":
+				return ec.fieldContext_TenantBillingProfile_zip(ctx, field)
+			case "legalName":
+				return ec.fieldContext_TenantBillingProfile_legalName(ctx, field)
+			case "domesticPaymentsBankInfo":
+				return ec.fieldContext_TenantBillingProfile_domesticPaymentsBankInfo(ctx, field)
+			case "internationalPaymentsBankInfo":
+				return ec.fieldContext_TenantBillingProfile_internationalPaymentsBankInfo(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TenantBillingProfile", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_tenant_UpdateBillingProfile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_user_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_user_Create(ctx, field)
 	if err != nil {
@@ -83444,6 +83778,214 @@ func (ec *executionContext) unmarshalInputTagUpdateInput(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTenantBillingProfileInput(ctx context.Context, obj interface{}) (model.TenantBillingProfileInput, error) {
+	var it model.TenantBillingProfileInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"email", "phone", "addressLine1", "addressLine2", "addressLine3", "locality", "country", "zip", "legalName", "domesticPaymentsBankInfo", "internationalPaymentsBankInfo"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "phone":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phone"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Phone = data
+		case "addressLine1":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressLine1"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AddressLine1 = data
+		case "addressLine2":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressLine2"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AddressLine2 = data
+		case "addressLine3":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressLine3"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AddressLine3 = data
+		case "locality":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("locality"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Locality = data
+		case "country":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("country"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Country = data
+		case "zip":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("zip"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Zip = data
+		case "legalName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("legalName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LegalName = data
+		case "domesticPaymentsBankInfo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domesticPaymentsBankInfo"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DomesticPaymentsBankInfo = data
+		case "internationalPaymentsBankInfo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("internationalPaymentsBankInfo"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InternationalPaymentsBankInfo = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTenantBillingProfileUpdateInput(ctx context.Context, obj interface{}) (model.TenantBillingProfileUpdateInput, error) {
+	var it model.TenantBillingProfileUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "patch", "email", "phone", "addressLine1", "addressLine2", "addressLine3", "locality", "country", "zip", "legalName", "domesticPaymentsBankInfo", "internationalPaymentsBankInfo"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "patch":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("patch"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Patch = data
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "phone":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phone"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Phone = data
+		case "addressLine1":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressLine1"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AddressLine1 = data
+		case "addressLine2":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressLine2"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AddressLine2 = data
+		case "addressLine3":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressLine3"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AddressLine3 = data
+		case "locality":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("locality"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Locality = data
+		case "country":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("country"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Country = data
+		case "zip":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("zip"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Zip = data
+		case "legalName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("legalName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LegalName = data
+		case "domesticPaymentsBankInfo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domesticPaymentsBankInfo"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DomesticPaymentsBankInfo = data
+		case "internationalPaymentsBankInfo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("internationalPaymentsBankInfo"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InternationalPaymentsBankInfo = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputTenantInput(ctx context.Context, obj interface{}) (model.TenantInput, error) {
 	var it model.TenantInput
 	asMap := map[string]interface{}{}
@@ -91890,6 +92432,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "tenant_Merge":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_tenant_Merge(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "tenant_AddBillingProfile":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_tenant_AddBillingProfile(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "tenant_UpdateBillingProfile":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_tenant_UpdateBillingProfile(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -101289,6 +101845,10 @@ func (ec *executionContext) marshalNTenantBillableInfo2ᚖgithubᚗcomᚋopenlin
 	return ec._TenantBillableInfo(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNTenantBillingProfile2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfile(ctx context.Context, sel ast.SelectionSet, v model.TenantBillingProfile) graphql.Marshaler {
+	return ec._TenantBillingProfile(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNTenantBillingProfile2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TenantBillingProfile) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -101341,6 +101901,16 @@ func (ec *executionContext) marshalNTenantBillingProfile2ᚖgithubᚗcomᚋopenl
 		return graphql.Null
 	}
 	return ec._TenantBillingProfile(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTenantBillingProfileInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfileInput(ctx context.Context, v interface{}) (model.TenantBillingProfileInput, error) {
+	res, err := ec.unmarshalInputTenantBillingProfileInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNTenantBillingProfileUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfileUpdateInput(ctx context.Context, v interface{}) (model.TenantBillingProfileUpdateInput, error) {
+	res, err := ec.unmarshalInputTenantBillingProfileUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNTenantInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantInput(ctx context.Context, v interface{}) (model.TenantInput, error) {

@@ -81,7 +81,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		DomainService:              NewDomainService(log, repositories),
 		PageViewService:            NewPageViewService(log, repositories),
 		AttachmentService:          NewAttachmentService(log, repositories),
-		TenantService:              NewTenantService(log, repositories),
+		TenantService:              NewTenantService(log, repositories, grpcClients),
 		WorkspaceService:           NewWorkspaceService(log, repositories),
 		SocialService:              NewSocialService(log, repositories),
 		ExternalSystemService:      NewExternalSystemService(log, repositories),
