@@ -2051,16 +2051,13 @@ type ServiceLineItemBulkUpdateInput struct {
 }
 
 type ServiceLineItemBulkUpdateItem struct {
-	ServiceLineItemID       string                        `json:"serviceLineItemId"`
-	Tenant                  *string                       `json:"tenant,omitempty"`
-	Name                    *string                       `json:"name,omitempty"`
-	Billed                  *BilledType                   `json:"billed,omitempty"`
-	Price                   *float64                      `json:"price,omitempty"`
-	Quantity                *int64                        `json:"quantity,omitempty"`
-	Comments                *string                       `json:"comments,omitempty"`
-	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
-	IsRetroactiveCorrection *bool                         `json:"isRetroactiveCorrection,omitempty"`
-	ContractID              *string                       `json:"contractId,omitempty"`
+	ServiceLineItemID       *string     `json:"serviceLineItemId,omitempty"`
+	Name                    *string     `json:"name,omitempty"`
+	Billed                  *BilledType `json:"billed,omitempty"`
+	Price                   *float64    `json:"price,omitempty"`
+	Quantity                *int64      `json:"quantity,omitempty"`
+	Comments                *string     `json:"comments,omitempty"`
+	IsRetroactiveCorrection *bool       `json:"isRetroactiveCorrection,omitempty"`
 }
 
 type ServiceLineItemCloseInput struct {

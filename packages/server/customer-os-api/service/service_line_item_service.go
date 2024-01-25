@@ -33,7 +33,7 @@ type ServiceLineItemService interface {
 	GetById(ctx context.Context, id string) (*entity.ServiceLineItemEntity, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*entity.ServiceLineItemEntities, error)
 	Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error
-	CreateOrUpdateInBulk(ctx context.Context, sliBulkData []*SLIBulkData) ([]string, error)
+	CreateOrUpdateInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error)
 }
 type serviceLineItemService struct {
 	log          logger.Logger
@@ -354,7 +354,7 @@ func (s *serviceLineItemService) mapDbNodeToServiceLineItemEntity(dbNode dbtype.
 	return &serviceLineItem
 }
 
-type SLIBulkData struct {
+type ServiceLineItemDetails struct {
 	Id                      string
 	Name                    string
 	Price                   float64
@@ -364,10 +364,11 @@ type SLIBulkData struct {
 	IsRetroactiveCorrection bool
 }
 
-func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, sliBulkData []*SLIBulkData) ([]string, error) {
+func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.CreateOrUpdateInBulk")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contractId", contractId))
 
 	if len(sliBulkData) == 0 {
 		return []string{}, nil
@@ -379,15 +380,15 @@ func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, sliBu
 		if serviceLineItem.Id == "" {
 			itemId, err := s.Create(ctx, &ServiceLineItemCreateData{
 				ServiceLineItemEntity: &entity.ServiceLineItemEntity{
-					Name:          serviceLineItem.Name,
-					Price:         serviceLineItem.Price,
-					Quantity:      serviceLineItem.Quantity,
-					Billed:        serviceLineItem.Billed,
-					Comments:      serviceLineItem.Comments,
-					Source:        neo4jentity.DataSourceOpenline,
-					SourceOfTruth: neo4jentity.DataSourceOpenline,
-					AppSource:     constants.AppSourceCustomerOsApi,
+					Name:     serviceLineItem.Name,
+					Price:    serviceLineItem.Price,
+					Quantity: serviceLineItem.Quantity,
+					Billed:   serviceLineItem.Billed,
+					Comments: serviceLineItem.Comments,
 				},
+				ContractId: contractId,
+				AppSource:  constants.AppSourceCustomerOsApi,
+				Source:     neo4jentity.DataSourceOpenline,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -398,14 +399,20 @@ func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, sliBu
 
 		} else {
 			responseIds = append(responseIds, serviceLineItem.Id)
-			err := s.Update(ctx, &entity.ServiceLineItemEntity{
+			sliEntity, err := s.GetById(ctx, serviceLineItem.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Service line item with id %s not found", err.Error())
+				return []string{}, err
+			}
+			err = s.Update(ctx, &entity.ServiceLineItemEntity{
 				ID:        serviceLineItem.Id,
 				Name:      serviceLineItem.Name,
 				Price:     serviceLineItem.Price,
 				Quantity:  serviceLineItem.Quantity,
 				Comments:  serviceLineItem.Comments,
 				Billed:    serviceLineItem.Billed,
-				Source:    neo4jentity.DataSourceOpenline,
+				Source:    sliEntity.Source,
 				AppSource: constants.AppSourceCustomerOsApi,
 			}, serviceLineItem.IsRetroactiveCorrection)
 			if err != nil {
@@ -419,8 +426,8 @@ func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, sliBu
 	return responseIds, nil
 }
 
-func MapServiceLineItemBulkItemsToData(input []*model.ServiceLineItemBulkUpdateItem) []*SLIBulkData {
-	var arr []*SLIBulkData
+func MapServiceLineItemBulkItemsToData(input []*model.ServiceLineItemBulkUpdateItem) []*ServiceLineItemDetails {
+	var arr []*ServiceLineItemDetails
 	for _, item := range input {
 		sli := MapServiceLineItemBulkItemToData(item)
 		if sli != nil {
@@ -430,7 +437,7 @@ func MapServiceLineItemBulkItemsToData(input []*model.ServiceLineItemBulkUpdateI
 	return arr
 }
 
-func MapServiceLineItemBulkItemToData(input *model.ServiceLineItemBulkUpdateItem) *SLIBulkData {
+func MapServiceLineItemBulkItemToData(input *model.ServiceLineItemBulkUpdateItem) *ServiceLineItemDetails {
 	if input == nil {
 		return nil
 	}
@@ -438,8 +445,8 @@ func MapServiceLineItemBulkItemToData(input *model.ServiceLineItemBulkUpdateItem
 	if input.Billed != nil {
 		billed = mapper.MapBilledTypeFromModel(*input.Billed)
 	}
-	return &SLIBulkData{
-		Id:                      input.ServiceLineItemID,
+	return &ServiceLineItemDetails{
+		Id:                      utils.IfNotNilString(input.ServiceLineItemID),
 		Name:                    utils.IfNotNilString(input.Name),
 		Price:                   utils.IfNotNilFloat64(input.Price),
 		Quantity:                utils.IfNotNilInt64(input.Quantity),
