@@ -1521,33 +1521,45 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	hoursAgo3 := now.Add(time.Duration(-3) * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "org name"})
-	orgId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{Name: "just another org"})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org name"})
+	orgId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "just another org"})
 	contractId1 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		Name:             "contract 1",
-		CreatedAt:        now,
-		UpdatedAt:        now,
-		ServiceStartedAt: &hoursAgo3,
-		SignedAt:         &hoursAgo2,
-		EndedAt:          &hoursAgo1,
-		RenewalCycle:     neo4jenum.RenewalCycleMonthlyRenewal,
-		ContractStatus:   neo4jenum.ContractStatusDraft,
-		ContractUrl:      "url1",
-		Source:           neo4jentity.DataSourceOpenline,
-		AppSource:        "test1",
+		Name:                  "contract 1",
+		CreatedAt:             now,
+		UpdatedAt:             now,
+		ServiceStartedAt:      &hoursAgo3,
+		SignedAt:              &hoursAgo2,
+		EndedAt:               &hoursAgo1,
+		RenewalCycle:          neo4jenum.RenewalCycleMonthlyRenewal,
+		ContractStatus:        neo4jenum.ContractStatusDraft,
+		ContractUrl:           "url1",
+		Source:                neo4jentity.DataSourceOpenline,
+		AppSource:             "test1",
+		OrganizationLegalName: "legal name 1",
+		Country:               "country 1",
+		Locality:              "locality 1",
+		Zip:                   "zip 1",
+		InvoiceEmail:          "invoice email 1",
+		InvoiceNote:           "invoice note 1",
 	})
 	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		Name:             "contract 2",
-		CreatedAt:        yesterday,
-		UpdatedAt:        yesterday,
-		ServiceStartedAt: &hoursAgo1,
-		SignedAt:         &hoursAgo3,
-		EndedAt:          &hoursAgo2,
-		RenewalCycle:     neo4jenum.RenewalCycleAnnualRenewal,
-		ContractStatus:   neo4jenum.ContractStatusLive,
-		ContractUrl:      "url2",
-		Source:           neo4jentity.DataSourceOpenline,
-		AppSource:        "test2",
+		Name:                  "contract 2",
+		CreatedAt:             yesterday,
+		UpdatedAt:             yesterday,
+		ServiceStartedAt:      &hoursAgo1,
+		SignedAt:              &hoursAgo3,
+		EndedAt:               &hoursAgo2,
+		RenewalCycle:          neo4jenum.RenewalCycleAnnualRenewal,
+		ContractStatus:        neo4jenum.ContractStatusLive,
+		ContractUrl:           "url2",
+		Source:                neo4jentity.DataSourceOpenline,
+		AppSource:             "test2",
+		OrganizationLegalName: "legal name 2",
+		Country:               "country 2",
+		Locality:              "locality 2",
+		Zip:                   "zip 2",
+		InvoiceEmail:          "invoice email 2",
+		InvoiceNote:           "invoice note 2",
 	})
 	contractId3 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId2, neo4jentity.ContractEntity{})
 
@@ -1587,6 +1599,12 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	require.Equal(t, "url1", *firstContract.ContractURL)
 	require.Equal(t, model.DataSourceOpenline, firstContract.Source)
 	require.Equal(t, "test1", firstContract.AppSource)
+	require.Equal(t, "legal name 1", *firstContract.OrganizationLegalName)
+	require.Equal(t, "country 1", *firstContract.Country)
+	require.Equal(t, "locality 1", *firstContract.Locality)
+	require.Equal(t, "zip 1", *firstContract.Zip)
+	require.Equal(t, "invoice email 1", *firstContract.InvoiceEmail)
+	require.Equal(t, "invoice note 1", *firstContract.InvoiceNote)
 
 	secondContract := organization.Contracts[1]
 	require.Equal(t, contractId2, secondContract.ID)
@@ -1601,6 +1619,12 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	require.Equal(t, "url2", *secondContract.ContractURL)
 	require.Equal(t, model.DataSourceOpenline, secondContract.Source)
 	require.Equal(t, "test2", secondContract.AppSource)
+	require.Equal(t, "legal name 2", *secondContract.OrganizationLegalName)
+	require.Equal(t, "country 2", *secondContract.Country)
+	require.Equal(t, "locality 2", *secondContract.Locality)
+	require.Equal(t, "zip 2", *secondContract.Zip)
+	require.Equal(t, "invoice email 2", *secondContract.InvoiceEmail)
+	require.Equal(t, "invoice note 2", *secondContract.InvoiceNote)
 }
 
 func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {

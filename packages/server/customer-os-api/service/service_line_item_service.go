@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -359,7 +360,6 @@ type SLIBulkData struct {
 	Price                   float64
 	Quantity                int64
 	Billed                  neo4jenum.BilledType
-	ContractId              string
 	Comments                string
 	IsRetroactiveCorrection bool
 }
@@ -420,37 +420,31 @@ func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, sliBu
 }
 
 func MapServiceLineItemBulkItemsToData(input []*model.ServiceLineItemBulkUpdateItem) []*SLIBulkData {
-	arr := make([]*SLIBulkData, 0, len(input))
+	var arr []*SLIBulkData
 	for _, item := range input {
-		arr = append(arr, MapServiceLineItemBulkItemToData(item))
+		sli := MapServiceLineItemBulkItemToData(item)
+		if sli != nil {
+			arr = append(arr, sli)
+		}
 	}
 	return arr
 }
 
 func MapServiceLineItemBulkItemToData(input *model.ServiceLineItemBulkUpdateItem) *SLIBulkData {
+	if input == nil {
+		return nil
+	}
 	billed := neo4jenum.BilledTypeNone
-	switch *input.Billed {
-	case model.BilledTypeMonthly:
-		billed = neo4jenum.BilledTypeMonthly
-	case model.BilledTypeQuarterly:
-		billed = neo4jenum.BilledTypeQuarterly
-	case model.BilledTypeAnnually:
-		billed = neo4jenum.BilledTypeAnnually
-	case model.BilledTypeOnce:
-		billed = neo4jenum.BilledTypeOnce
-	case model.BilledTypeUsage:
-		billed = neo4jenum.BilledTypeUsage
-	default:
-		billed = neo4jenum.BilledTypeNone
+	if input.Billed != nil {
+		billed = mapper.MapBilledTypeFromModel(*input.Billed)
 	}
 	return &SLIBulkData{
 		Id:                      input.ServiceLineItemID,
-		Name:                    *input.Name,
-		Price:                   *input.Price,
-		Quantity:                *input.Quantity,
+		Name:                    utils.IfNotNilString(input.Name),
+		Price:                   utils.IfNotNilFloat64(input.Price),
+		Quantity:                utils.IfNotNilInt64(input.Quantity),
 		Billed:                  billed,
-		ContractId:              *input.ContractID,
-		Comments:                *input.Comments,
-		IsRetroactiveCorrection: *input.IsRetroactiveCorrection,
+		Comments:                utils.IfNotNilString(input.Comments),
+		IsRetroactiveCorrection: utils.IfNotNilBool(input.IsRetroactiveCorrection),
 	}
 }

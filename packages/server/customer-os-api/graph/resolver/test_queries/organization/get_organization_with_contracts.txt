@@ -17,6 +17,12 @@ query GetOrganization($organizationId: ID!) {
       sourceOfTruth
       appSource
       contractUrl
+      organizationLegalName
+      country
+      locality
+      zip
+      invoiceEmail
+      invoiceNote
     }
   }
 }

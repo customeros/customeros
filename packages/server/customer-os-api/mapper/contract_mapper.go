@@ -30,14 +30,14 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		InvoicingStartDate:    entity.InvoicingStartDate,
 		Currency:              utils.ToPtr(MapCurrencyToModel(entity.Currency)),
 		BillingCycle:          utils.ToPtr(MapContractBillingCycleToModel(entity.BillingCycle)),
-		AddressLine1:          &entity.AddressLine1,
-		AddressLine2:          &entity.AddressLine2,
-		Zip:                   &entity.Zip,
-		Country:               &entity.Country,
-		Locality:              &entity.Locality,
-		OrganizationLegalName: &entity.OrganizationLegalName,
-		InvoiceEmail:          &entity.InvoiceEmail,
-		InvoiceNote:           &entity.InvoiceNote,
+		AddressLine1:          utils.ToPtr(entity.AddressLine1),
+		AddressLine2:          utils.ToPtr(entity.AddressLine2),
+		Zip:                   utils.ToPtr(entity.Zip),
+		Country:               utils.ToPtr(entity.Country),
+		Locality:              utils.ToPtr(entity.Locality),
+		OrganizationLegalName: utils.ToPtr(entity.OrganizationLegalName),
+		InvoiceEmail:          utils.ToPtr(entity.InvoiceEmail),
+		InvoiceNote:           utils.ToPtr(entity.InvoiceNote),
 	}
 }
 
