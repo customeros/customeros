@@ -32,7 +32,7 @@ export function InvoicesTable() {
   });
 
   if (data?.invoices.totalElements === 0) {
-    return <EmptyState />;
+    return <EmptyState maxW={550} withBorder />;
   }
 
   return (

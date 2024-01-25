@@ -6,10 +6,22 @@ import { File04 } from '@ui/media/icons/File04';
 
 import HalfCirclePattern from '../../../assets/HalfCirclePattern';
 
-export const EmptyState = ({ maxW }: { maxW?: string | number }) => {
+export const EmptyState = ({
+  maxW,
+  withBorder,
+}: {
+  withBorder?: boolean;
+  maxW?: string | number;
+}) => {
   return (
-    <Center h='100%'>
-      <Flex direction='column' height={500} width={maxW || 500}>
+    <Center h='100%' width={maxW || 500}>
+      <Flex
+        direction='column'
+        h='100%'
+        width={maxW || 500}
+        borderRight={withBorder ? '1px solid' : 'none'}
+        borderColor='gray.200'
+      >
         <Flex position='relative'>
           <FeaturedIcon
             colorScheme='primary'

@@ -114,8 +114,9 @@ export function Invoice({
           </Flex>
           <Flex
             flexDir='column'
-            flex={1}
             minW={150}
+            w='160px'
+            overflow='hidden'
             py={2}
             borderRight={isBilledToFocused ? '1px solid' : '1px solid'}
             borderColor={'gray.300'}
@@ -134,24 +135,34 @@ export function Invoice({
               },
             }}
           >
-            <Text fontWeight='semibold' mb={1} fontSize='sm'>
+            <Text fontWeight='semibold' mb={0.5} fontSize='sm'>
               Billed to
             </Text>
-            <Text fontSize='sm' fontWeight='medium' mb={1}>
+            <Text
+              fontSize='sm'
+              fontWeight='medium'
+              mb={1}
+              lineHeight={1.2}
+              noOfLines={1}
+            >
               {billedTo.name}
             </Text>
 
-            <Text fontSize='sm'>
+            <Text fontSize='sm' lineHeight={1.2} noOfLines={1}>
               {billedTo.addressLine}
-              <Text as='span' display='block'>
+              <Text as='span' display='block' lineHeight={1.2} noOfLines={1}>
                 {billedTo.addressLine2}
               </Text>
             </Text>
-            <Text fontSize='sm'>
+            <Text fontSize='sm' lineHeight={1.2} noOfLines={1}>
               {billedTo.locality} {billedTo.locality && ', '} {billedTo.zip}
             </Text>
-            <Text fontSize='sm'>{billedTo.country}</Text>
-            <Text fontSize='sm'>{billedTo.email}</Text>
+            <Text fontSize='sm' lineHeight={1.2} noOfLines={1}>
+              {billedTo.country}
+            </Text>
+            <Text fontSize='sm' lineHeight={1.2} noOfLines={1}>
+              {billedTo.email}
+            </Text>
           </Flex>
           <Flex
             flexDir='column'
@@ -163,17 +174,31 @@ export function Invoice({
             <Text fontWeight='semibold' mb={1} fontSize='sm'>
               From
             </Text>
-            <Text fontSize='sm' fontWeight='medium' mb={1}>
+            <Text
+              fontSize='sm'
+              fontWeight='medium'
+              mb={1}
+              lineHeight={1.2}
+              noOfLines={1}
+            >
+              {from.name}
+            </Text>
+
+            <Text fontSize='sm' lineHeight={1.2} noOfLines={1}>
               {from.addressLine}
-              <Text as='span' display='block'>
+              <Text as='span' display='block' lineHeight={1.2} noOfLines={1}>
                 {from.addressLine2}
               </Text>
             </Text>
-            <Text fontSize='sm'>
-              {from.locality}, {from.zip}
+            <Text fontSize='sm' lineHeight={1.2} noOfLines={1}>
+              {from.locality} {from.locality && ', '} {from.zip}
             </Text>
-            <Text fontSize='sm'>{from.country}</Text>
-            <Text fontSize='sm'>{from.email}</Text>
+            <Text fontSize='sm' lineHeight={1.2} noOfLines={1}>
+              {from.country}
+            </Text>
+            <Text fontSize='sm' lineHeight={1.2} noOfLines={1}>
+              {from.email}
+            </Text>
           </Flex>
         </Flex>
       </Flex>

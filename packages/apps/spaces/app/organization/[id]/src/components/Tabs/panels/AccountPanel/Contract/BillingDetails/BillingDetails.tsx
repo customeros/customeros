@@ -284,7 +284,7 @@ export const BillingDetails = ({
               />
               <FormSelect
                 label='Currency'
-                placeholder='currency'
+                placeholder='Invoice currency'
                 isLabelVisible
                 name='currency'
                 formId={formId}
