@@ -1,72 +1,72 @@
 query getContracts($id: ID!) {
-  organization(id: $id) {
-    id
-    name
-    note
-    accountDetails {
-      renewalSummary {
-        arrForecast
-        maxArrForecast
-        renewalLikelihood
-      }
-    }
-    contracts {
-      id
-      name
-      createdAt
-      serviceStartedAt
-      signedAt
-      endedAt
-      renewalCycle
-      renewalPeriods
-      status
-      contractUrl
-      billingCycle
-      invoicingStartDate
-      currency
-      organizationLegalName
-      addressLine1
-      addressLine2
-      locality
-      country
-      zip
-      invoiceEmail
-      invoiceNote
-      opportunities {
+    organization(id: $id) {
         id
-        comments
-        internalStage
-        internalType
-        amount
-        maxAmount
         name
-        renewalLikelihood
-        renewalUpdatedByUserId
-        renewalUpdatedByUserAt
-        renewedAt
-
-        owner {
-          id
-          firstName
-          lastName
-          name
+        note
+        accountDetails {
+            renewalSummary {
+                arrForecast
+                maxArrForecast
+                renewalLikelihood
+            }
         }
-      }
-      serviceLineItems {
-        id
-        createdAt
-        updatedAt
-        name
-        billed
-        price
-        quantity
-        source
-        comments
-        sourceOfTruth
-        appSource
-        endedAt
-        parentId
-      }
+        contracts {
+            id
+            name
+            createdAt
+            serviceStartedAt
+            signedAt
+            endedAt
+            renewalCycle
+            renewalPeriods
+            status
+            contractUrl
+            billingCycle
+            invoicingStartDate
+            currency
+            organizationLegalName
+            addressLine1
+            addressLine2
+            locality
+            country
+            zip
+            invoiceEmail
+            invoiceNote
+            opportunities {
+                id
+                comments
+                internalStage
+                internalType
+                amount
+                maxAmount
+                name
+                renewalLikelihood
+                renewalUpdatedByUserId
+                renewalUpdatedByUserAt
+                renewedAt
+
+                owner {
+                    id
+                    firstName
+                    lastName
+                    name
+                }
+            }
+            serviceLineItems {
+                id
+                createdAt
+                updatedAt
+                name
+                billed
+                price
+                quantity
+                source
+                comments
+                sourceOfTruth
+                appSource
+                endedAt
+                parentId
+            }
+        }
     }
-  }
 }

@@ -1,29 +1,26 @@
 'use client';
-import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 
-import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
-import { Contract } from '@graphql/types';
 import { FormInput } from '@ui/form/Input';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { File02 } from '@ui/media/icons/File02';
 import { Grid, GridItem } from '@ui/layout/Grid';
 import { Heading } from '@ui/typography/Heading';
 import { FormSelect } from '@ui/form/SyncSelect';
-import { toastError } from '@ui/presentation/Toast';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
-  GetContractsQuery,
-  useGetContractsQuery,
-} from '@organization/src/graphql/getContracts.generated';
+  GetContractQuery,
+  useGetContractQuery,
+} from '@organization/src/graphql/getContract.generated';
 import {
   Modal,
   ModalBody,
@@ -33,15 +30,15 @@ import {
   ModalOverlay,
 } from '@ui/overlay/Modal';
 
+import { BillingDetailsDto } from './BillingDetails.dto';
 import { countryOptions, currencyOptions } from './utils';
-import { BillingDetailsDto, BillingDetailsForm } from './BillingDetails.dto';
 
 interface SubscriptionServiceModalProps {
-  data: Contract;
   isOpen: boolean;
   contractId: string;
   onClose: () => void;
   organizationName: string;
+  data?: GetContractQuery['contract'] | null;
 }
 
 export const BillingDetails = ({
@@ -55,54 +52,27 @@ export const BillingDetails = ({
   const formId = `billing-details-form-${contractId}`;
   const [isBillingDetailsFocused, setIsBillingDetailsFocused] =
     useState<boolean>(false);
-  const id = useParams()?.id as string;
 
   const [isBillingDetailsHovered, setIsBillingDetailsHovered] =
     useState<boolean>(false);
-  const queryKey = useGetContractsQuery.getKey({ id });
+  const queryKey = useGetContractQuery.getKey({ id: contractId });
 
   const queryClient = useQueryClient();
   const client = getGraphQLClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const updateContract = useUpdateContractMutation(client, {
-    onMutate: ({ input }) => {
-      queryClient.cancelQueries({ queryKey });
-      queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
-        return produce(currentCache, (draft) => {
-          const previousContracts = draft?.['organization']?.['contracts'];
-          const updatedContractIndex = previousContracts?.findIndex(
-            (contract) => contract.id === contractId,
-          );
-          if (draft?.['organization']?.['contracts']) {
-            draft['organization']['contracts']?.map((contractData, index) => {
-              if (index !== updatedContractIndex) {
-                return contractData;
-              }
-
-              return { ...input };
-            });
-          }
-        });
-      });
-
-      const previousEntries =
-        queryClient.getQueryData<GetContractsQuery>(queryKey);
-
-      return { previousEntries };
-    },
-    onError: (error, { input }, context) => {
-      queryClient.setQueryData<GetContractsQuery>(
-        queryKey,
-        context?.previousEntries,
-      );
-
+    onError: (error) => {
       toastError(
         'Failed to update billing details',
         `update-contract-error-${error}`,
       );
     },
     onSuccess: () => {
+      toastSuccess(
+        'Billing details updated!',
+        `update-contract-success-${contractId}`,
+      );
       onClose();
     },
     onSettled: () => {
@@ -111,29 +81,22 @@ export const BillingDetails = ({
       }
       timeoutRef.current = setTimeout(() => {
         queryClient.invalidateQueries({ queryKey });
-      }, 800);
+      }, 1000);
     },
   });
 
-  const defaultValues = new BillingDetailsDto({
-    ...data,
-    organizationLegalName: data.organizationLegalName || organizationName,
-  } as BillingDetailsForm);
-
   const { state, setDefaultValues } = useForm({
     formId,
-    defaultValues,
     stateReducer: (_, action, next) => {
       return next;
     },
   });
-
   useEffect(() => {
     if (isOpen) {
       const newDefaults = new BillingDetailsDto({
         ...data,
-        organizationLegalName: data.organizationLegalName || organizationName,
-      } as BillingDetailsForm);
+        organizationLegalName: data?.organizationLegalName || organizationName,
+      });
       setDefaultValues(newDefaults);
     }
   }, [isOpen]);
@@ -149,15 +112,26 @@ export const BillingDetails = ({
     });
   };
 
-  const fromDummyData = useMemo(
+  const invoicePreviewStaticData = useMemo(
     () => ({
-      addressLine: '29 Maple Lane',
-      addressLine2: 'Springfield, Haven County',
-      locality: 'San Francisco',
-      zip: '89302',
-      country: 'United States',
-      email: 'invoices@acme.com',
-      name: 'Acme Corp.',
+      status: 'Preview',
+      invoiceNumber: 'INV-003',
+      lines: [],
+      tax: 0,
+      note: '',
+      total: 0,
+      dueDate: new Date().toISOString(),
+      subtotal: 0,
+      issueDate: new Date().toISOString(),
+      from: {
+        addressLine: '29 Maple Lane',
+        addressLine2: 'Springfield, Haven County',
+        locality: 'San Francisco',
+        zip: '89302',
+        country: 'United States',
+        email: 'invoices@acme.com',
+        name: 'Acme Corp.',
+      },
     }),
     [],
   );
@@ -310,7 +284,7 @@ export const BillingDetails = ({
               />
               <FormSelect
                 label='Currency'
-                placeholder='currency'
+                placeholder='Invoice currency'
                 isLabelVisible
                 name='currency'
                 formId={formId}
@@ -340,13 +314,6 @@ export const BillingDetails = ({
                   isBillingDetailsFocused || isBillingDetailsHovered
                 }
                 currency={state?.values?.currency?.value}
-                tax={0}
-                note={''}
-                from={fromDummyData}
-                total={0}
-                dueDate={new Date().toISOString()}
-                subtotal={0}
-                issueDate={new Date().toISOString()}
                 billedTo={{
                   addressLine: state.values.addressLine1 ?? '',
                   addressLine2: state.values.addressLine2 ?? '',
@@ -356,9 +323,7 @@ export const BillingDetails = ({
                   email: state.values.invoiceEmail ?? '',
                   name: state.values?.organizationLegalName ?? '',
                 }}
-                status='Preview'
-                invoiceNumber='INV-003'
-                lines={[]}
+                {...invoicePreviewStaticData}
               />
             </Box>
           </GridItem>
