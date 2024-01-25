@@ -111,7 +111,7 @@ func (r *mutationResolver) ServiceLineItemBulkUpdate(ctx context.Context, input 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemBulkUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request.input", input))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	sliEntitiesForBulkSync := service.MapServiceLineItemBulkItemsToData(input.ServiceLineItems)
 

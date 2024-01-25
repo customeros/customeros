@@ -620,7 +620,6 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 					c.appSource=$appSource,
 					c.createdAt=$createdAt,
 					c.updatedAt=$updatedAt,
-
 					c.name=$name,
 					c.contractUrl=$contractUrl,
 					c.status=$status,
