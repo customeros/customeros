@@ -40,9 +40,9 @@ export const authOptions: AuthOptions = {
         token.playerIdentityId = account.providerAccountId;
 
         // Check if the email is available in the profile
-        if (profile && profile.email && account.provider === 'azure-ad') {
+        if (profile && profile.email && account.provider === 'google') {
           token.email = profile.email;
-        } else {
+        } else if (account.provider === 'azure-ad') {
           // If the email is not available in the profile, fetch it from Microsoft Graph API
           const graphApiResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
             headers: {
