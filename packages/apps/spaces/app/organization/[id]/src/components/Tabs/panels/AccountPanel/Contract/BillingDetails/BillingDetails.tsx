@@ -339,6 +339,7 @@ export const BillingDetails = ({
                 isBilledToFocused={
                   isBillingDetailsFocused || isBillingDetailsHovered
                 }
+                currency={state?.values?.currency?.value}
                 tax={0}
                 note={''}
                 from={fromDummyData}

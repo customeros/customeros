@@ -58,6 +58,7 @@ interface TableProps<T extends object> {
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
   contentHeight?: number | string;
+  onFullRowSelection?: (id?: string) => void;
   onSortingChange?: OnChangeFn<SortingState>;
   tableRef: MutableRefObject<TableInstance<T> | null>;
   // REASON: Typing TValue is too exhaustive and has no benefit
@@ -99,6 +100,7 @@ export const Table = <T extends object>({
   rowHeight = 64,
   contentHeight,
   borderColor,
+  onFullRowSelection,
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -111,6 +113,7 @@ export const Table = <T extends object>({
     },
     manualSorting: true,
     enableRowSelection: enableRowSelection || fullRowSelection,
+    enableMultiRowSelection: enableRowSelection && !fullRowSelection,
     enableColumnFilters: true,
     enableSortingRemoval: false,
     getCoreRowModel: getCoreRowModel<T>(),
@@ -247,7 +250,14 @@ export const Table = <T extends object>({
                     : undefined
                 }
                 onClick={
-                  fullRowSelection ? row?.getToggleSelectedHandler() : undefined
+                  fullRowSelection
+                    ? () => {
+                        row?.getToggleSelectedHandler();
+                        /// @ts-expect-error improve this later
+                        const rowId = (row.original as unknown)?.id;
+                        onFullRowSelection?.(rowId);
+                      }
+                    : undefined
                 }
               >
                 <TCell pl='2' pr='0' maxW='fit-content'>

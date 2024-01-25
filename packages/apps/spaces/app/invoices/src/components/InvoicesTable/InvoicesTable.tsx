@@ -19,7 +19,7 @@ export function InvoicesTable() {
   // const isRestoring = useIsRestoring();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'LAST_TOUCHPOINT', desc: true },
+    { id: 'DUE_DATE', desc: true },
   ]);
   const client = getGraphQLClient();
   const tableRef = useRef(null);

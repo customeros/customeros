@@ -18,6 +18,7 @@ export const noop = () => undefined;
 interface TimelineEventPreviewContextMethods {
   closeModal: () => void;
   openModal: (id: string) => void;
+  handleOpenInvoice: (id: string) => void;
 }
 interface TimelineEventPreviewState {
   isModalOpen: boolean;
@@ -28,6 +29,7 @@ const TimelineEventPreviewContext =
   createContext<TimelineEventPreviewContextMethods>({
     openModal: noop,
     closeModal: noop,
+    handleOpenInvoice: noop,
   });
 
 const TimelineEventPreviewStateContext =
@@ -94,6 +96,18 @@ export const TimelineEventPreviewContextContextProvider = ({
       updateUrlAndPosition(timelineEventId, id);
     }
   };
+
+  // TODO refactor candidate added to open invoice in timeline preview modal
+  const handleOpenInvoice = (timelineEventId: string) => {
+    setIsModalOpen(true);
+
+    setModalContent({ id: timelineEventId, __typename: 'Invoice' });
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
+    params.set('invoice', timelineEventId);
+    router.push(`?${params}`);
+
+    setLastActivePosition({ ...lastActivePosition, [id]: params.toString() });
+  };
   const handleCloseModal = () => {
     if (!isModalOpen) return;
     setIsModalOpen(false);
@@ -128,6 +142,7 @@ export const TimelineEventPreviewContextContextProvider = ({
       value={{
         openModal: handleOpenModal,
         closeModal: handleCloseModal,
+        handleOpenInvoice, // todo remove me when invoice event are available as timeline events
       }}
     >
       <TimelineEventPreviewStateContext.Provider

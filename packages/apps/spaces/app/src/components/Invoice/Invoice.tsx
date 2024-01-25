@@ -31,6 +31,7 @@ type InvoiceProps = {
   dueDate: string;
   status?: string;
   subtotal: number;
+  currency?: string;
   issueDate: string;
   billedTo: Address;
   amountDue?: number;
@@ -53,6 +54,7 @@ export function Invoice({
   amountDue,
   status,
   isBilledToFocused,
+  currency = 'USD',
 }: InvoiceProps) {
   return (
     <Flex px={4} flexDir='column' w='inherit'>
@@ -188,14 +190,14 @@ export function Invoice({
               Subtotal
             </Text>
             <Text fontSize='sm' ml={2} color='gray.600'>
-              {formatCurrency(subtotal)}
+              {formatCurrency(subtotal, 2, currency)}
             </Text>
           </Flex>
           <Divider orientation='horizontal' my={1} borderColor='gray.300' />
           <Flex justifyContent='space-between'>
             <Text fontSize='sm'>Tax</Text>
             <Text fontSize='sm' ml={2} color='gray.600'>
-              {formatCurrency(tax)}
+              {formatCurrency(tax, 2, currency)}
             </Text>
           </Flex>
           <Divider orientation='horizontal' my={1} borderColor='gray.300' />
@@ -204,7 +206,7 @@ export function Invoice({
               Total
             </Text>
             <Text fontSize='sm' ml={2} color='gray.600'>
-              {formatCurrency(total)}
+              {formatCurrency(total, 2, currency)}
             </Text>
           </Flex>
           <Divider orientation='horizontal' my={1} borderColor='gray.500' />
@@ -213,7 +215,7 @@ export function Invoice({
               Amount due
             </Text>
             <Text fontSize='sm' fontWeight='semibold' ml={2}>
-              {formatCurrency(amountDue || total)}
+              {formatCurrency(amountDue || total, 2, currency)}
             </Text>
           </Flex>
           <Divider orientation='horizontal' my={1} borderColor='gray.500' />

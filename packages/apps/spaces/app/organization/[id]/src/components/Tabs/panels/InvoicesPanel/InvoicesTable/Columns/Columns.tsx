@@ -86,7 +86,11 @@ export const columns = [
       <THead id='amount' title='Amount' {...getTHeadProps<Invoice>(props)} />
     ),
     cell: (props) => {
-      return <Text>{formatCurrency(props.getValue())}</Text>;
+      return (
+        <Text textAlign='center'>
+          {formatCurrency(props.getValue(), 2, props.row.original.currency)}
+        </Text>
+      );
     },
     skeleton: () => (
       <Skeleton

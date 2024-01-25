@@ -60,7 +60,7 @@ function renderStatusNode(type: InvoiceStatus | null | undefined) {
     //     </Tag>
     //   );
     default:
-      return <div>Unknown Type - {type}</div>;
+      return null;
   }
 }
 

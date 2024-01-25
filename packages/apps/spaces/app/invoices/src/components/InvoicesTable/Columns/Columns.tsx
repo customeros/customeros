@@ -56,7 +56,7 @@ export const columns = [
     ),
   }),
   columnHelper.accessor('dueDate', {
-    id: 'DATE',
+    id: 'DUE_DATE',
     minSize: 40,
 
     header: (props) => (

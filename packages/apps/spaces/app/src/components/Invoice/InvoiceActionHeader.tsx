@@ -9,26 +9,26 @@ import { Download02 } from '@ui/media/icons/Download02';
 import { StatusCell } from '@shared/components/Invoice/Cells';
 
 type InvoiceProps = {
-  status: InvoiceStatus;
+  onDownload: () => void;
+  status?: InvoiceStatus | null;
 };
 
-export function InvoiceActionHeader({ status }: InvoiceProps) {
+export function InvoiceActionHeader({ status, onDownload }: InvoiceProps) {
   return (
-    <Flex px={4} flexDir='column' w='inherit'>
-      <Flex justifyContent='space-between' py={3}>
-        <StatusCell status={status} />
+    <Flex justifyContent='space-between' w='full'>
+      <StatusCell status={status} />
 
-        <Flex>
-          <Button
-            variant='outline'
-            size='sm'
-            borderRadius='full'
-            leftIcon={<Download02 />}
-            mr={2}
-          >
-            Download
-          </Button>
-        </Flex>
+      <Flex>
+        <Button
+          variant='outline'
+          size='sm'
+          borderRadius='full'
+          leftIcon={<Download02 />}
+          onClick={onDownload}
+          mr={2}
+        >
+          Download
+        </Button>
       </Flex>
     </Flex>
   );

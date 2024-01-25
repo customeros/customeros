@@ -15,11 +15,12 @@ interface TimelineEventPreviewHeaderProps {
   date?: string;
   copyLabel: string;
   onClose: () => void;
+  children?: React.ReactNode;
 }
 
 export const TimelineEventPreviewHeader: React.FC<
   TimelineEventPreviewHeaderProps
-> = ({ date, name, onClose, copyLabel }) => {
+> = ({ date, name, onClose, copyLabel, children }) => {
   const [_, copy] = useCopyToClipboard();
 
   return (
@@ -49,6 +50,7 @@ export const TimelineEventPreviewHeader: React.FC<
           )}
         </div>
         <Flex direction='row' justifyContent='flex-end' alignItems='center'>
+          {children}
           <Tooltip label={copyLabel} placement='bottom'>
             <IconButton
               variant='ghost'

@@ -440,7 +440,6 @@ export const ContractCard = ({
             />
           )}
         </Collapse>
-
         <Services
           data={data?.serviceLineItems}
           onModalOpen={onServiceLineItemsOpen}
