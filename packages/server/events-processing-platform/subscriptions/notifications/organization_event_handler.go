@@ -264,7 +264,11 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	return err
 }
 
-func (h *OrganizationEventHandler) parseOrgOwnerUpdateEmail(actor, target *neo4jentity.UserEntity, orgId, orgName string) (string, error) {
+func (h *OrganizationEventHandler) parseOrgOwnerUpdateEmail(actor, target *neo4jentity.UserEntity, orgId, organizationName string) (string, error) {
+	orgName := organizationName
+	if organizationName == "" {
+		orgName = "Unnamed Organization"
+	}
 	if _, err := os.Stat(h.cfg.Subscriptions.NotificationsSubscription.EmailTemplatePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("(OrganizationEventHandler.parseOrgOwnerUpdateEmail) error: %s", err.Error())
 	}
