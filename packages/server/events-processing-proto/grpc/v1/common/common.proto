@@ -7,3 +7,7 @@ message ErrorStatus {
   int32 code = 1;
   string message = 2;
 }
+
+message IdResponse {
+  string id = 1;
+}

@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 import "common/source.proto";
+import "common/common.proto";
 
 option go_package = "api/grpc/v1/tenant;tenant_grpc_service";
 
@@ -30,14 +31,42 @@ message AddBillingProfileRequest {
   string internationalPaymentsBankInfo = 22;
 }
 
-message UpdateBillingProfileRequest {
-
+enum TenantBillingProfileFieldMask {
+  TENANT_BILLING_PROFILE_FIELD_NONE = 0; // No property, ignored by the server
+  TENANT_BILLING_PROFILE_FIELD_EMAIL = 1;
+  TENANT_BILLING_PROFILE_FIELD_PHONE = 2;
+  TENANT_BILLING_PROFILE_FIELD_LEGAL_NAME = 3;
+  TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_1 = 4;
+  TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_2 = 5;
+  TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_3 = 6;
+  TENANT_BILLING_PROFILE_FIELD_LOCALITY = 7;
+  TENANT_BILLING_PROFILE_FIELD_COUNTRY = 8;
+  TENANT_BILLING_PROFILE_FIELD_ZIP = 9;
+  TENANT_BILLING_PROFILE_FIELD_DOMESTIC_PAYMENTS_BANK_INFO = 10;
+  TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO = 11;
 }
 
-message IdResponse {
-  string id = 1;
+message UpdateBillingProfileRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  string id = 3;
+  google.protobuf.Timestamp updatedAt = 4;
+  string email = 5;
+  string phone = 6;
+  string legalName = 7;
+  string addressLine1 = 8;
+  string addressLine2 = 9;
+  string addressLine3 = 10;
+  string locality = 11;
+  string country = 12;
+  string zip = 13;
+  string domesticPaymentsBankInfo = 14;
+  string internationalPaymentsBankInfo = 15;
+  string appSource = 16;
+  repeated TenantBillingProfileFieldMask fieldsMask = 17;
 }
 
 service tenantGrpcService {
   rpc AddBillingProfile(AddBillingProfileRequest) returns (IdResponse);
+  rpc UpdateBillingProfile(UpdateBillingProfileRequest) returns (IdResponse);
 }
