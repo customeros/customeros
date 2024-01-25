@@ -101,6 +101,7 @@ func (s *invoiceService) GenerateInvoices() {
 					InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
 					InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
 					DryRun:             dryRun,
+					Note:               contract.InvoiceNote,
 					SourceFields: &commonpb.SourceFields{
 						AppSource: constants.AppSourceDataUpkeeper,
 						Source:    neo4jentity.DataSourceOpenline.String(),
