@@ -2,13 +2,35 @@ extend type Query {
     tenant: String!
     tenant_ByWorkspace(workspace: WorkspaceInput!): String @hasRole(roles: [USER, ADMIN])
     tenant_ByEmail(email: String!): String @hasRole(roles: [ADMIN])
+
+    tenantBillingProfiles: [TenantBillingProfile!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+    tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
+}
+
+type TenantBillingProfile implements SourceFields & Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+    email:              String!
+    phone:              String!
+    addressLine1:       String!
+    addressLine2:       String!
+    addressLine3:       String!
+    locality:           String!
+    country:            String!
+    zip:                String!
+    legalName:          String!
+    domesticPaymentsBankInfo:      String!
+    internationalPaymentsBankInfo: String!
 }
 
 input TenantInput {
     name: String!
     appSource: String
-}
-
-extend type Mutation {
-    tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
 }

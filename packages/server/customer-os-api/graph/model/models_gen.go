@@ -2218,6 +2218,34 @@ type TenantBillableInfo struct {
 	GreylistedContacts       int64 `json:"greylistedContacts"`
 }
 
+type TenantBillingProfile struct {
+	ID                            string     `json:"id"`
+	CreatedAt                     time.Time  `json:"createdAt"`
+	UpdatedAt                     time.Time  `json:"updatedAt"`
+	Source                        DataSource `json:"source"`
+	SourceOfTruth                 DataSource `json:"sourceOfTruth"`
+	AppSource                     string     `json:"appSource"`
+	Email                         string     `json:"email"`
+	Phone                         string     `json:"phone"`
+	AddressLine1                  string     `json:"addressLine1"`
+	AddressLine2                  string     `json:"addressLine2"`
+	AddressLine3                  string     `json:"addressLine3"`
+	Locality                      string     `json:"locality"`
+	Country                       string     `json:"country"`
+	Zip                           string     `json:"zip"`
+	LegalName                     string     `json:"legalName"`
+	DomesticPaymentsBankInfo      string     `json:"domesticPaymentsBankInfo"`
+	InternationalPaymentsBankInfo string     `json:"internationalPaymentsBankInfo"`
+}
+
+func (TenantBillingProfile) IsSourceFields()                   {}
+func (this TenantBillingProfile) GetID() string                { return this.ID }
+func (this TenantBillingProfile) GetSource() DataSource        { return this.Source }
+func (this TenantBillingProfile) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this TenantBillingProfile) GetAppSource() string         { return this.AppSource }
+
+func (TenantBillingProfile) IsNode() {}
+
 type TenantInput struct {
 	Name      string  `json:"name"`
 	AppSource *string `json:"appSource,omitempty"`

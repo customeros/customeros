@@ -1186,6 +1186,7 @@ type ComplexityRoot struct {
 		TableViewDefs                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort *model.SortBy) int
 		Tags                                  func(childComplexity int) int
 		Tenant                                func(childComplexity int) int
+		TenantBillingProfiles                 func(childComplexity int) int
 		TenantByEmail                         func(childComplexity int, email string) int
 		TenantByWorkspace                     func(childComplexity int, workspace model.WorkspaceInput) int
 		TimelineEvents                        func(childComplexity int, ids []string) int
@@ -1303,6 +1304,26 @@ type ComplexityRoot struct {
 		GreylistedOrganizations  func(childComplexity int) int
 		WhitelistedContacts      func(childComplexity int) int
 		WhitelistedOrganizations func(childComplexity int) int
+	}
+
+	TenantBillingProfile struct {
+		AddressLine1                  func(childComplexity int) int
+		AddressLine2                  func(childComplexity int) int
+		AddressLine3                  func(childComplexity int) int
+		AppSource                     func(childComplexity int) int
+		Country                       func(childComplexity int) int
+		CreatedAt                     func(childComplexity int) int
+		DomesticPaymentsBankInfo      func(childComplexity int) int
+		Email                         func(childComplexity int) int
+		ID                            func(childComplexity int) int
+		InternationalPaymentsBankInfo func(childComplexity int) int
+		LegalName                     func(childComplexity int) int
+		Locality                      func(childComplexity int) int
+		Phone                         func(childComplexity int) int
+		Source                        func(childComplexity int) int
+		SourceOfTruth                 func(childComplexity int) int
+		UpdatedAt                     func(childComplexity int) int
+		Zip                           func(childComplexity int) int
 	}
 
 	User struct {
@@ -1732,6 +1753,7 @@ type QueryResolver interface {
 	Tenant(ctx context.Context) (string, error)
 	TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error)
 	TenantByEmail(ctx context.Context, email string) (*string, error)
+	TenantBillingProfiles(ctx context.Context) ([]*model.TenantBillingProfile, error)
 	BillableInfo(ctx context.Context) (*model.TenantBillableInfo, error)
 	TimelineEvents(ctx context.Context, ids []string) ([]model.TimelineEvent, error)
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
@@ -8833,6 +8855,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Tenant(childComplexity), true
 
+	case "Query.tenantBillingProfiles":
+		if e.complexity.Query.TenantBillingProfiles == nil {
+			break
+		}
+
+		return e.complexity.Query.TenantBillingProfiles(childComplexity), true
+
 	case "Query.tenant_ByEmail":
 		if e.complexity.Query.TenantByEmail == nil {
 			break
@@ -9408,6 +9437,125 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TenantBillableInfo.WhitelistedOrganizations(childComplexity), true
+
+	case "TenantBillingProfile.addressLine1":
+		if e.complexity.TenantBillingProfile.AddressLine1 == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.AddressLine1(childComplexity), true
+
+	case "TenantBillingProfile.addressLine2":
+		if e.complexity.TenantBillingProfile.AddressLine2 == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.AddressLine2(childComplexity), true
+
+	case "TenantBillingProfile.addressLine3":
+		if e.complexity.TenantBillingProfile.AddressLine3 == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.AddressLine3(childComplexity), true
+
+	case "TenantBillingProfile.appSource":
+		if e.complexity.TenantBillingProfile.AppSource == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.AppSource(childComplexity), true
+
+	case "TenantBillingProfile.country":
+		if e.complexity.TenantBillingProfile.Country == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.Country(childComplexity), true
+
+	case "TenantBillingProfile.createdAt":
+		if e.complexity.TenantBillingProfile.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.CreatedAt(childComplexity), true
+
+	case "TenantBillingProfile.domesticPaymentsBankInfo":
+		if e.complexity.TenantBillingProfile.DomesticPaymentsBankInfo == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.DomesticPaymentsBankInfo(childComplexity), true
+
+	case "TenantBillingProfile.email":
+		if e.complexity.TenantBillingProfile.Email == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.Email(childComplexity), true
+
+	case "TenantBillingProfile.id":
+		if e.complexity.TenantBillingProfile.ID == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.ID(childComplexity), true
+
+	case "TenantBillingProfile.internationalPaymentsBankInfo":
+		if e.complexity.TenantBillingProfile.InternationalPaymentsBankInfo == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.InternationalPaymentsBankInfo(childComplexity), true
+
+	case "TenantBillingProfile.legalName":
+		if e.complexity.TenantBillingProfile.LegalName == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.LegalName(childComplexity), true
+
+	case "TenantBillingProfile.locality":
+		if e.complexity.TenantBillingProfile.Locality == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.Locality(childComplexity), true
+
+	case "TenantBillingProfile.phone":
+		if e.complexity.TenantBillingProfile.Phone == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.Phone(childComplexity), true
+
+	case "TenantBillingProfile.source":
+		if e.complexity.TenantBillingProfile.Source == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.Source(childComplexity), true
+
+	case "TenantBillingProfile.sourceOfTruth":
+		if e.complexity.TenantBillingProfile.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.SourceOfTruth(childComplexity), true
+
+	case "TenantBillingProfile.updatedAt":
+		if e.complexity.TenantBillingProfile.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.UpdatedAt(childComplexity), true
+
+	case "TenantBillingProfile.zip":
+		if e.complexity.TenantBillingProfile.Zip == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.Zip(childComplexity), true
 
 	case "User.appSource":
 		if e.complexity.User.AppSource == nil {
@@ -12691,15 +12839,37 @@ input TagIdOrNameInput {
     tenant: String!
     tenant_ByWorkspace(workspace: WorkspaceInput!): String @hasRole(roles: [USER, ADMIN])
     tenant_ByEmail(email: String!): String @hasRole(roles: [ADMIN])
+
+    tenantBillingProfiles: [TenantBillingProfile!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+    tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
+}
+
+type TenantBillingProfile implements SourceFields & Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+    email:              String!
+    phone:              String!
+    addressLine1:       String!
+    addressLine2:       String!
+    addressLine3:       String!
+    locality:           String!
+    country:            String!
+    zip:                String!
+    legalName:          String!
+    domesticPaymentsBankInfo:      String!
+    internationalPaymentsBankInfo: String!
 }
 
 input TenantInput {
     name: String!
     appSource: String
-}
-
-extend type Mutation {
-    tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
 }`, BuiltIn: false},
 	{Name: "../schemas/tenant_billable.graphqls", Input: `extend type Query {
     billableInfo: TenantBillableInfo! @hasRole(roles: [USER, ADMIN])
@@ -69423,6 +69593,116 @@ func (ec *executionContext) fieldContext_Query_tenant_ByEmail(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_tenantBillingProfiles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_tenantBillingProfiles(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().TenantBillingProfiles(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.TenantBillingProfile); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.TenantBillingProfile`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.TenantBillingProfile)
+	fc.Result = res
+	return ec.marshalNTenantBillingProfile2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfileᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_tenantBillingProfiles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_TenantBillingProfile_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_TenantBillingProfile_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_TenantBillingProfile_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_TenantBillingProfile_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_TenantBillingProfile_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_TenantBillingProfile_appSource(ctx, field)
+			case "email":
+				return ec.fieldContext_TenantBillingProfile_email(ctx, field)
+			case "phone":
+				return ec.fieldContext_TenantBillingProfile_phone(ctx, field)
+			case "addressLine1":
+				return ec.fieldContext_TenantBillingProfile_addressLine1(ctx, field)
+			case "addressLine2":
+				return ec.fieldContext_TenantBillingProfile_addressLine2(ctx, field)
+			case "addressLine3":
+				return ec.fieldContext_TenantBillingProfile_addressLine3(ctx, field)
+			case "locality":
+				return ec.fieldContext_TenantBillingProfile_locality(ctx, field)
+			case "country":
+				return ec.fieldContext_TenantBillingProfile_country(ctx, field)
+			case "zip":
+				return ec.fieldContext_TenantBillingProfile_zip(ctx, field)
+			case "legalName":
+				return ec.fieldContext_TenantBillingProfile_legalName(ctx, field)
+			case "domesticPaymentsBankInfo":
+				return ec.fieldContext_TenantBillingProfile_domesticPaymentsBankInfo(ctx, field)
+			case "internationalPaymentsBankInfo":
+				return ec.fieldContext_TenantBillingProfile_internationalPaymentsBankInfo(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TenantBillingProfile", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_billableInfo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_billableInfo(ctx, field)
 	if err != nil {
@@ -73690,6 +73970,754 @@ func (ec *executionContext) fieldContext_TenantBillableInfo_greylistedContacts(c
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_id(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_source(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_appSource(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_email(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_email(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Email, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_phone(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_phone(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Phone, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_phone(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_addressLine1(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_addressLine1(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AddressLine1, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_addressLine1(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_addressLine2(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_addressLine2(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AddressLine2, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_addressLine2(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_addressLine3(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_addressLine3(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AddressLine3, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_addressLine3(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_locality(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_locality(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Locality, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_locality(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_country(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_country(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Country, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_country(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_zip(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_zip(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Zip, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_zip(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_legalName(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_legalName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LegalName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_legalName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_domesticPaymentsBankInfo(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_domesticPaymentsBankInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DomesticPaymentsBankInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_domesticPaymentsBankInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_internationalPaymentsBankInfo(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_internationalPaymentsBankInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InternationalPaymentsBankInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_internationalPaymentsBankInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -82685,13 +83713,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._OrganizationPlanMilestone(ctx, sel, obj)
-	case model.Invoice:
-		return ec._Invoice(ctx, sel, &obj)
-	case *model.Invoice:
+	case model.MasterPlan:
+		return ec._MasterPlan(ctx, sel, &obj)
+	case *model.MasterPlan:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._Invoice(ctx, sel, obj)
+		return ec._MasterPlan(ctx, sel, obj)
 	case model.BillingProfile:
 		return ec._BillingProfile(ctx, sel, &obj)
 	case *model.BillingProfile:
@@ -82699,27 +83727,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._BillingProfile(ctx, sel, obj)
-	case model.Contact:
-		return ec._Contact(ctx, sel, &obj)
-	case *model.Contact:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Contact(ctx, sel, obj)
-	case model.InvoicingCycle:
-		return ec._InvoicingCycle(ctx, sel, &obj)
-	case *model.InvoicingCycle:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InvoicingCycle(ctx, sel, obj)
-	case model.Social:
-		return ec._Social(ctx, sel, &obj)
-	case *model.Social:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Social(ctx, sel, obj)
 	case model.Issue:
 		return ec._Issue(ctx, sel, &obj)
 	case *model.Issue:
@@ -82727,6 +83734,20 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Issue(ctx, sel, obj)
+	case model.TenantBillingProfile:
+		return ec._TenantBillingProfile(ctx, sel, &obj)
+	case *model.TenantBillingProfile:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._TenantBillingProfile(ctx, sel, obj)
+	case model.Social:
+		return ec._Social(ctx, sel, &obj)
+	case *model.Social:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Social(ctx, sel, obj)
 	case model.PageView:
 		return ec._PageView(ctx, sel, &obj)
 	case *model.PageView:
@@ -82734,6 +83755,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._PageView(ctx, sel, obj)
+	case model.Location:
+		return ec._Location(ctx, sel, &obj)
+	case *model.Location:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Location(ctx, sel, obj)
 	case model.OrganizationPlan:
 		return ec._OrganizationPlan(ctx, sel, &obj)
 	case *model.OrganizationPlan:
@@ -82748,67 +83776,27 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._MasterPlanMilestone(ctx, sel, obj)
-	case model.MasterPlan:
-		return ec._MasterPlan(ctx, sel, &obj)
-	case *model.MasterPlan:
+	case model.Invoice:
+		return ec._Invoice(ctx, sel, &obj)
+	case *model.Invoice:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._MasterPlan(ctx, sel, obj)
-	case model.Location:
-		return ec._Location(ctx, sel, &obj)
-	case *model.Location:
+		return ec._Invoice(ctx, sel, obj)
+	case model.Contact:
+		return ec._Contact(ctx, sel, &obj)
+	case *model.Contact:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._Location(ctx, sel, obj)
-	case model.ViewType:
-		return ec._ViewType(ctx, sel, &obj)
-	case *model.ViewType:
+		return ec._Contact(ctx, sel, obj)
+	case model.InvoicingCycle:
+		return ec._InvoicingCycle(ctx, sel, &obj)
+	case *model.InvoicingCycle:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._ViewType(ctx, sel, obj)
-	case model.Opportunity:
-		return ec._Opportunity(ctx, sel, &obj)
-	case *model.Opportunity:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Opportunity(ctx, sel, obj)
-	case model.ColumnType:
-		return ec._ColumnType(ctx, sel, &obj)
-	case *model.ColumnType:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._ColumnType(ctx, sel, obj)
-	case model.Attachment:
-		return ec._Attachment(ctx, sel, &obj)
-	case *model.Attachment:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Attachment(ctx, sel, obj)
-	case model.CustomFieldTemplate:
-		return ec._CustomFieldTemplate(ctx, sel, &obj)
-	case *model.CustomFieldTemplate:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._CustomFieldTemplate(ctx, sel, obj)
-	case model.SourceFields:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._SourceFields(ctx, sel, obj)
-	case model.InteractionEvent:
-		return ec._InteractionEvent(ctx, sel, &obj)
-	case *model.InteractionEvent:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InteractionEvent(ctx, sel, obj)
+		return ec._InvoicingCycle(ctx, sel, obj)
 	case model.InteractionSession:
 		return ec._InteractionSession(ctx, sel, &obj)
 	case *model.InteractionSession:
@@ -82816,18 +83804,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._InteractionSession(ctx, sel, obj)
-	case model.Meeting:
-		return ec._Meeting(ctx, sel, &obj)
-	case *model.Meeting:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Meeting(ctx, sel, obj)
-	case model.ExtensibleEntity:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._ExtensibleEntity(ctx, sel, obj)
 	case model.Organization:
 		return ec._Organization(ctx, sel, &obj)
 	case *model.Organization:
@@ -82835,6 +83811,58 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Organization(ctx, sel, obj)
+	case model.ExtensibleEntity:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ExtensibleEntity(ctx, sel, obj)
+	case model.SourceFields:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SourceFields(ctx, sel, obj)
+	case model.EntityTemplate:
+		return ec._EntityTemplate(ctx, sel, &obj)
+	case *model.EntityTemplate:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._EntityTemplate(ctx, sel, obj)
+	case model.InteractionEvent:
+		return ec._InteractionEvent(ctx, sel, &obj)
+	case *model.InteractionEvent:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InteractionEvent(ctx, sel, obj)
+	case model.Attachment:
+		return ec._Attachment(ctx, sel, &obj)
+	case *model.Attachment:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Attachment(ctx, sel, obj)
+	case model.Meeting:
+		return ec._Meeting(ctx, sel, &obj)
+	case *model.Meeting:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Meeting(ctx, sel, obj)
+	case model.Opportunity:
+		return ec._Opportunity(ctx, sel, &obj)
+	case *model.Opportunity:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Opportunity(ctx, sel, obj)
+	case model.InvoiceLine:
+		return ec._InvoiceLine(ctx, sel, &obj)
+	case *model.InvoiceLine:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InvoiceLine(ctx, sel, obj)
 	case model.FieldSetTemplate:
 		return ec._FieldSetTemplate(ctx, sel, &obj)
 	case *model.FieldSetTemplate:
@@ -82849,13 +83877,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Analysis(ctx, sel, obj)
-	case model.EntityTemplate:
-		return ec._EntityTemplate(ctx, sel, &obj)
-	case *model.EntityTemplate:
+	case model.CustomFieldTemplate:
+		return ec._CustomFieldTemplate(ctx, sel, &obj)
+	case *model.CustomFieldTemplate:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._EntityTemplate(ctx, sel, obj)
+		return ec._CustomFieldTemplate(ctx, sel, obj)
 	case model.ServiceLineItem:
 		return ec._ServiceLineItem(ctx, sel, &obj)
 	case *model.ServiceLineItem:
@@ -82870,13 +83898,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._CustomField(ctx, sel, obj)
-	case model.TableViewDef:
-		return ec._TableViewDef(ctx, sel, &obj)
-	case *model.TableViewDef:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._TableViewDef(ctx, sel, obj)
 	case model.Contract:
 		return ec._Contract(ctx, sel, &obj)
 	case *model.Contract:
@@ -82884,6 +83905,20 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Contract(ctx, sel, obj)
+	case model.TableViewDef:
+		return ec._TableViewDef(ctx, sel, &obj)
+	case *model.TableViewDef:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._TableViewDef(ctx, sel, obj)
+	case model.ViewType:
+		return ec._ViewType(ctx, sel, &obj)
+	case *model.ViewType:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ViewType(ctx, sel, obj)
 	case model.ColumnDef:
 		return ec._ColumnDef(ctx, sel, &obj)
 	case *model.ColumnDef:
@@ -82891,13 +83926,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._ColumnDef(ctx, sel, obj)
-	case model.InvoiceLine:
-		return ec._InvoiceLine(ctx, sel, &obj)
-	case *model.InvoiceLine:
+	case model.ColumnType:
+		return ec._ColumnType(ctx, sel, &obj)
+	case *model.ColumnType:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._InvoiceLine(ctx, sel, obj)
+		return ec._ColumnType(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -83072,6 +84107,13 @@ func (ec *executionContext) _SourceFields(ctx context.Context, sel ast.Selection
 			return graphql.Null
 		}
 		return ec._Social(ctx, sel, obj)
+	case model.TenantBillingProfile:
+		return ec._TenantBillingProfile(ctx, sel, &obj)
+	case *model.TenantBillingProfile:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._TenantBillingProfile(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -94065,6 +95107,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "tenantBillingProfiles":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_tenantBillingProfiles(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "billableInfo":
 			field := field
 
@@ -95043,6 +96107,125 @@ func (ec *executionContext) _TenantBillableInfo(ctx context.Context, sel ast.Sel
 			}
 		case "greylistedContacts":
 			out.Values[i] = ec._TenantBillableInfo_greylistedContacts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var tenantBillingProfileImplementors = []string{"TenantBillingProfile", "SourceFields", "Node"}
+
+func (ec *executionContext) _TenantBillingProfile(ctx context.Context, sel ast.SelectionSet, obj *model.TenantBillingProfile) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, tenantBillingProfileImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TenantBillingProfile")
+		case "id":
+			out.Values[i] = ec._TenantBillingProfile_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._TenantBillingProfile_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._TenantBillingProfile_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._TenantBillingProfile_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sourceOfTruth":
+			out.Values[i] = ec._TenantBillingProfile_sourceOfTruth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "appSource":
+			out.Values[i] = ec._TenantBillingProfile_appSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "email":
+			out.Values[i] = ec._TenantBillingProfile_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "phone":
+			out.Values[i] = ec._TenantBillingProfile_phone(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "addressLine1":
+			out.Values[i] = ec._TenantBillingProfile_addressLine1(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "addressLine2":
+			out.Values[i] = ec._TenantBillingProfile_addressLine2(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "addressLine3":
+			out.Values[i] = ec._TenantBillingProfile_addressLine3(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "locality":
+			out.Values[i] = ec._TenantBillingProfile_locality(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "country":
+			out.Values[i] = ec._TenantBillingProfile_country(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "zip":
+			out.Values[i] = ec._TenantBillingProfile_zip(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "legalName":
+			out.Values[i] = ec._TenantBillingProfile_legalName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "domesticPaymentsBankInfo":
+			out.Values[i] = ec._TenantBillingProfile_domesticPaymentsBankInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "internationalPaymentsBankInfo":
+			out.Values[i] = ec._TenantBillingProfile_internationalPaymentsBankInfo(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -99879,6 +101062,60 @@ func (ec *executionContext) marshalNTenantBillableInfo2ᚖgithubᚗcomᚋopenlin
 		return graphql.Null
 	}
 	return ec._TenantBillableInfo(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTenantBillingProfile2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TenantBillingProfile) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTenantBillingProfile2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfile(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTenantBillingProfile2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfile(ctx context.Context, sel ast.SelectionSet, v *model.TenantBillingProfile) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TenantBillingProfile(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNTenantInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantInput(ctx context.Context, v interface{}) (model.TenantInput, error) {
