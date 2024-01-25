@@ -21,6 +21,7 @@ import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
 import { Contract, ContractStatus, ContractUpdateInput } from '@graphql/types';
+import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
   GetContractsQuery,
@@ -65,6 +66,11 @@ export const ContractCard = ({
   });
 
   const client = getGraphQLClient();
+
+  const { data: billingDetailsData } = useGetContractQuery(client, {
+    id: data.id,
+  });
+
   const updateContract = useUpdateContractMutation(client, {
     onMutate: ({ input }) => {
       queryClient.cancelQueries({ queryKey });
@@ -108,15 +114,6 @@ export const ContractCard = ({
         }`,
         `update-contract-error-${error}`,
       );
-    },
-    onSettled: () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey });
-        queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
-      }, 800);
     },
   });
 
@@ -449,7 +446,7 @@ export const ContractCard = ({
           contractId={data.id}
           onClose={onClose}
           organizationName={organizationName}
-          data={data}
+          data={billingDetailsData?.contract}
         />
         <ServiceLineItemsModal
           isOpen={isServceItemsModalOpen}
