@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type CreateTenantBillingProfileEvent struct {
+type TenantBillingProfileCreateEvent struct {
 	Tenant                            string             `json:"tenant" validate:"required"`
 	Id                                string             `json:"id" validate:"required"`
 	CreatedAt                         time.Time          `json:"createdAt"`
@@ -34,8 +34,8 @@ type CreateTenantBillingProfileEvent struct {
 	InternationalPaymentsInstructions string             `json:"internationalPaymentsInstructions"`
 }
 
-func NewCreateTenantBillingProfileEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, id string, request *tenantpb.AddBillingProfileRequest, createdAt time.Time) (eventstore.Event, error) {
-	eventData := CreateTenantBillingProfileEvent{
+func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, id string, request *tenantpb.AddBillingProfileRequest, createdAt time.Time) (eventstore.Event, error) {
+	eventData := TenantBillingProfileCreateEvent{
 		Tenant:                            aggregate.GetTenant(),
 		Id:                                id,
 		CreatedAt:                         createdAt,
@@ -61,12 +61,12 @@ func NewCreateTenantBillingProfileEvent(aggregate eventstore.Aggregate, sourceFi
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate CreateTenantBillingProfileEvent")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate TenantBillingProfileCreateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, TenantAddBillingProfileV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for CreateTenantBillingProfileEvent")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for TenantBillingProfileCreateEvent")
 	}
 
 	return event, nil
