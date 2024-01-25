@@ -68,6 +68,7 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 		orgAggregate,
 		orgPlanId,
 		mpid,
+		orgId,
 		"org plan name",
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,

@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -44,7 +43,7 @@ func (h *OrganizationPlanEventHandler) OnCreate(ctx context.Context, evt eventst
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	organizationId := aggregate.GetOrganizationObjectID(evt.GetAggregateID(), eventData.Tenant)
+	organizationId := eventData.OrganizationId
 	masterPlanId := eventData.MasterPlanId
 	span.SetTag(tracing.SpanTagEntityId, eventData.OrganizationPlanId)
 
