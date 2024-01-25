@@ -263,7 +263,15 @@ func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []commo
 		}
 
 		if tenantName != nil {
+
 			log.Printf("GetTenant - Tenant identified using %s provider: %s", provider, *tenantName)
+
+			err = createWorkspaceInTenant(ginContext, cosClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
+			if err != nil {
+				return nil, err
+			}
+			log.Printf("GetTenant - Workspace merged: %s", domain)
+
 			return tenantName, nil
 		}
 	}
@@ -280,14 +288,15 @@ func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []commo
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	if !isPersonalEmail {
-		err = createWorkspaceInTenant(ginContext, cosClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
-		if err != nil {
-			return nil, err
+		if !isPersonalEmail {
+			err = createWorkspaceInTenant(ginContext, cosClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
+			if err != nil {
+				return nil, err
+			}
+			log.Printf("GetTenant - Workspace merged: %s", domain)
 		}
-		log.Printf("GetTenant - Workspace merged: %s", domain)
+
 	}
 
 	return tenantName, nil
