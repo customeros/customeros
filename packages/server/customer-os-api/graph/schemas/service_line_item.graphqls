@@ -53,16 +53,13 @@ input ServiceLineItemUpdateInput {
 }
 
 input ServiceLineItemBulkUpdateItem {
-    serviceLineItemId:  ID!
-    tenant: String
-    name:               String
-    billed:             BilledType
-    price:              Float
-    quantity:           Int64
-    comments:           String
-    externalReference:  ExternalSystemReferenceInput
+    serviceLineItemId:       ID
+    name:                    String
+    billed:                  BilledType
+    price:                   Float
+    quantity:                Int64
+    comments:                String
     isRetroactiveCorrection: Boolean
-    contractId:         String
 }
 
 input ServiceLineItemBulkUpdateInput {

@@ -115,7 +115,7 @@ func (r *mutationResolver) ServiceLineItemBulkUpdate(ctx context.Context, input 
 
 	sliEntitiesForBulkSync := service.MapServiceLineItemBulkItemsToData(input.ServiceLineItems)
 
-	updatedServiceLineItemIds, err := r.Services.ServiceLineItemService.CreateOrUpdateInBulk(ctx, sliEntitiesForBulkSync)
+	updatedServiceLineItemIds, err := r.Services.ServiceLineItemService.CreateOrUpdateInBulk(ctx, input.ContractID, sliEntitiesForBulkSync)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "failed to bulk update service line items")
