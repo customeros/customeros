@@ -4,7 +4,6 @@ import (
 	"context"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"testing"
 	"time"
@@ -27,11 +26,11 @@ func TestQueryResolver_Organizations_FilterByNameLike(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "A closed organization")
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "OPENLINE")
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "the openline")
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "some other open organization")
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "OpEnLiNe")
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "A closed organization"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "OPENLINE"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "the openline"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "some other open organization"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "OpEnLiNe"})
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
@@ -1643,50 +1642,4 @@ func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {
 	organization := organizationStruct.Organization_UpdateOnboardingStatus
 	require.Equal(t, organizationId, organization.ID)
 	require.True(t, calledEventsPlatform)
-}
-
-func TestQueryResolver_Organization_WithInvoices(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	organization1Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contract1Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization1Id, neo4jentity.ContractEntity{})
-	contract2Id := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization1Id, neo4jentity.ContractEntity{})
-	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract1Id, neo4jentity.InvoiceEntity{
-		Number: "1",
-	})
-	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contract2Id, neo4jentity.InvoiceEntity{
-		Number: "2",
-	})
-
-	organization2Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contrac3tId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization2Id, neo4jentity.ContractEntity{})
-	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contrac3tId, neo4jentity.InvoiceEntity{
-		Number: "3",
-	})
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelOrganization: 2,
-		neo4jutil.NodeLabelContract:     3,
-		neo4jutil.NodeLabelInvoice:      3,
-	})
-
-	rawResponse := callGraphQL(t, "organization/get_organization_with_invoices",
-		map[string]interface{}{"organizationId": organization1Id})
-
-	var orgStruct struct {
-		Organization model.Organization
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &orgStruct)
-	require.Nil(t, err)
-
-	organization := orgStruct.Organization
-	require.NotNil(t, organization)
-	require.Equal(t, int64(2), organization.Invoices.TotalElements)
-	require.Equal(t, 2, len(organization.Invoices.Content))
-
-	require.ElementsMatch(t, []string{invoice1Id, invoice2Id}, []string{organization.Invoices.Content[0].ID, organization.Invoices.Content[1].ID})
-	require.ElementsMatch(t, []string{"1", "2"}, []string{organization.Invoices.Content[0].Number, organization.Invoices.Content[1].Number})
 }

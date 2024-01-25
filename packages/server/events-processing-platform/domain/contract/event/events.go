@@ -26,4 +26,5 @@ const (
 	FieldMaskOrganizationLegalName = "organizationLegalName"
 	FieldMaskInvoiceEmail          = "invoiceEmail"
 	FieldMaskStatus                = "status"
+	FieldMaskInvoiceNote           = "invoiceNote"
 )

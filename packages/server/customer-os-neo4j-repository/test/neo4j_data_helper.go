@@ -586,7 +586,8 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 					c.locality=$locality,
 					c.country=$country,
 					c.organizationLegalName=$organizationLegalName,
-					c.invoiceEmail=$invoiceEmail
+					c.invoiceEmail=$invoiceEmail,
+					c.invoiceNote=$invoiceNote
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -617,6 +618,7 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 		"country":               contract.Country,
 		"organizationLegalName": contract.OrganizationLegalName,
 		"invoiceEmail":          contract.InvoiceEmail,
+		"invoiceNote":           contract.InvoiceNote,
 	})
 	return contractId
 }

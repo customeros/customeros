@@ -10,7 +10,7 @@ invoice(id: $id) {
     dueDate
     amount
     vat
-    total
+    totalAmount
     currency
     repositoryFileId
 
@@ -20,7 +20,7 @@ invoice(id: $id) {
         quantity
         amount
         vat
-        total
+        totalAmount
     }
   }
 }

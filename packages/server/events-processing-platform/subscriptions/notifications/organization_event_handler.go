@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"net/http"
 	"os"
 	"strings"
+
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 
 	"github.com/Boostport/mjml-go"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
@@ -51,6 +52,11 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	if eventData.ActorUserId == eventData.OwnerUserId {
+		// do not send notification if the actor is the same as the target
+		h.log.Info("actor is the same as the target, skipping notification")
+		return nil
+	}
 
 	err := h.notificationProviderSendEmail(
 		ctx,

@@ -4,7 +4,6 @@ import set from 'lodash/set';
 import { produce } from 'immer';
 import { useDebounce } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
-import { useMasterPlansQuery } from '@settings/graphql/masterPlans.generated';
 import { useCreateMilestoneMutation } from '@settings/graphql/createMilestone.generated';
 import { useUpdateMilestoneMutation } from '@settings/graphql/updateMilestone.generated';
 import { useUpdateMilestonesMutation } from '@settings/graphql/updateMilestones.generated';
@@ -12,6 +11,7 @@ import { useDuplicateMilestoneMutation } from '@settings/graphql/duplicateMilest
 
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useMasterPlansQuery } from '@shared/graphql/masterPlans.generated';
 
 export const useMilestonesMutations = () => {
   const client = getGraphQLClient();

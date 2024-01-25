@@ -33,6 +33,7 @@ type ContractUpdateEvent struct {
 	Zip                   string                     `json:"zip,omitempty"`
 	OrganizationLegalName string                     `json:"organizationLegalName,omitempty"`
 	InvoiceEmail          string                     `json:"invoiceEmail,omitempty"`
+	InvoiceNote           string                     `json:"invoiceNote,omitempty"`
 	FieldsMask            []string                   `json:"fieldsMask,omitempty"`
 }
 
@@ -56,6 +57,7 @@ func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.Contract
 		Zip:                   dataFields.Zip,
 		OrganizationLegalName: dataFields.OrganizationLegalName,
 		InvoiceEmail:          dataFields.InvoiceEmail,
+		InvoiceNote:           dataFields.InvoiceNote,
 		InvoicingStartDate:    utils.ToDatePtr(dataFields.InvoicingStartDate),
 		UpdatedAt:             updatedAt,
 		Source:                source,
@@ -146,4 +148,8 @@ func (e ContractUpdateEvent) UpdateOrganizationLegalName() bool {
 
 func (e ContractUpdateEvent) UpdateInvoiceEmail() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInvoiceEmail)
+}
+
+func (e ContractUpdateEvent) UpdateInvoiceNote() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInvoiceNote)
 }

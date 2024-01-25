@@ -1,10 +1,9 @@
 import { useSearchParams } from 'next/navigation';
 
-import { MasterPlansQuery } from '@settings/graphql/masterPlans.generated';
-
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Collapse } from '@ui/transitions/Collapse';
+import { MasterPlansQuery } from '@shared/graphql/masterPlans.generated';
 
 import { MasterPlans } from './MasterPlans';
 import { MasterPlansMenu } from './MasterPlansMenu';

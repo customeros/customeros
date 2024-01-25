@@ -6,7 +6,7 @@ extend type Mutation {
     serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
     serviceLineItem_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     serviceLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    serviceLineItemBulkUpdate(input: ServiceLineItemBulkUpdateInput!): [ID]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    serviceLineItem_BulkUpdate(input: ServiceLineItemBulkUpdateInput!): [ID!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type ServiceLineItem implements Node {
@@ -62,21 +62,13 @@ input ServiceLineItemBulkUpdateItem {
     comments:           String
     externalReference:  ExternalSystemReferenceInput
     isRetroactiveCorrection: Boolean
-    isCanceled: Boolean
-    contractId: String
+    contractId:         String
 }
 
 input ServiceLineItemBulkUpdateInput {
-    serviceLineItems:  [ServiceLineItemBulkUpdateItem]!
-	createdAt:          Time
-	updatedAt:          Time
-	startedAt:          Time
-	endedAt:          Time
-    source:             DataSource!
-    sourceOfTruth:      DataSource!
-    appSource:          String!
-	tenant:           String
-	loggedInUserId:   String
+    serviceLineItems: [ServiceLineItemBulkUpdateItem]!
+    contractId: ID!
+    invoiceNote: String
 }
 
 input ServiceLineItemCloseInput {

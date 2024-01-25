@@ -3,12 +3,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { produce } from 'immer';
 import { useDebounce } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
-import { useMasterPlansQuery } from '@settings/graphql/masterPlans.generated';
 import { useCreateMasterPlanMutation } from '@settings/graphql/createMasterPlan.generated';
 import { useCreateDefaultMasterPlanMutation } from '@settings/graphql/createDefaultMasterPlan.generated';
 
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useMasterPlansQuery } from '@shared/graphql/masterPlans.generated';
 
 export const useMasterPlansMethods = () => {
   const router = useRouter();

@@ -1,6 +1,6 @@
 extend type Query {
     invoice(id: ID!): Invoice!
-    invoices(pagination: Pagination, where: Filter, sort: [SortBy!]): InvoicesPage!
+    invoices(pagination: Pagination, where: Filter, sort: [SortBy!], organizationId: ID): InvoicesPage!
 }
 
 extend type Mutation {
@@ -28,7 +28,7 @@ type Invoice implements SourceFields & Node {
     dueDate:            Time!
     amount:             Float!
     vat:                Float!
-    total:              Float!
+    totalAmount:        Float!
     currency:           String!
     repositoryFileId:   String!
     invoiceLines:       [InvoiceLine!]! @goField(forceResolver: true)
@@ -45,7 +45,7 @@ type InvoiceLine implements Node {
 
     amount:             Float!
     vat:                Float!
-    total:              Float!
+    totalAmount:        Float!
 }
 
 input InvoiceSimulateInput {

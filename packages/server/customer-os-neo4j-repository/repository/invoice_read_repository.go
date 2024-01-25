@@ -12,9 +12,8 @@ import (
 )
 
 type InvoiceReadRepository interface {
-	// GetInvoiceById returns the invoice node with the given id for tenant, error if not found or multiple found
 	GetInvoiceById(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
-	GetInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 }
 
 type invoiceReadRepository struct {
@@ -33,8 +32,8 @@ func (r *invoiceReadRepository) prepareReadSession(ctx context.Context) neo4j.Se
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *invoiceReadRepository) GetInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoices")
+func (r *invoiceReadRepository) GetPaginatedInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetPaginatedInvoices")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.Int("skip", skip))
@@ -66,17 +65,19 @@ func (r *invoiceReadRepository) GetInvoices(ctx context.Context, tenant, organiz
 				filterCypherStr += " WHERE "
 			}
 			filterCypherStr += " o.id=$organizationId"
-			countParams["organizationId"] = organizationId
 			filterParams["organizationId"] = organizationId
 		}
 
 		utils.MergeMapToMap(filterParams, countParams)
 
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(
-			" MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_INVOICE]->(i:Invoice_%s) "+
-				" %s "+
-				" RETURN count(i) as count", tenant, tenant, tenant, filterCypherStr),
-			countParams)
+		countCypher := fmt.Sprintf(` MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_INVOICE]->(i:Invoice_%s) 
+				 %s 
+				 RETURN count(i) as count`, tenant, tenant, tenant, filterCypherStr)
+
+		span.LogFields(log.String("countCypher", countCypher))
+		tracing.LogObjectAsJson(span, "countParams", countParams)
+
+		queryResult, err := tx.Run(ctx, countCypher, countParams)
 		if err != nil {
 			return nil, err
 		}
@@ -85,12 +86,16 @@ func (r *invoiceReadRepository) GetInvoices(ctx context.Context, tenant, organiz
 
 		utils.MergeMapToMap(filterParams, queryParams)
 
-		queryResult, err = tx.Run(ctx, fmt.Sprintf(
-			" MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_INVOICE]->(i:Invoice_%s) "+
-				" %s "+
-				" RETURN i "+
-				" %s "+
-				" SKIP $skip LIMIT $limit", tenant, tenant, tenant, filterCypherStr, sorting.SortingCypherFragment("i")),
+		cypher := fmt.Sprintf(` MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_INVOICE]->(i:Invoice_%s) 
+				 %s 
+				 RETURN i 
+				 %s 
+				 SKIP $skip LIMIT $limit`, tenant, tenant, tenant, filterCypherStr, sorting.SortingCypherFragment("i"))
+
+		span.LogFields(log.String("cypher", cypher))
+		tracing.LogObjectAsJson(span, "queryParams", queryParams)
+
+		queryResult, err = tx.Run(ctx, cypher,
 			queryParams)
 		return queryResult.Collect(ctx)
 	})
