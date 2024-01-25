@@ -124,7 +124,7 @@ export const ServiceLineItemsModal = ({
       closeOnOverlayClick={false}
     >
       <ModalOverlay />
-      <ModalContent borderRadius='2xl' maxH='90vh' overflow='hidden'>
+      <ModalContent borderRadius='2xl'>
         {/*<Grid h='100%' templateColumns='1fr' gap={4} overflow='scroll'>*/}
         {/*545px 1fr*/}
         {/*<GridItem*/}
@@ -155,13 +155,7 @@ export const ServiceLineItemsModal = ({
             Modify contract service line items
           </Heading>
         </ModalHeader>
-        <ModalBody
-          pb='0'
-          display='flex'
-          flexDir='column'
-          flex={1}
-          overflow='scroll'
-        >
+        <ModalBody pb='0' display='flex' flexDir='column' flex={1}>
           <Flex
             justifyContent='space-between'
             alignItems='center'
@@ -201,7 +195,7 @@ export const ServiceLineItemsModal = ({
               leftIcon={<Plus />}
               variant='ghost'
               size='sm'
-              p={1}
+              px={2}
               my={1}
               color='gray.500'
               fontWeight='regular'
@@ -221,7 +215,7 @@ export const ServiceLineItemsModal = ({
             }}
             name='contractUrl'
             textOverflow='ellipsis'
-            placeholder='Paste or enter a contract link'
+            placeholder='Customer invoice note'
             onChange={(event) => setNote(event.target.value)}
           />
         </ModalBody>

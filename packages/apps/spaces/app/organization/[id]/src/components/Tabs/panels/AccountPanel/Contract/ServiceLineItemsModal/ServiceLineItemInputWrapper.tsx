@@ -9,28 +9,7 @@ export const ServiceLineItemInputWrapper: FC<{
   width: string | number;
 }> = ({ children, isDeleted, width }) => {
   return (
-    <Box
-      fontSize='sm'
-      w={width}
-      sx={{
-        '&': {
-          position: 'relative',
-        },
-        '&:after': isDeleted
-          ? {
-              content: '""',
-              position: 'absolute',
-              left: '0',
-              width: '100%',
-              zIndex: '1',
-              height: '1px',
-              bg: 'gray.700',
-              top: '50%',
-              animation: 'line-animated 0.25s forwards',
-            }
-          : {},
-      }}
-    >
+    <Box fontSize='sm' w={width} pointerEvents={isDeleted ? 'none' : 'auto'}>
       {children}
     </Box>
   );

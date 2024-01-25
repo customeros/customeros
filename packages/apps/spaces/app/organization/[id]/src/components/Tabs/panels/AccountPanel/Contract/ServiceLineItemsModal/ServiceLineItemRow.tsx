@@ -66,7 +66,6 @@ export const ServiceLineItemRow = ({
       pr='20px'
       borderBottom='1px solid'
       borderColor='gray.300'
-      pointerEvents={service.isDeleted ? 'none' : 'auto'}
       sx={{
         button: {
           opacity: '0',
@@ -88,6 +87,7 @@ export const ServiceLineItemRow = ({
           ref={nameRef}
           onChange={(event) => handleChange('name', event.target.value)}
           key={`name-${index}`}
+          textDecoration={service.isDeleted ? 'line-through' : 'unset'}
         />
       </ServiceLineItemInputWrapper>
       <ServiceLineItemInputWrapper width='20%' isDeleted={service.isDeleted}>
@@ -116,6 +116,7 @@ export const ServiceLineItemRow = ({
 
                 '& *': {
                   fontSize: 'sm',
+                  textDecoration: service.isDeleted ? 'line-through' : 'unset',
                 },
               };
             },
@@ -136,11 +137,13 @@ export const ServiceLineItemRow = ({
           <NumberInputField
             placeholder='10'
             aria-label='Quantity'
+            textDecoration={service.isDeleted ? 'line-through' : 'unset'}
             min={1}
             name='quantity'
             fontSize='sm'
             value={service.quantity}
             p={0}
+            onChange={(event) => handleChange('quantity', event.target.value)}
           />
         </NumberInput>
       </ServiceLineItemInputWrapper>
@@ -158,7 +161,8 @@ export const ServiceLineItemRow = ({
           fontSize='sm'
           sx={{
             '& *': {
-              fontSize: 'sm',
+              fontSize: '14px !important',
+              textDecoration: service.isDeleted ? 'line-through' : 'unset',
             },
           }}
           onChange={(value) => handleChange('price', value)}
@@ -181,11 +185,17 @@ export const ServiceLineItemRow = ({
                   borderBottom: 'none',
                   '& *': {
                     fontSize: 'sm',
+                    textDecoration: service.isDeleted
+                      ? 'line-through'
+                      : 'unset',
                   },
                 };
               },
               input: (props, state) => {
-                return { minHeight: 'auto', fontSize: 'sm' };
+                return {
+                  minHeight: 'auto',
+                  fontSize: 'sm',
+                };
               },
               option: (props, state) => {
                 return { fontSize: 'sm' };
