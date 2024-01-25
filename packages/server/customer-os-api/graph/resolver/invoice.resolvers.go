@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -16,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -89,7 +89,7 @@ func (r *queryResolver) Invoice(ctx context.Context, id string) (*model.Invoice,
 }
 
 // Invoices is the resolver for the invoices field.
-func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.InvoicesPage, error) {
+func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy, organizationID *string) (*model.InvoicesPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.Invoices", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -99,7 +99,7 @@ func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Paginati
 	}
 	span.LogFields(log.Int("request.pagination.page", pagination.Page), log.Int("request.pagination.limit", pagination.Limit))
 
-	paginatedResult, err := r.Services.InvoiceService.GetInvoices(ctx, "", pagination.Page, pagination.Limit, where, sort)
+	paginatedResult, err := r.Services.InvoiceService.GetInvoices(ctx, utils.IfNotNilString(organizationID), pagination.Page, pagination.Limit, where, sort)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get invoices")
@@ -116,13 +116,3 @@ func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Paginati
 func (r *Resolver) Invoice() generated.InvoiceResolver { return &invoiceResolver{r} }
 
 type invoiceResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *invoiceResolver) Lines(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error) {
-	panic(fmt.Errorf("not implemented: Lines - lines"))
-}

@@ -33,6 +33,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
 		Status:           enum.DecodeInvoiceStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Note:             utils.GetStringPropOrEmpty(props, "note"),
 		InvoiceInternalFields: entity.InvoiceInternalFields{
 			PaymentRequestedAt: utils.GetTimePropOrNil(props, "techPaymentRequestedAt"),
 		},
@@ -224,6 +225,22 @@ func MapDbNodeToBillingProfileEntity(dbNode *dbtype.Node) *entity.BillingProfile
 	return &billingProfileEntity
 }
 
+func MapDbNodeToTenantEntity(dbNode *dbtype.Node) *entity.TenantEntity {
+	if dbNode == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	tenant := entity.TenantEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+	}
+	return &tenant
+}
+
 func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettingsEntity {
 	if dbNode == nil {
 		return &entity.TenantSettingsEntity{}
@@ -239,12 +256,12 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 	return &tenantSettingsEntity
 }
 
-func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBillingProfile {
+func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBillingProfileEntity {
 	if dbNode == nil {
-		return &entity.TenantBillingProfile{}
+		return &entity.TenantBillingProfileEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	tenantBillingProfile := entity.TenantBillingProfile{
+	tenantBillingProfile := entity.TenantBillingProfileEntity{
 		Id:                                utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:                         utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:                         utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -254,9 +271,14 @@ func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBi
 		AddressLine1:                      utils.GetStringPropOrEmpty(props, "addressLine1"),
 		AddressLine2:                      utils.GetStringPropOrEmpty(props, "addressLine2"),
 		AddressLine3:                      utils.GetStringPropOrEmpty(props, "addressLine3"),
+		Locality:                          utils.GetStringPropOrEmpty(props, "locality"),
+		Country:                           utils.GetStringPropOrEmpty(props, "country"),
+		Zip:                               utils.GetStringPropOrEmpty(props, "zip"),
+		DomesticPaymentsBankInfo:          utils.GetStringPropOrEmpty(props, "domesticPaymentsBankInfo"),
 		DomesticPaymentsBankName:          utils.GetStringPropOrEmpty(props, "domesticPaymentsBankName"),
 		DomesticPaymentsAccountNumber:     utils.GetStringPropOrEmpty(props, "domesticPaymentsAccountNumber"),
 		DomesticPaymentsSortCode:          utils.GetStringPropOrEmpty(props, "domesticPaymentsSortCode"),
+		InternationalPaymentsBankInfo:     utils.GetStringPropOrEmpty(props, "internationalPaymentsBankInfo"),
 		InternationalPaymentsSwiftBic:     utils.GetStringPropOrEmpty(props, "internationalPaymentsSwiftBic"),
 		InternationalPaymentsBankName:     utils.GetStringPropOrEmpty(props, "internationalPaymentsBankName"),
 		InternationalPaymentsBankAddress:  utils.GetStringPropOrEmpty(props, "internationalPaymentsBankAddress"),
@@ -318,6 +340,7 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		Country:                         utils.GetStringPropOrEmpty(props, "country"),
 		OrganizationLegalName:           utils.GetStringPropOrEmpty(props, "organizationLegalName"),
 		InvoiceEmail:                    utils.GetStringPropOrEmpty(props, "invoiceEmail"),
+		InvoiceNote:                     utils.GetStringPropOrEmpty(props, "invoiceNote"),
 	}
 	return &contract
 }

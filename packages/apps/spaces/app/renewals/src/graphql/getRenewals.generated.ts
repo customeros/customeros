@@ -3,26 +3,14 @@ import * as Types from '../../../src/types/__generated__/graphql.types';
 
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
-import {
-  useQuery,
-  useInfiniteQuery,
-  UseQueryOptions,
-  UseInfiniteQueryOptions,
-  InfiniteData,
-} from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, UseQueryOptions, UseInfiniteQueryOptions, InfiniteData } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type GetRenewalsQueryVariables = Types.Exact<{
   pagination: Types.Pagination;
@@ -30,151 +18,10 @@ export type GetRenewalsQueryVariables = Types.Exact<{
   sort?: Types.InputMaybe<Types.SortBy>;
 }>;
 
-export type GetRenewalsQuery = {
-  __typename?: 'Query';
-  dashboardView_Renewals?: {
-    __typename?: 'RenewalsPage';
-    totalPages: number;
-    totalElements: any;
-    totalAvailable: any;
-    content: Array<{
-      __typename?: 'RenewalRecord';
-      organization: {
-        __typename?: 'Organization';
-        id: string;
-        name: string;
-        logoUrl?: string | null;
-        lastTouchPointAt?: any | null;
-        lastTouchPointType?: Types.LastTouchpointType | null;
-        accountDetails?: {
-          __typename?: 'OrgAccountDetails';
-          renewalSummary?: {
-            __typename?: 'RenewalSummary';
-            renewalLikelihood?: Types.OpportunityRenewalLikelihood | null;
-            nextRenewalDate?: any | null;
-            arrForecast?: number | null;
-            maxArrForecast?: number | null;
-          } | null;
-        } | null;
-        lastTouchPointTimelineEvent?:
-          | {
-              __typename: 'Action';
-              id: string;
-              actionType: Types.ActionType;
-              createdAt: any;
-              source: Types.DataSource;
-              createdBy?: {
-                __typename?: 'User';
-                id: string;
-                firstName: string;
-                lastName: string;
-              } | null;
-            }
-          | { __typename: 'Analysis'; id: string }
-          | {
-              __typename: 'InteractionEvent';
-              id: string;
-              channel?: string | null;
-              eventType?: string | null;
-              externalLinks: Array<{
-                __typename?: 'ExternalSystem';
-                type: Types.ExternalSystemType;
-              }>;
-              sentBy: Array<
-                | {
-                    __typename: 'ContactParticipant';
-                    contactParticipant: {
-                      __typename?: 'Contact';
-                      id: string;
-                      name?: string | null;
-                      firstName?: string | null;
-                      lastName?: string | null;
-                    };
-                  }
-                | {
-                    __typename: 'EmailParticipant';
-                    type?: string | null;
-                    emailParticipant: {
-                      __typename?: 'Email';
-                      id: string;
-                      email?: string | null;
-                      rawEmail?: string | null;
-                    };
-                  }
-                | {
-                    __typename: 'JobRoleParticipant';
-                    jobRoleParticipant: {
-                      __typename?: 'JobRole';
-                      contact?: {
-                        __typename?: 'Contact';
-                        id: string;
-                        name?: string | null;
-                        firstName?: string | null;
-                        lastName?: string | null;
-                      } | null;
-                    };
-                  }
-                | { __typename: 'OrganizationParticipant' }
-                | { __typename: 'PhoneNumberParticipant' }
-                | {
-                    __typename: 'UserParticipant';
-                    userParticipant: {
-                      __typename?: 'User';
-                      id: string;
-                      firstName: string;
-                      lastName: string;
-                    };
-                  }
-              >;
-            }
-          | { __typename: 'InteractionSession' }
-          | { __typename: 'Issue'; id: string; createdAt: any; updatedAt: any }
-          | {
-              __typename: 'LogEntry';
-              id: string;
-              createdBy?: {
-                __typename?: 'User';
-                lastName: string;
-                firstName: string;
-              } | null;
-            }
-          | {
-              __typename: 'Meeting';
-              id: string;
-              name?: string | null;
-              attendedBy: Array<
-                | { __typename: 'ContactParticipant' }
-                | { __typename: 'EmailParticipant' }
-                | { __typename: 'OrganizationParticipant' }
-                | { __typename: 'UserParticipant' }
-              >;
-            }
-          | {
-              __typename: 'Note';
-              id: string;
-              createdBy?: {
-                __typename?: 'User';
-                firstName: string;
-                lastName: string;
-              } | null;
-            }
-          | { __typename: 'PageView'; id: string }
-          | null;
-      };
-      contract: { __typename?: 'Contract'; id: string; name: string };
-      opportunity?: {
-        __typename?: 'Opportunity';
-        owner?: {
-          __typename?: 'User';
-          id: string;
-          firstName: string;
-          lastName: string;
-          name?: string | null;
-        } | null;
-      } | null;
-    }>;
-  } | null;
-};
+
+export type GetRenewalsQuery = { __typename?: 'Query', dashboardView_Renewals?: { __typename?: 'RenewalsPage', totalPages: number, totalElements: any, totalAvailable: any, content: Array<{ __typename?: 'RenewalRecord', organization: { __typename?: 'Organization', id: string, name: string, logoUrl?: string | null, lastTouchPointAt?: any | null, lastTouchPointType?: Types.LastTouchpointType | null, accountDetails?: { __typename?: 'OrgAccountDetails', renewalSummary?: { __typename?: 'RenewalSummary', renewalLikelihood?: Types.OpportunityRenewalLikelihood | null, nextRenewalDate?: any | null, arrForecast?: number | null, maxArrForecast?: number | null } | null } | null, lastTouchPointTimelineEvent?: { __typename: 'Action', id: string, actionType: Types.ActionType, createdAt: any, source: Types.DataSource, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename: 'Analysis', id: string } | { __typename: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, externalLinks: Array<{ __typename?: 'ExternalSystem', type: Types.ExternalSystemType }>, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'JobRoleParticipant', jobRoleParticipant: { __typename?: 'JobRole', contact?: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }> } | { __typename: 'InteractionSession' } | { __typename: 'Issue', id: string, createdAt: any, updatedAt: any } | { __typename: 'LogEntry', id: string, createdBy?: { __typename?: 'User', lastName: string, firstName: string } | null } | { __typename: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'EmailParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename: 'PageView', id: string } | null }, contract: { __typename?: 'Contract', id: string, name: string }, opportunity?: { __typename?: 'Opportunity', owner?: { __typename?: 'User', id: string, firstName: string, lastName: string, name?: string | null } | null } | null }> } | null };
+
+
 
 export const GetRenewalsDocument = `
     query getRenewals($pagination: Pagination!, $where: Filter, $sort: SortBy) {
@@ -305,88 +152,54 @@ export const GetRenewalsDocument = `
 }
     `;
 
-export const useGetRenewalsQuery = <TData = GetRenewalsQuery, TError = unknown>(
-  client: GraphQLClient,
-  variables: GetRenewalsQueryVariables,
-  options?: Omit<
-    UseQueryOptions<GetRenewalsQuery, TError, TData>,
-    'queryKey'
-  > & {
-    queryKey?: UseQueryOptions<GetRenewalsQuery, TError, TData>['queryKey'];
-  },
-  headers?: RequestInit['headers'],
-) => {
-  return useQuery<GetRenewalsQuery, TError, TData>({
+export const useGetRenewalsQuery = <
+      TData = GetRenewalsQuery,
+      TError = unknown
+    >(
+      client: GraphQLClient,
+      variables: GetRenewalsQueryVariables,
+      options?: Omit<UseQueryOptions<GetRenewalsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetRenewalsQuery, TError, TData>['queryKey'] },
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useQuery<GetRenewalsQuery, TError, TData>(
+      {
     queryKey: ['getRenewals', variables],
-    queryFn: fetcher<GetRenewalsQuery, GetRenewalsQueryVariables>(
-      client,
-      GetRenewalsDocument,
-      variables,
-      headers,
-    ),
-    ...options,
-  });
-};
+    queryFn: fetcher<GetRenewalsQuery, GetRenewalsQueryVariables>(client, GetRenewalsDocument, variables, headers),
+    ...options
+  }
+    )};
 
 useGetRenewalsQuery.document = GetRenewalsDocument;
 
-useGetRenewalsQuery.getKey = (variables: GetRenewalsQueryVariables) => [
-  'getRenewals',
-  variables,
-];
+useGetRenewalsQuery.getKey = (variables: GetRenewalsQueryVariables) => ['getRenewals', variables];
 
 export const useInfiniteGetRenewalsQuery = <
-  TData = InfiniteData<GetRenewalsQuery>,
-  TError = unknown,
->(
-  client: GraphQLClient,
-  variables: GetRenewalsQueryVariables,
-  options: Omit<
-    UseInfiniteQueryOptions<GetRenewalsQuery, TError, TData>,
-    'queryKey'
-  > & {
-    queryKey?: UseInfiniteQueryOptions<
-      GetRenewalsQuery,
-      TError,
-      TData
-    >['queryKey'];
-  },
-  headers?: RequestInit['headers'],
-) => {
-  return useInfiniteQuery<GetRenewalsQuery, TError, TData>(
-    (() => {
-      const { queryKey: optionsQueryKey, ...restOptions } = options;
-      return {
-        queryKey: optionsQueryKey ?? ['getRenewals.infinite', variables],
-        queryFn: (metaData) =>
-          fetcher<GetRenewalsQuery, GetRenewalsQueryVariables>(
-            client,
-            GetRenewalsDocument,
-            { ...variables, ...(metaData.pageParam ?? {}) },
-            headers,
-          )(),
-        ...restOptions,
-      };
-    })(),
-  );
-};
+      TData = InfiniteData<GetRenewalsQuery>,
+      TError = unknown
+    >(
+      client: GraphQLClient,
+      variables: GetRenewalsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetRenewalsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetRenewalsQuery, TError, TData>['queryKey'] },
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useInfiniteQuery<GetRenewalsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['getRenewals.infinite', variables],
+      queryFn: (metaData) => fetcher<GetRenewalsQuery, GetRenewalsQueryVariables>(client, GetRenewalsDocument, {...variables, ...(metaData.pageParam ?? {})}, headers)(),
+      ...restOptions
+    }
+  })()
+    )};
 
-useInfiniteGetRenewalsQuery.getKey = (variables: GetRenewalsQueryVariables) => [
-  'getRenewals.infinite',
-  variables,
-];
+useInfiniteGetRenewalsQuery.getKey = (variables: GetRenewalsQueryVariables) => ['getRenewals.infinite', variables];
 
-useGetRenewalsQuery.fetcher = (
-  client: GraphQLClient,
-  variables: GetRenewalsQueryVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<GetRenewalsQuery, GetRenewalsQueryVariables>(
-    client,
-    GetRenewalsDocument,
-    variables,
-    headers,
-  );
+
+useGetRenewalsQuery.fetcher = (client: GraphQLClient, variables: GetRenewalsQueryVariables, headers?: RequestInit['headers']) => fetcher<GetRenewalsQuery, GetRenewalsQueryVariables>(client, GetRenewalsDocument, variables, headers);
+
 
 useGetRenewalsQuery.mutateCacheEntry =
   (queryClient: QueryClient, variables?: GetRenewalsQueryVariables) =>
@@ -398,22 +211,15 @@ useGetRenewalsQuery.mutateCacheEntry =
       queryClient.setQueryData<GetRenewalsQuery>(cacheKey, mutator);
     }
     return { previousEntries };
-  };
+  }
 useInfiniteGetRenewalsQuery.mutateCacheEntry =
   (queryClient: QueryClient, variables?: GetRenewalsQueryVariables) =>
-  (
-    mutator: (
-      cacheEntry: InfiniteData<GetRenewalsQuery>,
-    ) => InfiniteData<GetRenewalsQuery>,
-  ) => {
+  (mutator: (cacheEntry: InfiniteData<GetRenewalsQuery>) => InfiniteData<GetRenewalsQuery>) => {
     const cacheKey = useInfiniteGetRenewalsQuery.getKey(variables);
     const previousEntries =
       queryClient.getQueryData<InfiniteData<GetRenewalsQuery>>(cacheKey);
     if (previousEntries) {
-      queryClient.setQueryData<InfiniteData<GetRenewalsQuery>>(
-        cacheKey,
-        mutator,
-      );
+      queryClient.setQueryData<InfiniteData<GetRenewalsQuery>>(cacheKey, mutator);
     }
     return { previousEntries };
-  };
+  }

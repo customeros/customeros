@@ -24,6 +24,14 @@ query getContracts($id: ID!) {
       billingCycle
       invoicingStartDate
       currency
+      organizationLegalName
+      addressLine1
+      addressLine2
+      locality
+      country
+      zip
+      invoiceEmail
+      invoiceNote
       opportunities {
         id
         comments

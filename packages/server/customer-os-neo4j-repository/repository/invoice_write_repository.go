@@ -24,6 +24,7 @@ type InvoiceCreateFields struct {
 	SourceFields    model.Source            `json:"sourceFields"`
 	BillingCycle    neo4jenum.BillingCycle  `json:"billingCycle"`
 	Status          neo4jenum.InvoiceStatus `json:"status"`
+	Note            string                  `json:"note"`
 }
 
 type InvoiceFillFields struct {
@@ -90,7 +91,8 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 								i.currency=$currency,
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
-								i.billingCycle=$billingCycle
+								i.billingCycle=$billingCycle,
+								i.note=$note
 							WITH c, i 
 							MERGE (c)-[:HAS_INVOICE]->(i) 
 							`, tenant)
@@ -110,6 +112,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"periodEnd":     data.PeriodEndDate,
 		"billingCycle":  data.BillingCycle.String(),
 		"status":        data.Status.String(),
+		"note":          data.Note,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

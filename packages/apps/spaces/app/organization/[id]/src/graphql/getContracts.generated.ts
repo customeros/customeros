@@ -59,6 +59,14 @@ export type GetContractsQuery = {
       billingCycle?: Types.ContractBillingCycle | null;
       invoicingStartDate?: any | null;
       currency?: Types.Currency | null;
+      organizationLegalName?: string | null;
+      addressLine1?: string | null;
+      addressLine2?: string | null;
+      locality?: string | null;
+      country?: string | null;
+      zip?: string | null;
+      invoiceEmail?: string | null;
+      invoiceNote?: string | null;
       opportunities?: Array<{
         __typename?: 'Opportunity';
         id: string;
@@ -127,6 +135,14 @@ export const GetContractsDocument = `
       billingCycle
       invoicingStartDate
       currency
+      organizationLegalName
+      addressLine1
+      addressLine2
+      locality
+      country
+      zip
+      invoiceEmail
+      invoiceNote
       opportunities {
         id
         comments

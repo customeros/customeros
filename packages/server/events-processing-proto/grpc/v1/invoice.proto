@@ -30,6 +30,7 @@ message NewInvoiceForContractRequest {
   google.protobuf.Timestamp invoicePeriodEnd = 10; // mandatory
   string currency = 11; // mandatory
   BillingCycle billingCycle = 12;
+  string note = 13;
 }
 
 message FillInvoiceRequest {

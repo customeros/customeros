@@ -1,1 +1,1 @@
-export { Tag, TagLabel } from '@chakra-ui/tag';
+export { Tag, TagLabel, TagLeftIcon } from '@chakra-ui/tag';

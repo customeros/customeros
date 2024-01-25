@@ -5,27 +5,21 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type HideOrganizationsMutationVariables = Types.Exact<{
   ids: Array<Types.Scalars['ID']['input']> | Types.Scalars['ID']['input'];
 }>;
 
-export type HideOrganizationsMutation = {
-  __typename?: 'Mutation';
-  organization_HideAll?: { __typename?: 'Result'; result: boolean } | null;
-};
+
+export type HideOrganizationsMutation = { __typename?: 'Mutation', organization_HideAll?: { __typename?: 'Result', result: boolean } | null };
+
+
 
 export const HideOrganizationsDocument = `
     mutation hideOrganizations($ids: [ID!]!) {
@@ -36,46 +30,23 @@ export const HideOrganizationsDocument = `
     `;
 
 export const useHideOrganizationsMutation = <
-  TError = unknown,
-  TContext = unknown,
->(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    HideOrganizationsMutation,
-    TError,
-    HideOrganizationsMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) => {
-  return useMutation<
-    HideOrganizationsMutation,
-    TError,
-    HideOrganizationsMutationVariables,
-    TContext
-  >({
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<HideOrganizationsMutation, TError, HideOrganizationsMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<HideOrganizationsMutation, TError, HideOrganizationsMutationVariables, TContext>(
+      {
     mutationKey: ['hideOrganizations'],
-    mutationFn: (variables?: HideOrganizationsMutationVariables) =>
-      fetcher<HideOrganizationsMutation, HideOrganizationsMutationVariables>(
-        client,
-        HideOrganizationsDocument,
-        variables,
-        headers,
-      )(),
-    ...options,
-  });
-};
+    mutationFn: (variables?: HideOrganizationsMutationVariables) => fetcher<HideOrganizationsMutation, HideOrganizationsMutationVariables>(client, HideOrganizationsDocument, variables, headers)(),
+    ...options
+  }
+    )};
 
 useHideOrganizationsMutation.getKey = () => ['hideOrganizations'];
 
-useHideOrganizationsMutation.fetcher = (
-  client: GraphQLClient,
-  variables: HideOrganizationsMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<HideOrganizationsMutation, HideOrganizationsMutationVariables>(
-    client,
-    HideOrganizationsDocument,
-    variables,
-    headers,
-  );
+
+useHideOrganizationsMutation.fetcher = (client: GraphQLClient, variables: HideOrganizationsMutationVariables, headers?: RequestInit['headers']) => fetcher<HideOrganizationsMutation, HideOrganizationsMutationVariables>(client, HideOrganizationsDocument, variables, headers);

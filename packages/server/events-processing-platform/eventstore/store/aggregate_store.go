@@ -82,6 +82,10 @@ func (as *aggregateStore) LoadVersion(ctx context.Context, aggregate es.Aggregat
 	defer stream.Close()
 
 	lastEvent, err := stream.Recv()
+	if errors.Is(err, io.EOF) {
+		aggregate.SetVersion(-1)
+		return nil
+	}
 	if err != nil {
 		tracing.TraceErr(span, err)
 		as.log.Errorf("(LoadVersion) stream.Recv: {%s}", err.Error())
@@ -116,9 +120,13 @@ func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) erro
 	}
 
 	// check if new aggregate, version is 0, or now events applied or version is not greater than uncommitted events
+	// note for temporal aggregates it's possible to have version 0 as all previous events already removed from stream
 	var expectedRevision esdb.ExpectedRevision
 	if aggregate.GetVersion() == 0 || int64(len(aggregate.GetUncommittedEvents()))-aggregate.GetVersion()-1 == 0 || (aggregate.IsWithAppliedEvents() && len(aggregate.GetAppliedEvents()) == 0) {
 		expectedRevision = esdb.NoStream{}
+		if aggregate.IsTemporal() {
+			expectedRevision = esdb.Any{}
+		}
 		as.log.Debugf("(Save) expectedRevision: {%T}", expectedRevision)
 		span.LogFields(log.String("expectedRevision", "NoStream"))
 

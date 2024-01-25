@@ -69,6 +69,15 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 	span.LogFields(log.Object("filter", filter))
 	span.LogFields(log.Object("sortBy", sortBy))
 
+	if len(sortBy) == 0 {
+		sortBy = []*model.SortBy{
+			{
+				By:        "CREATED_AT",
+				Direction: model.SortingDirectionDesc,
+			},
+		}
+	}
+
 	cypherSort, err := buildSort(sortBy, reflect.TypeOf(neo4jentity.InvoiceEntity{}))
 	if err != nil {
 		return nil, err
@@ -78,7 +87,7 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 		return nil, err
 	}
 
-	dbNodesWithTotalCount, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoices(ctx, common.GetTenantFromContext(ctx), organizationId,
+	dbNodesWithTotalCount, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetPaginatedInvoices(ctx, common.GetTenantFromContext(ctx), organizationId,
 		page,
 		limit,
 		cypherFilter,
@@ -95,7 +104,7 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	invoices := make(neo4jentity.InvoiceEntities, 0, len(dbNodesWithTotalCount.Nodes))
+	var invoices neo4jentity.InvoiceEntities
 
 	for _, v := range dbNodesWithTotalCount.Nodes {
 		invoices = append(invoices, *mapper.MapDbNodeToInvoiceEntity(v))

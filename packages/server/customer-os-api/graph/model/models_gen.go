@@ -440,6 +440,7 @@ type Contract struct {
 	Zip                   *string               `json:"zip,omitempty"`
 	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
 	InvoiceEmail          *string               `json:"invoiceEmail,omitempty"`
+	InvoiceNote           *string               `json:"invoiceNote,omitempty"`
 }
 
 func (Contract) IsNode()            {}
@@ -481,6 +482,7 @@ type ContractUpdateInput struct {
 	Zip                   *string               `json:"zip,omitempty"`
 	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
 	InvoiceEmail          *string               `json:"invoiceEmail,omitempty"`
+	InvoiceNote           *string               `json:"invoiceNote,omitempty"`
 }
 
 type Country struct {
@@ -1037,11 +1039,12 @@ type Invoice struct {
 	DueDate          time.Time      `json:"dueDate"`
 	Amount           float64        `json:"amount"`
 	Vat              float64        `json:"vat"`
-	Total            float64        `json:"total"`
+	TotalAmount      float64        `json:"totalAmount"`
 	Currency         string         `json:"currency"`
 	RepositoryFileID string         `json:"repositoryFileId"`
 	InvoiceLines     []*InvoiceLine `json:"invoiceLines"`
 	Status           *InvoiceStatus `json:"status,omitempty"`
+	Note             *string        `json:"note,omitempty"`
 }
 
 func (Invoice) IsSourceFields()                   {}
@@ -1053,14 +1056,14 @@ func (this Invoice) GetAppSource() string         { return this.AppSource }
 func (Invoice) IsNode() {}
 
 type InvoiceLine struct {
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
-	Name      string    `json:"name"`
-	Price     float64   `json:"price"`
-	Quantity  int       `json:"quantity"`
-	Amount    float64   `json:"amount"`
-	Vat       float64   `json:"vat"`
-	Total     float64   `json:"total"`
+	ID          string    `json:"id"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Name        string    `json:"name"`
+	Price       float64   `json:"price"`
+	Quantity    int       `json:"quantity"`
+	Amount      float64   `json:"amount"`
+	Vat         float64   `json:"vat"`
+	TotalAmount float64   `json:"totalAmount"`
 }
 
 func (InvoiceLine) IsNode()            {}
@@ -1667,7 +1670,6 @@ type Organization struct {
 	TimelineEventsTotalCount      int64                         `json:"timelineEventsTotalCount"`
 	Owner                         *User                         `json:"owner,omitempty"`
 	ExternalLinks                 []*ExternalSystem             `json:"externalLinks"`
-	Invoices                      *InvoicesPage                 `json:"invoices"`
 	LastTouchPointAt              *time.Time                    `json:"lastTouchPointAt,omitempty"`
 	LastTouchPointType            *LastTouchpointType           `json:"lastTouchPointType,omitempty"`
 	LastTouchPointTimelineEventID *string                       `json:"lastTouchPointTimelineEventId,omitempty"`
@@ -2043,15 +2045,8 @@ func (this ServiceLineItem) GetID() string { return this.ID }
 
 type ServiceLineItemBulkUpdateInput struct {
 	ServiceLineItems []*ServiceLineItemBulkUpdateItem `json:"serviceLineItems"`
-	CreatedAt        *time.Time                       `json:"createdAt,omitempty"`
-	UpdatedAt        *time.Time                       `json:"updatedAt,omitempty"`
-	StartedAt        *time.Time                       `json:"startedAt,omitempty"`
-	EndedAt          *time.Time                       `json:"endedAt,omitempty"`
-	Source           DataSource                       `json:"source"`
-	SourceOfTruth    DataSource                       `json:"sourceOfTruth"`
-	AppSource        string                           `json:"appSource"`
-	Tenant           *string                          `json:"tenant,omitempty"`
-	LoggedInUserID   *string                          `json:"loggedInUserId,omitempty"`
+	ContractID       string                           `json:"contractId"`
+	InvoiceNote      *string                          `json:"invoiceNote,omitempty"`
 }
 
 type ServiceLineItemBulkUpdateItem struct {
@@ -2064,7 +2059,6 @@ type ServiceLineItemBulkUpdateItem struct {
 	Comments                *string                       `json:"comments,omitempty"`
 	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 	IsRetroactiveCorrection *bool                         `json:"isRetroactiveCorrection,omitempty"`
-	IsCanceled              *bool                         `json:"isCanceled,omitempty"`
 	ContractID              *string                       `json:"contractId,omitempty"`
 }
 
@@ -2224,6 +2218,34 @@ type TenantBillableInfo struct {
 	GreylistedOrganizations  int64 `json:"greylistedOrganizations"`
 	GreylistedContacts       int64 `json:"greylistedContacts"`
 }
+
+type TenantBillingProfile struct {
+	ID                            string     `json:"id"`
+	CreatedAt                     time.Time  `json:"createdAt"`
+	UpdatedAt                     time.Time  `json:"updatedAt"`
+	Source                        DataSource `json:"source"`
+	SourceOfTruth                 DataSource `json:"sourceOfTruth"`
+	AppSource                     string     `json:"appSource"`
+	Email                         string     `json:"email"`
+	Phone                         string     `json:"phone"`
+	AddressLine1                  string     `json:"addressLine1"`
+	AddressLine2                  string     `json:"addressLine2"`
+	AddressLine3                  string     `json:"addressLine3"`
+	Locality                      string     `json:"locality"`
+	Country                       string     `json:"country"`
+	Zip                           string     `json:"zip"`
+	LegalName                     string     `json:"legalName"`
+	DomesticPaymentsBankInfo      string     `json:"domesticPaymentsBankInfo"`
+	InternationalPaymentsBankInfo string     `json:"internationalPaymentsBankInfo"`
+}
+
+func (TenantBillingProfile) IsSourceFields()                   {}
+func (this TenantBillingProfile) GetID() string                { return this.ID }
+func (this TenantBillingProfile) GetSource() DataSource        { return this.Source }
+func (this TenantBillingProfile) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this TenantBillingProfile) GetAppSource() string         { return this.AppSource }
+
+func (TenantBillingProfile) IsNode() {}
 
 type TenantInput struct {
 	Name      string  `json:"name"`

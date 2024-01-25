@@ -123,7 +123,7 @@ export const OrganizationSidenav = () => {
         />
         <SidenavItem
           label='Account'
-          isActive={checkIsActive('account')}
+          isActive={checkIsActive('account') || checkIsActive('invoices')}
           onClick={handleItemClick('account')}
           icon={
             <Icons.ActivityHeart

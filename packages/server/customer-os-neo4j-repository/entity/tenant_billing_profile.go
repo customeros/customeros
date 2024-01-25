@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type TenantBillingProfile struct {
+type TenantBillingProfileEntity struct {
 	Id                                string
 	CreatedAt                         time.Time
 	UpdatedAt                         time.Time
@@ -14,6 +14,11 @@ type TenantBillingProfile struct {
 	AddressLine1                      string
 	AddressLine2                      string
 	AddressLine3                      string
+	Locality                          string
+	Country                           string
+	Zip                               string
+	DomesticPaymentsBankInfo          string
+	InternationalPaymentsBankInfo     string
 	DomesticPaymentsBankName          string
 	DomesticPaymentsAccountNumber     string
 	DomesticPaymentsSortCode          string
@@ -26,4 +31,4 @@ type TenantBillingProfile struct {
 	AppSource                         string
 }
 
-type TenantBillingProfiles []TenantBillingProfile
+type TenantBillingProfileEntities []TenantBillingProfileEntity

@@ -18,6 +18,7 @@ contract_Update(
         zip: "test zip"
         organizationLegalName: "test organization legal name"
         invoiceEmail: "test invoice email"
+        invoiceNote: "test invoice note"
         billingCycle: ANNUAL_BILLING
         currency: USD
     }

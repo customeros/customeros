@@ -71,3 +71,18 @@ func (r *queryResolver) TenantByEmail(ctx context.Context, email string) (*strin
 	}
 	return &tenant.Name, nil
 }
+
+// TenantBillingProfiles is the resolver for the tenantBillingProfiles field.
+func (r *queryResolver) TenantBillingProfiles(ctx context.Context) ([]*model.TenantBillingProfile, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TenantBillingProfiles", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenantBillingProfileEntities, err := r.Services.TenantService.GetTenantBillingProfiles(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch billing profiles")
+		return nil, nil
+	}
+	return mapper.MapEntitiesToTenantBillingProfiles(tenantBillingProfileEntities), nil
+}

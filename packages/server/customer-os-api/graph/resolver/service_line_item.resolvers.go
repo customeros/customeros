@@ -17,7 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -64,6 +63,7 @@ func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input mode
 		graphql.AddErrorf(ctx, "Failed to update service line item %s", input.ServiceLineItemID)
 		return &model.ServiceLineItem{ID: input.ServiceLineItemID}, nil
 	}
+
 	serviceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, input.ServiceLineItemID)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -107,33 +107,34 @@ func (r *mutationResolver) ServiceLineItemClose(ctx context.Context, input model
 }
 
 // ServiceLineItemBulkUpdate is the resolver for the serviceLineItemBulkUpdate field.
-func (r *mutationResolver) ServiceLineItemBulkUpdate(ctx context.Context, input model.ServiceLineItemBulkUpdateInput) ([]*string, error) {
+func (r *mutationResolver) ServiceLineItemBulkUpdate(ctx context.Context, input model.ServiceLineItemBulkUpdateInput) ([]string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemBulkUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("request.input", input))
 
-	sliEntities := service.MapServiceLineItemBulkItemsToData(input.ServiceLineItems)
+	sliEntitiesForBulkSync := service.MapServiceLineItemBulkItemsToData(input.ServiceLineItems)
 
-	updatedServiceLineItemIds, err := r.Services.ServiceLineItemService.CreateOrUpdateInBulk(ctx, &service.SLIBulkReq{
-		ServiceLineItems: sliEntities,
-		SourceFields: &commonpb.SourceFields{
-			Source:        string(input.Source),
-			SourceOfTruth: string(input.SourceOfTruth),
-			AppSource:     input.AppSource,
-		},
-		StartedAt:      input.StartedAt,
-		EndedAt:        input.EndedAt,
-		CreatedAt:      input.CreatedAt,
-		UpdatedAt:      input.UpdatedAt,
-		Tenant:         *input.Tenant,
-		LoggedInUserId: *input.LoggedInUserID,
-	})
+	updatedServiceLineItemIds, err := r.Services.ServiceLineItemService.CreateOrUpdateInBulk(ctx, sliEntitiesForBulkSync)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "failed to bulk update service line items")
 		return nil, nil
 	}
+
+	if input.InvoiceNote != nil && input.ContractID != "" {
+		err = r.Services.ContractService.Update(ctx, model.ContractUpdateInput{
+			Patch:       utils.ToPtr(true),
+			ContractID:  input.ContractID,
+			InvoiceNote: input.InvoiceNote,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "failed to update contract invoice note")
+			return nil, nil
+		}
+	}
+
 	return updatedServiceLineItemIds, nil
 }
 

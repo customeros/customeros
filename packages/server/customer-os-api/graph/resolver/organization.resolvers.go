@@ -183,7 +183,13 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("input", input))
+	tracing.LogObjectAsJson(span, "input", input)
+
+	if input.ID == "" {
+		tracing.TraceErr(span, errors.New("missing organization id"))
+		graphql.AddErrorf(ctx, "Missing organization id")
+		return nil, nil
+	}
 
 	_, err := r.Services.OrganizationService.GetById(ctx, input.ID)
 	if err != nil {
@@ -304,6 +310,12 @@ func (r *mutationResolver) OrganizationArchive(ctx context.Context, id string) (
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", id))
 
+	if id == "" {
+		tracing.TraceErr(span, errors.New("missing organization id"))
+		graphql.AddErrorf(ctx, "Missing organization id")
+		return nil, nil
+	}
+
 	err := r.Services.OrganizationService.Archive(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -345,6 +357,12 @@ func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (str
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationId", id))
+
+	if id == "" {
+		tracing.TraceErr(span, errors.New("missing organization id"))
+		graphql.AddErrorf(ctx, "Missing organization id")
+		return "", nil
+	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
@@ -947,30 +965,6 @@ func (r *organizationResolver) ExternalLinks(ctx context.Context, obj *model.Org
 	return mapper.MapEntitiesToExternalSystems(entities), nil
 }
 
-// Invoices is the resolver for the invoices field.
-func (r *organizationResolver) Invoices(ctx context.Context, obj *model.Organization, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.InvoicesPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.Invoices", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	if pagination == nil {
-		pagination = &model.Pagination{Page: 0, Limit: 0}
-	}
-	span.LogFields(log.Int("request.pagination.page", pagination.Page), log.Int("request.pagination.limit", pagination.Limit))
-
-	paginatedResult, err := r.Services.InvoiceService.GetInvoices(ctx, obj.ID, pagination.Page, pagination.Limit, where, sort)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get invoices")
-		return nil, nil
-	}
-	return &model.InvoicesPage{
-		Content:       mapper.MapEntitiesToInvoices(paginatedResult.Rows.(*neo4jentity.InvoiceEntities)),
-		TotalPages:    paginatedResult.TotalPages,
-		TotalElements: paginatedResult.TotalRows,
-	}, err
-}
-
 // LastTouchPointTimelineEvent is the resolver for the lastTouchPointTimelineEvent field.
 func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
@@ -1044,8 +1038,8 @@ func (r *queryResolver) Organization(ctx context.Context, id string) (*model.Org
 	span.LogFields(log.String("request.organizationID", id))
 
 	if id == "" {
-		tracing.TraceErr(span, errors.New("missing organization input id"))
-		graphql.AddErrorf(ctx, "Missing organization input id")
+		tracing.TraceErr(span, errors.New("missing organization id"))
+		graphql.AddErrorf(ctx, "Missing organization id")
 		return nil, nil
 	}
 

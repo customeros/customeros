@@ -68,6 +68,59 @@ func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, 
 	})
 }
 
+func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, profile entity.TenantBillingProfileEntity) string {
+	profileId := utils.NewUUIDIfEmpty(profile.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
+				MERGE (t)-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile {id:$profileId})
+				ON CREATE SET
+					tbp:TenantBillingProfile_%s,
+					tbp.createdAt=$createdAt,
+					tbp.updatedAt=$updatedAt,
+					tbp.email=$email,
+					tbp.phone=$phone,
+					tbp.legalName=$legalName,
+					tbp.addressLine1=$addressLine1,
+					tbp.addressLine2=$addressLine2,
+					tbp.addressLine3=$addressLine3,
+					tbp.locality=$locality,
+					tbp.country=$country,
+					tbp.zip=$zip,
+					tbp.domesticPaymentsBankInfo=$domesticPaymentsBankInfo,
+					tbp.domesticPaymentsBankName=$domesticPaymentsBankName,
+					tbp.domesticPaymentsAccountNumber=$domesticPaymentsAccountNumber,
+					tbp.domesticPaymentsSortCode=$domesticPaymentsSortCode,
+					tbp.internationalPaymentsBankInfo=$internationalPaymentsBankInfo,
+					tbp.internationalPaymentsSwiftBic=$internationalPaymentsSwiftBic,
+					tbp.internationalPaymentsBankName=$internationalPaymentsBankName,
+					tbp.internationalPaymentsBankAddress=$internationalPaymentsBankAddress,
+					tbp.internationalPaymentsInstructions=$internationalPaymentsInstructions`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":                            tenant,
+		"profileId":                         profileId,
+		"createdAt":                         profile.CreatedAt,
+		"updatedAt":                         profile.UpdatedAt,
+		"email":                             profile.Email,
+		"phone":                             profile.Phone,
+		"addressLine1":                      profile.AddressLine1,
+		"addressLine2":                      profile.AddressLine2,
+		"addressLine3":                      profile.AddressLine3,
+		"locality":                          profile.Locality,
+		"country":                           profile.Country,
+		"zip":                               profile.Zip,
+		"legalName":                         profile.LegalName,
+		"domesticPaymentsBankInfo":          profile.DomesticPaymentsBankInfo,
+		"internationalPaymentsBankInfo":     profile.InternationalPaymentsBankInfo,
+		"domesticPaymentsBankName":          profile.DomesticPaymentsBankName,
+		"domesticPaymentsAccountNumber":     profile.DomesticPaymentsAccountNumber,
+		"domesticPaymentsSortCode":          profile.DomesticPaymentsSortCode,
+		"internationalPaymentsSwiftBic":     profile.InternationalPaymentsSwiftBic,
+		"internationalPaymentsBankName":     profile.InternationalPaymentsBankName,
+		"internationalPaymentsBankAddress":  profile.InternationalPaymentsBankAddress,
+		"internationalPaymentsInstructions": profile.InternationalPaymentsInstructions,
+	})
+	return profileId
+}
+
 func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, workspace string, provider string, tenant string) {
 	query := `MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)-[:HAS_WORKSPACE]->(w:Workspace {name:$workspace, provider:$provider})`
@@ -586,7 +639,8 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 					c.locality=$locality,
 					c.country=$country,
 					c.organizationLegalName=$organizationLegalName,
-					c.invoiceEmail=$invoiceEmail
+					c.invoiceEmail=$invoiceEmail,
+					c.invoiceNote=$invoiceNote
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -617,6 +671,7 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 		"country":               contract.Country,
 		"organizationLegalName": contract.OrganizationLegalName,
 		"invoiceEmail":          contract.InvoiceEmail,
+		"invoiceNote":           contract.InvoiceNote,
 	})
 	return contractId
 }
@@ -878,7 +933,8 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 				i.vat=$vat,
 				i.totalAmount=$totalAmount,
 				i.repositoryFileId=$repositoryFileId,
-				i.status=$status
+				i.status=$status,
+				i.note=$note
 			WITH c, i 
 			MERGE (c)-[:HAS_INVOICE]->(i) 
 				`, tenant)
@@ -903,6 +959,7 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 		"totalAmount":      invoice.TotalAmount,
 		"repositoryFileId": invoice.RepositoryFileId,
 		"status":           invoice.Status.String(),
+		"note":             invoice.Note,
 	}
 
 	ExecuteWriteQuery(ctx, driver, query, params)

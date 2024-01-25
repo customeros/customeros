@@ -23,6 +23,15 @@ message AddBillingProfileRequest {
   string internationalPaymentsBankName = 15;
   string internationalPaymentsBankAddress = 16;
   string internationalPaymentsInstructions = 17;
+  string locality = 18;
+  string country = 19;
+  string zip = 20;
+  string domesticPaymentsBankInfo = 21;
+  string internationalPaymentsBankInfo = 22;
+}
+
+message UpdateBillingProfileRequest {
+
 }
 
 message IdResponse {
