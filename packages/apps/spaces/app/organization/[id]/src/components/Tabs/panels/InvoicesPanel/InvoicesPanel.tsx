@@ -10,8 +10,8 @@ import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { ChevronDown } from '@ui/media/icons/ChevronDown';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { InvoicesTable } from '@organization/src/components/Tabs/panels/InvoicesPanel/InvoicesTable';
-import { useGetOrganizationInvoicesQuery } from '@organization/src/graphql/getOrganizationInvoices.generated';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 
 const slideUpVariants = {
@@ -27,12 +27,12 @@ export const InvoicesPanel = () => {
   const id = useParams()?.id as string;
   const client = getGraphQLClient();
   const router = useRouter();
-  const { data } = useGetOrganizationInvoicesQuery(client, {
-    id,
+  const { data } = useGetInvoicesQuery(client, {
     pagination: {
       page: 0,
       limit: 50,
     },
+    organizationId: id,
   });
 
   return (
@@ -58,10 +58,8 @@ export const InvoicesPanel = () => {
         </Flex>
         <Flex mx={-5}>
           <InvoicesTable
-            invoices={
-              (data?.organization?.invoices?.content as Array<Invoice>) ?? []
-            }
-            totalElements={data?.organization?.invoices.totalElements}
+            invoices={(data?.invoices?.content as Array<Invoice>) ?? []}
+            totalElements={data?.invoices.totalElements}
           />
         </Flex>
       </motion.div>

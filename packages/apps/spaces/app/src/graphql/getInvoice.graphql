@@ -9,7 +9,7 @@ query GetInvoice($id: ID!) {
     dueDate
     amount
     vat
-    total
+    totalAmount
     currency
     repositoryFileId
     invoiceLines {
@@ -18,7 +18,7 @@ query GetInvoice($id: ID!) {
       quantity
       amount
       vat
-      total
+      totalAmount
       price
       name
     }

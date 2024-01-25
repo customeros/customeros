@@ -85,6 +85,7 @@ export const BillingDetails = ({
           }
         });
       });
+
       const previousEntries =
         queryClient.getQueryData<GetContractsQuery>(queryKey);
 
@@ -133,7 +134,6 @@ export const BillingDetails = ({
         ...data,
         organizationLegalName: data.organizationLegalName || organizationName,
       } as BillingDetailsForm);
-
       setDefaultValues(newDefaults);
     }
   }, [isOpen]);

@@ -5,30 +5,22 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type MergeOrganizationsMutationVariables = Types.Exact<{
   primaryOrganizationId: Types.Scalars['ID']['input'];
-  mergedOrganizationIds:
-    | Array<Types.Scalars['ID']['input']>
-    | Types.Scalars['ID']['input'];
+  mergedOrganizationIds: Array<Types.Scalars['ID']['input']> | Types.Scalars['ID']['input'];
 }>;
 
-export type MergeOrganizationsMutation = {
-  __typename?: 'Mutation';
-  organization_Merge: { __typename?: 'Organization'; id: string };
-};
+
+export type MergeOrganizationsMutation = { __typename?: 'Mutation', organization_Merge: { __typename?: 'Organization', id: string } };
+
+
 
 export const MergeOrganizationsDocument = `
     mutation mergeOrganizations($primaryOrganizationId: ID!, $mergedOrganizationIds: [ID!]!) {
@@ -42,46 +34,23 @@ export const MergeOrganizationsDocument = `
     `;
 
 export const useMergeOrganizationsMutation = <
-  TError = unknown,
-  TContext = unknown,
->(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    MergeOrganizationsMutation,
-    TError,
-    MergeOrganizationsMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) => {
-  return useMutation<
-    MergeOrganizationsMutation,
-    TError,
-    MergeOrganizationsMutationVariables,
-    TContext
-  >({
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<MergeOrganizationsMutation, TError, MergeOrganizationsMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<MergeOrganizationsMutation, TError, MergeOrganizationsMutationVariables, TContext>(
+      {
     mutationKey: ['mergeOrganizations'],
-    mutationFn: (variables?: MergeOrganizationsMutationVariables) =>
-      fetcher<MergeOrganizationsMutation, MergeOrganizationsMutationVariables>(
-        client,
-        MergeOrganizationsDocument,
-        variables,
-        headers,
-      )(),
-    ...options,
-  });
-};
+    mutationFn: (variables?: MergeOrganizationsMutationVariables) => fetcher<MergeOrganizationsMutation, MergeOrganizationsMutationVariables>(client, MergeOrganizationsDocument, variables, headers)(),
+    ...options
+  }
+    )};
 
 useMergeOrganizationsMutation.getKey = () => ['mergeOrganizations'];
 
-useMergeOrganizationsMutation.fetcher = (
-  client: GraphQLClient,
-  variables: MergeOrganizationsMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<MergeOrganizationsMutation, MergeOrganizationsMutationVariables>(
-    client,
-    MergeOrganizationsDocument,
-    variables,
-    headers,
-  );
+
+useMergeOrganizationsMutation.fetcher = (client: GraphQLClient, variables: MergeOrganizationsMutationVariables, headers?: RequestInit['headers']) => fetcher<MergeOrganizationsMutation, MergeOrganizationsMutationVariables>(client, MergeOrganizationsDocument, variables, headers);

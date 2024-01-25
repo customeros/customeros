@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 
-// import { useIsRestoring } from '@tanstack/react-query';
+import { useIsRestoring } from '@tanstack/react-query';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Flex } from '@ui/layout/Flex';
@@ -10,13 +10,13 @@ import { Invoice } from '@graphql/types';
 import { Heading } from '@ui/typography/Heading';
 import { Table, SortingState } from '@ui/presentation/Table';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
 
 import { columns } from './Columns/Columns';
-import { useGetInvoicesQuery } from '../../graphql/getInvoices.generated';
 
 export function InvoicesTable() {
-  // const isRestoring = useIsRestoring();
+  const isRestoring = useIsRestoring();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'DUE_DATE', desc: true },
@@ -24,7 +24,7 @@ export function InvoicesTable() {
   const client = getGraphQLClient();
   const tableRef = useRef(null);
 
-  const { data } = useGetInvoicesQuery(client, {
+  const { data, isFetching } = useGetInvoicesQuery(client, {
     pagination: {
       page: 0,
       limit: 40,
@@ -50,8 +50,8 @@ export function InvoicesTable() {
         canFetchMore={false}
         onSortingChange={setSorting}
         // onFetchMore={handleFetchMore}
-        isLoading={false}
-        totalItems={4}
+        isLoading={isRestoring ? false : isFetching}
+        totalItems={isRestoring ? 40 : data?.invoices?.totalElements || 0}
         tableRef={tableRef}
         borderColor='gray.100'
         rowHeight={48}

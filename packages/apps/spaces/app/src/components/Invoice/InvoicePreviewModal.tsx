@@ -28,7 +28,7 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
 
   return (
     <Invoice
-      tax={data?.invoice?.vat ?? 9}
+      tax={data?.invoice?.vat}
       note={''}
       from={{
         zip: '',
@@ -39,10 +39,10 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
         addressLine: '',
         addressLine2: '',
       }}
-      total={data?.invoice.total ?? 10}
-      dueDate={data?.invoice.dueDate ?? new Date().toISOString()}
-      subtotal={data?.invoice.amount ?? 90}
-      issueDate={data?.invoice?.createdAt ?? new Date().toISOString()}
+      total={data?.invoice.totalAmount}
+      dueDate={data?.invoice.dueDate}
+      subtotal={data?.invoice.amount}
+      issueDate={data?.invoice?.createdAt}
       billedTo={{
         zip: '',
         email: '',

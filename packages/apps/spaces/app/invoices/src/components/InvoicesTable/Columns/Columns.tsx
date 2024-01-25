@@ -86,7 +86,7 @@ export const columns = [
       />
     ),
   }),
-  columnHelper.accessor('total', {
+  columnHelper.accessor('totalAmount', {
     id: 'AMOUNT_DUE',
     minSize: 40,
     header: (props) => (

@@ -15,7 +15,6 @@ import { AutoresizeTextarea } from '@ui/form/Textarea';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import {
   BilledType,
-  DataSource,
   // InvoiceLine,
   ServiceLineItem,
 } from '@graphql/types';
@@ -104,16 +103,13 @@ export const ServiceLineItemsModal = ({
   const handleApplyChanges = async () => {
     updateServices.mutate({
       input: {
-        source: DataSource.Openline,
-        sourceOfTruth: DataSource.Openline,
-        appSource: DataSource.Openline,
+        contractId,
         serviceLineItems: services.map((e) => ({
-          serviceLineItemId: e?.id ?? 'new',
+          serviceLineItemId: e?.id ?? '',
           billed: e.billed,
           name: e.name,
           price: e.price,
           quantity: e.quantity,
-          contractId,
         })),
       },
     });

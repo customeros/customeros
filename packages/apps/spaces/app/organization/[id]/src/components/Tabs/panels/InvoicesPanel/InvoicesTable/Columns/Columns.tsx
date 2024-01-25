@@ -78,7 +78,7 @@ export const columns = [
       />
     ),
   }),
-  columnHelper.accessor('total', {
+  columnHelper.accessor('totalAmount', {
     id: 'AMOUNT_DUE',
     minSize: 20,
     maxSize: 20,

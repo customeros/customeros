@@ -5,28 +5,22 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type AddContactSocialMutationVariables = Types.Exact<{
   contactId: Types.Scalars['ID']['input'];
   input: Types.SocialInput;
 }>;
 
-export type AddContactSocialMutation = {
-  __typename?: 'Mutation';
-  contact_AddSocial: { __typename?: 'Social'; id: string; url: string };
-};
+
+export type AddContactSocialMutation = { __typename?: 'Mutation', contact_AddSocial: { __typename?: 'Social', id: string, url: string } };
+
+
 
 export const AddContactSocialDocument = `
     mutation addContactSocial($contactId: ID!, $input: SocialInput!) {
@@ -38,46 +32,23 @@ export const AddContactSocialDocument = `
     `;
 
 export const useAddContactSocialMutation = <
-  TError = unknown,
-  TContext = unknown,
->(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    AddContactSocialMutation,
-    TError,
-    AddContactSocialMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) => {
-  return useMutation<
-    AddContactSocialMutation,
-    TError,
-    AddContactSocialMutationVariables,
-    TContext
-  >({
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<AddContactSocialMutation, TError, AddContactSocialMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<AddContactSocialMutation, TError, AddContactSocialMutationVariables, TContext>(
+      {
     mutationKey: ['addContactSocial'],
-    mutationFn: (variables?: AddContactSocialMutationVariables) =>
-      fetcher<AddContactSocialMutation, AddContactSocialMutationVariables>(
-        client,
-        AddContactSocialDocument,
-        variables,
-        headers,
-      )(),
-    ...options,
-  });
-};
+    mutationFn: (variables?: AddContactSocialMutationVariables) => fetcher<AddContactSocialMutation, AddContactSocialMutationVariables>(client, AddContactSocialDocument, variables, headers)(),
+    ...options
+  }
+    )};
 
 useAddContactSocialMutation.getKey = () => ['addContactSocial'];
 
-useAddContactSocialMutation.fetcher = (
-  client: GraphQLClient,
-  variables: AddContactSocialMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<AddContactSocialMutation, AddContactSocialMutationVariables>(
-    client,
-    AddContactSocialDocument,
-    variables,
-    headers,
-  );
+
+useAddContactSocialMutation.fetcher = (client: GraphQLClient, variables: AddContactSocialMutationVariables, headers?: RequestInit['headers']) => fetcher<AddContactSocialMutation, AddContactSocialMutationVariables>(client, AddContactSocialDocument, variables, headers);
