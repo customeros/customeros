@@ -32,7 +32,7 @@ func (h *TenantEventHandler) OnAddBillingProfile(ctx context.Context, evt events
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.CreateTenantBillingProfileEvent
+	var eventData event.TenantBillingProfileCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

@@ -62,6 +62,8 @@ func (a *TenantAggregate) HandleRequest(ctx context.Context, request any) (any, 
 	switch r := request.(type) {
 	case *tenantpb.AddBillingProfileRequest:
 		return a.AddBillingProfile(ctx, r)
+	case *tenantpb.UpdateBillingProfileRequest:
+		return r.Id, a.UpdateBillingProfile(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -82,10 +84,10 @@ func (a *TenantAggregate) AddBillingProfile(ctx context.Context, request *tenant
 
 	billingProfileId := uuid.New().String()
 
-	addBillingProfileEvent, err := event.NewCreateTenantBillingProfileEvent(a, sourceFields, billingProfileId, request, createdAtNotNil)
+	addBillingProfileEvent, err := event.NewTenantBillingProfileCreateEvent(a, sourceFields, billingProfileId, request, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return "", errors.Wrap(err, "CreateTenantBillingProfileEvent")
+		return "", errors.Wrap(err, "TenantBillingProfileCreateEvent")
 	}
 	aggregate.EnrichEventWithMetadataExtended(&addBillingProfileEvent, span, aggregate.EventMetadata{
 		Tenant: request.Tenant,
@@ -96,10 +98,36 @@ func (a *TenantAggregate) AddBillingProfile(ctx context.Context, request *tenant
 	return billingProfileId, a.Apply(addBillingProfileEvent)
 }
 
+func (a *TenantAggregate) UpdateBillingProfile(ctx context.Context, r *tenantpb.UpdateBillingProfileRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TenantAggregate.UpdateBillingProfile")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), utils.Now())
+	fieldsMaks := extractTenantBillingProfileFieldsMask(r.FieldsMask)
+
+	updateBillingProfileEvent, err := event.NewTenantBillingProfileUpdateEvent(a, r.Id, r, updatedAtNotNil, fieldsMaks)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "TenantBillingProfileUpdateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&updateBillingProfileEvent, span, aggregate.EventMetadata{
+		Tenant: r.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    r.AppSource,
+	})
+
+	return a.Apply(updateBillingProfileEvent)
+}
+
 func (a *TenantAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.TenantAddBillingProfileV1:
 		return a.onAddBillingProfile(evt)
+	case event.TenantUpdateBillingProfileV1:
+		return a.onUpdateBillingProfile(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -108,7 +136,7 @@ func (a *TenantAggregate) When(evt eventstore.Event) error {
 }
 
 func (a *TenantAggregate) onAddBillingProfile(evt eventstore.Event) error {
-	var eventData event.CreateTenantBillingProfileEvent
+	var eventData event.TenantBillingProfileCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -142,4 +170,86 @@ func (a *TenantAggregate) onAddBillingProfile(evt eventstore.Event) error {
 	a.TenantDetails.BillingProfiles = append(a.TenantDetails.BillingProfiles, &tenantBillingProfile)
 
 	return nil
+}
+
+func (a *TenantAggregate) onUpdateBillingProfile(evt eventstore.Event) error {
+	var eventData event.TenantBillingProfileUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if !a.TenantDetails.HasBillingProfile(eventData.Id) {
+		tenantBillingProfile := TenantBillingProfile{
+			Id: eventData.Id,
+		}
+		a.TenantDetails.BillingProfiles = append(a.TenantDetails.BillingProfiles, &tenantBillingProfile)
+	}
+
+	tenantBillingProfile := a.TenantDetails.GetBillingProfile(eventData.Id)
+	if eventData.UpdateEmail() {
+		tenantBillingProfile.Email = eventData.Email
+	}
+	if eventData.UpdatePhone() {
+		tenantBillingProfile.Phone = eventData.Phone
+	}
+	if eventData.UpdateAddressLine1() {
+		tenantBillingProfile.AddressLine1 = eventData.AddressLine1
+	}
+	if eventData.UpdateAddressLine2() {
+		tenantBillingProfile.AddressLine2 = eventData.AddressLine2
+	}
+	if eventData.UpdateAddressLine3() {
+		tenantBillingProfile.AddressLine3 = eventData.AddressLine3
+	}
+	if eventData.UpdateLocality() {
+		tenantBillingProfile.Locality = eventData.Locality
+	}
+	if eventData.UpdateCountry() {
+		tenantBillingProfile.Country = eventData.Country
+	}
+	if eventData.UpdateZip() {
+		tenantBillingProfile.Zip = eventData.Zip
+	}
+	if eventData.UpdateLegalName() {
+		tenantBillingProfile.LegalName = eventData.LegalName
+	}
+	if eventData.UpdateDomesticPaymentsBankInfo() {
+		tenantBillingProfile.DomesticPaymentsBankInfo = eventData.DomesticPaymentsBankInfo
+	}
+	if eventData.UpdateInternationalPaymentsBankInfo() {
+		tenantBillingProfile.InternationalPaymentsBankInfo = eventData.InternationalPaymentsBankInfo
+	}
+	return nil
+}
+
+func extractTenantBillingProfileFieldsMask(requestFieldsMask []tenantpb.TenantBillingProfileFieldMask) []string {
+	var fieldsMask []string
+	for _, requestFieldMask := range requestFieldsMask {
+		switch requestFieldMask {
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_EMAIL:
+			fieldsMask = append(fieldsMask, event.FieldMaskEmail)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_PHONE:
+			fieldsMask = append(fieldsMask, event.FieldMaskPhone)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_1:
+			fieldsMask = append(fieldsMask, event.FieldMaskAddressLine1)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_2:
+			fieldsMask = append(fieldsMask, event.FieldMaskAddressLine2)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_3:
+			fieldsMask = append(fieldsMask, event.FieldMaskAddressLine3)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LOCALITY:
+			fieldsMask = append(fieldsMask, event.FieldMaskLocality)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_COUNTRY:
+			fieldsMask = append(fieldsMask, event.FieldMaskCountry)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ZIP:
+			fieldsMask = append(fieldsMask, event.FieldMaskZip)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LEGAL_NAME:
+			fieldsMask = append(fieldsMask, event.FieldMaskLegalName)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_DOMESTIC_PAYMENTS_BANK_INFO:
+			fieldsMask = append(fieldsMask, event.FieldMaskDomesticPaymentsBankInfo)
+		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO:
+			fieldsMask = append(fieldsMask, event.FieldMaskInternationalPaymentsBankInfo)
+		}
+	}
+	fieldsMask = utils.RemoveDuplicates(fieldsMask)
+	return fieldsMask
 }
