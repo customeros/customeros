@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
-import { useMasterPlansQuery } from '@settings/graphql/masterPlans.generated';
 import { useUpdateMasterPlanMutation } from '@settings/graphql/updateMasterPlan.generated';
 import { useDuplicateMasterPlanMutation } from '@settings/graphql/duplicateMasterPlan.generated';
 
@@ -14,6 +13,7 @@ import { FormInput } from '@ui/form/Input';
 import { toastError } from '@ui/presentation/Toast';
 import { useThrottle } from '@shared/hooks/useThrottle';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useMasterPlansQuery } from '@shared/graphql/masterPlans.generated';
 
 import { MasterPlanMenu } from './MasterPlanMenu';
 

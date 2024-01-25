@@ -1,12 +1,11 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { MasterPlansQuery } from '@settings/graphql/masterPlans.generated';
-
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { Collapse } from '@ui/transitions/Collapse';
 import { ChevronDown } from '@ui/media/icons/ChevronDown';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
+import { MasterPlansQuery } from '@shared/graphql/masterPlans.generated';
 
 import { MasterPlans } from './MasterPlans';
 

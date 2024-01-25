@@ -1,11 +1,10 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { MasterPlansQuery } from '@settings/graphql/masterPlans.generated';
-
 import { Flex } from '@ui/layout/Flex';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { Skeleton } from '@ui/presentation/Skeleton';
+import { MasterPlansQuery } from '@shared/graphql/masterPlans.generated';
 
 interface MasterPlanNavItemProps {
   id: string;
