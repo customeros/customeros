@@ -40,6 +40,7 @@ func TestQueryResolver_Invoice(t *testing.T) {
 		Vat:              19,
 		TotalAmount:      119,
 		RepositoryFileId: "ABC",
+		Note:             "Note",
 	})
 
 	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoiceId, neo4jentity.InvoiceLineEntity{
@@ -76,6 +77,7 @@ func TestQueryResolver_Invoice(t *testing.T) {
 	require.Equal(t, 19.0, invoice.Vat)
 	require.Equal(t, 119.0, invoice.TotalAmount)
 	require.Equal(t, "ABC", invoice.RepositoryFileID)
+	require.Equal(t, "Note", *invoice.Note)
 
 	require.Equal(t, 1, len(invoice.InvoiceLines))
 	require.Equal(t, "SLI 1", invoice.InvoiceLines[0].Name)

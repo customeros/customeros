@@ -60,6 +60,7 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 			Source:    eventData.SourceFields.Source,
 			AppSource: eventData.SourceFields.AppSource,
 		},
+		Note: eventData.Note,
 	}
 	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.CreateInvoiceForContract(ctx, eventData.Tenant, invoiceId, data)
 	if err != nil {

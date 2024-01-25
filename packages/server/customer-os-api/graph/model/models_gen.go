@@ -1044,6 +1044,7 @@ type Invoice struct {
 	RepositoryFileID string         `json:"repositoryFileId"`
 	InvoiceLines     []*InvoiceLine `json:"invoiceLines"`
 	Status           *InvoiceStatus `json:"status,omitempty"`
+	Note             *string        `json:"note,omitempty"`
 }
 
 func (Invoice) IsSourceFields()                   {}
