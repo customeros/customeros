@@ -495,13 +495,12 @@ func (s *organizationPlanService) GetOrganizationPlansForOrganization(ctx contex
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	organizationPlanEntities := make(neo4jentity.OrganizationPlanEntities, 0, len(organizationPlanDbNodes))
 	if len(organizationPlanDbNodes) == 0 {
-		err = errors.New(fmt.Sprintf("Organization plan for organization with id {%s} not found", organizationId))
-		tracing.TraceErr(span, err)
-		return nil, err
+		span.LogFields(log.String("Warning", fmt.Sprintf("Organization plans for organization with id {%s} not found", organizationId)))
+		return &organizationPlanEntities, nil
 	}
 
-	organizationPlanEntities := make(neo4jentity.OrganizationPlanEntities, 0, len(organizationPlanDbNodes))
 	for _, v := range organizationPlanDbNodes {
 		organizationPlanEntities = append(organizationPlanEntities, *neo4jmapper.MapDbNodeToOrganizationPlanEntity(v))
 	}

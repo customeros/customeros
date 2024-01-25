@@ -24,6 +24,9 @@ func MapEntityToOrganizationPlan(entity *neo4jentity.OrganizationPlanEntity) *mo
 
 func MapEntitiesToOrganizationPlans(entities *neo4jentity.OrganizationPlanEntities) []*model.OrganizationPlan {
 	var models []*model.OrganizationPlan
+	if len(*entities) == 0 {
+		return models
+	}
 	for _, entity := range *entities {
 		models = append(models, MapEntityToOrganizationPlan(&entity))
 	}
