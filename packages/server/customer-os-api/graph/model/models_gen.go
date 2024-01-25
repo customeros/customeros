@@ -2248,6 +2248,36 @@ func (this TenantBillingProfile) GetAppSource() string         { return this.App
 
 func (TenantBillingProfile) IsNode() {}
 
+type TenantBillingProfileInput struct {
+	Email                         *string `json:"email,omitempty"`
+	Phone                         *string `json:"phone,omitempty"`
+	AddressLine1                  *string `json:"addressLine1,omitempty"`
+	AddressLine2                  *string `json:"addressLine2,omitempty"`
+	AddressLine3                  *string `json:"addressLine3,omitempty"`
+	Locality                      *string `json:"locality,omitempty"`
+	Country                       *string `json:"country,omitempty"`
+	Zip                           *string `json:"zip,omitempty"`
+	LegalName                     *string `json:"legalName,omitempty"`
+	DomesticPaymentsBankInfo      *string `json:"domesticPaymentsBankInfo,omitempty"`
+	InternationalPaymentsBankInfo *string `json:"internationalPaymentsBankInfo,omitempty"`
+}
+
+type TenantBillingProfileUpdateInput struct {
+	ID                            string  `json:"id"`
+	Patch                         *bool   `json:"patch,omitempty"`
+	Email                         *string `json:"email,omitempty"`
+	Phone                         *string `json:"phone,omitempty"`
+	AddressLine1                  *string `json:"addressLine1,omitempty"`
+	AddressLine2                  *string `json:"addressLine2,omitempty"`
+	AddressLine3                  *string `json:"addressLine3,omitempty"`
+	Locality                      *string `json:"locality,omitempty"`
+	Country                       *string `json:"country,omitempty"`
+	Zip                           *string `json:"zip,omitempty"`
+	LegalName                     *string `json:"legalName,omitempty"`
+	DomesticPaymentsBankInfo      *string `json:"domesticPaymentsBankInfo,omitempty"`
+	InternationalPaymentsBankInfo *string `json:"internationalPaymentsBankInfo,omitempty"`
+}
+
 type TenantInput struct {
 	Name      string  `json:"name"`
 	AppSource *string `json:"appSource,omitempty"`
