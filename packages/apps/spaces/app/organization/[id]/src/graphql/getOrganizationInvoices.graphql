@@ -5,7 +5,6 @@ query getOrganizationInvoices($id: ID!,
     invoices(pagination: $pagination) {
       content {
         id
-        id
         number
         dueDate
         total

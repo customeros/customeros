@@ -68,7 +68,6 @@ export const GetOrganizationInvoicesDocument = `
     invoices(pagination: $pagination) {
       content {
         id
-        id
         number
         dueDate
         total
