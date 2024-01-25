@@ -22,9 +22,14 @@ type TenantBillingProfileCreateFields struct {
 	AddressLine1                      string       `json:"addressLine1"`
 	AddressLine2                      string       `json:"addressLine2"`
 	AddressLine3                      string       `json:"addressLine3"`
+	Locality                          string       `json:"locality"`
+	Country                           string       `json:"country"`
+	Zip                               string       `json:"zip"`
+	DomesticPaymentsBankInfo          string       `json:"domesticPaymentsBankInfo"`
 	DomesticPaymentsBankName          string       `json:"domesticPaymentsBankName"`
 	DomesticPaymentsAccountNumber     string       `json:"domesticPaymentsAccountNumber"`
 	DomesticPaymentsSortCode          string       `json:"domesticPaymentsSortCode"`
+	InternationalPaymentsBankInfo     string       `json:"internationalPaymentsBankInfo"`
 	InternationalPaymentsSwiftBic     string       `json:"internationalPaymentsSwiftBic"`
 	InternationalPaymentsBankName     string       `json:"internationalPaymentsBankName"`
 	InternationalPaymentsBankAddress  string       `json:"internationalPaymentsBankAddress"`
@@ -60,9 +65,14 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 								tbp.addressLine1=$addressLine1,	
 								tbp.addressLine2=$addressLine2,
 								tbp.addressLine3=$addressLine3,
+								tbp.locality=$locality,
+								tbp.country=$country,
+								tbp.zip=$zip,
+								tbp.domesticPaymentsBankInfo=$domesticPaymentsBankInfo,
 								tbp.domesticPaymentsBankName=$domesticPaymentsBankName,
 								tbp.domesticPaymentsAccountNumber=$domesticPaymentsAccountNumber,
 								tbp.domesticPaymentsSortCode=$domesticPaymentsSortCode,
+								tbp.internationalPaymentsBankInfo=$internationalPaymentsBankInfo,
 								tbp.internationalPaymentsSwiftBic=$internationalPaymentsSwiftBic,
 								tbp.internationalPaymentsBankName=$internationalPaymentsBankName,
 								tbp.internationalPaymentsBankAddress=$internationalPaymentsBankAddress,
@@ -82,9 +92,14 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 		"addressLine1":                      data.AddressLine1,
 		"addressLine2":                      data.AddressLine2,
 		"addressLine3":                      data.AddressLine3,
+		"locality":                          data.Locality,
+		"country":                           data.Country,
+		"zip":                               data.Zip,
+		"domesticPaymentsBankInfo":          data.DomesticPaymentsBankInfo,
 		"domesticPaymentsBankName":          data.DomesticPaymentsBankName,
 		"domesticPaymentsAccountNumber":     data.DomesticPaymentsAccountNumber,
 		"domesticPaymentsSortCode":          data.DomesticPaymentsSortCode,
+		"internationalPaymentsBankInfo":     data.InternationalPaymentsBankInfo,
 		"internationalPaymentsSwiftBic":     data.InternationalPaymentsSwiftBic,
 		"internationalPaymentsBankName":     data.InternationalPaymentsBankName,
 		"internationalPaymentsBankAddress":  data.InternationalPaymentsBankAddress,

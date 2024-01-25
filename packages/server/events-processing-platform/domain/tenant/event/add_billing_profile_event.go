@@ -19,10 +19,15 @@ type CreateTenantBillingProfileEvent struct {
 	AddressLine1                      string             `json:"addressLine1"`
 	AddressLine2                      string             `json:"addressLine2"`
 	AddressLine3                      string             `json:"addressLine3"`
+	Locality                          string             `json:"locality"`
+	Country                           string             `json:"country"`
+	Zip                               string             `json:"zip"`
 	LegalName                         string             `json:"legalName"`
+	DomesticPaymentsBankInfo          string             `json:"domesticPaymentsBankInfo"`
 	DomesticPaymentsBankName          string             `json:"domesticPaymentsBankName"`
 	DomesticPaymentsAccountNumber     string             `json:"domesticPaymentsAccountNumber"`
 	DomesticPaymentsSortCode          string             `json:"domesticPaymentsSortCode"`
+	InternationalPaymentsBankInfo     string             `json:"internationalPaymentsBankInfo"`
 	InternationalPaymentsSwiftBic     string             `json:"internationalPaymentsSwiftBic"`
 	InternationalPaymentsBankName     string             `json:"internationalPaymentsBankName"`
 	InternationalPaymentsBankAddress  string             `json:"internationalPaymentsBankAddress"`
@@ -40,10 +45,15 @@ func NewCreateTenantBillingProfileEvent(aggregate eventstore.Aggregate, sourceFi
 		AddressLine1:                      request.AddressLine1,
 		AddressLine2:                      request.AddressLine2,
 		AddressLine3:                      request.AddressLine3,
+		Locality:                          request.Locality,
+		Country:                           request.Country,
+		Zip:                               request.Zip,
 		LegalName:                         request.LegalName,
+		DomesticPaymentsBankInfo:          request.DomesticPaymentsBankInfo,
 		DomesticPaymentsBankName:          request.DomesticPaymentsBankName,
 		DomesticPaymentsAccountNumber:     request.DomesticPaymentsAccountNumber,
 		DomesticPaymentsSortCode:          request.DomesticPaymentsSortCode,
+		InternationalPaymentsBankInfo:     request.InternationalPaymentsBankInfo,
 		InternationalPaymentsSwiftBic:     request.InternationalPaymentsSwiftBic,
 		InternationalPaymentsBankName:     request.InternationalPaymentsBankName,
 		InternationalPaymentsBankAddress:  request.InternationalPaymentsBankAddress,
