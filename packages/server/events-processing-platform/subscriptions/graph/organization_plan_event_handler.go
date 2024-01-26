@@ -59,11 +59,13 @@ func (h *OrganizationPlanEventHandler) OnCreate(ctx context.Context, evt eventst
 	}
 
 	// Link org plan to master plan
-	err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.LinkWithMasterPlan(ctx, eventData.Tenant, eventData.OrganizationPlanId, masterPlanId, eventData.CreatedAt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error linking master plan %s: %s", eventData.OrganizationPlanId, err.Error())
-		return err
+	if masterPlanId != "" {
+		err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.LinkWithMasterPlan(ctx, eventData.Tenant, eventData.OrganizationPlanId, masterPlanId, eventData.CreatedAt)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error linking master plan %s: %s", eventData.OrganizationPlanId, err.Error())
+			return err
+		}
 	}
 	// Link org plan to org
 	err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, eventData.OrganizationPlanId, organizationId, eventData.CreatedAt)
