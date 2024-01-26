@@ -18,6 +18,7 @@ import (
 
 func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// Setup test environment
 	tenant := "tenant1"
@@ -78,7 +79,7 @@ func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 	require.Equal(t, timeNow, eventData.CreatedAt)
 	require.Equal(t, "unit-test", eventData.SourceFields.AppSource)
 	require.Equal(t, false, eventData.DryRun)
-	require.NotEmpty(t, eventData.InvoiceNumber)
+	require.Equal(t, 12, len(eventData.InvoiceNumber))
 	require.Equal(t, "USD", eventData.Currency)
 	require.Equal(t, yesterday, eventData.PeriodStartDate)
 	require.Equal(t, nextWeek, eventData.PeriodEndDate)

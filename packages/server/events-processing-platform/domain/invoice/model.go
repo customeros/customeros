@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+const (
+	PARAM_INVOICE_NUMBER = "invoiceNumber"
+)
+
 type Invoice struct {
 	ID               string                  `json:"id"`
 	Tenant           string                  `json:"tenant"`

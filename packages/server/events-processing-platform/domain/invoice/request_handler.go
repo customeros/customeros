@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	repository "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -14,33 +15,41 @@ import (
 )
 
 type InvoiceRequestHandler interface {
-	Handle(ctx context.Context, tenant, objectId string, request any) (any, error)
+	Handle(ctx context.Context, tenant, objectId string, request any, params ...map[string]any) (any, error)
 	HandleWithRetry(ctx context.Context, tenant, objectId string, aggregateRequired bool, request any) (any, error)
 	HandleTemp(ctx context.Context, tenant, objectId string, request any) (any, error)
 }
 
 type invoiceRequestHandler struct {
-	log logger.Logger
-	es  eventstore.AggregateStore
-	cfg config.Utils
+	log               logger.Logger
+	es                eventstore.AggregateStore
+	cfg               config.Utils
+	invoiceRepository repository.InvoiceRepository
 }
 
 func NewInvoiceRequestHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) InvoiceRequestHandler {
 	return &invoiceRequestHandler{log: log, es: es, cfg: cfg}
 }
 
-func (h *invoiceRequestHandler) Handle(ctx context.Context, tenant, objectId string, request any) (any, error) {
+func (h *invoiceRequestHandler) Handle(ctx context.Context, tenant, objectId string, request any, params ...map[string]any) (any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceRequestHandler.Handle")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	tracing.LogObjectAsJson(span, "request", request)
+	if params != nil && len(params) > 0 {
+		span.LogFields(log.Object("params", params))
+	}
 
 	invoiceAggregate, err := LoadInvoiceAggregate(ctx, h.es, tenant, objectId, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	result, err := invoiceAggregate.HandleRequest(ctx, request)
+	var requestParams map[string]any
+	if params != nil && len(params) > 0 {
+		requestParams = params[0]
+	}
+	result, err := invoiceAggregate.HandleRequest(ctx, request, requestParams)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
