@@ -27,6 +27,7 @@ message CreateOrganizationPlanMilestoneGrpcRequest {
   google.protobuf.Timestamp dueDate = 8;
   repeated string items = 9;
   int64 order = 10;
+  string orgId = 11;
 }
 
 message StatusDetails {
@@ -91,6 +92,7 @@ message UpdateOrganizationPlanMilestoneGrpcRequest {
   repeated OrganizationPlanMilestoneItem items = 12;
   repeated OrganizationPlanMilestoneFieldMask fieldsMask = 13;
   StatusDetails statusDetails = 14;
+  string orgId = 15;
 }
 
 message ReorderOrganizationPlanMilestonesGrpcRequest {
@@ -100,6 +102,7 @@ message ReorderOrganizationPlanMilestonesGrpcRequest {
   string appSource = 4;
   google.protobuf.Timestamp updatedAt = 5;
   repeated string organizationPlanMilestoneIds = 6;
+  string orgId = 7;
 }
 
 message OrganizationPlanIdGrpcResponse {

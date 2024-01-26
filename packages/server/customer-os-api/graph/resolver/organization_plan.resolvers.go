@@ -43,7 +43,16 @@ func (r *mutationResolver) OrganizationPlanCreate(ctx context.Context, input mod
 	// create organization plan milestones based on each master plan milestone
 	for _, masterPlanMilestoneEntity := range *masterPlanMilestonesEntities {
 		msDueDate := time.Now().UTC().Add(time.Hour * time.Duration(masterPlanMilestoneEntity.DurationHours))
-		_, err := r.Services.OrganizationPlanService.CreateOrganizationPlanMilestone(ctx, orgPlanId, masterPlanMilestoneEntity.Name, &masterPlanMilestoneEntity.Order, &msDueDate, masterPlanMilestoneEntity.Optional, masterPlanMilestoneEntity.Items)
+		_, err := r.Services.OrganizationPlanService.CreateOrganizationPlanMilestone(
+			ctx,
+			orgPlanId,
+			input.OrganizationID,
+			masterPlanMilestoneEntity.Name,
+			&masterPlanMilestoneEntity.Order,
+			&msDueDate,
+			masterPlanMilestoneEntity.Optional,
+			masterPlanMilestoneEntity.Items,
+		)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to create organization plan milestone")
@@ -69,7 +78,7 @@ func (r *mutationResolver) OrganizationPlanUpdate(ctx context.Context, input mod
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	err := r.Services.OrganizationPlanService.UpdateOrganizationPlan(ctx, input.ID, input.Name, input.Retired, input.StatusDetails)
+	err := r.Services.OrganizationPlanService.UpdateOrganizationPlan(ctx, input.ID, input.OrganizationID, input.Name, input.Retired, input.StatusDetails)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update organization plan")
@@ -86,13 +95,13 @@ func (r *mutationResolver) OrganizationPlanUpdate(ctx context.Context, input mod
 }
 
 // OrganizationPlanDuplicate is the resolver for the organizationPlan_Duplicate field.
-func (r *mutationResolver) OrganizationPlanDuplicate(ctx context.Context, id string) (*model.OrganizationPlan, error) {
+func (r *mutationResolver) OrganizationPlanDuplicate(ctx context.Context, id string, organizationID string) (*model.OrganizationPlan, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationPlanDuplicate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "id", id)
 
-	opId, err := r.Services.OrganizationPlanService.DuplicateOrganizationPlan(ctx, id)
+	opId, err := r.Services.OrganizationPlanService.DuplicateOrganizationPlan(ctx, id, organizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to duplicate org plan")
@@ -116,7 +125,7 @@ func (r *mutationResolver) OrganizationPlanMilestoneCreate(ctx context.Context, 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	opMilestoneId, err := r.Services.OrganizationPlanService.CreateOrganizationPlanMilestone(ctx, input.OrganizationPlanID, utils.IfNotNilString(input.Name),
+	opMilestoneId, err := r.Services.OrganizationPlanService.CreateOrganizationPlanMilestone(ctx, input.OrganizationPlanID, input.OrganizationID, utils.IfNotNilString(input.Name),
 		&input.Order, &input.DueDate, input.Optional, input.Items)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -141,7 +150,7 @@ func (r *mutationResolver) OrganizationPlanMilestoneUpdate(ctx context.Context, 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	err := r.Services.OrganizationPlanService.UpdateOrganizationPlanMilestone(ctx, input.OrganizationPlanID, input.ID, input.Name,
+	err := r.Services.OrganizationPlanService.UpdateOrganizationPlanMilestone(ctx, input.OrganizationID, input.OrganizationPlanID, input.ID, input.Name,
 		input.Order, &input.DueDate, input.Items, input.Optional, input.Retired, input.StatusDetails)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -167,7 +176,7 @@ func (r *mutationResolver) OrganizationPlanMilestoneBulkUpdate(ctx context.Conte
 	var updatedOrgPlanMilestoneEntities []*model.OrganizationPlanMilestone
 	var err error
 	for _, opms := range input {
-		err = r.Services.OrganizationPlanService.UpdateOrganizationPlanMilestone(ctx, opms.OrganizationPlanID, opms.ID, opms.Name,
+		err = r.Services.OrganizationPlanService.UpdateOrganizationPlanMilestone(ctx, opms.OrganizationID, opms.OrganizationPlanID, opms.ID, opms.Name,
 			opms.Order, &opms.DueDate, opms.Items, opms.Optional, opms.Retired, opms.StatusDetails)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -196,7 +205,7 @@ func (r *mutationResolver) OrganizationPlanMilestoneReorder(ctx context.Context,
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	err := r.Services.OrganizationPlanService.ReorderOrganizationPlanMilestones(ctx, input.OrganizationPlanID, input.OrderedIds)
+	err := r.Services.OrganizationPlanService.ReorderOrganizationPlanMilestones(ctx, input.OrganizationPlanID, input.OrganizationID, input.OrderedIds)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to reorder org plan milestones")
@@ -206,13 +215,13 @@ func (r *mutationResolver) OrganizationPlanMilestoneReorder(ctx context.Context,
 }
 
 // OrganizationPlanMilestoneDuplicate is the resolver for the organizationPlanMilestone_Duplicate field.
-func (r *mutationResolver) OrganizationPlanMilestoneDuplicate(ctx context.Context, organizationPlanID string, id string) (*model.OrganizationPlanMilestone, error) {
+func (r *mutationResolver) OrganizationPlanMilestoneDuplicate(ctx context.Context, organizationID string, organizationPlanID string, id string) (*model.OrganizationPlanMilestone, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationPlanMilestoneDuplicate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("organizationPlanID", organizationPlanID), log.String("id", id))
 
-	opMilestoneId, err := r.Services.OrganizationPlanService.DuplicateOrganizationPlanMilestone(ctx, organizationPlanID, id)
+	opMilestoneId, err := r.Services.OrganizationPlanService.DuplicateOrganizationPlanMilestone(ctx, organizationPlanID, organizationID, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to duplicate org plan milestone")

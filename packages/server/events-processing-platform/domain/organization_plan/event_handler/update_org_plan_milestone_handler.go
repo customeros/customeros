@@ -43,7 +43,7 @@ func (h *updateOrganizationPlanMilestoneCommandHandler) Handle(ctx context.Conte
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
 		// Load or initialize the org aggregate
-		orgAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, baseRequest.Tenant, baseRequest.ObjectID, eventstore.LoadAggregateOptions{})
+		orgAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, baseRequest.Tenant, request.OrgId, eventstore.LoadAggregateOptions{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

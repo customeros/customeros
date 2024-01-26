@@ -37,7 +37,7 @@ func (h *createOrganizationPlanHandler) Handle(ctx context.Context, baseRequest 
 	tracing.LogObjectAsJson(span, "request", request)
 
 	// Load or initialize the org plan aggregate
-	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, baseRequest.Tenant, baseRequest.ObjectID, eventstore.LoadAggregateOptions{})
+	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, baseRequest.Tenant, request.OrgId, eventstore.LoadAggregateOptions{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

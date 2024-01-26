@@ -26,16 +26,16 @@ import (
 
 type OrganizationPlanService interface {
 	CreateOrganizationPlan(ctx context.Context, name, masterPlanId, orgId string) (string, error)
-	UpdateOrganizationPlan(ctx context.Context, id string, name *string, retired *bool, statusDetails *model.StatusDetailsInput) error
-	DuplicateOrganizationPlan(ctx context.Context, sourceOrganizationPlanId string) (string, error)
+	UpdateOrganizationPlan(ctx context.Context, organizationPlanId, orgId string, name *string, retired *bool, statusDetails *model.StatusDetailsInput) error
+	DuplicateOrganizationPlan(ctx context.Context, sourceOrganizationPlanId, orgId string) (string, error)
 	GetOrganizationPlanById(ctx context.Context, organizationPlanId string) (*neo4jentity.OrganizationPlanEntity, error)
 	GetOrganizationPlans(ctx context.Context, returnRetired *bool) (*neo4jentity.OrganizationPlanEntities, error)
-	CreateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, name string, order *int64, dueDate *time.Time, optional bool, items []string) (string, error)
-	UpdateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, organizationPlanMilestoneId string, name *string, order *int64, dueDate *time.Time, items []*model.MilestoneItemInput, optional *bool, retired *bool, statusDetails *model.StatusDetailsInput) error
+	CreateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, orgId, name string, order *int64, dueDate *time.Time, optional bool, items []string) (string, error)
+	UpdateOrganizationPlanMilestone(ctx context.Context, orgId, organizationPlanId, organizationPlanMilestoneId string, name *string, order *int64, dueDate *time.Time, items []*model.MilestoneItemInput, optional *bool, retired *bool, statusDetails *model.StatusDetailsInput) error
 	GetOrganizationPlanMilestoneById(ctx context.Context, organizationPlanMilestoneId string) (*neo4jentity.OrganizationPlanMilestoneEntity, error)
 	GetOrganizationPlanMilestonesForOrganizationPlans(ctx context.Context, organizationPlanIds []string) (*neo4jentity.OrganizationPlanMilestoneEntities, error)
-	ReorderOrganizationPlanMilestones(ctx context.Context, organizationPlanId string, organizationPlanMilestoneIds []string) error
-	DuplicateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, sourceOrganizationPlanMilestoneId string) (string, error)
+	ReorderOrganizationPlanMilestones(ctx context.Context, organizationPlanId, orgId string, organizationPlanMilestoneIds []string) error
+	DuplicateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, orgId, sourceOrganizationPlanMilestoneId string) (string, error)
 	GetOrganizationPlansForOrganization(ctx context.Context, organizationId string) (*neo4jentity.OrganizationPlanEntities, error)
 }
 type organizationPlanService struct {
@@ -83,7 +83,7 @@ func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, na
 	return response.Id, nil
 }
 
-func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, organizationPlanId string, name *string, retired *bool, statusDetails *model.StatusDetailsInput) error {
+func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, organizationPlanId, orgId string, name *string, retired *bool, statusDetails *model.StatusDetailsInput) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.UpdateOrganizationPlan")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -114,6 +114,7 @@ func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, or
 		Retired:            utils.IfNotNilBool(retired),
 		AppSource:          constants.AppSourceCustomerOsApi,
 		StatusDetails:      IfNotNilStatusDetailsInput(statusDetails),
+		OrgId:              orgId,
 	}
 	fieldsMask := make([]orgplanpb.OrganizationPlanFieldMask, 0)
 	if name != nil {
@@ -152,7 +153,7 @@ func (s *organizationPlanService) GetOrganizationPlanById(ctx context.Context, o
 	}
 }
 
-func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, name string, order *int64, dueDate *time.Time, optional bool, items []string) (string, error) {
+func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, orgId, name string, order *int64, dueDate *time.Time, optional bool, items []string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.CreateOrganizationPlanMilestone")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -182,6 +183,7 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: constants.AppSourceCustomerOsApi,
 		},
+		OrgId: orgId,
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -251,7 +253,7 @@ func (s *organizationPlanService) GetOrganizationPlanMilestonesForOrganizationPl
 	return &organizationPlanMilestoneEntities, nil
 }
 
-func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, organizationPlanMilestoneId string, name *string, order *int64, dueDate *time.Time, items []*model.MilestoneItemInput, optional *bool, retired *bool, statusDetails *model.StatusDetailsInput) error {
+func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Context, orgId, organizationPlanId, organizationPlanMilestoneId string, name *string, order *int64, dueDate *time.Time, items []*model.MilestoneItemInput, optional *bool, retired *bool, statusDetails *model.StatusDetailsInput) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.UpdateOrganizationPlanMilestone")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -280,6 +282,7 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		OrganizationPlanMilestoneId: organizationPlanMilestoneId,
 		LoggedInUserId:              common.GetUserIdFromContext(ctx),
 		AppSource:                   constants.AppSourceCustomerOsApi,
+		OrgId:                       orgId,
 	}
 	fieldsMask := make([]orgplanpb.OrganizationPlanMilestoneFieldMask, 0)
 	if name != nil {
@@ -323,7 +326,7 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 	return nil
 }
 
-func (s *organizationPlanService) ReorderOrganizationPlanMilestones(ctx context.Context, organizationPlanId string, organizationPlanMilestoneIds []string) error {
+func (s *organizationPlanService) ReorderOrganizationPlanMilestones(ctx context.Context, organizationPlanId, orgId string, organizationPlanMilestoneIds []string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.ReorderOrganizationPlanMilestones")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -346,6 +349,7 @@ func (s *organizationPlanService) ReorderOrganizationPlanMilestones(ctx context.
 		LoggedInUserId:               common.GetUserIdFromContext(ctx),
 		AppSource:                    constants.AppSourceCustomerOsApi,
 		OrganizationPlanMilestoneIds: organizationPlanMilestoneIds,
+		OrgId:                        orgId,
 	}
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = s.grpcClients.OrganizationPlanClient.ReorderOrganizationPlanMilestones(ctx, &grpcRequest)
@@ -357,7 +361,7 @@ func (s *organizationPlanService) ReorderOrganizationPlanMilestones(ctx context.
 	return nil
 }
 
-func (s *organizationPlanService) DuplicateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, sourceOrganizationPlanMilestoneId string) (string, error) {
+func (s *organizationPlanService) DuplicateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, orgId, sourceOrganizationPlanMilestoneId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.DuplicateOrganizationPlanMilestone")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -397,6 +401,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlanMilestone(ctx context
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: constants.AppSourceCustomerOsApi,
 		},
+		OrgId: orgId,
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -411,7 +416,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlanMilestone(ctx context
 	return response.Id, nil
 }
 
-func (s *organizationPlanService) DuplicateOrganizationPlan(ctx context.Context, sourceOrganizationPlanId string) (string, error) {
+func (s *organizationPlanService) DuplicateOrganizationPlan(ctx context.Context, sourceOrganizationPlanId, orgId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.DuplicateOrganizationPlan")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -441,6 +446,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlan(ctx context.Context,
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: constants.AppSourceCustomerOsApi,
 		},
+		OrgId: orgId,
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -472,6 +478,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlan(ctx context.Context,
 					Source:    neo4jentity.DataSourceOpenline.String(),
 					AppSource: constants.AppSourceCustomerOsApi,
 				},
+				OrgId: orgId,
 			}
 			_, err = s.grpcClients.OrganizationPlanClient.CreateOrganizationPlanMilestone(ctx, &grpcRequestCreateMilestone)
 			if err != nil {
