@@ -1797,10 +1797,12 @@ type OrganizationPlanMilestoneInput struct {
 	CreatedAt          time.Time `json:"createdAt"`
 	Optional           bool      `json:"optional"`
 	Items              []string  `json:"items"`
+	OrganizationID     string    `json:"organizationId"`
 }
 
 type OrganizationPlanMilestoneReorderInput struct {
 	OrganizationPlanID string   `json:"organizationPlanId"`
+	OrganizationID     string   `json:"organizationId"`
 	OrderedIds         []string `json:"orderedIds"`
 }
 
@@ -1815,13 +1817,15 @@ type OrganizationPlanMilestoneUpdateInput struct {
 	Retired            *bool                 `json:"retired,omitempty"`
 	Items              []*MilestoneItemInput `json:"items"`
 	StatusDetails      *StatusDetailsInput   `json:"statusDetails"`
+	OrganizationID     string                `json:"organizationId"`
 }
 
 type OrganizationPlanUpdateInput struct {
-	ID            string              `json:"id"`
-	Name          *string             `json:"name,omitempty"`
-	Retired       *bool               `json:"retired,omitempty"`
-	StatusDetails *StatusDetailsInput `json:"statusDetails"`
+	ID             string              `json:"id"`
+	Name           *string             `json:"name,omitempty"`
+	Retired        *bool               `json:"retired,omitempty"`
+	StatusDetails  *StatusDetailsInput `json:"statusDetails"`
+	OrganizationID string              `json:"organizationId"`
 }
 
 type OrganizationUpdateInput struct {

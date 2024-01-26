@@ -1,12 +1,12 @@
 extend type Mutation {
     organizationPlan_Create(input: OrganizationPlanInput!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizationPlan_Update(input: OrganizationPlanUpdateInput!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organizationPlan_Duplicate(id: ID!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlan_Duplicate(id: ID!, organizationId: ID!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizationPlanMilestone_Create(input: OrganizationPlanMilestoneInput!): OrganizationPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizationPlanMilestone_Update(input: OrganizationPlanMilestoneUpdateInput!): OrganizationPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizationPlanMilestone_BulkUpdate(input: [OrganizationPlanMilestoneUpdateInput!]!): [OrganizationPlanMilestone!]!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizationPlanMilestone_Reorder(input: OrganizationPlanMilestoneReorderInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organizationPlanMilestone_Duplicate(organizationPlanId: ID!, id: ID!): OrganizationPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlanMilestone_Duplicate(organizationId: ID!, organizationPlanId: ID!, id: ID!): OrganizationPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Query {
@@ -74,6 +74,7 @@ input OrganizationPlanUpdateInput {
     name: String
     retired: Boolean
     statusDetails: StatusDetailsInput!
+    organizationId: ID!
 }
 
 input OrganizationPlanMilestoneInput {
@@ -84,6 +85,7 @@ input OrganizationPlanMilestoneInput {
     createdAt: Time!
     optional: Boolean!
     items: [String!]!
+    organizationId: ID!
 }
 
 input MilestoneItemInput {
@@ -103,9 +105,11 @@ input OrganizationPlanMilestoneUpdateInput {
     retired: Boolean
     items: [MilestoneItemInput!]!
     statusDetails: StatusDetailsInput!
+    organizationId: ID!
 }
 
 input OrganizationPlanMilestoneReorderInput {
     organizationPlanId: ID!
+    organizationId: ID!
     orderedIds: [ID!]!
 }

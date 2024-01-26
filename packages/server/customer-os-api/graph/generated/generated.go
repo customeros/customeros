@@ -825,6 +825,7 @@ type ComplexityRoot struct {
 		InteractionEventLinkAttachment          func(childComplexity int, eventID string, attachmentID string) int
 		InteractionSessionCreate                func(childComplexity int, session model.InteractionSessionInput) int
 		InteractionSessionLinkAttachment        func(childComplexity int, sessionID string, attachmentID string) int
+		InvoiceNextDryRunForContract            func(childComplexity int, contractID string) int
 		InvoiceSimulate                         func(childComplexity int, input model.InvoiceSimulateInput) int
 		InvoicingCycleCreate                    func(childComplexity int, input model.InvoicingCycleInput) int
 		InvoicingCycleUpdate                    func(childComplexity int, input model.InvoicingCycleUpdateInput) int
@@ -876,10 +877,10 @@ type ComplexityRoot struct {
 		OrganizationHideAll                     func(childComplexity int, ids []string) int
 		OrganizationMerge                       func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
 		OrganizationPlanCreate                  func(childComplexity int, input model.OrganizationPlanInput) int
-		OrganizationPlanDuplicate               func(childComplexity int, id string) int
+		OrganizationPlanDuplicate               func(childComplexity int, id string, organizationID string) int
 		OrganizationPlanMilestoneBulkUpdate     func(childComplexity int, input []*model.OrganizationPlanMilestoneUpdateInput) int
 		OrganizationPlanMilestoneCreate         func(childComplexity int, input model.OrganizationPlanMilestoneInput) int
-		OrganizationPlanMilestoneDuplicate      func(childComplexity int, organizationPlanID string, id string) int
+		OrganizationPlanMilestoneDuplicate      func(childComplexity int, organizationID string, organizationPlanID string, id string) int
 		OrganizationPlanMilestoneReorder        func(childComplexity int, input model.OrganizationPlanMilestoneReorderInput) int
 		OrganizationPlanMilestoneUpdate         func(childComplexity int, input model.OrganizationPlanMilestoneUpdateInput) int
 		OrganizationPlanUpdate                  func(childComplexity int, input model.OrganizationPlanUpdateInput) int
@@ -1556,6 +1557,7 @@ type MutationResolver interface {
 	InteractionSessionLinkAttachment(ctx context.Context, sessionID string, attachmentID string) (*model.InteractionSession, error)
 	InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error)
 	InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.InteractionEvent, error)
+	InvoiceNextDryRunForContract(ctx context.Context, contractID string) (string, error)
 	InvoiceSimulate(ctx context.Context, input model.InvoiceSimulateInput) (string, error)
 	InvoicingCycleCreate(ctx context.Context, input model.InvoicingCycleInput) (*model.InvoicingCycle, error)
 	InvoicingCycleUpdate(ctx context.Context, input model.InvoicingCycleUpdateInput) (*model.InvoicingCycle, error)
@@ -1615,12 +1617,12 @@ type MutationResolver interface {
 	OrganizationUpdateOnboardingStatus(ctx context.Context, input model.OnboardingStatusInput) (*model.Organization, error)
 	OrganizationPlanCreate(ctx context.Context, input model.OrganizationPlanInput) (*model.OrganizationPlan, error)
 	OrganizationPlanUpdate(ctx context.Context, input model.OrganizationPlanUpdateInput) (*model.OrganizationPlan, error)
-	OrganizationPlanDuplicate(ctx context.Context, id string) (*model.OrganizationPlan, error)
+	OrganizationPlanDuplicate(ctx context.Context, id string, organizationID string) (*model.OrganizationPlan, error)
 	OrganizationPlanMilestoneCreate(ctx context.Context, input model.OrganizationPlanMilestoneInput) (*model.OrganizationPlanMilestone, error)
 	OrganizationPlanMilestoneUpdate(ctx context.Context, input model.OrganizationPlanMilestoneUpdateInput) (*model.OrganizationPlanMilestone, error)
 	OrganizationPlanMilestoneBulkUpdate(ctx context.Context, input []*model.OrganizationPlanMilestoneUpdateInput) ([]*model.OrganizationPlanMilestone, error)
 	OrganizationPlanMilestoneReorder(ctx context.Context, input model.OrganizationPlanMilestoneReorderInput) (string, error)
-	OrganizationPlanMilestoneDuplicate(ctx context.Context, organizationPlanID string, id string) (*model.OrganizationPlanMilestone, error)
+	OrganizationPlanMilestoneDuplicate(ctx context.Context, organizationID string, organizationPlanID string, id string) (*model.OrganizationPlanMilestone, error)
 	PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error)
 	PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error)
 	PhoneNumberRemoveFromContactByE164(ctx context.Context, contactID string, e164 string) (*model.Result, error)
@@ -5951,6 +5953,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.InteractionSessionLinkAttachment(childComplexity, args["sessionId"].(string), args["attachmentId"].(string)), true
 
+	case "Mutation.invoice_NextDryRunForContract":
+		if e.complexity.Mutation.InvoiceNextDryRunForContract == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_invoice_NextDryRunForContract_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.InvoiceNextDryRunForContract(childComplexity, args["contractId"].(string)), true
+
 	case "Mutation.invoice_Simulate":
 		if e.complexity.Mutation.InvoiceSimulate == nil {
 			break
@@ -6573,7 +6587,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.OrganizationPlanDuplicate(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.OrganizationPlanDuplicate(childComplexity, args["id"].(string), args["organizationId"].(string)), true
 
 	case "Mutation.organizationPlanMilestone_BulkUpdate":
 		if e.complexity.Mutation.OrganizationPlanMilestoneBulkUpdate == nil {
@@ -6609,7 +6623,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.OrganizationPlanMilestoneDuplicate(childComplexity, args["organizationPlanId"].(string), args["id"].(string)), true
+		return e.complexity.Mutation.OrganizationPlanMilestoneDuplicate(childComplexity, args["organizationId"].(string), args["organizationPlanId"].(string), args["id"].(string)), true
 
 	case "Mutation.organizationPlanMilestone_Reorder":
 		if e.complexity.Mutation.OrganizationPlanMilestoneReorder == nil {
@@ -11531,6 +11545,7 @@ interface ExtensibleEntity implements Node {
 }
 
 extend type Mutation {
+    invoice_NextDryRunForContract(contractId: ID!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     invoice_Simulate(input: InvoiceSimulateInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -12387,12 +12402,12 @@ enum LastTouchpointType {
 	{Name: "../schemas/organization_plan.graphqls", Input: `extend type Mutation {
     organizationPlan_Create(input: OrganizationPlanInput!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizationPlan_Update(input: OrganizationPlanUpdateInput!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organizationPlan_Duplicate(id: ID!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlan_Duplicate(id: ID!, organizationId: ID!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizationPlanMilestone_Create(input: OrganizationPlanMilestoneInput!): OrganizationPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizationPlanMilestone_Update(input: OrganizationPlanMilestoneUpdateInput!): OrganizationPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizationPlanMilestone_BulkUpdate(input: [OrganizationPlanMilestoneUpdateInput!]!): [OrganizationPlanMilestone!]!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizationPlanMilestone_Reorder(input: OrganizationPlanMilestoneReorderInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organizationPlanMilestone_Duplicate(organizationPlanId: ID!, id: ID!): OrganizationPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organizationPlanMilestone_Duplicate(organizationId: ID!, organizationPlanId: ID!, id: ID!): OrganizationPlanMilestone!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Query {
@@ -12460,6 +12475,7 @@ input OrganizationPlanUpdateInput {
     name: String
     retired: Boolean
     statusDetails: StatusDetailsInput!
+    organizationId: ID!
 }
 
 input OrganizationPlanMilestoneInput {
@@ -12470,6 +12486,7 @@ input OrganizationPlanMilestoneInput {
     createdAt: Time!
     optional: Boolean!
     items: [String!]!
+    organizationId: ID!
 }
 
 input MilestoneItemInput {
@@ -12489,10 +12506,12 @@ input OrganizationPlanMilestoneUpdateInput {
     retired: Boolean
     items: [MilestoneItemInput!]!
     statusDetails: StatusDetailsInput!
+    organizationId: ID!
 }
 
 input OrganizationPlanMilestoneReorderInput {
     organizationPlanId: ID!
+    organizationId: ID!
     orderedIds: [ID!]!
 }
 `, BuiltIn: false},
@@ -14489,6 +14508,21 @@ func (ec *executionContext) field_Mutation_interactionSession_LinkAttachment_arg
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_invoice_NextDryRunForContract_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contractId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contractId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_invoice_Simulate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -15354,23 +15388,32 @@ func (ec *executionContext) field_Mutation_organizationPlanMilestone_Duplicate_a
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["organizationPlanId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationPlanId"))
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["organizationPlanId"] = arg0
+	args["organizationId"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["organizationPlanId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationPlanId"))
 		arg1, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["id"] = arg1
+	args["organizationPlanId"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg2, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg2
 	return args, nil
 }
 
@@ -15431,6 +15474,15 @@ func (ec *executionContext) field_Mutation_organizationPlan_Duplicate_args(ctx c
 		}
 	}
 	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationId"] = arg1
 	return args, nil
 }
 
@@ -46390,6 +46442,91 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_LinkAttachmen
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_invoice_NextDryRunForContract(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_invoice_NextDryRunForContract(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().InvoiceNextDryRunForContract(rctx, fc.Args["contractId"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_invoice_NextDryRunForContract(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_invoice_NextDryRunForContract_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_invoice_Simulate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_invoice_Simulate(ctx, field)
 	if err != nil {
@@ -52952,7 +53089,7 @@ func (ec *executionContext) _Mutation_organizationPlan_Duplicate(ctx context.Con
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationPlanDuplicate(rctx, fc.Args["id"].(string))
+			return ec.resolvers.Mutation().OrganizationPlanDuplicate(rctx, fc.Args["id"].(string), fc.Args["organizationId"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
@@ -53485,7 +53622,7 @@ func (ec *executionContext) _Mutation_organizationPlanMilestone_Duplicate(ctx co
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationPlanMilestoneDuplicate(rctx, fc.Args["organizationPlanId"].(string), fc.Args["id"].(string))
+			return ec.resolvers.Mutation().OrganizationPlanMilestoneDuplicate(rctx, fc.Args["organizationId"].(string), fc.Args["organizationPlanId"].(string), fc.Args["id"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
@@ -82537,7 +82674,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationPlanId", "name", "order", "dueDate", "createdAt", "optional", "items"}
+	fieldsInOrder := [...]string{"organizationPlanId", "name", "order", "dueDate", "createdAt", "optional", "items", "organizationId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -82593,6 +82730,13 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneInput(ctx con
 				return it, err
 			}
 			it.Items = data
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
 		}
 	}
 
@@ -82606,7 +82750,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneReorderInput(
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationPlanId", "orderedIds"}
+	fieldsInOrder := [...]string{"organizationPlanId", "organizationId", "orderedIds"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -82620,6 +82764,13 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneReorderInput(
 				return it, err
 			}
 			it.OrganizationPlanID = data
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
 		case "orderedIds":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderedIds"))
 			data, err := ec.unmarshalNID2ᚕstringᚄ(ctx, v)
@@ -82640,7 +82791,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneUpdateInput(c
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationPlanId", "id", "name", "order", "dueDate", "updatedAt", "optional", "retired", "items", "statusDetails"}
+	fieldsInOrder := [...]string{"organizationPlanId", "id", "name", "order", "dueDate", "updatedAt", "optional", "retired", "items", "statusDetails", "organizationId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -82717,6 +82868,13 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneUpdateInput(c
 				return it, err
 			}
 			it.StatusDetails = data
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
 		}
 	}
 
@@ -82730,7 +82888,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanUpdateInput(ctx contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "retired", "statusDetails"}
+	fieldsInOrder := [...]string{"id", "name", "retired", "statusDetails", "organizationId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -82765,6 +82923,13 @@ func (ec *executionContext) unmarshalInputOrganizationPlanUpdateInput(ctx contex
 				return it, err
 			}
 			it.StatusDetails = data
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
 		}
 	}
 
@@ -91803,6 +91968,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "interactionEvent_LinkAttachment":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_interactionEvent_LinkAttachment(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "invoice_NextDryRunForContract":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_invoice_NextDryRunForContract(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
