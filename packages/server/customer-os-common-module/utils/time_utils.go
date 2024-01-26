@@ -135,3 +135,19 @@ func BackOffIncrementalDelay(attempt int) time.Duration {
 	}
 	return delay
 }
+
+func FirstTimeOfMonth(year, month int) time.Time {
+	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+}
+
+func MiddleTimeOfMonth(year, month int) time.Time {
+	return FirstTimeOfMonth(year, month).AddDate(0, 0, 15)
+}
+
+func LastTimeOfMonth(year, month int) time.Time {
+	return FirstTimeOfMonth(year, month).AddDate(0, 1, 0).Add(-time.Nanosecond)
+}
+
+func LastDayOfMonth(year, month int) time.Time {
+	return FirstTimeOfMonth(year, month).AddDate(0, 1, 0).Add(-time.Hour * 24)
+}

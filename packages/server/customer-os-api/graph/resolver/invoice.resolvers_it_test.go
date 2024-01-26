@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -17,7 +18,7 @@ import (
 	"time"
 )
 
-func TestQueryResolver_Invoice(t *testing.T) {
+func TestInvoiceResolver_Invoice(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
@@ -88,7 +89,7 @@ func TestQueryResolver_Invoice(t *testing.T) {
 	require.Equal(t, 119.0, invoice.InvoiceLines[0].TotalAmount)
 }
 
-func TestQueryResolver_Invoices(t *testing.T) {
+func TestInvoiceResolver_Invoices(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
@@ -148,7 +149,7 @@ func TestQueryResolver_Invoices(t *testing.T) {
 	require.Equal(t, "SLI 3", invoiceStruct.Invoices.Content[1].InvoiceLines[0].Name)
 }
 
-func TestQueryResolver_SimulateInvoice(t *testing.T) {
+func TestInvoiceResolver_SimulateInvoice(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
@@ -223,7 +224,7 @@ func TestQueryResolver_SimulateInvoice(t *testing.T) {
 	require.Equal(t, invoiceId, invoiceStruct.Invoice_Simulate)
 }
 
-func TestQueryResolver_InvoicesForOrganization(t *testing.T) {
+func TestInvoiceResolver_InvoicesForOrganization(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
@@ -269,4 +270,65 @@ func TestQueryResolver_InvoicesForOrganization(t *testing.T) {
 
 	require.ElementsMatch(t, []string{invoice1Id, invoice2Id}, []string{invoiceStruct.Invoices.Content[0].ID, invoiceStruct.Invoices.Content[1].ID})
 	require.ElementsMatch(t, []string{"1", "2"}, []string{invoiceStruct.Invoices.Content[0].Number, invoiceStruct.Invoices.Content[1].Number})
+}
+
+func TestInvoiceResolver_NextDryRunForContract(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	nextInvoiceDate := neo4jtest.FirstTimeOfMonth(2023, 6)
+	periodStartExpected := neo4jtest.FirstTimeOfMonth(2023, 6)
+	periodEndExpected := utils.LastDayOfMonth(2023, 6)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
+		BillingCycle:    neo4jenum.BillingCycleMonthlyBilling,
+		Currency:        neo4jenum.CurrencyAUD,
+		InvoiceNote:     "abc",
+		NextInvoiceDate: &nextInvoiceDate,
+	})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
+
+	calledNextDryRun := false
+	invoiceServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
+		NewInvoiceForContract: func(context context.Context, request *invoicepb.NewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, request.Tenant)
+			require.Equal(t, testUserId, request.LoggedInUserId)
+			require.Equal(t, contractId, request.ContractId)
+			require.Equal(t, commonpb.BillingCycle_MONTHLY_BILLING, request.BillingCycle)
+			require.Equal(t, neo4jenum.CurrencyAUD.String(), request.Currency)
+			require.Equal(t, utils.ConvertTimeToTimestampPtr(&periodStartExpected), request.InvoicePeriodStart)
+			require.Equal(t, utils.ConvertTimeToTimestampPtr(&periodEndExpected), request.InvoicePeriodEnd)
+			require.Equal(t, constants.AppSourceCustomerOsApi, request.SourceFields.AppSource)
+			calledNextDryRun = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: invoiceId,
+			}, nil
+		},
+	}
+	events_platform.SetInvoiceCallbacks(&invoiceServiceCallbacks)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		neo4jutil.NodeLabelOrganization: 1,
+		neo4jutil.NodeLabelContract:     1,
+	})
+
+	rawResponse := callGraphQL(t, "invoice/next_dry_run_for_contract", map[string]interface{}{
+		"page":       0,
+		"limit":      10,
+		"contractId": contractId,
+	})
+	require.Nil(t, rawResponse.Errors)
+
+	var invoiceStruct struct {
+		Invoice_NextDryRunForContract string
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+
+	require.True(t, calledNextDryRun)
+
+	require.Equal(t, invoiceId, invoiceStruct.Invoice_NextDryRunForContract)
 }
