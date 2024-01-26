@@ -55,6 +55,7 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 		PeriodStartDate: eventData.PeriodStartDate,
 		PeriodEndDate:   eventData.PeriodEndDate,
 		CreatedAt:       eventData.CreatedAt,
+		DueDate:         eventData.DueDate,
 		Status:          neo4jenum.InvoiceStatusDraft,
 		SourceFields: neo4jmodel.Source{
 			Source:    eventData.SourceFields.Source,

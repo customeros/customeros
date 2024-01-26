@@ -78,6 +78,7 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 		h.log.Errorf("Error getting service line items for contract %s: %s", eventData.ContractId, err.Error())
 		return err
 	}
+
 	var sliEntities neo4jentity.ServiceLineItemEntities
 	for _, sliDbNode := range sliDbNodes {
 		sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
@@ -139,6 +140,11 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error processing SLI during invoicing %s: %s", sliEntity.ID, err.Error())
 	}
+
+	if len(invoiceLines) == 0 {
+		return errors.Wrap(err, "No invoice lines to invoice")
+	}
+
 	totalAmount = amount + vat
 
 	var contractEntity *neo4jentity.ContractEntity
@@ -184,15 +190,15 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 	err = h.callFillInvoice(ctx,
 		eventData.Tenant,
 		invoiceId,
-		contractEntity.InvoiceNote,
 		tenantBillingProfileEntity.DomesticPaymentsBankInfo,
 		tenantBillingProfileEntity.InternationalPaymentsBankInfo,
 		contractEntity.OrganizationLegalName,
-		contractEntity.AddressLine1+", "+contractEntity.AddressLine2+", "+contractEntity.Zip+", "+contractEntity.Locality+", "+", "+contractEntity.Country,
+		utils.JoinNonEmpty(", ", contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractEntity.Country),
 		contractEntity.InvoiceEmail,
 		tenantSettingsEntity.LogoUrl,
 		tenantBillingProfileEntity.LegalName,
-		tenantBillingProfileEntity.AddressLine1+", "+tenantBillingProfileEntity.AddressLine2+", "+tenantBillingProfileEntity.AddressLine3+", "+tenantBillingProfileEntity.Zip+", "+tenantBillingProfileEntity.Locality+", "+tenantBillingProfileEntity.Country,
+		utils.JoinNonEmpty(", ", tenantBillingProfileEntity.AddressLine1, tenantBillingProfileEntity.AddressLine2, tenantBillingProfileEntity.AddressLine3, tenantBillingProfileEntity.Zip, tenantBillingProfileEntity.Locality, tenantBillingProfileEntity.Country),
+		contractEntity.InvoiceNote,
 		amount,
 		vat,
 		totalAmount,
@@ -420,6 +426,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 
 	var invoiceEntity *neo4jentity.InvoiceEntity
+	var invoiceLineEntities []*neo4jentity.InvoiceLineEntity = []*neo4jentity.InvoiceLineEntity{}
 
 	//load invoice
 	invoiceNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
@@ -433,7 +440,18 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		return errors.New("invoiceNode is nil")
 	}
 
-	currencyAndSymbol := invoiceEntity.Currency.String() + "" + invoiceEntity.Currency.Symbol()
+	invoiceLinesNodes, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetAllForInvoice(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetAllForInvoice")
+	}
+	if invoiceLinesNodes != nil {
+		for _, invoiceLineNode := range invoiceLinesNodes {
+			invoiceLineEntities = append(invoiceLineEntities, neo4jmapper.MapDbNodeToInvoiceLineEntity(invoiceLineNode))
+		}
+	} else {
+		return errors.New("invoiceLinesNodes is nil")
+	}
 
 	data := map[string]interface{}{
 		"CustomerName":                  invoiceEntity.CustomerName,
@@ -444,23 +462,23 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"ProviderName":                  invoiceEntity.ProviderName,
 		"ProviderAddress":               invoiceEntity.ProviderAddress,
 		"InvoiceNumber":                 invoiceEntity.Number,
-		"InvoiceIssueDate":              invoiceEntity.CreatedAt.Format("dd-MMM-yyy"),
-		"InvoiceDueDate":                invoiceEntity.DueDate.Format("dd-MMM-yyy"),
-		"InvoiceCurrency":               currencyAndSymbol,
-		"InvoiceSubtotal":               currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
-		"InvoiceTax":                    currencyAndSymbol + "0.00",
-		"InvoiceTotal":                  currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
-		"InvoiceAmountDue":              currencyAndSymbol + fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
+		"InvoiceIssueDate":              invoiceEntity.CreatedAt.Format("02 Jan 2006"),
+		"InvoiceDueDate":                invoiceEntity.DueDate.Format("02 Jan 2006"),
+		"InvoiceCurrency":               invoiceEntity.Currency.String() + "" + invoiceEntity.Currency.Symbol(),
+		"InvoiceSubtotal":               fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
+		"InvoiceTax":                    "0.00",
+		"InvoiceTotal":                  fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
+		"InvoiceAmountDue":              fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 		"InvoiceLineItems":              []map[string]string{},
 		"Note":                          invoiceEntity.Note,
 		"DomesticPaymentsBankInfo":      invoiceEntity.DomesticPaymentsBankInfo,
 		"InternationalPaymentsBankInfo": invoiceEntity.InternationalPaymentsBankInfo,
 	}
 
-	for _, line := range eventData.InvoiceLines {
+	for _, line := range invoiceLineEntities {
 		data["InvoiceLineItems"] = append(data["InvoiceLineItems"].([]map[string]string), map[string]string{
 			"Name":        line.Name,
-			"Description": line.Name,
+			"Description": "",
 			"Quantity":    fmt.Sprintf("%d", line.Quantity),
 			"UnitPrice":   fmt.Sprintf("%.2f", line.Price),
 			"Amount":      fmt.Sprintf("%.2f", line.Amount),
@@ -505,7 +523,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		return errors.New("fileDTO.Id is empty")
 	}
 
-	err = h.callPdfGeneratedInvoice(ctx, eventData.Tenant, evt.GetAggregateID(), fileDTO.Id, span)
+	err = h.callPdfGeneratedInvoice(ctx, eventData.Tenant, invoiceId, fileDTO.Id, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.CallPdfGeneratedInvoice")

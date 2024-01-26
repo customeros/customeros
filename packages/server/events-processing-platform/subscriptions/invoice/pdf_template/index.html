@@ -141,6 +141,7 @@
             </div>
             <div class="invoice-logo-container">
               {{if .ProviderLogoExtension}}
+              {{else}}
               <img alt="Company Logo" src="provider-logo{{.ProviderLogoExtension}}" class="invoice-company-logo" />
               {{end}}
             </div>

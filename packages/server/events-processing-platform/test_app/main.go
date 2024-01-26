@@ -2,11 +2,6 @@ package main
 
 import (
 	"context"
-	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
-	"log"
-	"time"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
@@ -15,15 +10,18 @@ import (
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
+	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
+	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"log"
 )
 
 const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
@@ -112,54 +110,59 @@ func main() {
 	//testUpdateOrgOwner()
 	//testRefreshLastTouchpoint()
 	//testAddTenantBillingProfile()
-	//testCreateInvoice()
+	testCreateInvoice()
 }
 
 func testCreateInvoice() {
 	_, err := clients.TenantClient.AddBillingProfile(context.Background(), &tenantpb.AddBillingProfileRequest{
-		Tenant:       tenant,
-		Email:        "test@gmail.com",
-		LegalName:    "My awesome company",
-		AddressLine1: "On a street",
-		AddressLine2: "Down the road",
+		Tenant:                        tenant,
+		Email:                         "test@gmail.com",
+		LegalName:                     "My awesome company",
+		AddressLine1:                  "On a street",
+		AddressLine2:                  "Down the road",
+		Locality:                      "In a city",
+		Country:                       "US",
+		Zip:                           "12345",
+		DomesticPaymentsBankInfo:      "my bank info",
+		InternationalPaymentsBankInfo: "my international bank info",
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
 	}
-
-	organization, err := clients.OrganizationClient.UpsertOrganization(context.Background(), &organizationpb.UpsertOrganizationGrpcRequest{
-		Tenant: tenant,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-
-	time.Sleep(2 * time.Second)
-
-	contract, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organization.Id,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-
-	time.Sleep(2 * time.Second)
-
-	result, err := clients.InvoiceClient.NewInvoiceForContract(context.Background(), &invoicepb.NewInvoiceForContractRequest{
-		Tenant:             tenant,
-		ContractId:         contract.Id,
-		CreatedAt:          timestamppb.New(utils.Now()),
-		InvoicePeriodStart: timestamppb.New(utils.Now()),
-		DryRun:             true,
-		SourceFields: &commonpb.SourceFields{
-			AppSource: "test",
-		},
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
+	//
+	//organization, err := clients.OrganizationClient.UpsertOrganization(context.Background(), &organizationpb.UpsertOrganizationGrpcRequest{
+	//	Tenant: tenant,
+	//})
+	//if err != nil {
+	//	log.Fatalf("Failed: %v", err.Error())
+	//}
+	//
+	//time.Sleep(2 * time.Second)
+	//
+	//contract, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
+	//	Tenant:         tenant,
+	//	OrganizationId: organization.Id,
+	//})
+	//if err != nil {
+	//	log.Fatalf("Failed: %v", err.Error())
+	//}
+	//
+	//time.Sleep(2 * time.Second)
+	//
+	//result, err := clients.InvoiceClient.NewInvoiceForContract(context.Background(), &invoicepb.NewInvoiceForContractRequest{
+	//	Tenant:             tenant,
+	//	ContractId:         contract.Id,
+	//	CreatedAt:          timestamppb.New(utils.Now()),
+	//	InvoicePeriodStart: timestamppb.New(utils.Now()),
+	//	DryRun:             true,
+	//	SourceFields: &commonpb.SourceFields{
+	//		AppSource: "test",
+	//	},
+	//})
+	//if err != nil {
+	//	log.Fatalf("Failed: %v", err.Error())
+	//}
+	//log.Printf("Result: %v", result.Id)
 }
 
 func testAddTenantBillingProfile() {
