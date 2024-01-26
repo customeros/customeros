@@ -21,7 +21,7 @@ type ContractReadRepository interface {
 	GetContractsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	TenantsHasAtLeastOneContract(ctx context.Context, tenant string) (bool, error)
 	CountContracts(ctx context.Context, tenant string) (int64, error)
-	GetContractsToGenerateOnCycleInvoices(ctx context.Context, invoiceDateTime time.Time) ([]*utils.DbNodeAndTenant, error)
+	GetContractsToGenerateCycleInvoices(ctx context.Context, invoiceDateTime time.Time) ([]*utils.DbNodeAndTenant, error)
 }
 
 type contractReadRepository struct {
@@ -231,23 +231,27 @@ func (r *contractReadRepository) CountContracts(ctx context.Context, tenant stri
 	return contractsCount, nil
 }
 
-func (r *contractReadRepository) GetContractsToGenerateOnCycleInvoices(ctx context.Context, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsToGenerateOnCycleInvoices")
+func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context.Context, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsToGenerateCycleInvoices")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, "")
 	span.LogFields(log.Object("referenceTime", referenceTime))
 
-	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)
+	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(:ServiceLineItem)
 			WHERE 
 				ts.invoicingEnabled = true AND
 				(o.hide = false OR o.hide IS NULL) AND
 				(c.currency <> "" OR ts.defaultCurrency <> "") AND
+				c.organizationLegalName IS NOT NULL AND 
+				c.organizationLegalName <> "" AND
+				c.invoiceEmail IS NOT NULL AND
+				c.invoiceEmail <> "" AND
 				(c.billingCycle IN $validBillingCycles) AND
 				(c.nextInvoiceDate IS NULL OR date(c.nextInvoiceDate) <= date($referenceTime)) AND
 				(date(c.invoicingStartDate) <= date($referenceTime)) AND
 				(c.endedAt IS NULL OR date(c.endedAt) > date(coalesce(c.nextInvoiceDate, c.invoicingStartDate))) AND
-				(c.techInvoicingStartedAt IS NULL OR c.techInvoicingStartedAt + duration({hours: 12}) < $referenceTime)
-			RETURN c, t.name limit 100`
+				(c.techInvoicingStartedAt IS NULL OR c.techInvoicingStartedAt + duration({hours: 1}) < $referenceTime)
+			RETURN distinct(c), t.name limit 100`
 	params := map[string]any{
 		"referenceTime": referenceTime,
 		"validBillingCycles": []string{
