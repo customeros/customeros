@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"time"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -55,8 +55,8 @@ type ServiceLineItemService interface {
 	Create(ctx context.Context, serviceLineItemDetails ServiceLineItemCreateData) (string, error)
 	Update(ctx context.Context, serviceLineItemDetails ServiceLineItemUpdateData) error
 	Delete(ctx context.Context, serviceLineItemId string) (bool, error)
-	GetById(ctx context.Context, id string) (*entity.ServiceLineItemEntity, error)
-	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*entity.ServiceLineItemEntities, error)
+	GetById(ctx context.Context, id string) (*neo4jentity.ServiceLineItemEntity, error)
+	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.ServiceLineItemEntities, error)
 	Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error
 	CreateOrUpdateInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error)
 }
@@ -305,22 +305,22 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 	return nil
 }
 
-func (s *serviceLineItemService) GetById(ctx context.Context, serviceLineItemId string) (*entity.ServiceLineItemEntity, error) {
+func (s *serviceLineItemService) GetById(ctx context.Context, serviceLineItemId string) (*neo4jentity.ServiceLineItemEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
 
-	if serviceLineItemDbNode, err := s.repositories.ServiceLineItemRepository.GetById(ctx, common.GetContext(ctx).Tenant, serviceLineItemId); err != nil {
+	if sliDbNode, err := s.repositories.ServiceLineItemRepository.GetById(ctx, common.GetContext(ctx).Tenant, serviceLineItemId); err != nil {
 		tracing.TraceErr(span, err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("service line item with id {%s} not found", serviceLineItemId))
 		return nil, wrappedErr
 	} else {
-		return s.mapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode), nil
+		return neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode), nil
 	}
 }
 
-func (s *serviceLineItemService) GetServiceLineItemsForContracts(ctx context.Context, contractIDs []string) (*entity.ServiceLineItemEntities, error) {
+func (s *serviceLineItemService) GetServiceLineItemsForContracts(ctx context.Context, contractIDs []string) (*neo4jentity.ServiceLineItemEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.GetServiceLineItemsForContracts")
 	defer span.Finish()
 	span.LogFields(log.Object("contractIDs", contractIDs))
@@ -329,34 +329,13 @@ func (s *serviceLineItemService) GetServiceLineItemsForContracts(ctx context.Con
 	if err != nil {
 		return nil, err
 	}
-	serviceLineItemEntities := make(entity.ServiceLineItemEntities, 0, len(serviceLineItems))
+	serviceLineItemEntities := make(neo4jentity.ServiceLineItemEntities, 0, len(serviceLineItems))
 	for _, v := range serviceLineItems {
-		serviceLineItemEntity := s.mapDbNodeToServiceLineItemEntity(*v.Node)
+		serviceLineItemEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(v.Node)
 		serviceLineItemEntity.DataloaderKey = v.LinkedNodeId
 		serviceLineItemEntities = append(serviceLineItemEntities, *serviceLineItemEntity)
 	}
 	return &serviceLineItemEntities, nil
-}
-
-func (s *serviceLineItemService) mapDbNodeToServiceLineItemEntity(dbNode dbtype.Node) *entity.ServiceLineItemEntity {
-	props := utils.GetPropsFromNode(dbNode)
-	serviceLineItem := entity.ServiceLineItemEntity{
-		ID:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
-		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
-		Billed:        neo4jenum.DecodeBilledType(utils.GetStringPropOrEmpty(props, "billed")),
-		Price:         utils.GetFloatPropOrZero(props, "price"),
-		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
-		Comments:      utils.GetStringPropOrEmpty(props, "comments"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		ParentID:      utils.GetStringPropOrEmpty(props, "parentId"),
-	}
-	return &serviceLineItem
 }
 
 type ServiceLineItemDetails struct {

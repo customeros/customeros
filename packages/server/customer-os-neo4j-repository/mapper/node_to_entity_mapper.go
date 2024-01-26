@@ -421,7 +421,7 @@ func MapOrganizationPlanMilestoneItemToEntity(props map[string]any) []entity.Org
 
 func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *entity.ServiceLineItemEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.ServiceLineItemEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	serviceLineItem := entity.ServiceLineItemEntity{

@@ -42,7 +42,7 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 			require.Equal(t, float64(30), serviceLineItem.Price)
 
 			calledCreateServiceLineItem = true
-			neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+			neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 				ID:       serviceLineItemId,
 				ParentID: serviceLineItemId,
 			})
@@ -78,9 +78,9 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
-	serviceLineItemIdParentId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{Name: "service"})
+	serviceLineItemIdParentId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{Name: "service"})
 	//Using serviceLineItemIdParentId as the parent id
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{Name: "service", ParentID: serviceLineItemIdParentId})
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{Name: "service", ParentID: serviceLineItemIdParentId})
 	calledUpdateServiceLineItem := false
 	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
 		UpdateServiceLineItem: func(context context.Context, serviceLineItem *servicelineitempb.UpdateServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
@@ -127,7 +127,7 @@ func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{})
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{})
 
 	calledDeleteServiceLineItem := false
 	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
@@ -168,7 +168,7 @@ func TestMutationResolver_ServiceLineItemClose(t *testing.T) {
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{})
+	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{})
 
 	calledCloseServiceLineItem := false
 	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
