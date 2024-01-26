@@ -46,9 +46,8 @@ export const EmptyState = ({
             Awaiting your invoices
           </Text>
           <Text maxW='350px' fontSize='sm' color='gray.600' my={1}>
-            This is where your journey from contract to cash flow comes alive.
-            Create your first contract with services and watch this space fill
-            up!
+            Create your first contract with services, and your invoices will
+            appear here.
           </Text>
         </Flex>
       </Flex>
