@@ -1,6 +1,9 @@
 package server
 
 import (
+	"net"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/interceptors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
@@ -19,6 +22,7 @@ import (
 	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
 	masterplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
+	orgplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/org_plan"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
@@ -27,8 +31,6 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
-	"net"
-	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -96,4 +98,5 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	invoicepb.RegisterInvoiceGrpcServiceServer(grpcServer, services.InvoiceService)
 	countrypb.RegisterCountryGrpcServiceServer(grpcServer, services.CountryService)
 	tenantpb.RegisterTenantGrpcServiceServer(grpcServer, services.TenantService)
+	orgplanpb.RegisterOrganizationPlanGrpcServiceServer(grpcServer, services.OrganizationPlanService)
 }
