@@ -304,6 +304,7 @@ func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
 	a.Invoice.ID = a.ID
 	a.Invoice.CreatedAt = eventData.CreatedAt
 	a.Invoice.UpdatedAt = eventData.CreatedAt
+	a.Invoice.DueDate = eventData.DueDate
 	a.Invoice.ContractId = eventData.ContractId
 	a.Invoice.SourceFields = eventData.SourceFields
 	a.Invoice.InvoiceNumber = eventData.InvoiceNumber

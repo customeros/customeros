@@ -76,6 +76,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, createdInvoice.AppSource)
 	require.Equal(t, now, createdInvoice.CreatedAt)
 	require.Equal(t, now, createdInvoice.UpdatedAt)
+	require.Equal(t, now, createdInvoice.DueDate)
 	require.Equal(t, true, createdInvoice.DryRun)
 	require.Equal(t, "INV-123", createdInvoice.Number)
 	require.Equal(t, yesterday, createdInvoice.PeriodStartDate)
