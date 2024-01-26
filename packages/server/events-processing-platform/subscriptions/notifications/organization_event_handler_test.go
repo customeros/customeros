@@ -3,10 +3,11 @@ package notifications
 import (
 	"context"
 	"fmt"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"strings"
 	"testing"
+
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 
@@ -53,6 +54,9 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 	actorUserId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
 		FirstName: "actor",
 		LastName:  "user",
+	})
+	neo4jt.CreateEmailForUser(ctx, testDatabase.Driver, tenantName, actorUserId, entity.EmailEntity{
+		Email: "actor.email@email.test",
 	})
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
