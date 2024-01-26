@@ -26,15 +26,41 @@ import (
 	"github.com/pkg/errors"
 )
 
+type ServiceLineItemCreateData struct {
+	ContractId        string                       `json:"contractId"`
+	SliName           string                       `json:"sliName"`
+	SliPrice          float64                      `json:"sliPrice"`
+	SliQuantity       int64                        `json:"sliQuantity"`
+	SliBilledType     neo4jenum.BilledType         `json:"sliBilledType"`
+	ExternalReference *entity.ExternalSystemEntity `json:"externalReference"`
+	Source            neo4jentity.DataSource       `json:"source"`
+	AppSource         string                       `json:"appSource"`
+	StartedAt         *time.Time                   `json:"startedAt"`
+	EndedAt           *time.Time                   `json:"endedAt"`
+}
+
+type ServiceLineItemUpdateData struct {
+	Id                      string                 `json:"id"`
+	IsRetroactiveCorrection bool                   `json:"isRetroactiveCorrection"`
+	SliName                 string                 `json:"sliName"`
+	SliPrice                float64                `json:"sliPrice"`
+	SliQuantity             int64                  `json:"sliQuantity"`
+	SliBilledType           neo4jenum.BilledType   `json:"sliBilledType"`
+	SliComments             string                 `json:"sliComments"`
+	Source                  neo4jentity.DataSource `json:"source"`
+	AppSource               string                 `json:"appSource"`
+}
+
 type ServiceLineItemService interface {
-	Create(ctx context.Context, serviceLineItem *ServiceLineItemCreateData) (string, error)
-	Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity, isRetroactiveCorrection bool) error
+	Create(ctx context.Context, serviceLineItemDetails ServiceLineItemCreateData) (string, error)
+	Update(ctx context.Context, serviceLineItemDetails ServiceLineItemUpdateData) error
 	Delete(ctx context.Context, serviceLineItemId string) (bool, error)
 	GetById(ctx context.Context, id string) (*entity.ServiceLineItemEntity, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*entity.ServiceLineItemEntities, error)
 	Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error
 	CreateOrUpdateInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error)
 }
+
 type serviceLineItemService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
@@ -51,29 +77,13 @@ func NewServiceLineItemService(log logger.Logger, repositories *repository.Repos
 	}
 }
 
-type ServiceLineItemCreateData struct {
-	ServiceLineItemEntity *entity.ServiceLineItemEntity
-	ContractId            string
-	ExternalReference     *entity.ExternalSystemEntity
-	Source                neo4jentity.DataSource
-	AppSource             string
-	StartedAt             *time.Time
-	EndedAt               *time.Time
-}
-
-func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDetails *ServiceLineItemCreateData) (string, error) {
+func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDetails ServiceLineItemCreateData) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItem.Create")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("serviceLineItemDetails", serviceLineItemDetails))
+	tracing.LogObjectAsJson(span, "serviceLineItemDetails", serviceLineItemDetails)
 
-	if serviceLineItemDetails.ServiceLineItemEntity == nil {
-		err := fmt.Errorf("service line item entity is nil")
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	serviceLineItemId, err := s.createServiceLineItemWithEvents(ctx, serviceLineItemDetails)
+	serviceLineItemId, err := s.createServiceLineItemWithEvents(ctx, &serviceLineItemDetails)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -92,9 +102,9 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 	createServiceLineItemRequest := servicelineitempb.CreateServiceLineItemGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		ContractId:     serviceLineItemDetails.ContractId,
-		Name:           serviceLineItemDetails.ServiceLineItemEntity.Name,
-		Quantity:       serviceLineItemDetails.ServiceLineItemEntity.Quantity,
-		Price:          serviceLineItemDetails.ServiceLineItemEntity.Price,
+		Name:           serviceLineItemDetails.SliName,
+		Quantity:       serviceLineItemDetails.SliQuantity,
+		Price:          serviceLineItemDetails.SliPrice,
 		StartedAt:      utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt),
 		EndedAt:        utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.EndedAt),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -104,7 +114,7 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		},
 	}
 
-	switch serviceLineItemDetails.ServiceLineItemEntity.Billed {
+	switch serviceLineItemDetails.SliBilledType {
 	case neo4jenum.BilledTypeMonthly:
 		createServiceLineItemRequest.Billed = commonpb.BilledType_MONTHLY_BILLED
 	case neo4jenum.BilledTypeQuarterly:
@@ -130,27 +140,22 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 	return response.Id, err
 }
 
-func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity, isRetroactiveCorrection bool) error {
+func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDetails ServiceLineItemUpdateData) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("serviceLineItem", serviceLineItem))
+	tracing.LogObjectAsJson(span, "serviceLineItemDetails", serviceLineItemDetails)
 
-	if serviceLineItem == nil {
-		err := fmt.Errorf("(ServiceLineItemService.Update) service line item entity is nil")
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	} else if serviceLineItem.ID == "" {
+	if serviceLineItemDetails.Id == "" {
 		err := fmt.Errorf("(ServiceLineItemService.Update) service line item id is missing")
 		s.log.Error(err.Error())
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	serviceLineItemExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItem.ID, neo4jutil.NodeLabelServiceLineItem)
+	serviceLineItemExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.Id, neo4jutil.NodeLabelServiceLineItem)
 	if !serviceLineItemExists {
-		err := fmt.Errorf("(ServiceLineItemService.Update) service line item with id {%s} not found", serviceLineItem.ID)
+		err := fmt.Errorf("(ServiceLineItemService.Update) service line item with id {%s} not found", serviceLineItemDetails.Id)
 		s.log.Error(err.Error())
 		tracing.TraceErr(span, err)
 		return err
@@ -158,19 +163,19 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 
 	serviceLineItemUpdateRequest := servicelineitempb.UpdateServiceLineItemGrpcRequest{
 		Tenant:                  common.GetTenantFromContext(ctx),
-		Id:                      serviceLineItem.ID,
+		Id:                      serviceLineItemDetails.Id,
 		LoggedInUserId:          common.GetUserIdFromContext(ctx),
-		Name:                    serviceLineItem.Name,
-		Quantity:                serviceLineItem.Quantity,
-		Price:                   serviceLineItem.Price,
-		Comments:                serviceLineItem.Comments,
-		IsRetroactiveCorrection: isRetroactiveCorrection,
+		Name:                    serviceLineItemDetails.SliName,
+		Quantity:                serviceLineItemDetails.SliQuantity,
+		Price:                   serviceLineItemDetails.SliPrice,
+		Comments:                serviceLineItemDetails.SliComments,
+		IsRetroactiveCorrection: serviceLineItemDetails.IsRetroactiveCorrection,
 		SourceFields: &commonpb.SourceFields{
-			Source:    string(serviceLineItem.Source),
-			AppSource: utils.StringFirstNonEmpty(serviceLineItem.AppSource, constants.AppSourceCustomerOsApi),
+			Source:    string(serviceLineItemDetails.Source),
+			AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
 		},
 	}
-	switch serviceLineItem.Billed {
+	switch serviceLineItemDetails.SliBilledType {
 	case neo4jenum.BilledTypeMonthly:
 		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_MONTHLY_BILLED
 	case neo4jenum.BilledTypeQuarterly:
@@ -185,15 +190,15 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_NONE_BILLED
 	}
 	// set contract id if it's not a retroactive correction
-	if !isRetroactiveCorrection {
-		contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItem.ID)
+	if !serviceLineItemDetails.IsRetroactiveCorrection {
+		contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItem.ID, err.Error())
+			s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 			return err
 		}
 		if contractDbNode == nil {
-			err := fmt.Errorf("contract not found for service line item id {%s}", serviceLineItem.ID)
+			err := fmt.Errorf("contract not found for service line item id {%s}", serviceLineItemDetails.Id)
 			tracing.TraceErr(span, err)
 			s.log.Errorf(err.Error())
 			return err
@@ -373,22 +378,46 @@ func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, contr
 	if len(sliBulkData) == 0 {
 		return []string{}, nil
 	}
-
 	var responseIds []string
+
+	sliDbNodes, err := s.repositories.ServiceLineItemRepository.GetForContracts(ctx, common.GetTenantFromContext(ctx), []string{contractId})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed to get service line items for contract: %s", err.Error())
+		return []string{}, err
+	}
+	var existingSliIds, inputSliIds []string
+	for _, sliDbNode := range sliDbNodes {
+		id := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*sliDbNode.Node), "id")
+		if id != "" {
+			existingSliIds = append(existingSliIds, id)
+		}
+	}
+	for _, sli := range sliBulkData {
+		if sli.Id != "" {
+			inputSliIds = append(inputSliIds, sli.Id)
+		}
+	}
+	for _, existingId := range existingSliIds {
+		if !utils.Contains(inputSliIds, existingId) {
+			err = s.Close(ctx, existingId, nil)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Failed to close service line item: %s", err.Error())
+			}
+		}
+	}
 
 	for _, serviceLineItem := range sliBulkData {
 		if serviceLineItem.Id == "" {
-			itemId, err := s.Create(ctx, &ServiceLineItemCreateData{
-				ServiceLineItemEntity: &entity.ServiceLineItemEntity{
-					Name:     serviceLineItem.Name,
-					Price:    serviceLineItem.Price,
-					Quantity: serviceLineItem.Quantity,
-					Billed:   serviceLineItem.Billed,
-					Comments: serviceLineItem.Comments,
-				},
-				ContractId: contractId,
-				AppSource:  constants.AppSourceCustomerOsApi,
-				Source:     neo4jentity.DataSourceOpenline,
+			itemId, err := s.Create(ctx, ServiceLineItemCreateData{
+				ContractId:    contractId,
+				SliName:       serviceLineItem.Name,
+				SliPrice:      serviceLineItem.Price,
+				SliQuantity:   serviceLineItem.Quantity,
+				SliBilledType: serviceLineItem.Billed,
+				Source:        neo4jentity.DataSourceOpenline,
+				AppSource:     constants.AppSourceCustomerOsApi,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -399,22 +428,17 @@ func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, contr
 
 		} else {
 			responseIds = append(responseIds, serviceLineItem.Id)
-			sliEntity, err := s.GetById(ctx, serviceLineItem.Id)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Service line item with id %s not found", err.Error())
-				return []string{}, err
-			}
-			err = s.Update(ctx, &entity.ServiceLineItemEntity{
-				ID:        serviceLineItem.Id,
-				Name:      serviceLineItem.Name,
-				Price:     serviceLineItem.Price,
-				Quantity:  serviceLineItem.Quantity,
-				Comments:  serviceLineItem.Comments,
-				Billed:    serviceLineItem.Billed,
-				Source:    sliEntity.Source,
-				AppSource: constants.AppSourceCustomerOsApi,
-			}, serviceLineItem.IsRetroactiveCorrection)
+			err = s.Update(ctx, ServiceLineItemUpdateData{
+				Id:                      serviceLineItem.Id,
+				IsRetroactiveCorrection: serviceLineItem.IsRetroactiveCorrection,
+				SliName:                 serviceLineItem.Name,
+				SliPrice:                serviceLineItem.Price,
+				SliQuantity:             serviceLineItem.Quantity,
+				SliBilledType:           serviceLineItem.Billed,
+				SliComments:             serviceLineItem.Comments,
+				Source:                  neo4jentity.DataSourceOpenline,
+				AppSource:               constants.AppSourceCustomerOsApi,
+			})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error from events processing: %s", err.Error())

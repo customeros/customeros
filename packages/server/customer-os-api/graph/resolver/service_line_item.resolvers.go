@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -27,14 +28,24 @@ func (r *mutationResolver) ServiceLineItemCreate(ctx context.Context, input mode
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	serviceLineItemId, err := r.Services.ServiceLineItemService.Create(ctx, &service.ServiceLineItemCreateData{
-		ServiceLineItemEntity: mapper.MapServiceLineItemInputToEntity(input),
-		ContractId:            input.ContractID,
-		ExternalReference:     mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
-		Source:                neo4jentity.DataSourceOpenline,
-		StartedAt:             input.StartedAt,
-		EndedAt:               input.EndedAt,
-	})
+	billedType := neo4jenum.BilledTypeNone
+	if input.Billed != nil {
+		billedType = mapper.MapBilledTypeFromModel(*input.Billed)
+	}
+
+	data := service.ServiceLineItemCreateData{
+		ContractId:        input.ContractID,
+		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
+		Source:            neo4jentity.DataSourceOpenline,
+		StartedAt:         input.StartedAt,
+		EndedAt:           input.EndedAt,
+		SliBilledType:     billedType,
+		SliName:           utils.IfNotNilString(input.Name),
+		SliPrice:          utils.IfNotNilFloat64(input.Price),
+		SliQuantity:       utils.IfNotNilInt64(input.Quantity),
+	}
+
+	serviceLineItemId, err := r.Services.ServiceLineItemService.Create(ctx, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create service line item")
@@ -57,7 +68,24 @@ func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input mode
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.serviceLineItemId", input.ServiceLineItemID))
 
-	err := r.Services.ServiceLineItemService.Update(ctx, mapper.MapServiceLineItemUpdateInputToEntity(input), utils.IfNotNilBool(input.IsRetroactiveCorrection))
+	billedType := neo4jenum.BilledTypeNone
+	if input.Billed != nil {
+		billedType = mapper.MapBilledTypeFromModel(*input.Billed)
+	}
+
+	data := service.ServiceLineItemUpdateData{
+		Id:                      input.ServiceLineItemID,
+		IsRetroactiveCorrection: utils.IfNotNilBool(input.IsRetroactiveCorrection),
+		SliName:                 utils.IfNotNilString(input.Name),
+		SliPrice:                utils.IfNotNilFloat64(input.Price),
+		SliQuantity:             utils.IfNotNilInt64(input.Quantity),
+		SliBilledType:           billedType,
+		SliComments:             utils.IfNotNilString(input.Comments),
+		Source:                  neo4jentity.DataSourceOpenline,
+		AppSource:               utils.IfNotNilString(input.AppSource),
+	}
+
+	err := r.Services.ServiceLineItemService.Update(ctx, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update service line item %s", input.ServiceLineItemID)

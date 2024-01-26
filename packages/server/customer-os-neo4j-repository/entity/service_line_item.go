@@ -7,6 +7,7 @@ import (
 )
 
 type ServiceLineItemEntity struct {
+	DataLoaderKey
 	ID               string
 	Name             string
 	CreatedAt        time.Time
