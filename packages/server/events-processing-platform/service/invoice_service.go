@@ -2,18 +2,22 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	repository "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"time"
 )
 
 type invoiceService struct {
@@ -21,13 +25,15 @@ type invoiceService struct {
 	log                   logger.Logger
 	invoiceRequestHandler invoice.InvoiceRequestHandler
 	aggregateStore        eventstore.AggregateStore
+	invoiceRepository     repository.InvoiceRepository
 }
 
-func NewInvoiceService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config) *invoiceService {
+func NewInvoiceService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, invoiceRepository repository.InvoiceRepository) *invoiceService {
 	return &invoiceService{
 		log:                   log,
 		invoiceRequestHandler: invoice.NewInvoiceRequestHandler(log, aggregateStore, cfg.Utils),
 		aggregateStore:        aggregateStore,
+		invoiceRepository:     invoiceRepository,
 	}
 }
 
@@ -59,13 +65,32 @@ func (s *invoiceService) NewInvoiceForContract(ctx context.Context, request *inv
 
 	invoiceId := uuid.New().String()
 
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, invoiceId, request); err != nil {
+	extraParams := map[string]any{
+		invoice.PARAM_INVOICE_NUMBER: s.prepareInvoiceNumber(utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.InvoicePeriodStart), utils.Now())),
+	}
+
+	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, invoiceId, request, extraParams); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(NewOnCycleInvoiceForContract) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
 	return &invoicepb.InvoiceIdResponse{Id: invoiceId}, nil
+}
+
+func (s *invoiceService) prepareInvoiceNumber(t time.Time) string {
+	// Format year, month, and day as per your requirements
+	year := fmt.Sprintf("%02d", t.Year()%100) // Take the last 2 digits of the year
+	month := fmt.Sprintf("%02d", int(t.Month()))
+	day := fmt.Sprintf("%02d", t.Day())
+
+	// Format the sequence value as a 6-digit string
+	sequence := fmt.Sprintf("%06d", s.invoiceRepository.GetNextInvoiceNumberSequenceValue())
+
+	// Combine the formatted values
+	formattedString := year + month + day + sequence
+
+	return formattedString
 }
 
 func (s *invoiceService) FillInvoice(ctx context.Context, request *invoicepb.FillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {

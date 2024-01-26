@@ -55,13 +55,20 @@ func NewInvoiceAggregateWithTenantAndID(tenant, id string) *InvoiceAggregate {
 	return &invoiceAggregate
 }
 
-func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any) (any, error) {
+func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any, params ...map[string]any) (any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.HandleRequest")
 	defer span.Finish()
 
+	invoiceNumber := ""
+	if params != nil {
+		if _, ok := params[0][PARAM_INVOICE_NUMBER]; ok {
+			invoiceNumber = params[0][PARAM_INVOICE_NUMBER].(string)
+		}
+	}
+
 	switch r := request.(type) {
 	case *invoicepb.NewInvoiceForContractRequest:
-		return nil, a.CreateNewInvoiceForContract(ctx, r)
+		return nil, a.CreateNewInvoiceForContract(ctx, r, invoiceNumber)
 	case *invoicepb.FillInvoiceRequest:
 		return nil, a.FillInvoice(ctx, r)
 	case *invoicepb.GenerateInvoicePdfRequest:
@@ -102,7 +109,7 @@ func (a *InvoiceAggregate) CreatePdfGeneratedEvent(ctx context.Context, request 
 	return a.Apply(event)
 }
 
-func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, request *invoicepb.NewInvoiceForContractRequest) error {
+func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, request *invoicepb.NewInvoiceForContractRequest, invoiceNumber string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.CreateNewInvoiceForContract")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
@@ -112,8 +119,9 @@ func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, requ
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	// TODO add here logic to generate invoice number
-	invoiceNumber := uuid.New().String()
+	if invoiceNumber == "" {
+		invoiceNumber = uuid.New().String()
+	}
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	periodStartDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodStart)
