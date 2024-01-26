@@ -25,7 +25,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -508,10 +507,10 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	// Save the PDF file to disk
-	err = ioutil.WriteFile("output.pdf", *pdfBytes, 0644)
-	if err != nil {
-		return errors.Wrap(err, "ioutil.WriteFile")
-	}
+	//err = ioutil.WriteFile("output.pdf", *pdfBytes, 0644)
+	//if err != nil {
+	//	return errors.Wrap(err, "ioutil.WriteFile")
+	//}
 
 	fileDTO, err := h.fsc.UploadSingleFileBytes(eventData.Tenant, *pdfBytes)
 	if err != nil {
