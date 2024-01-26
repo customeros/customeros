@@ -19,7 +19,7 @@ import (
 func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
 	appSource := "user-admin-api"
 
-	rg.GET("/demo-tenant-users", func(context *gin.Context) {
+	rg.POST("/demo-tenant-users", func(context *gin.Context) {
 		apiKey := context.GetHeader("X-Openline-Api-Key")
 		if apiKey != config.Service.ApiKey {
 			context.JSON(http.StatusUnauthorized, gin.H{
@@ -71,7 +71,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 		})
 	})
 
-	rg.GET("/demo-tenant-data", func(context *gin.Context) {
+	rg.POST("/demo-tenant-data", func(context *gin.Context) {
 
 		apiKey := context.GetHeader("X-Openline-Api-Key")
 		if apiKey != config.Service.ApiKey {
