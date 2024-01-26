@@ -3,7 +3,7 @@ import { Currency, ContractUpdateInput } from '@graphql/types';
 import { GetContractQuery } from '@organization/src/graphql/getContract.generated';
 import {
   countryOptions,
-  currencyOptions,
+  getCurrencyOptions,
 } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/BillingDetails/utils';
 
 export interface BillingDetailsForm {
@@ -35,7 +35,9 @@ export class BillingDetailsDto implements BillingDetailsForm {
     this.invoiceEmail = data?.invoiceEmail;
     this.addressLine1 = data?.addressLine1;
     this.country = countryOptions.find((i) => data?.country === i.value);
-    this.currency = currencyOptions.find((i) => data?.currency === i.value);
+    this.currency = getCurrencyOptions().find(
+      (i) => data?.currency === i.value,
+    );
     this.addressLine2 = data?.addressLine2;
     this.organizationLegalName = data?.organizationLegalName;
     this.contractUrl = data?.contractUrl;
