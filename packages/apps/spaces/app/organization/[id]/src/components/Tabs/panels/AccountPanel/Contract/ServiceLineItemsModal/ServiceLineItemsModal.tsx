@@ -124,13 +124,15 @@ export const ServiceLineItemsModal = ({
     updateServices.mutate({
       input: {
         contractId,
-        serviceLineItems: services.map((e) => ({
-          serviceLineItemId: e?.id ?? '',
-          billed: e.billed,
-          name: e.name,
-          price: e.price,
-          quantity: e.quantity,
-        })),
+        serviceLineItems: services
+          .filter((e) => !e.isDeleted)
+          .map((e) => ({
+            serviceLineItemId: e?.id ?? '',
+            billed: e.billed,
+            name: e.name,
+            price: e.price,
+            quantity: e.quantity,
+          })),
       },
     });
   };

@@ -31,7 +31,7 @@ import {
 } from '@ui/overlay/Modal';
 
 import { BillingDetailsDto } from './BillingDetails.dto';
-import { countryOptions, currencyOptions } from './utils';
+import { countryOptions, getCurrencyOptions } from './utils';
 
 interface SubscriptionServiceModalProps {
   isOpen: boolean;
@@ -40,6 +40,7 @@ interface SubscriptionServiceModalProps {
   organizationName: string;
   data?: GetContractQuery['contract'] | null;
 }
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const BillingDetails = ({
   isOpen,
@@ -60,6 +61,7 @@ export const BillingDetails = ({
   const queryClient = useQueryClient();
   const client = getGraphQLClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const currencyOptions = useMemo(() => getCurrencyOptions(), []);
 
   const updateContract = useUpdateContractMutation(client, {
     onError: (error) => {
@@ -88,6 +90,18 @@ export const BillingDetails = ({
   const { state, setDefaultValues } = useForm({
     formId,
     stateReducer: (_, action, next) => {
+      if (action.type === 'FIELD_CHANGE') {
+        if (action.payload.name === 'invoiceEmail') {
+          return {
+            ...next,
+            values: {
+              ...next.values,
+              invoiceEmail: action.payload.value.split(' ').join('').trim(),
+            },
+          };
+        }
+      }
+
       return next;
     },
   });
@@ -280,6 +294,8 @@ export const BillingDetails = ({
                 name='invoiceEmail'
                 textOverflow='ellipsis'
                 placeholder='Email'
+                type='email'
+                isInvalid={!emailRegex.test(state.values.invoiceEmail)}
                 onMouseEnter={() => setIsBillingDetailsHovered(true)}
                 onMouseLeave={() => setIsBillingDetailsHovered(false)}
                 onFocus={() => setIsBillingDetailsFocused(true)}
@@ -291,7 +307,7 @@ export const BillingDetails = ({
                 isLabelVisible
                 name='currency'
                 formId={formId}
-                options={currencyOptions}
+                options={currencyOptions ?? []}
               />
             </ModalBody>
             <ModalFooter p='6'>
