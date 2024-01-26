@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -33,6 +32,23 @@ func (r *invoiceResolver) InvoiceLines(ctx context.Context, obj *model.Invoice) 
 		return nil, nil
 	}
 	return mapper.MapEntitiesToInvoiceLines(entities), nil
+}
+
+// InvoiceNextDryRunForContract is the resolver for the invoice_NextDryRunForContract field.
+func (r *mutationResolver) InvoiceNextDryRunForContract(ctx context.Context, contractID string) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.InvoiceNextInvoiceDryRun", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("contractID", contractID))
+
+	invoiceId, err := r.Services.InvoiceService.NextInvoiceDryRun(ctx, contractID)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to dry run next invoice for contract")
+		return "", err
+	}
+	return invoiceId, nil
 }
 
 // InvoiceSimulate is the resolver for the invoice_Simulate field.

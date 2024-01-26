@@ -29,6 +29,7 @@ type InvoiceService interface {
 	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (string, error)
+	NextInvoiceDryRun(ctx context.Context, contractId string) (string, error)
 }
 type invoiceService struct {
 	log          logger.Logger
@@ -205,4 +206,86 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, invoiceData *Simul
 
 	span.LogFields(log.String("output - createdInvoiceId", response.Id))
 	return response.Id, nil
+}
+
+func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.NextInvoiceDryRun")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("contractId", contractId))
+
+	tenant := common.GetTenantFromContext(ctx)
+	now := time.Now()
+
+	contract, err := s.services.ContractService.GetById(ctx, contractId)
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+
+	var invoicePeriodStart, invoicePeriodEnd time.Time
+	if contract.NextInvoiceDate != nil {
+		invoicePeriodStart = *contract.NextInvoiceDate
+	} else {
+		invoicePeriodStart = *contract.InvoicingStartDate
+	}
+	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycle)
+
+	currency := contract.Currency.String()
+	if currency == "" {
+		dbNode, _ := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
+		tenantSettings := mapper.MapDbNodeToTenantSettingsEntity(dbNode)
+		currency = tenantSettings.DefaultCurrency.String()
+	}
+
+	dryRunInvoiceRequest := invoicepb.NewInvoiceForContractRequest{
+		Tenant:             tenant,
+		LoggedInUserId:     common.GetUserIdFromContext(ctx),
+		ContractId:         contractId,
+		DryRun:             true,
+		CreatedAt:          utils.ConvertTimeToTimestampPtr(&now),
+		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
+		InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
+		Currency:           currency,
+		Note:               contract.InvoiceNote,
+		SourceFields: &commonpb.SourceFields{
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		},
+	}
+
+	switch contract.BillingCycle {
+	case enum.BillingCycleMonthlyBilling:
+		dryRunInvoiceRequest.BillingCycle = commonpb.BillingCycle_MONTHLY_BILLING
+	case enum.BillingCycleQuarterlyBilling:
+		dryRunInvoiceRequest.BillingCycle = commonpb.BillingCycle_QUARTERLY_BILLING
+	case enum.BillingCycleAnnuallyBilling:
+		dryRunInvoiceRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
+	}
+
+	response, err := s.grpcClients.InvoiceClient.NewInvoiceForContract(ctx, &dryRunInvoiceRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return "", err
+	}
+
+	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelInvoice, span)
+
+	span.LogFields(log.String("output - createdInvoiceId", response.Id))
+	return response.Id, nil
+}
+
+func calculateInvoiceCycleEnd(start time.Time, cycle enum.BillingCycle) time.Time {
+	var end time.Time
+	switch cycle {
+	case enum.BillingCycleMonthlyBilling:
+		end = start.AddDate(0, 1, 0)
+	case enum.BillingCycleQuarterlyBilling:
+		end = start.AddDate(0, 3, 0)
+	case enum.BillingCycleAnnuallyBilling:
+		end = start.AddDate(1, 0, 0)
+	default:
+		return start
+	}
+	previousDay := end.AddDate(0, 0, -1)
+	return previousDay
 }
