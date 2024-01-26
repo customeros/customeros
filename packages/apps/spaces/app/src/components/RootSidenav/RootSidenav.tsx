@@ -165,18 +165,6 @@ export const RootSidenav = () => {
             />
           )}
         />
-        ś
-      </VStack>
-
-      <VStack spacing='2' w='full'>
-        {(globalCache?.isOwner || showMyViewsItems) && (
-          <Flex w='full' justify='flex-start' pl='3.5'>
-            <Text color='gray.500' fontSize='sm'>
-              My views
-            </Text>
-          </Flex>
-        )}
-
         <SidenavItem
           label='Invoices'
           isActive={checkIsActive('invoices')}
@@ -188,6 +176,16 @@ export const RootSidenav = () => {
             />
           }
         />
+      </VStack>
+
+      <VStack spacing='2' w='full'>
+        {(globalCache?.isOwner || showMyViewsItems) && (
+          <Flex w='full' justify='flex-start' pl='3.5'>
+            <Text color='gray.500' fontSize='sm'>
+              My views
+            </Text>
+          </Flex>
+        )}
 
         {globalCache?.isOwner && (
           <SidenavItem

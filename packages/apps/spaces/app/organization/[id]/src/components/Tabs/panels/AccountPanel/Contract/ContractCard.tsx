@@ -366,7 +366,7 @@ export const ContractCard = ({
         <CardBody as={Flex} p='0' flexDir='column' w='full'>
           <Flex gap='4' mb={2} flexGrow={0}>
             <DatePicker
-              label='Service strarts'
+              label='Service starts'
               placeholder='Start date'
               formId={formId}
               name='serviceStartedAt'

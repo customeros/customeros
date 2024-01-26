@@ -1,5 +1,8 @@
 'use client';
+import { useParams } from 'next/navigation';
 import React, { useRef, useState, Fragment, useEffect } from 'react';
+
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
@@ -18,6 +21,7 @@ import {
   // InvoiceLine,
   ServiceLineItem,
 } from '@graphql/types';
+import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { useUpdateServicesMutation } from '@organization/src/graphql/updateServiceLineItems.generated';
 import { ServiceItem } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/type';
 import {
@@ -61,8 +65,24 @@ export const ServiceLineItemsModal = ({
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
   const client = getGraphQLClient();
+  const id = useParams()?.id as string;
+  const queryKey = useGetContractsQuery.getKey({ id });
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const queryClient = useQueryClient();
 
-  const updateServices = useUpdateServicesMutation(client);
+  const updateServices = useUpdateServicesMutation(client, {
+    onSuccess: () => {
+      onClose();
+    },
+    onSettled: () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey });
+      }, 1000);
+    },
+  });
   const [services, setServices] = useState<Array<ServiceItem>>([]);
   const [_, setNote] = useState<string>('');
   useEffect(() => {
