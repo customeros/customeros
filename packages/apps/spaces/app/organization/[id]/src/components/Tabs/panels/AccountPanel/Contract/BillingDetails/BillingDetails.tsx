@@ -170,7 +170,10 @@ export const BillingDetails = ({
                 <File02 color='primary.600' />
               </FeaturedIcon>
               <Heading fontSize='lg' mt='4'>
-                {organizationName} contract details
+                {data?.organizationLegalName ||
+                  organizationName ||
+                  "Unnamed's "}{' '}
+                contract details
               </Heading>
             </ModalHeader>
             <ModalBody pb='0' gap={4} display='flex' flexDir='column' flex={1}>

@@ -365,8 +365,8 @@ export const ContractCard = ({
         <CardBody as={Flex} p='0' flexDir='column' w='full'>
           <Flex gap='4' mb={2} flexGrow={0}>
             <DatePicker
-              label='Service starts'
-              placeholder='Service starts date'
+              label='Service strarts'
+              placeholder='Start date'
               formId={formId}
               name='serviceStartedAt'
               inset='120% auto auto 0px'
@@ -403,7 +403,7 @@ export const ContractCard = ({
             <DatePicker
               label='Invoicing starts'
               placeholder='Invoicing starts'
-              minDate={state.values.serviceStartedAt}
+              minDate={state.values.invoicingStartDate}
               formId={formId}
               name='invoicingStartDate'
               inset='120% auto auto 0px'

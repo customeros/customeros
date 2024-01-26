@@ -43,7 +43,6 @@ export const RenewalARRCard = ({
     new Date().toISOString(),
     startedAt,
   );
-
   const hasRenewed = startedAt
     ? renewCycle === ContractRenewalCycle.AnnualRenewal
       ? differenceInMonths > 12
@@ -53,7 +52,8 @@ export const RenewalARRCard = ({
   const formattedMaxAmount = formatCurrency(opportunity.maxAmount ?? 0);
   const formattedAmount = formatCurrency(hasEnded ? 0 : opportunity.amount);
 
-  const hasRewenewChanged = formattedMaxAmount !== formattedAmount;
+  const hasRewenewChanged = formattedMaxAmount !== formattedAmount; // should be also less
+
   const hasRenewalLikelihoodZero =
     opportunity?.renewalLikelihood === OpportunityRenewalLikelihood.ZeroRenewal;
   const timeToRenewal = getDifferenceFromNow(opportunity.renewedAt).join(' ');

@@ -116,8 +116,8 @@ export function Invoice({
             flexDir='column'
             minW={150}
             w='160px'
-            overflow='hidden'
             py={2}
+            pr={2}
             borderRight={isBilledToFocused ? '1px solid' : '1px solid'}
             borderColor={'gray.300'}
             position='relative'
