@@ -1,11 +1,11 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapEntityToServiceLineItem(entity *entity.ServiceLineItemEntity) *model.ServiceLineItem {
+func MapEntityToServiceLineItem(entity *neo4jentity.ServiceLineItemEntity) *model.ServiceLineItem {
 	if entity == nil {
 		return nil
 	}
@@ -27,7 +27,7 @@ func MapEntityToServiceLineItem(entity *entity.ServiceLineItemEntity) *model.Ser
 	}
 }
 
-func MapEntitiesToServiceLineItems(entities *entity.ServiceLineItemEntities) []*model.ServiceLineItem {
+func MapEntitiesToServiceLineItems(entities *neo4jentity.ServiceLineItemEntities) []*model.ServiceLineItem {
 	var ServiceLineItems []*model.ServiceLineItem
 	for _, ServiceLineItemEntity := range *entities {
 		ServiceLineItems = append(ServiceLineItems, MapEntityToServiceLineItem(&ServiceLineItemEntity))

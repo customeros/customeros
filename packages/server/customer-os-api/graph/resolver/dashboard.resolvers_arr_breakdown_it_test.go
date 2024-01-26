@@ -517,7 +517,7 @@ func Test_Dashboard_ARR_Breakdown_Cancellations_No_Recurring_SLI(t *testing.T) {
 
 	sli1StartedAt := neo4jtest.FirstTimeOfMonth(2023, 7)
 
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:      1,
 		Quantity:   2,
 		IsCanceled: true,
@@ -986,7 +986,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Live_Contract_In_Month_No_Rec
 		ServiceStartedAt: &sli1StartedAt,
 	}, neo4jentity.OpportunityEntity{})
 
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		ID:        "1",
 		ParentID:  "1",
 		Price:     12,
@@ -1327,7 +1327,7 @@ func Test_Dashboard_ARR_Breakdown_Newly_Contracted_Contract_No_Recurring_SLI(t *
 		ContractStatus:   neo4jenum.ContractStatusLive,
 		ServiceStartedAt: &sli1StartedAt,
 	}, neo4jentity.OpportunityEntity{})
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     12,
 		Quantity:  2,
 		StartedAt: sli1StartedAt,
@@ -2087,7 +2087,7 @@ func Test_Dashboard_ARR_Breakdown_Churned_Contract_In_Month_No_Recurring_SLI(t *
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, neo4jentity.OpportunityEntity{})
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     12,
 		Quantity:  2,
 		StartedAt: sli1StartedAt,
@@ -3178,7 +3178,7 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Contract_No_Upsell_No_Recurring_SLI(t 
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, neo4jentity.OpportunityEntity{})
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     12,
 		Quantity:  2,
 		StartedAt: sli1StartedAt,
@@ -3224,12 +3224,12 @@ func Test_Dashboard_ARR_Breakdown_Upsells_Contract_With_Upsell_No_Recurring_SLI(
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, neo4jentity.OpportunityEntity{})
-	sliId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	sliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     12,
 		Quantity:  2,
 		StartedAt: sli1StartedAt,
 	})
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		ParentID:         sliId,
 		Price:            24,
 		Quantity:         4,
@@ -4127,7 +4127,7 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Contract_No_Downgrade_No_Recurring_
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, neo4jentity.OpportunityEntity{})
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     12,
 		Quantity:  2,
 		StartedAt: sli1StartedAt,
@@ -4173,12 +4173,12 @@ func Test_Dashboard_ARR_Breakdown_Downgrades_Contract_With_Downgrade_No_Recurrin
 		ServiceStartedAt: &sli1StartedAt,
 		EndedAt:          &sli1StartedAt,
 	}, neo4jentity.OpportunityEntity{})
-	sliId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	sliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     12,
 		Quantity:  2,
 		StartedAt: sli1StartedAt,
 	})
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		ParentID:         sliId,
 		Price:            6,
 		Quantity:         2,
@@ -5642,7 +5642,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_In_Month_No_Recurring_S
 		ServiceStartedAt: &sli1StartedAt,
 	}, neo4jentity.OpportunityEntity{})
 
-	neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		ID:        "1",
 		ParentID:  "1",
 		Price:     1,

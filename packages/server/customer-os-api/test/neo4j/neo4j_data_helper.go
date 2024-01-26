@@ -1495,64 +1495,6 @@ func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4
 }
 
 // Deprecated
-func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, serviceLineItem entity.ServiceLineItemEntity) string {
-	serviceLineItemId := utils.NewUUIDIfEmpty(serviceLineItem.ID)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
-				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(sli:ServiceLineItem {id:$id})<-[:HAS_SERVICE]-(c)
-				SET 
-					sli:ServiceLineItem_%s,
-					sli.name=$name,
-					sli.source=$source,
-					sli.sourceOfTruth=$sourceOfTruth,
-					sli.appSource=$appSource,
-					sli.isCanceled=$isCanceled,	
-					sli.billed=$billed,	
-					sli.quantity=$quantity,	
-					sli.price=$price,
-					sli.previousBilled=$previousBilled,	
-					sli.previousQuantity=$previousQuantity,	
-					sli.previousPrice=$previousPrice,
-                    sli.comments=$comments,
-					sli.startedAt=$startedAt,
-					sli.endedAt=$endedAt,
-					sli.createdAt=$createdAt,
-					sli.updatedAt=$updatedAt,
-	                sli.parentId=$parentId
-				`, tenant)
-
-	params := map[string]any{
-		"id":               serviceLineItemId,
-		"contractId":       contractId,
-		"tenant":           tenant,
-		"name":             serviceLineItem.Name,
-		"source":           serviceLineItem.Source,
-		"sourceOfTruth":    serviceLineItem.SourceOfTruth,
-		"appSource":        serviceLineItem.AppSource,
-		"isCanceled":       serviceLineItem.IsCanceled,
-		"billed":           serviceLineItem.Billed,
-		"quantity":         serviceLineItem.Quantity,
-		"price":            serviceLineItem.Price,
-		"previousBilled":   serviceLineItem.PreviousBilled,
-		"previousQuantity": serviceLineItem.PreviousQuantity,
-		"previousPrice":    serviceLineItem.PreviousPrice,
-		"startedAt":        serviceLineItem.StartedAt,
-		"comments":         serviceLineItem.Comments,
-		"createdAt":        serviceLineItem.CreatedAt,
-		"updatedAt":        serviceLineItem.UpdatedAt,
-		"parentId":         serviceLineItem.ParentID,
-	}
-
-	if serviceLineItem.EndedAt != nil {
-		params["endedAt"] = *serviceLineItem.EndedAt
-	} else {
-		params["endedAt"] = nil
-	}
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, params)
-	return serviceLineItemId
-}
-
-// Deprecated
 func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, opportunity entity.OpportunityEntity) string {
 	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})

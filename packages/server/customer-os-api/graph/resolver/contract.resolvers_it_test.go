@@ -181,7 +181,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		InvoiceNote:           "invoice note",
 	})
 
-	serviceLineItemId1 := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemId1 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:      "service line item 1",
 		CreatedAt: yesterday,
 		UpdatedAt: yesterday,
@@ -191,7 +191,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test1",
 	})
-	serviceLineItemId2 := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	serviceLineItemId2 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:      "service line item 2",
 		CreatedAt: now,
 		UpdatedAt: now,
