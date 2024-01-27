@@ -51,7 +51,7 @@ func (h *OrganizationPlanEventHandler) OnCreate(ctx context.Context, evt eventst
 	appSource := helper.GetAppSource(eventData.SourceFields.AppSource)
 
 	// Create empty org plan
-	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.Create(ctx, eventData.Tenant, eventData.OrganizationPlanId, eventData.Name, source, appSource, eventData.CreatedAt, entity.OrganizationPlanStatusDetails{Status: model.NotStarted.String(), UpdatedAt: eventData.CreatedAt, Comments: ""})
+	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.Create(ctx, eventData.Tenant, masterPlanId, eventData.OrganizationPlanId, eventData.Name, source, appSource, eventData.CreatedAt, entity.OrganizationPlanStatusDetails{Status: model.NotStarted.String(), UpdatedAt: eventData.CreatedAt, Comments: ""})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving organization plan %s: %s", eventData.OrganizationPlanId, err.Error())
@@ -67,6 +67,7 @@ func (h *OrganizationPlanEventHandler) OnCreate(ctx context.Context, evt eventst
 			return err
 		}
 	}
+
 	// Link org plan to org
 	err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, eventData.OrganizationPlanId, organizationId, eventData.CreatedAt)
 

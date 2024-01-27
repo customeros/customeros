@@ -19,6 +19,7 @@ func MapEntityToOrganizationPlan(entity *neo4jentity.OrganizationPlanEntity) *mo
 		AppSource:     entity.AppSource,
 		Retired:       entity.Retired,
 		StatusDetails: MapEntityToOrganizationPlanStatusDetails(&entity.StatusDetails),
+		MasterPlanID:  entity.MasterPlanId,
 	}
 }
 

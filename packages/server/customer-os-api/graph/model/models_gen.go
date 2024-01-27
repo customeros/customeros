@@ -1749,6 +1749,7 @@ type OrganizationPlan struct {
 	Milestones        []*OrganizationPlanMilestone `json:"milestones"`
 	RetiredMilestones []*OrganizationPlanMilestone `json:"retiredMilestones"`
 	StatusDetails     *StatusDetails               `json:"statusDetails"`
+	MasterPlanID      string                       `json:"masterPlanId"`
 }
 
 func (OrganizationPlan) IsSourceFields()                   {}

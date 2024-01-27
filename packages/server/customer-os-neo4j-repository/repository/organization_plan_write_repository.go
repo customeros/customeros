@@ -45,7 +45,7 @@ type OrganizationPlanMilestoneUpdateFields struct {
 }
 
 type OrganizationPlanWriteRepository interface {
-	Create(ctx context.Context, tenant, organizationPlanId, name, source, appSource string, createdAt time.Time, statusDetails entity.OrganizationPlanStatusDetails) error
+	Create(ctx context.Context, tenant, masterPlanId, organizationPlanId, name, source, appSource string, createdAt time.Time, statusDetails entity.OrganizationPlanStatusDetails) error
 	Update(ctx context.Context, tenant, organizationPlanId string, data OrganizationPlanUpdateFields) error
 	CreateMilestone(ctx context.Context, tenant, organizationPlanId, milestoneId, name, source, appSource string, order int64, items []entity.OrganizationPlanMilestoneItem, optional bool, createdAt, dueDate time.Time, statusDetails entity.OrganizationPlanMilestoneStatusDetails) error
 	CreateBulkMilestones(ctx context.Context, tenant, organizationPlanId, source, appSource string, milestones []entity.OrganizationPlanMilestoneEntity, createdAt time.Time) error
@@ -66,7 +66,7 @@ func NewOrganizationPlanWriteRepository(driver *neo4j.DriverWithContext, databas
 	}
 }
 
-func (r *organizationPlanWriteRepository) Create(ctx context.Context, tenant, organizationPlanId, name, source, appSource string, createdAt time.Time, statusDetails entity.OrganizationPlanStatusDetails) error {
+func (r *organizationPlanWriteRepository) Create(ctx context.Context, tenant, masterPlanId, organizationPlanId, name, source, appSource string, createdAt time.Time, statusDetails entity.OrganizationPlanStatusDetails) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanWriteRepository.Create")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -84,7 +84,8 @@ func (r *organizationPlanWriteRepository) Create(ctx context.Context, tenant, or
 								op.name=$name,
 								op.status=$status,
 								op.statusComments=$statusComments,
-								op.statusUpdatedAt=$statusUpdatedAt
+								op.statusUpdatedAt=$statusUpdatedAt,
+								op.masterPlanId=$masterPlanId
 							`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
@@ -98,6 +99,7 @@ func (r *organizationPlanWriteRepository) Create(ctx context.Context, tenant, or
 		"status":             statusDetails.Status,
 		"statusComments":     statusDetails.Comments,
 		"statusUpdatedAt":    statusDetails.UpdatedAt,
+		"masterPlanId":       masterPlanId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
