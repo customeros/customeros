@@ -155,6 +155,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		OrganizationLegalName: request.OrganizationLegalName,
 		InvoiceEmail:          request.InvoiceEmail,
 		InvoiceNote:           request.InvoiceNote,
+		NextInvoiceDate:       utils.TimestampProtoToTimePtr(request.NextInvoiceDate),
 	}
 	fieldsMask := extractFieldsMask(request.FieldsMask)
 
@@ -319,6 +320,8 @@ func extractFieldsMask(requestFieldsMask []contractpb.ContractFieldMask) []strin
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoiceEmail)
 		case contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE:
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoiceNote)
+		case contractpb.ContractFieldMask_CONTRACT_FIELD_NEXT_INVOICE_DATE:
+			fieldsMask = append(fieldsMask, event.FieldMaskNextInvoiceDate)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)

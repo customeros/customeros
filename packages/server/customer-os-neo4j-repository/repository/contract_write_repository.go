@@ -47,6 +47,7 @@ type ContractUpdateFields struct {
 	BillingCycle                neo4jenum.BillingCycle `json:"billingCycle"`
 	Currency                    neo4jenum.Currency     `json:"currency"`
 	InvoicingStartDate          *time.Time             `json:"invoicingStartDate,omitempty"`
+	NextInvoiceDate             *time.Time             `json:"nextInvoiceDate,omitempty"`
 	AddressLine1                string                 `json:"addressLine1"`
 	AddressLine2                string                 `json:"addressLine2"`
 	Locality                    string                 `json:"locality"`
@@ -66,6 +67,7 @@ type ContractUpdateFields struct {
 	UpdateBillingCycle          bool                   `json:"updateBillingCycle"`
 	UpdateCurrency              bool                   `json:"updateCurrency"`
 	UpdateInvoicingStartDate    bool                   `json:"updateInvoicingStartDate"`
+	UpdateNextInvoiceDate       bool                   `json:"updateNextInvoiceDate"`
 	UpdateAddressLine1          bool                   `json:"updateAddressLine1"`
 	UpdateAddressLine2          bool                   `json:"updateAddressLine2"`
 	UpdateLocality              bool                   `json:"updateLocality"`
@@ -85,7 +87,7 @@ type ContractWriteRepository interface {
 	ContractCausedOnboardingStatusChange(ctx context.Context, tenant, contractId string) error
 	MarkStatusRenewalRequested(ctx context.Context, tenant, contractId string) error
 	MarkRolloutRenewalRequested(ctx context.Context, tenant, contractId string) error
-	MarkInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time, nextInvoiceDate *time.Time) error
+	MarkInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
 }
 
 type contractWriteRepository struct {
@@ -257,6 +259,10 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 	if data.UpdateInvoiceNote {
 		cypher += `, ct.invoiceNote = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $invoiceNote ELSE ct.invoiceNote END `
 		params["invoiceNote"] = data.InvoiceNote
+	}
+	if data.UpdateNextInvoiceDate {
+		cypher += `, ct.nextInvoiceDate=$nextInvoiceDate `
+		params["nextInvoiceDate"] = utils.ToNeo4jDateAsAny(data.NextInvoiceDate)
 	}
 	cypher += ` RETURN ct`
 
@@ -434,20 +440,18 @@ func (r *contractWriteRepository) MarkRolloutRenewalRequested(ctx context.Contex
 	return err
 }
 
-func (r *contractWriteRepository) MarkInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time, nextInvoiceDate *time.Time) error {
+func (r *contractWriteRepository) MarkInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkInvoicingStarted")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
-				SET c.techInvoicingStartedAt=$invoicingStartedAt,
-					c.nextInvoiceDate=$nextInvoiceDate`
+				SET c.techInvoicingStartedAt=$invoicingStartedAt`
 	params := map[string]any{
 		"tenant":             tenant,
 		"contractId":         contractId,
 		"invoicingStartedAt": invoicingStartedAt,
-		"nextInvoiceDate":    utils.ToNeo4jDateAsAny(nextInvoiceDate),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

@@ -35,6 +35,7 @@ type ContractUpdateEvent struct {
 	InvoiceEmail          string                     `json:"invoiceEmail,omitempty"`
 	InvoiceNote           string                     `json:"invoiceNote,omitempty"`
 	FieldsMask            []string                   `json:"fieldsMask,omitempty"`
+	NextInvoiceDate       *time.Time                 `json:"nextInvoiceDate,omitempty"`
 }
 
 func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source string, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
@@ -56,13 +57,23 @@ func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.Contract
 		Country:               dataFields.Country,
 		Zip:                   dataFields.Zip,
 		OrganizationLegalName: dataFields.OrganizationLegalName,
-		InvoiceEmail:          dataFields.InvoiceEmail,
-		InvoiceNote:           dataFields.InvoiceNote,
-		InvoicingStartDate:    utils.ToDatePtr(dataFields.InvoicingStartDate),
 		UpdatedAt:             updatedAt,
 		Source:                source,
 		FieldsMask:            fieldsMask,
 	}
+	if eventData.UpdateNextInvoiceDate() {
+		eventData.NextInvoiceDate = utils.ToDatePtr(dataFields.NextInvoiceDate)
+	}
+	if eventData.UpdateInvoicingStartDate() {
+		eventData.InvoicingStartDate = utils.ToDatePtr(dataFields.InvoicingStartDate)
+	}
+	if eventData.UpdateInvoiceNote() {
+		eventData.InvoiceNote = dataFields.InvoiceNote
+	}
+	if eventData.UpdateInvoiceEmail() {
+		eventData.InvoiceEmail = dataFields.InvoiceEmail
+	}
+
 	if externalSystem.Available() {
 		eventData.ExternalSystem = externalSystem
 	}
@@ -152,4 +163,8 @@ func (e ContractUpdateEvent) UpdateInvoiceEmail() bool {
 
 func (e ContractUpdateEvent) UpdateInvoiceNote() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInvoiceNote)
+}
+
+func (e ContractUpdateEvent) UpdateNextInvoiceDate() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskNextInvoiceDate)
 }

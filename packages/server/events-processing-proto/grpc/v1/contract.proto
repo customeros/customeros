@@ -35,6 +35,7 @@ enum ContractFieldMask {
   CONTRACT_FIELD_ORGANIZATION_LEGAL_NAME = 16;
   CONTRACT_FIELD_INVOICE_EMAIL = 17;
   CONTRACT_FIELD_INVOICE_NOTE = 18;
+  CONTRACT_FIELD_NEXT_INVOICE_DATE = 19; // to update next invoice date field mask must be specified explicitly
 }
 
 // CreateContract request message
@@ -84,6 +85,7 @@ message UpdateContractGrpcRequest {
   string invoiceEmail = 23;
   repeated ContractFieldMask fieldsMask = 24;
   string invoiceNote = 25;
+  google.protobuf.Timestamp nextInvoiceDate = 26;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {

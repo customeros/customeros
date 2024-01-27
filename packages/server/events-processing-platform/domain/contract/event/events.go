@@ -27,4 +27,5 @@ const (
 	FieldMaskInvoiceEmail          = "invoiceEmail"
 	FieldMaskStatus                = "status"
 	FieldMaskInvoiceNote           = "invoiceNote"
+	FieldMaskNextInvoiceDate       = "nextInvoiceDate"
 )

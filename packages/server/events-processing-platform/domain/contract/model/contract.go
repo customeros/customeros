@@ -36,6 +36,7 @@ type Contract struct {
 	OrganizationLegalName string                       `json:"organizationLegalName"`
 	InvoiceEmail          string                       `json:"invoiceEmail"`
 	InvoiceNote           string                       `json:"invoiceNote"`
+	NextInvoiceDate       *time.Time                   `json:"nextInvoiceDate,omitempty"`
 }
 
 type ContractDataFields struct {
@@ -52,6 +53,7 @@ type ContractDataFields struct {
 	BillingCycle          string
 	Currency              string
 	InvoicingStartDate    *time.Time
+	NextInvoiceDate       *time.Time
 	AddressLine1          string `json:"addressLine1"`
 	AddressLine2          string `json:"addressLine2"`
 	Locality              string `json:"locality"`
