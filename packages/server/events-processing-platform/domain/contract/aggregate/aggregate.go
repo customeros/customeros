@@ -165,6 +165,9 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	if eventData.UpdateInvoiceNote() {
 		a.Contract.InvoiceNote = eventData.InvoiceNote
 	}
+	if eventData.UpdateNextInvoiceDate() {
+		a.Contract.NextInvoiceDate = eventData.NextInvoiceDate
+	}
 
 	if eventData.ExternalSystem.Available() {
 		found := false

@@ -230,6 +230,7 @@ func TestContractService_UpdateContract(t *testing.T) {
 		ServiceStartedAt: timestamppb.New(timeNow),
 		SignedAt:         timestamppb.New(timeNow),
 		EndedAt:          timestamppb.New(timeNow.AddDate(0, 1, 0)),
+		NextInvoiceDate:  timestamppb.New(timeNow),
 		RenewalCycle:     contractpb.RenewalCycle_MONTHLY_RENEWAL,
 		Currency:         "USD",
 		SourceFields: &commonpb.SourceFields{
@@ -278,4 +279,5 @@ func TestContractService_UpdateContract(t *testing.T) {
 	require.Equal(t, constants.SourceOpenline, eventData.Source)
 	require.Equal(t, "ExternalSystemID", eventData.ExternalSystem.ExternalSystemId)
 	require.Equal(t, "USD", eventData.Currency)
+	require.Nil(t, eventData.NextInvoiceDate) // next invoice date was not mentioned in fields mask, hence it should be nil
 }

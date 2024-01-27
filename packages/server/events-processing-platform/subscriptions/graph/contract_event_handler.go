@@ -167,6 +167,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		OrganizationLegalName:       eventData.OrganizationLegalName,
 		InvoiceEmail:                eventData.InvoiceEmail,
 		InvoiceNote:                 eventData.InvoiceNote,
+		NextInvoiceDate:             eventData.NextInvoiceDate,
 		UpdateName:                  eventData.UpdateName(),
 		UpdateContractUrl:           eventData.UpdateContractUrl(),
 		UpdateServiceStartedAt:      eventData.UpdateServiceStartedAt(),
@@ -186,6 +187,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		UpdateOrganizationLegalName: eventData.UpdateOrganizationLegalName(),
 		UpdateInvoiceEmail:          eventData.UpdateInvoiceEmail(),
 		UpdateInvoiceNote:           eventData.UpdateInvoiceNote(),
+		UpdateNextInvoiceDate:       eventData.UpdateNextInvoiceDate(),
 	}
 	updatedContractDbNode, err := h.repositories.Neo4jRepositories.ContractWriteRepository.UpdateAndReturn(ctx, eventData.Tenant, contractId, data)
 	if err != nil {
