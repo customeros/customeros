@@ -127,6 +127,16 @@
       "name": "Check renewal opportunity data consistency",
       "query": "CALL {\n     MATCH (op:RenewalOpportunity) WHERE op.renewedAt < datetime()-duration({minutes: 30}) AND op.internalStage = 'OPEN' RETURN count(op) as cnt\n     UNION ALL\n     MATCH (op:RenewalOpportunity) WHERE op.renewalLikelihood IS NOT NULL AND NOT op.renewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(op) as cnt\n} RETURN sum(cnt)",
       "description": "Checks: 1 - Renewal opportunity with wrong renewedAt date and open internal stage. 2 - Renewal opportunity with wrong renewalLikelihood value."
+    },
+    {
+      "name": "Check contract and invoice link consistency",
+      "query": "CALL {\n    MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false AND date(coalesce(c.nextInvoiceDate, c.invoicingStartDate, datetime())) <= date(i.periodEndDate) RETURN count(i) as cnt\n    UNION ALL\n    MATCH (c:Contract) WHERE c.techInvoicingStartedAt IS NOT NULL WITH c OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice) WHERE i IS NULL RETURN count(c) as cnt\n} RETURN sum(cnt)",
+      "description": "Checks: 1 - Check that contract next invoice date is not before invoice period end date. 2 - Check that contract with techInvoicingStartedAt date has at least one invoice."
+    },
+    {
+      "name": "Check invoices",
+      "query": "CALL {\n    MATCH (i:Invoice) WHERE i.dryRun IS NULL OR i.periodEndDate IS NULL OR i.periodStartDate IS NULL OR i.currency IS NULL RETURN count(i) AS cnt\n    UNION ALL\n    MATCH (i:Invoice) WHERE i.dryRun = false AND i.status = 'DRAFT' AND duration.between(i.createdAt, datetime()).minutes > 5 RETURN count(i) AS cnt\n} RETURN sum(cnt)",
+      "description": "Checks: 1 - Mandatory invoice properties. 2 - Invoices stuck in draft status > 5 minutes."
     }
   ]
 }

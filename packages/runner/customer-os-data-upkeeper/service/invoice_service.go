@@ -13,6 +13,7 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"time"
 )
@@ -62,7 +63,7 @@ func (s *invoiceService) GenerateInvoices() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateOnCycleInvoices(ctx, referenceTime)
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceTime)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for invoicing: %v", err)
@@ -121,20 +122,35 @@ func (s *invoiceService) GenerateInvoices() {
 					tracing.TraceErr(span, err)
 					s.log.Errorf("Error generating invoice for contract %s: %s", contract.Id, err.Error())
 				}
+				if !dryRun && err == nil {
+					nextInvoiceDate := utils.ToPtr(invoicePeriodEnd.AddDate(0, 0, 1))
+					_, err = s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &contractpb.UpdateContractGrpcRequest{
+						Tenant: tenant,
+						Id:     contract.Id,
+						SourceFields: &commonpb.SourceFields{
+							AppSource: constants.AppSourceDataUpkeeper,
+						},
+						NextInvoiceDate: utils.ConvertTimeToTimestampPtr(nextInvoiceDate),
+						InvoiceNote:     "",
+						FieldsMask: []contractpb.ContractFieldMask{
+							contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE,
+							contractpb.ContractFieldMask_CONTRACT_FIELD_NEXT_INVOICE_DATE},
+					})
+					if err != nil {
+						tracing.TraceErr(span, err)
+						s.log.Errorf("Error updating contract %s: %s", contract.Id, err.Error())
+					}
+				}
 			}
-			// mark invoicing started as long dry run is false
-			nextInvoiceDate := contract.NextInvoiceDate
-			if !dryRun {
-				nextInvoiceDate = utils.ToPtr(invoicePeriodEnd.AddDate(0, 0, 1))
-			}
-			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkInvoicingStarted(ctx, tenant, contract.Id, utils.Now(), nextInvoiceDate)
+			// mark invoicing started
+			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkInvoicingStarted(ctx, tenant, contract.Id, utils.Now())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
 			}
 		}
 		//sleep for async processing, then check again
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }
 
