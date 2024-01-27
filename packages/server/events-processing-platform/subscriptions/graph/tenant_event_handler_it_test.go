@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
@@ -86,4 +87,61 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 	require.Equal(t, "legalName", tenantBillingProfileEntity.LegalName)
 	require.Equal(t, "domesticPaymentsBankInfo", tenantBillingProfileEntity.DomesticPaymentsBankInfo)
 	require.Equal(t, "internationalPaymentsBankInfo", tenantBillingProfileEntity.InternationalPaymentsBankInfo)
+}
+
+func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	settingsId := neo4jtest.CreateTenantSettings(ctx, testDatabase.Driver, tenantName, neo4jentity.TenantSettingsEntity{})
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelTenant:         1,
+		neo4jutil.NodeLabelTenantSettings: 1,
+	})
+
+	// Prepare the event handler
+	eventHandler := &TenantEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	timeNow := utils.Now()
+
+	aggregate := tenant.NewTenantAggregate(tenantName)
+	updateEvent, err := event.NewTenantSettingsUpdateEvent(
+		aggregate,
+		&tenantpb.UpdateTenantSettingsRequest{
+			LogoUrl:          "http://logo",
+			DefaultCurrency:  neo4jenum.CurrencyAUD.String(),
+			InvoicingEnabled: true,
+		},
+		timeNow,
+		[]string{},
+	)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = eventHandler.OnUpdateTenantSettingsV1(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	// check still same nodes available
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelTenant:         1,
+		neo4jutil.NodeLabelTenantSettings: 1,
+	})
+
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelTenantSettings, settingsId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+
+	// verify
+	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
+	require.Equal(t, settingsId, tenantSettingsEntity.Id)
+	require.Equal(t, timeNow, tenantSettingsEntity.UpdatedAt)
+	require.Equal(t, "http://logo", tenantSettingsEntity.LogoUrl)
+	require.Equal(t, true, tenantSettingsEntity.InvoicingEnabled)
+	require.Equal(t, neo4jenum.CurrencyAUD, tenantSettingsEntity.DefaultCurrency)
 }

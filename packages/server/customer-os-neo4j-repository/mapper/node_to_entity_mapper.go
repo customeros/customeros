@@ -255,6 +255,7 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	tenantSettingsEntity := entity.TenantSettingsEntity{
+		Id:               utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		LogoUrl:          utils.GetStringPropOrEmpty(props, "logoUrl"),
