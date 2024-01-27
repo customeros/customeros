@@ -64,6 +64,8 @@ func (a *TenantAggregate) HandleRequest(ctx context.Context, request any) (any, 
 		return a.AddBillingProfile(ctx, r)
 	case *tenantpb.UpdateBillingProfileRequest:
 		return r.Id, a.UpdateBillingProfile(ctx, r)
+	case *tenantpb.UpdateTenantSettingsRequest:
+		return nil, a.UpdateTenantSettings(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -122,12 +124,38 @@ func (a *TenantAggregate) UpdateBillingProfile(ctx context.Context, r *tenantpb.
 	return a.Apply(updateBillingProfileEvent)
 }
 
+func (a *TenantAggregate) UpdateTenantSettings(ctx context.Context, r *tenantpb.UpdateTenantSettingsRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TenantAggregate.UpdateTenantSettings")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), utils.Now())
+	fieldsMaks := extractTenantSettingsFieldsMask(r.FieldsMask)
+
+	updateSettingsEvent, err := event.NewTenantSettingsUpdateEvent(a, r, updatedAtNotNil, fieldsMaks)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "TenantSettingsUpdateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&updateSettingsEvent, span, aggregate.EventMetadata{
+		Tenant: r.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    r.AppSource,
+	})
+
+	return a.Apply(updateSettingsEvent)
+}
+
 func (a *TenantAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.TenantAddBillingProfileV1:
 		return a.onAddBillingProfile(evt)
 	case event.TenantUpdateBillingProfileV1:
 		return a.onUpdateBillingProfile(evt)
+	case event.TenantUpdateSettingsV1:
+		return a.onUpdateTenantSettings(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -222,6 +250,24 @@ func (a *TenantAggregate) onUpdateBillingProfile(evt eventstore.Event) error {
 	return nil
 }
 
+func (a *TenantAggregate) onUpdateTenantSettings(evt eventstore.Event) error {
+	var eventData event.TenantSettingsUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if eventData.UpdateDefaultCurrency() {
+		a.TenantDetails.TenantSettings.DefaultCurrency = eventData.DefaultCurrency
+	}
+	if eventData.UpdateInvoicingEnabled() {
+		a.TenantDetails.TenantSettings.InvoicingEnabled = eventData.InvoicingEnabled
+	}
+	if eventData.UpdateLogoUrl() {
+		a.TenantDetails.TenantSettings.LogoUrl = eventData.LogoUrl
+	}
+	return nil
+}
+
 func extractTenantBillingProfileFieldsMask(requestFieldsMask []tenantpb.TenantBillingProfileFieldMask) []string {
 	var fieldsMask []string
 	for _, requestFieldMask := range requestFieldsMask {
@@ -248,6 +294,22 @@ func extractTenantBillingProfileFieldsMask(requestFieldsMask []tenantpb.TenantBi
 			fieldsMask = append(fieldsMask, event.FieldMaskDomesticPaymentsBankInfo)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO:
 			fieldsMask = append(fieldsMask, event.FieldMaskInternationalPaymentsBankInfo)
+		}
+	}
+	fieldsMask = utils.RemoveDuplicates(fieldsMask)
+	return fieldsMask
+}
+
+func extractTenantSettingsFieldsMask(inputFieldsMask []tenantpb.TenantSettingsFieldMask) []string {
+	var fieldsMask []string
+	for _, requestFieldMask := range inputFieldsMask {
+		switch requestFieldMask {
+		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_URL:
+			fieldsMask = append(fieldsMask, event.FieldMaskLogoUrl)
+		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY:
+			fieldsMask = append(fieldsMask, event.FieldMaskDefaultCurrency)
+		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED:
+			fieldsMask = append(fieldsMask, event.FieldMaskInvoicingEnabled)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)
