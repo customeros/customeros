@@ -35,6 +35,14 @@ type Invoice implements SourceFields & Node {
     invoiceLines:       [InvoiceLine!]! @goField(forceResolver: true)
     status:             InvoiceStatus
     note:               String
+    domesticPaymentsBankInfo:       String
+    internationalPaymentsBankInfo:  String
+    customerName:                   String
+    customerAddress:                String
+    customerEmail:                  String
+    providerLogoUrl:                String
+    providerName:                   String
+    providerAddress:                String
 }
 
 type InvoiceLine implements Node {

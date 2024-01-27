@@ -11,26 +11,32 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 		return nil
 	}
 	invoice := model.Invoice{
-		ID:               entity.Id,
-		CreatedAt:        entity.CreatedAt,
-		UpdatedAt:        entity.UpdatedAt,
-		Source:           MapDataSourceToModel(entity.Source),
-		SourceOfTruth:    MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:        entity.AppSource,
-		DryRun:           entity.DryRun,
-		Number:           entity.Number,
-		PeriodStartDate:  entity.PeriodStartDate,
-		PeriodEndDate:    entity.PeriodEndDate,
-		DueDate:          entity.DueDate,
-		Amount:           entity.Amount,
-		Vat:              entity.Vat,
-		TotalAmount:      entity.TotalAmount,
-		Currency:         entity.Currency.String(),
-		RepositoryFileID: entity.RepositoryFileId,
-		Status:           utils.ToPtr(MapInvoiceStatusToModel(entity.Status)),
-	}
-	if entity.Note != "" {
-		invoice.Note = utils.ToPtr(entity.Note)
+		ID:                            entity.Id,
+		CreatedAt:                     entity.CreatedAt,
+		UpdatedAt:                     entity.UpdatedAt,
+		Source:                        MapDataSourceToModel(entity.Source),
+		SourceOfTruth:                 MapDataSourceToModel(entity.SourceOfTruth),
+		AppSource:                     entity.AppSource,
+		DryRun:                        entity.DryRun,
+		Number:                        entity.Number,
+		PeriodStartDate:               entity.PeriodStartDate,
+		PeriodEndDate:                 entity.PeriodEndDate,
+		DueDate:                       entity.DueDate,
+		Amount:                        entity.Amount,
+		Vat:                           entity.Vat,
+		TotalAmount:                   entity.TotalAmount,
+		Currency:                      entity.Currency.String(),
+		RepositoryFileID:              entity.RepositoryFileId,
+		Status:                        utils.ToPtr(MapInvoiceStatusToModel(entity.Status)),
+		Note:                          utils.StringPtrNillable(entity.Note),
+		DomesticPaymentsBankInfo:      utils.StringPtrNillable(entity.DomesticPaymentsBankInfo),
+		InternationalPaymentsBankInfo: utils.StringPtrNillable(entity.InternationalPaymentsBankInfo),
+		CustomerName:                  utils.StringPtrNillable(entity.CustomerName),
+		CustomerAddress:               utils.StringPtrNillable(entity.CustomerAddress),
+		CustomerEmail:                 utils.StringPtrNillable(entity.CustomerEmail),
+		ProviderLogoURL:               utils.StringPtrNillable(entity.ProviderLogoUrl),
+		ProviderName:                  utils.StringPtrNillable(entity.ProviderName),
+		ProviderAddress:               utils.StringPtrNillable(entity.ProviderAddress),
 	}
 	return &invoice
 }
