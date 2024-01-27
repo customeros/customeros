@@ -132,7 +132,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
 	}
 	if !result.Valid {
-		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, *result.Error)
+		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, utils.IfNotNilStringWithDefault(*result.Error, "missing error in validation response"))
 	}
 
 	locationAddressFields := models.LocationAddressFields{
