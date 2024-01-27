@@ -1026,25 +1026,33 @@ type InteractionSessionParticipantInput struct {
 }
 
 type Invoice struct {
-	ID               string         `json:"id"`
-	CreatedAt        time.Time      `json:"createdAt"`
-	UpdatedAt        time.Time      `json:"updatedAt"`
-	Source           DataSource     `json:"source"`
-	SourceOfTruth    DataSource     `json:"sourceOfTruth"`
-	AppSource        string         `json:"appSource"`
-	DryRun           bool           `json:"dryRun"`
-	Number           string         `json:"number"`
-	PeriodStartDate  time.Time      `json:"periodStartDate"`
-	PeriodEndDate    time.Time      `json:"periodEndDate"`
-	DueDate          time.Time      `json:"dueDate"`
-	Amount           float64        `json:"amount"`
-	Vat              float64        `json:"vat"`
-	TotalAmount      float64        `json:"totalAmount"`
-	Currency         string         `json:"currency"`
-	RepositoryFileID string         `json:"repositoryFileId"`
-	InvoiceLines     []*InvoiceLine `json:"invoiceLines"`
-	Status           *InvoiceStatus `json:"status,omitempty"`
-	Note             *string        `json:"note,omitempty"`
+	ID                            string         `json:"id"`
+	CreatedAt                     time.Time      `json:"createdAt"`
+	UpdatedAt                     time.Time      `json:"updatedAt"`
+	Source                        DataSource     `json:"source"`
+	SourceOfTruth                 DataSource     `json:"sourceOfTruth"`
+	AppSource                     string         `json:"appSource"`
+	DryRun                        bool           `json:"dryRun"`
+	Number                        string         `json:"number"`
+	PeriodStartDate               time.Time      `json:"periodStartDate"`
+	PeriodEndDate                 time.Time      `json:"periodEndDate"`
+	DueDate                       time.Time      `json:"dueDate"`
+	Amount                        float64        `json:"amount"`
+	Vat                           float64        `json:"vat"`
+	TotalAmount                   float64        `json:"totalAmount"`
+	Currency                      string         `json:"currency"`
+	RepositoryFileID              string         `json:"repositoryFileId"`
+	InvoiceLines                  []*InvoiceLine `json:"invoiceLines"`
+	Status                        *InvoiceStatus `json:"status,omitempty"`
+	Note                          *string        `json:"note,omitempty"`
+	DomesticPaymentsBankInfo      *string        `json:"domesticPaymentsBankInfo,omitempty"`
+	InternationalPaymentsBankInfo *string        `json:"internationalPaymentsBankInfo,omitempty"`
+	CustomerName                  *string        `json:"customerName,omitempty"`
+	CustomerAddress               *string        `json:"customerAddress,omitempty"`
+	CustomerEmail                 *string        `json:"customerEmail,omitempty"`
+	ProviderLogoURL               *string        `json:"providerLogoUrl,omitempty"`
+	ProviderName                  *string        `json:"providerName,omitempty"`
+	ProviderAddress               *string        `json:"providerAddress,omitempty"`
 }
 
 func (Invoice) IsSourceFields()                   {}

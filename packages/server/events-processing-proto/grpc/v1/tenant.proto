@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 import "common/source.proto";
 import "common/common.proto";
 
@@ -66,7 +67,26 @@ message UpdateBillingProfileRequest {
   repeated TenantBillingProfileFieldMask fieldsMask = 17;
 }
 
+enum TenantSettingsFieldMask {
+  TENANT_SETTINGS_FIELD_NONE = 0; // No property, ignored by the server
+  TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY = 1;
+  TENANT_SETTINGS_FIELD_INVOICING_ENABLED = 2;
+  TENANT_SETTINGS_FIELD_LOGO_URL = 3;
+}
+
+message UpdateTenantSettingsRequest {
+  string tenant = 1;
+  string loggedInUserId = 2;
+  google.protobuf.Timestamp updatedAt = 4;
+  string appSource = 5;
+  repeated TenantBillingProfileFieldMask fieldsMask = 6;
+  string defaultCurrency = 7;
+  bool invoicingEnabled = 8;
+  string logoUrl = 9;
+}
+
 service tenantGrpcService {
   rpc AddBillingProfile(AddBillingProfileRequest) returns (IdResponse);
   rpc UpdateBillingProfile(UpdateBillingProfileRequest) returns (IdResponse);
+  rpc UpdateTenantSettings(UpdateTenantSettingsRequest) returns (google.protobuf.Empty);
 }

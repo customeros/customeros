@@ -12,6 +12,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -25,6 +26,7 @@ const _ = grpc.SupportPackageIsVersion7
 type TenantGrpcServiceClient interface {
 	AddBillingProfile(ctx context.Context, in *AddBillingProfileRequest, opts ...grpc.CallOption) (*common.IdResponse, error)
 	UpdateBillingProfile(ctx context.Context, in *UpdateBillingProfileRequest, opts ...grpc.CallOption) (*common.IdResponse, error)
+	UpdateTenantSettings(ctx context.Context, in *UpdateTenantSettingsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type tenantGrpcServiceClient struct {
@@ -53,12 +55,22 @@ func (c *tenantGrpcServiceClient) UpdateBillingProfile(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *tenantGrpcServiceClient) UpdateTenantSettings(ctx context.Context, in *UpdateTenantSettingsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tenantGrpcService/UpdateTenantSettings", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TenantGrpcServiceServer is the server API for TenantGrpcService service.
 // All implementations should embed UnimplementedTenantGrpcServiceServer
 // for forward compatibility
 type TenantGrpcServiceServer interface {
 	AddBillingProfile(context.Context, *AddBillingProfileRequest) (*common.IdResponse, error)
 	UpdateBillingProfile(context.Context, *UpdateBillingProfileRequest) (*common.IdResponse, error)
+	UpdateTenantSettings(context.Context, *UpdateTenantSettingsRequest) (*emptypb.Empty, error)
 }
 
 // UnimplementedTenantGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -70,6 +82,9 @@ func (UnimplementedTenantGrpcServiceServer) AddBillingProfile(context.Context, *
 }
 func (UnimplementedTenantGrpcServiceServer) UpdateBillingProfile(context.Context, *UpdateBillingProfileRequest) (*common.IdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateBillingProfile not implemented")
+}
+func (UnimplementedTenantGrpcServiceServer) UpdateTenantSettings(context.Context, *UpdateTenantSettingsRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTenantSettings not implemented")
 }
 
 // UnsafeTenantGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -119,6 +134,24 @@ func _TenantGrpcService_UpdateBillingProfile_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TenantGrpcService_UpdateTenantSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTenantSettingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantGrpcServiceServer).UpdateTenantSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tenantGrpcService/UpdateTenantSettings",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantGrpcServiceServer).UpdateTenantSettings(ctx, req.(*UpdateTenantSettingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TenantGrpcService_ServiceDesc is the grpc.ServiceDesc for TenantGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -133,6 +166,10 @@ var TenantGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateBillingProfile",
 			Handler:    _TenantGrpcService_UpdateBillingProfile_Handler,
+		},
+		{
+			MethodName: "UpdateTenantSettings",
+			Handler:    _TenantGrpcService_UpdateTenantSettings_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
