@@ -12,7 +12,7 @@ import (
 type TenantBillingProfileUpdateEvent struct {
 	Tenant                        string    `json:"tenant" validate:"required"`
 	Id                            string    `json:"id" validate:"required"`
-	UpdatedAt                     time.Time `json:"createdAt"`
+	UpdatedAt                     time.Time `json:"updatedAt"`
 	Email                         string    `json:"email,omitempty"`
 	Phone                         string    `json:"phone,omitempty"`
 	AddressLine1                  string    `json:"addressLine1,omitempty"`

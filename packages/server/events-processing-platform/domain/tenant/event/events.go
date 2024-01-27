@@ -3,6 +3,7 @@ package event
 const (
 	TenantAddBillingProfileV1    = "V1_TENANT_BILLING_PROFILE_NEW"
 	TenantUpdateBillingProfileV1 = "V1_TENANT_BILLING_PROFILE_UPDATE"
+	TenantUpdateSettingsV1       = "V1_TENANT_SETTINGS_UPDATE"
 )
 
 const (
@@ -17,4 +18,8 @@ const (
 	FieldMaskLegalName                     = "legalName"
 	FieldMaskDomesticPaymentsBankInfo      = "domesticPaymentsBankInfo"
 	FieldMaskInternationalPaymentsBankInfo = "internationalPaymentsBankInfo"
+
+	FieldMaskLogoUrl          = "logoUrl"
+	FieldMaskDefaultCurrency  = "defaultCurrency"
+	FieldMaskInvoicingEnabled = "invoicingEnabled"
 )

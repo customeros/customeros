@@ -12,6 +12,13 @@ type Tenant struct {
 	UpdatedAt       time.Time               `json:"updatedAt"`
 	SourceFields    commonmodel.Source      `json:"source"`
 	BillingProfiles []*TenantBillingProfile `json:"billingProfiles"`
+	TenantSettings  TenantSettings          `json:"tenantSettings"`
+}
+
+type TenantSettings struct {
+	InvoicingEnabled bool   `json:"invoicingEnabled"`
+	DefaultCurrency  string `json:"defaultCurrency"`
+	LogoUrl          string `json:"logoUrl"`
 }
 
 type TenantBillingProfile struct {

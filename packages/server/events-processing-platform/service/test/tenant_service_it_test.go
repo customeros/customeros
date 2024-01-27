@@ -161,3 +161,50 @@ func TestTenantService_UpdateBillingProfile(t *testing.T) {
 	require.Equal(t, "internationalPaymentsBankInfo", eventData.InternationalPaymentsBankInfo)
 	require.Equal(t, 0, len(eventData.FieldsMask))
 }
+
+func TestTenantService_UpdateTenantSettings(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// setup test environment
+	tenantName := "ziggy"
+	now := utils.Now()
+
+	// setup aggregate and create initial event
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err, "Failed to get grpc connection")
+	tenantServiceClient := tenantpb.NewTenantGrpcServiceClient(grpcConnection)
+
+	response, err := tenantServiceClient.UpdateTenantSettings(ctx, &tenantpb.UpdateTenantSettingsRequest{
+		Tenant:           tenantName,
+		AppSource:        "test",
+		UpdatedAt:        utils.ConvertTimeToTimestampPtr(&now),
+		LogoUrl:          "logoUrl",
+		DefaultCurrency:  "USD",
+		InvoicingEnabled: true,
+	})
+	require.Nil(t, err)
+	require.NotNil(t, response)
+
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+
+	tenantAggregate := tenant.NewTenantAggregate(tenantName)
+	eventList := eventsMap[tenantAggregate.ID]
+	require.Equal(t, 1, len(eventList))
+	require.Equal(t, event.TenantUpdateSettingsV1, eventList[0].GetEventType())
+	require.Equal(t, string(tenant.TenantAggregateType)+"-"+tenantName, eventList[0].GetAggregateID())
+
+	var eventData event.TenantSettingsUpdateEvent
+	err = eventList[0].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	// Assertions to validate the contract create event data
+	require.Equal(t, tenantName, eventData.Tenant)
+	require.Equal(t, now, eventData.UpdatedAt)
+	require.Equal(t, "logoUrl", eventData.LogoUrl)
+	require.Equal(t, "USD", eventData.DefaultCurrency)
+	require.Equal(t, true, eventData.InvoicingEnabled)
+	require.Equal(t, 0, len(eventData.FieldsMask))
+}

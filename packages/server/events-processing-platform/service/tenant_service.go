@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type tenantService struct {
@@ -36,7 +37,7 @@ func (s *tenantService) AddBillingProfile(ctx context.Context, request *tenantpb
 	billingProfileId, err := s.tenantRequestHandler.HandleWithRetry(ctx, request.Tenant, false, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(NewTenant) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(AddBillingProfile) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
@@ -52,9 +53,25 @@ func (s *tenantService) UpdateBillingProfile(ctx context.Context, request *tenan
 	_, err := s.tenantRequestHandler.HandleWithRetry(ctx, request.Tenant, false, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(NewTenant) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(UpdateBillingProfile) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
 	return &commonpb.IdResponse{Id: request.Id}, nil
+}
+
+func (s *tenantService) UpdateTenantSettings(ctx context.Context, request *tenantpb.UpdateTenantSettingsRequest) (*emptypb.Empty, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "TenantService.UpdateTenantSettings")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	_, err := s.tenantRequestHandler.HandleWithRetry(ctx, request.Tenant, false, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateTenantSettings) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &emptypb.Empty{}, nil
 }

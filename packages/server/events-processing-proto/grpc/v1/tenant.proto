@@ -79,7 +79,7 @@ message UpdateTenantSettingsRequest {
   string loggedInUserId = 2;
   google.protobuf.Timestamp updatedAt = 4;
   string appSource = 5;
-  repeated TenantBillingProfileFieldMask fieldsMask = 6;
+  repeated TenantSettingsFieldMask fieldsMask = 6;
   string defaultCurrency = 7;
   bool invoicingEnabled = 8;
   string logoUrl = 9;
