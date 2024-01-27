@@ -157,7 +157,7 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.CreateOrganizationPlanMilestone")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationPlanId", organizationPlanId), log.String("name", name), log.Int64("order", *order), log.Bool("optional", optional), log.Object("items", items))
+	span.LogFields(log.String("organizationId", orgId), log.String("organizationPlanId", organizationPlanId), log.String("name", name), log.Int64("order", *order), log.Bool("optional", optional), log.Object("items", items))
 
 	organizationPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationPlanId, neo4jutil.NodeLabelOrganizationPlan)
 	if err != nil {
@@ -185,6 +185,8 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 		},
 		OrgId: orgId,
 	}
+
+	tracing.LogObjectAsJson(span, "CreateOrganizationPlanMilestoneGrpcRequest", &grpcRequest)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.OrganizationPlanClient.CreateOrganizationPlanMilestone(ctx, &grpcRequest)

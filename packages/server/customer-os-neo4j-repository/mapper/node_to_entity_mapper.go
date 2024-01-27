@@ -372,6 +372,7 @@ func MapDbNodeToOrganizationPlanEntity(dbNode *dbtype.Node) *entity.Organization
 			UpdatedAt: utils.GetTimePropOrEpochStart(props, "statusUpdatedAt"),
 			Comments:  utils.GetStringPropOrEmpty(props, "statusComments"),
 		},
+		MasterPlanId: utils.GetStringPropOrEmpty(props, "masterPlanId"),
 	}
 	return &orgPlanEntity
 }

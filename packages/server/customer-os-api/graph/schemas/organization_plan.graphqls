@@ -27,6 +27,7 @@ type OrganizationPlan implements SourceFields & Node {
     milestones:         [OrganizationPlanMilestone!]! @goField(forceResolver: true)
     retiredMilestones:  [OrganizationPlanMilestone!]! @goField(forceResolver: true)
     statusDetails:      StatusDetails!
+    masterPlanId:       ID!
 }
 
 type OrganizationPlanMilestone implements SourceFields & Node {

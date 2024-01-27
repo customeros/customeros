@@ -20,6 +20,7 @@ type OrganizationPlanEntity struct {
 	SourceOfTruth DataSource
 	AppSource     string
 	StatusDetails OrganizationPlanStatusDetails
+	MasterPlanId  string
 }
 
 type OrganizationPlanEntities []OrganizationPlanEntity
