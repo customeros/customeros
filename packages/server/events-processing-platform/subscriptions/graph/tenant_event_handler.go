@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	tenant "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
@@ -116,6 +117,37 @@ func (h *TenantEventHandler) OnUpdateBillingProfileV1(ctx context.Context, evt e
 		UpdateInternationalPaymentsBankInfo: eventData.UpdateInternationalPaymentsBankInfo(),
 	}
 	err := h.repositories.Neo4jRepositories.TenantWriteRepository.UpdateTenantBillingProfile(ctx, tenantName, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return err
+}
+
+func (h *TenantEventHandler) OnUpdateTenantSettingsV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantEventHandler.OnUpdateTenantSettingsV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.TenantSettingsUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	tenantName := tenant.GetTenantName(evt.GetAggregateID())
+	span.SetTag(tracing.SpanTagEntityId, tenantName)
+
+	data := neo4jrepository.TenantSettingsFields{
+		UpdatedAt:              eventData.UpdatedAt,
+		LogoUrl:                eventData.LogoUrl,
+		InvoicingEnabled:       eventData.InvoicingEnabled,
+		DefaultCurrency:        neo4jenum.DecodeCurrency(eventData.DefaultCurrency),
+		UpdateLogoUrl:          eventData.UpdateLogoUrl(),
+		UpdateInvoicingEnabled: eventData.UpdateInvoicingEnabled(),
+		UpdateDefaultCurrency:  eventData.UpdateDefaultCurrency(),
+	}
+	err := h.repositories.Neo4jRepositories.TenantWriteRepository.UpdateTenantSettings(ctx, tenantName, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

@@ -6,6 +6,7 @@ import (
 )
 
 type TenantSettingsEntity struct {
+	Id               string
 	LogoUrl          string
 	DefaultCurrency  enum.Currency
 	InvoicingEnabled bool

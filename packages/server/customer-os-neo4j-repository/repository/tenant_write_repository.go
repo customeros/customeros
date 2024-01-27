@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -63,9 +64,20 @@ type TenantBillingProfileUpdateFields struct {
 	UpdateInternationalPaymentsBankInfo bool      `json:"updateInternationalPaymentsBankInfo"`
 }
 
+type TenantSettingsFields struct {
+	UpdatedAt              time.Time     `json:"updatedAt"`
+	LogoUrl                string        `json:"logoUrl"`
+	DefaultCurrency        enum.Currency `json:"defaultCurrency"`
+	InvoicingEnabled       bool          `json:"invoicingEnabled"`
+	UpdateLogoUrl          bool          `json:"updateLogoUrl"`
+	UpdateInvoicingEnabled bool          `json:"updateInvoicingEnabled"`
+	UpdateDefaultCurrency  bool          `json:"updateDefaultCurrency"`
+}
+
 type TenantWriteRepository interface {
 	CreateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileCreateFields) error
 	UpdateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileUpdateFields) error
+	UpdateTenantSettings(ctx context.Context, tenant string, data TenantSettingsFields) error
 }
 
 type tenantWriteRepository struct {
@@ -208,6 +220,47 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 	if data.UpdateInternationalPaymentsBankInfo {
 		cypher += `,tbp.internationalPaymentsBankInfo=$internationalPaymentsBankInfo`
 		params["internationalPaymentsBankInfo"] = data.InternationalPaymentsBankInfo
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant string, data TenantSettingsFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.UpdateTenantBillingProfile")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.LogObjectAsJson(span, "data", data)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})
+				MERGE (t)-[:HAS_SETTINGS]->(ts:TenantSettings {tenant:$tenant})
+				ON CREATE SET
+					ts.id=randomUUID(),
+					ts.createdAt=$now
+				SET
+					ts.updatedAt=$updatedAt`
+	params := map[string]any{
+		"tenant":    tenant,
+		"updatedAt": data.UpdatedAt,
+		"now":       utils.Now(),
+	}
+	if data.UpdateInvoicingEnabled {
+		cypher += ", ts.invoicingEnabled=$invoicingEnabled"
+		params["invoicingEnabled"] = data.InvoicingEnabled
+	}
+	if data.UpdateDefaultCurrency {
+		cypher += ", ts.defaultCurrency=$defaultCurrency"
+		params["defaultCurrency"] = data.DefaultCurrency.String()
+	}
+	if data.UpdateLogoUrl {
+		cypher += ", ts.logoUrl=$logoUrl"
+		params["logoUrl"] = data.LogoUrl
 	}
 
 	span.LogFields(log.String("cypher", cypher))

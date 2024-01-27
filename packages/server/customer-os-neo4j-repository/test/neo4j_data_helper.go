@@ -51,21 +51,23 @@ func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	})
 }
 
-func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, settings entity.TenantSettingsEntity) {
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
-				MERGE (t)-[:HAS_SETTINGS]->(s:TenantSettings {id:randomUUID()})
+func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, settings entity.TenantSettingsEntity) string {
+	settingsId := utils.NewUUIDIfEmpty(settings.Id)
+	query := `MATCH (t:Tenant {name:$tenant}) 
+				MERGE (t)-[:HAS_SETTINGS]->(s:TenantSettings {id:$id})
 				ON CREATE SET
-					s:TenantSettings_%s,
 					s.createdAt=$createdAt,
 					s.invoicingEnabled=$invoicingEnabled,
 					s.tenant=$tenant,
-					s.defaultCurrency=$defaultCurrency`, tenant)
+					s.defaultCurrency=$defaultCurrency`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":               settingsId,
 		"tenant":           tenant,
 		"invoicingEnabled": settings.InvoicingEnabled,
 		"createdAt":        settings.CreatedAt,
 		"defaultCurrency":  settings.DefaultCurrency,
 	})
+	return settingsId
 }
 
 func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, profile entity.TenantBillingProfileEntity) string {

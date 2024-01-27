@@ -383,10 +383,10 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.invoiceEventHandler.OnInvoiceCreateForContractV1(ctx, evt)
 	case invoiceevents.InvoiceFillV1:
 		return s.invoiceEventHandler.OnInvoiceFillV1(ctx, evt)
-	case invoiceevents.InvoicePdfGeneratedV1: //TODO to be reviewed and adjusted
+	case invoiceevents.InvoicePdfGeneratedV1:
 		return s.invoiceEventHandler.OnInvoicePdfGenerated(ctx, evt)
 	case invoiceevents.InvoicePdfRequestedV1:
-		return nil
+		return nil // do nothing
 	case invoiceevents.InvoicePayV1:
 		return nil // do nothing yet
 	case invoiceevents.InvoiceUpdateV1:
@@ -407,6 +407,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.tenantEventHandler.OnAddBillingProfileV1(ctx, evt)
 	case tenantevent.TenantUpdateBillingProfileV1:
 		return s.tenantEventHandler.OnUpdateBillingProfileV1(ctx, evt)
+	case tenantevent.TenantUpdateSettingsV1:
+		return s.tenantEventHandler.OnUpdateTenantSettingsV1(ctx, evt)
 
 	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		return nil
