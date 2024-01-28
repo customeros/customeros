@@ -64,6 +64,7 @@ export const TimelineEventPreviewContextContextProvider = ({
   const handleDeleteParams = () => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
     params.delete('events');
+    params.delete('invoice');
     setLastActivePosition({
       ...lastActivePosition,
       [id]: params.toString(),

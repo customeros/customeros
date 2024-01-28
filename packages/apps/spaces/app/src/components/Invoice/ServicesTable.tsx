@@ -13,10 +13,11 @@ import {
 } from '@ui/presentation/SimpleTable';
 
 type ServicesTableProps = {
+  currency: string;
   services: Array<InvoiceLine>;
 };
 
-export function ServicesTable({ services }: ServicesTableProps) {
+export function ServicesTable({ services, currency }: ServicesTableProps) {
   return (
     <TableContainer width='100%'>
       <Table variant='simple' size='md' width='100%'>
@@ -86,7 +87,7 @@ export function ServicesTable({ services }: ServicesTableProps) {
                 borderColor='gray.300'
                 color='gray.500'
               >
-                {formatCurrency(service.price)}
+                {formatCurrency(service.price, 2, currency)}
               </Td>
               <Td
                 fontSize='sm'

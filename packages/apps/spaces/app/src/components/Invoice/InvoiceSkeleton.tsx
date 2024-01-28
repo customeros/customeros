@@ -95,7 +95,7 @@ export function InvoiceSkeleton() {
       </Flex>
 
       <Flex mt={4} flexDir='column'>
-        <ServicesTable services={[]} />
+        <ServicesTable services={[]} currency='USD' />
         <Flex my={2} justifyContent='space-between'>
           <Skeleton width='55%' height='14px' mr={2} />
           <Skeleton width='10%' height='14px' mr={2} />

@@ -1,0 +1,3 @@
+mutation NextDryRunInvoiceForContract($contractId: ID!) {
+    invoice_NextDryRunForContract(contractId: $contractId)
+}

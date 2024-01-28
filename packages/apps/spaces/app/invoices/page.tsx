@@ -1,14 +1,39 @@
 'use client';
 
+import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 
 import { InvoicesTable } from './src/components/InvoicesTable';
+import { PreviewPanel } from './src/components/PreviewPanel/PreviewPanel';
 
-export default function InvoicesPage() {
+interface InvoicesPageProps {
+  searchParams: { invoice?: string };
+}
+export default function InvoicesPage({ searchParams }: InvoicesPageProps) {
   return (
-    <Flex pl='3' pt='4' h='100%'>
-      <InvoicesTable />
-      {/*<Invoice {...dummyData} />*/}
+    <Flex h='100%' w='full'>
+      <Box
+        maxW={550}
+        h='full'
+        mr='4'
+        pt='4'
+        pl='3'
+        borderRight='1px solid'
+        borderColor='gray.200'
+      >
+        <InvoicesTable />
+      </Box>
+      <Box
+        w='full'
+        maxW={575}
+        h='full'
+        pr={4}
+        pt='4'
+        borderRight='1px solid'
+        borderColor='gray.200'
+      >
+        {searchParams?.invoice && <PreviewPanel id={searchParams.invoice} />}
+      </Box>
     </Flex>
   );
 }
