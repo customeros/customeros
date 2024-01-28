@@ -74,7 +74,7 @@ input OrganizationPlanUpdateInput {
     id: ID!
     name: String
     retired: Boolean
-    statusDetails: StatusDetailsInput!
+    statusDetails: StatusDetailsInput
     organizationId: ID!
 }
 

@@ -12483,7 +12483,7 @@ input OrganizationPlanUpdateInput {
     id: ID!
     name: String
     retired: Boolean
-    statusDetails: StatusDetailsInput!
+    statusDetails: StatusDetailsInput
     organizationId: ID!
 }
 
@@ -82983,7 +82983,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanUpdateInput(ctx contex
 			it.Retired = data
 		case "statusDetails":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusDetails"))
-			data, err := ec.unmarshalNStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐStatusDetailsInput(ctx, v)
+			data, err := ec.unmarshalOStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐStatusDetailsInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -103756,6 +103756,14 @@ func (ec *executionContext) unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputSortBy(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐStatusDetailsInput(ctx context.Context, v interface{}) (*model.StatusDetailsInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputStatusDetailsInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

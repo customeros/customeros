@@ -1825,7 +1825,7 @@ type OrganizationPlanUpdateInput struct {
 	ID             string              `json:"id"`
 	Name           *string             `json:"name,omitempty"`
 	Retired        *bool               `json:"retired,omitempty"`
-	StatusDetails  *StatusDetailsInput `json:"statusDetails"`
+	StatusDetails  *StatusDetailsInput `json:"statusDetails,omitempty"`
 	OrganizationID string              `json:"organizationId"`
 }
 

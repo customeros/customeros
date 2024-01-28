@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -90,7 +89,7 @@ func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, or
 	span.SetTag(tracing.SpanTagEntityId, organizationPlanId)
 	span.LogFields(log.Object("name", name), log.Object("retired", retired))
 
-	if name == nil && retired == nil {
+	if name == nil && retired == nil && statusDetails == nil {
 		// nothing to update
 		return nil
 	}
@@ -113,7 +112,6 @@ func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, or
 		Name:               utils.IfNotNilString(name),
 		Retired:            utils.IfNotNilBool(retired),
 		AppSource:          constants.AppSourceCustomerOsApi,
-		StatusDetails:      IfNotNilStatusDetailsInput(statusDetails),
 		OrgId:              orgId,
 	}
 	fieldsMask := make([]orgplanpb.OrganizationPlanFieldMask, 0)
@@ -125,6 +123,7 @@ func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, or
 	}
 	if statusDetails != nil {
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanFieldMask_ORGANIZATION_PLAN_PROPERTY_STATUS_DETAILS)
+		grpcRequest.StatusDetails = statusDetailsInputToProtobuf(statusDetails)
 	}
 	grpcRequest.FieldsMask = fieldsMask
 
@@ -313,7 +312,7 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ITEMS)
 	}
 	if statusDetails != nil {
-		grpcRequest.StatusDetails = IfNotNilStatusDetailsInput(statusDetails)
+		grpcRequest.StatusDetails = statusDetailsInputToProtobuf(statusDetails)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_STATUS_DETAILS)
 	}
 	grpcRequest.FieldsMask = fieldsMask
@@ -520,17 +519,12 @@ func (s *organizationPlanService) GetOrganizationPlansForOrganization(ctx contex
 ////// utils just for this service //////
 ////////////////////////////////////////
 
-func IfNotNilStatusDetailsInput(check any, valueExtractor ...func() *orgplanpb.StatusDetails) *orgplanpb.StatusDetails {
-	if reflect.ValueOf(check).Kind() == reflect.Struct {
-		return check.(*orgplanpb.StatusDetails)
+func statusDetailsInputToProtobuf(sd *model.StatusDetailsInput) *orgplanpb.StatusDetails {
+	out := &orgplanpb.StatusDetails{
+		Status:    sd.Status,
+		UpdatedAt: utils.ConvertTimeToTimestampPtr(&sd.UpdatedAt),
+		Comments:  sd.Text,
 	}
-	if reflect.ValueOf(check).Kind() == reflect.Pointer && reflect.ValueOf(check).IsNil() {
-		return nil
-	}
-	if len(valueExtractor) > 0 {
-		return valueExtractor[0]()
-	}
-	out := check.(*orgplanpb.StatusDetails)
 	return out
 }
 
