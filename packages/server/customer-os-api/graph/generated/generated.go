@@ -12483,7 +12483,7 @@ input OrganizationPlanUpdateInput {
     id: ID!
     name: String
     retired: Boolean
-    statusDetails: StatusDetailsInput!
+    statusDetails: StatusDetailsInput
     organizationId: ID!
 }
 
@@ -12509,12 +12509,12 @@ input OrganizationPlanMilestoneUpdateInput {
     id: ID!
     name: String
     order: Int64
-    dueDate: Time!
+    dueDate: Time
     updatedAt: Time!
     optional: Boolean
     retired: Boolean
-    items: [MilestoneItemInput!]!
-    statusDetails: StatusDetailsInput!
+    items: [MilestoneItemInput]
+    statusDetails: StatusDetailsInput
     organizationId: ID!
 }
 
@@ -82893,7 +82893,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneUpdateInput(c
 			it.Order = data
 		case "dueDate":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dueDate"))
-			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -82921,14 +82921,14 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneUpdateInput(c
 			it.Retired = data
 		case "items":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("items"))
-			data, err := ec.unmarshalNMilestoneItemInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMilestoneItemInputᚄ(ctx, v)
+			data, err := ec.unmarshalOMilestoneItemInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMilestoneItemInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Items = data
 		case "statusDetails":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusDetails"))
-			data, err := ec.unmarshalNStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐStatusDetailsInput(ctx, v)
+			data, err := ec.unmarshalOStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐStatusDetailsInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -82983,7 +82983,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanUpdateInput(ctx contex
 			it.Retired = data
 		case "statusDetails":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusDetails"))
-			data, err := ec.unmarshalNStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐStatusDetailsInput(ctx, v)
+			data, err := ec.unmarshalOStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐStatusDetailsInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -100911,28 +100911,6 @@ func (ec *executionContext) marshalNMilestoneItem2ᚖgithubᚗcomᚋopenlineᚑa
 	return ec._MilestoneItem(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNMilestoneItemInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMilestoneItemInputᚄ(ctx context.Context, v interface{}) ([]*model.MilestoneItemInput, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.MilestoneItemInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNMilestoneItemInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMilestoneItemInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) unmarshalNMilestoneItemInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMilestoneItemInput(ctx context.Context, v interface{}) (*model.MilestoneItemInput, error) {
-	res, err := ec.unmarshalInputMilestoneItemInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) marshalNNote2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v model.Note) graphql.Marshaler {
 	return ec._Note(ctx, sel, &v)
 }
@@ -101795,11 +101773,6 @@ func (ec *executionContext) marshalNStatusDetails2ᚖgithubᚗcomᚋopenlineᚑa
 		return graphql.Null
 	}
 	return ec._StatusDetails(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐStatusDetailsInput(ctx context.Context, v interface{}) (*model.StatusDetailsInput, error) {
-	res, err := ec.unmarshalInputStatusDetailsInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -103509,6 +103482,34 @@ func (ec *executionContext) marshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑa
 	return v
 }
 
+func (ec *executionContext) unmarshalOMilestoneItemInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMilestoneItemInput(ctx context.Context, v interface{}) ([]*model.MilestoneItemInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.MilestoneItemInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOMilestoneItemInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMilestoneItemInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOMilestoneItemInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMilestoneItemInput(ctx context.Context, v interface{}) (*model.MilestoneItemInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputMilestoneItemInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteInput(ctx context.Context, v interface{}) (*model.NoteInput, error) {
 	if v == nil {
 		return nil, nil
@@ -103756,6 +103757,14 @@ func (ec *executionContext) unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputSortBy(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐStatusDetailsInput(ctx context.Context, v interface{}) (*model.StatusDetailsInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputStatusDetailsInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
