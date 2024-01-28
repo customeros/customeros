@@ -796,7 +796,7 @@ func (r *organizationRepository) GetMinMaxRenewalForecastArr(ctx context.Context
 
 	cypher := `CALL { MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
               RETURN min(o.renewalForecastArr) as min, max(o.renewalForecastArr) as max }
-		      RETURN min, max`
+		      RETURN toFloat(min), toFloat(max)`
 	params := map[string]any{
 		"tenant": common.GetTenantFromContext(ctx),
 	}
