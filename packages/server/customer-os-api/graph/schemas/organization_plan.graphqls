@@ -100,12 +100,12 @@ input OrganizationPlanMilestoneUpdateInput {
     id: ID!
     name: String
     order: Int64
-    dueDate: Time!
+    dueDate: Time
     updatedAt: Time!
     optional: Boolean
     retired: Boolean
-    items: [MilestoneItemInput!]!
-    statusDetails: StatusDetailsInput!
+    items: [MilestoneItemInput]
+    statusDetails: StatusDetailsInput
     organizationId: ID!
 }
 

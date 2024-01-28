@@ -1812,12 +1812,12 @@ type OrganizationPlanMilestoneUpdateInput struct {
 	ID                 string                `json:"id"`
 	Name               *string               `json:"name,omitempty"`
 	Order              *int64                `json:"order,omitempty"`
-	DueDate            time.Time             `json:"dueDate"`
+	DueDate            *time.Time            `json:"dueDate,omitempty"`
 	UpdatedAt          time.Time             `json:"updatedAt"`
 	Optional           *bool                 `json:"optional,omitempty"`
 	Retired            *bool                 `json:"retired,omitempty"`
-	Items              []*MilestoneItemInput `json:"items"`
-	StatusDetails      *StatusDetailsInput   `json:"statusDetails"`
+	Items              []*MilestoneItemInput `json:"items,omitempty"`
+	StatusDetails      *StatusDetailsInput   `json:"statusDetails,omitempty"`
 	OrganizationID     string                `json:"organizationId"`
 }
 
