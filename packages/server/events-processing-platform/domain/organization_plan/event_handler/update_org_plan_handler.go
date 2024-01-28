@@ -54,15 +54,15 @@ func (h *updateOrganizationPlanHandler) Handle(ctx context.Context, baseRequest 
 			return eventstore.ErrAggregateNotFound
 		}
 
-		updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
+		updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
 
 		statusDetails := model.OrganizationPlanDetails{
 			Status:    request.StatusDetails.Status,
-			UpdatedAt: request.UpdatedAt.AsTime(),
+			UpdatedAt: updatedAtNotNil,
 			Comments:  request.StatusDetails.Comments,
 		}
 
-		evt, err := event.NewOrganizationPlanUpdateEvent(orgAggregate, request.OrganizationPlanId, request.Name, request.Retired, *updatedAt, extractOrganizationPlanFieldsMask(request.FieldsMask), statusDetails)
+		evt, err := event.NewOrganizationPlanUpdateEvent(orgAggregate, request.OrganizationPlanId, request.Name, request.Retired, updatedAtNotNil, extractOrganizationPlanFieldsMask(request.FieldsMask), statusDetails)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationPlanUpdateEvent")
