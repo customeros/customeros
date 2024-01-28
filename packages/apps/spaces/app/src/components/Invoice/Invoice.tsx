@@ -8,6 +8,7 @@ import { Tag } from '@ui/presentation/Tag';
 import { Text } from '@ui/typography/Text';
 import { InvoiceLine } from '@graphql/types';
 import { Heading } from '@ui/typography/Heading';
+import { Grid, GridItem } from '@ui/layout/Grid';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Divider } from '@ui/presentation/Divider';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
@@ -38,6 +39,9 @@ type InvoiceProps = {
   invoiceNumber: string;
   lines: Array<InvoiceLine>;
   isBilledToFocused?: boolean;
+  isInvoiceProviderFocused?: boolean;
+  domesticBankingDetails?: string | null;
+  internationalBankingDetails?: string | null;
 };
 
 export function Invoice({
@@ -54,8 +58,13 @@ export function Invoice({
   amountDue,
   status,
   isBilledToFocused,
+  isInvoiceProviderFocused,
   currency = 'USD',
+  domesticBankingDetails,
+  internationalBankingDetails,
 }: InvoiceProps) {
+  const isOutOfFocus = isBilledToFocused || isInvoiceProviderFocused;
+
   return (
     <Flex px={4} flexDir='column' w='inherit' overflowY='auto'>
       <Flex flexDir='column' mt={2}>
@@ -76,21 +85,18 @@ export function Invoice({
           N° {invoiceNumber}
         </Heading>
 
-        <Flex
-          mt={2}
-          borderTop='1px solid'
-          borderBottom='1px solid'
-          borderColor='gray.300'
-          justifyContent='space-evenly'
-          gap={3}
-        >
+        <Flex mt={2} justifyContent='space-evenly'>
           <Flex
             flexDir='column'
             flex={1}
-            minW={150}
+            w={170}
             py={2}
+            px={2}
             borderRight={'1px solid'}
-            filter={isBilledToFocused ? 'blur(2px)' : 'none'}
+            filter={isOutOfFocus ? 'blur(2px)' : 'none'}
+            transition='filter 0.25s ease-in-out'
+            borderTop='1px solid'
+            borderBottom='1px solid'
             borderColor='gray.300'
           >
             <Text fontWeight='semibold' mb={1} fontSize='sm'>
@@ -114,12 +120,15 @@ export function Invoice({
           </Flex>
           <Flex
             flexDir='column'
-            minW={150}
-            w='160px'
+            w={170}
             py={2}
-            pr={2}
-            borderRight={isBilledToFocused ? '1px solid' : '1px solid'}
+            px={3}
+            borderTop='1px solid'
+            borderBottom='1px solid'
+            borderRight={'1px solid'}
             borderColor={'gray.300'}
+            filter={isInvoiceProviderFocused ? 'blur(2px)' : 'none'}
+            transition='filter 0.25s ease-in-out'
             position='relative'
             sx={{
               '&:after': {
@@ -129,9 +138,10 @@ export function Invoice({
                 position: 'absolute',
                 top: 0,
                 bottom: 0,
-                left: -3,
+                left: 0,
                 right: 0,
                 opacity: isBilledToFocused ? 1 : 0,
+                transition: 'opacity 0.25s ease-in-out',
               },
             }}
           >
@@ -161,9 +171,29 @@ export function Invoice({
           <Flex
             flexDir='column'
             flex={1}
-            minW={150}
+            w={170}
             py={2}
+            px={3}
+            borderTop='1px solid'
+            borderBottom='1px solid'
+            borderColor={'gray.300'}
             filter={isBilledToFocused ? 'blur(2px)' : 'none'}
+            transition='filter 0.25s ease-in-out'
+            position='relative'
+            sx={{
+              '&:after': {
+                content: '""',
+                bg: 'transparent',
+                border: '2px solid',
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: -4,
+                opacity: isInvoiceProviderFocused ? 1 : 0,
+                transition: 'opacity 0.25s ease-in-out',
+              },
+            }}
           >
             <Text fontWeight='semibold' mb={1} fontSize='sm'>
               From
@@ -194,7 +224,8 @@ export function Invoice({
       <Flex
         mt={4}
         flexDir='column'
-        filter={isBilledToFocused ? 'blur(2px)' : 'none'}
+        filter={isOutOfFocus ? 'blur(2px)' : 'none'}
+        transition='filter 0.25s ease-in-out'
       >
         <ServicesTable services={lines} currency={currency} />
         <Flex flexDir='column' alignSelf='flex-end' w='50%' maxW='300px' mt={4}>
@@ -245,6 +276,40 @@ export function Invoice({
           )}
         </Flex>
       </Flex>
+
+      {domesticBankingDetails && internationalBankingDetails && (
+        <Grid
+          templateColumns={'50% 50%'}
+          marginTop={40}
+          minH={100}
+          borderTop='1px solid'
+          borderBottom='1px solid'
+          borderColor='gray.300'
+          maxW={600}
+          filter={isOutOfFocus ? 'blur(2px)' : 'none'}
+          transition='filter 0.25s ease-in-out'
+        >
+          <GridItem
+            p={3}
+            borderRight='1px solid'
+            borderColor='gray.300'
+            maxW='50%'
+          >
+            <Text fontSize='xs' fontWeight='semibold'>
+              Domestic Payments
+            </Text>
+            <Text fontSize='xs' whiteSpace='pre-wrap'>
+              {domesticBankingDetails}
+            </Text>
+          </GridItem>
+          <GridItem p={3}>
+            <Text fontSize='xs' fontWeight='semibold'>
+              International Payments
+            </Text>
+            <Text fontSize='xs'>{internationalBankingDetails}</Text>
+          </GridItem>
+        </Grid>
+      )}
     </Flex>
   );
 }

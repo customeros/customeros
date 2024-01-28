@@ -69,7 +69,7 @@ export const MasterPlansPanel = () => {
   if (!data?.masterPlans?.length) return <NoMasterPlans />;
 
   return (
-    <Grid templateColumns='1fr 2fr' h='full'>
+    <Grid templateColumns='1fr 2fr' h='full' maxW='50%'>
       <GridItem
         p='4'
         display='flex'

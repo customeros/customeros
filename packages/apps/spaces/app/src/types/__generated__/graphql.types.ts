@@ -3285,6 +3285,7 @@ export type Query = {
   tableViewDefs: TableViewDefPage;
   tags: Array<Tag>;
   tenant: Scalars['String']['output'];
+  tenantBillingProfile: TenantBillingProfile;
   tenantBillingProfiles: Array<TenantBillingProfile>;
   tenantSettings: TenantSettings;
   tenant_ByEmail?: Maybe<Scalars['String']['output']>;
@@ -3480,6 +3481,10 @@ export type QueryTableViewDefsArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<SortBy>;
   where?: InputMaybe<Filter>;
+};
+
+export type QueryTenantBillingProfileArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type QueryTenant_ByEmailArgs = {
