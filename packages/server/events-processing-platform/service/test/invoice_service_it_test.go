@@ -115,14 +115,22 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 		DomesticPaymentsBankInfo:      "a",
 		InternationalPaymentsBankInfo: "b",
 		Provider: &invoicepb.FillInvoiceProvider{
-			LogoUrl: "c",
-			Name:    "d",
-			Address: "e",
+			LogoUrl:      "c",
+			Name:         "d",
+			AddressLine1: "e",
+			AddressLine2: "f",
+			Zip:          "g",
+			Locality:     "h",
+			Country:      "i",
 		},
 		Customer: &invoicepb.FillInvoiceCustomer{
-			Name:    "f",
-			Address: "g",
-			Email:   "h",
+			Name:         "j",
+			Email:        "k",
+			AddressLine1: "l",
+			AddressLine2: "m",
+			Zip:          "n",
+			Locality:     "o",
+			Country:      "p",
 		},
 		Amount: 1.01,
 		Vat:    2.02,
@@ -171,10 +179,18 @@ func TestInvoiceService_FillInvoice(t *testing.T) {
 	require.Equal(t, "b", eventData.InternationalPaymentsBankInfo)
 	require.Equal(t, "c", eventData.Provider.LogoUrl)
 	require.Equal(t, "d", eventData.Provider.Name)
-	require.Equal(t, "e", eventData.Provider.Address)
-	require.Equal(t, "f", eventData.Customer.Name)
-	require.Equal(t, "g", eventData.Customer.Address)
-	require.Equal(t, "h", eventData.Customer.Email)
+	require.Equal(t, "e", eventData.Provider.AddressLine1)
+	require.Equal(t, "f", eventData.Provider.AddressLine2)
+	require.Equal(t, "g", eventData.Provider.Zip)
+	require.Equal(t, "h", eventData.Provider.Locality)
+	require.Equal(t, "i", eventData.Provider.Country)
+	require.Equal(t, "j", eventData.Customer.Name)
+	require.Equal(t, "k", eventData.Customer.Email)
+	require.Equal(t, "l", eventData.Customer.AddressLine1)
+	require.Equal(t, "m", eventData.Customer.AddressLine2)
+	require.Equal(t, "n", eventData.Customer.Zip)
+	require.Equal(t, "o", eventData.Customer.Locality)
+	require.Equal(t, "p", eventData.Customer.Country)
 	require.Equal(t, "contract-1", eventData.ContractId)
 	require.Equal(t, "USD", eventData.Currency)
 	require.Equal(t, 1, len(eventData.InvoiceLines))

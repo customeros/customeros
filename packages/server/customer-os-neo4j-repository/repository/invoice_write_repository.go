@@ -45,11 +45,19 @@ type InvoiceFillFields struct {
 	DomesticPaymentsBankInfo      string                  `json:"domesticPaymentsBankInfo"`
 	InternationalPaymentsBankInfo string                  `json:"internationalPaymentsBankInfo"`
 	CustomerName                  string                  `json:"customerName"`
-	CustomerAddress               string                  `json:"customerAddress"`
 	CustomerEmail                 string                  `json:"customerEmail"`
+	CustomerAddressLine1          string                  `json:"customerAddressLine1"`
+	CustomerAddressLine2          string                  `json:"customerAddressLine2"`
+	CustomerAddressZip            string                  `json:"customerAddressZip"`
+	CustomerAddressLocality       string                  `json:"customerAddressLocality"`
+	CustomerAddressCountry        string                  `json:"customerAddressCountry"`
 	ProviderLogoUrl               string                  `json:"providerLogoUrl"`
 	ProviderName                  string                  `json:"providerName"`
-	ProviderAddress               string                  `json:"providerAddress"`
+	ProviderAddressLine1          string                  `json:"providerAddressLine1"`
+	ProviderAddressLine2          string                  `json:"providerAddressLine2"`
+	ProviderAddressZip            string                  `json:"providerAddressZip"`
+	ProviderAddressLocality       string                  `json:"providerAddressLocality"`
+	ProviderAddressCountry        string                  `json:"providerAddressCountry"`
 }
 
 type InvoiceUpdateFields struct {
@@ -153,15 +161,27 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
 								i.billingCycle=$billingCycle,
+								i.amount=$amount,
+								i.vat=$vat,
+								i.totalAmount=$totalAmount,
+								i.status=$status,
 								i.note=$note,
 								i.domesticPaymentsBankInfo=$domesticPaymentsBankInfo,
 								i.internationalPaymentsBankInfo=$internationalPaymentsBankInfo,
 								i.customerName=$customerName,
-								i.customerAddress=$customerAddress,
 								i.customerEmail=$customerEmail,
+								i.customerAddressLine1=$customerAddressLine1,
+								i.customerAddressLine2=$customerAddressLine2,
+								i.customerAddressZip=$customerAddressZip,
+								i.customerAddressLocality=$customerAddressLocality,
+								i.customerAddressCountry=$customerAddressCountry,
 								i.providerLogoUrl=$providerLogoUrl,
 								i.providerName=$providerName,
-								i.providerAddress=$providerAddress
+								i.providerAddressLine1=$providerAddressLine1,
+								i.providerAddressLine2=$providerAddressLine2,
+								i.providerAddressZip=$providerAddressZip,
+								i.providerAddressLocality=$providerAddressLocality,
+								i.providerAddressCountry=$providerAddressCountry
 							SET 
 								i.updatedAt=$updatedAt,
 								i.amount=$amount,
@@ -172,11 +192,19 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.domesticPaymentsBankInfo=$domesticPaymentsBankInfo,
 								i.internationalPaymentsBankInfo=$internationalPaymentsBankInfo,
 								i.customerName=$customerName,
-								i.customerAddress=$customerAddress,
 								i.customerEmail=$customerEmail,
+								i.customerAddressLine1=$customerAddressLine1,
+								i.customerAddressLine2=$customerAddressLine2,
+								i.customerAddressZip=$customerAddressZip,
+								i.customerAddressLocality=$customerAddressLocality,
+								i.customerAddressCountry=$customerAddressCountry,
 								i.providerLogoUrl=$providerLogoUrl,
 								i.providerName=$providerName,
-								i.providerAddress=$providerAddress
+								i.providerAddressLine1=$providerAddressLine1,
+								i.providerAddressLine2=$providerAddressLine2,
+								i.providerAddressZip=$providerAddressZip,
+								i.providerAddressLocality=$providerAddressLocality,
+								i.providerAddressCountry=$providerAddressCountry
 							WITH c, i 
 							MERGE (c)-[:HAS_INVOICE]->(i) 
 							`, tenant)
@@ -199,11 +227,19 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 		"domesticPaymentsBankInfo":      data.DomesticPaymentsBankInfo,
 		"internationalPaymentsBankInfo": data.InternationalPaymentsBankInfo,
 		"customerName":                  data.CustomerName,
-		"customerAddress":               data.CustomerAddress,
 		"customerEmail":                 data.CustomerEmail,
+		"customerAddressLine1":          data.CustomerAddressLine1,
+		"customerAddressLine2":          data.CustomerAddressLine2,
+		"customerAddressZip":            data.CustomerAddressZip,
+		"customerAddressLocality":       data.CustomerAddressLocality,
+		"customerAddressCountry":        data.CustomerAddressCountry,
 		"providerLogoUrl":               data.ProviderLogoUrl,
 		"providerName":                  data.ProviderName,
-		"providerAddress":               data.ProviderAddress,
+		"providerAddressLine1":          data.ProviderAddressLine1,
+		"providerAddressLine2":          data.ProviderAddressLine2,
+		"providerAddressZip":            data.ProviderAddressZip,
+		"providerAddressLocality":       data.ProviderAddressLocality,
+		"providerAddressCountry":        data.ProviderAddressCountry,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

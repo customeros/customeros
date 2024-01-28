@@ -33,9 +33,20 @@ func FillInvoiceHtmlTemplate(tmpFile *os.File, invoiceData map[string]interface{
 
 	// Build the full path to the template file
 	templatePath := filepath.Join(currentDir, "/subscriptions/invoice/pdf_template/index.html")
+	templateContent, err := ioutil.ReadFile(templatePath)
+	if err != nil {
+		return errors.Wrap(err, "ioutil.ReadFile")
+	}
+
+	// Convert the template content to a string
+	templateString := string(templateContent)
 
 	// Load HTML template
-	tmpl, err := template.ParseFiles(templatePath)
+	tmpl, err := template.New("template").Funcs(template.FuncMap{
+		"safeHTML": func(text string) template.HTML {
+			return template.HTML(text)
+		},
+	}).Parse(templateString)
 	if err != nil {
 		return errors.Wrap(err, "template.ParseFiles")
 	}
@@ -133,6 +144,11 @@ func ConvertInvoiceHtmlToPdf(pdfConverterUrl string, tmpFile *os.File, invoiceDa
 		return nil, errors.Wrap(err, "addResourceFile line31681-nvh.svg")
 	}
 
+	err = addMultipartValue(writer, "9.2", "paperWidth")
+	if err != nil {
+		return nil, errors.Wrap(err, "addMultipartValue format")
+	}
+
 	writer.Close()
 
 	// Create HTTP request
@@ -207,6 +223,18 @@ func getFileByName(filePath string) (*os.File, error) {
 	}
 
 	return file, nil
+}
+
+func addMultipartValue(writer *multipart.Writer, value string, partName string) error {
+	part, err := writer.CreateFormField(partName)
+	if err != nil {
+		return errors.Wrap(err, "writer.CreateFormFile")
+	}
+	_, err = part.Write([]byte(value))
+	if err != nil {
+		return errors.Wrap(err, "part.Write")
+	}
+	return nil
 }
 
 func addMultipartFile(writer *multipart.Writer, file *os.File, partName string) error {

@@ -143,12 +143,20 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		},
 		"a",
 		"b",
-		"c",
-		"d",
-		"e",
-		"f",
-		"g",
-		"h",
+		"customerName",
+		"customerAddressLine1",
+		"customerAddressLine2",
+		"customerAddressZip",
+		"customerAddressLocality",
+		"customerAddressCountry",
+		"customerEmail",
+		"providerLogoUrl",
+		"providerName",
+		"providerAddressLine1",
+		"providerAddressLine2",
+		"providerAddressZip",
+		"providerAddressLocality",
+		"providerAddressCountry",
 		"note abc",
 		neo4jenum.InvoiceStatusDue.String(),
 		100,
@@ -217,12 +225,20 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, float64(120), invoiceEntity.TotalAmount)
 	require.Equal(t, "a", invoiceEntity.DomesticPaymentsBankInfo)
 	require.Equal(t, "b", invoiceEntity.InternationalPaymentsBankInfo)
-	require.Equal(t, "c", invoiceEntity.CustomerName)
-	require.Equal(t, "d", invoiceEntity.CustomerAddress)
-	require.Equal(t, "e", invoiceEntity.CustomerEmail)
-	require.Equal(t, "f", invoiceEntity.ProviderLogoUrl)
-	require.Equal(t, "g", invoiceEntity.ProviderName)
-	require.Equal(t, "h", invoiceEntity.ProviderAddress)
+	require.Equal(t, "customerName", invoiceEntity.Customer.Name)
+	require.Equal(t, "customerEmail", invoiceEntity.Customer.Email)
+	require.Equal(t, "customerAddressLine1", invoiceEntity.Customer.AddressLine1)
+	require.Equal(t, "customerAddressLine2", invoiceEntity.Customer.AddressLine2)
+	require.Equal(t, "customerAddressZip", invoiceEntity.Customer.Zip)
+	require.Equal(t, "customerAddressLocality", invoiceEntity.Customer.Locality)
+	require.Equal(t, "customerAddressCountry", invoiceEntity.Customer.Country)
+	require.Equal(t, "providerLogoUrl", invoiceEntity.Provider.LogoUrl)
+	require.Equal(t, "providerName", invoiceEntity.Provider.Name)
+	require.Equal(t, "providerAddressLine1", invoiceEntity.Provider.AddressLine1)
+	require.Equal(t, "providerAddressLine2", invoiceEntity.Provider.AddressLine2)
+	require.Equal(t, "providerAddressZip", invoiceEntity.Provider.Zip)
+	require.Equal(t, "providerAddressLocality", invoiceEntity.Provider.Locality)
+	require.Equal(t, "providerAddressCountry", invoiceEntity.Provider.Country)
 	require.Equal(t, "note abc", invoiceEntity.Note)
 	require.Equal(t, neo4jenum.InvoiceStatusDue, invoiceEntity.Status)
 

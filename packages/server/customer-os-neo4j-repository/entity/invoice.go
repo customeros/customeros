@@ -17,12 +17,8 @@ type InvoiceEntity struct {
 	DueDate                       time.Time
 	DomesticPaymentsBankInfo      string
 	InternationalPaymentsBankInfo string
-	CustomerName                  string
-	CustomerAddress               string
-	CustomerEmail                 string
-	ProviderLogoUrl               string
-	ProviderName                  string
-	ProviderAddress               string
+	Customer                      InvoiceCustomer
+	Provider                      InvoiceProvider
 	Amount                        float64 `neo4jDb:"property:amount;lookupName:AMOUNT;supportCaseSensitive:false"`
 	Vat                           float64 `neo4jDb:"property:vat;lookupName:VAT;supportCaseSensitive:false"`
 	TotalAmount                   float64 `neo4jDb:"property:totalAmount;lookupName:TOTAL_AMOUNT;supportCaseSensitive:false"`
@@ -36,6 +32,26 @@ type InvoiceEntity struct {
 	AppSource     string
 
 	InvoiceInternalFields InvoiceInternalFields
+}
+
+type InvoiceCustomer struct {
+	Name         string
+	Email        string
+	AddressLine1 string
+	AddressLine2 string
+	Zip          string
+	Locality     string
+	Country      string
+}
+
+type InvoiceProvider struct {
+	LogoUrl      string
+	Name         string
+	AddressLine1 string
+	AddressLine2 string
+	Zip          string
+	Locality     string
+	Country      string
 }
 
 type InvoiceInternalFields struct {

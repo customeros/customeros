@@ -15,6 +15,26 @@ invoice(id: $id) {
     repositoryFileId
     note
 
+    customer {
+        name
+        email
+        addressLine1
+        addressLine2
+        addressZip
+        addressLocality
+        addressCountry
+    }
+
+    provider {
+        logoUrl
+        name
+        addressLine1
+        addressLine2
+        addressZip
+        addressLocality
+        addressCountry
+    }
+
     invoiceLines {
         name
         price

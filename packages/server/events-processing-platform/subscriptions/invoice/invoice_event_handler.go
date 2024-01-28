@@ -192,11 +192,11 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 		tenantBillingProfileEntity.DomesticPaymentsBankInfo,
 		tenantBillingProfileEntity.InternationalPaymentsBankInfo,
 		contractEntity.OrganizationLegalName,
-		utils.JoinNonEmpty(", ", contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractEntity.Country),
 		contractEntity.InvoiceEmail,
+		contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractEntity.Country,
 		tenantSettingsEntity.LogoUrl,
 		tenantBillingProfileEntity.LegalName,
-		utils.JoinNonEmpty(", ", tenantBillingProfileEntity.AddressLine1, tenantBillingProfileEntity.AddressLine2, tenantBillingProfileEntity.AddressLine3, tenantBillingProfileEntity.Zip, tenantBillingProfileEntity.Locality, tenantBillingProfileEntity.Country),
+		tenantBillingProfileEntity.AddressLine1, tenantBillingProfileEntity.AddressLine2, tenantBillingProfileEntity.Zip, tenantBillingProfileEntity.Locality, tenantBillingProfileEntity.Country,
 		contractEntity.InvoiceNote,
 		amount,
 		vat,
@@ -247,7 +247,10 @@ func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed n
 	return float64(0)
 }
 
-func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, domesticPaymentsBankInfo, internationalPaymentsBankInfo, customerName, customerAddress, customerEmail, providerLogoUrl, providerName, providerAddress, note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
+func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, domesticPaymentsBankInfo, internationalPaymentsBankInfo,
+	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry,
+	providerLogoUrl, providerName, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
+	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
 	_, err := h.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
@@ -257,14 +260,22 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 		DomesticPaymentsBankInfo:      domesticPaymentsBankInfo,
 		InternationalPaymentsBankInfo: internationalPaymentsBankInfo,
 		Customer: &invoicepb.FillInvoiceCustomer{
-			Name:    customerName,
-			Address: customerAddress,
-			Email:   customerEmail,
+			Name:         customerName,
+			Email:        customerEmail,
+			AddressLine1: customerAddressLine1,
+			AddressLine2: customerAddressLine2,
+			Zip:          customerAddressZip,
+			Locality:     customerAddressLocality,
+			Country:      customerAddressCountry,
 		},
 		Provider: &invoicepb.FillInvoiceProvider{
-			LogoUrl: providerLogoUrl,
-			Name:    providerName,
-			Address: providerAddress,
+			LogoUrl:      providerLogoUrl,
+			Name:         providerName,
+			AddressLine1: providerAddressLine1,
+			AddressLine2: providerAddressLine2,
+			Zip:          providerAddressZip,
+			Locality:     providerAddressLocality,
+			Country:      providerAddressCountry,
 		},
 		Amount:       amount,
 		Vat:          vat,
@@ -453,13 +464,17 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	data := map[string]interface{}{
-		"CustomerName":                  invoiceEntity.CustomerName,
-		"CustomerAddress":               invoiceEntity.CustomerAddress,
-		"CustomerEmail":                 invoiceEntity.CustomerEmail,
-		"ProviderLogoUrl":               invoiceEntity.ProviderLogoUrl,
-		"ProviderLogoExtension":         GetFileExtensionFromUrl(invoiceEntity.ProviderLogoUrl),
-		"ProviderName":                  invoiceEntity.ProviderName,
-		"ProviderAddress":               invoiceEntity.ProviderAddress,
+		"CustomerName":                  invoiceEntity.Customer.Name,
+		"CustomerEmail":                 invoiceEntity.Customer.Email,
+		"CustomerAddressLine1":          invoiceEntity.Customer.AddressLine1,
+		"CustomerAddressLine2":          invoiceEntity.Customer.AddressLine2,
+		"CustomerAddressLine3":          utils.JoinNonEmpty(", ", invoiceEntity.Customer.Zip, invoiceEntity.Customer.Locality, invoiceEntity.Customer.Country),
+		"ProviderLogoUrl":               invoiceEntity.Provider.LogoUrl,
+		"ProviderLogoExtension":         GetFileExtensionFromUrl(invoiceEntity.Provider.LogoUrl),
+		"ProviderName":                  invoiceEntity.Provider.Name,
+		"ProviderAddressLine1":          invoiceEntity.Provider.AddressLine1,
+		"ProviderAddressLine2":          invoiceEntity.Provider.AddressLine2,
+		"ProviderAddressLine3":          utils.JoinNonEmpty(", ", invoiceEntity.Provider.Zip, invoiceEntity.Provider.Locality, invoiceEntity.Provider.Country),
 		"InvoiceNumber":                 invoiceEntity.Number,
 		"InvoiceIssueDate":              invoiceEntity.CreatedAt.Format("02 Jan 2006"),
 		"InvoiceDueDate":                invoiceEntity.DueDate.Format("02 Jan 2006"),
