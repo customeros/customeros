@@ -37,12 +37,28 @@ type Invoice implements SourceFields & Node {
     note:               String
     domesticPaymentsBankInfo:       String
     internationalPaymentsBankInfo:  String
-    customerName:                   String
-    customerAddress:                String
-    customerEmail:                  String
-    providerLogoUrl:                String
-    providerName:                   String
-    providerAddress:                String
+    customer:                   InvoiceCustomer!
+    provider:                   InvoiceProvider!
+}
+
+type InvoiceCustomer {
+    name:               String
+    email:              String
+    addressLine1:       String
+    addressLine2:       String
+    addressZip:         String
+    addressLocality:    String
+    addressCountry:     String
+}
+
+type InvoiceProvider {
+    logoUrl:            String
+    name:               String
+    addressLine1:       String
+    addressLine2:       String
+    addressZip:         String
+    addressLocality:    String
+    addressCountry:     String
 }
 
 type InvoiceLine implements Node {

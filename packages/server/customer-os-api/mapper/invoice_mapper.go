@@ -31,12 +31,24 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 		Note:                          utils.StringPtrNillable(entity.Note),
 		DomesticPaymentsBankInfo:      utils.StringPtrNillable(entity.DomesticPaymentsBankInfo),
 		InternationalPaymentsBankInfo: utils.StringPtrNillable(entity.InternationalPaymentsBankInfo),
-		CustomerName:                  utils.StringPtrNillable(entity.CustomerName),
-		CustomerAddress:               utils.StringPtrNillable(entity.CustomerAddress),
-		CustomerEmail:                 utils.StringPtrNillable(entity.CustomerEmail),
-		ProviderLogoURL:               utils.StringPtrNillable(entity.ProviderLogoUrl),
-		ProviderName:                  utils.StringPtrNillable(entity.ProviderName),
-		ProviderAddress:               utils.StringPtrNillable(entity.ProviderAddress),
+		Customer: &model.InvoiceCustomer{
+			Name:            utils.StringPtrNillable(entity.Customer.Name),
+			Email:           utils.StringPtrNillable(entity.Customer.Email),
+			AddressLine1:    utils.StringPtrNillable(entity.Customer.AddressLine1),
+			AddressLine2:    utils.StringPtrNillable(entity.Customer.AddressLine2),
+			AddressZip:      utils.StringPtrNillable(entity.Customer.Zip),
+			AddressLocality: utils.StringPtrNillable(entity.Customer.Locality),
+			AddressCountry:  utils.StringPtrNillable(entity.Customer.Country),
+		},
+		Provider: &model.InvoiceProvider{
+			LogoURL:         utils.StringPtrNillable(entity.Provider.LogoUrl),
+			Name:            utils.StringPtrNillable(entity.Provider.Name),
+			AddressLine1:    utils.StringPtrNillable(entity.Provider.AddressLine1),
+			AddressLine2:    utils.StringPtrNillable(entity.Provider.AddressLine2),
+			AddressZip:      utils.StringPtrNillable(entity.Provider.Zip),
+			AddressLocality: utils.StringPtrNillable(entity.Provider.Locality),
+			AddressCountry:  utils.StringPtrNillable(entity.Provider.Country),
+		},
 	}
 	return &invoice
 }

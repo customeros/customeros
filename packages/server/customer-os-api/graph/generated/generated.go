@@ -563,9 +563,7 @@ type ComplexityRoot struct {
 		AppSource                     func(childComplexity int) int
 		CreatedAt                     func(childComplexity int) int
 		Currency                      func(childComplexity int) int
-		CustomerAddress               func(childComplexity int) int
-		CustomerEmail                 func(childComplexity int) int
-		CustomerName                  func(childComplexity int) int
+		Customer                      func(childComplexity int) int
 		DomesticPaymentsBankInfo      func(childComplexity int) int
 		DryRun                        func(childComplexity int) int
 		DueDate                       func(childComplexity int) int
@@ -576,9 +574,7 @@ type ComplexityRoot struct {
 		Number                        func(childComplexity int) int
 		PeriodEndDate                 func(childComplexity int) int
 		PeriodStartDate               func(childComplexity int) int
-		ProviderAddress               func(childComplexity int) int
-		ProviderLogoURL               func(childComplexity int) int
-		ProviderName                  func(childComplexity int) int
+		Provider                      func(childComplexity int) int
 		RepositoryFileID              func(childComplexity int) int
 		Source                        func(childComplexity int) int
 		SourceOfTruth                 func(childComplexity int) int
@@ -586,6 +582,16 @@ type ComplexityRoot struct {
 		TotalAmount                   func(childComplexity int) int
 		UpdatedAt                     func(childComplexity int) int
 		Vat                           func(childComplexity int) int
+	}
+
+	InvoiceCustomer struct {
+		AddressCountry  func(childComplexity int) int
+		AddressLine1    func(childComplexity int) int
+		AddressLine2    func(childComplexity int) int
+		AddressLocality func(childComplexity int) int
+		AddressZip      func(childComplexity int) int
+		Email           func(childComplexity int) int
+		Name            func(childComplexity int) int
 	}
 
 	InvoiceLine struct {
@@ -597,6 +603,16 @@ type ComplexityRoot struct {
 		Quantity    func(childComplexity int) int
 		TotalAmount func(childComplexity int) int
 		Vat         func(childComplexity int) int
+	}
+
+	InvoiceProvider struct {
+		AddressCountry  func(childComplexity int) int
+		AddressLine1    func(childComplexity int) int
+		AddressLine2    func(childComplexity int) int
+		AddressLocality func(childComplexity int) int
+		AddressZip      func(childComplexity int) int
+		LogoURL         func(childComplexity int) int
+		Name            func(childComplexity int) int
 	}
 
 	InvoicesPage struct {
@@ -4199,26 +4215,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Invoice.Currency(childComplexity), true
 
-	case "Invoice.customerAddress":
-		if e.complexity.Invoice.CustomerAddress == nil {
+	case "Invoice.customer":
+		if e.complexity.Invoice.Customer == nil {
 			break
 		}
 
-		return e.complexity.Invoice.CustomerAddress(childComplexity), true
-
-	case "Invoice.customerEmail":
-		if e.complexity.Invoice.CustomerEmail == nil {
-			break
-		}
-
-		return e.complexity.Invoice.CustomerEmail(childComplexity), true
-
-	case "Invoice.customerName":
-		if e.complexity.Invoice.CustomerName == nil {
-			break
-		}
-
-		return e.complexity.Invoice.CustomerName(childComplexity), true
+		return e.complexity.Invoice.Customer(childComplexity), true
 
 	case "Invoice.domesticPaymentsBankInfo":
 		if e.complexity.Invoice.DomesticPaymentsBankInfo == nil {
@@ -4290,26 +4292,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Invoice.PeriodStartDate(childComplexity), true
 
-	case "Invoice.providerAddress":
-		if e.complexity.Invoice.ProviderAddress == nil {
+	case "Invoice.provider":
+		if e.complexity.Invoice.Provider == nil {
 			break
 		}
 
-		return e.complexity.Invoice.ProviderAddress(childComplexity), true
-
-	case "Invoice.providerLogoUrl":
-		if e.complexity.Invoice.ProviderLogoURL == nil {
-			break
-		}
-
-		return e.complexity.Invoice.ProviderLogoURL(childComplexity), true
-
-	case "Invoice.providerName":
-		if e.complexity.Invoice.ProviderName == nil {
-			break
-		}
-
-		return e.complexity.Invoice.ProviderName(childComplexity), true
+		return e.complexity.Invoice.Provider(childComplexity), true
 
 	case "Invoice.repositoryFileId":
 		if e.complexity.Invoice.RepositoryFileID == nil {
@@ -4359,6 +4347,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Invoice.Vat(childComplexity), true
+
+	case "InvoiceCustomer.addressCountry":
+		if e.complexity.InvoiceCustomer.AddressCountry == nil {
+			break
+		}
+
+		return e.complexity.InvoiceCustomer.AddressCountry(childComplexity), true
+
+	case "InvoiceCustomer.addressLine1":
+		if e.complexity.InvoiceCustomer.AddressLine1 == nil {
+			break
+		}
+
+		return e.complexity.InvoiceCustomer.AddressLine1(childComplexity), true
+
+	case "InvoiceCustomer.addressLine2":
+		if e.complexity.InvoiceCustomer.AddressLine2 == nil {
+			break
+		}
+
+		return e.complexity.InvoiceCustomer.AddressLine2(childComplexity), true
+
+	case "InvoiceCustomer.addressLocality":
+		if e.complexity.InvoiceCustomer.AddressLocality == nil {
+			break
+		}
+
+		return e.complexity.InvoiceCustomer.AddressLocality(childComplexity), true
+
+	case "InvoiceCustomer.addressZip":
+		if e.complexity.InvoiceCustomer.AddressZip == nil {
+			break
+		}
+
+		return e.complexity.InvoiceCustomer.AddressZip(childComplexity), true
+
+	case "InvoiceCustomer.email":
+		if e.complexity.InvoiceCustomer.Email == nil {
+			break
+		}
+
+		return e.complexity.InvoiceCustomer.Email(childComplexity), true
+
+	case "InvoiceCustomer.name":
+		if e.complexity.InvoiceCustomer.Name == nil {
+			break
+		}
+
+		return e.complexity.InvoiceCustomer.Name(childComplexity), true
 
 	case "InvoiceLine.amount":
 		if e.complexity.InvoiceLine.Amount == nil {
@@ -4415,6 +4452,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InvoiceLine.Vat(childComplexity), true
+
+	case "InvoiceProvider.addressCountry":
+		if e.complexity.InvoiceProvider.AddressCountry == nil {
+			break
+		}
+
+		return e.complexity.InvoiceProvider.AddressCountry(childComplexity), true
+
+	case "InvoiceProvider.addressLine1":
+		if e.complexity.InvoiceProvider.AddressLine1 == nil {
+			break
+		}
+
+		return e.complexity.InvoiceProvider.AddressLine1(childComplexity), true
+
+	case "InvoiceProvider.addressLine2":
+		if e.complexity.InvoiceProvider.AddressLine2 == nil {
+			break
+		}
+
+		return e.complexity.InvoiceProvider.AddressLine2(childComplexity), true
+
+	case "InvoiceProvider.addressLocality":
+		if e.complexity.InvoiceProvider.AddressLocality == nil {
+			break
+		}
+
+		return e.complexity.InvoiceProvider.AddressLocality(childComplexity), true
+
+	case "InvoiceProvider.addressZip":
+		if e.complexity.InvoiceProvider.AddressZip == nil {
+			break
+		}
+
+		return e.complexity.InvoiceProvider.AddressZip(childComplexity), true
+
+	case "InvoiceProvider.logoUrl":
+		if e.complexity.InvoiceProvider.LogoURL == nil {
+			break
+		}
+
+		return e.complexity.InvoiceProvider.LogoURL(childComplexity), true
+
+	case "InvoiceProvider.name":
+		if e.complexity.InvoiceProvider.Name == nil {
+			break
+		}
+
+		return e.complexity.InvoiceProvider.Name(childComplexity), true
 
 	case "InvoicesPage.content":
 		if e.complexity.InvoicesPage.Content == nil {
@@ -11701,12 +11787,28 @@ type Invoice implements SourceFields & Node {
     note:               String
     domesticPaymentsBankInfo:       String
     internationalPaymentsBankInfo:  String
-    customerName:                   String
-    customerAddress:                String
-    customerEmail:                  String
-    providerLogoUrl:                String
-    providerName:                   String
-    providerAddress:                String
+    customer:                   InvoiceCustomer!
+    provider:                   InvoiceProvider!
+}
+
+type InvoiceCustomer {
+    name:               String
+    email:              String
+    addressLine1:       String
+    addressLine2:       String
+    addressZip:         String
+    addressLocality:    String
+    addressCountry:     String
+}
+
+type InvoiceProvider {
+    logoUrl:            String
+    name:               String
+    addressLine1:       String
+    addressLine2:       String
+    addressZip:         String
+    addressLocality:    String
+    addressCountry:     String
 }
 
 type InvoiceLine implements Node {
@@ -34776,8 +34878,8 @@ func (ec *executionContext) fieldContext_Invoice_internationalPaymentsBankInfo(c
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_customerName(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_customerName(ctx, field)
+func (ec *executionContext) _Invoice_customer(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_customer(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -34790,7 +34892,127 @@ func (ec *executionContext) _Invoice_customerName(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CustomerName, nil
+		return obj.Customer, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InvoiceCustomer)
+	fc.Result = res
+	return ec.marshalNInvoiceCustomer2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceCustomer(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_customer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "name":
+				return ec.fieldContext_InvoiceCustomer_name(ctx, field)
+			case "email":
+				return ec.fieldContext_InvoiceCustomer_email(ctx, field)
+			case "addressLine1":
+				return ec.fieldContext_InvoiceCustomer_addressLine1(ctx, field)
+			case "addressLine2":
+				return ec.fieldContext_InvoiceCustomer_addressLine2(ctx, field)
+			case "addressZip":
+				return ec.fieldContext_InvoiceCustomer_addressZip(ctx, field)
+			case "addressLocality":
+				return ec.fieldContext_InvoiceCustomer_addressLocality(ctx, field)
+			case "addressCountry":
+				return ec.fieldContext_InvoiceCustomer_addressCountry(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InvoiceCustomer", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_provider(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_provider(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Provider, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InvoiceProvider)
+	fc.Result = res
+	return ec.marshalNInvoiceProvider2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceProvider(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_provider(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "logoUrl":
+				return ec.fieldContext_InvoiceProvider_logoUrl(ctx, field)
+			case "name":
+				return ec.fieldContext_InvoiceProvider_name(ctx, field)
+			case "addressLine1":
+				return ec.fieldContext_InvoiceProvider_addressLine1(ctx, field)
+			case "addressLine2":
+				return ec.fieldContext_InvoiceProvider_addressLine2(ctx, field)
+			case "addressZip":
+				return ec.fieldContext_InvoiceProvider_addressZip(ctx, field)
+			case "addressLocality":
+				return ec.fieldContext_InvoiceProvider_addressLocality(ctx, field)
+			case "addressCountry":
+				return ec.fieldContext_InvoiceProvider_addressCountry(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InvoiceProvider", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceCustomer_name(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceCustomer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceCustomer_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -34804,9 +35026,9 @@ func (ec *executionContext) _Invoice_customerName(ctx context.Context, field gra
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_customerName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_InvoiceCustomer_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Invoice",
+		Object:     "InvoiceCustomer",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -34817,8 +35039,8 @@ func (ec *executionContext) fieldContext_Invoice_customerName(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_customerAddress(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_customerAddress(ctx, field)
+func (ec *executionContext) _InvoiceCustomer_email(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceCustomer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceCustomer_email(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -34831,7 +35053,7 @@ func (ec *executionContext) _Invoice_customerAddress(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CustomerAddress, nil
+		return obj.Email, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -34845,9 +35067,9 @@ func (ec *executionContext) _Invoice_customerAddress(ctx context.Context, field 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_customerAddress(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_InvoiceCustomer_email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Invoice",
+		Object:     "InvoiceCustomer",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -34858,8 +35080,8 @@ func (ec *executionContext) fieldContext_Invoice_customerAddress(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_customerEmail(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_customerEmail(ctx, field)
+func (ec *executionContext) _InvoiceCustomer_addressLine1(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceCustomer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceCustomer_addressLine1(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -34872,7 +35094,7 @@ func (ec *executionContext) _Invoice_customerEmail(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CustomerEmail, nil
+		return obj.AddressLine1, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -34886,9 +35108,9 @@ func (ec *executionContext) _Invoice_customerEmail(ctx context.Context, field gr
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_customerEmail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_InvoiceCustomer_addressLine1(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Invoice",
+		Object:     "InvoiceCustomer",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -34899,8 +35121,8 @@ func (ec *executionContext) fieldContext_Invoice_customerEmail(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_providerLogoUrl(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_providerLogoUrl(ctx, field)
+func (ec *executionContext) _InvoiceCustomer_addressLine2(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceCustomer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceCustomer_addressLine2(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -34913,7 +35135,7 @@ func (ec *executionContext) _Invoice_providerLogoUrl(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ProviderLogoURL, nil
+		return obj.AddressLine2, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -34927,9 +35149,9 @@ func (ec *executionContext) _Invoice_providerLogoUrl(ctx context.Context, field 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_providerLogoUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_InvoiceCustomer_addressLine2(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Invoice",
+		Object:     "InvoiceCustomer",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -34940,8 +35162,8 @@ func (ec *executionContext) fieldContext_Invoice_providerLogoUrl(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_providerName(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_providerName(ctx, field)
+func (ec *executionContext) _InvoiceCustomer_addressZip(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceCustomer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceCustomer_addressZip(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -34954,7 +35176,7 @@ func (ec *executionContext) _Invoice_providerName(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ProviderName, nil
+		return obj.AddressZip, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -34968,9 +35190,9 @@ func (ec *executionContext) _Invoice_providerName(ctx context.Context, field gra
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_providerName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_InvoiceCustomer_addressZip(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Invoice",
+		Object:     "InvoiceCustomer",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -34981,8 +35203,8 @@ func (ec *executionContext) fieldContext_Invoice_providerName(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_providerAddress(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_providerAddress(ctx, field)
+func (ec *executionContext) _InvoiceCustomer_addressLocality(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceCustomer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceCustomer_addressLocality(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -34995,7 +35217,7 @@ func (ec *executionContext) _Invoice_providerAddress(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ProviderAddress, nil
+		return obj.AddressLocality, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -35009,9 +35231,50 @@ func (ec *executionContext) _Invoice_providerAddress(ctx context.Context, field 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_providerAddress(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_InvoiceCustomer_addressLocality(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Invoice",
+		Object:     "InvoiceCustomer",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceCustomer_addressCountry(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceCustomer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceCustomer_addressCountry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AddressCountry, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceCustomer_addressCountry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceCustomer",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -35374,6 +35637,293 @@ func (ec *executionContext) fieldContext_InvoiceLine_totalAmount(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _InvoiceProvider_logoUrl(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceProvider) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceProvider_logoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LogoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceProvider_logoUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceProvider_name(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceProvider) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceProvider_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceProvider_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceProvider_addressLine1(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceProvider) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceProvider_addressLine1(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AddressLine1, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceProvider_addressLine1(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceProvider_addressLine2(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceProvider) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceProvider_addressLine2(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AddressLine2, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceProvider_addressLine2(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceProvider_addressZip(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceProvider) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceProvider_addressZip(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AddressZip, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceProvider_addressZip(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceProvider_addressLocality(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceProvider) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceProvider_addressLocality(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AddressLocality, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceProvider_addressLocality(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceProvider_addressCountry(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceProvider) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceProvider_addressCountry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AddressCountry, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceProvider_addressCountry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InvoicesPage_content(ctx context.Context, field graphql.CollectedField, obj *model.InvoicesPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InvoicesPage_content(ctx, field)
 	if err != nil {
@@ -35455,18 +36005,10 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 				return ec.fieldContext_Invoice_domesticPaymentsBankInfo(ctx, field)
 			case "internationalPaymentsBankInfo":
 				return ec.fieldContext_Invoice_internationalPaymentsBankInfo(ctx, field)
-			case "customerName":
-				return ec.fieldContext_Invoice_customerName(ctx, field)
-			case "customerAddress":
-				return ec.fieldContext_Invoice_customerAddress(ctx, field)
-			case "customerEmail":
-				return ec.fieldContext_Invoice_customerEmail(ctx, field)
-			case "providerLogoUrl":
-				return ec.fieldContext_Invoice_providerLogoUrl(ctx, field)
-			case "providerName":
-				return ec.fieldContext_Invoice_providerName(ctx, field)
-			case "providerAddress":
-				return ec.fieldContext_Invoice_providerAddress(ctx, field)
+			case "customer":
+				return ec.fieldContext_Invoice_customer(ctx, field)
+			case "provider":
+				return ec.fieldContext_Invoice_provider(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Invoice", field.Name)
 		},
@@ -68643,18 +69185,10 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 				return ec.fieldContext_Invoice_domesticPaymentsBankInfo(ctx, field)
 			case "internationalPaymentsBankInfo":
 				return ec.fieldContext_Invoice_internationalPaymentsBankInfo(ctx, field)
-			case "customerName":
-				return ec.fieldContext_Invoice_customerName(ctx, field)
-			case "customerAddress":
-				return ec.fieldContext_Invoice_customerAddress(ctx, field)
-			case "customerEmail":
-				return ec.fieldContext_Invoice_customerEmail(ctx, field)
-			case "providerLogoUrl":
-				return ec.fieldContext_Invoice_providerLogoUrl(ctx, field)
-			case "providerName":
-				return ec.fieldContext_Invoice_providerName(ctx, field)
-			case "providerAddress":
-				return ec.fieldContext_Invoice_providerAddress(ctx, field)
+			case "customer":
+				return ec.fieldContext_Invoice_customer(ctx, field)
+			case "provider":
+				return ec.fieldContext_Invoice_provider(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Invoice", field.Name)
 		},
@@ -90687,18 +91221,64 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Invoice_domesticPaymentsBankInfo(ctx, field, obj)
 		case "internationalPaymentsBankInfo":
 			out.Values[i] = ec._Invoice_internationalPaymentsBankInfo(ctx, field, obj)
-		case "customerName":
-			out.Values[i] = ec._Invoice_customerName(ctx, field, obj)
-		case "customerAddress":
-			out.Values[i] = ec._Invoice_customerAddress(ctx, field, obj)
-		case "customerEmail":
-			out.Values[i] = ec._Invoice_customerEmail(ctx, field, obj)
-		case "providerLogoUrl":
-			out.Values[i] = ec._Invoice_providerLogoUrl(ctx, field, obj)
-		case "providerName":
-			out.Values[i] = ec._Invoice_providerName(ctx, field, obj)
-		case "providerAddress":
-			out.Values[i] = ec._Invoice_providerAddress(ctx, field, obj)
+		case "customer":
+			out.Values[i] = ec._Invoice_customer(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "provider":
+			out.Values[i] = ec._Invoice_provider(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var invoiceCustomerImplementors = []string{"InvoiceCustomer"}
+
+func (ec *executionContext) _InvoiceCustomer(ctx context.Context, sel ast.SelectionSet, obj *model.InvoiceCustomer) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, invoiceCustomerImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("InvoiceCustomer")
+		case "name":
+			out.Values[i] = ec._InvoiceCustomer_name(ctx, field, obj)
+		case "email":
+			out.Values[i] = ec._InvoiceCustomer_email(ctx, field, obj)
+		case "addressLine1":
+			out.Values[i] = ec._InvoiceCustomer_addressLine1(ctx, field, obj)
+		case "addressLine2":
+			out.Values[i] = ec._InvoiceCustomer_addressLine2(ctx, field, obj)
+		case "addressZip":
+			out.Values[i] = ec._InvoiceCustomer_addressZip(ctx, field, obj)
+		case "addressLocality":
+			out.Values[i] = ec._InvoiceCustomer_addressLocality(ctx, field, obj)
+		case "addressCountry":
+			out.Values[i] = ec._InvoiceCustomer_addressCountry(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -90773,6 +91353,54 @@ func (ec *executionContext) _InvoiceLine(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var invoiceProviderImplementors = []string{"InvoiceProvider"}
+
+func (ec *executionContext) _InvoiceProvider(ctx context.Context, sel ast.SelectionSet, obj *model.InvoiceProvider) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, invoiceProviderImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("InvoiceProvider")
+		case "logoUrl":
+			out.Values[i] = ec._InvoiceProvider_logoUrl(ctx, field, obj)
+		case "name":
+			out.Values[i] = ec._InvoiceProvider_name(ctx, field, obj)
+		case "addressLine1":
+			out.Values[i] = ec._InvoiceProvider_addressLine1(ctx, field, obj)
+		case "addressLine2":
+			out.Values[i] = ec._InvoiceProvider_addressLine2(ctx, field, obj)
+		case "addressZip":
+			out.Values[i] = ec._InvoiceProvider_addressZip(ctx, field, obj)
+		case "addressLocality":
+			out.Values[i] = ec._InvoiceProvider_addressLocality(ctx, field, obj)
+		case "addressCountry":
+			out.Values[i] = ec._InvoiceProvider_addressCountry(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -101024,6 +101652,16 @@ func (ec *executionContext) marshalNInvoice2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ec._Invoice(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNInvoiceCustomer2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceCustomer(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceCustomer) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._InvoiceCustomer(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNInvoiceLine2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceLineᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InvoiceLine) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -101098,6 +101736,16 @@ func (ec *executionContext) unmarshalNInvoiceLineInput2ᚕᚖgithubᚗcomᚋopen
 func (ec *executionContext) unmarshalNInvoiceLineInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceLineInput(ctx context.Context, v interface{}) (*model.InvoiceLineInput, error) {
 	res, err := ec.unmarshalInputInvoiceLineInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInvoiceProvider2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceProvider(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceProvider) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._InvoiceProvider(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNInvoiceSimulateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceSimulateInput(ctx context.Context, v interface{}) (model.InvoiceSimulateInput, error) {

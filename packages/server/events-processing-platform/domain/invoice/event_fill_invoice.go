@@ -30,17 +30,29 @@ type InvoiceFillEvent struct {
 	Provider                      InvoiceFillProviderEvent `json:"provider"`
 }
 type InvoiceFillCustomerEvent struct {
-	Name    string `json:"name"`
-	Address string `json:"address"`
-	Email   string `json:"email"`
+	Name         string `json:"name"`
+	AddressLine1 string `json:"addressLine1"`
+	AddressLine2 string `json:"addressLine2"`
+	Zip          string `json:"zip"`
+	Locality     string `json:"locality"`
+	Country      string `json:"country"`
+	Email        string `json:"email"`
 }
 type InvoiceFillProviderEvent struct {
-	LogoUrl string `json:"logoUrl"`
-	Name    string `json:"name"`
-	Address string `json:"address"`
+	LogoUrl      string `json:"logoUrl"`
+	Name         string `json:"name"`
+	AddressLine1 string `json:"addressLine1"`
+	AddressLine2 string `json:"addressLine2"`
+	Zip          string `json:"zip"`
+	Locality     string `json:"locality"`
+	Country      string `json:"country"`
 }
 
-func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, invoice Invoice, domesticPaymentsBankInfo, internationalPaymentsBankInfo, customerName, customerAddress, customerEmail, providerLogoUrl, providerName, providerAddress, note, status string, amount, vat, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
+func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, invoice Invoice,
+	domesticPaymentsBankInfo, internationalPaymentsBankInfo,
+	customerName, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerEmail,
+	providerLogoUrl, providerName, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
+	note, status string, amount, vat, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
 	eventData := InvoiceFillEvent{
 		Tenant:                        aggregate.GetTenant(),
 		UpdatedAt:                     updatedAt,
@@ -60,14 +72,22 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, in
 		DomesticPaymentsBankInfo:      domesticPaymentsBankInfo,
 		InternationalPaymentsBankInfo: internationalPaymentsBankInfo,
 		Customer: InvoiceFillCustomerEvent{
-			Name:    customerName,
-			Address: customerAddress,
-			Email:   customerEmail,
+			Name:         customerName,
+			Email:        customerEmail,
+			AddressLine1: customerAddressLine1,
+			AddressLine2: customerAddressLine2,
+			Zip:          customerAddressZip,
+			Locality:     customerAddressLocality,
+			Country:      customerAddressCountry,
 		},
 		Provider: InvoiceFillProviderEvent{
-			LogoUrl: providerLogoUrl,
-			Name:    providerName,
-			Address: providerAddress,
+			LogoUrl:      providerLogoUrl,
+			Name:         providerName,
+			AddressLine1: providerAddressLine1,
+			AddressLine2: providerAddressLine2,
+			Zip:          providerAddressZip,
+			Locality:     providerAddressLocality,
+			Country:      providerAddressCountry,
 		},
 	}
 

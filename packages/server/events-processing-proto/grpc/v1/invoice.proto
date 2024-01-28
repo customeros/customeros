@@ -53,14 +53,22 @@ message FillInvoiceRequest {
 
 message FillInvoiceCustomer {
   string Name = 1;
-  string Address = 2;
-  string Email = 3;
+  string AddressLine1 = 2;
+  string AddressLine2 = 3;
+  string Zip = 4;
+  string Locality = 5;
+  string Country = 6;
+  string Email = 7;
 }
 
 message FillInvoiceProvider {
   string LogoUrl = 1;
   string Name = 2;
-  string Address = 3;
+  string AddressLine1 = 3;
+  string AddressLine2 = 4;
+  string Zip = 5;
+  string Locality = 6;
+  string Country = 7;
 }
 
 message InvoiceLine {

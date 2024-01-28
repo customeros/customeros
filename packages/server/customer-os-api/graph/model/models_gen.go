@@ -1026,33 +1026,29 @@ type InteractionSessionParticipantInput struct {
 }
 
 type Invoice struct {
-	ID                            string         `json:"id"`
-	CreatedAt                     time.Time      `json:"createdAt"`
-	UpdatedAt                     time.Time      `json:"updatedAt"`
-	Source                        DataSource     `json:"source"`
-	SourceOfTruth                 DataSource     `json:"sourceOfTruth"`
-	AppSource                     string         `json:"appSource"`
-	DryRun                        bool           `json:"dryRun"`
-	Number                        string         `json:"number"`
-	PeriodStartDate               time.Time      `json:"periodStartDate"`
-	PeriodEndDate                 time.Time      `json:"periodEndDate"`
-	DueDate                       time.Time      `json:"dueDate"`
-	Amount                        float64        `json:"amount"`
-	Vat                           float64        `json:"vat"`
-	TotalAmount                   float64        `json:"totalAmount"`
-	Currency                      string         `json:"currency"`
-	RepositoryFileID              string         `json:"repositoryFileId"`
-	InvoiceLines                  []*InvoiceLine `json:"invoiceLines"`
-	Status                        *InvoiceStatus `json:"status,omitempty"`
-	Note                          *string        `json:"note,omitempty"`
-	DomesticPaymentsBankInfo      *string        `json:"domesticPaymentsBankInfo,omitempty"`
-	InternationalPaymentsBankInfo *string        `json:"internationalPaymentsBankInfo,omitempty"`
-	CustomerName                  *string        `json:"customerName,omitempty"`
-	CustomerAddress               *string        `json:"customerAddress,omitempty"`
-	CustomerEmail                 *string        `json:"customerEmail,omitempty"`
-	ProviderLogoURL               *string        `json:"providerLogoUrl,omitempty"`
-	ProviderName                  *string        `json:"providerName,omitempty"`
-	ProviderAddress               *string        `json:"providerAddress,omitempty"`
+	ID                            string           `json:"id"`
+	CreatedAt                     time.Time        `json:"createdAt"`
+	UpdatedAt                     time.Time        `json:"updatedAt"`
+	Source                        DataSource       `json:"source"`
+	SourceOfTruth                 DataSource       `json:"sourceOfTruth"`
+	AppSource                     string           `json:"appSource"`
+	DryRun                        bool             `json:"dryRun"`
+	Number                        string           `json:"number"`
+	PeriodStartDate               time.Time        `json:"periodStartDate"`
+	PeriodEndDate                 time.Time        `json:"periodEndDate"`
+	DueDate                       time.Time        `json:"dueDate"`
+	Amount                        float64          `json:"amount"`
+	Vat                           float64          `json:"vat"`
+	TotalAmount                   float64          `json:"totalAmount"`
+	Currency                      string           `json:"currency"`
+	RepositoryFileID              string           `json:"repositoryFileId"`
+	InvoiceLines                  []*InvoiceLine   `json:"invoiceLines"`
+	Status                        *InvoiceStatus   `json:"status,omitempty"`
+	Note                          *string          `json:"note,omitempty"`
+	DomesticPaymentsBankInfo      *string          `json:"domesticPaymentsBankInfo,omitempty"`
+	InternationalPaymentsBankInfo *string          `json:"internationalPaymentsBankInfo,omitempty"`
+	Customer                      *InvoiceCustomer `json:"customer"`
+	Provider                      *InvoiceProvider `json:"provider"`
 }
 
 func (Invoice) IsSourceFields()                   {}
@@ -1062,6 +1058,16 @@ func (this Invoice) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
 func (this Invoice) GetAppSource() string         { return this.AppSource }
 
 func (Invoice) IsNode() {}
+
+type InvoiceCustomer struct {
+	Name            *string `json:"name,omitempty"`
+	Email           *string `json:"email,omitempty"`
+	AddressLine1    *string `json:"addressLine1,omitempty"`
+	AddressLine2    *string `json:"addressLine2,omitempty"`
+	AddressZip      *string `json:"addressZip,omitempty"`
+	AddressLocality *string `json:"addressLocality,omitempty"`
+	AddressCountry  *string `json:"addressCountry,omitempty"`
+}
 
 type InvoiceLine struct {
 	ID          string    `json:"id"`
@@ -1083,6 +1089,16 @@ type InvoiceLineInput struct {
 	Billed            BilledType `json:"billed"`
 	Price             float64    `json:"price"`
 	Quantity          int        `json:"quantity"`
+}
+
+type InvoiceProvider struct {
+	LogoURL         *string `json:"logoUrl,omitempty"`
+	Name            *string `json:"name,omitempty"`
+	AddressLine1    *string `json:"addressLine1,omitempty"`
+	AddressLine2    *string `json:"addressLine2,omitempty"`
+	AddressZip      *string `json:"addressZip,omitempty"`
+	AddressLocality *string `json:"addressLocality,omitempty"`
+	AddressCountry  *string `json:"addressCountry,omitempty"`
 }
 
 type InvoiceSimulateInput struct {
