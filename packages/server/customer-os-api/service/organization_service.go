@@ -458,13 +458,13 @@ func (s *organizationService) GetMinMaxRenewalForecastArr(ctx context.Context) (
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	min, max, err := s.repositories.OrganizationRepository.GetMinMaxRenewalForecastArr(ctx)
+	minArr, maxArr, err := s.repositories.OrganizationRepository.GetMinMaxRenewalForecastArr(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error getting min and max renewal forecast ARR: %s", err.Error())
 		return 0, 0, err
 	}
-	return min, max, nil
+	return minArr, maxArr, nil
 }
 
 func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error) {

@@ -146,7 +146,8 @@ func (h *organizationEventHandler) WebScrapeOrganizationByWebsite(ctx context.Co
 func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, tenant, organizationId, url string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.webScrapeOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant), log.String("organizationId", organizationId), log.String("url", url))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("organizationId", organizationId), log.String("url", url))
 
 	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
