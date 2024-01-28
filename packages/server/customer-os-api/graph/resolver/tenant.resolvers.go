@@ -84,6 +84,29 @@ func (r *mutationResolver) TenantUpdateBillingProfile(ctx context.Context, input
 	return mapper.MapEntityToTenantBillingProfile(updatedTenantBillingProfileEntity), nil
 }
 
+// TenantUpdateSettings is the resolver for the tenant_UpdateSettings field.
+func (r *mutationResolver) TenantUpdateSettings(ctx context.Context, input *model.TenantSettingsInput) (*model.TenantSettings, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantUpdateSettings", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	err := r.Services.TenantService.UpdateTenantSettings(ctx, input)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update tenant settings")
+		return nil, err
+	}
+
+	updatedTenantSettingsEntity, err := r.Services.TenantService.GetTenantSettings(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch tenant settings")
+		return nil, nil
+	}
+	return mapper.MapEntityToTenantSettings(updatedTenantSettingsEntity), nil
+}
+
 // Tenant is the resolver for the tenant field.
 func (r *queryResolver) Tenant(ctx context.Context) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Tenant", graphql.GetOperationContext(ctx))
@@ -140,4 +163,19 @@ func (r *queryResolver) TenantBillingProfiles(ctx context.Context) ([]*model.Ten
 		return nil, nil
 	}
 	return mapper.MapEntitiesToTenantBillingProfiles(tenantBillingProfileEntities), nil
+}
+
+// TenantSettings is the resolver for the tenantSettings field.
+func (r *queryResolver) TenantSettings(ctx context.Context) (*model.TenantSettings, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TenantSettings", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenantSettingsEntity, err := r.Services.TenantService.GetTenantSettings(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch tenant settings")
+		return nil, nil
+	}
+	return mapper.MapEntityToTenantSettings(tenantSettingsEntity), nil
 }

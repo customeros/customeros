@@ -1,0 +1,11 @@
+mutation UpdateTenantSettings {
+tenant_UpdateSettings(
+    input: {
+        patch: true
+        logoUrl: "https://logo.com"
+        invoicingEnabled: true
+        defaultCurrency: EUR
+    }) {
+    logoUrl
+  }
+}

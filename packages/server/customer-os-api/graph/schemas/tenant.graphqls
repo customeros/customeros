@@ -4,12 +4,20 @@ extend type Query {
     tenant_ByEmail(email: String!): String @hasRole(roles: [ADMIN])
 
     tenantBillingProfiles: [TenantBillingProfile!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tenantSettings: TenantSettings! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
     tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
     tenant_AddBillingProfile(input: TenantBillingProfileInput!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
     tenant_UpdateBillingProfile(input: TenantBillingProfileUpdateInput!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tenant_UpdateSettings(input: TenantSettingsInput): TenantSettings! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type TenantSettings {
+    logoUrl:          String!
+    defaultCurrency:  Currency
+    invoicingEnabled: Boolean!
 }
 
 type TenantBillingProfile implements SourceFields & Node {
@@ -65,4 +73,11 @@ input TenantBillingProfileUpdateInput {
     legalName:          String
     domesticPaymentsBankInfo:      String
     internationalPaymentsBankInfo: String
+}
+
+input TenantSettingsInput {
+    patch:            Boolean
+    logoUrl:          String
+    defaultCurrency:  Currency
+    invoicingEnabled: Boolean
 }

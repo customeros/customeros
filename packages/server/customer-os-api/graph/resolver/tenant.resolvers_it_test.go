@@ -11,10 +11,12 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"strings"
 	"testing"
 )
@@ -326,4 +328,74 @@ func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
 	require.Equal(t, profileId, profile.ID)
 
 	require.True(t, calledUpdateTenantBillingProfile)
+}
+
+func TestQueryResolver_GetTenantSettings(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
+		LogoUrl:          "logoUrl",
+		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		InvoicingEnabled: true,
+	})
+
+	rawResponse, err := c.RawPost(getQuery("tenant/get_tenant_settings"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var tenantGraphqlResponse struct {
+		TenantSettings model.TenantSettings
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &tenantGraphqlResponse)
+	require.Nil(t, err)
+	require.NotNil(t, tenantGraphqlResponse)
+
+	tenantSettings := tenantGraphqlResponse.TenantSettings
+	require.Equal(t, "logoUrl", tenantSettings.LogoURL)
+	require.Equal(t, model.CurrencyUsd, *tenantSettings.DefaultCurrency)
+	require.Equal(t, true, tenantSettings.InvoicingEnabled)
+}
+
+func TestMutationResolver_TenantUpdateSettings(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{})
+	calledUpdateTenantSettings := false
+
+	tenantServiceCallbacks := events_platform.MockTenantServiceCallbacks{
+		UpdateTenantSettings: func(context context.Context, profile *tenantpb.UpdateTenantSettingsRequest) (*emptypb.Empty, error) {
+			require.Equal(t, tenantName, profile.Tenant)
+			require.Equal(t, testUserId, profile.LoggedInUserId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, profile.AppSource)
+			require.Equal(t, "https://logo.com", profile.LogoUrl)
+			require.Equal(t, "EUR", profile.DefaultCurrency)
+			require.Equal(t, true, profile.InvoicingEnabled)
+			require.ElementsMatch(t, []tenantpb.TenantSettingsFieldMask{
+				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_URL,
+				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED,
+				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY,
+			},
+				profile.FieldsMask)
+			calledUpdateTenantSettings = true
+			return &emptypb.Empty{}, nil
+		},
+	}
+	events_platform.SetTenantCallbacks(&tenantServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "tenant/update_tenant_settings", map[string]interface{}{})
+	require.Nil(t, rawResponse.Errors)
+
+	var responseStruct struct {
+		Tenant_UpdateSettings model.TenantSettings
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &responseStruct)
+	require.Nil(t, err)
+
+	require.True(t, calledUpdateTenantSettings)
 }

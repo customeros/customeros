@@ -59,6 +59,7 @@ func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, 
 					s.createdAt=$createdAt,
 					s.invoicingEnabled=$invoicingEnabled,
 					s.tenant=$tenant,
+					s.logoUrl=$logoUrl,
 					s.defaultCurrency=$defaultCurrency`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":               settingsId,
@@ -66,6 +67,7 @@ func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, 
 		"invoicingEnabled": settings.InvoicingEnabled,
 		"createdAt":        settings.CreatedAt,
 		"defaultCurrency":  settings.DefaultCurrency,
+		"logoUrl":          settings.LogoUrl,
 	})
 	return settingsId
 }

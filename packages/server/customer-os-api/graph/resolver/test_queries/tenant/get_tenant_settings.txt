@@ -1,0 +1,7 @@
+query GetTenantSettings {
+  tenantSettings{
+    logoUrl
+    invoicingEnabled
+    defaultCurrency
+  }
+}
