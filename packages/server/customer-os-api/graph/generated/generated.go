@@ -925,6 +925,7 @@ type ComplexityRoot struct {
 		TenantAddBillingProfile                 func(childComplexity int, input model.TenantBillingProfileInput) int
 		TenantMerge                             func(childComplexity int, tenant model.TenantInput) int
 		TenantUpdateBillingProfile              func(childComplexity int, input model.TenantBillingProfileUpdateInput) int
+		TenantUpdateSettings                    func(childComplexity int, input *model.TenantSettingsInput) int
 		UserAddRole                             func(childComplexity int, id string, role model.Role) int
 		UserAddRoleInTenant                     func(childComplexity int, id string, tenant string, role model.Role) int
 		UserCreate                              func(childComplexity int, input model.UserInput) int
@@ -1203,6 +1204,7 @@ type ComplexityRoot struct {
 		TenantBillingProfiles                 func(childComplexity int) int
 		TenantByEmail                         func(childComplexity int, email string) int
 		TenantByWorkspace                     func(childComplexity int, workspace model.WorkspaceInput) int
+		TenantSettings                        func(childComplexity int) int
 		TimelineEvents                        func(childComplexity int, ids []string) int
 		User                                  func(childComplexity int, id string) int
 		UserByEmail                           func(childComplexity int, email string) int
@@ -1338,6 +1340,12 @@ type ComplexityRoot struct {
 		SourceOfTruth                 func(childComplexity int) int
 		UpdatedAt                     func(childComplexity int) int
 		Zip                           func(childComplexity int) int
+	}
+
+	TenantSettings struct {
+		DefaultCurrency  func(childComplexity int) int
+		InvoicingEnabled func(childComplexity int) int
+		LogoURL          func(childComplexity int) int
 	}
 
 	User struct {
@@ -1658,6 +1666,7 @@ type MutationResolver interface {
 	TenantMerge(ctx context.Context, tenant model.TenantInput) (string, error)
 	TenantAddBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (*model.TenantBillingProfile, error)
 	TenantUpdateBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) (*model.TenantBillingProfile, error)
+	TenantUpdateSettings(ctx context.Context, input *model.TenantSettingsInput) (*model.TenantSettings, error)
 	UserCreate(ctx context.Context, input model.UserInput) (*model.User, error)
 	UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error)
 	UserAddRole(ctx context.Context, id string, role model.Role) (*model.User, error)
@@ -1772,6 +1781,7 @@ type QueryResolver interface {
 	TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error)
 	TenantByEmail(ctx context.Context, email string) (*string, error)
 	TenantBillingProfiles(ctx context.Context) ([]*model.TenantBillingProfile, error)
+	TenantSettings(ctx context.Context) (*model.TenantSettings, error)
 	BillableInfo(ctx context.Context) (*model.TenantBillableInfo, error)
 	TimelineEvents(ctx context.Context, ids []string) ([]model.TimelineEvent, error)
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
@@ -7122,6 +7132,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.TenantUpdateBillingProfile(childComplexity, args["input"].(model.TenantBillingProfileUpdateInput)), true
 
+	case "Mutation.tenant_UpdateSettings":
+		if e.complexity.Mutation.TenantUpdateSettings == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_tenant_UpdateSettings_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TenantUpdateSettings(childComplexity, args["input"].(*model.TenantSettingsInput)), true
+
 	case "Mutation.user_AddRole":
 		if e.complexity.Mutation.UserAddRole == nil {
 			break
@@ -9022,6 +9044,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.TenantByWorkspace(childComplexity, args["workspace"].(model.WorkspaceInput)), true
 
+	case "Query.tenantSettings":
+		if e.complexity.Query.TenantSettings == nil {
+			break
+		}
+
+		return e.complexity.Query.TenantSettings(childComplexity), true
+
 	case "Query.timelineEvents":
 		if e.complexity.Query.TimelineEvents == nil {
 			break
@@ -9693,6 +9722,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TenantBillingProfile.Zip(childComplexity), true
 
+	case "TenantSettings.defaultCurrency":
+		if e.complexity.TenantSettings.DefaultCurrency == nil {
+			break
+		}
+
+		return e.complexity.TenantSettings.DefaultCurrency(childComplexity), true
+
+	case "TenantSettings.invoicingEnabled":
+		if e.complexity.TenantSettings.InvoicingEnabled == nil {
+			break
+		}
+
+		return e.complexity.TenantSettings.InvoicingEnabled(childComplexity), true
+
+	case "TenantSettings.logoUrl":
+		if e.complexity.TenantSettings.LogoURL == nil {
+			break
+		}
+
+		return e.complexity.TenantSettings.LogoURL(childComplexity), true
+
 	case "User.appSource":
 		if e.complexity.User.AppSource == nil {
 			break
@@ -10043,6 +10093,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputTenantBillingProfileInput,
 		ec.unmarshalInputTenantBillingProfileUpdateInput,
 		ec.unmarshalInputTenantInput,
+		ec.unmarshalInputTenantSettingsInput,
 		ec.unmarshalInputTimeRange,
 		ec.unmarshalInputUserInput,
 		ec.unmarshalInputUserUpdateInput,
@@ -12993,12 +13044,20 @@ input TagIdOrNameInput {
     tenant_ByEmail(email: String!): String @hasRole(roles: [ADMIN])
 
     tenantBillingProfiles: [TenantBillingProfile!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tenantSettings: TenantSettings! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
     tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
     tenant_AddBillingProfile(input: TenantBillingProfileInput!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
     tenant_UpdateBillingProfile(input: TenantBillingProfileUpdateInput!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tenant_UpdateSettings(input: TenantSettingsInput): TenantSettings! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type TenantSettings {
+    logoUrl:          String!
+    defaultCurrency:  Currency
+    invoicingEnabled: Boolean!
 }
 
 type TenantBillingProfile implements SourceFields & Node {
@@ -13054,6 +13113,13 @@ input TenantBillingProfileUpdateInput {
     legalName:          String
     domesticPaymentsBankInfo:      String
     internationalPaymentsBankInfo: String
+}
+
+input TenantSettingsInput {
+    patch:            Boolean
+    logoUrl:          String
+    defaultCurrency:  Currency
+    invoicingEnabled: Boolean
 }`, BuiltIn: false},
 	{Name: "../schemas/tenant_billable.graphqls", Input: `extend type Query {
     billableInfo: TenantBillableInfo! @hasRole(roles: [USER, ADMIN])
@@ -16357,6 +16423,21 @@ func (ec *executionContext) field_Mutation_tenant_UpdateBillingProfile_args(ctx 
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNTenantBillingProfileUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillingProfileUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_tenant_UpdateSettings_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.TenantSettingsInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOTenantSettingsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantSettingsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -56661,6 +56742,99 @@ func (ec *executionContext) fieldContext_Mutation_tenant_UpdateBillingProfile(ct
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_tenant_UpdateSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_tenant_UpdateSettings(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().TenantUpdateSettings(rctx, fc.Args["input"].(*model.TenantSettingsInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.TenantSettings); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.TenantSettings`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.TenantSettings)
+	fc.Result = res
+	return ec.marshalNTenantSettings2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantSettings(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_tenant_UpdateSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "logoUrl":
+				return ec.fieldContext_TenantSettings_logoUrl(ctx, field)
+			case "defaultCurrency":
+				return ec.fieldContext_TenantSettings_defaultCurrency(ctx, field)
+			case "invoicingEnabled":
+				return ec.fieldContext_TenantSettings_invoicingEnabled(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TenantSettings", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_tenant_UpdateSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_user_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_user_Create(ctx, field)
 	if err != nil {
@@ -70862,6 +71036,88 @@ func (ec *executionContext) fieldContext_Query_tenantBillingProfiles(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_tenantSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_tenantSettings(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().TenantSettings(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.TenantSettings); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.TenantSettings`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.TenantSettings)
+	fc.Result = res
+	return ec.marshalNTenantSettings2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantSettings(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_tenantSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "logoUrl":
+				return ec.fieldContext_TenantSettings_logoUrl(ctx, field)
+			case "defaultCurrency":
+				return ec.fieldContext_TenantSettings_defaultCurrency(ctx, field)
+			case "invoicingEnabled":
+				return ec.fieldContext_TenantSettings_invoicingEnabled(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TenantSettings", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_billableInfo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_billableInfo(ctx, field)
 	if err != nil {
@@ -75877,6 +76133,135 @@ func (ec *executionContext) fieldContext_TenantBillingProfile_internationalPayme
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantSettings_logoUrl(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantSettings_logoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LogoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantSettings_logoUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantSettings_defaultCurrency(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantSettings_defaultCurrency(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DefaultCurrency, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Currency)
+	fc.Result = res
+	return ec.marshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantSettings_defaultCurrency(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Currency does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantSettings_invoicingEnabled(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantSettings_invoicingEnabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InvoicingEnabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantSettings_invoicingEnabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -84658,6 +85043,54 @@ func (ec *executionContext) unmarshalInputTenantInput(ctx context.Context, obj i
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTenantSettingsInput(ctx context.Context, obj interface{}) (model.TenantSettingsInput, error) {
+	var it model.TenantSettingsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"patch", "logoUrl", "defaultCurrency", "invoicingEnabled"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "patch":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("patch"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Patch = data
+		case "logoUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LogoURL = data
+		case "defaultCurrency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultCurrency"))
+			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCurrency(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultCurrency = data
+		case "invoicingEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingEnabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InvoicingEnabled = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputTimeRange(ctx context.Context, obj interface{}) (model.TimeRange, error) {
 	var it model.TimeRange
 	asMap := map[string]interface{}{}
@@ -93111,6 +93544,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "tenant_UpdateSettings":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_tenant_UpdateSettings(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "user_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_user_Create(ctx, field)
@@ -96576,6 +97016,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "tenantSettings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_tenantSettings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "billableInfo":
 			field := field
 
@@ -97673,6 +98135,52 @@ func (ec *executionContext) _TenantBillingProfile(ctx context.Context, sel ast.S
 			}
 		case "internationalPaymentsBankInfo":
 			out.Values[i] = ec._TenantBillingProfile_internationalPaymentsBankInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var tenantSettingsImplementors = []string{"TenantSettings"}
+
+func (ec *executionContext) _TenantSettings(ctx context.Context, sel ast.SelectionSet, obj *model.TenantSettings) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, tenantSettingsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TenantSettings")
+		case "logoUrl":
+			out.Values[i] = ec._TenantSettings_logoUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "defaultCurrency":
+			out.Values[i] = ec._TenantSettings_defaultCurrency(ctx, field, obj)
+		case "invoicingEnabled":
+			out.Values[i] = ec._TenantSettings_invoicingEnabled(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -102557,6 +103065,20 @@ func (ec *executionContext) unmarshalNTenantInput2githubᚗcomᚋopenlineᚑai�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNTenantSettings2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantSettings(ctx context.Context, sel ast.SelectionSet, v model.TenantSettings) graphql.Marshaler {
+	return ec._TenantSettings(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTenantSettings2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantSettings(ctx context.Context, sel ast.SelectionSet, v *model.TenantSettings) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TenantSettings(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
 	res, err := graphql.UnmarshalTime(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -104383,6 +104905,14 @@ func (ec *executionContext) unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋopen
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalOTenantSettingsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantSettingsInput(ctx context.Context, v interface{}) (*model.TenantSettingsInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputTenantSettingsInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {

@@ -2293,6 +2293,19 @@ type TenantInput struct {
 	AppSource *string `json:"appSource,omitempty"`
 }
 
+type TenantSettings struct {
+	LogoURL          string    `json:"logoUrl"`
+	DefaultCurrency  *Currency `json:"defaultCurrency,omitempty"`
+	InvoicingEnabled bool      `json:"invoicingEnabled"`
+}
+
+type TenantSettingsInput struct {
+	Patch            *bool     `json:"patch,omitempty"`
+	LogoURL          *string   `json:"logoUrl,omitempty"`
+	DefaultCurrency  *Currency `json:"defaultCurrency,omitempty"`
+	InvoicingEnabled *bool     `json:"invoicingEnabled,omitempty"`
+}
+
 type TimeRange struct {
 	// The start time of the time range.
 	// **Required.**

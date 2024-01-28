@@ -30,6 +30,8 @@ type TenantService interface {
 	GetTenantBillingProfile(ctx context.Context, id string) (*neo4jentity.TenantBillingProfileEntity, error)
 	CreateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (string, error)
 	UpdateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) error
+	GetTenantSettings(ctx context.Context) (*neo4jentity.TenantSettingsEntity, error)
+	UpdateTenantSettings(ctx context.Context, input *model.TenantSettingsInput) error
 }
 
 type tenantService struct {
@@ -174,7 +176,7 @@ func (s *tenantService) CreateTenantBillingProfile(ctx context.Context, input mo
 }
 
 func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.UpdateTenantBillingProfile")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.UpdateTenantBillingProfile")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
@@ -252,6 +254,65 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := s.grpcClients.TenantClient.UpdateBillingProfile(ctx, &updateRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *tenantService) GetTenantSettings(ctx context.Context) (*neo4jentity.TenantSettingsEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantSettings")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+
+	dbNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode), nil
+}
+
+func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.TenantSettingsInput) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.UpdateTenantSettings")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	var defaultCurrency string
+	if input.DefaultCurrency != nil {
+		defaultCurrency = input.DefaultCurrency.String()
+	}
+
+	var fieldMask []tenantpb.TenantSettingsFieldMask
+	updateRequest := tenantpb.UpdateTenantSettingsRequest{
+		Tenant:           common.GetTenantFromContext(ctx),
+		LoggedInUserId:   common.GetUserIdFromContext(ctx),
+		AppSource:        constants.AppSourceCustomerOsApi,
+		LogoUrl:          utils.IfNotNilString(input.LogoURL),
+		DefaultCurrency:  defaultCurrency,
+		InvoicingEnabled: utils.IfNotNilBool(input.InvoicingEnabled),
+	}
+
+	if input.Patch != nil && *input.Patch {
+		if input.LogoURL != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_URL)
+		}
+		if input.DefaultCurrency != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY)
+		}
+		if input.InvoicingEnabled != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED)
+		}
+		updateRequest.FieldsMask = fieldMask
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := s.grpcClients.TenantClient.UpdateTenantSettings(ctx, &updateRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
