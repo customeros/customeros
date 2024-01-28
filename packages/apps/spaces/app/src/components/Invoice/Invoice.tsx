@@ -196,7 +196,7 @@ export function Invoice({
         flexDir='column'
         filter={isBilledToFocused ? 'blur(2px)' : 'none'}
       >
-        <ServicesTable services={lines} />
+        <ServicesTable services={lines} currency={currency} />
         <Flex flexDir='column' alignSelf='flex-end' w='50%' maxW='300px' mt={4}>
           <Flex justifyContent='space-between'>
             <Text fontSize='sm' fontWeight='medium'>

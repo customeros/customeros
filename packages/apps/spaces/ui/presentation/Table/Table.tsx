@@ -65,23 +65,24 @@ interface TableProps<T extends object> {
   renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
 }
 
-const fullRowSelectionStyle = {
+const fullRowSelectionStyle = (index: number) => ({
   '&:after': {
     content: '""',
     height: '2px',
     width: '100%',
     background: 'gray.200',
-    bottom: '0px',
+    bottom: '-1px',
     position: 'absolute',
   },
   '&:before': {
     content: '""',
     height: '2px',
+    top: index === 0 ? '-1px' : '-2px',
     width: '100%',
     background: 'gray.200',
     position: 'absolute',
   },
-};
+});
 
 export const Table = <T extends object>({
   data,
@@ -162,6 +163,7 @@ export const Table = <T extends object>({
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
     [table, totalItems],
   );
+  // console.log('🏷️ ----- table: ', table.table);
 
   return (
     <Flex w='100%' flexDir='column' position='relative'>
@@ -234,7 +236,7 @@ export const Table = <T extends object>({
                     ? {
                         '&': {
                           cursor: fullRowSelection ? 'pointer' : 'default',
-                          ...fullRowSelectionStyle,
+                          ...fullRowSelectionStyle(virtualRow.index),
                         },
                       }
                     : {
@@ -246,13 +248,13 @@ export const Table = <T extends object>({
                 }
                 sx={
                   fullRowSelection && row?.getIsSelected()
-                    ? fullRowSelectionStyle
+                    ? fullRowSelectionStyle(virtualRow.index)
                     : undefined
                 }
                 onClick={
                   fullRowSelection
-                    ? () => {
-                        row?.getToggleSelectedHandler();
+                    ? (s) => {
+                        row?.getToggleSelectedHandler()(s);
                         /// @ts-expect-error improve this later
                         const rowId = (row.original as unknown)?.id;
                         onFullRowSelection?.(rowId);

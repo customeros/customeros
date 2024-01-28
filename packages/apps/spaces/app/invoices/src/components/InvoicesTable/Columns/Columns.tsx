@@ -14,8 +14,8 @@ const columnHelper = createColumnHelper<Invoice>();
 export const columns = [
   columnHelper.accessor('number', {
     id: 'NUMBER',
-    minSize: 75,
-    maxSize: 75,
+    minSize: 150,
+    maxSize: 150,
     enableSorting: false,
     enableColumnFilter: false,
     cell: (props) => <Text overflow='hidden'>{props?.getValue()}</Text>,
@@ -33,7 +33,8 @@ export const columns = [
   }),
   columnHelper.accessor('status', {
     id: 'STATUS',
-    minSize: 40,
+    minSize: 60,
+    maxSize: 60,
 
     header: (props) => (
       <THead
@@ -58,6 +59,7 @@ export const columns = [
   columnHelper.accessor('dueDate', {
     id: 'DUE_DATE',
     minSize: 40,
+    maxSize: 40,
 
     header: (props) => (
       <THead
@@ -98,7 +100,11 @@ export const columns = [
       />
     ),
     cell: (props) => {
-      return <Text>{formatCurrency(props.getValue())}</Text>;
+      return (
+        <Text>
+          {formatCurrency(props.getValue(), 2, props.row.original.currency)}
+        </Text>
+      );
     },
     skeleton: () => (
       <Skeleton

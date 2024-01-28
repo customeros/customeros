@@ -54,6 +54,7 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
       }}
       invoiceNumber={data?.invoice?.number ?? ''}
       lines={data?.invoice?.invoiceLines ?? []}
+      currency={data?.invoice?.currency ?? 'USD'}
     />
   );
 };
