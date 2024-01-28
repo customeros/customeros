@@ -33,7 +33,7 @@ func NewUpdateOrganizationPlanMilestoneCommandHandler(log logger.Logger, es even
 	return &updateOrganizationPlanMilestoneCommandHandler{log: log, es: es, cfg: cfg}
 }
 
-// Handle processes the UpdateOrganizationPlanCommand to update a new org plan.
+// Handle processes the UpdateOrganizationPlanMilestoneCommand to update a new org plan.
 func (h *updateOrganizationPlanMilestoneCommandHandler) Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.UpdateOrganizationPlanMilestoneGrpcRequest) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateOrganizationPlanMilestoneCommandHandler.Handle")
 	defer span.Finish()
@@ -54,11 +54,11 @@ func (h *updateOrganizationPlanMilestoneCommandHandler) Handle(ctx context.Conte
 			return eventstore.ErrAggregateNotFound
 		}
 
-		updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
+		updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
 
 		statusDetails := model.OrganizationPlanDetails{
 			Status:    request.StatusDetails.Status,
-			UpdatedAt: request.UpdatedAt.AsTime(),
+			UpdatedAt: updatedAtNotNil,
 			Comments:  request.StatusDetails.Comments,
 		}
 
@@ -72,13 +72,13 @@ func (h *updateOrganizationPlanMilestoneCommandHandler) Handle(ctx context.Conte
 			extractOrganizationPlanMilestoneFieldsMask(request.FieldsMask),
 			request.Optional,
 			request.Retired,
-			*updatedAt,
+			updatedAtNotNil,
 			request.DueDate.AsTime(),
 			statusDetails,
 		)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "NewOrganizationPlanUpdateEvent")
+			return errors.Wrap(err, "NewOrganizationPlanMilestoneUpdateEvent")
 		}
 
 		commonAggregate.EnrichEventWithMetadataExtended(&evt, span, commonAggregate.EventMetadata{

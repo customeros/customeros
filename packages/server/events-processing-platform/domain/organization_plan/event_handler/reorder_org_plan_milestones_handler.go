@@ -52,12 +52,12 @@ func (h *reorderOrganizationPlanMilestonesHandler) Handle(ctx context.Context, b
 			return eventstore.ErrAggregateNotFound
 		}
 
-		updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
+		updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
 
-		evt, err := event.NewOrganizationPlanMilestoneReorderEvent(orgAggregate, request.OrganizationPlanId, request.OrganizationPlanMilestoneIds, *updatedAt)
+		evt, err := event.NewOrganizationPlanMilestoneReorderEvent(orgAggregate, request.OrganizationPlanId, request.OrganizationPlanMilestoneIds, updatedAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "NewOrganizationPlanMilestoneCreateEvent")
+			return errors.Wrap(err, "NewOrganizationPlanMilestoneReorderEvent")
 		}
 
 		commonAggregate.EnrichEventWithMetadataExtended(&evt, span, commonAggregate.EventMetadata{
