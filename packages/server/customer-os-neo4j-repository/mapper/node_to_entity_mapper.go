@@ -48,6 +48,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		Provider: entity.InvoiceProvider{
 			LogoUrl:      utils.GetStringPropOrEmpty(props, "providerLogoUrl"),
 			Name:         utils.GetStringPropOrEmpty(props, "providerName"),
+			Email:        utils.GetStringPropOrEmpty(props, "providerEmail"),
 			AddressLine1: utils.GetStringPropOrEmpty(props, "providerAddressLine1"),
 			AddressLine2: utils.GetStringPropOrEmpty(props, "providerAddressLine2"),
 			Zip:          utils.GetStringPropOrEmpty(props, "providerAddressZip"),

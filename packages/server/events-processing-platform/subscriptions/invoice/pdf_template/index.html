@@ -66,21 +66,6 @@
             -webkit-appearance: button;
         }
 
-        button::-moz-focus-inner,
-        [type="button"]::-moz-focus-inner,
-        [type="reset"]::-moz-focus-inner,
-        [type="submit"]::-moz-focus-inner {
-            border-style: none;
-            padding: 0;
-        }
-
-        button:-moz-focus,
-        [type="button"]:-moz-focus,
-        [type="reset"]:-moz-focus,
-        [type="submit"]:-moz-focus {
-            outline: 1px dotted ButtonText;
-        }
-
         a {
             color: inherit;
             text-decoration: inherit;
@@ -129,7 +114,7 @@
                 <div class="invoice-header">
                     <div class="invoice-header-frame">
                         <div class="invoice-title-container">
-                            <div class="invoice-text-title DisplaysmMedium">
+                            <div class="InvoiceHeading">
                                 Invoice
                             </div>
                             <div class="invoice-number-container">
@@ -140,8 +125,8 @@
                         </div>
                         <div class="invoice-logo-container">
                             {{if .ProviderLogoExtension}}
+                            <img alt="Logo" class="invoice-company-logo" src="provider-logo{{.ProviderLogoExtension}}"/>
                             {{else}}
-                            <img alt="Company Logo" class="invoice-company-logo" src="provider-logo{{.ProviderLogoExtension}}"/>
                             {{end}}
                         </div>
                     </div>
@@ -174,13 +159,13 @@
                                 <div class="invoice-title-3 TextsmMedium">
                                     {{.CustomerName}}
                                 </div>
-                                <div class="invoice-text TextsmRegular">
+                                <div class="invoice-text TextsmRegular line-height-14">
                                     {{.CustomerAddressLine1}}
                                 </div>
-                                <div class="invoice-text TextsmRegular">
+                                <div class="invoice-text TextsmRegular line-height-14">
                                     {{.CustomerAddressLine2}}
                                 </div>
-                                <div class="invoice-text TextsmRegular">
+                                <div class="invoice-text TextsmRegular line-height-14">
                                     {{.CustomerAddressLine3}}
                                 </div>
                             </div>
@@ -193,13 +178,13 @@
                                 <div class="invoice-title-3 TextsmMedium">
                                     {{.ProviderName}}
                                 </div>
-                                <div class="invoice-text TextsmRegular">
+                                <div class="invoice-text TextsmRegular line-height-14">
                                     {{.ProviderAddressLine1}}
                                 </div>
-                                <div class="invoice-text TextsmRegular">
+                                <div class="invoice-text TextsmRegular line-height-14">
                                     {{.ProviderAddressLine2}}
                                 </div>
-                                <div class="invoice-text TextsmRegular">
+                                <div class="invoice-text TextsmRegular line-height-14">
                                     {{.ProviderAddressLine3}}
                                 </div>
                             </div>
@@ -208,90 +193,50 @@
                 </div>
                 <div class="invoice-items-frame">
                     <div class="invoice-table-container">
-                        <div class="invoice-printed-column">
-                            <div class="invoice-printed-tableheadercell">
-                                <div class="invoice-printed-tableheader">
-                                    <div class="invoice-printed-text024 TextsmSemibold">
-                                        Service
-                                    </div>
+                        <div style="display: flex; flex-grow: 1;">
+                            <div class="invoice-sli-name-column TextsmSemibold">
+                                Service
+                            </div>
+                            <div class="invoice-printed-frame44408">
+                                <div class="invoice-printed-column1 TextsmSemibold">
+                                    Qty
+                                </div>
+                                <div class="invoice-printed-column1 TextsmSemibold">
+                                    Unit Price
+                                </div>
+                                <div class="invoice-printed-column1 TextsmSemibold pr-0">
+                                    Amount
                                 </div>
                             </div>
                         </div>
-                        <div class="invoice-printed-frame44408">
-                            <div class="invoice-printed-column1">
-                                <div class="invoice-printed-tableheadercell1">
-                                    <div class="invoice-printed-tableheader1">
-                                        <div class="invoice-printed-text030 TextsmSemibold">
-                                            Qty
+
+                        <div style="display: flex; flex-grow: 1;padding-top: 8px;">
+                            {{range .InvoiceLineItems}}
+                                <div style="display: flex; flex-grow: 1;">
+                                    <div class="invoice-printed-column">
+                                        <div class="invoice-title-3 TextsmMedium">
+                                            {{.Name}}
+                                        </div>
+                                        <div class="invoice-printed-text028 TextsmRegular">
+                                            {{.Description}}
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="invoice-printed-column2">
-                                <div class="invoice-printed-tableheadercell2">
-                                    <div class="invoice-printed-tableheader2">
-                                        <div class="invoice-printed-text034 TextsmSemibold">
-                                            Unit Price
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="invoice-printed-column3">
-                                <div class="invoice-printed-tableheadercell3">
-                                    <div class="invoice-printed-tableheader3">
-                                        <div class="invoice-printed-text038 TextsmSemibold">
-                                            Amount
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {{range .InvoiceLineItems}}
-                    <div class="invoice-table-container">
-                        <div class="invoice-printed-column">
-                            <div class="invoice-printed-tablecell">
-                                <div class="invoice-printed-textandsupportingtext">
-                                    <div class="invoice-title-3 TextsmMedium">
-                                        {{.Name}}
-                                    </div>
-                                    <div class="invoice-printed-text028 TextsmRegular">
-                                        {{.Description}}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="invoice-printed-frame44408">
-                            <div class="invoice-printed-column1">
-                                <div class="invoice-printed-tablecell1">
-                                    <div class="invoice-printed-textandsupportingtext1">
-                                        <div class="invoice-text-right TextsmRegular">
+                                    <div class="invoice-printed-frame44408">
+                                        <div class="invoice-printed-column1 TextsmRegular">
                                             {{.Quantity}}
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="invoice-printed-column2">
-                                <div class="invoice-printed-tablecell2">
-                                    <div class="invoice-printed-textandsupportingtext2">
-                                        <div class="invoice-text-right TextsmRegular">
+                                        <div class="invoice-printed-column1 TextsmRegular">
                                             {{.UnitPrice}}
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="invoice-printed-column3">
-                                <div class="invoice-printed-tablecell3">
-                                    <div class="invoice-printed-textandsupportingtext3">
-                                        <div class="invoice-text-right TextsmRegular">
+                                        <div class="invoice-printed-column1 TextsmRegular pr-0">
                                             {{.Amount}}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            {{end}}
                         </div>
                     </div>
-                    {{end}}
+
                     <div class="invoice-subtotal-frame">
                         <div class="invoice-subtotal-container">
                             <div class="invoice-title-3 TextsmMedium">
@@ -301,7 +246,6 @@
                                 {{.InvoiceCurrency}} {{.InvoiceSubtotal}}
                             </div>
                         </div>
-                        <img alt="Line11681" class="invoice-printed-line1" src="line11681-7w4.svg"/>
                         <div class="invoice-subtotal-container">
                             <div class="invoice-title-4 TextsmRegular">
                                 Tax (0%)
@@ -310,8 +254,7 @@
                                 {{.InvoiceCurrency}} {{.InvoiceTax}}
                             </div>
                         </div>
-                        <img alt="Line21681" class="invoice-printed-line2" src="line21681-3s8.svg"/>
-                        <div class="invoice-subtotal-container">
+                        <div class="invoice-subtotal-container no-border-bottom">
                             <div class="invoice-title-3 TextsmMedium">
                                 Total
                             </div>
@@ -329,17 +272,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="invoice-printed-due1">
-                            <div class="invoice-payment-text TextsmSemibold">
-                                <a href="">
-                                    Pay online via Credit Card or ACH
-                                    <svg class="invoice-external-link" fill="none" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M13 5.00001L13 1.00001M13 1.00001H8.99999M13 1.00001L7 7M5.66667 1H4.2C3.0799 1 2.51984 1 2.09202 1.21799C1.71569 1.40973 1.40973 1.71569 1.21799 2.09202C1 2.51984 1 3.07989 1 4.2V9.8C1 10.9201 1 11.4802 1.21799 11.908C1.40973 12.2843 1.71569 12.5903 2.09202 12.782C2.51984 13 3.07989 13 4.2 13H9.8C10.9201 13 11.4802 13 11.908 12.782C12.2843 12.5903 12.5903 12.2843 12.782 11.908C13 11.4802 13 10.9201 13 9.8V8.33333"
-                                              stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>
-                                    </svg>
-                                </a>
-                            </div>
-                        </div>
+
+                        {{if .Note}}
                         <div class="invoice-printed-frame3625">
                             <div class="invoice-printed-text066 TextsmMedium">
                                 Note:
@@ -348,63 +282,69 @@
                                 {{.Note}}
                             </div>
                         </div>
+                        {{else}}
+                        {{end}}
                     </div>
-                    <div class="invoice-printed-frame44433">
-                        <div class="invoice-printed-frame3615">
-                            <div class="invoice-printed-dates1">
-                                <div class="invoice-payment-details-container">
-                                    <div class="invoice-title-2 TextsmSemibold">
-                                        Domestic payments
-                                    </div>
-                                </div>
-                                <div class="invoice-payment-details-header-container">
-                                    <div class="TextsmRegular">
-                                        {{safeHTML .DomesticPaymentsBankInfo}}
-                                    </div>
-                                </div>
-                                <div class="invoice-payment-details-container">
-                                    <div class="invoice-title-3 TextsmMedium">
-                                        Reference
-                                    </div>
-                                    <div class="invoice-text-right TextsmRegular">
-                                        {{.InvoiceNumber}}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="invoice-printed-dates2">
-                                <div class="invoice-payment-details-container">
-                                    <div class="invoice-title-2 TextsmSemibold">
-                                        International payments
-                                    </div>
-                                </div>
-                                <div class="invoice-payment-details-container">
-                                    <div class="TextsmRegular">
-                                        {{safeHTML .InternationalPaymentsBankInfo}}
-                                    </div>
-                                </div>
-                                <div class="invoice-payment-details-container">
-                                    <div class="invoice-title-3 TextsmMedium">
-                                        Reference
-                                    </div>
-                                    <div class="invoice-text-right TextsmRegular">
-                                        {{.InvoiceNumber}}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="invoice-footer-container">
-                            <div class="invoice-customeros-logo-container">
-                                <img alt="CustomerOS" class="invoice-printed-customer-os" src="customer-os.png"/>
-                            </div>
-                            <div class="invoice-customeros-text TextxsRegular">
-                                Powered by CustomerOS - Revenue Intelligence for B2B hyperscalers
-                            </div>
-                            <div class="invoice-question-text">
-                                <a href="mailto:{{.CompanySupportEmail}}">Questions?</a>
-                            </div>
-                        </div>
-                    </div>
+                </div>
 
+                <div class="invoice-printed-frame44433" style="bottom: 0;">
+                    <div class="invoice-printed-frame3615">
+                        <div class="invoice-printed-dates1">
+                            <div class="invoice-payment-details-container">
+                                <div class="invoice-title-2 TextsmSemibold">
+                                    Domestic payments
+                                </div>
+                            </div>
+                            <div class="invoice-payment-details-header-container">
+                                <div class="TextsmRegular invoice-text">
+                                    {{safeHTML .DomesticPaymentsBankInfo}}
+                                </div>
+                            </div>
+                            &nbsp;
+                            <div class="invoice-payment-details-container">
+                                <div class="invoice-title-3 TextsmMedium">
+                                    Reference:
+                                </div>
+                                &nbsp;
+                                <div class="invoice-text-left TextsmRegular">
+                                    {{.InvoiceNumber}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="invoice-printed-dates2">
+                            <div class="invoice-payment-details-container">
+                                <div class="invoice-title-2 TextsmSemibold">
+                                    International payments
+                                </div>
+                            </div>
+                            <div class="invoice-payment-details-container">
+                                <div class="TextsmRegular invoice-text">
+                                    {{safeHTML .InternationalPaymentsBankInfo}}
+                                </div>
+                            </div>
+                            &nbsp;
+                            <div class="invoice-payment-details-container">
+                                <div class="invoice-title-3 TextsmMedium">
+                                    Reference:
+                                </div>
+                                &nbsp;
+                                <div class="invoice-text-left TextsmRegular">
+                                    {{.InvoiceNumber}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="invoice-footer-container">
+                        <div class="invoice-customeros-logo-container">
+                            <img alt="CustomerOS" class="invoice-printed-customer-os" src="customer-os.png"/>
+                        </div>
+                        <div class="invoice-customeros-text TextxsRegular">
+                            Powered by CustomerOS - Revenue Intelligence for B2B hyperscalers
+                        </div>
+                        <div class="invoice-question-text">
+                            <a href="mailto:{{.ProviderEmail}}?subject=Questions about invoice {{.InvoiceNumber}}&body=Hi team, I have some questions about invoice {{.InvoiceNumber}}">Questions?</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

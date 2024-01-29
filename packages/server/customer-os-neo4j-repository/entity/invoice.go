@@ -47,6 +47,7 @@ type InvoiceCustomer struct {
 type InvoiceProvider struct {
 	LogoUrl      string
 	Name         string
+	Email        string
 	AddressLine1 string
 	AddressLine2 string
 	Zip          string

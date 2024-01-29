@@ -51,6 +51,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
+	github.com/mrz1836/postmark v1.6.1 // indirect
 	github.com/tetratelabs/wazero v1.6.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.45.0 // indirect
 	go.opentelemetry.io/otel v1.19.0 // indirect

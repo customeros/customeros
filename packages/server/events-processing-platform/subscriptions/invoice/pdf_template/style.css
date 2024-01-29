@@ -1,14 +1,9 @@
 :root {
-  --dl-color-gray-25: rgba(251, 252, 252, 1);
-  --dl-color-gray-500: #595959;
-  --dl-color-gray-600: rgba(94, 100, 112, 1);
-  --dl-color-gray-700: #999999;
-  --dl-color-gray-900: #D9D9D9;
+  --dl-color-gray-300: #D0D5DD;
+  --dl-color-gray-500: #667085;
+  --dl-color-gray-700: #344054;
   --dl-size-size-large: 144px;
   --dl-size-size-small: 48px;
-  --dl-color-danger-300: #A22020;
-  --dl-color-danger-500: #BF2626;
-  --dl-color-danger-700: #E14747;
   --dl-color-gray-black: #000000;
   --dl-color-gray-white: #FFFFFF;
   --dl-size-size-medium: 96px;
@@ -115,6 +110,17 @@
   line-height: 1.15;
   text-transform: none;
   text-decoration: none;
+}
+.InvoiceHeading {
+  font-family: Barlow;
+  font-weight: 700;
+  font-size: 30px;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: 30px;
+  color: var(--dl-color-gray-700);
+  height: auto;
+  text-align: left;
 }
 .DisplaysmMedium {
   font-size: 30px;
