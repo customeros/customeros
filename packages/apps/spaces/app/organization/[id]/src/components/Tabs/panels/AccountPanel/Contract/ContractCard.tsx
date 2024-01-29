@@ -115,6 +115,15 @@ export const ContractCard = ({
         `update-contract-error-${error}`,
       );
     },
+    onSettled: () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
+      }, 800);
+    },
   });
 
   const updateContractDebounced = debounce(
@@ -366,7 +375,7 @@ export const ContractCard = ({
           <Flex gap='4' mb={2} flexGrow={0}>
             <DatePicker
               label='Service starts'
-              placeholder='Start date'
+              placeholder='Service starts date'
               formId={formId}
               name='serviceStartedAt'
               inset='120% auto auto 0px'
@@ -403,7 +412,7 @@ export const ContractCard = ({
             <DatePicker
               label='Invoicing starts'
               placeholder='Invoicing starts'
-              minDate={state.values.invoicingStartDate}
+              minDate={state.values.serviceStartedAt}
               formId={formId}
               name='invoicingStartDate'
               inset='120% auto auto 0px'
