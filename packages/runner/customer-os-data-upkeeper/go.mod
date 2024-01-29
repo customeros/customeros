@@ -14,6 +14,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240129175106-cfe433d58dd0
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240129175106-cfe433d58dd0
 	github.com/opentracing/opentracing-go v1.2.0
+	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc v1.61.0
@@ -30,7 +31,6 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
