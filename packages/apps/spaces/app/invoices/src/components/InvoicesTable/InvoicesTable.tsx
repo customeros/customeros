@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useIsRestoring } from '@tanstack/react-query';
@@ -10,8 +10,8 @@ import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Invoice } from '@graphql/types';
 import { Heading } from '@ui/typography/Heading';
-import { Table, SortingState } from '@ui/presentation/Table';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { useGetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
 
@@ -24,17 +24,38 @@ export function InvoicesTable() {
     { id: 'DUE_DATE', desc: true },
   ]);
   const searchParams = useSearchParams();
+  const selectedInvoiceId = searchParams?.get('invoice');
   const router = useRouter();
 
   const client = getGraphQLClient();
-  const tableRef = useRef(null);
+  const tableRef = useRef<TableInstance<Invoice>>(null);
 
-  const { data, isFetching } = useGetInvoicesQuery(client, {
+  const { data, isFetching, isFetched } = useGetInvoicesQuery(client, {
     pagination: {
       page: 0,
       limit: 40,
     },
   });
+
+  useEffect(() => {
+    if (!selectedInvoiceId && tableRef.current) {
+      const newParams = new URLSearchParams(searchParams ?? '');
+      const firstId = data?.invoices?.content?.[0]?.id;
+      if (!firstId) return;
+
+      newParams.set('invoice', firstId);
+      router.replace(`/invoices?${newParams.toString()}`);
+    }
+  }, [selectedInvoiceId, isFetched]);
+  useEffect(() => {
+    if (tableRef.current && isFetched) {
+      const initialSelectedId = searchParams?.get('invoice');
+      tableRef.current
+        ?.getRowModel()
+        ?.rows?.find((e) => e.original.id === initialSelectedId)
+        ?.toggleSelected(true);
+    }
+  }, [tableRef, isFetched]);
 
   if (data?.invoices.totalElements === 0) {
     return <EmptyState maxW={550} />;

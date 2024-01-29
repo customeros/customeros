@@ -143,7 +143,7 @@ export const ServiceLineItemsModal = ({
       onClose={onClose}
       initialFocusRef={initialRef}
       size='2xl'
-      closeOnOverlayClick={false}
+      closeOnOverlayClick
     >
       <ModalOverlay />
       <ModalContent borderRadius='2xl'>
@@ -242,7 +242,12 @@ export const ServiceLineItemsModal = ({
           />
         </ModalBody>
         <ModalFooter p='6'>
-          <Button variant='outline' w='full' onClick={onClose}>
+          <Button
+            variant='outline'
+            w='full'
+            onClick={onClose}
+            isDisabled={updateServices.isPending}
+          >
             Cancel
           </Button>
           <Button
@@ -251,6 +256,7 @@ export const ServiceLineItemsModal = ({
             variant='outline'
             colorScheme='primary'
             loadingText='Applying changes...'
+            isLoading={updateServices.isPending}
             onClick={handleApplyChanges}
           >
             Apply changes

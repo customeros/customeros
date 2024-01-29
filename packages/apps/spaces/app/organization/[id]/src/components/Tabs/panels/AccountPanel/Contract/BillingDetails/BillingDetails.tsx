@@ -72,7 +72,7 @@ export const BillingDetails = ({
     },
     onSuccess: () => {
       toastSuccess(
-        'Billing details updated!',
+        'Billing details updated',
         `update-contract-success-${contractId}`,
       );
       onClose();
