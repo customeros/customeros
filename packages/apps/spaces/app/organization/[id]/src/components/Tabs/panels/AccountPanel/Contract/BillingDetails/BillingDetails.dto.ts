@@ -1,10 +1,8 @@
 import { SelectOption } from '@shared/types/SelectOptions';
+import { countryOptions } from '@shared/util/countryOptions';
 import { Currency, ContractUpdateInput } from '@graphql/types';
+import { getCurrencyOptions } from '@shared/util/currencyOptions';
 import { GetContractQuery } from '@organization/src/graphql/getContract.generated';
-import {
-  countryOptions,
-  getCurrencyOptions,
-} from '@organization/src/components/Tabs/panels/AccountPanel/Contract/BillingDetails/utils';
 
 export interface BillingDetailsForm {
   zip?: string | null;

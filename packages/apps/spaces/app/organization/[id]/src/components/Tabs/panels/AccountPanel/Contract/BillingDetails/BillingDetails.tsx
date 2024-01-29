@@ -14,7 +14,9 @@ import { Grid, GridItem } from '@ui/layout/Grid';
 import { Heading } from '@ui/typography/Heading';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Invoice } from '@shared/components/Invoice/Invoice';
+import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { getCurrencyOptions } from '@shared/util/currencyOptions';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
@@ -31,7 +33,6 @@ import {
 } from '@ui/overlay/Modal';
 
 import { BillingDetailsDto } from './BillingDetails.dto';
-import { countryOptions, getCurrencyOptions } from './utils';
 
 interface SubscriptionServiceModalProps {
   isOpen: boolean;
