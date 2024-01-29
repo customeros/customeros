@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -238,19 +239,33 @@ func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.Updat
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)
 	status := InvoiceStatus(r.Status).String()
 
-	event, err := NewInvoiceUpdateEvent(a, updatedAtNotNil, fieldsMask, status)
+	events := []eventstore.Event{}
+	updateEvent, err := NewInvoiceUpdateEvent(a, updatedAtNotNil, fieldsMask, status)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUpdateInvoiceEvent")
 	}
+	events = append(events, updateEvent)
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	// if status updated, and set from non-paid to paid
+	if len(fieldsMask) == 0 || utils.Contains(fieldsMask, FieldMaskStatus) &&
+		a.Invoice.Status != neo4jenum.InvoiceStatusPaid.String() &&
+		status == neo4jenum.InvoiceStatusPaid.String() {
+		paidEvent, err := NewInvoicePaidEvent(a)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return errors.Wrap(err, "NewInvoicePaidEvent")
+		}
+		events = append(events, paidEvent)
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
 		Tenant: r.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    r.AppSource,
 	})
 
-	return a.Apply(event)
+	return a.ApplyAll(events)
 }
 
 func (a *InvoiceAggregate) PayInvoice(ctx context.Context, request *invoicepb.PayInvoiceRequest) error {
@@ -292,6 +307,8 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		return nil
 	case InvoiceUpdateV1:
 		return a.onUpdateInvoice(evt)
+	case InvoicePaidV1:
+		return nil
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
