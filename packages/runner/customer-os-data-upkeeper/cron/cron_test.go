@@ -23,9 +23,10 @@ func TestStartCron(t *testing.T) {
 	// Arrange
 	cfg := config.Config{
 		Cron: cron_config.Config{
-			CronScheduleUpdateContract:        "0 0 */1 * * *",
-			CronScheduleWebScrapeOrganization: "0 0 */1 * * *",
-			CronScheduleGenerateInvoice:       "0 0 */1 * * *",
+			CronScheduleUpdateContract:             "0 0 */1 * * *",
+			CronScheduleWebScrapeOrganization:      "0 0 */1 * * *",
+			CronScheduleGenerateInvoice:            "0 0 */1 * * *",
+			CronScheduleSendPayInvoiceNotification: "0 0 */1 * * *",
 		},
 	}
 
