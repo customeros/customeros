@@ -12,6 +12,26 @@ query GetInvoice($id: ID!) {
     totalAmount
     currency
     repositoryFileId
+    note
+    customer {
+      name
+      email
+      addressLine1
+      addressLine2
+      addressZip
+      addressLocality
+      addressCountry
+    }
+    provider {
+      name
+      logoUrl
+      addressLine1
+      addressLine2
+      addressZip
+      addressLocality
+      addressCountry
+    }
+
     invoiceLines {
       id
       createdAt
