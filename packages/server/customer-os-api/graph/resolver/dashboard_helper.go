@@ -2,17 +2,16 @@ package resolver
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
-func getPeriod(period *model.DashboardPeriodInput) (time.Time, time.Time, error) {
+func getPeriod(period *model.DashboardPeriodInput, now time.Time) (time.Time, time.Time, error) {
 	if period == nil {
-		now := time.Now().UTC()
-
 		//last 12 months including current month
-		startDate := now.AddDate(-1, 1, 0)
+		startDate := utils.LastTimeOfMonth(now.Year()-1, int(now.Month())+1)
 		endDate := now
 
 		return startDate, endDate, nil

@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -143,7 +144,7 @@ func (r *queryResolver) DashboardMRRPerCustomer(ctx context.Context, period *mod
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("period", period))
 
-	startTime, endTime, err := getPeriod(period)
+	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
@@ -167,7 +168,7 @@ func (r *queryResolver) DashboardGrossRevenueRetention(ctx context.Context, peri
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("period", period))
 
-	startTime, endTime, err := getPeriod(period)
+	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
@@ -191,7 +192,7 @@ func (r *queryResolver) DashboardARRBreakdown(ctx context.Context, period *model
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("period", period))
 
-	startTime, endTime, err := getPeriod(period)
+	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
@@ -215,7 +216,7 @@ func (r *queryResolver) DashboardRevenueAtRisk(ctx context.Context, period *mode
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("period", period))
 
-	startTime, endTime, err := getPeriod(period)
+	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
@@ -239,7 +240,7 @@ func (r *queryResolver) DashboardRetentionRate(ctx context.Context, period *mode
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("period", period))
 
-	startTime, endTime, err := getPeriod(period)
+	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
@@ -263,7 +264,7 @@ func (r *queryResolver) DashboardNewCustomers(ctx context.Context, period *model
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("period", period))
 
-	startTime, endTime, err := getPeriod(period)
+	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
@@ -287,7 +288,7 @@ func (r *queryResolver) DashboardTimeToOnboard(ctx context.Context, period *mode
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("period", period))
 
-	startTime, endTime, err := getPeriod(period)
+	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
@@ -311,7 +312,7 @@ func (r *queryResolver) DashboardOnboardingCompletion(ctx context.Context, perio
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("period", period))
 
-	startTime, endTime, err := getPeriod(period)
+	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
