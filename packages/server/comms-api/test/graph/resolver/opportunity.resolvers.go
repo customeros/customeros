@@ -18,7 +18,7 @@ func (r *mutationResolver) OpportunityUpdate(ctx context.Context, input model.Op
 }
 
 // OpportunityRenewalUpdate is the resolver for the opportunityRenewalUpdate field.
-func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput) (*model.Opportunity, error) {
+func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error) {
 	panic(fmt.Errorf("not implemented: OpportunityRenewalUpdate - opportunityRenewalUpdate"))
 }
 

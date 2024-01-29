@@ -39,11 +39,11 @@ func (r *queryResolver) Attachment(ctx context.Context, id string) (*model.Attac
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.ID", id))
 
-	analysis, err := r.Services.AttachmentService.GetAttachmentById(ctx, id)
-	if err != nil || analysis == nil {
+	attachmentEntity, err := r.Services.AttachmentService.GetAttachmentById(ctx, id)
+	if err != nil || attachmentEntity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Attachment with id %s not found", id)
 		return nil, err
 	}
-	return mapper.MapEntityToAttachment(analysis), nil
+	return mapper.MapEntityToAttachment(attachmentEntity), nil
 }

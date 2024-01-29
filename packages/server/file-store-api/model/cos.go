@@ -6,9 +6,9 @@ type Attachment struct {
 	Id        string    `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 	MimeType  string    `json:"mimeType"`
-	Name      string    `json:"name"`
+	FileName  string    `json:"fileName"`
+	BasePath  string    `json:"basePath"`
 	Size      int64     `json:"size"`
-	Extension string    `json:"extension"`
 }
 
 type AttachmentCreateResponse struct {

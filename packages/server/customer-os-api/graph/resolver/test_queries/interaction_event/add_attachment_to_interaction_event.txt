@@ -10,10 +10,9 @@ mutation AddAttachmentToInteractionEvent($eventId: ID!, $attachmentId: ID!) {
     appSource
       includes {
         id
-        name
-        size
+        fileName
         mimeType
-        extension
+        size
       }
     }
 }

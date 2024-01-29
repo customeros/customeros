@@ -22,6 +22,11 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 	panic(fmt.Errorf("not implemented: DashboardViewOrganizations - dashboardView_Organizations"))
 }
 
+// DashboardViewRenewals is the resolver for the dashboardView_Renewals field.
+func (r *queryResolver) DashboardViewRenewals(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.RenewalsPage, error) {
+	panic(fmt.Errorf("not implemented: DashboardViewRenewals - dashboardView_Renewals"))
+}
+
 // DashboardCustomerMap is the resolver for the dashboard_CustomerMap field.
 func (r *queryResolver) DashboardCustomerMap(ctx context.Context) ([]*model.DashboardCustomerMap, error) {
 	panic(fmt.Errorf("not implemented: DashboardCustomerMap - dashboard_CustomerMap"))
@@ -55,6 +60,16 @@ func (r *queryResolver) DashboardRetentionRate(ctx context.Context, period *mode
 // DashboardNewCustomers is the resolver for the dashboard_NewCustomers field.
 func (r *queryResolver) DashboardNewCustomers(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardNewCustomers, error) {
 	panic(fmt.Errorf("not implemented: DashboardNewCustomers - dashboard_NewCustomers"))
+}
+
+// DashboardTimeToOnboard is the resolver for the dashboard_TimeToOnboard field.
+func (r *queryResolver) DashboardTimeToOnboard(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardTimeToOnboard, error) {
+	panic(fmt.Errorf("not implemented: DashboardTimeToOnboard - dashboard_TimeToOnboard"))
+}
+
+// DashboardOnboardingCompletion is the resolver for the dashboard_OnboardingCompletion field.
+func (r *queryResolver) DashboardOnboardingCompletion(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardOnboardingCompletion, error) {
+	panic(fmt.Errorf("not implemented: DashboardOnboardingCompletion - dashboard_OnboardingCompletion"))
 }
 
 // DashboardCustomerMap returns generated.DashboardCustomerMapResolver implementation.

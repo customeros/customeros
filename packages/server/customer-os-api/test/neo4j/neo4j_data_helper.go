@@ -88,20 +88,18 @@ func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tena
 		" a.id=$id, " +
 		" a.source=$source, " +
 		" a.createdAt=datetime({timezone: 'UTC'}), " +
-		" a.name=$name, " +
+		" a.fileName=$fileName, " +
 		" a.mimeType=$mimeType, " +
-		" a.extension=$extension, " +
-		" a.size=$size, " +
+		" a.basePath=$basePath, " +
 		" a.sourceOfTruth=$sourceOfTruth, " +
 		" a.appSource=$appSource " +
 		" RETURN a"
 	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
 		"tenant":        tenant,
 		"id":            attachment.Id,
-		"name":          attachment.Name,
+		"fileName":      attachment.FileName,
 		"mimeType":      attachment.MimeType,
-		"size":          attachment.Size,
-		"extension":     attachment.Extension,
+		"basePath":      attachment.BasePath,
 		"sourceOfTruth": attachment.SourceOfTruth,
 		"source":        attachment.Source,
 		"appSource":     attachment.AppSource,

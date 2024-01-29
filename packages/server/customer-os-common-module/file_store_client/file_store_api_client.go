@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"log"
 	"mime/multipart"
@@ -11,15 +12,15 @@ import (
 )
 
 type FileStoreApiService interface {
-	UploadSingleMultipartFile(tenantName string, multipartFileHeader *multipart.FileHeader) (*FileDTO, error)
-	UploadSingleFileBytes(tenantName string, fileBytes []byte) (*FileDTO, error)
+	UploadSingleMultipartFile(tenantName, basePath string, multipartFileHeader *multipart.FileHeader) (*FileDTO, error)
+	UploadSingleFileBytes(tenantName, basePath, fileId, fileName string, fileBytes []byte) (*FileDTO, error)
 }
 
 type fileStoreApiService struct {
 	conf *FileStoreApiConfig
 }
 
-func (fsas *fileStoreApiService) UploadSingleMultipartFile(tenantName string, multipartFileHeader *multipart.FileHeader) (*FileDTO, error) {
+func (fsas *fileStoreApiService) UploadSingleMultipartFile(tenantName, basePath string, multipartFileHeader *multipart.FileHeader) (*FileDTO, error) {
 	file, err := multipartFileHeader.Open()
 	if err != nil {
 		return nil, fmt.Errorf("UploadSingleMultipartFile: failed to open multipart file: %w", err)
@@ -30,14 +31,14 @@ func (fsas *fileStoreApiService) UploadSingleMultipartFile(tenantName string, mu
 		return nil, fmt.Errorf("UploadSingleMultipartFile: failed to read multipart file: %w", err)
 	}
 
-	return sendRequest(fsas.conf, tenantName, fileBytes)
+	return sendRequest(fsas.conf, tenantName, basePath, "", multipartFileHeader.Filename, fileBytes)
 }
 
-func (fsas *fileStoreApiService) UploadSingleFileBytes(tenantName string, fileBytes []byte) (*FileDTO, error) {
-	return sendRequest(fsas.conf, tenantName, fileBytes)
+func (fsas *fileStoreApiService) UploadSingleFileBytes(tenantName, basePath, fileId, fileName string, fileBytes []byte) (*FileDTO, error) {
+	return sendRequest(fsas.conf, tenantName, basePath, fileId, fileName, fileBytes)
 }
 
-func sendRequest(conf *FileStoreApiConfig, tenantName string, fileBytes []byte) (*FileDTO, error) {
+func sendRequest(conf *FileStoreApiConfig, tenantName, basePath, fileId, fileName string, fileBytes []byte) (*FileDTO, error) {
 	// Create a new buffer to store the request body
 	var requestBody bytes.Buffer
 
@@ -45,7 +46,7 @@ func sendRequest(conf *FileStoreApiConfig, tenantName string, fileBytes []byte) 
 	writer := multipart.NewWriter(&requestBody)
 
 	// Create a form file field for the file
-	fileWriter, err := writer.CreateFormFile("file", "filename.txt")
+	fileWriter, err := writer.CreateFormFile("file", fileName)
 	if err != nil {
 		fmt.Println("Error creating form file:", err)
 		return nil, err
@@ -56,6 +57,15 @@ func sendRequest(conf *FileStoreApiConfig, tenantName string, fileBytes []byte) 
 	if err != nil {
 		fmt.Println("Error writing file content:", err)
 		return nil, err
+	}
+
+	err = addMultipartValue(writer, basePath, "basePath")
+	if err != nil {
+		return nil, errors.Wrap(err, "addMultipartValue basePath")
+	}
+	err = addMultipartValue(writer, fileId, "fileId")
+	if err != nil {
+		return nil, errors.Wrap(err, "addMultipartValue fileId")
 	}
 
 	// Close the multipart writer to finalize the request body
@@ -98,6 +108,18 @@ func sendRequest(conf *FileStoreApiConfig, tenantName string, fileBytes []byte) 
 		err = fmt.Errorf("Got error from File Store API: Status: %d Response: %s", resp.StatusCode, responseBody.String())
 		return nil, err
 	}
+}
+
+func addMultipartValue(writer *multipart.Writer, value string, partName string) error {
+	part, err := writer.CreateFormField(partName)
+	if err != nil {
+		return errors.Wrap(err, "writer.CreateFormFile")
+	}
+	_, err = part.Write([]byte(value))
+	if err != nil {
+		return errors.Wrap(err, "part.Write")
+	}
+	return nil
 }
 
 func NewFileStoreApiService(conf *FileStoreApiConfig) *fileStoreApiService {

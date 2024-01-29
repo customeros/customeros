@@ -9,10 +9,10 @@ extend type Mutation {
 type Attachment implements Node {
     id: ID!
     createdAt: Time!
+    basePath: String!
+    fileName: String!
     mimeType: String!
-    name: String!
     size: Int64!
-    extension: String!
 
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -20,9 +20,11 @@ type Attachment implements Node {
 }
 
 input AttachmentInput {
+    id: ID
+    createdAt: Time
+    basePath: String!
+    fileName: String!
     mimeType: String!
-    name: String!
     size: Int64!
-    extension: String!
     appSource: String!
 }

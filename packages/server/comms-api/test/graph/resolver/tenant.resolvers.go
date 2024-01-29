@@ -16,6 +16,21 @@ func (r *mutationResolver) TenantMerge(ctx context.Context, tenant model.TenantI
 	panic(fmt.Errorf("not implemented: TenantMerge - tenant_Merge"))
 }
 
+// TenantAddBillingProfile is the resolver for the tenant_AddBillingProfile field.
+func (r *mutationResolver) TenantAddBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (*model.TenantBillingProfile, error) {
+	panic(fmt.Errorf("not implemented: TenantAddBillingProfile - tenant_AddBillingProfile"))
+}
+
+// TenantUpdateBillingProfile is the resolver for the tenant_UpdateBillingProfile field.
+func (r *mutationResolver) TenantUpdateBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) (*model.TenantBillingProfile, error) {
+	panic(fmt.Errorf("not implemented: TenantUpdateBillingProfile - tenant_UpdateBillingProfile"))
+}
+
+// TenantUpdateSettings is the resolver for the tenant_UpdateSettings field.
+func (r *mutationResolver) TenantUpdateSettings(ctx context.Context, input *model.TenantSettingsInput) (*model.TenantSettings, error) {
+	panic(fmt.Errorf("not implemented: TenantUpdateSettings - tenant_UpdateSettings"))
+}
+
 // Tenant is the resolver for the tenant field.
 func (r *queryResolver) Tenant(ctx context.Context) (string, error) {
 	panic(fmt.Errorf("not implemented: Tenant - tenant"))
@@ -29,4 +44,19 @@ func (r *queryResolver) TenantByWorkspace(ctx context.Context, workspace model.W
 // TenantByEmail is the resolver for the tenant_ByEmail field.
 func (r *queryResolver) TenantByEmail(ctx context.Context, email string) (*string, error) {
 	panic(fmt.Errorf("not implemented: TenantByEmail - tenant_ByEmail"))
+}
+
+// TenantBillingProfiles is the resolver for the tenantBillingProfiles field.
+func (r *queryResolver) TenantBillingProfiles(ctx context.Context) ([]*model.TenantBillingProfile, error) {
+	panic(fmt.Errorf("not implemented: TenantBillingProfiles - tenantBillingProfiles"))
+}
+
+// TenantBillingProfile is the resolver for the tenantBillingProfile field.
+func (r *queryResolver) TenantBillingProfile(ctx context.Context, id string) (*model.TenantBillingProfile, error) {
+	panic(fmt.Errorf("not implemented: TenantBillingProfile - tenantBillingProfile"))
+}
+
+// TenantSettings is the resolver for the tenantSettings field.
+func (r *queryResolver) TenantSettings(ctx context.Context) (*model.TenantSettings, error) {
+	panic(fmt.Errorf("not implemented: TenantSettings - tenantSettings"))
 }

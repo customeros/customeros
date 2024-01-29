@@ -2,10 +2,9 @@ package fsc
 
 type FileDTO struct {
 	Id          string `json:"id"`
-	Name        string `json:"name"`
-	Extension   string `json:"extension"`
-	Length      int64  `json:"length"`
-	Mime        string `json:"mime"`
+	FileName    string `json:"fileName"`
+	MimeType    string `json:"mimeType"`
+	Size        int64  `json:"size"`
 	MetadataUrl string `json:"previewUrl"`
 	DownloadUrl string `json:"downloadUrl"`
 }

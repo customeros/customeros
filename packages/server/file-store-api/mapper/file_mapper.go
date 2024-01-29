@@ -12,10 +12,9 @@ func MapFileEntityToDTO(input *model.File, serviceUrl string) *fs.FileDTO {
 	}
 	file := fs.FileDTO{
 		Id:          input.ID,
-		Name:        input.Name,
-		Extension:   input.Extension,
-		Mime:        input.MIME,
-		Length:      input.Length,
+		FileName:    input.FileName,
+		MimeType:    input.MimeType,
+		Size:        input.Size,
 		MetadataUrl: fmt.Sprintf("%s/file/%s", serviceUrl, input.ID),
 		DownloadUrl: fmt.Sprintf("%s/file/%s/download", serviceUrl, input.ID),
 	}
@@ -27,10 +26,10 @@ func MapAttachmentResponseToFileEntity(input *model.Attachment) *model.File {
 		return nil
 	}
 	return &model.File{
-		ID:        input.Id,
-		Name:      input.Name,
-		Extension: input.Extension,
-		MIME:      input.MimeType,
-		Length:    input.Size,
+		ID:       input.Id,
+		FileName: input.FileName,
+		MimeType: input.MimeType,
+		BasePath: input.BasePath,
+		Size:     input.Size,
 	}
 }

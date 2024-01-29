@@ -1,5 +1,5 @@
 generate:
-	export PATH="${PATH}:$(shell go env GOPATH)/bin";go run github.com/99designs/gqlgen generate
+	export PATH="${PATH}:$(shell go env GOPATH)/bin";go generate ./...
 
 clean:
 	rm -rf bin
