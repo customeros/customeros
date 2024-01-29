@@ -53,6 +53,7 @@ type InvoiceFillFields struct {
 	CustomerAddressCountry        string                  `json:"customerAddressCountry"`
 	ProviderLogoUrl               string                  `json:"providerLogoUrl"`
 	ProviderName                  string                  `json:"providerName"`
+	ProviderEmail                 string                  `json:"providerEmail"`
 	ProviderAddressLine1          string                  `json:"providerAddressLine1"`
 	ProviderAddressLine2          string                  `json:"providerAddressLine2"`
 	ProviderAddressZip            string                  `json:"providerAddressZip"`
@@ -177,6 +178,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.customerAddressCountry=$customerAddressCountry,
 								i.providerLogoUrl=$providerLogoUrl,
 								i.providerName=$providerName,
+								i.providerEmail=$providerEmail,
 								i.providerAddressLine1=$providerAddressLine1,
 								i.providerAddressLine2=$providerAddressLine2,
 								i.providerAddressZip=$providerAddressZip,
@@ -200,6 +202,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.customerAddressCountry=$customerAddressCountry,
 								i.providerLogoUrl=$providerLogoUrl,
 								i.providerName=$providerName,
+								i.providerEmail=$providerEmail,
 								i.providerAddressLine1=$providerAddressLine1,
 								i.providerAddressLine2=$providerAddressLine2,
 								i.providerAddressZip=$providerAddressZip,
@@ -235,6 +238,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 		"customerAddressCountry":        data.CustomerAddressCountry,
 		"providerLogoUrl":               data.ProviderLogoUrl,
 		"providerName":                  data.ProviderName,
+		"providerEmail":                 data.ProviderEmail,
 		"providerAddressLine1":          data.ProviderAddressLine1,
 		"providerAddressLine2":          data.ProviderAddressLine2,
 		"providerAddressZip":            data.ProviderAddressZip,

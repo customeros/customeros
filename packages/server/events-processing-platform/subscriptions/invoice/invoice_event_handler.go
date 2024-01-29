@@ -197,6 +197,7 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 		contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractEntity.Country,
 		tenantSettingsEntity.LogoUrl,
 		tenantBillingProfileEntity.LegalName,
+		tenantBillingProfileEntity.Email,
 		tenantBillingProfileEntity.AddressLine1, tenantBillingProfileEntity.AddressLine2, tenantBillingProfileEntity.Zip, tenantBillingProfileEntity.Locality, tenantBillingProfileEntity.Country,
 		contractEntity.InvoiceNote,
 		amount,
@@ -250,7 +251,7 @@ func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed n
 
 func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, domesticPaymentsBankInfo, internationalPaymentsBankInfo,
 	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry,
-	providerLogoUrl, providerName, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
+	providerLogoUrl, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
 	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
@@ -272,6 +273,7 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 		Provider: &invoicepb.FillInvoiceProvider{
 			LogoUrl:      providerLogoUrl,
 			Name:         providerName,
+			Email:        providerEmail,
 			AddressLine1: providerAddressLine1,
 			AddressLine2: providerAddressLine2,
 			Zip:          providerAddressZip,
@@ -473,6 +475,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"ProviderLogoUrl":               invoiceEntity.Provider.LogoUrl,
 		"ProviderLogoExtension":         GetFileExtensionFromUrl(invoiceEntity.Provider.LogoUrl),
 		"ProviderName":                  invoiceEntity.Provider.Name,
+		"ProviderEmail":                 invoiceEntity.Provider.Email,
 		"ProviderAddressLine1":          invoiceEntity.Provider.AddressLine1,
 		"ProviderAddressLine2":          invoiceEntity.Provider.AddressLine2,
 		"ProviderAddressLine3":          utils.JoinNonEmpty(", ", invoiceEntity.Provider.Zip, invoiceEntity.Provider.Locality, invoiceEntity.Provider.Country),
@@ -495,8 +498,8 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 			"Name":        line.Name,
 			"Description": "",
 			"Quantity":    fmt.Sprintf("%d", line.Quantity),
-			"UnitPrice":   fmt.Sprintf("%.2f", line.Price),
-			"Amount":      fmt.Sprintf("%.2f", line.Amount),
+			"UnitPrice":   invoiceEntity.Currency.Symbol() + fmt.Sprintf("%.2f", line.Price),
+			"Amount":      invoiceEntity.Currency.Symbol() + fmt.Sprintf("%.2f", line.Amount),
 		})
 	}
 

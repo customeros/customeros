@@ -64,11 +64,12 @@ message FillInvoiceCustomer {
 message FillInvoiceProvider {
   string LogoUrl = 1;
   string Name = 2;
-  string AddressLine1 = 3;
-  string AddressLine2 = 4;
-  string Zip = 5;
-  string Locality = 6;
-  string Country = 7;
+  string Email = 3;
+  string AddressLine1 = 4;
+  string AddressLine2 = 5;
+  string Zip = 6;
+  string Locality = 7;
+  string Country = 8;
 }
 
 message InvoiceLine {

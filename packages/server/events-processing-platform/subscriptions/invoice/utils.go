@@ -144,9 +144,25 @@ func ConvertInvoiceHtmlToPdf(pdfConverterUrl string, tmpFile *os.File, invoiceDa
 		return nil, errors.Wrap(err, "addResourceFile line31681-nvh.svg")
 	}
 
-	err = addMultipartValue(writer, "9.2", "paperWidth")
+	err = addMultipartValue(writer, "8.6", "paperWidth")
 	if err != nil {
-		return nil, errors.Wrap(err, "addMultipartValue format")
+		return nil, errors.Wrap(err, "addMultipartValue paperWidth")
+	}
+	err = addMultipartValue(writer, "0", "marginTop")
+	if err != nil {
+		return nil, errors.Wrap(err, "addMultipartValue marginTop")
+	}
+	err = addMultipartValue(writer, "0", "marginBottom")
+	if err != nil {
+		return nil, errors.Wrap(err, "addMultipartValue marginBottom")
+	}
+	err = addMultipartValue(writer, "0", "marginLeft")
+	if err != nil {
+		return nil, errors.Wrap(err, "addMultipartValue marginLeft")
+	}
+	err = addMultipartValue(writer, "0", "marginRight")
+	if err != nil {
+		return nil, errors.Wrap(err, "addMultipartValue marginRight")
 	}
 
 	writer.Close()
