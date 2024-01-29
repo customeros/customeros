@@ -61,9 +61,7 @@ func TestMutationResolver_InteractionSessionCreateWithAttachment(t *testing.T) {
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
-		Name:          "readme.txt",
-		Extension:     "txt",
-		Size:          123,
+		FileName:      "readme.txt",
 		Source:        "",
 		SourceOfTruth: "",
 		AppSource:     "",
@@ -203,9 +201,7 @@ func TestMutationResolver_InteractionEventCreateWithAttachment(t *testing.T) {
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
-		Name:          "readme.txt",
-		Extension:     "txt",
-		Size:          123,
+		FileName:      "readme.txt",
 		Source:        "",
 		SourceOfTruth: "",
 		AppSource:     "",

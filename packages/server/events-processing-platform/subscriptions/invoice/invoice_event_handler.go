@@ -531,7 +531,13 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	//	return errors.Wrap(err, "ioutil.WriteFile")
 	//}
 
-	fileDTO, err := h.fsc.UploadSingleFileBytes(eventData.Tenant, *pdfBytes)
+	basePath := fmt.Sprintf("/INVOICE/%d/%s", invoiceEntity.CreatedAt.Year(), invoiceEntity.CreatedAt.Format("01"))
+
+	if invoiceEntity.DryRun {
+		basePath = basePath + "/DRY_RUN"
+	}
+
+	fileDTO, err := h.fsc.UploadSingleFileBytes(eventData.Tenant, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", *pdfBytes)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.UploadSingleFileBytes")

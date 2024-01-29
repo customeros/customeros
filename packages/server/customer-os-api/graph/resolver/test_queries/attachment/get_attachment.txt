@@ -1,13 +1,13 @@
 query GetAttachment($attachmentId: ID!) {
   attachment(id: $attachmentId) {
-      id
-      createdAt
-      name
-      mimeType
-      extension
-      size
-      source
-      sourceOfTruth
-      appSource
+    id
+    createdAt
+    basePath
+    fileName
+    mimeType
+    size
+    source
+    sourceOfTruth
+    appSource
   }
 }

@@ -23,9 +23,9 @@ func TestGetById(t *testing.T) {
 			ID:            "test-id",
 			CreatedAt:     time.Now().UTC(),
 			MimeType:      "image/png",
-			Name:          "test.png",
+			FileName:      "test.png",
 			Size:          1024,
-			Extension:     "png",
+			BasePath:      "/GLOBAL",
 			Source:        "TEST",
 			SourceOfTruth: "TEST",
 			AppSource:     "file-store-api",
@@ -46,11 +46,11 @@ func TestGetById(t *testing.T) {
 
 	// Verify that the file object matches the expected value
 	expectedFile := &model.File{
-		ID:        "test-id",
-		MIME:      "image/png",
-		Name:      "test.png",
-		Length:    1024,
-		Extension: "png",
+		ID:       "test-id",
+		MimeType: "image/png",
+		FileName: "test.png",
+		Size:     1024,
+		BasePath: "/GLOBAL",
 	}
 	if !reflect.DeepEqual(file, expectedFile) {
 		t.Fatalf("Unexpected file object: %v", file)

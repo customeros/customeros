@@ -88,6 +88,11 @@ func (r *mutationResolver) OrganizationUnsetOwner(ctx context.Context, organizat
 	panic(fmt.Errorf("not implemented: OrganizationUnsetOwner - organization_UnsetOwner"))
 }
 
+// OrganizationUpdateOnboardingStatus is the resolver for the organization_UpdateOnboardingStatus field.
+func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Context, input model.OnboardingStatusInput) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUpdateOnboardingStatus - organization_UpdateOnboardingStatus"))
+}
+
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	panic(fmt.Errorf("not implemented: Domains - domains"))

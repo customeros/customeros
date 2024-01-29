@@ -293,10 +293,8 @@ func TestMutationResolver_AddAttachmentToMeeting(t *testing.T) {
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme.txt",
-		Extension: "txt",
-		Size:      123,
+		MimeType: "text/plain",
+		FileName: "readme.txt",
 	})
 
 	rawResponse, err := c.RawPost(getQuery("meeting/add_attachment_to_meeting"),
@@ -329,17 +327,13 @@ func TestMutationResolver_RemoveAttachmentFromMeeting(t *testing.T) {
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
 	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme1.txt",
-		Extension: "txt",
-		Size:      1,
+		MimeType: "text/plain",
+		FileName: "readme1.txt",
 	})
 
 	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme2.txt",
-		Extension: "txt",
-		Size:      2,
+		MimeType: "text/plain",
+		FileName: "readme2.txt",
 	})
 
 	addAttachment1Response, err := c.RawPost(getQuery("meeting/add_attachment_to_meeting"),
@@ -386,10 +380,8 @@ func TestMutationResolver_AddRecordingToMeeting(t *testing.T) {
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme.txt",
-		Extension: "txt",
-		Size:      123,
+		MimeType: "text/plain",
+		FileName: "readme.txt",
 	})
 
 	rawResponse, err := c.RawPost(getQuery("meeting/add_recording_to_meeting"),
@@ -422,17 +414,13 @@ func TestMutationResolver_RemoveRecordingFromMeeting(t *testing.T) {
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
 	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme1.txt",
-		Extension: "txt",
-		Size:      1,
+		MimeType: "text/plain",
+		FileName: "readme1.txt",
 	})
 
 	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme2.txt",
-		Extension: "txt",
-		Size:      2,
+		MimeType: "text/plain",
+		FileName: "readme2.txt",
 	})
 
 	addAttachment1Response, err := c.RawPost(getQuery("meeting/add_recording_to_meeting"),

@@ -90,13 +90,16 @@ func main() {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
 
+			basePath := ctx.Request.FormValue("basePath")
+			fileId := ctx.Request.FormValue("fileId")
+
 			multipartFileHeader, err := ctx.FormFile("file")
 			if err != nil {
 				ctx.AbortWithStatusJSON(500, map[string]string{"error": "missing field file"}) //todo
 				return
 			}
 
-			fileEntity, err := services.FileService.UploadSingleFile(userEmail, tenantName, multipartFileHeader)
+			fileEntity, err := services.FileService.UploadSingleFile(userEmail, tenantName, basePath, fileId, multipartFileHeader)
 			if err != nil {
 				ctx.AbortWithStatusJSON(500, map[string]string{"error": fmt.Sprintf("Error Uploading File %v", err)}) //todo
 				return
@@ -141,9 +144,6 @@ func main() {
 				ctx.AbortWithStatus(404)
 				return
 			}
-
-			//ctx.Header("Accept-Length", fmt.Sprintf("%d", len(bytes)))
-			//ctx.Writer.Write(bytes)
 		})
 	r.GET("/file/:id/base64",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/h2non/filetype"
 	"github.com/machinebox/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
@@ -19,6 +20,7 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -26,7 +28,7 @@ import (
 
 type FileService interface {
 	GetById(userEmail, tenantName string, id string) (*model.File, error)
-	UploadSingleFile(userEmail, tenantName string, multipartFileHeader *multipart.FileHeader) (*model.File, error)
+	UploadSingleFile(userEmail, tenantName, basePath, fileId string, multipartFileHeader *multipart.FileHeader) (*model.File, error)
 	DownloadSingleFile(userEmail, tenantName, id string, context *gin.Context, inline bool) (*model.File, error)
 	Base64Image(userEmail, tenantName string, id string) (*string, error)
 }
@@ -52,7 +54,7 @@ func (s *fileService) GetById(userEmail, tenantName string, id string) (*model.F
 	return mapper.MapAttachmentResponseToFileEntity(attachment), nil
 }
 
-func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFileHeader *multipart.FileHeader) (*model.File, error) {
+func (s *fileService) UploadSingleFile(userEmail, tenantName, basePath, fileId string, multipartFileHeader *multipart.FileHeader) (*model.File, error) {
 	multipartFile, err := multipartFileHeader.Open()
 	if err != nil {
 		return nil, err
@@ -77,27 +79,40 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFi
 		log.Fatal(err)
 	}
 
+	if basePath == "" {
+		basePath = "/GLOBAL"
+	}
+
+	if fileId == "" {
+		fileId = uuid.New().String()
+	}
+
+	err = uploadFileToS3(s.cfg, session, tenantName, basePath, fileId+"."+kind.Extension, multipartFileHeader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	graphqlRequest := graphql.NewRequest(
-		`mutation AttachmentCreate($mimeType: String!, $name: String!, $size: Int64!, $extension: String!, $appSource: String!) {
+		`mutation AttachmentCreate($id: ID, $basePath: String!, $mimeType: String!, $size: Int64!, $fileName: String!, $appSource: String!) {
 			attachment_Create(input: {
+				id: $id	
+				basePath: $basePath	
 				mimeType: $mimeType	
-				name: $name
+				fileName: $fileName
 				size: $size
-				extension: $extension
 				appSource: $appSource
 			}) {
 				id
-				createdAt
-				mimeType
-				name
-				size
-				extension
 			}
 		}`)
+	graphqlRequest.Var("id", fileId)
+	graphqlRequest.Var("basePath", basePath)
 	graphqlRequest.Var("mimeType", multipartFileHeader.Header.Get(http.CanonicalHeaderKey("Content-Type")))
-	graphqlRequest.Var("name", multipartFileHeader.Filename)
+	graphqlRequest.Var("fileName", multipartFileHeader.Filename)
 	graphqlRequest.Var("size", multipartFileHeader.Size)
-	graphqlRequest.Var("extension", kind.Extension)
 	graphqlRequest.Var("appSource", "file-store-api")
 
 	err = s.addHeadersToGraphRequest(graphqlRequest, tenantName, userEmail)
@@ -112,14 +127,6 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFi
 
 	var graphqlResponse model.AttachmentCreateResponse
 	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return nil, err
-	}
-
-	err = uploadFileToS3(s.cfg, session, graphqlResponse.Attachment.Id, multipartFileHeader)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err != nil {
 		return nil, err
 	}
 
@@ -143,10 +150,18 @@ func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, conte
 
 	svc := s3.New(session)
 
+	extension := filepath.Ext(attachment.FileName)
+	if extension == "" {
+		fmt.Println("No file extension found.")
+	} else {
+		extension = extension[1:]
+		fmt.Println("File Extension:", extension)
+	}
+
 	// Get the object metadata to determine the file size and ETag
 	respHead, err := svc.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(s.cfg.AWS.Bucket),
-		Key:    aws.String(attachment.Id),
+		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.Id + "." + extension),
 	})
 	if err != nil {
 		// Handle error
@@ -191,14 +206,14 @@ func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, conte
 	}
 
 	if !inline {
-		context.Header("Content-Disposition", "attachment; filename="+byId.Name)
+		context.Header("Content-Disposition", "attachment; filename="+byId.FileName)
 	} else {
-		context.Header("Content-Disposition", "inline; filename="+byId.Name)
+		context.Header("Content-Disposition", "inline; filename="+byId.FileName)
 	}
-	context.Header("Content-Type", fmt.Sprintf("%s", byId.MIME))
+	context.Header("Content-Type", fmt.Sprintf("%s", byId.MimeType))
 	resp, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(s.cfg.AWS.Bucket),
-		Key:    aws.String(attachment.Id),
+		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.Id + "." + extension),
 		Range:  aws.String("bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end, 10)),
 	})
 	if err != nil {
@@ -209,9 +224,6 @@ func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, conte
 	}
 	defer resp.Body.Close()
 
-	if int64(end-start+1) != byId.Length {
-		context.Status(http.StatusPartialContent)
-	}
 	// Serve the file contents
 	io.Copy(context.Writer, resp.Body)
 	return byId, nil
@@ -274,9 +286,9 @@ func (s *fileService) getCosAttachmentById(userEmail, tenantName string, id stri
 				id
 				createdAt
 				mimeType
-				name
+				fileName
+				basePath
 				size
-				extension
 			}
 		}`)
 	graphqlRequest.Var("id", id)
@@ -298,15 +310,25 @@ func (s *fileService) getCosAttachmentById(userEmail, tenantName string, id stri
 	return &graphqlResponse.Attachment, nil
 }
 
-func uploadFileToS3(cfg *config.Config, session *awsSes.Session, fileId string, multipartFile *multipart.FileHeader) error {
+func uploadFileToS3(cfg *config.Config, session *awsSes.Session, tenantName, basePath, fileId string, multipartFile *multipart.FileHeader) error {
 	fileStream, err := multipartFile.Open()
+	if err != nil {
+		return fmt.Errorf("uploadFileToS3: %w", err)
+	}
+
+	_, err = s3.New(session).PutObject(&s3.PutObjectInput{
+		Bucket:        aws.String(cfg.AWS.Bucket),
+		Key:           aws.String(tenantName + basePath + "/" + fileId),
+		ACL:           aws.String("private"),
+		ContentLength: aws.Int64(0),
+	})
 	if err != nil {
 		return fmt.Errorf("uploadFileToS3: %w", err)
 	}
 
 	_, err2 := s3.New(session).PutObject(&s3.PutObjectInput{
 		Bucket:               aws.String(cfg.AWS.Bucket),
-		Key:                  aws.String(fileId),
+		Key:                  aws.String(tenantName + basePath + "/" + fileId),
 		ACL:                  aws.String("private"),
 		Body:                 fileStream,
 		ContentLength:        aws.Int64(multipartFile.Size),

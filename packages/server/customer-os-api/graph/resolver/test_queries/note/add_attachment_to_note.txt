@@ -9,10 +9,9 @@ mutation AddAttachmentToNote($noteId: ID!, $attachmentId: ID!) {
       sourceOfTruth
       includes {
         id
-        name
-        size
+        fileName
         mimeType
-        extension
+        size
       }
     }
 }

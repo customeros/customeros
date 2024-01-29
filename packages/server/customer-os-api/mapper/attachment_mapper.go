@@ -12,10 +12,11 @@ func MapEntityToAttachment(entity *entity.AttachmentEntity) *model.Attachment {
 	}
 	return &model.Attachment{
 		ID:        entity.Id,
-		CreatedAt: utils.IfNotNilTimeWithDefault(*entity.CreatedAt, utils.Now()), MimeType: entity.MimeType,
+		CreatedAt: utils.IfNotNilTimeWithDefault(*entity.CreatedAt, utils.Now()),
+		BasePath:  entity.BasePath,
+		MimeType:  entity.MimeType,
+		FileName:  entity.FileName,
 		Size:      entity.Size,
-		Name:      entity.Name,
-		Extension: entity.Extension,
 
 		Source:        MapDataSourceToModel(entity.Source),
 		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
@@ -33,10 +34,12 @@ func MapEntitiesToAttachment(entities *entity.AttachmentEntities) []*model.Attac
 
 func MapAttachmentInputToEntity(input *model.AttachmentInput) *entity.AttachmentEntity {
 	return &entity.AttachmentEntity{
+		Id:        utils.IfNotNilStringWithDefault(input.ID, ""),
+		CreatedAt: input.CreatedAt,
+		BasePath:  input.BasePath,
+		FileName:  input.FileName,
 		MimeType:  input.MimeType,
 		Size:      input.Size,
-		Name:      input.Name,
-		Extension: input.Extension,
 
 		AppSource: input.AppSource,
 	}

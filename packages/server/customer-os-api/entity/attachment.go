@@ -11,10 +11,10 @@ type AttachmentEntity struct {
 	Id        string
 	CreatedAt *time.Time
 
-	MimeType  string
-	Name      string
-	Extension string
-	Size      int64
+	BasePath string
+	FileName string
+	MimeType string
+	Size     int64
 
 	Source        neo4jentity.DataSource
 	SourceOfTruth neo4jentity.DataSource

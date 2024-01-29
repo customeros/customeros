@@ -113,9 +113,7 @@ func TestMutationResolver_AddAttachmentToNote(t *testing.T) {
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
-		Name:          "readme.txt",
-		Extension:     "txt",
-		Size:          123,
+		FileName:      "readme.txt",
 		Source:        "",
 		SourceOfTruth: "",
 		AppSource:     "",
@@ -149,9 +147,7 @@ func TestMutationResolver_RemoveAttachmentFromNote(t *testing.T) {
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
-		Name:          "readme.txt",
-		Extension:     "txt",
-		Size:          123,
+		FileName:      "readme.txt",
 		Source:        "",
 		SourceOfTruth: "",
 		AppSource:     "",

@@ -32,6 +32,11 @@ func (r *mutationResolver) ServiceLineItemClose(ctx context.Context, input model
 	panic(fmt.Errorf("not implemented: ServiceLineItemClose - serviceLineItem_Close"))
 }
 
+// ServiceLineItemBulkUpdate is the resolver for the serviceLineItem_BulkUpdate field.
+func (r *mutationResolver) ServiceLineItemBulkUpdate(ctx context.Context, input model.ServiceLineItemBulkUpdateInput) ([]string, error) {
+	panic(fmt.Errorf("not implemented: ServiceLineItemBulkUpdate - serviceLineItem_BulkUpdate"))
+}
+
 // ServiceLineItem is the resolver for the serviceLineItem field.
 func (r *queryResolver) ServiceLineItem(ctx context.Context, id string) (*model.ServiceLineItem, error) {
 	panic(fmt.Errorf("not implemented: ServiceLineItem - serviceLineItem"))
