@@ -3,11 +3,14 @@ package notifications
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
+	"github.com/Boostport/mjml-go"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/pkg/errors"
 
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 
@@ -16,6 +19,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/notifications"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 )
@@ -24,17 +28,81 @@ type MockNotificationProvider struct {
 	called           bool
 	emailContent     string
 	notificationText string
+	TemplatePath     string
+	emailRawContent  string
 }
 
-func (m *MockNotificationProvider) SendNotification(ctx context.Context, u *NotifiableUser, payload, overrides map[string]interface{}, workflowId string) error {
+func (m *MockNotificationProvider) SendNotification(ctx context.Context, u *notifications.NotifiableUser, payload map[string]interface{}, workflowId string) error {
 	m.called = true
 	switch workflowId {
-	case WorkflowIdOrgOwnerUpdateEmail:
+	case notifications.WorkflowIdOrgOwnerUpdateEmail:
 		m.emailContent = payload["html"].(string)
-	case WorkflowIdOrgOwnerUpdateAppNotification:
+	case notifications.WorkflowIdOrgOwnerUpdateAppNotification:
 		m.notificationText = payload["notificationText"].(string)
 	}
 	return nil
+}
+func (m *MockNotificationProvider) LoadEmailBody(ctx context.Context, workflowId string) error {
+	switch workflowId {
+	case notifications.WorkflowIdOrgOwnerUpdateEmail:
+		if _, err := os.Stat(m.TemplatePath); os.IsNotExist(err) {
+			return fmt.Errorf("(MockProvider.LoadEmailBody) error: %s", err.Error())
+		}
+		emailPath := fmt.Sprintf("%s/ownership.single.mjml", m.TemplatePath)
+		if _, err := os.Stat(emailPath); err != nil {
+			return fmt.Errorf("(MockProvider.LoadEmailBody) error: %s", err.Error())
+		}
+
+		rawMjml, err := os.ReadFile(emailPath)
+		if err != nil {
+			return fmt.Errorf("(MockProvider.LoadEmailBody) error: %s", err.Error())
+		}
+		m.emailRawContent = string(rawMjml[:])
+	}
+	return nil
+}
+func (m *MockNotificationProvider) Template(ctx context.Context, replace map[string]string) (string, error) {
+	_, ok := replace["{{userFirstName}}"]
+	if !ok {
+		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing userFirstName")
+	}
+	_, ok = replace["{{actorFirstName}}"]
+	if !ok {
+		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing actorFirstName")
+	}
+	_, ok = replace["{{actorLastName}}"]
+	if !ok {
+		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing actorLastName")
+	}
+	_, ok = replace["{{orgName}}"]
+	if !ok {
+		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing orgName")
+	}
+	_, ok = replace["{{orgLink}}"]
+	if !ok {
+		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing orgLink")
+	}
+	mjmlf := m.emailRawContent
+	for k, v := range replace {
+		mjmlf = strings.Replace(mjmlf, k, v, -1)
+	}
+	m.emailRawContent = mjmlf
+	// mjmlf := strings.Replace(string(np.emailRawContent[:]), "{{userFirstName}}", userFirstName, -1)
+	// mjmlf = strings.Replace(mjmlf, "{{actorFirstName}}", actorFirstName, -1)
+	// mjmlf = strings.Replace(mjmlf, "{{actorLastName}}", actorLastName, -1)
+	// mjmlf = strings.Replace(mjmlf, "{{orgName}}", orgName, -1)
+	// mjmlf = strings.Replace(mjmlf, "{{orgLink}}", orgLink, -1)
+
+	html, err := mjml.ToHTML(context.Background(), mjmlf)
+	var mjmlError mjml.Error
+	if errors.As(err, &mjmlError) {
+		return "", fmt.Errorf("(NovuProvider.Template) error: %s", mjmlError.Message)
+	}
+	m.emailContent = html
+	return html, err
+}
+func (m *MockNotificationProvider) GetRawContent() string {
+	return m.emailRawContent
 }
 
 func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {

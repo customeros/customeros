@@ -1,0 +1,29 @@
+<mjml>
+  <mj-head>
+    <mj-font name="Barlow" href="https://fonts.googleapis.com/css2?family=Barlow:400"></mj-font>
+    <mj-attributes>
+      <mj-text font-family="Barlow, sans-serif" font-weight="400" font-size="14px" color="#344054" line-height="20px"></mj-text>
+    </mj-attributes>
+  </mj-head>
+  
+  <mj-body>
+
+    <mj-section padding="20px" background-color="#ffffff">
+      <mj-column>
+        <mj-image align="left" width="250px" src={{tenantLogo}}">
+        </mj-image>
+        <mj-text>
+          <p>Hi {{userFirstName}},</p>
+          <p>Attached is your <b>paid invoice</b> {{invoiceNumber}} for {{currencySymbol}}{{amtDue}}.</p>
+          <p><b>No action is required</b> as the balance was automatically paid on {{paymentDate}}. Thank you for your continued trust.
+          <p>Have a great day!</p>
+          <p>The {{tenantName}} Team</p>
+        </mj-text>
+        <mj-text>
+          <p>Oh, and if you have any questions about the invoice, simply reply to this email.</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+  </mj-body>
+</mjml>
