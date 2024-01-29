@@ -11,7 +11,7 @@ type InvoicePayNotificationEvent struct {
 }
 
 func NewInvoicePayNotificationEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
-	eventData := InvoicePaidEvent{
+	eventData := InvoicePayNotificationEvent{
 		Tenant: aggregate.GetTenant(),
 	}
 
