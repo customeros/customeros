@@ -57,6 +57,11 @@ func (a *ServiceLineItemAggregate) createServiceLineItem(ctx context.Context, cm
 		return err
 	}
 
+	// if this is parent service line item, set startedAt to start of day in UTC
+	if cmd.DataFields.ParentId == GetServiceLineItemObjectID(a.GetID(), a.Tenant) {
+		startedAtNotNil = utils.StartOfDayInUTC(startedAtNotNil)
+	}
+
 	createEvent, err := event.NewServiceLineItemCreateEvent(
 		a,
 		cmd.DataFields,
