@@ -295,7 +295,10 @@ export const BillingDetails = ({
                 textOverflow='ellipsis'
                 placeholder='Email'
                 type='email'
-                isInvalid={!emailRegex.test(state.values.invoiceEmail)}
+                isInvalid={
+                  !!state.values.invoiceEmail?.length &&
+                  !emailRegex.test(state.values.invoiceEmail)
+                }
                 onMouseEnter={() => setIsBillingDetailsHovered(true)}
                 onMouseLeave={() => setIsBillingDetailsHovered(false)}
                 onFocus={() => setIsBillingDetailsFocused(true)}
