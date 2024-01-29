@@ -37,7 +37,7 @@ export function InvoicesTable() {
   });
 
   if (data?.invoices.totalElements === 0) {
-    return <EmptyState maxW={550} withBorder />;
+    return <EmptyState maxW={550} />;
   }
 
   const handleOpenInvoice = (id: string) => {

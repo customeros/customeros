@@ -23,17 +23,20 @@ export default function InvoicesPage({ searchParams }: InvoicesPageProps) {
       >
         <InvoicesTable />
       </Box>
-      <Box
-        w='full'
-        maxW={575}
-        h='full'
-        pr={4}
-        pt='4'
-        borderRight='1px solid'
-        borderColor='gray.200'
-      >
-        {searchParams?.invoice && <PreviewPanel id={searchParams.invoice} />}
-      </Box>
+
+      {searchParams?.invoice && (
+        <Box
+          w='full'
+          maxW={575}
+          h='full'
+          pr={4}
+          pt='4'
+          borderRight='1px solid'
+          borderColor='gray.200'
+        >
+          <PreviewPanel id={searchParams.invoice} />
+        </Box>
+      )}
     </Flex>
   );
 }
