@@ -219,8 +219,6 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 
 	contract, err := s.services.ContractService.GetById(ctx, contractId)
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-
 	var invoicePeriodStart, invoicePeriodEnd time.Time
 	if contract.NextInvoiceDate != nil {
 		invoicePeriodStart = *contract.NextInvoiceDate
@@ -231,8 +229,11 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 
 	currency := contract.Currency.String()
 	if currency == "" {
-		dbNode, _ := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
-		tenantSettings := mapper.MapDbNodeToTenantSettingsEntity(dbNode)
+		tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
 		currency = tenantSettings.DefaultCurrency.String()
 	}
 
@@ -261,6 +262,7 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 		dryRunInvoiceRequest.BillingCycle = commonpb.BillingCycle_ANNUALLY_BILLING
 	}
 
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.InvoiceClient.NewInvoiceForContract(ctx, &dryRunInvoiceRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
