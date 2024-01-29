@@ -215,7 +215,6 @@ export const ContractCard = ({
   useEffect(() => {
     setDefaultValues(defaultValues);
   }, [
-    defaultValues.signedAt?.toISOString(),
     defaultValues.renewalCycle,
     defaultValues.endedAt?.toISOString(),
     defaultValues.serviceStartedAt?.toISOString(),
@@ -354,10 +353,10 @@ export const ContractCard = ({
         <CardBody as={Flex} p='0' flexDir='column' w='full'>
           <Flex gap='4' mb={2} flexGrow={0}>
             <DatePicker
-              label='Contract signed'
-              placeholder='Signed date'
+              label='Service starts'
+              placeholder='Service starts date'
               formId={formId}
-              name='signedAt'
+              name='serviceStartedAt'
               inset='120% auto auto 0px'
               calendarIconHidden
             />
