@@ -215,6 +215,51 @@ func TestQueryResolver_GetTenantBillingProfiles(t *testing.T) {
 	require.Equal(t, "internationalPaymentsBankInfo", tenantBillingProfile.InternationalPaymentsBankInfo)
 }
 
+func TestQueryResolver_GetTenantBillingProfile(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	profileId := neo4jtest.CreateTenantBillingProfile(ctx, driver, tenantName, neo4jentity.TenantBillingProfileEntity{
+		Email:                         "test@gmail.com",
+		Phone:                         "123456789",
+		LegalName:                     "test",
+		AddressLine1:                  "address1",
+		AddressLine2:                  "address2",
+		AddressLine3:                  "address3",
+		Locality:                      "locality",
+		Country:                       "country",
+		Zip:                           "zip",
+		DomesticPaymentsBankInfo:      "domesticPaymentsBankInfo",
+		InternationalPaymentsBankInfo: "internationalPaymentsBankInfo",
+	})
+
+	rawResponse, err := c.RawPost(getQuery("tenant/get_tenant_billing_profile"), client.Var("id", profileId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var tenantGraphqlResponse struct {
+		TenantBillingProfile model.TenantBillingProfile
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &tenantGraphqlResponse)
+	require.Nil(t, err)
+	require.NotNil(t, tenantGraphqlResponse)
+
+	tenantBillingProfile := tenantGraphqlResponse.TenantBillingProfile
+	require.Equal(t, profileId, tenantBillingProfile.ID)
+	require.Equal(t, "test@gmail.com", tenantBillingProfile.Email)
+	require.Equal(t, "123456789", tenantBillingProfile.Phone)
+	require.Equal(t, "test", tenantBillingProfile.LegalName)
+	require.Equal(t, "address1", tenantBillingProfile.AddressLine1)
+	require.Equal(t, "address2", tenantBillingProfile.AddressLine2)
+	require.Equal(t, "address3", tenantBillingProfile.AddressLine3)
+	require.Equal(t, "locality", tenantBillingProfile.Locality)
+	require.Equal(t, "country", tenantBillingProfile.Country)
+	require.Equal(t, "zip", tenantBillingProfile.Zip)
+	require.Equal(t, "domesticPaymentsBankInfo", tenantBillingProfile.DomesticPaymentsBankInfo)
+	require.Equal(t, "internationalPaymentsBankInfo", tenantBillingProfile.InternationalPaymentsBankInfo)
+}
+
 func TestMutationResolver_TenantAddBillingProfile(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)

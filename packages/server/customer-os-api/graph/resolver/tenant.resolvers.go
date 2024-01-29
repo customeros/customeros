@@ -165,6 +165,22 @@ func (r *queryResolver) TenantBillingProfiles(ctx context.Context) ([]*model.Ten
 	return mapper.MapEntitiesToTenantBillingProfiles(tenantBillingProfileEntities), nil
 }
 
+// TenantBillingProfile is the resolver for the tenantBillingProfile field.
+func (r *queryResolver) TenantBillingProfile(ctx context.Context, id string) (*model.TenantBillingProfile, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TenantBillingProfile", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.tenantBillingProfileId", id))
+
+	tenantBillingProfileEntity, err := r.Services.TenantService.GetTenantBillingProfile(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch tenant billing profile details")
+		return nil, nil
+	}
+	return mapper.MapEntityToTenantBillingProfile(tenantBillingProfileEntity), nil
+}
+
 // TenantSettings is the resolver for the tenantSettings field.
 func (r *queryResolver) TenantSettings(ctx context.Context) (*model.TenantSettings, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TenantSettings", graphql.GetOperationContext(ctx))
