@@ -2,8 +2,6 @@ package aggregate
 
 import (
 	"context"
-	"strings"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -14,13 +12,6 @@ import (
 // GetServiceLineItemObjectID generates the object ID for a service line item.
 func GetServiceLineItemObjectID(aggregateID string, tenant string) string {
 	return aggregate.GetAggregateObjectID(aggregateID, tenant, ServiceLineItemAggregateType)
-}
-
-// getServiceLineItemObjectUUID generates the UUID for a service line item when the tenant is not known.
-func getServiceLineItemObjectUUID(aggregateID string) string {
-	parts := strings.Split(aggregateID, "-")
-	fullUUID := parts[len(parts)-5] + "-" + parts[len(parts)-4] + "-" + parts[len(parts)-3] + "-" + parts[len(parts)-2] + "-" + parts[len(parts)-1]
-	return fullUUID
 }
 
 // LoadServiceLineItemAggregate loads the service line item aggregate from the event store.

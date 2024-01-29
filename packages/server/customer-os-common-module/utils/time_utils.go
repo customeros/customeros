@@ -151,3 +151,7 @@ func LastTimeOfMonth(year, month int) time.Time {
 func LastDayOfMonth(year, month int) time.Time {
 	return FirstTimeOfMonth(year, month).AddDate(0, 1, 0).Add(-time.Hour * 24)
 }
+
+func StartOfDayInUTC(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
+}
