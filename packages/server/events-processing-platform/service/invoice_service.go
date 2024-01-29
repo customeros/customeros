@@ -205,6 +205,25 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, request *invoicepb
 	return &invoicepb.InvoiceIdResponse{Id: invoiceId}, nil
 }
 
+func (s *invoiceService) PayInvoiceNotification(ctx context.Context, request *invoicepb.PayInvoiceNotificationRequest) (*invoicepb.InvoiceIdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.PayInvoiceNotification")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.InvoiceId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
+	}
+
+	if _, err := s.invoiceRequestHandler.HandleWithRetry(ctx, request.Tenant, request.InvoiceId, true, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(PayInvoiceNotification) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
+}
+
 func (s *invoiceService) checkContractExists(ctx context.Context, tenant, contractId string) (bool, error) {
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenant, contractId)
 	err := s.aggregateStore.Exists(ctx, contractAggregate.GetID())
