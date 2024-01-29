@@ -12,7 +12,6 @@ import {
 export interface TimeToRenewalData {
   name?: string;
   endedAt?: Date;
-  signedAt?: Date;
   serviceStartedAt?: Date;
   invoicingStartDate?: Date;
   organizationName?: string;
@@ -24,7 +23,6 @@ export interface TimeToRenewalData {
 export interface TimeToRenewalForm {
   name?: string;
   endedAt?: Date;
-  signedAt?: Date;
   serviceStartedAt?: Date;
   invoicingStartDate?: Date;
   contractUrl?: string | null;
@@ -34,7 +32,6 @@ export interface TimeToRenewalForm {
 }
 
 export class ContractDTO implements TimeToRenewalForm {
-  signedAt?: Date;
   endedAt?: Date;
   invoicingStartDate?: Date;
   serviceStartedAt?: Date;
@@ -55,7 +52,6 @@ export class ContractDTO implements TimeToRenewalForm {
       [...contractBillingCycleOptions].find(
         ({ value }) => value === data?.billingCycle,
       ) ?? undefined;
-    this.signedAt = data?.signedAt && new Date(data.signedAt);
     this.endedAt = data?.endedAt && new Date(data.endedAt);
     this.invoicingStartDate =
       data?.invoicingStartDate && new Date(data.invoicingStartDate);
@@ -84,9 +80,9 @@ export class ContractDTO implements TimeToRenewalForm {
     data: TimeToRenewalForm,
   ): Omit<ContractUpdateInput, 'contractId'> {
     return {
-      signedAt: data?.signedAt,
       endedAt: data?.endedAt,
       invoicingStartDate: data?.invoicingStartDate,
+      serviceStartedAt: data?.serviceStartedAt,
       billingCycle: data?.billingCycle?.value,
       renewalCycle:
         data?.renewalCycle?.value === 'MULTI_YEAR'
