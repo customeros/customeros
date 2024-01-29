@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/Boostport/mjml-go"
@@ -56,22 +57,31 @@ func (np *NovuProvider) SendNotification(ctx context.Context, u *NotifiableUser,
 }
 
 func (np *NovuProvider) LoadEmailBody(ctx context.Context, workflowId string) error {
+	var emailPath string
 	switch workflowId {
 	case WorkflowIdOrgOwnerUpdateEmail:
 		if _, err := os.Stat(np.TemplatePath); os.IsNotExist(err) {
 			return fmt.Errorf("(NovuProvider.LoadEmailBody) error: %s", err.Error())
 		}
-		emailPath := fmt.Sprintf("%s/ownership.single.mjml", np.TemplatePath)
-		if _, err := os.Stat(emailPath); err != nil {
-			return fmt.Errorf("(NovuProvider.LoadEmailBody) error: %s", err.Error())
-		}
-
-		rawMjml, err := os.ReadFile(emailPath)
-		if err != nil {
-			return fmt.Errorf("(NovuProvider.LoadEmailBody) error: %s", err.Error())
-		}
-		np.emailRawContent = string(rawMjml[:])
+		emailPath = fmt.Sprintf("%s/ownership.single.mjml", np.TemplatePath)
 	}
+	// Get the current directory
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("(NovuProvider.LoadEmailBody) Getwd: %s", err.Error())
+	}
+
+	// Build the full path to the template file
+	templatePath := filepath.Join(currentDir, emailPath)
+	if _, err := os.Stat(templatePath); err != nil {
+		return fmt.Errorf("(NovuProvider.LoadEmailBody) error: %s", err.Error())
+	}
+
+	rawMjml, err := os.ReadFile(templatePath)
+	if err != nil {
+		return fmt.Errorf("(NovuProvider.LoadEmailBody) error: %s", err.Error())
+	}
+	np.emailRawContent = string(rawMjml[:])
 	return nil
 }
 

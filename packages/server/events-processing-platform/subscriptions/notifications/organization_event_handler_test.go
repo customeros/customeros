@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -43,22 +44,31 @@ func (m *MockNotificationProvider) SendNotification(ctx context.Context, u *noti
 	return nil
 }
 func (m *MockNotificationProvider) LoadEmailBody(ctx context.Context, workflowId string) error {
+	var emailPath string
 	switch workflowId {
 	case notifications.WorkflowIdOrgOwnerUpdateEmail:
 		if _, err := os.Stat(m.TemplatePath); os.IsNotExist(err) {
 			return fmt.Errorf("(MockProvider.LoadEmailBody) error: %s", err.Error())
 		}
-		emailPath := fmt.Sprintf("%s/ownership.single.mjml", m.TemplatePath)
-		if _, err := os.Stat(emailPath); err != nil {
-			return fmt.Errorf("(MockProvider.LoadEmailBody) error: %s", err.Error())
-		}
-
-		rawMjml, err := os.ReadFile(emailPath)
-		if err != nil {
-			return fmt.Errorf("(MockProvider.LoadEmailBody) error: %s", err.Error())
-		}
-		m.emailRawContent = string(rawMjml[:])
+		emailPath = fmt.Sprintf("%s/ownership.single.mjml", m.TemplatePath)
 	}
+	// Get the current directory
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return errors.Wrap(err, "os.Getwd")
+	}
+
+	// Build the full path to the template file
+	templatePath := filepath.Join(currentDir, emailPath)
+	if _, err := os.Stat(templatePath); err != nil {
+		return fmt.Errorf("(MockProvider.LoadEmailBody) error: %s", err.Error())
+	}
+
+	rawMjml, err := os.ReadFile(templatePath)
+	if err != nil {
+		return fmt.Errorf("(MockProvider.LoadEmailBody) error: %s", err.Error())
+	}
+	m.emailRawContent = string(rawMjml[:])
 	return nil
 }
 func (m *MockNotificationProvider) Template(ctx context.Context, replace map[string]string) (string, error) {
@@ -87,11 +97,6 @@ func (m *MockNotificationProvider) Template(ctx context.Context, replace map[str
 		mjmlf = strings.Replace(mjmlf, k, v, -1)
 	}
 	m.emailRawContent = mjmlf
-	// mjmlf := strings.Replace(string(np.emailRawContent[:]), "{{userFirstName}}", userFirstName, -1)
-	// mjmlf = strings.Replace(mjmlf, "{{actorFirstName}}", actorFirstName, -1)
-	// mjmlf = strings.Replace(mjmlf, "{{actorLastName}}", actorLastName, -1)
-	// mjmlf = strings.Replace(mjmlf, "{{orgName}}", orgName, -1)
-	// mjmlf = strings.Replace(mjmlf, "{{orgLink}}", orgLink, -1)
 
 	html, err := mjml.ToHTML(context.Background(), mjmlf)
 	var mjmlError mjml.Error
@@ -138,7 +143,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
 		log:                  testLogger,
-		notificationProvider: &MockNotificationProvider{},
+		notificationProvider: &MockNotificationProvider{TemplatePath: "./email_templates"},
 		cfg: &config.Config{Services: config.Services{MJML: struct {
 			ApplicationId string "env:\"MJML_APPLICATION_ID,required\" envDefault:\"\""
 			SecretKey     string "env:\"MJML_SECRET_KEY,required\" envDefault:\"\""
@@ -183,6 +188,8 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 	emailContentIsHTML := strings.Contains(orgEventHandler.notificationProvider.(*MockNotificationProvider).emailContent, "<!doctype html>")
 	require.True(t, orgEventHandler.notificationProvider.(*MockNotificationProvider).called)
 	require.Equal(t, orgEventHandler.notificationProvider.(*MockNotificationProvider).notificationText, expectedInAppNotification)
+	require.NotEqual(t, "", orgEventHandler.notificationProvider.(*MockNotificationProvider).emailRawContent)
+	require.NotEqual(t, "", orgEventHandler.notificationProvider.(*MockNotificationProvider).emailContent)
 	require.True(t, emailContentHasCorrectData)
 	require.True(t, emailContentIsHTML)
 }

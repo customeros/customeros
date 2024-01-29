@@ -11,6 +11,7 @@ const (
 	WorkflowIdOrgOwnerUpdateEmail           = "org-owner-update-email"
 	WorkflowIdOrgOwnerUpdateAppNotification = "org-owner-update-in-app-notification"
 	WorkflowInvoicePaid                     = "invoice-paid"
+	WorkflowInvoiceReady                    = "invoice-ready"
 )
 
 type NotifiableUser struct {
