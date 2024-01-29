@@ -5,15 +5,18 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
+	"time"
 )
 
 type InvoiceReadRepository interface {
 	GetInvoiceById(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
 	GetPaginatedInvoices(ctx context.Context, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
 }
 
 type invoiceReadRepository struct {
@@ -138,4 +141,49 @@ func (r *invoiceReadRepository) GetInvoiceById(ctx context.Context, tenant, invo
 	}
 	span.LogFields(log.Bool("result.found", result != nil))
 	return result.(*dbtype.Node), nil
+}
+
+func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoicesForPayNotifications")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Int("minutesFromLastUpdate", minutesFromLastUpdate), log.Object("referenceTime", referenceTime))
+
+	cypher := `MATCH (i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)
+			WHERE 
+				i.dryRun = false AND
+				NOT i.status IN $ignoredStatuses AND
+				(i.techPayNotificationRequestedAt IS NULL OR i.techPayNotificationRequestedAt + duration({hours: 1}) < $referenceTime) AND
+				i.customerEmail IS NOT NULL AND
+				i.customerEmail <> '' AND	
+				i.techEmailSentAt IS NULL AND
+				(i.updatedAt + duration({minutes: $delay}) < $referenceTime)
+			RETURN distinct(i), t.name limit 100`
+	params := map[string]any{
+		"delay":         minutesFromLastUpdate,
+		"referenceTime": referenceTime,
+		"ignoredStatuses": []string{
+			neo4jenum.InvoiceStatusPaid.String(), neo4jenum.InvoiceStatusDraft.String(), neo4jenum.InvoiceStatusNone.String(),
+		},
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsAsDbNodeAndTenant(ctx, queryResult, err)
+
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndTenant))))
+	return result.([]*utils.DbNodeAndTenant), err
 }
