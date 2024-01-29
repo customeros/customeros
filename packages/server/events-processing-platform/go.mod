@@ -11,7 +11,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
 require (
-	github.com/EventStore/EventStore-Client-Go/v3 v3.2.1
+	github.com/EventStore/EventStore-Client-Go/v3 v3.3.0
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.4
