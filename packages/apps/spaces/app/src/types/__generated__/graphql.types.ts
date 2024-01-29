@@ -1298,14 +1298,18 @@ export type Invoice = Node &
     appSource: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
     currency: Scalars['String']['output'];
+    customer: InvoiceCustomer;
+    domesticPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
     dryRun: Scalars['Boolean']['output'];
     dueDate: Scalars['Time']['output'];
     id: Scalars['ID']['output'];
+    internationalPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
     invoiceLines: Array<InvoiceLine>;
     note?: Maybe<Scalars['String']['output']>;
     number: Scalars['String']['output'];
     periodEndDate: Scalars['Time']['output'];
     periodStartDate: Scalars['Time']['output'];
+    provider: InvoiceProvider;
     repositoryFileId: Scalars['String']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
@@ -1314,6 +1318,17 @@ export type Invoice = Node &
     updatedAt: Scalars['Time']['output'];
     vat: Scalars['Float']['output'];
   };
+
+export type InvoiceCustomer = {
+  __typename?: 'InvoiceCustomer';
+  addressCountry?: Maybe<Scalars['String']['output']>;
+  addressLine1?: Maybe<Scalars['String']['output']>;
+  addressLine2?: Maybe<Scalars['String']['output']>;
+  addressLocality?: Maybe<Scalars['String']['output']>;
+  addressZip?: Maybe<Scalars['String']['output']>;
+  email?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+};
 
 export type InvoiceLine = Node & {
   __typename?: 'InvoiceLine';
@@ -1333,6 +1348,17 @@ export type InvoiceLineInput = {
   price: Scalars['Float']['input'];
   quantity: Scalars['Int']['input'];
   serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type InvoiceProvider = {
+  __typename?: 'InvoiceProvider';
+  addressCountry?: Maybe<Scalars['String']['output']>;
+  addressLine1?: Maybe<Scalars['String']['output']>;
+  addressLine2?: Maybe<Scalars['String']['output']>;
+  addressLocality?: Maybe<Scalars['String']['output']>;
+  addressZip?: Maybe<Scalars['String']['output']>;
+  logoUrl?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
 };
 
 export type InvoiceSimulateInput = {
@@ -1924,6 +1950,7 @@ export type Mutation = {
   tenant_AddBillingProfile: TenantBillingProfile;
   tenant_Merge: Scalars['String']['output'];
   tenant_UpdateBillingProfile: TenantBillingProfile;
+  tenant_UpdateSettings: TenantSettings;
   user_AddRole: User;
   user_AddRoleInTenant: User;
   user_Create: User;
@@ -2601,6 +2628,10 @@ export type MutationTenant_UpdateBillingProfileArgs = {
   input: TenantBillingProfileUpdateInput;
 };
 
+export type MutationTenant_UpdateSettingsArgs = {
+  input?: InputMaybe<TenantSettingsInput>;
+};
+
 export type MutationUser_AddRoleArgs = {
   id: Scalars['ID']['input'];
   role: Role;
@@ -2901,6 +2932,7 @@ export type OrganizationPlan = Node &
     appSource: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
     id: Scalars['ID']['output'];
+    masterPlanId: Scalars['ID']['output'];
     milestones: Array<OrganizationPlanMilestone>;
     name: Scalars['String']['output'];
     retired: Scalars['Boolean']['output'];
@@ -2953,16 +2985,16 @@ export type OrganizationPlanMilestoneReorderInput = {
 };
 
 export type OrganizationPlanMilestoneUpdateInput = {
-  dueDate: Scalars['Time']['input'];
+  dueDate?: InputMaybe<Scalars['Time']['input']>;
   id: Scalars['ID']['input'];
-  items: Array<MilestoneItemInput>;
+  items?: InputMaybe<Array<InputMaybe<MilestoneItemInput>>>;
   name?: InputMaybe<Scalars['String']['input']>;
   optional?: InputMaybe<Scalars['Boolean']['input']>;
   order?: InputMaybe<Scalars['Int64']['input']>;
   organizationId: Scalars['ID']['input'];
   organizationPlanId: Scalars['ID']['input'];
   retired?: InputMaybe<Scalars['Boolean']['input']>;
-  statusDetails: StatusDetailsInput;
+  statusDetails?: InputMaybe<StatusDetailsInput>;
   updatedAt: Scalars['Time']['input'];
 };
 
@@ -2971,7 +3003,7 @@ export type OrganizationPlanUpdateInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   organizationId: Scalars['ID']['input'];
   retired?: InputMaybe<Scalars['Boolean']['input']>;
-  statusDetails: StatusDetailsInput;
+  statusDetails?: InputMaybe<StatusDetailsInput>;
 };
 
 export type OrganizationUpdateInput = {
@@ -3254,6 +3286,7 @@ export type Query = {
   tags: Array<Tag>;
   tenant: Scalars['String']['output'];
   tenantBillingProfiles: Array<TenantBillingProfile>;
+  tenantSettings: TenantSettings;
   tenant_ByEmail?: Maybe<Scalars['String']['output']>;
   tenant_ByWorkspace?: Maybe<Scalars['String']['output']>;
   timelineEvents: Array<TimelineEvent>;
@@ -3766,6 +3799,20 @@ export type TenantBillingProfileUpdateInput = {
 export type TenantInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
+};
+
+export type TenantSettings = {
+  __typename?: 'TenantSettings';
+  defaultCurrency?: Maybe<Currency>;
+  invoicingEnabled: Scalars['Boolean']['output'];
+  logoUrl: Scalars['String']['output'];
+};
+
+export type TenantSettingsInput = {
+  defaultCurrency?: InputMaybe<Currency>;
+  invoicingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  logoUrl?: InputMaybe<Scalars['String']['input']>;
+  patch?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type TimeRange = {
