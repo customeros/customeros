@@ -561,3 +561,23 @@ func (s *InvoiceEventHandler) callPdfGeneratedInvoice(ctx context.Context, tenan
 	}
 	return nil
 }
+
+func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoicePaidV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData invoice.InvoicePaidEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	tracing.LogObjectAsJson(span, "eventData", eventData)
+	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	// TODO Implement
+
+	return nil
+}

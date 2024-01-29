@@ -135,6 +135,13 @@ message UpdateInvoiceRequest {
   repeated InvoiceFieldMask fieldsMask = 7;
 }
 
+message PayInvoiceNotificationRequest {
+  string tenant = 1;
+  string invoiceId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
 message InvoiceIdResponse {
   string id = 1;
 }
@@ -147,4 +154,5 @@ service InvoiceGrpcService {
   rpc PayInvoice(PayInvoiceRequest) returns (InvoiceIdResponse);
   rpc SimulateInvoice(SimulateInvoiceRequest) returns (InvoiceIdResponse);
   rpc UpdateInvoice(UpdateInvoiceRequest) returns (InvoiceIdResponse);
+  rpc PayInvoiceNotification(PayInvoiceNotificationRequest) returns (InvoiceIdResponse);
 }

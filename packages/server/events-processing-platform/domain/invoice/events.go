@@ -16,6 +16,7 @@ const (
 	InvoicePdfGeneratedV1      = "V1_INVOICE_PDF_GENERATED"
 	InvoicePayV1               = "V1_INVOICE_PAY"
 	InvoiceUpdateV1            = "V1_INVOICE_UPDATE"
+	InvoicePaidV1              = "V1_INVOICE_PAID"
 )
 
 const (

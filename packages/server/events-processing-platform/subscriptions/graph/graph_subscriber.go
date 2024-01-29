@@ -385,12 +385,13 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.invoiceEventHandler.OnInvoiceFillV1(ctx, evt)
 	case invoiceevents.InvoicePdfGeneratedV1:
 		return s.invoiceEventHandler.OnInvoicePdfGenerated(ctx, evt)
-	case invoiceevents.InvoicePdfRequestedV1:
-		return nil // do nothing
-	case invoiceevents.InvoicePayV1:
-		return nil // do nothing yet
 	case invoiceevents.InvoiceUpdateV1:
 		return s.invoiceEventHandler.OnInvoiceUpdateV1(ctx, evt)
+	case invoiceevents.InvoicePdfRequestedV1,
+		invoiceevents.InvoicePaidV1:
+		return nil // do nothing
+	case invoiceevents.InvoicePayV1:
+		return nil // do nothing yet, not implemented
 
 	case orgplanevent.OrganizationPlanCreateV1:
 		return s.organizationPlanEventHandler.OnCreate(ctx, evt)
