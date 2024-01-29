@@ -15,11 +15,13 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	"github.com/pkg/errors"
 	"time"
 )
 
 type InvoiceService interface {
 	GenerateInvoices()
+	SendPayNotifications()
 }
 
 type invoiceService struct {
@@ -46,7 +48,9 @@ func (s *invoiceService) GenerateInvoices() {
 	defer span.Finish()
 
 	if s.eventsProcessingClient == nil {
-		s.log.Warn("eventsProcessingClient is nil. Will not update next cycle date.")
+		err := errors.New("eventsProcessingClient is nil")
+		tracing.TraceErr(span, err)
+		s.log.Error(err.Error())
 		return
 	}
 
@@ -180,4 +184,69 @@ func (s *invoiceService) getTenantDefaultCurrency(ctx context.Context, tenant st
 
 	tenantDefaultCurrencies[tenant] = tenantSettings.DefaultCurrency
 	return tenantSettings.DefaultCurrency
+}
+
+func (s *invoiceService) SendPayNotifications() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.SendPayNotifications")
+	defer span.Finish()
+
+	if s.eventsProcessingClient == nil {
+		err := errors.New("eventsProcessingClient is nil")
+		tracing.TraceErr(span, err)
+		s.log.Error(err.Error())
+		return
+	}
+
+	referenceTime := utils.Now()
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, s.cfg.ProcessConfig.DelaySendPayInvoiceNotificationInMinutes, referenceTime)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting invoices for pay notifications: %v", err)
+			return
+		}
+
+		// no invoices found
+		if len(records) == 0 {
+			return
+		}
+
+		//process records
+		for _, record := range records {
+			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+			tenant := record.Tenant
+
+			grpcRequest := invoicepb.PayInvoiceNotificationRequest{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+				InvoiceId: invoice.Id,
+			}
+			_, err = s.eventsProcessingClient.InvoiceClient.PayInvoiceNotification(ctx, &grpcRequest)
+
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error sending pay notification for invoice %s: %s", invoice.Id, err.Error())
+			}
+			// mark invoicing started
+			err = s.repositories.ContractRepository.MarkPayNotificationRequested(ctx, tenant, invoice.Id, utils.Now())
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error marking pay notification requested for invoice %s: %s", invoice.Id, err.Error())
+			}
+		}
+		//sleep for async processing, then check again
+		time.Sleep(5 * time.Second)
+	}
 }

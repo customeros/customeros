@@ -73,6 +73,7 @@ type InvoiceWriteRepository interface {
 	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string, updatedAt time.Time) error
 	SetInvoicePaymentRequested(ctx context.Context, tenant, invoiceId string) error
 	UpdateInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceUpdateFields) error
+	MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
 }
 
 type invoiceWriteRepository struct {
@@ -326,6 +327,29 @@ func (r *invoiceWriteRepository) SetInvoicePaymentRequested(ctx context.Context,
 		"now":       utils.Now(),
 	}
 
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *invoiceWriteRepository) MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.MarkPayNotificationRequested")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
+				SET i.techPayNotificationRequestedAt=$requestedAt`
+	params := map[string]any{
+		"tenant":      tenant,
+		"invoiceId":   invoiceId,
+		"requestedAt": requestedAt,
+	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 

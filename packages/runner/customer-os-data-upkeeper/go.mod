@@ -10,14 +10,14 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.16.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240127080723-f1ba6128de71
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240127080723-f1ba6128de71
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240127080723-f1ba6128de71
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240129175106-cfe433d58dd0
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240129175106-cfe433d58dd0
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240129175106-cfe433d58dd0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/robfig/cron v1.2.0
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc v1.61.0
-	gorm.io/gorm v1.25.5
+	gorm.io/gorm v1.25.6
 )
 
 require (
