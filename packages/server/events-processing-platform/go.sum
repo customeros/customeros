@@ -821,8 +821,8 @@ github.com/Boostport/mjml-go v0.14.5 h1:zlWYS7Qmx+F1t8yuIunHke0NR7Mo2794yUnl8uOH
 github.com/Boostport/mjml-go v0.14.5/go.mod h1:On1E8e/2N1QzICMnjxJ7MFZ90d8eLNv4QxkZvqVZf7s=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/EventStore/EventStore-Client-Go/v3 v3.2.1 h1:V8OTxpFYXLMxcZwPHh90eiqvoG5rOp39l2wwzWa0+Lg=
-github.com/EventStore/EventStore-Client-Go/v3 v3.2.1/go.mod h1:LAbzioXCF0calHNynlGcfliMDgUTOuO8cAjY1F+qXGU=
+github.com/EventStore/EventStore-Client-Go/v3 v3.3.0 h1:1AGEOdOUJfoiFAaSukQ1M1W4dO7hD49/4lKDkEzj36g=
+github.com/EventStore/EventStore-Client-Go/v3 v3.3.0/go.mod h1:LAbzioXCF0calHNynlGcfliMDgUTOuO8cAjY1F+qXGU=
 github.com/HdrHistogram/hdrhistogram-go v1.1.2 h1:5IcZpTvzydCQeHzK4Ef/D5rrSqwxob0t8PQPMybUNFM=
 github.com/HdrHistogram/hdrhistogram-go v1.1.2/go.mod h1:yDgFjdqOqDEKOvasDdhWNXYg9BVp4O+o5f6V/ehm6Oo=
 github.com/JohannesKaufmann/html-to-markdown v1.5.0 h1:cEAcqpxk0hUJOXEVGrgILGW76d1GpyGY7PCnAaWQyAI=
