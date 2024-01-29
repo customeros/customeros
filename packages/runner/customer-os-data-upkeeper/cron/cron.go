@@ -50,6 +50,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "generateInvoices", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendPayInvoiceNotification, func() {
+		lockAndRunJob(cont, invoiceGroup, sendPayInvoiceNotifications)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "sendPayInvoiceNotifications", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -79,4 +86,8 @@ func webScrapeOrganizations(cont *container.Container) {
 
 func generateInvoices(cont *container.Container) {
 	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateInvoices()
+}
+
+func sendPayInvoiceNotifications(cont *container.Container) {
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).SendPayNotifications()
 }

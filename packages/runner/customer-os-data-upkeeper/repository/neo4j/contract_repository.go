@@ -18,6 +18,8 @@ type TenantAndContractId struct {
 type ContractRepository interface {
 	GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error)
 	GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error)
+	// Deprecated, use neo4j module instead
+	MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
 }
 
 type contractRepository struct {
@@ -116,4 +118,27 @@ func (r *contractRepository) GetContractsForRenewalRollout(ctx context.Context, 
 	}
 	span.LogFields(log.Int("output - length", len(output)))
 	return output, nil
+}
+
+func (r *contractRepository) MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.MarkPayNotificationRequested")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(span)
+	span.LogFields(log.String("invoiceId", invoiceId), log.Object("requestedAt", requestedAt))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
+				SET i.techPayNotificationRequestedAt=$requestedAt`
+	params := map[string]any{
+		"tenant":      tenant,
+		"invoiceId":   invoiceId,
+		"requestedAt": requestedAt,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
 }
