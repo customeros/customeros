@@ -96,7 +96,7 @@ export function ServicesTable({ services, currency }: ServicesTableProps) {
                 color='gray.500'
                 pr={0}
               >
-                {formatCurrency(service.quantity * service.price)}
+                {formatCurrency(service.amount, 2, currency)}
               </Td>
             </Tr>
           ))}

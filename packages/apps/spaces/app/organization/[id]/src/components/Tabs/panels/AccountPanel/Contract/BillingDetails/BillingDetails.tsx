@@ -130,12 +130,23 @@ export const BillingDetails = ({
     () => ({
       status: 'Preview',
       invoiceNumber: 'INV-003',
-      lines: [],
+      lines: [
+        {
+          amount: 33,
+          createdAt: new Date().toISOString(),
+          id: 'dummy-id',
+          name: 'Professional tier',
+          price: 50,
+          quantity: 2,
+          totalAmount: 33,
+          vat: 0,
+        },
+      ],
       tax: 0,
       note: '',
-      total: 0,
+      total: 33,
       dueDate: new Date().toISOString(),
-      subtotal: 0,
+      subtotal: 33,
       issueDate: new Date().toISOString(),
       from: {
         addressLine: '29 Maple Lane',
