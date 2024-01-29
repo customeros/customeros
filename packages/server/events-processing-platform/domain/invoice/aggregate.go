@@ -80,6 +80,8 @@ func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any, param
 		return nil, a.PayInvoice(ctx, r)
 	case *invoicepb.UpdateInvoiceRequest:
 		return nil, a.UpdateInvoice(ctx, r)
+	case *invoicepb.PayInvoiceNotificationRequest:
+		return nil, a.CreatePayInvoiceNotificationEvent(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -222,6 +224,28 @@ func (a *InvoiceAggregate) CreatePdfRequestedEvent(ctx context.Context, r *invoi
 	return a.Apply(event)
 }
 
+func (a *InvoiceAggregate) CreatePayInvoiceNotificationEvent(ctx context.Context, r *invoicepb.PayInvoiceNotificationRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.CreatePayInvoiceNotificationEvent")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := NewInvoicePayNotificationEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewInvoicePayNotificationEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: r.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    r.AppSource,
+	})
+
+	return a.Apply(event)
+}
+
 func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.UpdateInvoiceRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.UpdateInvoice")
 	defer span.Finish()
@@ -301,13 +325,12 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		return a.onFillInvoice(evt)
 	case InvoicePdfGeneratedV1:
 		return a.onPdfGeneratedInvoice(evt)
-	case InvoicePayV1:
-		return a.onPayInvoice(evt)
-	case InvoicePdfRequestedV1:
-		return nil
 	case InvoiceUpdateV1:
 		return a.onUpdateInvoice(evt)
-	case InvoicePaidV1:
+	case InvoicePayV1,
+		InvoicePdfRequestedV1,
+		InvoicePaidV1,
+		InvoicePayNotificationV1:
 		return nil
 	default:
 		err := eventstore.ErrInvalidEventType
@@ -393,9 +416,5 @@ func (a *InvoiceAggregate) onUpdateInvoice(evt eventstore.Event) error {
 		a.Invoice.Status = eventData.Status
 	}
 
-	return nil
-}
-
-func (a *InvoiceAggregate) onPayInvoice(evt eventstore.Event) error {
 	return nil
 }

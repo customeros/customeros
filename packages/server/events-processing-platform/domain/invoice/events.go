@@ -17,6 +17,7 @@ const (
 	InvoicePayV1               = "V1_INVOICE_PAY"
 	InvoiceUpdateV1            = "V1_INVOICE_UPDATE"
 	InvoicePaidV1              = "V1_INVOICE_PAID"
+	InvoicePayNotificationV1   = "V1_INVOICE_PAY_NOTIFICATION"
 )
 
 const (

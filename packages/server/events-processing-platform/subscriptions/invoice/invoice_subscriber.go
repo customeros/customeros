@@ -130,6 +130,8 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 		return s.invoiceEventHandler.onInvoicePdfGeneratedV1(ctx, evt)
 	case invoice.InvoicePaidV1:
 		return s.invoiceEventHandler.onInvoicePaidV1(ctx, evt)
+	case invoice.InvoicePayNotificationV1:
+		return s.invoiceEventHandler.onInvoicePayNotificationV1(ctx, evt)
 	default:
 		return nil
 	}

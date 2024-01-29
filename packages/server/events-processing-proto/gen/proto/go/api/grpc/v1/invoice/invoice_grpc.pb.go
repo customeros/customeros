@@ -29,6 +29,7 @@ type InvoiceGrpcServiceClient interface {
 	PayInvoice(ctx context.Context, in *PayInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	SimulateInvoice(ctx context.Context, in *SimulateInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	UpdateInvoice(ctx context.Context, in *UpdateInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
+	PayInvoiceNotification(ctx context.Context, in *PayInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 }
 
 type invoiceGrpcServiceClient struct {
@@ -102,6 +103,15 @@ func (c *invoiceGrpcServiceClient) UpdateInvoice(ctx context.Context, in *Update
 	return out, nil
 }
 
+func (c *invoiceGrpcServiceClient) PayInvoiceNotification(ctx context.Context, in *PayInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
+	out := new(InvoiceIdResponse)
+	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/PayInvoiceNotification", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InvoiceGrpcServiceServer is the server API for InvoiceGrpcService service.
 // All implementations should embed UnimplementedInvoiceGrpcServiceServer
 // for forward compatibility
@@ -113,6 +123,7 @@ type InvoiceGrpcServiceServer interface {
 	PayInvoice(context.Context, *PayInvoiceRequest) (*InvoiceIdResponse, error)
 	SimulateInvoice(context.Context, *SimulateInvoiceRequest) (*InvoiceIdResponse, error)
 	UpdateInvoice(context.Context, *UpdateInvoiceRequest) (*InvoiceIdResponse, error)
+	PayInvoiceNotification(context.Context, *PayInvoiceNotificationRequest) (*InvoiceIdResponse, error)
 }
 
 // UnimplementedInvoiceGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -139,6 +150,9 @@ func (UnimplementedInvoiceGrpcServiceServer) SimulateInvoice(context.Context, *S
 }
 func (UnimplementedInvoiceGrpcServiceServer) UpdateInvoice(context.Context, *UpdateInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateInvoice not implemented")
+}
+func (UnimplementedInvoiceGrpcServiceServer) PayInvoiceNotification(context.Context, *PayInvoiceNotificationRequest) (*InvoiceIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PayInvoiceNotification not implemented")
 }
 
 // UnsafeInvoiceGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -278,6 +292,24 @@ func _InvoiceGrpcService_UpdateInvoice_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InvoiceGrpcService_PayInvoiceNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PayInvoiceNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvoiceGrpcServiceServer).PayInvoiceNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/InvoiceGrpcService/PayInvoiceNotification",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvoiceGrpcServiceServer).PayInvoiceNotification(ctx, req.(*PayInvoiceNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InvoiceGrpcService_ServiceDesc is the grpc.ServiceDesc for InvoiceGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -312,6 +344,10 @@ var InvoiceGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateInvoice",
 			Handler:    _InvoiceGrpcService_UpdateInvoice_Handler,
+		},
+		{
+			MethodName: "PayInvoiceNotification",
+			Handler:    _InvoiceGrpcService_PayInvoiceNotification_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
