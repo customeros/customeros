@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -302,74 +301,84 @@ func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx c
 		return err
 	}
 
-	opMilestones := convertMilestonesToOrganizationPlanMilestones(opmNode, opNode.CreatedAt)
-
-	// check if all milestones are done
-	allMilestonesDone := true
-	for _, milestone := range opNode.Milestones {
-		if milestone.StatusDetails.Status != model.MilestoneDone.String() && milestone.StatusDetails.Status != model.MilestoneDoneLate.String() {
-			allMilestonesDone = false
-			break
-		}
+	opNode, err := h.repositories.Neo4jRepositories.OrganizationPlanReadRepository.GetOrganizationPlanById(ctx, tenant, opid)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while retrieving organization plan %s: %s", opid, err.Error())
+		return err
 	}
+
+	op := neo4jmapper.MapDbNodeToOrganizationPlanEntity(opNode)
+
+	opMilestones := convertMilestonesToOrganizationPlanMilestones(opmNode)
 
 	opdata := neo4jrepository.OrganizationPlanUpdateFields{
 		Name:    op.Name,
-		Retired: eventData.Retired,
+		Retired: op.Retired,
 		StatusDetails: entity.OrganizationPlanStatusDetails{
-			Status:    eventData.StatusDetails.Status,
-			UpdatedAt: eventData.StatusDetails.UpdatedAt,
-			Comments:  eventData.StatusDetails.Comments,
+			Status:    op.StatusDetails.Status,
+			UpdatedAt: op.StatusDetails.UpdatedAt,
+			Comments:  op.StatusDetails.Comments,
 		},
-		UpdatedAt:           eventData.UpdatedAt,
-		UpdateName:          eventData.UpdateName(),
-		UpdateRetired:       eventData.UpdateRetired(),
-		UpdateStatusDetails: eventData.UpdateStatusDetails(),
+		UpdatedAt:           op.UpdatedAt,
+		UpdateName:          false,
+		UpdateRetired:       false,
+		UpdateStatusDetails: false,
 	}
 
-	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.Update(ctx, eventData.Tenant, organizationPlanId, data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while updating organization plan %s: %s", organizationPlanId, err.Error())
-		return err
+	// check if all milestones are done
+	allMilestonesDone := true
+	late := false
+	started := false
+	for _, milestone := range opMilestones {
+		if milestone.StatusDetails.Status != model.MilestoneDone.String() && milestone.StatusDetails.Status != model.MilestoneDoneLate.String() {
+			allMilestonesDone = false
+		}
+		if milestone.StatusDetails.Status == model.MilestoneDoneLate.String() || milestone.StatusDetails.Status == model.MilestoneStartedLate.String() || milestone.StatusDetails.Status == model.MilestoneNotStartedLate.String() {
+			late = true
+		}
+		if milestone.StatusDetails.Status == model.MilestoneStarted.String() || milestone.StatusDetails.Status == model.MilestoneStartedLate.String() {
+			started = true
+		}
 	}
-	return err
+
+	// update organization plan status
+	if allMilestonesDone {
+		if late {
+			opdata.StatusDetails.Status = model.DoneLate.String() // donelate status
+		} else {
+			opdata.StatusDetails.Status = model.Done.String()
+		}
+	} else {
+		if !started {
+			if late {
+				opdata.StatusDetails.Status = model.NotStartedLate.String()
+			} else {
+				opdata.StatusDetails.Status = model.NotStarted.String()
+			}
+		} else {
+			if late {
+				opdata.StatusDetails.Status = model.Late.String()
+			} else {
+				opdata.StatusDetails.Status = model.OnTrack.String()
+			}
+		}
+	}
+
+	if op.StatusDetails.Status != opdata.StatusDetails.Status {
+		opdata.StatusDetails.UpdatedAt = time.Now().UTC()
+		opdata.StatusDetails.Comments = ""
+		opdata.UpdateStatusDetails = true
+		err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.Update(ctx, tenant, opid, opdata)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while updating organization plan %s: %s", opid, err.Error())
+			return err
+		}
+	}
+
+	return nil
 }
-
-// func (h *OrganizationPlanEventHandler) propagateStatusUpdatesToOrganizationPlan(ctx context.Context, log logger.Logger, repositories *repository.Repositories, tenant, organizationPlanId string, statusDetails entity.OrganizationPlanMilestoneStatusDetails, updatedAt time.Time) error {
-// 	span, ctx := opentracing.StartSpanFromContext(ctx, "propagateStatusUpdatesToOrganizationPlan")
-// 	defer span.Finish()
-// 	span.SetTag(tracing.SpanTagEntityId, organizationPlanId)
-
-// 	organizationPlan, err := repositories.Neo4jRepositories.OrganizationPlanReadRepository.GetOrganizationPlanById(ctx, tenant, organizationPlanId)
-// 	if err != nil {
-// 		tracing.TraceErr(span, err)
-// 		log.Errorf("Error while retrieving organization plan %s: %s", organizationPlanId, err.Error())
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// func (h *OrganizationPlanEventHandler) propagateStatusUpdatesToOrganizationPlanMilestone(ctx context.Context, evt eventstore.Event) error {
-// 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanEventHandler.propagateStatusUpdatesToOrganizationPlanMilestone")
-// 	defer span.Finish()
-// 	setEventSpanTagsAndLogFields(span, evt)
-
-// 	organizationPlanId := eventData.OrganizationPlanId
-// 	milestoneId := eventData.MilestoneId
-
-// 	span.SetTag(tracing.SpanTagEntityId, milestoneId)
-
-// 	milestone, err := h.repositories.Neo4jRepositories.OrganizationPlanReadRepository.GetOrganizationPlanMilestoneById(ctx, eventData.Tenant, organizationPlanId, milestoneId)
-
-// 	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, organizationPlanId, milestoneId, data)
-// 	if err != nil {
-// 		tracing.TraceErr(span, err)
-// 		h.log.Errorf("Error while updating organization plan milestone %s: %s", milestoneId, err.Error())
-// 		return err
-// 	}
-// 	return err
-// }
 
 /////////////////////////////////////////////////// helper functions ///////////////////////////////////////////////////
 
@@ -382,21 +391,11 @@ func checkAllItemStatusesAreDoneOrSkipped(items []model.OrganizationPlanMileston
 	return true
 }
 
-func convertMilestonesToOrganizationPlanMilestones(opMilestonesNodes []*dbtype.Node, createdAt time.Time) []entity.OrganizationPlanMilestoneEntity {
+func convertMilestonesToOrganizationPlanMilestones(opMilestonesNodes []*dbtype.Node) []entity.OrganizationPlanMilestoneEntity {
 	organizationPlanMilestones := make([]entity.OrganizationPlanMilestoneEntity, len(opMilestonesNodes))
 	for i, opMilestoneNode := range opMilestonesNodes {
 		milestone := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(opMilestoneNode)
-		organizationPlanMilestones[i] = entity.OrganizationPlanMilestoneEntity{
-			Id:            uuid.New().String(),
-			Name:          milestone.Name,
-			Order:         milestone.Order,
-			DueDate:       createdAt.Add(time.Duration(milestone.DurationHours) * time.Hour),
-			Items:         convertItemsStrToObject(milestone.Items),
-			Optional:      milestone.Optional,
-			CreatedAt:     createdAt,
-			UpdatedAt:     createdAt,
-			StatusDetails: entity.OrganizationPlanMilestoneStatusDetails{Status: model.MilestoneNotStarted.String(), UpdatedAt: createdAt, Comments: ""},
-		}
+		organizationPlanMilestones[i] = *milestone
 	}
 	return organizationPlanMilestones
 }

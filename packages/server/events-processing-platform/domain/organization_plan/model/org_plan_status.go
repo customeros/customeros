@@ -4,9 +4,12 @@ type OrganizationPlanStatusString string
 
 const (
 	OrganizationPlanStatusNotStarted OrganizationPlanStatusString = "NOT_STARTED"
-	OrganizationPlanStatusOnTrack    OrganizationPlanStatusString = "ON_TRACK"
-	OrganizationPlanStatusLate       OrganizationPlanStatusString = "LATE"
+	OrganizationPlanStatusOnTrack    OrganizationPlanStatusString = "ON_TRACK" // ~ started, on time
+	OrganizationPlanStatusLate       OrganizationPlanStatusString = "LATE"     // ~ started, late
 	OrganizationPlanStatusDone       OrganizationPlanStatusString = "DONE"
+	// timeline related
+	OrganizationPlanStatusNotStartedLate OrganizationPlanStatusString = "NOT_STARTED_LATE"
+	OrganizationPlanStatusDoneLate       OrganizationPlanStatusString = "DONE_LATE"
 )
 
 type OrganizationPlanStatus int32
@@ -16,6 +19,9 @@ const (
 	OnTrack
 	Late
 	Done
+	// timeline related
+	NotStartedLate
+	DoneLate
 )
 
 func (os OrganizationPlanStatus) String() string {
@@ -28,6 +34,10 @@ func (os OrganizationPlanStatus) String() string {
 		return string(OrganizationPlanStatusLate)
 	case Done:
 		return string(OrganizationPlanStatusDone)
+	case NotStartedLate:
+		return string(OrganizationPlanStatusNotStartedLate)
+	case DoneLate:
+		return string(OrganizationPlanStatusDoneLate)
 	default:
 		return string(OrganizationPlanStatusNotStarted)
 	}
