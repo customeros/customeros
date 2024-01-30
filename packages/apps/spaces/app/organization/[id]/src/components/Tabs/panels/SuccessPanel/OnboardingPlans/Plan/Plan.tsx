@@ -142,7 +142,7 @@ export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
               }
             />
             <PlanMenu
-              id={plan.id}
+              id={plan.masterPlanId}
               onRemovePlan={handleRemovePlan}
               onAddMilestone={addMilestoneModal.onOpen}
             />

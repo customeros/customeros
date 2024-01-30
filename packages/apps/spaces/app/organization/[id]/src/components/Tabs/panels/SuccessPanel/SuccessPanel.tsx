@@ -24,7 +24,7 @@ export const SuccessPanel = () => {
     >
       <OnboardingStatus data={data?.organization?.accountDetails?.onboarding} />
 
-      <OnboardingPlans />
+      {isFeatureOn && <OnboardingPlans />}
     </PanelContainer>
   );
 };
