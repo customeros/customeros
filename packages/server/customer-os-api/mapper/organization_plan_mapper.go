@@ -63,20 +63,35 @@ func MapEntitiesToOrganizationPlanMilestones(entities *neo4jentity.OrganizationP
 	return models
 }
 
-func MapEntityToOrganizationPlanMilestoneItems(entities []neo4jentity.OrganizationPlanMilestoneItem) []*model.MilestoneItem {
-	var models []*model.MilestoneItem
+func MapEntityToOrganizationPlanMilestoneItems(entities []neo4jentity.OrganizationPlanMilestoneItem) []*model.OrganizationPlanMilestoneItem {
+	var models []*model.OrganizationPlanMilestoneItem
 	for _, entity := range entities {
 		models = append(models, MapEntityToOrganizationPlanMilestoneItem(&entity))
 	}
 	return models
 }
 
-func MapEntityToOrganizationPlanMilestoneItem(entity *neo4jentity.OrganizationPlanMilestoneItem) *model.MilestoneItem {
+func MapEntityToOrganizationPlanMilestoneItem(entity *neo4jentity.OrganizationPlanMilestoneItem) *model.OrganizationPlanMilestoneItem {
 	if entity == nil {
 		return nil
 	}
-	return &model.MilestoneItem{
-		Status:    entity.Status,
+	status := model.OnboardingPlanMilestoneItemStatusNotDone
+	switch entity.Status {
+	case model.OnboardingPlanMilestoneItemStatusNotDone.String():
+		status = model.OnboardingPlanMilestoneItemStatusNotDone
+	case model.OnboardingPlanMilestoneItemStatusDone.String():
+		status = model.OnboardingPlanMilestoneItemStatusDone
+	case model.OnboardingPlanMilestoneItemStatusSkipped.String():
+		status = model.OnboardingPlanMilestoneItemStatusSkipped
+	case model.OnboardingPlanMilestoneItemStatusNotDoneLate.String():
+		status = model.OnboardingPlanMilestoneItemStatusNotDoneLate
+	case model.OnboardingPlanMilestoneItemStatusSkippedLate.String():
+		status = model.OnboardingPlanMilestoneItemStatusSkippedLate
+	case model.OnboardingPlanMilestoneItemStatusDoneLate.String():
+		status = model.OnboardingPlanMilestoneItemStatusDoneLate
+	}
+	return &model.OrganizationPlanMilestoneItem{
+		Status:    status,
 		UpdatedAt: entity.UpdatedAt,
 		Text:      entity.Text,
 	}

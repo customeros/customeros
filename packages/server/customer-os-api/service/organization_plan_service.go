@@ -25,12 +25,12 @@ import (
 
 type OrganizationPlanService interface {
 	CreateOrganizationPlan(ctx context.Context, name, masterPlanId, orgId string) (string, error)
-	UpdateOrganizationPlan(ctx context.Context, organizationPlanId, orgId string, name *string, retired *bool, statusDetails *model.StatusDetailsInput) error
+	UpdateOrganizationPlan(ctx context.Context, organizationPlanId, orgId string, name *string, retired *bool, statusDetails *model.OrganizationPlanStatusDetailsInput) error
 	DuplicateOrganizationPlan(ctx context.Context, sourceOrganizationPlanId, orgId string) (string, error)
 	GetOrganizationPlanById(ctx context.Context, organizationPlanId string) (*neo4jentity.OrganizationPlanEntity, error)
 	GetOrganizationPlans(ctx context.Context, returnRetired *bool) (*neo4jentity.OrganizationPlanEntities, error)
 	CreateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, orgId, name string, order *int64, dueDate *time.Time, optional, adhoc bool, items []string) (string, error)
-	UpdateOrganizationPlanMilestone(ctx context.Context, orgId, organizationPlanId, organizationPlanMilestoneId string, name *string, order *int64, dueDate *time.Time, items []*model.MilestoneItemInput, optional, adhoc *bool, retired *bool, statusDetails *model.StatusDetailsInput) error
+	UpdateOrganizationPlanMilestone(ctx context.Context, orgId, organizationPlanId, organizationPlanMilestoneId string, name *string, order *int64, dueDate *time.Time, items []*model.OrganizationPlanMilestoneItemInput, optional, adhoc, retired *bool, statusDetails *model.OrganizationPlanMilestoneStatusDetailsInput) error
 	GetOrganizationPlanMilestoneById(ctx context.Context, organizationPlanMilestoneId string) (*neo4jentity.OrganizationPlanMilestoneEntity, error)
 	GetOrganizationPlanMilestonesForOrganizationPlans(ctx context.Context, organizationPlanIds []string) (*neo4jentity.OrganizationPlanMilestoneEntities, error)
 	ReorderOrganizationPlanMilestones(ctx context.Context, organizationPlanId, orgId string, organizationPlanMilestoneIds []string) error
@@ -82,7 +82,7 @@ func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, na
 	return response.Id, nil
 }
 
-func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, organizationPlanId, orgId string, name *string, retired *bool, statusDetails *model.StatusDetailsInput) error {
+func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, organizationPlanId, orgId string, name *string, retired *bool, statusDetails *model.OrganizationPlanStatusDetailsInput) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.UpdateOrganizationPlan")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -255,7 +255,7 @@ func (s *organizationPlanService) GetOrganizationPlanMilestonesForOrganizationPl
 	return &organizationPlanMilestoneEntities, nil
 }
 
-func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Context, orgId, organizationPlanId, organizationPlanMilestoneId string, name *string, order *int64, dueDate *time.Time, items []*model.MilestoneItemInput, optional, adhoc *bool, retired *bool, statusDetails *model.StatusDetailsInput) error {
+func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Context, orgId, organizationPlanId, organizationPlanMilestoneId string, name *string, order *int64, dueDate *time.Time, items []*model.OrganizationPlanMilestoneItemInput, optional, adhoc, retired *bool, statusDetails *model.OrganizationPlanMilestoneStatusDetailsInput) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.UpdateOrganizationPlanMilestone")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -313,7 +313,7 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ITEMS)
 	}
 	if statusDetails != nil {
-		grpcRequest.StatusDetails = statusDetailsInputToProtobuf(statusDetails)
+		grpcRequest.StatusDetails = milestoneStatusDetailsInputToProtobuf(statusDetails)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_STATUS_DETAILS)
 	}
 	if adhoc != nil {
@@ -524,20 +524,29 @@ func (s *organizationPlanService) GetOrganizationPlansForOrganization(ctx contex
 ////// utils just for this service //////
 ////////////////////////////////////////
 
-func statusDetailsInputToProtobuf(sd *model.StatusDetailsInput) *orgplanpb.StatusDetails {
+func statusDetailsInputToProtobuf(sd *model.OrganizationPlanStatusDetailsInput) *orgplanpb.StatusDetails {
 	out := &orgplanpb.StatusDetails{
-		Status:    sd.Status,
+		Status:    sd.Status.String(),
 		UpdatedAt: utils.ConvertTimeToTimestampPtr(&sd.UpdatedAt),
 		Comments:  sd.Text,
 	}
 	return out
 }
 
-func modelItemsToPbItems(items []*model.MilestoneItemInput) []*orgplanpb.OrganizationPlanMilestoneItem {
+func milestoneStatusDetailsInputToProtobuf(sd *model.OrganizationPlanMilestoneStatusDetailsInput) *orgplanpb.StatusDetails {
+	out := &orgplanpb.StatusDetails{
+		Status:    sd.Status.String(),
+		UpdatedAt: utils.ConvertTimeToTimestampPtr(&sd.UpdatedAt),
+		Comments:  sd.Text,
+	}
+	return out
+}
+
+func modelItemsToPbItems(items []*model.OrganizationPlanMilestoneItemInput) []*orgplanpb.OrganizationPlanMilestoneItem {
 	out := make([]*orgplanpb.OrganizationPlanMilestoneItem, 0, len(items))
 	for _, v := range items {
 		out = append(out, &orgplanpb.OrganizationPlanMilestoneItem{
-			Status:    v.Status,
+			Status:    v.Status.String(),
 			UpdatedAt: utils.ConvertTimeToTimestampPtr(&v.UpdatedAt),
 			Text:      v.Text,
 		})
