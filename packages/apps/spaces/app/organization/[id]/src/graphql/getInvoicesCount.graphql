@@ -1,0 +1,14 @@
+query getInvoicesCount(
+    $organizationId: ID
+) {
+    invoices(
+        pagination: {
+            page: 0,
+            limit: 50,
+        }
+        organizationId: $organizationId
+
+    ) {
+        totalElements
+    }
+}

@@ -9,10 +9,12 @@ import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { Select } from '@ui/form/SyncSelect';
 import { Organization } from '@graphql/types';
+import { Skeleton } from '@ui/presentation/Skeleton';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
+import { useGetInvoicesCountQuery } from '@organization/src/graphql/getInvoicesCount.generated';
 import { contractButtonSelect } from '@organization/src/components/Tabs/shared/contractSelectStyles';
 import { Contracts } from '@organization/src/components/Tabs/panels/AccountPanel/Contracts/Contracts';
 
@@ -34,6 +36,10 @@ const AccountPanelComponent = () => {
   const { data, isFetching } = useGetContractsQuery(client, {
     id,
   });
+  const { data: invoicesCountData, isFetching: isFetchingInvoicesCount } =
+    useGetInvoicesCountQuery(client, {
+      organizationId: id,
+    });
 
   if (isFetching) {
     return <AccountPanelSkeleton />;
@@ -160,8 +166,18 @@ const AccountPanelComponent = () => {
         }}
         onClick={() => router.push(`?tab=invoices`)}
       >
-        <Text fontSize='sm' fontWeight='semibold'>
-          Invoices • 2
+        <Text
+          fontSize='sm'
+          fontWeight='semibold'
+          display='inline-flex'
+          alignItems='center'
+        >
+          Invoices •{' '}
+          {isFetchingInvoicesCount ? (
+            <Skeleton height={3} width={2} ml={1} />
+          ) : (
+            invoicesCountData?.invoices.totalElements
+          )}
         </Text>
       </Button>
     </OrganizationPanel>
