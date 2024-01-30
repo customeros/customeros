@@ -382,17 +382,17 @@ func checkAllItemStatusesAreDoneOrSkipped(items []model.OrganizationPlanMileston
 	return true
 }
 
-func convertMilestonesToOrganizationPlanMilestones(masterPlanMilestonesNodes []*dbtype.Node, createdAt time.Time) []entity.OrganizationPlanMilestoneEntity {
-	organizationPlanMilestones := make([]entity.OrganizationPlanMilestoneEntity, len(masterPlanMilestonesNodes))
-	for i, masterPlanMilestoneNode := range masterPlanMilestonesNodes {
-		mpMilestone := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneNode)
+func convertMilestonesToOrganizationPlanMilestones(opMilestonesNodes []*dbtype.Node, createdAt time.Time) []entity.OrganizationPlanMilestoneEntity {
+	organizationPlanMilestones := make([]entity.OrganizationPlanMilestoneEntity, len(opMilestonesNodes))
+	for i, opMilestoneNode := range opMilestonesNodes {
+		milestone := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(opMilestoneNode)
 		organizationPlanMilestones[i] = entity.OrganizationPlanMilestoneEntity{
 			Id:            uuid.New().String(),
-			Name:          mpMilestone.Name,
-			Order:         mpMilestone.Order,
-			DueDate:       createdAt.Add(time.Duration(mpMilestone.DurationHours) * time.Hour),
-			Items:         convertItemsStrToObject(mpMilestone.Items),
-			Optional:      mpMilestone.Optional,
+			Name:          milestone.Name,
+			Order:         milestone.Order,
+			DueDate:       createdAt.Add(time.Duration(milestone.DurationHours) * time.Hour),
+			Items:         convertItemsStrToObject(milestone.Items),
+			Optional:      milestone.Optional,
 			CreatedAt:     createdAt,
 			UpdatedAt:     createdAt,
 			StatusDetails: entity.OrganizationPlanMilestoneStatusDetails{Status: model.MilestoneNotStarted.String(), UpdatedAt: createdAt, Comments: ""},
