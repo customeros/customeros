@@ -240,7 +240,7 @@ func (s *invoiceService) SendPayNotifications() {
 				s.log.Errorf("Error sending pay notification for invoice %s: %s", invoice.Id, err.Error())
 			}
 			// mark invoicing started
-			err = s.repositories.ContractRepository.MarkPayNotificationRequested(ctx, tenant, invoice.Id, utils.Now())
+			err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkPayNotificationRequested(ctx, tenant, invoice.Id, utils.Now())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error marking pay notification requested for invoice %s: %s", invoice.Id, err.Error())
