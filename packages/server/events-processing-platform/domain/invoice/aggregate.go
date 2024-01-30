@@ -254,17 +254,11 @@ func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.Updat
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), utils.Now())
-	var fieldsMask []string
-	for _, field := range r.FieldsMask {
-		if field == invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS {
-			fieldsMask = append(fieldsMask, FieldMaskStatus)
-		}
-	}
-	fieldsMask = utils.RemoveDuplicates(fieldsMask)
+	fieldsMask := extractFieldsMask(r.FieldsMask)
 	status := InvoiceStatus(r.Status).String()
 
 	events := []eventstore.Event{}
-	updateEvent, err := NewInvoiceUpdateEvent(a, updatedAtNotNil, fieldsMask, status)
+	updateEvent, err := NewInvoiceUpdateEvent(a, updatedAtNotNil, fieldsMask, status, r.PaymentLink)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUpdateInvoiceEvent")
@@ -415,6 +409,23 @@ func (a *InvoiceAggregate) onUpdateInvoice(evt eventstore.Event) error {
 	if eventData.UpdateStatus() {
 		a.Invoice.Status = eventData.Status
 	}
+	if eventData.UpdatePaymentLink() {
+		a.Invoice.PaymentLink = eventData.PaymentLink
+	}
 
 	return nil
+}
+
+func extractFieldsMask(requestFieldsMask []invoicepb.InvoiceFieldMask) []string {
+	var fieldsMask []string
+	for _, field := range requestFieldsMask {
+		switch field {
+		case invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS:
+			fieldsMask = append(fieldsMask, FieldMaskStatus)
+		case invoicepb.InvoiceFieldMask_INVOICE_FIELD_PAYMENT_LINK:
+			fieldsMask = append(fieldsMask, FieldMaskPaymentLink)
+		}
+	}
+	fieldsMask = utils.RemoveDuplicates(fieldsMask)
+	return fieldsMask
 }

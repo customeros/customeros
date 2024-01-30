@@ -21,7 +21,8 @@ const (
 )
 
 const (
-	FieldMaskStatus = "status"
+	FieldMaskStatus      = "status"
+	FieldMaskPaymentLink = "paymentLink"
 )
 
 func SimulateInvoiceNewEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, request *invoicepb.SimulateInvoiceRequest) (eventstore.Event, error) {

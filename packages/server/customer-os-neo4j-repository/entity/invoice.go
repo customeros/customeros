@@ -26,6 +26,7 @@ type InvoiceEntity struct {
 	BillingCycle                  enum.BillingCycle
 	Status                        enum.InvoiceStatus
 	Note                          string
+	PaymentDetails                PaymentDetails
 
 	Source        DataSource
 	SourceOfTruth DataSource
@@ -53,6 +54,10 @@ type InvoiceProvider struct {
 	Zip          string
 	Locality     string
 	Country      string
+}
+
+type PaymentDetails struct {
+	PaymentLink string
 }
 
 type InvoiceInternalFields struct {

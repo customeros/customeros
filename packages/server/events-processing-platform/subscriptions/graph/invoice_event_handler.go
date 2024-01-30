@@ -175,9 +175,11 @@ func (h *InvoiceEventHandler) OnInvoiceUpdateV1(ctx context.Context, evt eventst
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
 	data := neo4jrepository.InvoiceUpdateFields{
-		UpdatedAt:    eventData.UpdatedAt,
-		Status:       neo4jenum.DecodeInvoiceStatus(eventData.Status),
-		UpdateStatus: eventData.UpdateStatus(),
+		UpdatedAt:         eventData.UpdatedAt,
+		Status:            neo4jenum.DecodeInvoiceStatus(eventData.Status),
+		PaymentLink:       eventData.PaymentLink,
+		UpdateStatus:      eventData.UpdateStatus(),
+		UpdatePaymentLink: eventData.UpdatePaymentLink(),
 	}
 	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, data)
 	if err != nil {

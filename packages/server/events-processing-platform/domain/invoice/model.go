@@ -32,6 +32,7 @@ type Invoice struct {
 	BillingCycle     string                  `json:"billingCycle"`
 	Status           string                  `json:"status"`
 	Note             string                  `json:"note"`
+	PaymentLink      string                  `json:"paymentLink"`
 }
 
 type DryRunServiceLineItem struct {

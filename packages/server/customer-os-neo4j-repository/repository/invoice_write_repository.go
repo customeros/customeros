@@ -62,9 +62,11 @@ type InvoiceFillFields struct {
 }
 
 type InvoiceUpdateFields struct {
-	UpdatedAt    time.Time               `json:"updatedAt"`
-	Status       neo4jenum.InvoiceStatus `json:"status"`
-	UpdateStatus bool                    `json:"updateStatus"`
+	UpdatedAt         time.Time               `json:"updatedAt"`
+	Status            neo4jenum.InvoiceStatus `json:"status"`
+	PaymentLink       string                  `json:"paymentLink"`
+	UpdateStatus      bool                    `json:"updateStatus"`
+	UpdatePaymentLink bool                    `json:"updatePaymentLink"`
 }
 
 type InvoiceWriteRepository interface {
@@ -273,6 +275,10 @@ func (r *invoiceWriteRepository) UpdateInvoice(ctx context.Context, tenant, invo
 	if data.UpdateStatus && data.Status.String() != "" {
 		cypher += `, i.status=$status`
 		params["status"] = data.Status.String()
+	}
+	if data.UpdatePaymentLink {
+		cypher += `, i.paymentLink=$paymentLink`
+		params["paymentLink"] = data.PaymentLink
 	}
 
 	span.LogFields(log.String("cypher", cypher))

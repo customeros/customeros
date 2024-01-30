@@ -197,6 +197,10 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 			}
 			fieldsMask = append(invoiceGrpcRequest.FieldsMask, invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS)
 		}
+		if invoiceInput.PaymentLink != "" {
+			invoiceGrpcRequest.PaymentLink = invoiceInput.PaymentLink
+			fieldsMask = append(invoiceGrpcRequest.FieldsMask, invoicepb.InvoiceFieldMask_INVOICE_FIELD_PAYMENT_LINK)
+		}
 		invoiceGrpcRequest.FieldsMask = fieldsMask
 
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
