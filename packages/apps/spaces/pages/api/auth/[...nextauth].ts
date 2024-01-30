@@ -43,16 +43,20 @@ export const authOptions: AuthOptions = {
           token.email = profile.email;
         } else if (account.provider === 'azure-ad') {
           // If the email is not available in the profile, fetch it from Microsoft Graph API
-          const graphApiResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
-            headers: {
-              Authorization: `Bearer ${token.accessToken}`,
+          const graphApiResponse = await fetch(
+            'https://graph.microsoft.com/v1.0/me',
+            {
+              headers: {
+                Authorization: `Bearer ${token.accessToken}`,
+              },
             },
-          });
+          );
           const graphApiData = await graphApiResponse.json();
 
           if (graphApiData && graphApiData.userPrincipalName) {
             token.email = graphApiData.userPrincipalName;
-          }}
+          }
+        }
 
         const oAuthToken: OAuthToken = {
           accessToken: account?.access_token ?? '',
