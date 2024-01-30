@@ -218,7 +218,7 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 			}
 		}
 		data.StatusDetails.UpdatedAt = eventData.UpdatedAt
-		data.StatusDetails.Comments = ""
+		data.StatusDetails.Comments = eventData.StatusDetails.Comments
 		data.UpdateStatusDetails = true
 	}
 
@@ -228,8 +228,8 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		h.log.Errorf("Error while updating master plan milestone %s: %s", eventData.MilestoneId, err.Error())
 		return err
 	}
-	// if milestone status or items changed, propagate to organization plan.
-	if eventData.UpdateStatusDetails() || eventData.UpdateItems() {
+	// if milestone status changed, propagate to organization plan.
+	if data.UpdateStatusDetails {
 		h.propagateStatusUpdatesFromMilestone(ctx, data, eventData.Tenant, eventData.OrganizationPlanId)
 	}
 	return err
@@ -363,7 +363,6 @@ func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx c
 
 	if op.StatusDetails.Status != opdata.StatusDetails.Status {
 		opdata.StatusDetails.UpdatedAt = time.Now().UTC()
-		opdata.StatusDetails.Comments = ""
 		opdata.UpdateStatusDetails = true
 		err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.Update(ctx, tenant, opid, opdata)
 		if err != nil {
@@ -380,7 +379,7 @@ func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx c
 
 func checkAllItemStatusesAreDoneOrSkipped(items []model.OrganizationPlanMilestoneItem) bool {
 	for _, item := range items {
-		if item.Status == model.TaskNotDone.String() {
+		if item.Status == model.TaskNotDone.String() || item.Status == model.TaskNotDoneLate.String() {
 			return false
 		}
 	}
