@@ -3,6 +3,7 @@ package invoice
 import (
 	"bytes"
 	context2 "context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
@@ -18,6 +19,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -41,20 +43,22 @@ type RequestBodyInvoiceReady struct {
 }
 
 type InvoiceEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	cfg          config.Config
-	grpcClients  *grpc_client.Clients
-	fsc          fsc.FileStoreApiService
+	log              logger.Logger
+	repositories     *repository.Repositories
+	cfg              config.Config
+	grpcClients      *grpc_client.Clients
+	fsc              fsc.FileStoreApiService
+	postmarkProvider *notifications.PostmarkProvider
 }
 
-func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Repositories, cfg config.Config, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService) *InvoiceEventHandler {
+func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Repositories, cfg config.Config, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService, postmarkProvider *notifications.PostmarkProvider) *InvoiceEventHandler {
 	return &InvoiceEventHandler{
-		log:          log,
-		repositories: repositories,
-		cfg:          cfg,
-		grpcClients:  grpcClients,
-		fsc:          fsc,
+		log:              log,
+		repositories:     repositories,
+		cfg:              cfg,
+		grpcClients:      grpcClients,
+		fsc:              fsc,
+		postmarkProvider: postmarkProvider,
 	}
 }
 
@@ -324,6 +328,10 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	}
 	invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(invoiceDbNode)
 
+	if invoiceEntity.DryRun {
+		return nil
+	}
+
 	// do not invoke invoice ready webhook if it was already invoked
 	if invoiceEntity.InvoiceInternalFields.PaymentRequestedAt == nil {
 		err = h.invokeInvoiceReadyWebhook(ctx, eventData.Tenant, *invoiceEntity)
@@ -343,9 +351,6 @@ func (h *InvoiceEventHandler) invokeInvoiceReadyWebhook(ctx context.Context, ten
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	tracing.LogObjectAsJson(span, "invoice", invoice)
 
-	if invoice.DryRun {
-		return nil
-	}
 	if h.cfg.EventNotifications.EndPoints.InvoiceReady == "" {
 		return nil
 	}
@@ -439,7 +444,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 
 	var invoiceEntity *neo4jentity.InvoiceEntity
-	var invoiceLineEntities []*neo4jentity.InvoiceLineEntity = []*neo4jentity.InvoiceLineEntity{}
+	var invoiceLineEntities = []*neo4jentity.InvoiceLineEntity{}
 
 	//load invoice
 	invoiceNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
@@ -587,7 +592,62 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	// TODO Implement
+	var invoiceEntity *neo4jentity.InvoiceEntity
+
+	//load invoice
+	invoiceNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetInvoice")
+	}
+	if invoiceNode != nil {
+		invoiceEntity = neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
+	} else {
+		return errors.New("invoiceNode is nil")
+	}
+
+	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error downloading invoice pdf for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	err = h.postmarkProvider.SendNotification(ctx, notifications.PostmarkEmail{
+		WorkflowId: notifications.WorkflowInvoicePaid,
+		From:       invoiceEntity.Provider.Email,
+		To:         invoiceEntity.Customer.Email,
+		Subject:    "Paid Invoice " + invoiceEntity.Number + " from " + invoiceEntity.Provider.Name,
+		TemplateData: map[string]string{
+			"{{tenantLogo}}":     invoiceEntity.Provider.LogoUrl,
+			"{{userFirstName}}":  invoiceEntity.Customer.Name,
+			"{{invoiceNumber}}":  invoiceEntity.Number,
+			"{{currencySymbol}}": invoiceEntity.Currency.Symbol(),
+			"{{amtDue}}":         fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
+			"{{paymentDate}}":    invoiceEntity.DueDate.Format("02 Jan 2006"),
+		},
+		Attachments: []notifications.PostmarkEmailAttachment{
+			{
+				Filename:       "Invoice " + invoiceEntity.Number + ".pdf",
+				ContentEncoded: base64.StdEncoding.EncodeToString(*invoiceFileBytes),
+				ContentType:    "application/pdf",
+			},
+		},
+	})
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error sending invoice paid notification for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	// Request was successful
+	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.SetPaidInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error setting invoice paid notification sent at for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
 
 	return nil
 }
@@ -607,7 +667,66 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context2.Context, e
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	// TODO Implement
+	var invoiceEntity *neo4jentity.InvoiceEntity
+
+	//load invoice
+	invoiceNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetInvoice")
+	}
+	if invoiceNode != nil {
+		invoiceEntity = neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
+	} else {
+		return errors.New("invoiceNode is nil")
+	}
+
+	if invoiceEntity.PaymentDetails.PaymentLink == "" {
+		return errors.Wrap(err, "invoiceEntity.PaymentDetails.PaymentLink is empty")
+	}
+
+	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error downloading invoice pdf for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	err = h.postmarkProvider.SendNotification(ctx, notifications.PostmarkEmail{
+		WorkflowId: notifications.WorkflowInvoiceReady,
+		From:       invoiceEntity.Provider.Email,
+		To:         invoiceEntity.Customer.Email,
+		Subject:    "New invoice " + invoiceEntity.Number,
+		TemplateData: map[string]string{
+			"{{tenantLogo}}":       invoiceEntity.Provider.LogoUrl,
+			"{{organizationName}}": invoiceEntity.Customer.Name,
+			"{{invoiceNumber}}":    invoiceEntity.Number,
+			"{{currencySymbol}}":   invoiceEntity.Currency.Symbol(),
+			"{{amtDue}}":           fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
+			"{{paymentLink}}":      invoiceEntity.PaymentDetails.PaymentLink,
+		},
+		Attachments: []notifications.PostmarkEmailAttachment{
+			{
+				Filename:       "Invoice " + invoiceEntity.Number + ".pdf",
+				ContentEncoded: base64.StdEncoding.EncodeToString(*invoiceFileBytes),
+				ContentType:    "application/pdf",
+			},
+		},
+	})
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error sending invoice pay request notification for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	// Request was successful
+	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.SetPayInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error setting invoice pay notification sent at for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
 
 	return nil
 }

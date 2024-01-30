@@ -84,7 +84,7 @@ func main() {
 
 	r.POST("/file",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
+		commonservice.TenantUserContextEnhancer(commonservice.TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
 		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
@@ -109,7 +109,7 @@ func main() {
 		})
 	r.GET("/file/:id",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, commonRepositoryContainer, commonservice.WithCache(commonCache)),
+		commonservice.TenantUserContextEnhancer(commonservice.TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
 		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
@@ -129,7 +129,7 @@ func main() {
 		})
 	r.GET("/file/:id/download",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, commonRepositoryContainer, commonservice.WithCache(commonCache)),
+		commonservice.TenantUserContextEnhancer(commonservice.TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
 		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)

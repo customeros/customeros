@@ -76,6 +76,8 @@ type InvoiceWriteRepository interface {
 	SetInvoicePaymentRequested(ctx context.Context, tenant, invoiceId string) error
 	UpdateInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceUpdateFields) error
 	MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
+	SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
+	SetPayInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 }
 
 type invoiceWriteRepository struct {
@@ -356,6 +358,56 @@ func (r *invoiceWriteRepository) MarkPayNotificationRequested(ctx context.Contex
 		"invoiceId":   invoiceId,
 		"requestedAt": requestedAt,
 	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *invoiceWriteRepository) SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.SetPaidInvoiceNotificationSentAt")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
+							WHERE i:Invoice_%s
+							SET i.techPaidInvoiceNotificationSentAt=$now`, tenant)
+	params := map[string]any{
+		"tenant":    tenant,
+		"invoiceId": invoiceId,
+		"now":       utils.Now(),
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *invoiceWriteRepository) SetPayInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.SetPayInvoiceNotificationSentAt")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
+							WHERE i:Invoice_%s
+							SET i.techPayInvoiceNotificationSentAt=$now`, tenant)
+	params := map[string]any{
+		"tenant":    tenant,
+		"invoiceId": invoiceId,
+		"now":       utils.Now(),
+	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 

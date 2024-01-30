@@ -3,10 +3,19 @@
     <mj-font name="Barlow" href="https://fonts.googleapis.com/css2?family=Barlow:400"></mj-font>
     <mj-attributes>
       <mj-text font-family="Barlow, sans-serif" font-weight="400" font-size="14px" color="#344054" line-height="20px"></mj-text>
-      <mj-button background-color="white" border="1px #D0D5DD solid" border-radius="8px" color="#667085" font-size="14px" font-weight="600" height="100%" inner-padding="8px 14px" align="center" vertical-align="middle">
-        <mj-text>View online</mj-text>
-      </mj-button>
     </mj-attributes>
+    <mj-style>
+    .hover-blue a {
+        border: solid 1px #D0D5DD!important;
+        border-radius: 8px!important;
+        background: #F9FAFB!important;
+        color: #344054!important;
+    }
+      .hover-blue a:hover {
+       background: white!important;
+       color:  #667085!important;
+     }
+     </mj-style>
   </mj-head>
   
   <mj-body>
@@ -15,22 +24,19 @@
       <mj-column>
         <mj-image align="left" width="250px" src={{tenantLogo}}></mj-image>
         <mj-text>
-          <p>Hi {{userFirstName}},</p>
-          <p>Your invoice {{invoiceNumber}} for {{currencySymbol}}{{amtDue}} is attached.</p>
-          <p>Payment is due by <b>{{paymentDueDate}}</b>, and payment details can be found on the attached invoice. You can also pay online if you prefer.</p>
+          <p>Hi {{organizationName}},</p>
+          <p>Attached is your invoice for {{currencySymbol}}{{amtDue}}.</p>
+          <p>You can either pay for this online or, if available, use the alternative payment methods provided in the attached invoice.</p>
         </mj-text>
         
-        <mj-button align="left" href="{{paymentLink}}" width="30%">
+        <mj-button align="left" href="{{paymentLink}}" background-color="transparent" padding="0px 20px" css-class="hover-blue">
           Pay online
         </mj-button>
         
         <mj-text>
           <p>Have a great day!</p>
-          <p>The {{tenantName}} Team</p>
         </mj-text>
-        <mj-text>
-          <p>Oh, and if you have any questions about the invoice, simply reply to this email.</p>
-        </mj-text>
+
       </mj-column>
     </mj-section>
     

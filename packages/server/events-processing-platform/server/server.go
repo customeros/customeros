@@ -262,7 +262,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.InvoiceSubscription.Enabled {
-		invoiceSubscriber := invoice.NewInvoiceSubscriber(server.Log, esdb, server.Config, server.Repositories, grpcClients, services.FileStoreApiService)
+		invoiceSubscriber := invoice.NewInvoiceSubscriber(server.Log, esdb, server.Config, server.Repositories, grpcClients, services.FileStoreApiService, services.PostmarkProvider)
 		go func() {
 			err := invoiceSubscriber.Connect(ctx, invoiceSubscriber.ProcessEvents)
 			if err != nil {

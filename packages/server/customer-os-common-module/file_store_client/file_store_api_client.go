@@ -14,6 +14,7 @@ import (
 type FileStoreApiService interface {
 	UploadSingleMultipartFile(tenantName, basePath string, multipartFileHeader *multipart.FileHeader) (*FileDTO, error)
 	UploadSingleFileBytes(tenantName, basePath, fileId, fileName string, fileBytes []byte) (*FileDTO, error)
+	DownloadFile(tenantName, fileId string) (*[]byte, error)
 }
 
 type fileStoreApiService struct {
@@ -36,6 +37,45 @@ func (fsas *fileStoreApiService) UploadSingleMultipartFile(tenantName, basePath 
 
 func (fsas *fileStoreApiService) UploadSingleFileBytes(tenantName, basePath, fileId, fileName string, fileBytes []byte) (*FileDTO, error) {
 	return sendRequest(fsas.conf, tenantName, basePath, fileId, fileName, fileBytes)
+}
+
+func (fsas *fileStoreApiService) DownloadFile(tenantName, fileId string) (*[]byte, error) {
+
+	url := fmt.Sprintf("%s/file/%s/download", fsas.conf.ApiPath, fileId)
+	log.Printf("DownloadFile: url: %s", url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("DownloadFile: failed to create new request: %w", err)
+	}
+
+	req.Header.Add("X-Openline-API-KEY", fsas.conf.ApiKey)
+	req.Header.Add("X-Openline-Tenant", tenantName)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("DownloadFile: failed to perform request: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		var fileResponse []byte
+		if fileResponse, err = io.ReadAll(resp.Body); err != nil {
+			return nil, fmt.Errorf("DownloadFile: failed to read response: %w", err)
+		}
+		return &fileResponse, nil
+	} else {
+		var responseBody bytes.Buffer
+		_, err = io.Copy(&responseBody, resp.Body)
+		if err != nil {
+			fmt.Println("Error reading response:", err)
+			return nil, err
+		}
+
+		err = fmt.Errorf("Got error from File Store API: Status: %d Response: %s", resp.StatusCode, responseBody.String())
+		return nil, err
+	}
 }
 
 func sendRequest(conf *FileStoreApiConfig, tenantName, basePath, fileId, fileName string, fileBytes []byte) (*FileDTO, error) {

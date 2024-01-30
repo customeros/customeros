@@ -105,8 +105,6 @@ github.com/opencontainers/image-spec v1.1.0-rc5 h1:Ygwkfw9bpDvs+c9E34SdgGOj41dX/
 github.com/opencontainers/image-spec v1.1.0-rc5/go.mod h1:X4pATf0uXsnn3g5aiGIsVnJBR4mxhKzfwmvK/B2NTm8=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240129175106-cfe433d58dd0 h1:UMSdP9ajxR1oCwi2AXwXp6/yAb59wQiRknP01nWbfjM=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240129175106-cfe433d58dd0/go.mod h1:5r+rVkZVOQbfS9D5L1fguDY5Cj562JJe5o5QcVrLi+Q=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240129175106-cfe433d58dd0 h1:u8EpbgJwN12PuMSyOjdCySfT3CotBhtEEC1OWtiKbFs=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240129175106-cfe433d58dd0/go.mod h1:rFUGyLz5YhEQjVGE5KovPkemEmoW4AklI7rG5F7pPqQ=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240130044433-81aed82ba68a h1:3VzKoxPSMpSG+7h+kh7ewnUTngXotldKKTdF4B1cHyU=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240130044433-81aed82ba68a/go.mod h1:rFUGyLz5YhEQjVGE5KovPkemEmoW4AklI7rG5F7pPqQ=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240129175106-cfe433d58dd0 h1:B6Ezyj8xsynv0DmatCelBL+7VWv9IluYATeHBikevbQ=

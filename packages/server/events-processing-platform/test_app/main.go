@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
-	"github.com/mrz1836/postmark"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
@@ -24,7 +22,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
-	"os"
 )
 
 const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
@@ -76,38 +73,7 @@ func InitClients() {
 }
 
 func main() {
-	client := postmark.NewClient("030a2829-b7e8-4479-9624-9bccef0ec908", "")
-
-	email := postmark.Email{
-		From:       "hello@customeros.ai",
-		To:         "edi@openline.ai",
-		Subject:    "This is a test email sent through Postmark from Go!",
-		HTMLBody:   "<p>Ce face fetele? Se da cu barca?</p>",
-		TrackOpens: true,
-	}
-
-	readFile, err := os.ReadFile("/Users/efirut/work/openline/openline-customer-os/packages/server/events-processing-platform/test_app/sample.pdf")
-	if err != nil {
-		panic(err)
-	}
-
-	//convert to base64
-	encoded := base64.StdEncoding.EncodeToString(readFile)
-
-	email.Attachments = []postmark.Attachment{
-		{
-			Name:        "dummy.pdf",
-			Content:     encoded,
-			ContentType: "application/pdf",
-		},
-	}
-
-	_, err = client.SendEmail(context.Background(), email)
-	if err != nil {
-		panic(err)
-	}
-
-	//InitClients()
+	InitClients()
 
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
@@ -144,59 +110,31 @@ func main() {
 	//testUpdateOrgOwner()
 	//testRefreshLastTouchpoint()
 	//testAddTenantBillingProfile()
-	//testCreateInvoice()
+	//PaidInvoiceNotification()
+	PleasePayInvoiceNotification()
 }
 
-func testCreateInvoice() {
-	_, err := clients.TenantClient.AddBillingProfile(context.Background(), &tenantpb.AddBillingProfileRequest{
-		Tenant:                        tenant,
-		Email:                         "test@gmail.com",
-		LegalName:                     "My awesome company",
-		AddressLine1:                  "On a street",
-		AddressLine2:                  "Down the road",
-		Locality:                      "In a city",
-		Country:                       "US",
-		Zip:                           "12345",
-		DomesticPaymentsBankInfo:      "my bank info",
-		InternationalPaymentsBankInfo: "my international bank info",
+func PaidInvoiceNotification() {
+	_, err := clients.InvoiceClient.UpdateInvoice(context.Background(), &invoicepb.UpdateInvoiceRequest{
+		Tenant:    tenant,
+		InvoiceId: "555a4966-a64c-4e44-ace7-b474f1479335",
+		Status:    invoicepb.InvoiceStatus_INVOICE_STATUS_PAID,
 	})
+
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
 	}
-	//
-	//organization, err := clients.OrganizationClient.UpsertOrganization(context.Background(), &organizationpb.UpsertOrganizationGrpcRequest{
-	//	Tenant: tenant,
-	//})
-	//if err != nil {
-	//	log.Fatalf("Failed: %v", err.Error())
-	//}
-	//
-	//time.Sleep(2 * time.Second)
-	//
-	//contract, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
-	//	Tenant:         tenant,
-	//	OrganizationId: organization.Id,
-	//})
-	//if err != nil {
-	//	log.Fatalf("Failed: %v", err.Error())
-	//}
-	//
-	//time.Sleep(2 * time.Second)
-	//
-	//result, err := clients.InvoiceClient.NewInvoiceForContract(context.Background(), &invoicepb.NewInvoiceForContractRequest{
-	//	Tenant:             tenant,
-	//	ContractId:         contract.Id,
-	//	CreatedAt:          timestamppb.New(utils.Now()),
-	//	InvoicePeriodStart: timestamppb.New(utils.Now()),
-	//	DryRun:             true,
-	//	SourceFields: &commonpb.SourceFields{
-	//		AppSource: "test",
-	//	},
-	//})
-	//if err != nil {
-	//	log.Fatalf("Failed: %v", err.Error())
-	//}
-	//log.Printf("Result: %v", result.Id)
+}
+
+func PleasePayInvoiceNotification() {
+	_, err := clients.InvoiceClient.PayInvoiceNotification(context.Background(), &invoicepb.PayInvoiceNotificationRequest{
+		Tenant:    tenant,
+		InvoiceId: "02b5acf8-b25d-4ca5-aa58-3e0f15b53eda",
+	})
+
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
 }
 
 func testAddTenantBillingProfile() {
