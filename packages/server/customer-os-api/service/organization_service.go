@@ -27,6 +27,7 @@ import (
 type OrganizationService interface {
 	CountOrganizations(ctx context.Context, tenant string) (int64, error)
 	GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.OrganizationEntities, error)
+	GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*entity.OrganizationEntities, error)
 	GetById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	ExistsById(ctx context.Context, organizationId string) (bool, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
@@ -810,4 +811,23 @@ func (s *organizationService) addSuggestedMergeRelationshipToOrganizationEntity(
 	organizationEntity.SuggestedMerge.SuggestedBy = utils.GetStringPropOrNil(props, "suggestedBy")
 	organizationEntity.SuggestedMerge.SuggestedAt = utils.GetTimePropOrNil(props, "suggestedAt")
 	organizationEntity.SuggestedMerge.Confidence = utils.GetFloatPropOrNil(props, "confidence")
+}
+
+func (s *organizationService) GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*entity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForInvoices")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("invoiceIds", invoiceIds))
+
+	organizations, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetAllForInvoices(ctx, common.GetTenantFromContext(ctx), invoiceIds)
+	if err != nil {
+		return nil, err
+	}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
+	for _, v := range organizations {
+		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
 }
