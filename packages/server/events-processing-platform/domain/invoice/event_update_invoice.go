@@ -9,13 +9,14 @@ import (
 )
 
 type InvoiceUpdateEvent struct {
-	Tenant     string    `json:"tenant" validate:"required"`
-	UpdatedAt  time.Time `json:"updatedAt"`
-	Status     string    `json:"status,omitempty"`
-	FieldsMask []string  `json:"fieldsMask,omitempty"`
+	Tenant      string    `json:"tenant" validate:"required"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	Status      string    `json:"status,omitempty"`
+	PaymentLink string    `json:"paymentLink,omitempty"`
+	FieldsMask  []string  `json:"fieldsMask,omitempty"`
 }
 
-func NewInvoiceUpdateEvent(aggregate eventstore.Aggregate, updatedAt time.Time, fieldsMask []string, status string) (eventstore.Event, error) {
+func NewInvoiceUpdateEvent(aggregate eventstore.Aggregate, updatedAt time.Time, fieldsMask []string, status, paymentLink string) (eventstore.Event, error) {
 	eventData := InvoiceUpdateEvent{
 		Tenant:     aggregate.GetTenant(),
 		UpdatedAt:  updatedAt,
@@ -23,6 +24,9 @@ func NewInvoiceUpdateEvent(aggregate eventstore.Aggregate, updatedAt time.Time, 
 	}
 	if eventData.UpdateStatus() {
 		eventData.Status = status
+	}
+	if eventData.UpdatePaymentLink() {
+		eventData.PaymentLink = paymentLink
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -38,5 +42,9 @@ func NewInvoiceUpdateEvent(aggregate eventstore.Aggregate, updatedAt time.Time, 
 }
 
 func (e InvoiceUpdateEvent) UpdateStatus() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskStatus)
+	return utils.Contains(e.FieldsMask, FieldMaskStatus)
+}
+
+func (e InvoiceUpdateEvent) UpdatePaymentLink() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskPaymentLink)
 }

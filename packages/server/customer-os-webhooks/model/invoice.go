@@ -2,7 +2,8 @@ package model
 
 type InvoiceData struct {
 	BaseData
-	Status string `json:"status,omitempty"`
+	Status      string `json:"status,omitempty"`
+	PaymentLink string `json:"paymentLink,omitempty"`
 }
 
 func (i *InvoiceData) Normalize() {

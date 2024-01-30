@@ -367,8 +367,9 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	updateEvent, err := invoice.NewInvoiceUpdateEvent(
 		aggregate,
 		timeNow,
-		[]string{invoice.FieldMaskStatus},
+		[]string{invoice.FieldMaskStatus, invoice.FieldMaskPaymentLink},
 		neo4jenum.InvoiceStatusPaid.String(),
+		"link-1",
 	)
 	require.Nil(t, err)
 
@@ -390,4 +391,5 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	require.Equal(t, invoiceId, invoiceEntity.Id)
 	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
 	require.Equal(t, neo4jenum.InvoiceStatusPaid, invoiceEntity.Status)
+	require.Equal(t, "link-1", invoiceEntity.PaymentDetails.PaymentLink)
 }

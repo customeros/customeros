@@ -17,6 +17,7 @@ enum InvoiceStatus {
 enum InvoiceFieldMask {
   INVOICE_FIELD_NONE = 0; // No property, ignored by the server
   INVOICE_FIELD_STATUS = 1;
+  INVOICE_FIELD_PAYMENT_LINK = 2;
 }
 
 message NewInvoiceForContractRequest {
@@ -134,6 +135,7 @@ message UpdateInvoiceRequest {
   string appSource = 5;
   InvoiceStatus status = 6;
   repeated InvoiceFieldMask fieldsMask = 7;
+  string paymentLink = 8;
 }
 
 message PayInvoiceNotificationRequest {
