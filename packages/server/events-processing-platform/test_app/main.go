@@ -129,7 +129,7 @@ func PaidInvoiceNotification() {
 func PleasePayInvoiceNotification() {
 	_, err := clients.InvoiceClient.PayInvoiceNotification(context.Background(), &invoicepb.PayInvoiceNotificationRequest{
 		Tenant:    tenant,
-		InvoiceId: "02b5acf8-b25d-4ca5-aa58-3e0f15b53eda",
+		InvoiceId: "92e42a1f-ce73-4117-803c-a56f80d91570",
 	})
 
 	if err != nil {
