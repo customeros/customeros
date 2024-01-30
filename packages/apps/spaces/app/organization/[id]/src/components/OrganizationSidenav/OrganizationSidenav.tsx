@@ -86,6 +86,7 @@ export const OrganizationSidenav = () => {
           )}
           <Tooltip label={data?.organization?.name} placement='bottom'>
             <Text
+              maxW='150px'
               fontSize='lg'
               fontWeight='semibold'
               color='gray.700'

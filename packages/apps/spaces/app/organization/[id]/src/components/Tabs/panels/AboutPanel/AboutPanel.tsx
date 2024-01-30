@@ -1,9 +1,8 @@
 'use client';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
-import { useEffect, useCallback } from 'react';
 
-import debounce from 'lodash/debounce';
+import { useDeepCompareEffect } from 'rooks';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Box } from '@ui/layout/Box';
@@ -16,6 +15,7 @@ import { Tooltip } from '@ui/overlay/Tooltip';
 import { Organization } from '@graphql/types';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { VStack, HStack } from '@ui/layout/Stack';
+import { useThrottle } from '@shared/hooks/useThrottle';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { FormNumberInputGroup } from '@ui/form/InputGroup';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
@@ -75,12 +75,14 @@ export const AboutPanel = () => {
     });
   };
 
-  const debouncedMutatOrganization = useCallback(
-    debounce(mutateOrganization, 300),
+  const throttledMutatOrganization = useThrottle(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mutateOrganization as any,
+    300,
     [updateOrganization.mutate],
   );
 
-  useForm<OrganizationAboutForm>({
+  const { setDefaultValues } = useForm<OrganizationAboutForm>({
     formId: 'organization-about',
     defaultValues,
     stateReducer: (state, action, next) => {
@@ -108,7 +110,7 @@ export const AboutPanel = () => {
             ) {
               return next;
             }
-            debouncedMutatOrganization(state.values, {
+            throttledMutatOrganization(state.values, {
               [action.payload.name]: trimmedValue,
             });
             break;
@@ -122,11 +124,9 @@ export const AboutPanel = () => {
     },
   });
 
-  useEffect(() => {
-    return () => {
-      debouncedMutatOrganization.flush();
-    };
-  }, []); // empty array so it runs just once
+  useDeepCompareEffect(() => {
+    setDefaultValues(defaultValues);
+  }, [defaultValues]);
 
   const handleAddSocial = ({
     newValue,
