@@ -4,6 +4,7 @@ import (
 	"context"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/notifications"
 	"strings"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
@@ -29,14 +30,14 @@ type InvoiceSubscriber struct {
 	invoiceEventHandler *InvoiceEventHandler
 }
 
-func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService) *InvoiceSubscriber {
+func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService, postmarkProvider *notifications.PostmarkProvider) *InvoiceSubscriber {
 	return &InvoiceSubscriber{
 		log:                 log,
 		db:                  db,
 		cfg:                 cfg,
 		grpcClients:         grpcClients,
 		repositories:        repositories,
-		invoiceEventHandler: NewInvoiceEventHandler(log, repositories, *cfg, grpcClients, fsc),
+		invoiceEventHandler: NewInvoiceEventHandler(log, repositories, *cfg, grpcClients, fsc, postmarkProvider),
 	}
 }
 

@@ -61,7 +61,10 @@ type PaymentDetails struct {
 }
 
 type InvoiceInternalFields struct {
-	PaymentRequestedAt *time.Time
+	PaymentRequestedAt                *time.Time
+	PayInvoiceNotificationRequestedAt *time.Time // used for locking in batch to not send the same notification multiple times under an hour
+	PayInvoiceNotificationSentAt      *time.Time // used to prevent sending the same notification
+	PaidInvoiceNotificationSentAt     *time.Time // not used, but set for now
 }
 
 type InvoiceEntities []InvoiceEntity

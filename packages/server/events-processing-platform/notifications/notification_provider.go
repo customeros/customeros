@@ -31,7 +31,3 @@ type NotificationProvider interface {
 func NewNovuNotificationProvider(log logger.Logger, apiKey, templatePath string) NotificationProvider {
 	return newNovuProvider(log, apiKey, templatePath)
 }
-
-func NewPostmarkNotificationProvider(log logger.Logger, serverToken, accountToken string) NotificationProvider {
-	return newPostmarkProvider(log, serverToken, accountToken)
-}

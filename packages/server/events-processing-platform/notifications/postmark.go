@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
+	"github.com/aws/aws-sdk-go/aws"
+	awsSes "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"strings"
 
 	"github.com/Boostport/mjml-go"
@@ -13,54 +15,69 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
-type PostmarkProvider struct {
-	Client          *postmark.Client
-	TemplatePath    string
-	log             logger.Logger
-	emailRawContent string
-	emailContent    string
+type PostmarkEmail struct {
+	WorkflowId   string
+	TemplateData map[string]string
+
+	From    string
+	To      string
+	CC      string
+	BCC     string
+	Subject string
+
+	Attachments []PostmarkEmailAttachment
 }
 
-func newPostmarkProvider(log logger.Logger, serverToken, accountToken string) *PostmarkProvider {
+type PostmarkEmailAttachment struct {
+	Filename       string
+	ContentEncoded string
+	ContentType    string
+}
+
+type PostmarkProvider struct {
+	Client *postmark.Client
+	log    logger.Logger
+}
+
+func NewPostmarkProvider(log logger.Logger, serverToken string) *PostmarkProvider {
 	return &PostmarkProvider{
-		Client: postmark.NewClient(serverToken, accountToken),
+		Client: postmark.NewClient(serverToken, ""),
 		log:    log,
 	}
 }
 
-// SendNotification is a method that sends notification to the user, payload must contain the following:
-// - from: email address
-// - subject: email subject
-// - attachment: base64 encoded PDF attachment
-func (np *PostmarkProvider) SendNotification(ctx context.Context, u *NotifiableUser, payload map[string]interface{}, workflowId string) error {
+func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail) error {
+	rawEmailTemplate, err := np.LoadEmailBody(postmarkEmail.WorkflowId)
+	if err != nil {
+		return err
+	}
+
+	htmlEmailTemplate, err := np.FillTemplate(rawEmailTemplate, postmarkEmail.TemplateData)
+	if err != nil {
+		return err
+	}
+
 	email := postmark.Email{
-		From:       payload["from"].(string),
-		To:         u.Email,
-		Subject:    payload["subject"].(string),
-		HTMLBody:   np.emailContent,
+		From:       postmarkEmail.From,
+		To:         postmarkEmail.To,
+		Cc:         postmarkEmail.CC,
+		Bcc:        postmarkEmail.BCC,
+		Subject:    postmarkEmail.Subject,
+		HTMLBody:   htmlEmailTemplate,
 		TrackOpens: true,
 	}
 
-	encoded := payload["attachment"].(string)
-	var attachmentName string
-	switch workflowId {
-	case WorkflowInvoicePaid:
-		attachmentName = "paid_invoice.pdf"
-	case WorkflowInvoiceReady:
-		attachmentName = "ready_invoice.pdf"
+	if postmarkEmail.Attachments != nil {
+		for _, attachment := range postmarkEmail.Attachments {
+			email.Attachments = append(email.Attachments, postmark.Attachment{
+				Name:        attachment.Filename,
+				Content:     attachment.ContentEncoded,
+				ContentType: attachment.ContentType,
+			})
+		}
 	}
 
-	attachment := []postmark.Attachment{
-		{
-			Name:        attachmentName,
-			Content:     encoded,
-			ContentType: "application/pdf",
-		},
-	}
-
-	email.Attachments = attachment
-
-	_, err := np.Client.SendEmail(ctx, email)
+	_, err = np.Client.SendEmail(ctx, email)
 
 	if err != nil {
 		np.log.Errorf("(PostmarkProvider.SendNotification) error: %s", err.Error())
@@ -70,7 +87,7 @@ func (np *PostmarkProvider) SendNotification(ctx context.Context, u *NotifiableU
 	return nil
 }
 
-func (np *PostmarkProvider) LoadEmailBody(ctx context.Context, workflowId string) error {
+func (np *PostmarkProvider) LoadEmailBody(workflowId string) (string, error) {
 	var fileName string
 	switch workflowId {
 	case WorkflowInvoicePaid:
@@ -79,50 +96,37 @@ func (np *PostmarkProvider) LoadEmailBody(ctx context.Context, workflowId string
 		fileName = "invoice.ready.mjml"
 	}
 
-	if _, err := os.Stat(np.TemplatePath); os.IsNotExist(err) {
-		return fmt.Errorf("(PostmarkProvider.LoadEmailBody) error: %s", err.Error())
-	}
-	emailPath := fmt.Sprintf("%s/%s", np.TemplatePath, fileName)
-	if _, err := os.Stat(emailPath); err != nil {
-		return fmt.Errorf("(PostmarkProvider.LoadEmailBody) error: %s", err.Error())
-	}
-
-	// Get the current directory
-	currentDir, err := os.Getwd()
+	session, err := awsSes.NewSession(&aws.Config{Region: aws.String("eu-west-1")})
 	if err != nil {
-		return fmt.Errorf("(PostmarkProvider.LoadEmailBody) Getwd: %s", err.Error())
+		return "", err
 	}
 
-	// Build the full path to the template file
-	templatePath := filepath.Join(currentDir, emailPath)
-	if _, err := os.Stat(templatePath); err != nil {
-		return fmt.Errorf("(NovuProvider.LoadEmailBody) error: %s", err.Error())
-	}
+	downloader := s3manager.NewDownloader(session)
 
-	rawMjml, err := os.ReadFile(templatePath)
+	buffer := &aws.WriteAtBuffer{}
+	_, err = downloader.Download(buffer,
+		&s3.GetObjectInput{
+			Bucket: aws.String("openline-production-mjml-templates"),
+			Key:    aws.String(fileName),
+		})
 	if err != nil {
-		return fmt.Errorf("(PostmarkProvider.LoadEmailBody) error: %s", err.Error())
+		return "", err
 	}
-	np.emailRawContent = string(rawMjml[:])
-	return nil
+
+	return string(buffer.Bytes()), nil
 }
 
-func (np *PostmarkProvider) Template(ctx context.Context, replace map[string]string) (string, error) {
-	mjmlf := np.emailRawContent
+func (np *PostmarkProvider) FillTemplate(template string, replace map[string]string) (string, error) {
+	filledTemplate := template
 	for k, v := range replace {
-		mjmlf = strings.Replace(mjmlf, k, v, -1)
+		filledTemplate = strings.Replace(filledTemplate, k, v, -1)
 	}
-	np.emailRawContent = mjmlf
 
-	html, err := mjml.ToHTML(context.Background(), mjmlf)
+	html, err := mjml.ToHTML(context.Background(), filledTemplate)
 	var mjmlError mjml.Error
 	if errors.As(err, &mjmlError) {
 		return "", fmt.Errorf("(PostmarkProvider.Template) error: %s", mjmlError.Message)
 	}
-	np.emailContent = html
-	return html, err
-}
 
-func (np *PostmarkProvider) GetRawContent() string {
-	return np.emailRawContent
+	return html, err
 }

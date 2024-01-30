@@ -156,7 +156,7 @@ func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Conte
 				(i.techPayNotificationRequestedAt IS NULL OR i.techPayNotificationRequestedAt + duration({hours: 1}) < $referenceTime) AND
 				i.customerEmail IS NOT NULL AND
 				i.customerEmail <> '' AND	
-				i.techEmailSentAt IS NULL AND
+				i.techPayInvoiceNotificationSentAt IS NULL AND
 				(i.updatedAt + duration({minutes: $delay}) < $referenceTime)
 			RETURN distinct(i), t.name limit 100`
 	params := map[string]any{

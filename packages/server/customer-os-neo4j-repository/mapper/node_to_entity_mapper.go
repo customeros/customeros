@@ -59,7 +59,10 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 			PaymentLink: utils.GetStringPropOrEmpty(props, "paymentLink"),
 		},
 		InvoiceInternalFields: entity.InvoiceInternalFields{
-			PaymentRequestedAt: utils.GetTimePropOrNil(props, "techPaymentRequestedAt"),
+			PaymentRequestedAt:                utils.GetTimePropOrNil(props, "techPaymentRequestedAt"),
+			PayInvoiceNotificationRequestedAt: utils.GetTimePropOrNil(props, "techPayNotificationRequestedAt"),
+			PayInvoiceNotificationSentAt:      utils.GetTimePropOrNil(props, "techPayInvoiceNotificationSentAt"),
+			PaidInvoiceNotificationSentAt:     utils.GetTimePropOrNil(props, "techPaidInvoiceNotificationSentAt"),
 		},
 	}
 	return &invoiceEntity
