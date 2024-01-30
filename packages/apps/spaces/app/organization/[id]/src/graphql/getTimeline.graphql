@@ -38,8 +38,8 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         includes {
           id
           mimeType
-          name
-          extension
+          fileName
+          basePath
         }
         issue {
           externalLinks {

@@ -10,12 +10,12 @@ query getTimelineEvents($ids: [ID!]!) {
       }
       content
       contentType
-      includes {
-        id
-        mimeType
-        name
-        extension
-      }
+        includes {
+            id
+            mimeType
+            fileName
+            basePath
+        }
       issue {
         externalLinks {
           type

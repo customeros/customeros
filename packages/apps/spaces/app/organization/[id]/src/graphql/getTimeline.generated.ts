@@ -70,8 +70,8 @@ export type GetTimelineQuery = {
             __typename?: 'Attachment';
             id: string;
             mimeType: string;
-            name: string;
-            extension: string;
+            fileName: string;
+            basePath: string;
           }>;
           issue?: {
             __typename?: 'Issue';
@@ -824,8 +824,8 @@ export const GetTimelineDocument = `
         includes {
           id
           mimeType
-          name
-          extension
+          fileName
+          basePath
         }
         issue {
           externalLinks {
