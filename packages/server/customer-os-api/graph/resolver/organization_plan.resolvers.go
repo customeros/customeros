@@ -42,6 +42,9 @@ func (r *mutationResolver) OrganizationPlanCreate(ctx context.Context, input mod
 	}
 	// create organization plan milestones based on each master plan milestone
 	for _, masterPlanMilestoneEntity := range *masterPlanMilestonesEntities {
+		if masterPlanMilestoneEntity.Retired {
+			continue
+		}
 		msDueDate := time.Now().UTC().Add(time.Hour * time.Duration(masterPlanMilestoneEntity.DurationHours))
 		_, err := r.Services.OrganizationPlanService.CreateOrganizationPlanMilestone(
 			ctx,
