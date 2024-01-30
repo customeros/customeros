@@ -24,7 +24,7 @@ export const OnboardingMenu = () => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { data, isPending } = useMasterPlansQuery(client);
 
-  const { createOnboardingPlan } = usePlanMutations(organizationId);
+  const { createOnboardingPlan } = usePlanMutations({ organizationId });
 
   const activeMasterPlans = useMemo(
     () => data?.masterPlans?.filter((m) => !m.retired),

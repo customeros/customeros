@@ -38,6 +38,7 @@ export const usePlanMutations = ({
       const { previousEntries } = mutateCacheEntry((cacheEntry) => {
         return produce(cacheEntry, (draft) => {
           draft?.organizationPlansForOrganization?.unshift({
+            masterPlanId: 'temp',
             id: 'temp',
             name: name ?? 'Unnamed plan',
             milestones: [],
