@@ -22,7 +22,8 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.11.4
-	github.com/neo4j/neo4j-go-driver/v5 v5.16.0
+	github.com/mrz1836/postmark v1.6.1
+	github.com/neo4j/neo4j-go-driver/v5 v5.17.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240118205818-5175df67b3d4
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240118205818-5175df67b3d4
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240118192215-89a7b690bff9
@@ -51,7 +52,6 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
-	github.com/mrz1836/postmark v1.6.1 // indirect
 	github.com/tetratelabs/wazero v1.6.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.45.0 // indirect
 	go.opentelemetry.io/otel v1.19.0 // indirect
@@ -108,7 +108,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/mrz1836/postmark v1.6.1
 	github.com/novuhq/go-novu v0.1.2
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
