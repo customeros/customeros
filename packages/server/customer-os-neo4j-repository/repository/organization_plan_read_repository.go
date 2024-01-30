@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -19,6 +20,8 @@ type OrganizationPlanReadRepository interface {
 	GetOrganizationPlanMilestonesForOrganizationPlans(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetMaxOrderForOrganizationPlanMilestones(ctx context.Context, tenant, organizationPlanId string) (int64, error)
 	GetOrganizationPlansForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
+	GetMilestoneDueDate(ctx context.Context, tenant, organizationPlanMilestoneId string) (time.Time, error)
+	GetMilestonesForOrganizationPlan(ctx context.Context, tenant, organizationPlanId string) ([]*dbtype.Node, error)
 }
 
 type organizationPlanReadRepository struct {
@@ -167,6 +170,39 @@ func (r *organizationPlanReadRepository) GetOrganizationPlanMilestonesForOrganiz
 	return result.([]*utils.DbNodeAndId), err
 }
 
+func (r *organizationPlanReadRepository) GetMilestonesForOrganizationPlan(ctx context.Context, tenant, organizationPlanId string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetMilestonesForOrgPlan")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(:OrganizationPlan {id:$id})-[:HAS_MILESTONE]->(m:OrganizationPlanMilestone)
+		 WHERE m.retired IS NULL OR m.retired = false
+		 RETURN m ORDER BY m.optional, m.order`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     organizationPlanId,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	return result.([]*dbtype.Node), err
+}
+
 func (r *organizationPlanReadRepository) GetMaxOrderForOrganizationPlanMilestones(ctx context.Context, tenant, organizationPlanId string) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetMaxOrderForOrganizationPlanMilestones")
 	defer span.Finish()
@@ -258,4 +294,34 @@ func (r *organizationPlanReadRepository) GetOrganizationPlansForOrganization(ctx
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), nil
+}
+
+func (r *organizationPlanReadRepository) GetMilestoneDueDate(ctx context.Context, tenant, organizationPlanMilestoneId string) (time.Time, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetMilestoneDueDate")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationPlanMilestoneId)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(:OrganizationPlan)-[:HAS_MILESTONE]->(m:OrganizationPlanMilestone {id:$id}) RETURN m.dueDate`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     organizationPlanMilestoneId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsType[time.Time](ctx, queryResult, err)
+	})
+	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
+		tracing.TraceErr(span, err)
+		return time.Time{}, err
+	}
+	span.LogFields(log.Bool("result.found", result != nil))
+	return result.(time.Time), nil
 }
