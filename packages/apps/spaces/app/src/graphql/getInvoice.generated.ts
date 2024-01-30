@@ -43,8 +43,8 @@ export type GetInvoiceQuery = {
     vat: number;
     totalAmount: number;
     currency: string;
-    repositoryFileId: string;
     note?: string | null;
+    repositoryFileId: string;
     customer: {
       __typename?: 'InvoiceCustomer';
       name?: string | null;
@@ -93,8 +93,8 @@ export const GetInvoiceDocument = `
     vat
     totalAmount
     currency
-    repositoryFileId
     note
+    repositoryFileId
     customer {
       name
       email

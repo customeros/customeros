@@ -11,8 +11,8 @@ query GetInvoice($id: ID!) {
     vat
     totalAmount
     currency
-    repositoryFileId
     note
+    repositoryFileId
     customer {
       name
       email

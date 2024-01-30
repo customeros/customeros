@@ -2,6 +2,8 @@
 import { useParams } from 'next/navigation';
 import React, { useRef, useState, Fragment, useEffect } from 'react';
 
+import { produce } from 'immer';
+import { useSession } from 'next-auth/react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Box } from '@ui/layout/Box';
@@ -12,17 +14,19 @@ import { Plus } from '@ui/media/icons/Plus';
 import { FeaturedIcon } from '@ui/media/Icon';
 // import { Grid, GridItem } from '@ui/layout/Grid';
 import { Heading } from '@ui/typography/Heading';
+import { toastError } from '@ui/presentation/Toast';
 import { DotSingle } from '@ui/media/icons/DotSingle';
 import { AutoresizeTextarea } from '@ui/form/Textarea';
 // import { Invoice } from '@shared/components/Invoice/Invoice';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import {
-  BilledType,
-  // InvoiceLine,
-  ServiceLineItem,
-} from '@graphql/types';
-import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
+import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { useUpdateServicesMutation } from '@organization/src/graphql/updateServiceLineItems.generated';
+import {
+  GetContractsQuery,
+  useGetContractsQuery,
+} from '@organization/src/graphql/getContracts.generated';
+import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
 import { ServiceItem } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/type';
 import {
   Modal,
@@ -32,6 +36,15 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal';
+import {
+  BilledType,
+  DataSource,
+  InputMaybe,
+  // InvoiceLine,
+  ServiceLineItem,
+  ServiceLineItemBulkUpdateItem,
+} from '@graphql/types';
+import { updateTimelineCacheAfterServiceLineItemChange } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/utils';
 
 import { ServiceLineItemRow } from './ServiceLineItemRow';
 
@@ -57,21 +70,106 @@ const defaultValue = {
   type: 'RECURRING',
   isDeleted: false,
 };
+
+const getNewItem = (input: InputMaybe<ServiceLineItemBulkUpdateItem>) => ({
+  id: Math.random().toString(),
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  name: input?.name,
+  billed: input?.billed,
+  price: input?.price,
+  quantity: input?.quantity,
+  createdBy: '',
+  source: DataSource.Openline,
+  sourceOfTruth: '',
+  appSource: DataSource.Openline,
+  externalLinks: [],
+  opportunities: [
+    {
+      comments: '',
+      owner: null,
+      internalStage: 'OPEN',
+      internalType: 'RENEWAL',
+      amount: input?.price,
+      maxAmount: input?.price,
+      name: '',
+      renewalLikelihood: 'HIGH',
+      renewalUpdatedByUserId: '',
+      renewalUpdatedByUserAt: new Date().toISOString(),
+      renewedAt: new Date().toISOString(),
+    },
+  ],
+});
 export const ServiceLineItemsModal = ({
   isOpen,
   onClose,
   serviceLineItems,
   contractId,
+  contractName,
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
   const client = getGraphQLClient();
   const id = useParams()?.id as string;
+  const [timelineMeta] = useTimelineMeta();
   const queryKey = useGetContractsQuery.getKey({ id });
+  const timelineQueryKey = useInfiniteGetTimelineQuery.getKey(
+    timelineMeta.getTimelineVariables,
+  );
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const queryClient = useQueryClient();
+  const session = useSession();
+  const updateTimelineCache = useUpdateCacheWithNewEvent();
 
   const updateServices = useUpdateServicesMutation(client, {
-    onSuccess: () => {
+    onMutate: ({ input }) => {
+      queryClient.cancelQueries({ queryKey });
+
+      queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
+        return produce(currentCache, (draft) => {
+          const previousContracts = draft?.['organization']?.['contracts'];
+          if (draft?.['organization']?.['contracts']) {
+            draft['organization']['contracts']?.map((contractData, index) => {
+              const updatedContractIndex = previousContracts?.findIndex(
+                (contract) => contract.id === input.contractId,
+              );
+              if (!draft) return;
+              if (index !== updatedContractIndex) {
+                return contractData;
+              }
+
+              return {
+                ...contractData,
+                serviceLineItems: {
+                  ...input.serviceLineItems.map((e) => getNewItem(e)),
+                },
+              };
+            });
+          }
+        });
+      });
+
+      const previousEntries =
+        queryClient.getQueryData<GetContractsQuery>(queryKey);
+
+      return { previousEntries };
+    },
+    onError: (_, __, context) => {
+      queryClient.setQueryData<GetContractsQuery>(
+        queryKey,
+        context?.previousEntries,
+      );
+      toastError('Failed to update services', 'update-service-error');
+    },
+    onSuccess: (_, variables) => {
+      updateTimelineCacheAfterServiceLineItemChange({
+        timelineQueryKey,
+        contractName,
+        user: session?.data?.user?.name ?? '',
+        updateTimelineCache,
+        prevServiceLineItems: serviceLineItems,
+        newServiceLineItems: variables.input.serviceLineItems,
+      });
+
       onClose();
     },
     onSettled: () => {
@@ -80,6 +178,7 @@ export const ServiceLineItemsModal = ({
       }
       timeoutRef.current = setTimeout(() => {
         queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({ queryKey: timelineQueryKey });
       }, 1000);
     },
   });
