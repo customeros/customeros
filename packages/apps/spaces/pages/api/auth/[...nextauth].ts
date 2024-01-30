@@ -18,7 +18,6 @@ export const authOptions: AuthOptions = {
       clientSecret: process.env.GMAIL_CLIENT_SECRET as string,
       authorization: {
         params: {
-          prompt: 'consent',
           access_type: 'offline',
           response_type: 'code',
         },
