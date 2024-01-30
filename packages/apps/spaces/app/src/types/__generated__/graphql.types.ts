@@ -1309,6 +1309,7 @@ export type Invoice = Node &
     invoiceLines: Array<InvoiceLine>;
     note?: Maybe<Scalars['String']['output']>;
     number: Scalars['String']['output'];
+    organization: Organization;
     periodEndDate: Scalars['Time']['output'];
     periodStartDate: Scalars['Time']['output'];
     provider: InvoiceProvider;

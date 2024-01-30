@@ -9,6 +9,10 @@ query getInvoices(
     ) {
         content {
             id
+            organization {
+                id
+                name
+            }
             number
             dueDate
             periodStartDate

@@ -14,13 +14,46 @@ const columnHelper = createColumnHelper<Invoice>();
 export const columns = [
   columnHelper.accessor('number', {
     id: 'NUMBER',
-    minSize: 150,
-    maxSize: 150,
+    minSize: 120,
+    maxSize: 120,
     enableSorting: false,
     enableColumnFilter: false,
     cell: (props) => <Text overflow='hidden'>{props?.getValue()}</Text>,
     header: (props) => (
-      <THead id='number' title='N°' {...getTHeadProps<Invoice>(props)} py='2' />
+      <THead
+        id='number'
+        title='   N°'
+        {...getTHeadProps<Invoice>(props)}
+        py='2'
+      />
+    ),
+    skeleton: () => (
+      <Skeleton
+        width='50%'
+        height='18px'
+        startColor='gray.300'
+        endColor='gray.300'
+      />
+    ),
+  }),
+  columnHelper.accessor('organization', {
+    id: 'organizationName',
+    minSize: 120,
+    maxSize: 120,
+    enableSorting: false,
+    enableColumnFilter: false,
+    cell: (props) => (
+      <Text overflow='hidden' textOverflow='ellipsis'>
+        {props?.getValue().name}
+      </Text>
+    ),
+    header: (props) => (
+      <THead
+        id='organization'
+        title='Organization'
+        {...getTHeadProps<Invoice>(props)}
+        py='2'
+      />
     ),
     skeleton: () => (
       <Skeleton
@@ -33,9 +66,10 @@ export const columns = [
   }),
   columnHelper.accessor('status', {
     id: 'STATUS',
-    minSize: 60,
-    maxSize: 60,
-
+    minSize: 115,
+    maxSize: 115,
+    enableSorting: false,
+    enableColumnFilter: false,
     header: (props) => (
       <THead
         id='status'
@@ -56,11 +90,12 @@ export const columns = [
       />
     ),
   }),
-  columnHelper.accessor('dueDate', {
-    id: 'DUE_DATE',
-    minSize: 40,
-    maxSize: 40,
-
+  columnHelper.accessor('createdAt', {
+    id: 'CREATED_AT',
+    minSize: 80,
+    maxSize: 80,
+    enableSorting: false,
+    enableColumnFilter: false,
     header: (props) => (
       <THead
         id='issued'
@@ -90,7 +125,10 @@ export const columns = [
   }),
   columnHelper.accessor('totalAmount', {
     id: 'AMOUNT_DUE',
-    minSize: 40,
+    minSize: 100,
+    maxSize: 100,
+    enableSorting: false,
+    enableColumnFilter: false,
     header: (props) => (
       <THead
         id='amount'
@@ -101,7 +139,7 @@ export const columns = [
     ),
     cell: (props) => {
       return (
-        <Text>
+        <Text textAlign='right'>
           {formatCurrency(props.getValue(), 2, props.row.original.currency)}
         </Text>
       );

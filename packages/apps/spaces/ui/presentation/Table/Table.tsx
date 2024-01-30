@@ -178,7 +178,7 @@ export const Table = <T extends object>({
         >
           {table.getHeaderGroups().map((headerGroup) => (
             <THeaderGroup key={headerGroup.id}>
-              <THeaderCell p='0' w='28px' minH='8' />
+              <THeaderCell p='0' w={enableRowSelection ? '28px' : 2} minH='8' />
               {headerGroup.headers.map((header, index) => (
                 <THeaderCell
                   key={header.id}

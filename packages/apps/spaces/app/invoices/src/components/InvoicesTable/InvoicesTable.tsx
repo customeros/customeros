@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useIsRestoring } from '@tanstack/react-query';
@@ -10,8 +10,8 @@ import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Invoice } from '@graphql/types';
 import { Heading } from '@ui/typography/Heading';
+import { Table, TableInstance } from '@ui/presentation/Table';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { useGetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
 
@@ -20,9 +20,7 @@ import { columns } from './Columns/Columns';
 export function InvoicesTable() {
   const isRestoring = useIsRestoring();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'DUE_DATE', desc: true },
-  ]);
+
   const searchParams = useSearchParams();
   const selectedInvoiceId = searchParams?.get('invoice');
   const router = useRouter();
@@ -75,13 +73,11 @@ export function InvoicesTable() {
         <Table<Invoice>
           data={(data?.invoices?.content as Invoice[]) ?? []}
           columns={columns}
-          sorting={sorting}
           enableTableActions={enableFeature !== null ? enableFeature : true}
           onFullRowSelection={(id) => id && handleOpenInvoice(id)}
           enableRowSelection={false}
           fullRowSelection={true}
           canFetchMore={false}
-          onSortingChange={setSorting}
           // onFetchMore={handleFetchMore}
           isLoading={isRestoring ? false : isFetching}
           totalItems={isRestoring ? 40 : data?.invoices?.totalElements || 0}

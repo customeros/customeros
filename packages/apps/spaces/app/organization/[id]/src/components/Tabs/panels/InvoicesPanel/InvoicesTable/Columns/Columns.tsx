@@ -14,8 +14,8 @@ const columnHelper = createColumnHelper<Invoice>();
 export const columns = [
   columnHelper.accessor('number', {
     id: 'NUMBER',
-    minSize: 25,
-    maxSize: 35,
+    minSize: 110,
+    maxSize: 110,
     enableSorting: false,
     enableColumnFilter: false,
     cell: (props) => <Text overflow='hidden'>{props?.getValue()}</Text>,
@@ -36,6 +36,8 @@ export const columns = [
     id: 'STATUS',
     minSize: 65,
     maxSize: 65,
+    enableSorting: false,
+    enableColumnFilter: false,
     header: (props) => (
       <THead id='status' title='Status' {...getTHeadProps<Invoice>(props)} />
     ),
@@ -55,7 +57,8 @@ export const columns = [
     id: 'DATE',
     minSize: 20,
     maxSize: 20,
-
+    enableSorting: false,
+    enableColumnFilter: false,
     header: (props) => (
       <THead id='issued' title='Issued' {...getTHeadProps<Invoice>(props)} />
     ),
@@ -82,6 +85,8 @@ export const columns = [
     id: 'AMOUNT_DUE',
     minSize: 20,
     maxSize: 20,
+    enableSorting: false,
+    enableColumnFilter: false,
     header: (props) => (
       <THead id='amount' title='Amount' {...getTHeadProps<Invoice>(props)} />
     ),
