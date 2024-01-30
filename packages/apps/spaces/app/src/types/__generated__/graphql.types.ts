@@ -97,11 +97,11 @@ export type AnalysisInput = {
 export type Attachment = Node & {
   __typename?: 'Attachment';
   appSource: Scalars['String']['output'];
+  basePath: Scalars['String']['output'];
   createdAt: Scalars['Time']['output'];
-  extension: Scalars['String']['output'];
+  fileName: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   mimeType: Scalars['String']['output'];
-  name: Scalars['String']['output'];
   size: Scalars['Int64']['output'];
   source: DataSource;
   sourceOfTruth: DataSource;
@@ -109,9 +109,11 @@ export type Attachment = Node & {
 
 export type AttachmentInput = {
   appSource: Scalars['String']['input'];
-  extension: Scalars['String']['input'];
+  basePath: Scalars['String']['input'];
+  createdAt?: InputMaybe<Scalars['Time']['input']>;
+  fileName: Scalars['String']['input'];
+  id?: InputMaybe<Scalars['ID']['input']>;
   mimeType: Scalars['String']['input'];
-  name: Scalars['String']['input'];
   size: Scalars['Int64']['input'];
 };
 
@@ -458,18 +460,25 @@ export type ContactsPage = Pages & {
 
 export type Contract = Node & {
   __typename?: 'Contract';
+  addressLine1?: Maybe<Scalars['String']['output']>;
+  addressLine2?: Maybe<Scalars['String']['output']>;
   appSource: Scalars['String']['output'];
   billingCycle?: Maybe<ContractBillingCycle>;
   contractUrl?: Maybe<Scalars['String']['output']>;
+  country?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
   currency?: Maybe<Currency>;
   endedAt?: Maybe<Scalars['Time']['output']>;
   externalLinks: Array<ExternalSystem>;
   id: Scalars['ID']['output'];
+  invoiceEmail?: Maybe<Scalars['String']['output']>;
+  invoiceNote?: Maybe<Scalars['String']['output']>;
   invoicingStartDate?: Maybe<Scalars['Time']['output']>;
+  locality?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   opportunities?: Maybe<Array<Opportunity>>;
+  organizationLegalName?: Maybe<Scalars['String']['output']>;
   owner?: Maybe<User>;
   renewalCycle: ContractRenewalCycle;
   renewalPeriods?: Maybe<Scalars['Int64']['output']>;
@@ -480,6 +489,7 @@ export type Contract = Node & {
   sourceOfTruth: DataSource;
   status: ContractStatus;
   updatedAt: Scalars['Time']['output'];
+  zip?: Maybe<Scalars['String']['output']>;
 };
 
 export enum ContractBillingCycle {
@@ -519,18 +529,27 @@ export enum ContractStatus {
 }
 
 export type ContractUpdateInput = {
+  addressLine1?: InputMaybe<Scalars['String']['input']>;
+  addressLine2?: InputMaybe<Scalars['String']['input']>;
   appSource?: InputMaybe<Scalars['String']['input']>;
   billingCycle?: InputMaybe<ContractBillingCycle>;
   contractId: Scalars['ID']['input'];
   contractUrl?: InputMaybe<Scalars['String']['input']>;
+  country?: InputMaybe<Scalars['String']['input']>;
   currency?: InputMaybe<Currency>;
   endedAt?: InputMaybe<Scalars['Time']['input']>;
+  invoiceEmail?: InputMaybe<Scalars['String']['input']>;
+  invoiceNote?: InputMaybe<Scalars['String']['input']>;
   invoicingStartDate?: InputMaybe<Scalars['Time']['input']>;
+  locality?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  organizationLegalName?: InputMaybe<Scalars['String']['input']>;
+  patch?: InputMaybe<Scalars['Boolean']['input']>;
   renewalCycle?: InputMaybe<ContractRenewalCycle>;
   renewalPeriods?: InputMaybe<Scalars['Int64']['input']>;
   serviceStartedAt?: InputMaybe<Scalars['Time']['input']>;
   signedAt?: InputMaybe<Scalars['Time']['input']>;
+  zip?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Country = {
@@ -1281,21 +1300,37 @@ export type Invoice = Node &
     appSource: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
     currency: Scalars['String']['output'];
+    customer: InvoiceCustomer;
+    domesticPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
     dryRun: Scalars['Boolean']['output'];
     dueDate: Scalars['Time']['output'];
     id: Scalars['ID']['output'];
+    internationalPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
     invoiceLines: Array<InvoiceLine>;
+    note?: Maybe<Scalars['String']['output']>;
     number: Scalars['String']['output'];
     periodEndDate: Scalars['Time']['output'];
     periodStartDate: Scalars['Time']['output'];
+    provider: InvoiceProvider;
     repositoryFileId: Scalars['String']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
     status?: Maybe<InvoiceStatus>;
-    total: Scalars['Float']['output'];
+    totalAmount: Scalars['Float']['output'];
     updatedAt: Scalars['Time']['output'];
     vat: Scalars['Float']['output'];
   };
+
+export type InvoiceCustomer = {
+  __typename?: 'InvoiceCustomer';
+  addressCountry?: Maybe<Scalars['String']['output']>;
+  addressLine1?: Maybe<Scalars['String']['output']>;
+  addressLine2?: Maybe<Scalars['String']['output']>;
+  addressLocality?: Maybe<Scalars['String']['output']>;
+  addressZip?: Maybe<Scalars['String']['output']>;
+  email?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+};
 
 export type InvoiceLine = Node & {
   __typename?: 'InvoiceLine';
@@ -1305,7 +1340,7 @@ export type InvoiceLine = Node & {
   name: Scalars['String']['output'];
   price: Scalars['Float']['output'];
   quantity: Scalars['Int']['output'];
-  total: Scalars['Float']['output'];
+  totalAmount: Scalars['Float']['output'];
   vat: Scalars['Float']['output'];
 };
 
@@ -1315,6 +1350,17 @@ export type InvoiceLineInput = {
   price: Scalars['Float']['input'];
   quantity: Scalars['Int']['input'];
   serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type InvoiceProvider = {
+  __typename?: 'InvoiceProvider';
+  addressCountry?: Maybe<Scalars['String']['output']>;
+  addressLine1?: Maybe<Scalars['String']['output']>;
+  addressLine2?: Maybe<Scalars['String']['output']>;
+  addressLocality?: Maybe<Scalars['String']['output']>;
+  addressZip?: Maybe<Scalars['String']['output']>;
+  logoUrl?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
 };
 
 export type InvoiceSimulateInput = {
@@ -1744,6 +1790,19 @@ export type MeetingsPage = Pages & {
   totalPages: Scalars['Int']['output'];
 };
 
+export type MilestoneItem = {
+  __typename?: 'MilestoneItem';
+  status: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+};
+
+export type MilestoneItemInput = {
+  status: Scalars['String']['input'];
+  text: Scalars['String']['input'];
+  updatedAt: Scalars['Time']['input'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   analysis_Create: Analysis;
@@ -1801,6 +1860,7 @@ export type Mutation = {
   interactionEvent_LinkAttachment: InteractionEvent;
   interactionSession_Create: InteractionSession;
   interactionSession_LinkAttachment: InteractionSession;
+  invoice_NextDryRunForContract: Scalars['ID']['output'];
   invoice_Simulate: Scalars['ID']['output'];
   invoicingCycle_Create: InvoicingCycle;
   invoicingCycle_Update: InvoicingCycle;
@@ -1842,6 +1902,14 @@ export type Mutation = {
   note_Update: Note;
   opportunityRenewalUpdate: Opportunity;
   opportunityUpdate: Opportunity;
+  organizationPlanMilestone_BulkUpdate: Array<OrganizationPlanMilestone>;
+  organizationPlanMilestone_Create: OrganizationPlanMilestone;
+  organizationPlanMilestone_Duplicate: OrganizationPlanMilestone;
+  organizationPlanMilestone_Reorder: Scalars['ID']['output'];
+  organizationPlanMilestone_Update: OrganizationPlanMilestone;
+  organizationPlan_Create: OrganizationPlan;
+  organizationPlan_Duplicate: OrganizationPlan;
+  organizationPlan_Update: OrganizationPlan;
   organization_AddNewLocation: Location;
   organization_AddSocial: Social;
   organization_AddSubsidiary: Organization;
@@ -1871,9 +1939,9 @@ export type Mutation = {
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
   player_Merge: Result;
-  serviceLineItemBulkUpdate: Array<Maybe<Scalars['ID']['output']>>;
   serviceLineItemCreate: ServiceLineItem;
   serviceLineItemUpdate: ServiceLineItem;
+  serviceLineItem_BulkUpdate: Array<Scalars['ID']['output']>;
   serviceLineItem_Close: Scalars['ID']['output'];
   serviceLineItem_Delete: DeleteResponse;
   social_Remove: Result;
@@ -1881,7 +1949,10 @@ export type Mutation = {
   tag_Create: Tag;
   tag_Delete?: Maybe<Result>;
   tag_Update?: Maybe<Tag>;
+  tenant_AddBillingProfile: TenantBillingProfile;
   tenant_Merge: Scalars['String']['output'];
+  tenant_UpdateBillingProfile: TenantBillingProfile;
+  tenant_UpdateSettings: TenantSettings;
   user_AddRole: User;
   user_AddRoleInTenant: User;
   user_Create: User;
@@ -2147,6 +2218,10 @@ export type MutationInteractionSession_LinkAttachmentArgs = {
   sessionId: Scalars['ID']['input'];
 };
 
+export type MutationInvoice_NextDryRunForContractArgs = {
+  contractId: Scalars['ID']['input'];
+};
+
 export type MutationInvoice_SimulateArgs = {
   input: InvoiceSimulateInput;
 };
@@ -2335,6 +2410,41 @@ export type MutationOpportunityUpdateArgs = {
   input: OpportunityUpdateInput;
 };
 
+export type MutationOrganizationPlanMilestone_BulkUpdateArgs = {
+  input: Array<OrganizationPlanMilestoneUpdateInput>;
+};
+
+export type MutationOrganizationPlanMilestone_CreateArgs = {
+  input: OrganizationPlanMilestoneInput;
+};
+
+export type MutationOrganizationPlanMilestone_DuplicateArgs = {
+  id: Scalars['ID']['input'];
+  organizationId: Scalars['ID']['input'];
+  organizationPlanId: Scalars['ID']['input'];
+};
+
+export type MutationOrganizationPlanMilestone_ReorderArgs = {
+  input: OrganizationPlanMilestoneReorderInput;
+};
+
+export type MutationOrganizationPlanMilestone_UpdateArgs = {
+  input: OrganizationPlanMilestoneUpdateInput;
+};
+
+export type MutationOrganizationPlan_CreateArgs = {
+  input: OrganizationPlanInput;
+};
+
+export type MutationOrganizationPlan_DuplicateArgs = {
+  id: Scalars['ID']['input'];
+  organizationId: Scalars['ID']['input'];
+};
+
+export type MutationOrganizationPlan_UpdateArgs = {
+  input: OrganizationPlanUpdateInput;
+};
+
 export type MutationOrganization_AddNewLocationArgs = {
   organizationId: Scalars['ID']['input'];
 };
@@ -2468,16 +2578,16 @@ export type MutationPlayer_MergeArgs = {
   userId: Scalars['ID']['input'];
 };
 
-export type MutationServiceLineItemBulkUpdateArgs = {
-  input: ServiceLineItemBulkUpdateInput;
-};
-
 export type MutationServiceLineItemCreateArgs = {
   input: ServiceLineItemInput;
 };
 
 export type MutationServiceLineItemUpdateArgs = {
   input: ServiceLineItemUpdateInput;
+};
+
+export type MutationServiceLineItem_BulkUpdateArgs = {
+  input: ServiceLineItemBulkUpdateInput;
 };
 
 export type MutationServiceLineItem_CloseArgs = {
@@ -2508,8 +2618,20 @@ export type MutationTag_UpdateArgs = {
   input: TagUpdateInput;
 };
 
+export type MutationTenant_AddBillingProfileArgs = {
+  input: TenantBillingProfileInput;
+};
+
 export type MutationTenant_MergeArgs = {
   tenant: TenantInput;
+};
+
+export type MutationTenant_UpdateBillingProfileArgs = {
+  input: TenantBillingProfileUpdateInput;
+};
+
+export type MutationTenant_UpdateSettingsArgs = {
+  input?: InputMaybe<TenantSettingsInput>;
 };
 
 export type MutationUser_AddRoleArgs = {
@@ -2708,7 +2830,6 @@ export type Organization = Node & {
   id: Scalars['ID']['output'];
   industry?: Maybe<Scalars['String']['output']>;
   industryGroup?: Maybe<Scalars['String']['output']>;
-  invoices: InvoicesPage;
   isCustomer?: Maybe<Scalars['Boolean']['output']>;
   isPublic?: Maybe<Scalars['Boolean']['output']>;
   issueSummaryByStatus: Array<IssueSummaryByStatus>;
@@ -2746,12 +2867,6 @@ export type Organization = Node & {
 };
 
 export type OrganizationContactsArgs = {
-  pagination?: InputMaybe<Pagination>;
-  sort?: InputMaybe<Array<SortBy>>;
-  where?: InputMaybe<Filter>;
-};
-
-export type OrganizationInvoicesArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
@@ -2811,6 +2926,86 @@ export type OrganizationParticipant = {
   __typename?: 'OrganizationParticipant';
   organizationParticipant: Organization;
   type?: Maybe<Scalars['String']['output']>;
+};
+
+export type OrganizationPlan = Node &
+  SourceFields & {
+    __typename?: 'OrganizationPlan';
+    appSource: Scalars['String']['output'];
+    createdAt: Scalars['Time']['output'];
+    id: Scalars['ID']['output'];
+    masterPlanId: Scalars['ID']['output'];
+    milestones: Array<OrganizationPlanMilestone>;
+    name: Scalars['String']['output'];
+    retired: Scalars['Boolean']['output'];
+    retiredMilestones: Array<OrganizationPlanMilestone>;
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    statusDetails: StatusDetails;
+    updatedAt: Scalars['Time']['output'];
+  };
+
+export type OrganizationPlanInput = {
+  masterPlanId?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  organizationId: Scalars['ID']['input'];
+};
+
+export type OrganizationPlanMilestone = Node &
+  SourceFields & {
+    __typename?: 'OrganizationPlanMilestone';
+    appSource: Scalars['String']['output'];
+    createdAt: Scalars['Time']['output'];
+    dueDate: Scalars['Time']['output'];
+    id: Scalars['ID']['output'];
+    items: Array<MilestoneItem>;
+    name: Scalars['String']['output'];
+    optional: Scalars['Boolean']['output'];
+    order: Scalars['Int64']['output'];
+    retired: Scalars['Boolean']['output'];
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    statusDetails: StatusDetails;
+    updatedAt: Scalars['Time']['output'];
+  };
+
+export type OrganizationPlanMilestoneInput = {
+  createdAt: Scalars['Time']['input'];
+  dueDate: Scalars['Time']['input'];
+  items: Array<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  optional: Scalars['Boolean']['input'];
+  order: Scalars['Int64']['input'];
+  organizationId: Scalars['ID']['input'];
+  organizationPlanId: Scalars['ID']['input'];
+};
+
+export type OrganizationPlanMilestoneReorderInput = {
+  orderedIds: Array<Scalars['ID']['input']>;
+  organizationId: Scalars['ID']['input'];
+  organizationPlanId: Scalars['ID']['input'];
+};
+
+export type OrganizationPlanMilestoneUpdateInput = {
+  dueDate?: InputMaybe<Scalars['Time']['input']>;
+  id: Scalars['ID']['input'];
+  items?: InputMaybe<Array<InputMaybe<MilestoneItemInput>>>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  optional?: InputMaybe<Scalars['Boolean']['input']>;
+  order?: InputMaybe<Scalars['Int64']['input']>;
+  organizationId: Scalars['ID']['input'];
+  organizationPlanId: Scalars['ID']['input'];
+  retired?: InputMaybe<Scalars['Boolean']['input']>;
+  statusDetails?: InputMaybe<StatusDetailsInput>;
+  updatedAt: Scalars['Time']['input'];
+};
+
+export type OrganizationPlanUpdateInput = {
+  id: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  organizationId: Scalars['ID']['input'];
+  retired?: InputMaybe<Scalars['Boolean']['input']>;
+  statusDetails?: InputMaybe<StatusDetailsInput>;
 };
 
 export type OrganizationUpdateInput = {
@@ -3081,6 +3276,9 @@ export type Query = {
   meeting: Meeting;
   opportunity?: Maybe<Opportunity>;
   organization?: Maybe<Organization>;
+  organizationPlan: OrganizationPlan;
+  organizationPlans: Array<OrganizationPlan>;
+  organizationPlansForOrganization: Array<OrganizationPlan>;
   organization_DistinctOwners: Array<User>;
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;
@@ -3089,6 +3287,9 @@ export type Query = {
   tableViewDefs: TableViewDefPage;
   tags: Array<Tag>;
   tenant: Scalars['String']['output'];
+  tenantBillingProfile: TenantBillingProfile;
+  tenantBillingProfiles: Array<TenantBillingProfile>;
+  tenantSettings: TenantSettings;
   tenant_ByEmail?: Maybe<Scalars['String']['output']>;
   tenant_ByWorkspace?: Maybe<Scalars['String']['output']>;
   timelineEvents: Array<TimelineEvent>;
@@ -3213,6 +3414,7 @@ export type QueryInvoiceArgs = {
 };
 
 export type QueryInvoicesArgs = {
+  organizationId?: InputMaybe<Scalars['ID']['input']>;
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
@@ -3246,6 +3448,18 @@ export type QueryOrganizationArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type QueryOrganizationPlanArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryOrganizationPlansArgs = {
+  retired?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type QueryOrganizationPlansForOrganizationArgs = {
+  organizationId: Scalars['ID']['input'];
+};
+
 export type QueryOrganizationsArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
@@ -3269,6 +3483,10 @@ export type QueryTableViewDefsArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<SortBy>;
   where?: InputMaybe<Filter>;
+};
+
+export type QueryTenantBillingProfileArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type QueryTenant_ByEmailArgs = {
@@ -3361,30 +3579,19 @@ export type ServiceLineItem = Node & {
 };
 
 export type ServiceLineItemBulkUpdateInput = {
-  appSource: Scalars['String']['input'];
-  createdAt?: InputMaybe<Scalars['Time']['input']>;
-  endedAt?: InputMaybe<Scalars['Time']['input']>;
-  loggedInUserId?: InputMaybe<Scalars['String']['input']>;
+  contractId: Scalars['ID']['input'];
+  invoiceNote?: InputMaybe<Scalars['String']['input']>;
   serviceLineItems: Array<InputMaybe<ServiceLineItemBulkUpdateItem>>;
-  source: DataSource;
-  sourceOfTruth: DataSource;
-  startedAt?: InputMaybe<Scalars['Time']['input']>;
-  tenant?: InputMaybe<Scalars['String']['input']>;
-  updatedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
 export type ServiceLineItemBulkUpdateItem = {
   billed?: InputMaybe<BilledType>;
   comments?: InputMaybe<Scalars['String']['input']>;
-  contractId?: InputMaybe<Scalars['String']['input']>;
-  externalReference?: InputMaybe<ExternalSystemReferenceInput>;
-  isCanceled?: InputMaybe<Scalars['Boolean']['input']>;
   isRetroactiveCorrection?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
-  serviceLineItemId: Scalars['ID']['input'];
-  tenant?: InputMaybe<Scalars['String']['input']>;
+  serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type ServiceLineItemCloseInput = {
@@ -3467,6 +3674,19 @@ export type State = {
   name: Scalars['String']['output'];
 };
 
+export type StatusDetails = {
+  __typename?: 'StatusDetails';
+  status: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+};
+
+export type StatusDetailsInput = {
+  status: Scalars['String']['input'];
+  text: Scalars['String']['input'];
+  updatedAt: Scalars['Time']['input'];
+};
+
 export type SuggestedMergeOrganization = {
   __typename?: 'SuggestedMergeOrganization';
   confidence?: Maybe<Scalars['Float']['output']>;
@@ -3531,9 +3751,75 @@ export type TenantBillableInfo = {
   whitelistedOrganizations: Scalars['Int64']['output'];
 };
 
+export type TenantBillingProfile = Node &
+  SourceFields & {
+    __typename?: 'TenantBillingProfile';
+    addressLine1: Scalars['String']['output'];
+    addressLine2: Scalars['String']['output'];
+    addressLine3: Scalars['String']['output'];
+    appSource: Scalars['String']['output'];
+    country: Scalars['String']['output'];
+    createdAt: Scalars['Time']['output'];
+    domesticPaymentsBankInfo: Scalars['String']['output'];
+    email: Scalars['String']['output'];
+    id: Scalars['ID']['output'];
+    internationalPaymentsBankInfo: Scalars['String']['output'];
+    legalName: Scalars['String']['output'];
+    locality: Scalars['String']['output'];
+    phone: Scalars['String']['output'];
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    updatedAt: Scalars['Time']['output'];
+    zip: Scalars['String']['output'];
+  };
+
+export type TenantBillingProfileInput = {
+  addressLine1?: InputMaybe<Scalars['String']['input']>;
+  addressLine2?: InputMaybe<Scalars['String']['input']>;
+  addressLine3?: InputMaybe<Scalars['String']['input']>;
+  country?: InputMaybe<Scalars['String']['input']>;
+  domesticPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
+  internationalPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
+  legalName?: InputMaybe<Scalars['String']['input']>;
+  locality?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  zip?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type TenantBillingProfileUpdateInput = {
+  addressLine1?: InputMaybe<Scalars['String']['input']>;
+  addressLine2?: InputMaybe<Scalars['String']['input']>;
+  addressLine3?: InputMaybe<Scalars['String']['input']>;
+  country?: InputMaybe<Scalars['String']['input']>;
+  domesticPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  internationalPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
+  legalName?: InputMaybe<Scalars['String']['input']>;
+  locality?: InputMaybe<Scalars['String']['input']>;
+  patch?: InputMaybe<Scalars['Boolean']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  zip?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type TenantInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
+};
+
+export type TenantSettings = {
+  __typename?: 'TenantSettings';
+  defaultCurrency?: Maybe<Currency>;
+  invoicingEnabled: Scalars['Boolean']['output'];
+  logoUrl: Scalars['String']['output'];
+};
+
+export type TenantSettingsInput = {
+  defaultCurrency?: InputMaybe<Currency>;
+  invoicingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  logoUrl?: InputMaybe<Scalars['String']['input']>;
+  patch?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type TimeRange = {

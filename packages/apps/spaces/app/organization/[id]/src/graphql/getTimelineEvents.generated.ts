@@ -67,8 +67,8 @@ export type GetTimelineEventsQuery = {
           __typename?: 'Attachment';
           id: string;
           mimeType: string;
-          name: string;
-          extension: string;
+          fileName: string;
+          size: any;
         }>;
         issue?: {
           __typename?: 'Issue';
@@ -709,8 +709,8 @@ export const GetTimelineEventsDocument = `
       includes {
         id
         mimeType
-        name
-        extension
+        fileName
+        size
       }
       issue {
         externalLinks {

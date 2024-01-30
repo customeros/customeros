@@ -105,8 +105,7 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
       {/*            file = {*/}
       {/*              id: newFile.id,*/}
       {/*              key: newFile.key,*/}
-      {/*              name: newFile.name,*/}
-      {/*              extension: newFile.extension,*/}
+      {/*              fileName: newFile.name,*/}
       {/*              uploaded: true,*/}
       {/*            };*/}
       {/*          }*/}
