@@ -13,8 +13,8 @@ query getTimelineEvents($ids: [ID!]!) {
       includes {
         id
         mimeType
-        name
-        extension
+        fileName
+        size
       }
       issue {
         externalLinks {
