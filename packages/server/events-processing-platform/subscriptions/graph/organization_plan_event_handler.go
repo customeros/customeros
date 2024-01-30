@@ -210,19 +210,16 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 			} else {
 				data.StatusDetails.Status = model.MilestoneDone.String()
 			}
-			data.StatusDetails.UpdatedAt = eventData.UpdatedAt
-			data.StatusDetails.Comments = ""
-			data.UpdateStatusDetails = true
 		} else {
 			if eventData.UpdatedAt.After(dueDate) {
 				data.StatusDetails.Status = model.MilestoneStartedLate.String()
 			} else {
 				data.StatusDetails.Status = model.MilestoneStarted.String()
 			}
-			data.StatusDetails.UpdatedAt = eventData.UpdatedAt
-			data.StatusDetails.Comments = ""
-			data.UpdateStatusDetails = true
 		}
+		data.StatusDetails.UpdatedAt = eventData.UpdatedAt
+		data.StatusDetails.Comments = ""
+		data.UpdateStatusDetails = true
 	}
 
 	err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, eventData.OrganizationPlanId, eventData.MilestoneId, data)
@@ -231,8 +228,7 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		h.log.Errorf("Error while updating master plan milestone %s: %s", eventData.MilestoneId, err.Error())
 		return err
 	}
-	// if milestone status changed, propagate to organization plan.
-	// if item status changed, propagate to organization plan milestone.
+	// if milestone status or items changed, propagate to organization plan.
 	if eventData.UpdateStatusDetails() || eventData.UpdateItems() {
 		h.propagateStatusUpdatesFromMilestone(ctx, data, eventData.Tenant, eventData.OrganizationPlanId)
 	}
@@ -290,7 +286,7 @@ func (h *OrganizationPlanEventHandler) OnReorderMilestones(ctx context.Context, 
 //		return organizationPlanMilestones
 //	}
 func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx context.Context, data neo4jrepository.OrganizationPlanMilestoneUpdateFields, tenant, opid string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanEventHandler.propagateStatusUpdates")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanEventHandler.propagateStatusUpdatesFromMilestone")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagEntityId, opid)
 
@@ -345,7 +341,7 @@ func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx c
 	// update organization plan status
 	if allMilestonesDone {
 		if late {
-			opdata.StatusDetails.Status = model.DoneLate.String() // donelate status
+			opdata.StatusDetails.Status = model.DoneLate.String()
 		} else {
 			opdata.StatusDetails.Status = model.Done.String()
 		}
