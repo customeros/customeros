@@ -86,6 +86,18 @@ func (i *Loaders) GetOrganization(ctx context.Context, organizationId string) (*
 	return result.(*entity.OrganizationEntity), nil
 }
 
+func (i *Loaders) GetOrganizationForInvoice(ctx context.Context, invoiceId string) (*entity.OrganizationEntity, error) {
+	thunk := i.OrganizationForInvoice.Load(ctx, dataloader.StringKey(invoiceId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*entity.OrganizationEntity), nil
+}
+
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForEmails")
 	defer span.Finish()
@@ -373,6 +385,52 @@ func (b *organizationBatcher) getSuggestedMergeToForOrganization(ctx context.Con
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
+
+	return results
+}
+
+func (b *organizationBatcher) getOrganizationsForInvoices(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForInvoices")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	organizationEntities, err := b.organizationService.GetOrganizationsForInvoices(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get organizations for invoices")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	organizationEntityByInvoiceId := make(map[string]entity.OrganizationEntity)
+	for _, val := range *organizationEntities {
+		organizationEntityByInvoiceId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for jobRoleId, _ := range organizationEntityByInvoiceId {
+		if ix, ok := keyOrder[jobRoleId]; ok {
+			val := organizationEntityByInvoiceId[jobRoleId]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, jobRoleId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.OrganizationEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Int("result.length", len(results)))
 
 	return results
 }

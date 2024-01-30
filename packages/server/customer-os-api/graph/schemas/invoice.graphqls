@@ -22,6 +22,7 @@ type Invoice implements SourceFields & Node {
     sourceOfTruth:      DataSource!
     appSource:          String!
 
+    organization:       Organization! @goField(forceResolver: true)
     dryRun:             Boolean!
     number:             String!
     periodStartDate:    Time!

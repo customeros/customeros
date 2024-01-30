@@ -1034,6 +1034,7 @@ type Invoice struct {
 	Source                        DataSource       `json:"source"`
 	SourceOfTruth                 DataSource       `json:"sourceOfTruth"`
 	AppSource                     string           `json:"appSource"`
+	Organization                  *Organization    `json:"organization"`
 	DryRun                        bool             `json:"dryRun"`
 	Number                        string           `json:"number"`
 	PeriodStartDate               time.Time        `json:"periodStartDate"`

@@ -43,5 +43,9 @@ invoice(id: $id) {
         vat
         totalAmount
     }
+
+    organization {
+      id
+    }
   }
 }
