@@ -8,7 +8,7 @@ require (
 	github.com/cucumber/godog v0.13.0
 	github.com/docker/docker v25.0.1+incompatible
 	github.com/google/uuid v1.6.0
-	github.com/neo4j/neo4j-go-driver/v5 v5.16.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.17.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231227140027-08b87eac2360
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
