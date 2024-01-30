@@ -218,6 +218,10 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 	now := time.Now()
 
 	contract, err := s.services.ContractService.GetById(ctx, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
 
 	var invoicePeriodStart, invoicePeriodEnd time.Time
 	if contract.NextInvoiceDate != nil {
