@@ -8,6 +8,7 @@ import { useOrganizationQuery } from '@organization/src/graphql/organization.gen
 
 import { PanelContainer } from './PanelContainer';
 import { OnboardingMenu } from './OnboardingMenu';
+import { OnboardingPlans } from './OnboardingPlans';
 import { OnboardingStatus } from './OnboardingStatus';
 
 export const SuccessPanel = () => {
@@ -22,6 +23,8 @@ export const SuccessPanel = () => {
       actionItem={isFeatureOn ? <OnboardingMenu /> : undefined}
     >
       <OnboardingStatus data={data?.organization?.accountDetails?.onboarding} />
+
+      <OnboardingPlans />
     </PanelContainer>
   );
 };

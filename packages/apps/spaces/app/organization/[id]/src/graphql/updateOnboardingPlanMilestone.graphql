@@ -1,0 +1,7 @@
+mutation updateOnboardingPlanMilestone(
+  $input: OrganizationPlanMilestoneUpdateInput!
+) {
+  organizationPlanMilestone_Update(input: $input) {
+    id
+  }
+}

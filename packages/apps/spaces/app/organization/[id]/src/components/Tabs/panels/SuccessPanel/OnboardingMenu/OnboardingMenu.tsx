@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 import { Button } from '@ui/form/Button';
 import { useDisclosure } from '@ui/utils';
@@ -15,11 +15,16 @@ import {
   MenuDivider,
 } from '@ui/overlay/Menu';
 
+import { usePlanMutations } from '../hooks/usePlanMutations';
+
 export const OnboardingMenu = () => {
   const router = useRouter();
   const client = getGraphQLClient();
+  const organizationId = (useParams()?.id ?? '') as string;
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { data, isPending } = useMasterPlansQuery(client);
+
+  const { createOnboardingPlan } = usePlanMutations(organizationId);
 
   const activeMasterPlans = useMemo(
     () => data?.masterPlans?.filter((m) => !m.retired),
@@ -29,6 +34,17 @@ export const OnboardingMenu = () => {
   const handleEditMasterPlans = () => {
     router.push('/settings?tab=master-plans&show=active');
   };
+
+  const handleCreateOnboardingPlan =
+    (masterPlanId: string, name: string) => () => {
+      createOnboardingPlan.mutate({
+        input: {
+          name,
+          masterPlanId,
+          organizationId,
+        },
+      });
+    };
 
   return (
     <Menu isOpen={isOpen} onClose={onClose} placement='bottom-end'>
@@ -41,12 +57,16 @@ export const OnboardingMenu = () => {
         fontWeight='normal'
         isDisabled={isPending}
         leftIcon={<Plus color='gray.400' />}
+        isLoading={createOnboardingPlan.isPending}
       >
         Add plan
       </MenuButton>
       <MenuList maxW='200px' maxH='300px' overflowY='auto'>
         {activeMasterPlans?.map((m) => (
-          <MenuItem key={m.id}>
+          <MenuItem
+            key={m.id}
+            onClick={handleCreateOnboardingPlan(m.id, m.name)}
+          >
             <Text noOfLines={1}>{m.name}</Text>
           </MenuItem>
         ))}
