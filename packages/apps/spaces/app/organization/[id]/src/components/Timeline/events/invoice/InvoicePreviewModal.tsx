@@ -46,7 +46,8 @@ export const InvoicePreviewModal = () => {
         >
           <InvoiceActionHeader
             status={data?.invoice?.status}
-            onDownload={() => null}
+            id={data?.invoice?.id}
+            number={data?.invoice?.number}
           />
 
           <Flex direction='row' justifyContent='flex-end' alignItems='center'>

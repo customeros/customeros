@@ -49,13 +49,12 @@ export function InvoicesTable() {
   }, [selectedInvoiceId, isFetched]);
   useEffect(() => {
     if (tableRef.current && isFetched) {
-      const initialSelectedId = searchParams?.get('invoice');
       tableRef.current
         ?.getRowModel()
-        ?.rows?.find((e) => e.original.id === initialSelectedId)
+        ?.rows?.find((e) => e.original.id === selectedInvoiceId)
         ?.toggleSelected(true);
     }
-  }, [tableRef, isFetched]);
+  }, [tableRef, isFetched, selectedInvoiceId]);
 
   if (data?.invoices.totalElements === 0) {
     return <EmptyState maxW={550} />;

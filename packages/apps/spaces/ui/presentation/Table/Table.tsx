@@ -163,7 +163,6 @@ export const Table = <T extends object>({
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
     [table, totalItems],
   );
-  // console.log('🏷️ ----- table: ', table.table);
 
   return (
     <Flex w='100%' flexDir='column' position='relative'>

@@ -30,7 +30,8 @@ export const PreviewPanel = ({ id }: { id: string }) => {
       >
         <InvoiceActionHeader
           status={data?.invoice?.status}
-          onDownload={() => null}
+          id={data?.invoice?.id}
+          number={data?.invoice?.number}
         />
 
         <Flex direction='row' justifyContent='flex-end' alignItems='center'>
