@@ -3,17 +3,19 @@ package repository
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"strings"
 )
 
 type CountryReadRepository interface {
 	GetDefaultCountryCodeA3(ctx context.Context, tenant string) (string, error)
-	GetCountryByCodeA3(ctx context.Context, codeA3 string) (*dbtype.Node, error)
+	GetCountryByCodeIfExists(ctx context.Context, code string) (*dbtype.Node, error)
+	GetCountryByCodeA3IfExists(ctx context.Context, codeA3 string) (*dbtype.Node, error)
+	GetCountryByCodeA2IfExists(ctx context.Context, codeA2 string) (*dbtype.Node, error)
 	GetCountriesPaginated(ctx context.Context, skip, limit int) (*utils.DbNodesWithTotalCount, error)
 	GetCountries(ctx context.Context) ([]*dbtype.Node, error)
 	GetAllForPhoneNumbers(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
@@ -67,12 +69,26 @@ func (r *countryReadRepository) GetDefaultCountryCodeA3(ctx context.Context, ten
 	return result.(string), nil
 }
 
-func (r *countryReadRepository) GetCountryByCodeA3(ctx context.Context, codeA3 string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryReadRepository.GetCountryByCodeA3")
+func (r *countryReadRepository) GetCountryByCodeIfExists(ctx context.Context, code string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryReadRepository.GetCountryByCodeIfExists")
 	defer span.Finish()
-	tracing.LogObjectAsJson(span, "codeA3", codeA3)
+	span.LogFields(log.String("code", code))
 
-	cypher := `MATCH (c:Country {codeA3:$codeA3} ) RETURN c`
+	if len(strings.TrimSpace(code)) == 2 {
+		return r.GetCountryByCodeA2IfExists(ctx, strings.TrimSpace(code))
+	} else if len(strings.TrimSpace(code)) == 3 {
+		return r.GetCountryByCodeA3IfExists(ctx, strings.TrimSpace(code))
+	} else {
+		return nil, nil
+	}
+}
+
+func (r *countryReadRepository) GetCountryByCodeA3IfExists(ctx context.Context, codeA3 string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryReadRepository.GetCountryByCodeA3IfExists")
+	defer span.Finish()
+	span.LogFields(log.String("codeA3", codeA3))
+
+	cypher := `MATCH (c:Country {codeA3:$codeA3}) WHERE $codeA3 <> "" RETURN c`
 	params := map[string]any{
 		"codeA3": codeA3,
 	}
@@ -82,14 +98,51 @@ func (r *countryReadRepository) GetCountryByCodeA3(ctx context.Context, codeA3 s
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
-	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Single(ctx)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
-	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), err
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if len(dbRecords.([]*dbtype.Node)) == 0 {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, err
+	}
+	span.LogFields(log.Bool("result.found", true))
+	return dbRecords.([]*dbtype.Node)[0], err
+}
+
+func (r *countryReadRepository) GetCountryByCodeA2IfExists(ctx context.Context, codeA2 string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryReadRepository.GetCountryByCodeA2IfExists")
+	defer span.Finish()
+	span.LogFields(log.String("codeA2", codeA2))
+
+	cypher := `MATCH (c:Country {codeA2:$codeA2}) WHERE $codeA2 <> "" RETURN c`
+	params := map[string]any{
+		"codeA2": codeA2,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if len(dbRecords.([]*dbtype.Node)) == 0 {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, err
+	}
+	span.LogFields(log.Bool("result.found", true))
+	return dbRecords.([]*dbtype.Node)[0], err
 }
 
 func (r *countryReadRepository) GetCountriesPaginated(ctx context.Context, skip, limit int) (*utils.DbNodesWithTotalCount, error) {
@@ -137,7 +190,7 @@ func (r *countryReadRepository) GetCountriesPaginated(ctx context.Context, skip,
 }
 
 func (r *countryReadRepository) GetCountries(ctx context.Context) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryReadRepository.GetCountryByCodeA3")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryReadRepository.GetCountries")
 	defer span.Finish()
 
 	cypher := `MATCH (c:Country) RETURN c ORDER BY c.name`
