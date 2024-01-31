@@ -23,7 +23,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.11.4
-	github.com/mrz1836/postmark v1.6.1
+	github.com/mrz1836/postmark v1.6.2
 	github.com/neo4j/neo4j-go-driver/v5 v5.17.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240118205818-5175df67b3d4
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240118205818-5175df67b3d4
