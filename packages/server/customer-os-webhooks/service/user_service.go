@@ -168,31 +168,33 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 
 		// Create or update user
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.UserClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
-			Tenant:          tenant,
-			Id:              userId,
-			LoggedInUserId:  "",
-			FirstName:       userInput.FirstName,
-			LastName:        userInput.LastName,
-			Name:            userInput.Name,
-			CreatedAt:       utils.ConvertTimeToTimestampPtr(userInput.CreatedAt),
-			UpdatedAt:       utils.ConvertTimeToTimestampPtr(userInput.UpdatedAt),
-			Internal:        false,
-			ProfilePhotoUrl: userInput.ProfilePhotoUrl,
-			Timezone:        userInput.Timezone,
-			Bot:             userInput.Bot,
-			SourceFields: &commonpb.SourceFields{
-				Source:    userInput.ExternalSystem,
-				AppSource: appSource,
-			},
-			ExternalSystemFields: &commonpb.ExternalSystemFields{
-				ExternalSystemId: userInput.ExternalSystem,
-				ExternalId:       userInput.ExternalId,
-				ExternalUrl:      userInput.ExternalUrl,
-				ExternalIdSecond: userInput.ExternalIdSecond,
-				ExternalSource:   userInput.ExternalSourceEntity,
-				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
-			},
+		_, err = CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+			return s.grpcClients.UserClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
+				Tenant:          tenant,
+				Id:              userId,
+				LoggedInUserId:  "",
+				FirstName:       userInput.FirstName,
+				LastName:        userInput.LastName,
+				Name:            userInput.Name,
+				CreatedAt:       utils.ConvertTimeToTimestampPtr(userInput.CreatedAt),
+				UpdatedAt:       utils.ConvertTimeToTimestampPtr(userInput.UpdatedAt),
+				Internal:        false,
+				ProfilePhotoUrl: userInput.ProfilePhotoUrl,
+				Timezone:        userInput.Timezone,
+				Bot:             userInput.Bot,
+				SourceFields: &commonpb.SourceFields{
+					Source:    userInput.ExternalSystem,
+					AppSource: appSource,
+				},
+				ExternalSystemFields: &commonpb.ExternalSystemFields{
+					ExternalSystemId: userInput.ExternalSystem,
+					ExternalId:       userInput.ExternalId,
+					ExternalUrl:      userInput.ExternalUrl,
+					ExternalIdSecond: userInput.ExternalIdSecond,
+					ExternalSource:   userInput.ExternalSourceEntity,
+					SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
+				},
+			})
 		})
 		if err != nil {
 			failedSync = true
@@ -207,7 +209,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 				if found && findErr == nil {
 					break
 				}
-				time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+				time.Sleep(utils.BackOffExponentialDelay(i))
 			}
 		}
 	}
@@ -222,12 +224,14 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		}
 		// Link email to user
 		if !failedSync {
-			_, err = s.grpcClients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
-				Tenant:    common.GetTenantFromContext(ctx),
-				UserId:    userId,
-				EmailId:   emailId,
-				Primary:   true,
-				AppSource: appSource,
+			_, err = CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+				return s.grpcClients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
+					Tenant:    common.GetTenantFromContext(ctx),
+					UserId:    userId,
+					EmailId:   emailId,
+					Primary:   true,
+					AppSource: appSource,
+				})
 			})
 			if err != nil {
 				failedSync = true
@@ -250,13 +254,15 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 			}
 			// Link phone number to user
 			if !failedSync {
-				_, err = s.grpcClients.UserClient.LinkPhoneNumberToUser(ctx, &userpb.LinkPhoneNumberToUserGrpcRequest{
-					Tenant:        common.GetTenantFromContext(ctx),
-					UserId:        userId,
-					PhoneNumberId: phoneNumberId,
-					Primary:       phoneNumberDtls.Primary,
-					Label:         phoneNumberDtls.Label,
-					AppSource:     appSource,
+				_, err = CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+					return s.grpcClients.UserClient.LinkPhoneNumberToUser(ctx, &userpb.LinkPhoneNumberToUserGrpcRequest{
+						Tenant:        common.GetTenantFromContext(ctx),
+						UserId:        userId,
+						PhoneNumberId: phoneNumberId,
+						Primary:       phoneNumberDtls.Primary,
+						Label:         phoneNumberDtls.Label,
+						AppSource:     appSource,
+					})
 				})
 				if err != nil {
 					failedSync = true

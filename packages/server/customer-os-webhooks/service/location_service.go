@@ -45,25 +45,27 @@ func (s *locationService) CreateLocation(ctx context.Context, locationId, extern
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.LocationClient.UpsertLocation(ctx, &locationpb.UpsertLocationGrpcRequest{
-		Tenant: common.GetTenantFromContext(ctx),
-		Id:     locationId,
-		Name:   locationName,
-		SourceFields: &commonpb.SourceFields{
-			Source:    externalSystem,
-			AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsWebhooks),
-		},
-		RawAddress:   "",
-		CreatedAt:    utils.ConvertTimeToTimestampPtr(utils.NowPtr()),
-		UpdatedAt:    utils.ConvertTimeToTimestampPtr(utils.NowPtr()),
-		Country:      country,
-		Region:       region,
-		Locality:     locality,
-		Street:       street,
-		AddressLine1: address,
-		AddressLine2: address2,
-		ZipCode:      zip,
-		PostalCode:   postalCode,
+	response, err := CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
+		return s.grpcClients.LocationClient.UpsertLocation(ctx, &locationpb.UpsertLocationGrpcRequest{
+			Tenant: common.GetTenantFromContext(ctx),
+			Id:     locationId,
+			Name:   locationName,
+			SourceFields: &commonpb.SourceFields{
+				Source:    externalSystem,
+				AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsWebhooks),
+			},
+			RawAddress:   "",
+			CreatedAt:    utils.ConvertTimeToTimestampPtr(utils.NowPtr()),
+			UpdatedAt:    utils.ConvertTimeToTimestampPtr(utils.NowPtr()),
+			Country:      country,
+			Region:       region,
+			Locality:     locality,
+			Street:       street,
+			AddressLine1: address,
+			AddressLine2: address2,
+			ZipCode:      zip,
+			PostalCode:   postalCode,
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertLocation"))
@@ -76,7 +78,7 @@ func (s *locationService) CreateLocation(ctx context.Context, locationId, extern
 		if locationEntity != nil && findLocationErr == nil {
 			break
 		}
-		time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+		time.Sleep(utils.BackOffExponentialDelay(i))
 	}
 	span.LogFields(log.String("upsertedLocationId", response.Id))
 	return response.Id, nil

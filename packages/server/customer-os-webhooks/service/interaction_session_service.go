@@ -62,27 +62,29 @@ func (s *interactionSessionService) MergeInteractionSession(ctx context.Context,
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := s.grpcClients.InteractionSessionClient.UpsertInteractionSession(ctx, &interactionsessionpb.UpsertInteractionSessionGrpcRequest{
-		Tenant: tenant,
-		Id:     interactionSessionId,
-		SourceFields: &commonpb.SourceFields{
-			Source:    externalSystem,
-			AppSource: utils.StringFirstNonEmpty(interactionSessionInput.AppSource, constants.AppSourceCustomerOsWebhooks),
-		},
-		ExternalSystemFields: &commonpb.ExternalSystemFields{
-			ExternalSystemId: externalSystem,
-			ExternalId:       interactionSessionInput.ExternalId,
-			ExternalUrl:      interactionSessionInput.ExternalUrl,
-			ExternalIdSecond: interactionSessionInput.ExternalIdSecond,
-			ExternalSource:   interactionSessionInput.ExternalSourceEntity,
-			SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
-		},
-		Identifier:  interactionSessionInput.Identifier,
-		Channel:     interactionSessionInput.Channel,
-		ChannelData: interactionSessionInput.ChannelData,
-		Status:      interactionSessionInput.Status,
-		Type:        interactionSessionInput.Type,
-		Name:        interactionSessionInput.Name,
+	response, err := CallEventsPlatformGRPCWithRetry[*interactionsessionpb.InteractionSessionIdGrpcResponse](func() (*interactionsessionpb.InteractionSessionIdGrpcResponse, error) {
+		return s.grpcClients.InteractionSessionClient.UpsertInteractionSession(ctx, &interactionsessionpb.UpsertInteractionSessionGrpcRequest{
+			Tenant: tenant,
+			Id:     interactionSessionId,
+			SourceFields: &commonpb.SourceFields{
+				Source:    externalSystem,
+				AppSource: utils.StringFirstNonEmpty(interactionSessionInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+			},
+			ExternalSystemFields: &commonpb.ExternalSystemFields{
+				ExternalSystemId: externalSystem,
+				ExternalId:       interactionSessionInput.ExternalId,
+				ExternalUrl:      interactionSessionInput.ExternalUrl,
+				ExternalIdSecond: interactionSessionInput.ExternalIdSecond,
+				ExternalSource:   interactionSessionInput.ExternalSourceEntity,
+				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
+			},
+			Identifier:  interactionSessionInput.Identifier,
+			Channel:     interactionSessionInput.Channel,
+			ChannelData: interactionSessionInput.ChannelData,
+			Status:      interactionSessionInput.Status,
+			Type:        interactionSessionInput.Type,
+			Name:        interactionSessionInput.Name,
+		})
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

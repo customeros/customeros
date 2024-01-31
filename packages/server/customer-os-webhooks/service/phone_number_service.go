@@ -53,13 +53,15 @@ func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, phoneNumber,
 	if phoneNumberEntity == nil {
 		// phone number not exist, create new one
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		response, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(ctx, &phonenumberpb.UpsertPhoneNumberGrpcRequest{
-			Tenant:      common.GetTenantFromContext(ctx),
-			PhoneNumber: phoneNumber,
-			SourceFields: &commonpb.SourceFields{
-				Source:    source,
-				AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsWebhooks),
-			},
+		response, err := CallEventsPlatformGRPCWithRetry[*phonenumberpb.PhoneNumberIdGrpcResponse](func() (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
+			return s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(ctx, &phonenumberpb.UpsertPhoneNumberGrpcRequest{
+				Tenant:      common.GetTenantFromContext(ctx),
+				PhoneNumber: phoneNumber,
+				SourceFields: &commonpb.SourceFields{
+					Source:    source,
+					AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsWebhooks),
+				},
+			})
 		})
 		if err != nil {
 			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertPhoneNumber"))
@@ -72,7 +74,7 @@ func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, phoneNumber,
 			if phoneNumberEntity != nil && findPhoneNumErr == nil {
 				break
 			}
-			time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+			time.Sleep(utils.BackOffExponentialDelay(i))
 		}
 		span.LogFields(log.String("createdPhoneNumberId", response.Id))
 		return response.Id, nil

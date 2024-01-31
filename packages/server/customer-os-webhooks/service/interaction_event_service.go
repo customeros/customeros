@@ -263,7 +263,9 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 			}
 		}
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.InteractionEventClient.UpsertInteractionEvent(ctx, &interactionEventGrpcRequest)
+		_, err = CallEventsPlatformGRPCWithRetry[*interactioneventpb.InteractionEventIdGrpcResponse](func() (*interactioneventpb.InteractionEventIdGrpcResponse, error) {
+			return s.grpcClients.InteractionEventClient.UpsertInteractionEvent(ctx, &interactionEventGrpcRequest)
+		})
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertInteractionEvent"))
@@ -277,7 +279,7 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 				if issue != nil && findErr == nil {
 					break
 				}
-				time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+				time.Sleep(utils.BackOffExponentialDelay(i))
 			}
 		}
 	}
