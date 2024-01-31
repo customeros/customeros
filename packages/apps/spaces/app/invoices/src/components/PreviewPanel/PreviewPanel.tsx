@@ -35,10 +35,10 @@ export const PreviewPanel = ({ id }: { id: string }) => {
         />
 
         <Flex direction='row' justifyContent='flex-end' alignItems='center'>
-          <Tooltip label='Copy link to this invoice' placement='bottom'>
+          <Tooltip label='Copy invoice link' placement='bottom'>
             <IconButton
               variant='ghost'
-              aria-label='Copy link to this invoice'
+              aria-label='Copy invoice link'
               color='gray.500'
               size='sm'
               mr={1}

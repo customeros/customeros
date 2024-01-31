@@ -40,7 +40,6 @@ export function InvoicesTable() {
       const newParams = new URLSearchParams(searchParams ?? '');
       const firstId = data?.invoices?.content?.[0]?.id;
       if (!firstId) return;
-
       newParams.set('invoice', firstId);
       router.replace(`/invoices?${newParams.toString()}`);
     }
@@ -55,7 +54,7 @@ export function InvoicesTable() {
   }, [tableRef, isFetched, selectedInvoiceId]);
 
   if (data?.invoices.totalElements === 0) {
-    return <EmptyState maxW={550} />;
+    return <EmptyState maxW={500} />;
   }
 
   const handleOpenInvoice = (id: string) => {

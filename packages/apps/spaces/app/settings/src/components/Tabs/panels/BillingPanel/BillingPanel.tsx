@@ -216,7 +216,7 @@ export const BillingPanel = () => {
         borderRadius='none'
       >
         <CardHeader px='6' pb='0' pt='4'>
-          <Heading as='h1' fontSize='lg' color='gray.700'>
+          <Heading as='h1' fontSize='lg' color='gray.700' pt={1}>
             <b>Billing</b>
           </Heading>
         </CardHeader>

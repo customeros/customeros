@@ -12,6 +12,7 @@ interface OrganizationPanelProps extends BoxProps {
   withFade?: boolean;
   actionItem?: ReactNode;
   leftActionItem?: ReactNode;
+  bottomActionItem?: ReactNode;
   shouldBlockPanelScroll?: boolean; // fix for https://linear.app/customer-os/issue/COS-619/scrollbar-overlaps-the-renewal-modals-in-safari
 }
 export const OrganizationPanel = ({
@@ -22,6 +23,7 @@ export const OrganizationPanel = ({
   children,
   withFade = false,
   shouldBlockPanelScroll = false,
+  bottomActionItem,
   ...props
 }: OrganizationPanelProps) => {
   const [isMounted, setIsMounted] = useState(!withFade);
@@ -68,6 +70,8 @@ export const OrganizationPanel = ({
       >
         {children}
       </VStack>
+
+      {bottomActionItem && bottomActionItem}
     </Box>
   );
 };

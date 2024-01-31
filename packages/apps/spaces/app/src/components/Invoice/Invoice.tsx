@@ -122,7 +122,7 @@ export function Invoice({
               <Text fontWeight='semibold' mb={1} fontSize='sm'>
                 Issued
               </Text>
-              <Text fontSize='sm' mb={4}>
+              <Text fontSize='sm' mb={4} color='gray.500'>
                 {DateTimeUtils.format(
                   issueDate,
                   DateTimeUtils.dateWithAbreviatedMonth,
@@ -131,7 +131,7 @@ export function Invoice({
               <Text fontWeight='semibold' mb={1} fontSize='sm'>
                 Due
               </Text>
-              <Text fontSize='sm'>
+              <Text fontSize='sm' color='gray.500'>
                 {DateTimeUtils.format(
                   dueDate,
                   DateTimeUtils.dateWithAbreviatedMonth,
@@ -172,19 +172,19 @@ export function Invoice({
                 {billedTo.name}
               </Text>
 
-              <Text fontSize='sm' lineHeight={1.2}>
+              <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
                 {billedTo.addressLine}
                 <Text as='span' display='block' lineHeight={1.2}>
                   {billedTo.addressLine2}
                 </Text>
               </Text>
-              <Text fontSize='sm' lineHeight={1.2}>
+              <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
                 {billedTo.locality} {billedTo.locality && ', '} {billedTo.zip}
               </Text>
-              <Text fontSize='sm' lineHeight={1.2}>
+              <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
                 {billedTo.country}
               </Text>
-              <Text fontSize='sm' lineHeight={1.2}>
+              <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
                 {billedTo.email}
               </Text>
             </Flex>
@@ -222,19 +222,19 @@ export function Invoice({
                 {from.name}
               </Text>
 
-              <Text fontSize='sm' lineHeight={1.2}>
+              <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
                 {from.addressLine}
                 <Text as='span' display='block' lineHeight={1.2}>
                   {from.addressLine2}
                 </Text>
               </Text>
-              <Text fontSize='sm' lineHeight={1.2}>
+              <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
                 {from.locality} {from.locality && ', '} {from.zip}
               </Text>
-              <Text fontSize='sm' lineHeight={1.2}>
+              <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
                 {from.country}
               </Text>
-              <Text fontSize='sm' lineHeight={1.2}>
+              <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
                 {from.email}
               </Text>
             </Flex>
@@ -256,7 +256,7 @@ export function Invoice({
             mt={4}
           >
             <Flex justifyContent='space-between'>
-              <Text fontSize='sm' fontWeight='medium'>
+              <Text fontSize='sm' fontWeight='medium' alignItems='center'>
                 Subtotal
               </Text>
               <Text fontSize='sm' ml={2} color='gray.600'>
