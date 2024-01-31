@@ -42,7 +42,7 @@ func (r *mutationResolver) OrganizationPlanCreate(ctx context.Context, input mod
 	}
 	// create organization plan milestones based on each master plan milestone
 	for _, masterPlanMilestoneEntity := range *masterPlanMilestonesEntities {
-		if masterPlanMilestoneEntity.Retired {
+		if masterPlanMilestoneEntity.Retired || masterPlanMilestoneEntity.Optional {
 			continue
 		}
 		msDueDate := time.Now().UTC().Add(time.Hour * time.Duration(masterPlanMilestoneEntity.DurationHours))
@@ -54,6 +54,7 @@ func (r *mutationResolver) OrganizationPlanCreate(ctx context.Context, input mod
 			&masterPlanMilestoneEntity.Order,
 			&msDueDate,
 			masterPlanMilestoneEntity.Optional,
+			false, // there is no ad-hoc milestone for master plan milestones
 			masterPlanMilestoneEntity.Items,
 		)
 		if err != nil {
@@ -129,7 +130,7 @@ func (r *mutationResolver) OrganizationPlanMilestoneCreate(ctx context.Context, 
 	tracing.LogObjectAsJson(span, "input", input)
 
 	opMilestoneId, err := r.Services.OrganizationPlanService.CreateOrganizationPlanMilestone(ctx, input.OrganizationPlanID, input.OrganizationID, utils.IfNotNilString(input.Name),
-		&input.Order, &input.DueDate, input.Optional, input.Items)
+		&input.Order, &input.DueDate, input.Optional, input.Adhoc, input.Items)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create organization plan milestone")
@@ -154,7 +155,7 @@ func (r *mutationResolver) OrganizationPlanMilestoneUpdate(ctx context.Context, 
 	tracing.LogObjectAsJson(span, "input", input)
 
 	err := r.Services.OrganizationPlanService.UpdateOrganizationPlanMilestone(ctx, input.OrganizationID, input.OrganizationPlanID, input.ID, input.Name,
-		input.Order, input.DueDate, input.Items, input.Optional, input.Retired, input.StatusDetails)
+		input.Order, input.DueDate, input.Items, input.Optional, input.Adhoc, input.Retired, input.StatusDetails)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update organization plan milestone")
@@ -180,7 +181,7 @@ func (r *mutationResolver) OrganizationPlanMilestoneBulkUpdate(ctx context.Conte
 	var err error
 	for _, opms := range input {
 		err = r.Services.OrganizationPlanService.UpdateOrganizationPlanMilestone(ctx, opms.OrganizationID, opms.OrganizationPlanID, opms.ID, opms.Name,
-			opms.Order, opms.DueDate, opms.Items, opms.Optional, opms.Retired, opms.StatusDetails)
+			opms.Order, opms.DueDate, opms.Items, opms.Optional, opms.Adhoc, opms.Retired, opms.StatusDetails)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to update org plan milestone")

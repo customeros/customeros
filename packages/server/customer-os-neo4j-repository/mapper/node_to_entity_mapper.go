@@ -420,6 +420,7 @@ func MapDbNodeToOrganizationPlanMilestoneEntity(dbNode *dbtype.Node) *entity.Org
 			UpdatedAt: utils.GetTimePropOrEpochStart(props, "statusUpdatedAt"),
 			Comments:  utils.GetStringPropOrEmpty(props, "statusComments"),
 		},
+		Adhoc: utils.GetBoolPropOrFalse(props, "adhoc"),
 	}
 	return &orgPlanMilestoneEntity
 }

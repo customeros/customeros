@@ -35,6 +35,7 @@ type OrganizationPlanMilestoneUpdateFields struct {
 	StatusDetails       entity.OrganizationPlanMilestoneStatusDetails
 	Optional            bool
 	Retired             bool
+	Adhoc               bool
 	UpdateName          bool
 	UpdateOrder         bool
 	UpdateItems         bool
@@ -42,12 +43,13 @@ type OrganizationPlanMilestoneUpdateFields struct {
 	UpdateRetired       bool
 	UpdateStatusDetails bool
 	UpdateDueDate       bool
+	UpdateAdhoc         bool
 }
 
 type OrganizationPlanWriteRepository interface {
 	Create(ctx context.Context, tenant, masterPlanId, organizationPlanId, name, source, appSource string, createdAt time.Time, statusDetails entity.OrganizationPlanStatusDetails) error
 	Update(ctx context.Context, tenant, organizationPlanId string, data OrganizationPlanUpdateFields) error
-	CreateMilestone(ctx context.Context, tenant, organizationPlanId, milestoneId, name, source, appSource string, order int64, items []entity.OrganizationPlanMilestoneItem, optional bool, createdAt, dueDate time.Time, statusDetails entity.OrganizationPlanMilestoneStatusDetails) error
+	CreateMilestone(ctx context.Context, tenant, organizationPlanId, milestoneId, name, source, appSource string, order int64, items []entity.OrganizationPlanMilestoneItem, optional, adhoc bool, createdAt, dueDate time.Time, statusDetails entity.OrganizationPlanMilestoneStatusDetails) error
 	CreateBulkMilestones(ctx context.Context, tenant, organizationPlanId, source, appSource string, milestones []entity.OrganizationPlanMilestoneEntity, createdAt time.Time) error
 	UpdateMilestone(ctx context.Context, tenant, organizationPlanId, milestoneId string, data OrganizationPlanMilestoneUpdateFields) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationPlanId, organizationId string, createdAt time.Time) error
@@ -111,7 +113,7 @@ func (r *organizationPlanWriteRepository) Create(ctx context.Context, tenant, ma
 	return err
 }
 
-func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, tenant, organizationPlanId, milestoneId, name, source, appSource string, order int64, items []entity.OrganizationPlanMilestoneItem, optional bool, createdAt, dueDate time.Time, statusDetails entity.OrganizationPlanMilestoneStatusDetails) error {
+func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, tenant, organizationPlanId, milestoneId, name, source, appSource string, order int64, items []entity.OrganizationPlanMilestoneItem, optional, adhoc bool, createdAt, dueDate time.Time, statusDetails entity.OrganizationPlanMilestoneStatusDetails) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanWriteRepository.CreateMilestone")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -133,7 +135,8 @@ func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, t
 								m.status=$status,
 								m.statusComments=$statusComments,
 								m.statusUpdatedAt=$statusUpdatedAt,
-								m.dueDate=$dueDate
+								m.dueDate=$dueDate,
+								m.adhoc=$adhoc
 							`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
@@ -152,6 +155,7 @@ func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, t
 		"statusComments":     statusDetails.Comments,
 		"statusUpdatedAt":    statusDetails.UpdatedAt,
 		"dueDate":            dueDate,
+		"adhoc":              adhoc,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -186,7 +190,8 @@ func (r *organizationPlanWriteRepository) CreateBulkMilestones(ctx context.Conte
 								m.items=milestone.items,
 								m.status=milestone.status,
 								m.statusComments=milestone.statusComments,
-								m.statusUpdatedAt=milestone.statusUpdatedAt
+								m.statusUpdatedAt=milestone.statusUpdatedAt,
+								m.adhoc=milestone.adhoc
 							`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
@@ -292,6 +297,10 @@ func (r *organizationPlanWriteRepository) UpdateMilestone(ctx context.Context, t
 		cypher += ", m.dueDate=$dueDate"
 		params["dueDate"] = data.DueDate
 	}
+	if data.UpdateAdhoc {
+		cypher += ", m.adhoc=$adhoc"
+		params["adhoc"] = data.Adhoc
+	}
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -384,6 +393,7 @@ func mapMilestoneEntityToNeo4jProperties(entity entity.OrganizationPlanMilestone
 		"statusComments":  entity.StatusDetails.Comments,
 		"statusUpdatedAt": entity.StatusDetails.UpdatedAt,
 		"items":           mapMilestoneItemsToNeo4jProperties(entity.Items),
+		"adhoc":           entity.Adhoc,
 	}
 }
 

@@ -23,9 +23,10 @@ type OrganizationPlanMilestoneUpdateEvent struct {
 	FieldsMask         []string                              `json:"fieldsMask,omitempty"`
 	OrganizationPlanId string                                `json:"organizationPlanId" validate:"required"`
 	StatusDetails      model.OrganizationPlanDetails         `json:"statusDetails"`
+	Adhoc              bool                                  `json:"adhoc"`
 }
 
-func NewOrganizationPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, organizationPlanId, milestoneId, name string, order int64, items []model.OrganizationPlanMilestoneItem, fieldsMask []string, optional, retired bool, updatedAt, dueDate time.Time, statusDetails model.OrganizationPlanDetails) (eventstore.Event, error) {
+func NewOrganizationPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, organizationPlanId, milestoneId, name string, order int64, items []model.OrganizationPlanMilestoneItem, fieldsMask []string, optional, adhoc, retired bool, updatedAt, dueDate time.Time, statusDetails model.OrganizationPlanDetails) (eventstore.Event, error) {
 	eventData := OrganizationPlanMilestoneUpdateEvent{
 		Tenant:             aggregate.GetTenant(),
 		MilestoneId:        milestoneId,
@@ -53,6 +54,9 @@ func NewOrganizationPlanMilestoneUpdateEvent(aggregate eventstore.Aggregate, org
 	}
 	if eventData.UpdateStatusDetails() {
 		eventData.StatusDetails = statusDetails
+	}
+	if eventData.UpdateAdhoc() {
+		eventData.Adhoc = adhoc
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -93,4 +97,8 @@ func (e OrganizationPlanMilestoneUpdateEvent) UpdateRetired() bool {
 
 func (e OrganizationPlanMilestoneUpdateEvent) UpdateStatusDetails() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskStatusDetails)
+}
+
+func (e OrganizationPlanMilestoneUpdateEvent) UpdateAdhoc() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskAdhoc)
 }

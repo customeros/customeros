@@ -28,6 +28,7 @@ message CreateOrganizationPlanMilestoneGrpcRequest {
   repeated string items = 9;
   int64 order = 10;
   string orgId = 11;
+  bool adhoc = 12;
 }
 
 message StatusDetails {
@@ -68,6 +69,7 @@ enum OrganizationPlanMilestoneFieldMask {
   ORGANIZATION_PLAN_MILESTONE_PROPERTY_ITEMS = 6;
   ORGANIZATION_PLAN_MILESTONE_PROPERTY_ORDER = 7;
   ORGANIZATION_PLAN_MILESTONE_PROPERTY_STATUS_DETAILS = 8;
+  ORGANIZATION_PLAN_MILESTONE_PROPERTY_ADHOC = 9;
 }
 
 message OrganizationPlanMilestoneItem {
@@ -93,6 +95,7 @@ message UpdateOrganizationPlanMilestoneGrpcRequest {
   repeated OrganizationPlanMilestoneFieldMask fieldsMask = 13;
   StatusDetails statusDetails = 14;
   string orgId = 15;
+  bool adhoc = 16;
 }
 
 message ReorderOrganizationPlanMilestonesGrpcRequest {
