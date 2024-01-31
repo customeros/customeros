@@ -11,15 +11,19 @@ interface OrganizationPanelProps extends BoxProps {
   bgImage?: string;
   withFade?: boolean;
   actionItem?: ReactNode;
+  leftActionItem?: ReactNode;
+  bottomActionItem?: ReactNode;
   shouldBlockPanelScroll?: boolean; // fix for https://linear.app/customer-os/issue/COS-619/scrollbar-overlaps-the-renewal-modals-in-safari
 }
 export const OrganizationPanel = ({
   bgImage,
   title,
   actionItem,
+  leftActionItem,
   children,
   withFade = false,
   shouldBlockPanelScroll = false,
+  bottomActionItem,
   ...props
 }: OrganizationPanelProps) => {
   const [isMounted, setIsMounted] = useState(!withFade);
@@ -42,9 +46,13 @@ export const OrganizationPanel = ({
       {...props}
     >
       <Flex justify='space-between' pt='4' pb='4' px='6'>
-        <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
-          {title}
-        </Text>
+        <Flex alignItems='center'>
+          {leftActionItem && leftActionItem}
+          <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
+            {title}
+          </Text>
+        </Flex>
+
         {actionItem && actionItem}
       </Flex>
 
@@ -53,14 +61,17 @@ export const OrganizationPanel = ({
         w='full'
         h='100%'
         justify='stretch'
+        position='relative'
         overflowY={shouldBlockPanelScroll ? 'hidden' : 'auto'}
-        px='6'
+        px={'6'}
         pb={8}
         opacity={isMounted ? 1 : 0}
         transition='opacity 0.3s ease-in-out'
       >
         {children}
       </VStack>
+
+      {bottomActionItem && bottomActionItem}
     </Box>
   );
 };

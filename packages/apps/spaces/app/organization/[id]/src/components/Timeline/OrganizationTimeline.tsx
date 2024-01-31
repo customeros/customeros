@@ -9,7 +9,7 @@ import { setHours, setSeconds, setMinutes, setMilliseconds } from 'date-fns';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { ExternalSystemType } from '@graphql/types';
+import { Meeting, ExternalSystemType } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { EmptyTimeline } from '@organization/src/components/Timeline/EmptyTimeline';
 import { SlackStub } from '@organization/src/components/Timeline/events/slack/SlackStub';
@@ -69,7 +69,7 @@ function getEventDate(event?: TimelineEvent) {
   return (
     (event as InteractionEventWithDate)?.date ||
     (event as LogEntryWithAliases)?.logEntryStartedAt ||
-    event?.createdAt
+    (event as Meeting)?.createdAt
   );
 }
 export const OrganizationTimeline: FC = () => {
@@ -276,7 +276,7 @@ export const OrganizationTimeline: FC = () => {
               );
             }
             default:
-              return null;
+              return <div>not supported</div>;
           }
         }}
         components={{

@@ -198,6 +198,7 @@ export const AuthPanel = () => {
         boxShadow='none'
         position='relative'
         background='gray.25'
+        maxW='50%'
       >
         <CardHeader px={6} pb={2}>
           <Flex gap='1' align='center' mb='2'>

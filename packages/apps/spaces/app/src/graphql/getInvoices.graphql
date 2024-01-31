@@ -1,0 +1,40 @@
+query getInvoices(
+    $pagination: Pagination!
+    $organizationId: ID
+) {
+    invoices(
+        pagination: $pagination
+        organizationId: $organizationId
+
+    ) {
+        content {
+            id
+            organization {
+                id
+                name
+            }
+            number
+            dueDate
+            periodStartDate
+            periodEndDate
+            totalAmount
+            currency
+            dryRun
+            status
+            createdAt
+
+            invoiceLines {
+                id
+                name
+                price
+                quantity
+                amount
+                vat
+                totalAmount
+
+            }
+        }
+        totalPages
+        totalElements
+    }
+}

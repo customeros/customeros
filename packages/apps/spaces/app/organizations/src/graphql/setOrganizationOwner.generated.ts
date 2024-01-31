@@ -5,37 +5,22 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type SetOrganizationOwnerMutationVariables = Types.Exact<{
   organizationId: Types.Scalars['ID']['input'];
   userId: Types.Scalars['ID']['input'];
 }>;
 
-export type SetOrganizationOwnerMutation = {
-  __typename?: 'Mutation';
-  organization_SetOwner: {
-    __typename?: 'Organization';
-    id: string;
-    owner?: {
-      __typename?: 'User';
-      id: string;
-      firstName: string;
-      lastName: string;
-    } | null;
-  };
-};
+
+export type SetOrganizationOwnerMutation = { __typename?: 'Mutation', organization_SetOwner: { __typename?: 'Organization', id: string, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } };
+
+
 
 export const SetOrganizationOwnerDocument = `
     mutation setOrganizationOwner($organizationId: ID!, $userId: ID!) {
@@ -51,44 +36,23 @@ export const SetOrganizationOwnerDocument = `
     `;
 
 export const useSetOrganizationOwnerMutation = <
-  TError = unknown,
-  TContext = unknown,
->(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    SetOrganizationOwnerMutation,
-    TError,
-    SetOrganizationOwnerMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) => {
-  return useMutation<
-    SetOrganizationOwnerMutation,
-    TError,
-    SetOrganizationOwnerMutationVariables,
-    TContext
-  >({
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<SetOrganizationOwnerMutation, TError, SetOrganizationOwnerMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<SetOrganizationOwnerMutation, TError, SetOrganizationOwnerMutationVariables, TContext>(
+      {
     mutationKey: ['setOrganizationOwner'],
-    mutationFn: (variables?: SetOrganizationOwnerMutationVariables) =>
-      fetcher<
-        SetOrganizationOwnerMutation,
-        SetOrganizationOwnerMutationVariables
-      >(client, SetOrganizationOwnerDocument, variables, headers)(),
-    ...options,
-  });
-};
+    mutationFn: (variables?: SetOrganizationOwnerMutationVariables) => fetcher<SetOrganizationOwnerMutation, SetOrganizationOwnerMutationVariables>(client, SetOrganizationOwnerDocument, variables, headers)(),
+    ...options
+  }
+    )};
 
 useSetOrganizationOwnerMutation.getKey = () => ['setOrganizationOwner'];
 
-useSetOrganizationOwnerMutation.fetcher = (
-  client: GraphQLClient,
-  variables: SetOrganizationOwnerMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<SetOrganizationOwnerMutation, SetOrganizationOwnerMutationVariables>(
-    client,
-    SetOrganizationOwnerDocument,
-    variables,
-    headers,
-  );
+
+useSetOrganizationOwnerMutation.fetcher = (client: GraphQLClient, variables: SetOrganizationOwnerMutationVariables, headers?: RequestInit['headers']) => fetcher<SetOrganizationOwnerMutation, SetOrganizationOwnerMutationVariables>(client, SetOrganizationOwnerDocument, variables, headers);

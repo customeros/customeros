@@ -5,27 +5,21 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type CreateContractMutationVariables = Types.Exact<{
   input: Types.ContractInput;
 }>;
 
-export type CreateContractMutation = {
-  __typename?: 'Mutation';
-  contract_Create: { __typename?: 'Contract'; id: string };
-};
+
+export type CreateContractMutation = { __typename?: 'Mutation', contract_Create: { __typename?: 'Contract', id: string } };
+
+
 
 export const CreateContractDocument = `
     mutation createContract($input: ContractInput!) {
@@ -35,44 +29,24 @@ export const CreateContractDocument = `
 }
     `;
 
-export const useCreateContractMutation = <TError = unknown, TContext = unknown>(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    CreateContractMutation,
-    TError,
-    CreateContractMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) => {
-  return useMutation<
-    CreateContractMutation,
-    TError,
-    CreateContractMutationVariables,
-    TContext
-  >({
+export const useCreateContractMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<CreateContractMutation, TError, CreateContractMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<CreateContractMutation, TError, CreateContractMutationVariables, TContext>(
+      {
     mutationKey: ['createContract'],
-    mutationFn: (variables?: CreateContractMutationVariables) =>
-      fetcher<CreateContractMutation, CreateContractMutationVariables>(
-        client,
-        CreateContractDocument,
-        variables,
-        headers,
-      )(),
-    ...options,
-  });
-};
+    mutationFn: (variables?: CreateContractMutationVariables) => fetcher<CreateContractMutation, CreateContractMutationVariables>(client, CreateContractDocument, variables, headers)(),
+    ...options
+  }
+    )};
 
 useCreateContractMutation.getKey = () => ['createContract'];
 
-useCreateContractMutation.fetcher = (
-  client: GraphQLClient,
-  variables: CreateContractMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<CreateContractMutation, CreateContractMutationVariables>(
-    client,
-    CreateContractDocument,
-    variables,
-    headers,
-  );
+
+useCreateContractMutation.fetcher = (client: GraphQLClient, variables: CreateContractMutationVariables, headers?: RequestInit['headers']) => fetcher<CreateContractMutation, CreateContractMutationVariables>(client, CreateContractDocument, variables, headers);

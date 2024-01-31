@@ -63,7 +63,8 @@ export const TimelinePreviewBackdrop = ({
           position: 'absolute',
           marginInline: 'auto',
           top: '1rem',
-          width: '544px',
+          width: modalContent?.__typename === 'Invoice' ? '650px' : '544px',
+          height: modalContent?.__typename === 'Invoice' ? '90vh' : 'auto',
           minWidth: '544px',
         }}
       >
@@ -72,7 +73,8 @@ export const TimelinePreviewBackdrop = ({
           position='absolute'
           mx='auto'
           top='4'
-          w='544px'
+          w={modalContent?.__typename === 'Invoice' ? '650px' : '544px'}
+          h={modalContent?.__typename === 'Invoice' ? '90vh' : 'auto'}
           minW='544px'
           cursor='default'
           id='timeline-preview-card'

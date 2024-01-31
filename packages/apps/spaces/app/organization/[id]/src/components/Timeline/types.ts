@@ -3,6 +3,7 @@ import {
   Issue,
   Action,
   Meeting,
+  Invoice,
   LogEntry,
   InteractionEvent,
 } from '@graphql/types';
@@ -22,4 +23,5 @@ export type TimelineEvent =
   | Meeting
   | Action
   | IssueWithAliases
+  | Pick<Invoice, 'id' | '__typename'>
   | LogEntryWithAliases;

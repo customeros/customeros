@@ -5,31 +5,21 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type CreateDefaultMasterPlanMutationVariables = Types.Exact<{
   input: Types.MasterPlanInput;
 }>;
 
-export type CreateDefaultMasterPlanMutation = {
-  __typename?: 'Mutation';
-  masterPlan_CreateDefault: {
-    __typename?: 'MasterPlan';
-    id: string;
-    name: string;
-  };
-};
+
+export type CreateDefaultMasterPlanMutation = { __typename?: 'Mutation', masterPlan_CreateDefault: { __typename?: 'MasterPlan', id: string, name: string } };
+
+
 
 export const CreateDefaultMasterPlanDocument = `
     mutation createDefaultMasterPlan($input: MasterPlanInput!) {
@@ -41,42 +31,23 @@ export const CreateDefaultMasterPlanDocument = `
     `;
 
 export const useCreateDefaultMasterPlanMutation = <
-  TError = unknown,
-  TContext = unknown,
->(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    CreateDefaultMasterPlanMutation,
-    TError,
-    CreateDefaultMasterPlanMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) => {
-  return useMutation<
-    CreateDefaultMasterPlanMutation,
-    TError,
-    CreateDefaultMasterPlanMutationVariables,
-    TContext
-  >({
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<CreateDefaultMasterPlanMutation, TError, CreateDefaultMasterPlanMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<CreateDefaultMasterPlanMutation, TError, CreateDefaultMasterPlanMutationVariables, TContext>(
+      {
     mutationKey: ['createDefaultMasterPlan'],
-    mutationFn: (variables?: CreateDefaultMasterPlanMutationVariables) =>
-      fetcher<
-        CreateDefaultMasterPlanMutation,
-        CreateDefaultMasterPlanMutationVariables
-      >(client, CreateDefaultMasterPlanDocument, variables, headers)(),
-    ...options,
-  });
-};
+    mutationFn: (variables?: CreateDefaultMasterPlanMutationVariables) => fetcher<CreateDefaultMasterPlanMutation, CreateDefaultMasterPlanMutationVariables>(client, CreateDefaultMasterPlanDocument, variables, headers)(),
+    ...options
+  }
+    )};
 
 useCreateDefaultMasterPlanMutation.getKey = () => ['createDefaultMasterPlan'];
 
-useCreateDefaultMasterPlanMutation.fetcher = (
-  client: GraphQLClient,
-  variables: CreateDefaultMasterPlanMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<
-    CreateDefaultMasterPlanMutation,
-    CreateDefaultMasterPlanMutationVariables
-  >(client, CreateDefaultMasterPlanDocument, variables, headers);
+
+useCreateDefaultMasterPlanMutation.fetcher = (client: GraphQLClient, variables: CreateDefaultMasterPlanMutationVariables, headers?: RequestInit['headers']) => fetcher<CreateDefaultMasterPlanMutation, CreateDefaultMasterPlanMutationVariables>(client, CreateDefaultMasterPlanDocument, variables, headers);
