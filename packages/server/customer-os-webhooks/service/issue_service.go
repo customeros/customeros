@@ -232,7 +232,9 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 			}
 		}
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.IssueClient.UpsertIssue(ctx, &issueGrpcRequest)
+		_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
+			return s.grpcClients.IssueClient.UpsertIssue(ctx, &issueGrpcRequest)
+		})
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertIssue"))
@@ -246,7 +248,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				if issue != nil && findErr == nil {
 					break
 				}
-				time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+				time.Sleep(utils.BackOffExponentialDelay(i))
 			}
 		}
 	}
@@ -263,11 +265,13 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				s.log.Error(reason)
 			}
 			if followerId != "" && followerLabel == neo4jutil.NodeLabelUser && !utils.Contains(processedFollowerUserIds, followerId) {
-				_, err = s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
-					Tenant:    common.GetTenantFromContext(ctx),
-					IssueId:   issueId,
-					UserId:    followerId,
-					AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+				_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
+					return s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
+						Tenant:    common.GetTenantFromContext(ctx),
+						IssueId:   issueId,
+						UserId:    followerId,
+						AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+					})
 				})
 				processedFollowerUserIds = append(processedFollowerUserIds, followerId)
 				if err != nil {
@@ -290,11 +294,13 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				s.log.Error(reason)
 			}
 			if collaboratorId != "" && collaboratorLabel == neo4jutil.NodeLabelUser && !utils.Contains(processedFollowerUserIds, collaboratorId) {
-				_, err = s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
-					Tenant:    common.GetTenantFromContext(ctx),
-					IssueId:   issueId,
-					UserId:    collaboratorId,
-					AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+				_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
+					return s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
+						Tenant:    common.GetTenantFromContext(ctx),
+						IssueId:   issueId,
+						UserId:    collaboratorId,
+						AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+					})
 				})
 				processedFollowerUserIds = append(processedFollowerUserIds, collaboratorId)
 				if err != nil {
@@ -316,11 +322,13 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 			s.log.Error(reason)
 		}
 		if assigneeId != "" {
-			_, err = s.grpcClients.IssueClient.AddUserAssignee(ctx, &issuepb.AddUserAssigneeToIssueGrpcRequest{
-				Tenant:    common.GetTenantFromContext(ctx),
-				IssueId:   issueId,
-				UserId:    assigneeId,
-				AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+			_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
+				return s.grpcClients.IssueClient.AddUserAssignee(ctx, &issuepb.AddUserAssigneeToIssueGrpcRequest{
+					Tenant:    common.GetTenantFromContext(ctx),
+					IssueId:   issueId,
+					UserId:    assigneeId,
+					AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err, log.String("grpcMethod", "AddUserAssignee"))
