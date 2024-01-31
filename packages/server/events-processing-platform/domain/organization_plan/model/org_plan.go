@@ -42,4 +42,5 @@ type OrganizationPlanMilestone struct {
 	DueDate       time.Time                       `json:"dueDate"`
 	Items         []OrganizationPlanMilestoneItem `json:"items"`
 	StatusDetails OrganizationPlanDetails         `json:"statusDetails"`
+	Adhoc         bool                            `json:"adhoc"`
 }

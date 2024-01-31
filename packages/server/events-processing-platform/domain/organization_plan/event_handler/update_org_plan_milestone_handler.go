@@ -71,6 +71,7 @@ func (h *updateOrganizationPlanMilestoneCommandHandler) Handle(ctx context.Conte
 			GrpcItemsToDomainItems(request.Items),
 			extractOrganizationPlanMilestoneFieldsMask(request.FieldsMask),
 			request.Optional,
+			request.Adhoc,
 			request.Retired,
 			updatedAtNotNil,
 			request.DueDate.AsTime(),
