@@ -638,7 +638,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 				ContentType:    "application/pdf",
 			},
 		},
-	})
+	}, &span)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -683,11 +683,13 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context2.Context, e
 	if invoiceNode != nil {
 		invoiceEntity = neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
 	} else {
+		tracing.TraceErr(span, errors.New("invoiceNode is nil"))
 		return errors.New("invoiceNode is nil")
 	}
 
 	if invoiceEntity.PaymentDetails.PaymentLink == "" {
-		return errors.Wrap(err, "invoiceEntity.PaymentDetails.PaymentLink is empty")
+		tracing.TraceErr(span, errors.New("invoiceEntity.PaymentDetails.PaymentLink is empty"))
+		return errors.New("invoiceEntity.PaymentDetails.PaymentLink is empty")
 	}
 
 	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId, &span)
@@ -717,7 +719,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context2.Context, e
 				ContentType:    "application/pdf",
 			},
 		},
-	})
+	}, &span)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
