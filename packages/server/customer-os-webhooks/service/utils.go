@@ -16,7 +16,7 @@ func CallEventsPlatformGRPCWithRetry[T any](fn func() (T, error)) (T, error) {
 		if err == nil {
 			break
 		}
-		if grpcError, ok := status.FromError(err); ok && grpcError.Code() == codes.Unavailable {
+		if grpcError, ok := status.FromError(err); ok && (grpcError.Code() == codes.Unavailable || grpcError.Code() == codes.DeadlineExceeded) {
 			time.Sleep(utils.BackOffExponentialDelay(attempt))
 		} else {
 			break
