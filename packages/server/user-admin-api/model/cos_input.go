@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type WorkspaceInput struct {
 	Name      string  `json:"name"`
@@ -34,6 +36,20 @@ type TenantInput struct {
 	Name      string  `json:"name"`
 	AppSource *string `json:"appSource"`
 }
+type TenantBillingProfileInput struct {
+	LegalName                     string `json:"legalName"`
+	Email                         string `json:"email"`
+	AddressLine1                  string `json:"addressLine1"`
+	Locality                      string `json:"locality"`
+	Country                       string `json:"country"`
+	Zip                           string `json:"zip"`
+	DomesticPaymentsBankInfo      string `json:"domesticPaymentsBankInfo"`
+	InternationalPaymentsBankInfo string `json:"internationalPaymentsBankInfo"`
+}
+
+type NextDryRunInvoiceForContractInput struct {
+	ContractId string `json:"contractId"`
+}
 
 type ContactInput struct {
 	FirstName       *string     `json:"firstName,omitempty"`
@@ -50,6 +66,23 @@ type ContractInput struct {
 	ContractUrl      string    `json:"contractUrl"`
 	ServiceStartedAt time.Time `json:"serviceStartedAt"`
 	SignedAt         time.Time `json:"signedAt"`
+}
+
+type ContractUpdateInput struct {
+	ContractId            string     `json:"contractId,omitempty"`
+	Patch                 bool       `json:"patch"`
+	EndedAt               time.Time  `json:"endedAt"`
+	Currency              string     `json:"currency"`
+	InvoicingStartDate    *time.Time `json:"invoicingStartDate"`
+	BillingCycle          string     `json:"billingCycle"`
+	AddressLine1          string     `json:"addressLine1"`
+	AddressLine2          string     `json:"addressLine2"`
+	Locality              string     `json:"locality"`
+	Country               string     `json:"country"`
+	Zip                   string     `json:"zip"`
+	OrganizationLegalName string     `json:"organizationLegalName"`
+	InvoiceEmail          string     `json:"invoiceEmail"`
+	InvoiceNote           string     `json:"invoiceNote"`
 }
 
 type ServiceLineInput struct {

@@ -12,7 +12,8 @@ require (
 	github.com/machinebox/graphql v0.2.2
 	github.com/neo4j/neo4j-go-driver/v5 v5.17.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231120145804-10b6738ad211
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231120145804-10b6738ad211
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231227140027-08b87eac2360
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240130190820-d6caf9d4db61
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20231223141039-1ccda1d986b4
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/oauth2 v0.16.0

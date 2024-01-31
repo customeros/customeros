@@ -26,7 +26,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: ./packages/server/file-store-api
+      working-directory: ./packages/server/file-store-api
 
 jobs:
   test:
