@@ -192,6 +192,19 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 		return errors.New("tenantBillingProfiles is nil or empty")
 	}
 
+	contractCountry := contractEntity.Country
+	countryDbNode, _ := h.repositories.Neo4jRepositories.CountryReadRepository.GetCountryByCodeIfExists(ctx, contractCountry)
+	if countryDbNode != nil {
+		countryEntity := neo4jmapper.MapDbNodeToCountryEntity(countryDbNode)
+		contractCountry = countryEntity.Name
+	}
+	tenantBillingProfileCountry := tenantBillingProfileEntity.Country
+	countryDbNode, _ = h.repositories.Neo4jRepositories.CountryReadRepository.GetCountryByCodeIfExists(ctx, tenantBillingProfileCountry)
+	if countryDbNode != nil {
+		countryEntity := neo4jmapper.MapDbNodeToCountryEntity(countryDbNode)
+		tenantBillingProfileCountry = countryEntity.Name
+	}
+
 	err = h.callFillInvoice(ctx,
 		eventData.Tenant,
 		invoiceId,
@@ -199,11 +212,11 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 		tenantBillingProfileEntity.InternationalPaymentsBankInfo,
 		contractEntity.OrganizationLegalName,
 		contractEntity.InvoiceEmail,
-		contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractEntity.Country,
+		contractEntity.AddressLine1, contractEntity.AddressLine2, contractEntity.Zip, contractEntity.Locality, contractCountry,
 		tenantSettingsEntity.LogoUrl,
 		tenantBillingProfileEntity.LegalName,
 		tenantBillingProfileEntity.Email,
-		tenantBillingProfileEntity.AddressLine1, tenantBillingProfileEntity.AddressLine2, tenantBillingProfileEntity.Zip, tenantBillingProfileEntity.Locality, tenantBillingProfileEntity.Country,
+		tenantBillingProfileEntity.AddressLine1, tenantBillingProfileEntity.AddressLine2, tenantBillingProfileEntity.Zip, tenantBillingProfileEntity.Locality, tenantBillingProfileCountry,
 		contractEntity.InvoiceNote,
 		amount,
 		vat,
