@@ -2,7 +2,6 @@ package invoice
 
 import (
 	"bytes"
-	context2 "context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -672,7 +671,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	return nil
 }
 
-func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context2.Context, evt eventstore.Event) error {
+func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoicePayNotificationV1")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
