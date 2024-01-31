@@ -59,6 +59,12 @@ type CreateContractResponse struct {
 	} `json:"contract_Create"`
 }
 
+type UpdateContractResponse struct {
+	ContractUpdate struct {
+		Id string `json:"id"`
+	} `json:"contract_Update"`
+}
+
 type CreateServiceLineItemResponse struct {
 	ServiceLineItemCreate struct {
 		Id string `json:"id"`

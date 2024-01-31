@@ -23,6 +23,6 @@ func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithConte
 		GrpcClients:      grpcClients,
 		CommonServices:   commonService.InitServices(db, driver),
 		AuthServices:     authServices.InitServices(nil, db),
-		CustomerOsClient: NewCustomerOsClient(cfg),
+		CustomerOsClient: NewCustomerOsClient(cfg, driver),
 	}
 }

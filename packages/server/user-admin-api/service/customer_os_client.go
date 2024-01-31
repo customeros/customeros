@@ -4,6 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/machinebox/graphql"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
 
@@ -30,7 +33,11 @@ type CustomerOsClient interface {
 	CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error)
 	CreateOrganization(tenant, username, organizationName, domain string) (string, error)
 	UpdateOrganizationOnboardingStatus(tenant, username string, onboardingStatus model.OrganizationUpdateOnboardingStatus) (string, error)
+
 	CreateContract(tenant, username string, input model.ContractInput) (string, error)
+	UpdateContract(tenant, username string, input model.ContractUpdateInput) (string, error)
+	GetContractById(tenant, contractId string) (*dbtype.Node, error)
+
 	CreateServiceLine(tenant, username string, input interface{}) (string, error)
 	CreateMeeting(tenant, username string, input model.MeetingInput) (string, error)
 
@@ -47,12 +54,15 @@ type CustomerOsClient interface {
 type customerOsClient struct {
 	cfg           *config.Config
 	graphqlClient *graphql.Client
+	driver        *neo4j.DriverWithContext
+	database      string
 }
 
-func NewCustomerOsClient(cfg *config.Config) CustomerOsClient {
+func NewCustomerOsClient(cfg *config.Config, driver *neo4j.DriverWithContext) CustomerOsClient {
 	return &customerOsClient{
 		cfg:           cfg,
 		graphqlClient: graphql.NewClient(cfg.CustomerOS.CustomerOsAPI),
+		driver:        driver,
 	}
 }
 
@@ -381,6 +391,36 @@ func (cosService *customerOsClient) CreateContact(tenant, username, firstName, l
 	return id, nil
 }
 
+func (s *customerOsClient) GetContractById(tenant, contractId string) (*dbtype.Node, error) {
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id}) RETURN c`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     contractId,
+	}
+
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+	session := s.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (s *customerOsClient) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
+	return utils.NewNeo4jReadSession(ctx, *s.driver, utils.WithDatabaseName(s.database))
+}
+
 func (s *customerOsClient) CreateOrganization(tenant, username, organizationName, domain string) (string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateOrganization($organizationName: String!, $domain: String!) {
@@ -472,6 +512,34 @@ func (s *customerOsClient) CreateContract(tenant, username string, input model.C
 	}
 
 	return graphqlResponse.ContractCreate.Id, nil
+}
+
+func (s *customerOsClient) UpdateContract(tenant, username string, input model.ContractUpdateInput) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation updateContract($input: ContractUpdateInput!) {
+				contract_Update(input: $input) {
+					id
+			}
+		}`)
+
+	graphqlRequest.Var("input", input)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.UpdateContractResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("contract_Update: %w", err)
+	}
+
+	return graphqlResponse.ContractUpdate.Id, nil
 }
 
 func (s *customerOsClient) CreateServiceLine(tenant, username string, input interface{}) (string, error) {

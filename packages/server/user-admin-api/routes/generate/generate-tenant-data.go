@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
@@ -14,6 +15,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"time"
 )
 
 func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
@@ -170,6 +173,8 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 			}
 
 			//create Contracts with Service Lines in org
+			//now := utils.Now()
+
 			for _, contract := range organization.Contracts {
 				contractInput := cosModel.ContractInput{
 					OrganizationId:   organizationId,
@@ -187,7 +192,37 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 					})
 					return
 				}
+				if contractId == "" {
+					context.JSON(500, gin.H{
+						"error": "contractId is nil",
+					})
+					return
+				}
 
+				waitForNodeToBeWritten(services, tenant, contractId)
+
+				contractUpdateInput := cosModel.ContractUpdateInput{
+					ContractId:            contractId,
+					Patch:                 true,
+					InvoicingStartDate:    contract.InvoicingStartDate,
+					BillingCycle:          contract.BillingCycle,
+					Currency:              contract.Currency,
+					AddressLine1:          contract.AddressLine1,
+					AddressLine2:          contract.AddressLine2,
+					Zip:                   contract.Zip,
+					Locality:              contract.Locality,
+					Country:               contract.Country,
+					OrganizationLegalName: contract.OrganizationLegalName,
+					InvoiceEmail:          contract.InvoiceEmail,
+					InvoiceNote:           contract.InvoiceNote,
+				}
+				contractId, err = services.CustomerOsClient.UpdateContract(tenant, username, contractUpdateInput)
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
 				if contractId == "" {
 					context.JSON(500, gin.H{
 						"error": "contractId is nil",
@@ -680,6 +715,27 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 			"tenant": "tenant initiated",
 		})
 	})
+}
+
+func waitForNodeToBeWritten(services *service.Services, tenant string, contractId string) {
+	var _ *dbtype.Node
+	var maxAttempts = 5
+	var attempt = 0
+
+	for attempt < maxAttempts {
+		var err error
+		_, err = services.CustomerOsClient.GetContractById(tenant, contractId)
+		if err != nil {
+			attempt++
+			time.Sleep(time.Second * 2)
+			if attempt == maxAttempts {
+				fmt.Println("Failed to create contracts.")
+				os.Exit(1)
+			}
+		} else {
+			break
+		}
+	}
 }
 
 func validateRequestAndGetFileBytes(context *gin.Context) (*SourceData, error) {
