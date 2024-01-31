@@ -3,6 +3,7 @@ import { useForm } from 'react-inverted-form';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
+import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
@@ -63,6 +64,7 @@ export const BillingDetails = ({
   const client = getGraphQLClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currencyOptions = useMemo(() => getCurrencyOptions(), []);
+  const { data: tenantBillingProfile } = useTenantBillingProfilesQuery(client);
 
   const updateContract = useUpdateContractMutation(client, {
     onError: (error) => {
@@ -149,17 +151,37 @@ export const BillingDetails = ({
       dueDate: new Date().toISOString(),
       subtotal: 100,
       issueDate: new Date().toISOString(),
-      from: {
-        addressLine: '29 Maple Lane',
-        addressLine2: 'Springfield, Haven County',
-        locality: 'San Francisco',
-        zip: '89302',
-        country: 'United States',
-        email: 'invoices@acme.com',
-        name: 'Acme Corp.',
-      },
+      from: tenantBillingProfile?.tenantBillingProfiles?.[0]
+        ? {
+            addressLine:
+              tenantBillingProfile?.tenantBillingProfiles?.[0]?.addressLine1 ??
+              '',
+            addressLine2:
+              tenantBillingProfile?.tenantBillingProfiles?.[0].addressLine2,
+            locality:
+              tenantBillingProfile?.tenantBillingProfiles?.[0]?.locality ?? '',
+            zip: tenantBillingProfile?.tenantBillingProfiles?.[0]?.zip ?? '',
+            country: tenantBillingProfile?.tenantBillingProfiles?.[0].country
+              ? countryOptions.find(
+                  (country) =>
+                    country.value ===
+                    tenantBillingProfile?.tenantBillingProfiles?.[0]?.country,
+                )?.label
+              : '',
+            email: '',
+            name: tenantBillingProfile?.tenantBillingProfiles?.[0]?.legalName,
+          }
+        : {
+            addressLine: '29 Maple Lane',
+            addressLine2: 'Springfield, Haven County',
+            locality: 'San Francisco',
+            zip: '89302',
+            country: 'United States',
+            email: 'invoices@acme.com',
+            name: 'Acme Corp.',
+          },
     }),
-    [],
+    [tenantBillingProfile?.tenantBillingProfiles?.[0]],
   );
 
   return (

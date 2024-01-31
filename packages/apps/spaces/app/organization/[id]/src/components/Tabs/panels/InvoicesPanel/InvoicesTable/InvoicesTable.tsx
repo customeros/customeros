@@ -20,7 +20,7 @@ export const InvoicesTable: FC<{
   const tableRef = useRef(null);
 
   if (totalElements === 0) {
-    return <EmptyState maxW={440} />;
+    return <EmptyState maxW={448} />;
   }
 
   return (

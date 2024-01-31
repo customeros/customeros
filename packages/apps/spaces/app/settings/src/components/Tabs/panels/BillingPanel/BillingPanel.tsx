@@ -4,6 +4,7 @@ import { useForm } from 'react-inverted-form';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
+import { useDebounce } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
@@ -15,7 +16,6 @@ import { FormInput } from '@ui/form/Input';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Heading } from '@ui/typography/Heading';
 import { TenantBillingProfile } from '@graphql/types';
-import { useThrottle } from '@shared/hooks/useThrottle';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
@@ -31,7 +31,7 @@ export const BillingPanel = () => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
 
-  const { data, isFetched } = useTenantBillingProfilesQuery(client);
+  const { data, isFetchedAfterMount } = useTenantBillingProfilesQuery(client);
   const [isInvoiceProviderFocused, setIsInvoiceProviderFocused] =
     useState<boolean>(false);
   const [isInvoiceProviderDetailsHovered, setIsInvoiceProviderDetailsHovered] =
@@ -131,20 +131,16 @@ export const BillingPanel = () => {
 
   const newDefaults = new TenantBillingDetailsDto();
 
-  const handleUpdateData = useThrottle(
-    (d: TenantBillingDetails) => {
-      const payload = TenantBillingDetailsDto.toPayload(d);
+  const handleUpdateData = useDebounce((d: TenantBillingDetails) => {
+    const payload = TenantBillingDetailsDto.toPayload(d);
 
-      updateBillingProfileMutation.mutate({
-        input: {
-          id: tenantBillingProfileId,
-          ...payload,
-        },
-      });
-    },
-    500,
-    [tenantBillingProfileId],
-  );
+    updateBillingProfileMutation.mutate({
+      input: {
+        id: tenantBillingProfileId,
+        ...payload,
+      },
+    });
+  }, 500);
   const { state, setDefaultValues } = useForm({
     formId,
     defaultValues: newDefaults,
@@ -179,16 +175,20 @@ export const BillingPanel = () => {
   });
 
   useEffect(() => {
-    if (isFetched && !data?.tenantBillingProfiles.length) {
+    return handleUpdateData.flush();
+  }, []);
+
+  useEffect(() => {
+    if (isFetchedAfterMount && !data?.tenantBillingProfiles.length) {
       createBillingProfileMutation.mutate({
         input: {},
       });
     }
-  }, [isFetched, data]);
+  }, [isFetchedAfterMount, data]);
 
   useEffect(() => {
     if (
-      isFetched &&
+      isFetchedAfterMount &&
       !!data?.tenantBillingProfiles.length &&
       data?.tenantBillingProfiles?.[0]
     ) {
@@ -197,7 +197,7 @@ export const BillingPanel = () => {
       );
       setDefaultValues(newDefaults);
     }
-  }, [isFetched, data]);
+  }, [isFetchedAfterMount, data]);
 
   return (
     <Flex>
@@ -332,15 +332,22 @@ export const BillingPanel = () => {
       <Box borderRight='1px solid' borderColor='gray.300' maxH='100vh'>
         <Invoice
           isInvoiceProviderFocused={
-            isInvoiceProviderFocused || isInvoiceProviderDetailsHovered
+            isInvoiceProviderFocused ||
+            (isInvoiceProviderDetailsHovered &&
+              !isInternationalBankingDetailsSectionFocused &&
+              !isDomesticBankingDetailsSectionFocused)
           }
           isDomesticBankingDetailsSectionFocused={
             isDomesticBankingDetailsSectionFocused ||
-            isDomesticBankingDetailsSectionHovered
+            (isDomesticBankingDetailsSectionHovered &&
+              !isInvoiceProviderFocused &&
+              !isInternationalBankingDetailsSectionFocused)
           }
           isInternationalBankingDetailsSectionFocused={
             isInternationalBankingDetailsSectionFocused ||
-            isInternationalBankingDetailsSectionHovered
+            (isInternationalBankingDetailsSectionHovered &&
+              !isInvoiceProviderFocused &&
+              !isDomesticBankingDetailsSectionFocused)
           }
           from={{
             addressLine: state.values.addressLine1 ?? '',

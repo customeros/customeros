@@ -18,7 +18,7 @@ type Address = {
   zip: string;
   email: string;
   name?: string;
-  country: string;
+  country?: string;
   locality: string;
   addressLine: string;
   addressLine2?: string;
@@ -179,7 +179,8 @@ export function Invoice({
                 </Text>
               </Text>
               <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
-                {billedTo.locality} {billedTo.locality && ', '} {billedTo.zip}
+                {billedTo.locality}
+                {billedTo.locality && billedTo.zip && ', '} {billedTo.zip}
               </Text>
               <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
                 {billedTo.country}
@@ -229,7 +230,8 @@ export function Invoice({
                 </Text>
               </Text>
               <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
-                {from.locality} {from.locality && ', '} {from.zip}
+                {from.locality}
+                {from.locality && from.zip && ', '} {from.zip}
               </Text>
               <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
                 {from.country}
@@ -306,76 +308,87 @@ export function Invoice({
 
       {(domesticBankingDetails || internationalBankingDetails) && (
         <Grid
-          templateColumns={'1fr 1fr'}
+          templateColumns={
+            !domesticBankingDetails || !internationalBankingDetails
+              ? '1fr'
+              : '1fr 1fr'
+          }
           marginTop={6}
           minH={100}
           maxW={600}
           filter={isOutOfFocus ? 'blur(2px)' : 'none'}
           transition='filter 0.25s ease-in-out'
         >
-          <GridItem
-            p={3}
-            borderRight='1px solid'
-            borderTop='1px solid'
-            borderBottom='1px solid'
-            borderColor='gray.300'
-            filter={
-              isInternationalBankingDetailsSectionFocused ? 'blur(2px)' : 'none'
-            }
-            transition='filter 0.25s ease-in-out'
-            position='relative'
-            sx={{
-              '&:after': {
-                content: '""',
-                bg: 'transparent',
-                border: '2px solid',
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: 0,
-                right: 0,
-                opacity: isDomesticBankingDetailsSectionFocused ? 1 : 0,
-                transition: 'opacity 0.25s ease-in-out',
-              },
-            }}
-          >
-            <Text fontSize='xs' fontWeight='semibold'>
-              Domestic Payments
-            </Text>
-            <Text fontSize='xs' whiteSpace='pre-wrap'>
-              {domesticBankingDetails}
-            </Text>
-          </GridItem>
-          <GridItem
-            p={3}
-            borderTop='1px solid'
-            borderBottom='1px solid'
-            borderColor='gray.300'
-            filter={
-              isDomesticBankingDetailsSectionFocused ? 'blur(2px)' : 'none'
-            }
-            transition='filter 0.25s ease-in-out'
-            position='relative'
-            sx={{
-              '&:after': {
-                content: '""',
-                bg: 'transparent',
-                border: '2px solid',
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: 0,
-                right: -4,
-                opacity: isInternationalBankingDetailsSectionFocused ? 1 : 0,
-                transition: 'opacity 0.25s ease-in-out',
-              },
-            }}
-          >
-            <Text fontSize='xs' fontWeight='semibold'>
-              International Payments
-            </Text>
-            <Text fontSize='xs'>{internationalBankingDetails}</Text>
-          </GridItem>
+          {domesticBankingDetails && (
+            <GridItem
+              p={3}
+              borderRight='1px solid'
+              borderTop='1px solid'
+              borderBottom='1px solid'
+              borderColor='gray.300'
+              filter={
+                isInternationalBankingDetailsSectionFocused
+                  ? 'blur(2px)'
+                  : 'none'
+              }
+              transition='filter 0.25s ease-in-out'
+              position='relative'
+              sx={{
+                '&:after': {
+                  content: '""',
+                  bg: 'transparent',
+                  border: '2px solid',
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  opacity: isDomesticBankingDetailsSectionFocused ? 1 : 0,
+                  transition: 'opacity 0.25s ease-in-out',
+                },
+              }}
+            >
+              <Text fontSize='xs' fontWeight='semibold'>
+                Domestic Payments
+              </Text>
+              <Text fontSize='xs' whiteSpace='pre-wrap'>
+                {domesticBankingDetails}
+              </Text>
+            </GridItem>
+          )}
+
+          {internationalBankingDetails && (
+            <GridItem
+              p={3}
+              borderTop='1px solid'
+              borderBottom='1px solid'
+              borderColor='gray.300'
+              filter={
+                isDomesticBankingDetailsSectionFocused ? 'blur(2px)' : 'none'
+              }
+              transition='filter 0.25s ease-in-out'
+              position='relative'
+              sx={{
+                '&:after': {
+                  content: '""',
+                  bg: 'transparent',
+                  border: '2px solid',
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  left: 0,
+                  right: domesticBankingDetails ? -4 : 0,
+                  opacity: isInternationalBankingDetailsSectionFocused ? 1 : 0,
+                  transition: 'opacity 0.25s ease-in-out',
+                },
+              }}
+            >
+              <Text fontSize='xs' fontWeight='semibold'>
+                International Payments
+              </Text>
+              <Text fontSize='xs'>{internationalBankingDetails}</Text>
+            </GridItem>
+          )}
         </Grid>
       )}
     </Flex>
