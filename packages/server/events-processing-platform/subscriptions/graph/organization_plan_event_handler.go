@@ -4,10 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
@@ -129,8 +126,25 @@ func (h *OrganizationPlanEventHandler) OnCreateMilestone(ctx context.Context, ev
 
 	source := helper.GetSource(eventData.SourceFields.Source)
 	appSource := helper.GetAppSource(eventData.SourceFields.AppSource)
-	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.CreateMilestone(ctx, eventData.Tenant, eventData.OrganizationPlanId, eventData.MilestoneId,
-		eventData.Name, source, appSource, eventData.Order, convertItemsStrToObject(eventData.Items), eventData.Optional, eventData.CreatedAt, eventData.DueDate, entity.OrganizationPlanMilestoneStatusDetails{Status: model.MilestoneNotStarted.String(), UpdatedAt: eventData.CreatedAt, Comments: ""})
+	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.CreateMilestone(
+		ctx,
+		eventData.Tenant,
+		eventData.OrganizationPlanId,
+		eventData.MilestoneId,
+		eventData.Name,
+		source,
+		appSource,
+		eventData.Order,
+		convertItemsStrToObject(eventData.Items),
+		eventData.Optional,
+		eventData.Adhoc,
+		eventData.CreatedAt,
+		eventData.DueDate,
+		entity.OrganizationPlanMilestoneStatusDetails{
+			Status:    model.MilestoneNotStarted.String(),
+			UpdatedAt: eventData.CreatedAt,
+			Comments:  "",
+		})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving organization plan milestone %s: %s", eventData.OrganizationPlanId, err.Error())
@@ -165,6 +179,7 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 			UpdatedAt: eventData.StatusDetails.UpdatedAt,
 			Comments:  eventData.StatusDetails.Comments,
 		},
+		Adhoc:               eventData.Adhoc,
 		UpdateName:          eventData.UpdateName(),
 		UpdateOrder:         eventData.UpdateOrder(),
 		UpdateDueDate:       eventData.UpdateDueDate(),
@@ -172,6 +187,7 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		UpdateOptional:      eventData.UpdateOptional(),
 		UpdateRetired:       eventData.UpdateRetired(),
 		UpdateStatusDetails: eventData.UpdateStatusDetails(),
+		UpdateAdhoc:         eventData.UpdateAdhoc(),
 	}
 	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, eventData.OrganizationPlanId, eventData.MilestoneId, data)
 	if err != nil {
@@ -213,24 +229,25 @@ func (h *OrganizationPlanEventHandler) OnReorderMilestones(ctx context.Context, 
 	return nil
 }
 
-func convertMasterPlanMilestonesToOrganizationPlanMilestones(masterPlanMilestonesNodes []*dbtype.Node, createdAt time.Time) []entity.OrganizationPlanMilestoneEntity {
-	organizationPlanMilestones := make([]entity.OrganizationPlanMilestoneEntity, len(masterPlanMilestonesNodes))
-	for i, masterPlanMilestoneNode := range masterPlanMilestonesNodes {
-		mpMilestone := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneNode)
-		organizationPlanMilestones[i] = entity.OrganizationPlanMilestoneEntity{
-			Id:            uuid.New().String(),
-			Name:          mpMilestone.Name,
-			Order:         mpMilestone.Order,
-			DueDate:       createdAt.Add(time.Duration(mpMilestone.DurationHours) * time.Hour),
-			Items:         convertItemsStrToObject(mpMilestone.Items),
-			Optional:      mpMilestone.Optional,
-			CreatedAt:     createdAt,
-			UpdatedAt:     createdAt,
-			StatusDetails: entity.OrganizationPlanMilestoneStatusDetails{Status: model.MilestoneNotStarted.String(), UpdatedAt: createdAt, Comments: ""},
-		}
-	}
-	return organizationPlanMilestones
-}
+// func convertMasterPlanMilestonesToOrganizationPlanMilestones(masterPlanMilestonesNodes []*dbtype.Node, createdAt time.Time) []entity.OrganizationPlanMilestoneEntity {
+// 	organizationPlanMilestones := make([]entity.OrganizationPlanMilestoneEntity, len(masterPlanMilestonesNodes))
+// 	for i, masterPlanMilestoneNode := range masterPlanMilestonesNodes {
+// 		mpMilestone := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneNode)
+// 		organizationPlanMilestones[i] = entity.OrganizationPlanMilestoneEntity{
+// 			Id:            uuid.New().String(),
+// 			Name:          mpMilestone.Name,
+// 			Order:         mpMilestone.Order,
+// 			DueDate:       createdAt.Add(time.Duration(mpMilestone.DurationHours) * time.Hour),
+// 			Items:         convertItemsStrToObject(mpMilestone.Items),
+// 			Optional:      mpMilestone.Optional,
+// 			CreatedAt:     createdAt,
+// 			UpdatedAt:     createdAt,
+// 			StatusDetails: entity.OrganizationPlanMilestoneStatusDetails{Status: model.MilestoneNotStarted.String(), UpdatedAt: createdAt, Comments: ""},
+// 			Adhoc:         false,
+// 		}
+// 	}
+// 	return organizationPlanMilestones
+// }
 
 func convertItemsStrToObject(items []string) []entity.OrganizationPlanMilestoneItem {
 	milestoneItems := make([]entity.OrganizationPlanMilestoneItem, len(items))

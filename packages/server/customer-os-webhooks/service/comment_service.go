@@ -201,7 +201,9 @@ func (s *commentService) syncComment(ctx context.Context, syncMutex *sync.Mutex,
 			request.CommentedIssueId = utils.StringPtr(commentedIssueId)
 		}
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		response, err := s.grpcClients.CommentClient.UpsertComment(ctx, &request)
+		response, err := CallEventsPlatformGRPCWithRetry[*commentpb.CommentIdGrpcResponse](func() (*commentpb.CommentIdGrpcResponse, error) {
+			return s.grpcClients.CommentClient.UpsertComment(ctx, &request)
+		})
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertComment"))
@@ -217,7 +219,7 @@ func (s *commentService) syncComment(ctx context.Context, syncMutex *sync.Mutex,
 				if comment != nil && forErr == nil {
 					break
 				}
-				time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+				time.Sleep(utils.BackOffExponentialDelay(i))
 			}
 		}
 	}

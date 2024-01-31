@@ -31,6 +31,7 @@ type OrganizationPlanMilestoneEntity struct {
 	SourceOfTruth DataSource
 	AppSource     string
 	StatusDetails OrganizationPlanMilestoneStatusDetails
+	Adhoc         bool
 }
 
 type OrganizationPlanMilestoneEntities []OrganizationPlanMilestoneEntity

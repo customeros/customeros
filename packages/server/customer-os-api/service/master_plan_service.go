@@ -488,10 +488,26 @@ func (s *masterPlanService) CreateDefaultMasterPlan(ctx context.Context) (string
 	WaitForObjectCreationAndLogSpan(ctx, s.repositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
 	mid := response.Id
 
-	milestones := []string{"milestone1", "milestone2", "milestone3"}
+	milestones := []map[string]any{
+		{"text": "Kickoff activities", "order": 0, "durationHours": 24, "items": []string{
+			"Identify success criteria",
+			"Validate onboarding plan",
+			"Get list of admins",
+			"Get list of users",
+			"Validate training plan",
+		}},
+		{"text": "Add users to organization", "order": 1, "durationHours": 72, "items": []string{}},
+		{"text": "Admin training session", "order": 2, "durationHours": 120, "items": []string{}},
+		{"text": "User training session", "order": 3, "durationHours": 168, "items": []string{}},
+		{"text": "Office hours", "order": 4, "durationHours": 192, "items": []string{}},
+	}
 
 	for _, milestone := range milestones {
-		grpcRequestCreateMilestone := NewDefaultMasterPlanMilestone(mid, milestone, common.GetUserIdFromContext(ctx), common.GetTenantFromContext(ctx), 1, []string{"item1", "item2"})
+		text := milestone["text"].(string)
+		order := milestone["order"].(int64)
+		durationHours := milestone["durationHours"].(int64)
+		items := milestone["items"].([]string)
+		grpcRequestCreateMilestone := newDefaultMasterPlanMilestone(mid, text, common.GetUserIdFromContext(ctx), common.GetTenantFromContext(ctx), order, items, durationHours)
 		_, err = s.grpcClients.MasterPlanClient.CreateMasterPlanMilestone(ctx, &grpcRequestCreateMilestone)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -501,19 +517,20 @@ func (s *masterPlanService) CreateDefaultMasterPlan(ctx context.Context) (string
 	return response.Id, nil
 }
 
-func NewDefaultMasterPlanMilestone(
+func newDefaultMasterPlanMilestone(
 	mid,
 	name,
 	loggedInUserId,
 	tenant string,
 	order int64,
 	items []string,
+	durationHours int64,
 ) masterplanpb.CreateMasterPlanMilestoneGrpcRequest {
 	return masterplanpb.CreateMasterPlanMilestoneGrpcRequest{
 		Name:           name,
 		Optional:       false,
 		Order:          order,
-		DurationHours:  24,
+		DurationHours:  durationHours,
 		Items:          items,
 		MasterPlanId:   mid,
 		LoggedInUserId: loggedInUserId,

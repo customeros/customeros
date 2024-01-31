@@ -477,14 +477,15 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"CustomerEmail":                 invoiceEntity.Customer.Email,
 		"CustomerAddressLine1":          invoiceEntity.Customer.AddressLine1,
 		"CustomerAddressLine2":          invoiceEntity.Customer.AddressLine2,
-		"CustomerAddressLine3":          utils.JoinNonEmpty(", ", invoiceEntity.Customer.Zip, invoiceEntity.Customer.Locality, invoiceEntity.Customer.Country),
+		"CustomerAddressLine3":          utils.JoinNonEmpty(", ", invoiceEntity.Customer.Locality, invoiceEntity.Customer.Zip),
+		"CustomerCountry":               invoiceEntity.Customer.Country,
 		"ProviderLogoUrl":               invoiceEntity.Provider.LogoUrl,
 		"ProviderLogoExtension":         GetFileExtensionFromUrl(invoiceEntity.Provider.LogoUrl),
 		"ProviderName":                  invoiceEntity.Provider.Name,
 		"ProviderEmail":                 invoiceEntity.Provider.Email,
 		"ProviderAddressLine1":          invoiceEntity.Provider.AddressLine1,
 		"ProviderAddressLine2":          invoiceEntity.Provider.AddressLine2,
-		"ProviderAddressLine3":          utils.JoinNonEmpty(", ", invoiceEntity.Provider.Zip, invoiceEntity.Provider.Locality, invoiceEntity.Provider.Country),
+		"ProviderAddressLine3":          utils.JoinNonEmpty(", ", invoiceEntity.Provider.Locality, invoiceEntity.Provider.Zip, invoiceEntity.Provider.Country),
 		"InvoiceNumber":                 invoiceEntity.Number,
 		"InvoiceIssueDate":              invoiceEntity.CreatedAt.Format("02 Jan 2006"),
 		"InvoiceDueDate":                invoiceEntity.DueDate.Format("02 Jan 2006"),
@@ -547,7 +548,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		basePath = basePath + "/DRY_RUN"
 	}
 
-	fileDTO, err := h.fsc.UploadSingleFileBytes(eventData.Tenant, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", *pdfBytes, &span)
+	fileDTO, err := h.fsc.UploadSingleFileBytes(eventData.Tenant, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", *pdfBytes, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.UploadSingleFileBytes")
@@ -611,7 +612,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return errors.New("invoiceNode is nil")
 	}
 
-	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId, &span)
+	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error downloading invoice pdf for invoice %s: %s", invoiceId, err.Error())
@@ -638,7 +639,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 				ContentType:    "application/pdf",
 			},
 		},
-	})
+	}, span)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -683,14 +684,16 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context2.Context, e
 	if invoiceNode != nil {
 		invoiceEntity = neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
 	} else {
+		tracing.TraceErr(span, errors.New("invoiceNode is nil"))
 		return errors.New("invoiceNode is nil")
 	}
 
 	if invoiceEntity.PaymentDetails.PaymentLink == "" {
-		return errors.Wrap(err, "invoiceEntity.PaymentDetails.PaymentLink is empty")
+		tracing.TraceErr(span, errors.New("invoiceEntity.PaymentDetails.PaymentLink is empty"))
+		return errors.New("invoiceEntity.PaymentDetails.PaymentLink is empty")
 	}
 
-	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId, &span)
+	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error downloading invoice pdf for invoice %s: %s", invoiceId, err.Error())
@@ -717,7 +720,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context2.Context, e
 				ContentType:    "application/pdf",
 			},
 		},
-	})
+	}, span)
 
 	if err != nil {
 		tracing.TraceErr(span, err)

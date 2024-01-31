@@ -254,7 +254,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 		// Create or update organization
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
+		upsertOrganizationGrpcRequest := organizationpb.UpsertOrganizationGrpcRequest{
 			Tenant:             tenant,
 			Id:                 organizationId,
 			LoggedInUserId:     "",
@@ -294,6 +294,9 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				ExternalSource:   orgInput.ExternalSourceEntity,
 				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
 			},
+		}
+		_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return s.grpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationGrpcRequest)
 		})
 		if err != nil {
 			failedSync = true
@@ -308,7 +311,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				if organization != nil && findErr == nil {
 					break
 				}
-				time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+				time.Sleep(utils.BackOffExponentialDelay(i))
 			}
 		}
 	}
@@ -322,11 +325,13 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				continue
 			}
 			if !domainInUse {
-				_, err = s.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
-					Tenant:         common.GetTenantFromContext(ctx),
-					OrganizationId: organizationId,
-					Domain:         domain,
-					AppSource:      appSource,
+				_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+					return s.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
+						Tenant:         common.GetTenantFromContext(ctx),
+						OrganizationId: organizationId,
+						Domain:         domain,
+						AppSource:      appSource,
+					})
 				})
 				if err != nil {
 					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkDomainToOrganization"))
@@ -337,12 +342,14 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	if !failedSync && orgInput.IsSubOrg() {
 		parentOrganizationId, _ := s.GetIdForReferencedOrganization(ctx, tenant, orgInput.ExternalSystem, orgInput.ParentOrganization.Organization)
 		if parentOrganizationId != "" {
-			_, err = s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
-				Tenant:               common.GetTenantFromContext(ctx),
-				OrganizationId:       organizationId,
-				ParentOrganizationId: parentOrganizationId,
-				Type:                 orgInput.ParentOrganization.Type,
-				AppSource:            appSource,
+			_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
+					Tenant:               common.GetTenantFromContext(ctx),
+					OrganizationId:       organizationId,
+					ParentOrganizationId: parentOrganizationId,
+					Type:                 orgInput.ParentOrganization.Type,
+					AppSource:            appSource,
+				})
 			})
 			if err != nil {
 				failedSync = true
@@ -364,10 +371,12 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			}
 			// Link email to organization
 			if emailId != "" {
-				_, err = s.grpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
-					Tenant:         common.GetTenantFromContext(ctx),
-					OrganizationId: organizationId,
-					EmailId:        emailId,
+				_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+					return s.grpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
+						Tenant:         common.GetTenantFromContext(ctx),
+						OrganizationId: organizationId,
+						EmailId:        emailId,
+					})
 				})
 				if err != nil {
 					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkEmailToOrganization"))
@@ -390,12 +399,14 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				}
 				// Link phone number to organization
 				if phoneNumberId != "" {
-					_, err = s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(ctx, &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
-						Tenant:         common.GetTenantFromContext(ctx),
-						OrganizationId: organizationId,
-						PhoneNumberId:  phoneNumberId,
-						Primary:        phoneNumberDtls.Primary,
-						Label:          phoneNumberDtls.Label,
+					_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+						return s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(ctx, &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
+							Tenant:         common.GetTenantFromContext(ctx),
+							OrganizationId: organizationId,
+							PhoneNumberId:  phoneNumberId,
+							Primary:        phoneNumberDtls.Primary,
+							Label:          phoneNumberDtls.Label,
+						})
 					})
 					if err != nil {
 						failedSync = true
@@ -429,10 +440,12 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 			// Link location to organization
 			if locationId != "" {
-				_, err = s.grpcClients.OrganizationClient.LinkLocationToOrganization(ctx, &organizationpb.LinkLocationToOrganizationGrpcRequest{
-					Tenant:         common.GetTenantFromContext(ctx),
-					OrganizationId: organizationId,
-					LocationId:     locationId,
+				_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+					return s.grpcClients.OrganizationClient.LinkLocationToOrganization(ctx, &organizationpb.LinkLocationToOrganizationGrpcRequest{
+						Tenant:         common.GetTenantFromContext(ctx),
+						OrganizationId: organizationId,
+						LocationId:     locationId,
+					})
 				})
 				if err != nil {
 					failedSync = true

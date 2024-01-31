@@ -16,4 +16,5 @@ const (
 	FieldMaskDueDate       = "dueDate"
 	FieldMaskItems         = "items"
 	FieldMaskStatusDetails = "statusDetails"
+	FieldMaskAdhoc         = "adhoc"
 )

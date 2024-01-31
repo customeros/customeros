@@ -1807,6 +1807,7 @@ type OrganizationPlanMilestone struct {
 	Items         []*MilestoneItem `json:"items"`
 	Retired       bool             `json:"retired"`
 	StatusDetails *StatusDetails   `json:"statusDetails"`
+	Adhoc         bool             `json:"adhoc"`
 }
 
 func (OrganizationPlanMilestone) IsSourceFields()                   {}
@@ -1826,6 +1827,7 @@ type OrganizationPlanMilestoneInput struct {
 	Optional           bool      `json:"optional"`
 	Items              []string  `json:"items"`
 	OrganizationID     string    `json:"organizationId"`
+	Adhoc              bool      `json:"adhoc"`
 }
 
 type OrganizationPlanMilestoneReorderInput struct {
@@ -1846,6 +1848,7 @@ type OrganizationPlanMilestoneUpdateInput struct {
 	Items              []*MilestoneItemInput `json:"items,omitempty"`
 	StatusDetails      *StatusDetailsInput   `json:"statusDetails,omitempty"`
 	OrganizationID     string                `json:"organizationId"`
+	Adhoc              *bool                 `json:"adhoc,omitempty"`
 }
 
 type OrganizationPlanUpdateInput struct {

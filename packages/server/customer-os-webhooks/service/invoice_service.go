@@ -204,7 +204,9 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 		invoiceGrpcRequest.FieldsMask = fieldsMask
 
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = s.grpcClients.InvoiceClient.UpdateInvoice(ctx, &invoiceGrpcRequest)
+		_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+			return s.grpcClients.InvoiceClient.UpdateInvoice(ctx, &invoiceGrpcRequest)
+		})
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err, log.String("grpcMethod", "UpdateInvoice"))
