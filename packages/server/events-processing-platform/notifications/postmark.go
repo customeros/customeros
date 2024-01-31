@@ -48,16 +48,16 @@ func NewPostmarkProvider(log logger.Logger, serverToken string) *PostmarkProvide
 	}
 }
 
-func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, span *opentracing.Span) error {
+func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, span opentracing.Span) error {
 	rawEmailTemplate, err := np.LoadEmailBody(postmarkEmail.WorkflowId)
 	if err != nil {
-		tracing.TraceErr(*span, err)
+		tracing.TraceErr(span, err)
 		return err
 	}
 
 	htmlEmailTemplate, err := np.FillTemplate(rawEmailTemplate, postmarkEmail.TemplateData)
 	if err != nil {
-		tracing.TraceErr(*span, err)
+		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -84,7 +84,7 @@ func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail 
 	_, err = np.Client.SendEmail(ctx, email)
 
 	if err != nil {
-		tracing.TraceErr(*span, err)
+		tracing.TraceErr(span, err)
 		np.log.Errorf("(PostmarkProvider.SendNotification) error: %s", err.Error())
 		return err
 	}

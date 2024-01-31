@@ -547,7 +547,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		basePath = basePath + "/DRY_RUN"
 	}
 
-	fileDTO, err := h.fsc.UploadSingleFileBytes(eventData.Tenant, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", *pdfBytes, &span)
+	fileDTO, err := h.fsc.UploadSingleFileBytes(eventData.Tenant, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", *pdfBytes, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.UploadSingleFileBytes")
@@ -611,7 +611,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return errors.New("invoiceNode is nil")
 	}
 
-	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId, &span)
+	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error downloading invoice pdf for invoice %s: %s", invoiceId, err.Error())
@@ -638,7 +638,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 				ContentType:    "application/pdf",
 			},
 		},
-	}, &span)
+	}, span)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -692,7 +692,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context2.Context, e
 		return errors.New("invoiceEntity.PaymentDetails.PaymentLink is empty")
 	}
 
-	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId, &span)
+	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error downloading invoice pdf for invoice %s: %s", invoiceId, err.Error())
@@ -719,7 +719,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context2.Context, e
 				ContentType:    "application/pdf",
 			},
 		},
-	}, &span)
+	}, span)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
