@@ -39,6 +39,8 @@ type CustomerOsClient interface {
 	GetContractById(tenant, contractId string) (*dbtype.Node, error)
 
 	CreateServiceLine(tenant, username string, input interface{}) (string, error)
+	GetServiceLine(tenant, serviceLineId string) (*dbtype.Node, error)
+
 	CreateMeeting(tenant, username string, input model.MeetingInput) (string, error)
 
 	CreateInteractionSession(tenant, username string, options ...InteractionSessionBuilderOption) (*string, error)
@@ -391,32 +393,6 @@ func (cosService *customerOsClient) CreateContact(tenant, username, firstName, l
 	return id, nil
 }
 
-func (s *customerOsClient) GetContractById(tenant, contractId string) (*dbtype.Node, error) {
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id}) RETURN c`
-	params := map[string]any{
-		"tenant": tenant,
-		"id":     contractId,
-	}
-
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return nil, err
-	}
-	defer cancel()
-	session := s.prepareReadSession(ctx)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, params)
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
-}
-
 func (s *customerOsClient) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jReadSession(ctx, *s.driver, utils.WithDatabaseName(s.database))
 }
@@ -514,6 +490,32 @@ func (s *customerOsClient) CreateContract(tenant, username string, input model.C
 	return graphqlResponse.ContractCreate.Id, nil
 }
 
+func (s *customerOsClient) GetContractById(tenant, contractId string) (*dbtype.Node, error) {
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id}) RETURN c`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     contractId,
+	}
+
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+	session := s.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
 func (s *customerOsClient) UpdateContract(tenant, username string, input model.ContractUpdateInput) (string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation updateContract($input: ContractUpdateInput!) {
@@ -544,7 +546,7 @@ func (s *customerOsClient) UpdateContract(tenant, username string, input model.C
 
 func (s *customerOsClient) CreateServiceLine(tenant, username string, input interface{}) (string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`mutation createService($input: ServiceLineItemInput!) {
+		`mutation serviceLineItem($input: ServiceLineItemInput!) {
 				serviceLineItemCreate(input: $input) {
 					id
 			}
@@ -568,6 +570,32 @@ func (s *customerOsClient) CreateServiceLine(tenant, username string, input inte
 	}
 
 	return graphqlResponse.ServiceLineItemCreate.Id, nil
+}
+
+func (s *customerOsClient) GetServiceLine(contractId, serviceLineId string) (*dbtype.Node, error) {
+	cypher := `MATCH (c:Contract {id:$contractId})-[:HAS_SERVICE]->(sli:ServiceLineItem {id:$serviceLineId}) RETURN sli`
+	params := map[string]any{
+		"contractId":    contractId,
+		"serviceLineId": serviceLineId,
+	}
+
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+	session := s.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }
 
 func (s *customerOsClient) AddContactToOrganization(tenant, username, contactId, organizationId, jobTitle, description string) error {

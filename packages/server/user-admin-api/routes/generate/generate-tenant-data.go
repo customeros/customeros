@@ -173,7 +173,6 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 			}
 
 			//create Contracts with Service Lines in org
-			//now := utils.Now()
 
 			for _, contract := range organization.Contracts {
 				contractInput := cosModel.ContractInput{
@@ -199,7 +198,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 					return
 				}
 
-				waitForNodeToBeWritten(services, tenant, contractId)
+				waitForContractToExist(services, tenant, contractId)
 
 				contractUpdateInput := cosModel.ContractUpdateInput{
 					ContractId:            contractId,
@@ -267,6 +266,8 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 						})
 						return
 					}
+
+					waitForServiceLineToExist(services, contractId, serviceLineId)
 				}
 			}
 
@@ -717,7 +718,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 	})
 }
 
-func waitForNodeToBeWritten(services *service.Services, tenant string, contractId string) {
+func waitForContractToExist(services *service.Services, tenant string, contractId string) {
 	var _ *dbtype.Node
 	var maxAttempts = 5
 	var attempt = 0
@@ -730,6 +731,27 @@ func waitForNodeToBeWritten(services *service.Services, tenant string, contractI
 			time.Sleep(time.Second * 2)
 			if attempt == maxAttempts {
 				fmt.Println("Failed to create contracts.")
+				os.Exit(1)
+			}
+		} else {
+			break
+		}
+	}
+}
+
+func waitForServiceLineToExist(services *service.Services, contractId, serviceLineId string) {
+	var _ *dbtype.Node
+	var maxAttempts = 5
+	var attempt = 0
+
+	for attempt < maxAttempts {
+		var err error
+		_, err = services.CustomerOsClient.GetServiceLine(contractId, serviceLineId)
+		if err != nil {
+			attempt++
+			time.Sleep(time.Second * 2)
+			if attempt == maxAttempts {
+				fmt.Println("Failed to create service line.")
 				os.Exit(1)
 			}
 		} else {
