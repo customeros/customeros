@@ -440,7 +440,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 			// Link location to organization
 			if locationId != "" {
-				_, err = CallEventsPlatformGRPCWithRetry(func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 					return s.grpcClients.OrganizationClient.LinkLocationToOrganization(ctx, &organizationpb.LinkLocationToOrganizationGrpcRequest{
 						Tenant:         common.GetTenantFromContext(ctx),
 						OrganizationId: organizationId,
