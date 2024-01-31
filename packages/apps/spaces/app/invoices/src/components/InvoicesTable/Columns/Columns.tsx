@@ -44,7 +44,7 @@ export const columns = [
     enableColumnFilter: false,
     cell: (props) => (
       <Text overflow='hidden' textOverflow='ellipsis'>
-        {props?.getValue().name}
+        {props?.getValue()?.name ?? 'Unnamed'}
       </Text>
     ),
     header: (props) => (
