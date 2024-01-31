@@ -1,6 +1,6 @@
 'use client';
 import { useForm } from 'react-inverted-form';
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
@@ -53,6 +53,7 @@ export const BillingDetails = ({
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
   const formId = `billing-details-form-${contractId}`;
+
   const [isBillingDetailsFocused, setIsBillingDetailsFocused] =
     useState<boolean>(false);
 
@@ -89,9 +90,15 @@ export const BillingDetails = ({
       }, 1000);
     },
   });
+  const defaultValues = new BillingDetailsDto({
+    ...(data ?? {}),
+    organizationLegalName: data?.organizationLegalName || organizationName,
+  });
 
-  const { state, setDefaultValues } = useForm({
+  const { state } = useForm({
+    debug: true,
     formId,
+    defaultValues,
     stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
         if (action.payload.name === 'invoiceEmail') {
@@ -108,15 +115,6 @@ export const BillingDetails = ({
       return next;
     },
   });
-  useEffect(() => {
-    if (isOpen) {
-      const newDefaults = new BillingDetailsDto({
-        ...data,
-        organizationLegalName: data?.organizationLegalName || organizationName,
-      });
-      setDefaultValues(newDefaults);
-    }
-  }, [isOpen]);
 
   const handleApplyChanges = () => {
     const payload = BillingDetailsDto.toPayload(state.values);
@@ -128,7 +126,6 @@ export const BillingDetails = ({
       },
     });
   };
-
   const invoicePreviewStaticData = useMemo(
     () => ({
       status: 'Preview',

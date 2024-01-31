@@ -28,17 +28,17 @@ export class BillingDetailsDto implements BillingDetailsForm {
   contractUrl?: string | null;
 
   constructor(data?: Partial<GetContractQuery['contract']> | null) {
-    this.zip = data?.zip;
-    this.locality = data?.locality;
-    this.invoiceEmail = data?.invoiceEmail;
-    this.addressLine1 = data?.addressLine1;
+    this.zip = data?.zip ?? '';
+    this.locality = data?.locality ?? '';
+    this.invoiceEmail = data?.invoiceEmail ?? '';
+    this.addressLine1 = data?.addressLine1 ?? '';
     this.country = countryOptions.find((i) => data?.country === i.value);
     this.currency = getCurrencyOptions().find(
       (i) => data?.currency === i.value,
     );
-    this.addressLine2 = data?.addressLine2;
-    this.organizationLegalName = data?.organizationLegalName;
-    this.contractUrl = data?.contractUrl;
+    this.addressLine2 = data?.addressLine2 ?? '';
+    this.organizationLegalName = data?.organizationLegalName ?? '';
+    this.contractUrl = data?.contractUrl ?? '';
   }
 
   static toForm(

@@ -449,6 +449,7 @@ export const ContractCard = ({
           data={data?.serviceLineItems}
           onModalOpen={onServiceLineItemsOpen}
         />
+
         <BillingDetails
           isOpen={isOpen}
           contractId={data.id}
@@ -456,6 +457,7 @@ export const ContractCard = ({
           organizationName={organizationName}
           data={billingDetailsData?.contract}
         />
+
         <ServiceLineItemsModal
           isOpen={isServceItemsModalOpen}
           contractId={data.id}
