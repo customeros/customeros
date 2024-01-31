@@ -4,9 +4,12 @@ type OrganizationPlanStatusString string
 
 const (
 	OrganizationPlanStatusNotStarted OrganizationPlanStatusString = "NOT_STARTED"
-	OrganizationPlanStatusOnTrack    OrganizationPlanStatusString = "ON_TRACK"
-	OrganizationPlanStatusLate       OrganizationPlanStatusString = "LATE"
+	OrganizationPlanStatusOnTrack    OrganizationPlanStatusString = "ON_TRACK" // ~ started, on time
+	OrganizationPlanStatusLate       OrganizationPlanStatusString = "LATE"     // ~ started, late
 	OrganizationPlanStatusDone       OrganizationPlanStatusString = "DONE"
+	// timeline related
+	OrganizationPlanStatusNotStartedLate OrganizationPlanStatusString = "NOT_STARTED_LATE"
+	OrganizationPlanStatusDoneLate       OrganizationPlanStatusString = "DONE_LATE"
 )
 
 type OrganizationPlanStatus int32
@@ -16,6 +19,9 @@ const (
 	OnTrack
 	Late
 	Done
+	// timeline related
+	NotStartedLate
+	DoneLate
 )
 
 func (os OrganizationPlanStatus) String() string {
@@ -28,6 +34,10 @@ func (os OrganizationPlanStatus) String() string {
 		return string(OrganizationPlanStatusLate)
 	case Done:
 		return string(OrganizationPlanStatusDone)
+	case NotStartedLate:
+		return string(OrganizationPlanStatusNotStartedLate)
+	case DoneLate:
+		return string(OrganizationPlanStatusDoneLate)
 	default:
 		return string(OrganizationPlanStatusNotStarted)
 	}
@@ -41,6 +51,10 @@ const (
 	OrganizationPlanMilestoneStatusNotStarted OrganizationPlanMilestoneStatusString = "NOT_STARTED"
 	OrganizationPlanMilestoneStatusStarted    OrganizationPlanMilestoneStatusString = "STARTED"
 	OrganizationPlanMilestoneStatusDone       OrganizationPlanMilestoneStatusString = "DONE"
+	// timeline related
+	OrganizationPlanMilestoneStatusNotStartedLate OrganizationPlanMilestoneStatusString = "NOT_STARTED_LATE"
+	OrganizationPlanMilestoneStatusStartedLate    OrganizationPlanMilestoneStatusString = "STARTED_LATE"
+	OrganizationPlanMilestoneStatusDoneLate       OrganizationPlanMilestoneStatusString = "DONE_LATE"
 )
 
 type OrganizationPlanMilestoneStatus int32
@@ -49,6 +63,10 @@ const (
 	MilestoneNotStarted OrganizationPlanMilestoneStatus = iota
 	MilestoneStarted
 	MilestoneDone
+	// timeline related
+	MilestoneNotStartedLate
+	MilestoneStartedLate
+	MilestoneDoneLate
 )
 
 func (os OrganizationPlanMilestoneStatus) String() string {
@@ -59,6 +77,12 @@ func (os OrganizationPlanMilestoneStatus) String() string {
 		return string(OrganizationPlanMilestoneStatusStarted)
 	case MilestoneDone:
 		return string(OrganizationPlanMilestoneStatusDone)
+	case MilestoneNotStartedLate:
+		return string(OrganizationPlanMilestoneStatusNotStartedLate)
+	case MilestoneStartedLate:
+		return string(OrganizationPlanMilestoneStatusStartedLate)
+	case MilestoneDoneLate:
+		return string(OrganizationPlanMilestoneStatusDoneLate)
 	default:
 		return string(OrganizationPlanMilestoneStatusNotStarted)
 	}
@@ -72,6 +96,10 @@ const (
 	OrganizationPlanMilestoneTaskStatusNotDone OrganizationPlanMilestoneTaskStatusString = "NOT_DONE"
 	OrganizationPlanMilestoneTaskStatusSkipped OrganizationPlanMilestoneTaskStatusString = "SKIPPED"
 	OrganizationPlanMilestoneTaskStatusDone    OrganizationPlanMilestoneTaskStatusString = "DONE"
+	// timeline related
+	OrganizationPlanMilestoneTaskStatusNotDoneLate OrganizationPlanMilestoneTaskStatusString = "NOT_DONE_LATE"
+	OrganizationPlanMilestoneTaskStatusSkippedLate OrganizationPlanMilestoneTaskStatusString = "SKIPPED_LATE"
+	OrganizationPlanMilestoneTaskStatusDoneLate    OrganizationPlanMilestoneTaskStatusString = "DONE_LATE"
 )
 
 type OrganizationPlanMilestoneTaskStatus int32
@@ -80,6 +108,10 @@ const (
 	TaskNotDone OrganizationPlanMilestoneTaskStatus = iota
 	TaskSkipped
 	TaskDone
+	// timeline related
+	TaskNotDoneLate
+	TaskSkippedLate
+	TaskDoneLate
 )
 
 func (os OrganizationPlanMilestoneTaskStatus) String() string {
@@ -90,6 +122,12 @@ func (os OrganizationPlanMilestoneTaskStatus) String() string {
 		return string(OrganizationPlanMilestoneTaskStatusSkipped)
 	case TaskDone:
 		return string(OrganizationPlanMilestoneStatusDone)
+	case TaskNotDoneLate:
+		return string(OrganizationPlanMilestoneTaskStatusNotDoneLate)
+	case TaskSkippedLate:
+		return string(OrganizationPlanMilestoneTaskStatusSkippedLate)
+	case TaskDoneLate:
+		return string(OrganizationPlanMilestoneTaskStatusDoneLate)
 	default:
 		return string(OrganizationPlanMilestoneTaskStatusNotDone)
 	}

@@ -41,10 +41,37 @@ type OrganizationPlanMilestone implements SourceFields & Node {
     order:              Int64!
     dueDate:            Time!
     optional:           Boolean!
-    items:              [MilestoneItem!]!
+    items:              [OrganizationPlanMilestoneItem!]!
     retired:            Boolean!
     statusDetails:      StatusDetails!
     adhoc:              Boolean!
+}
+
+enum OnboardingPlanStatus {
+    NOT_STARTED
+    ON_TRACK
+    LATE
+    DONE
+    NOT_STARTED_LATE
+    DONE_LATE
+}
+
+enum OnboardingPlanMilestoneStatus {
+    NOT_STARTED
+    STARTED
+    DONE
+    NOT_STARTED_LATE
+    STARTED_LATE
+    DONE_LATE
+}
+
+enum OnboardingPlanMilestoneItemStatus {
+    NOT_DONE
+    SKIPPED
+    DONE
+    NOT_DONE_LATE
+    SKIPPED_LATE
+    DONE_LATE
 }
 
 type StatusDetails {
@@ -53,14 +80,20 @@ type StatusDetails {
     text: String!
 }
 
-type MilestoneItem {
-    status: String!
+input OrganizationPlanStatusDetailsInput {
+    status: OnboardingPlanStatus!
     updatedAt: Time!
     text: String!
 }
 
-input StatusDetailsInput {
-    status: String!
+input OrganizationPlanMilestoneStatusDetailsInput {
+    status: OnboardingPlanMilestoneStatus!
+    updatedAt: Time!
+    text: String!
+}
+
+type OrganizationPlanMilestoneItem {
+    status: OnboardingPlanMilestoneItemStatus!
     updatedAt: Time!
     text: String!
 }
@@ -75,7 +108,7 @@ input OrganizationPlanUpdateInput {
     id: ID!
     name: String
     retired: Boolean
-    statusDetails: StatusDetailsInput
+    statusDetails: OrganizationPlanStatusDetailsInput
     organizationId: ID!
 }
 
@@ -91,8 +124,8 @@ input OrganizationPlanMilestoneInput {
     adhoc: Boolean!
 }
 
-input MilestoneItemInput {
-    status: String!
+input OrganizationPlanMilestoneItemInput {
+    status: OnboardingPlanMilestoneItemStatus!
     updatedAt: Time!
     text: String!
 }
@@ -106,8 +139,8 @@ input OrganizationPlanMilestoneUpdateInput {
     updatedAt: Time!
     optional: Boolean
     retired: Boolean
-    items: [MilestoneItemInput]
-    statusDetails: StatusDetailsInput
+    items: [OrganizationPlanMilestoneItemInput]
+    statusDetails: OrganizationPlanMilestoneStatusDetailsInput
     organizationId: ID!
     adhoc: Boolean
 }

@@ -311,7 +311,9 @@ func (r *queryResolver) OrganizationPlan(ctx context.Context, id string) (*model
 		graphql.AddErrorf(ctx, "Org plan with id %s not found", id)
 		return nil, nil
 	}
-	return mapper.MapEntityToOrganizationPlan(orgPlanEntity), nil
+	op := mapper.MapEntityToOrganizationPlan(orgPlanEntity)
+
+	return op, nil
 }
 
 // OrganizationPlansForOrganization is the resolver for the organizationPlansForOrganization field.

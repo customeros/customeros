@@ -1520,18 +1520,6 @@ func (this MeetingsPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
 
-type MilestoneItem struct {
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	Text      string    `json:"text"`
-}
-
-type MilestoneItemInput struct {
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	Text      string    `json:"text"`
-}
-
 type Mutation struct {
 }
 
@@ -1794,20 +1782,20 @@ type OrganizationPlanInput struct {
 }
 
 type OrganizationPlanMilestone struct {
-	ID            string           `json:"id"`
-	CreatedAt     time.Time        `json:"createdAt"`
-	UpdatedAt     time.Time        `json:"updatedAt"`
-	Name          string           `json:"name"`
-	Source        DataSource       `json:"source"`
-	SourceOfTruth DataSource       `json:"sourceOfTruth"`
-	AppSource     string           `json:"appSource"`
-	Order         int64            `json:"order"`
-	DueDate       time.Time        `json:"dueDate"`
-	Optional      bool             `json:"optional"`
-	Items         []*MilestoneItem `json:"items"`
-	Retired       bool             `json:"retired"`
-	StatusDetails *StatusDetails   `json:"statusDetails"`
-	Adhoc         bool             `json:"adhoc"`
+	ID            string                           `json:"id"`
+	CreatedAt     time.Time                        `json:"createdAt"`
+	UpdatedAt     time.Time                        `json:"updatedAt"`
+	Name          string                           `json:"name"`
+	Source        DataSource                       `json:"source"`
+	SourceOfTruth DataSource                       `json:"sourceOfTruth"`
+	AppSource     string                           `json:"appSource"`
+	Order         int64                            `json:"order"`
+	DueDate       time.Time                        `json:"dueDate"`
+	Optional      bool                             `json:"optional"`
+	Items         []*OrganizationPlanMilestoneItem `json:"items"`
+	Retired       bool                             `json:"retired"`
+	StatusDetails *StatusDetails                   `json:"statusDetails"`
+	Adhoc         bool                             `json:"adhoc"`
 }
 
 func (OrganizationPlanMilestone) IsSourceFields()                   {}
@@ -1830,33 +1818,57 @@ type OrganizationPlanMilestoneInput struct {
 	Adhoc              bool      `json:"adhoc"`
 }
 
+type OrganizationPlanMilestoneItem struct {
+	Status    OnboardingPlanMilestoneItemStatus `json:"status"`
+	UpdatedAt time.Time                         `json:"updatedAt"`
+	Text      string                            `json:"text"`
+}
+
+type OrganizationPlanMilestoneItemInput struct {
+	Status    OnboardingPlanMilestoneItemStatus `json:"status"`
+	UpdatedAt time.Time                         `json:"updatedAt"`
+	Text      string                            `json:"text"`
+}
+
 type OrganizationPlanMilestoneReorderInput struct {
 	OrganizationPlanID string   `json:"organizationPlanId"`
 	OrganizationID     string   `json:"organizationId"`
 	OrderedIds         []string `json:"orderedIds"`
 }
 
+type OrganizationPlanMilestoneStatusDetailsInput struct {
+	Status    OnboardingPlanMilestoneStatus `json:"status"`
+	UpdatedAt time.Time                     `json:"updatedAt"`
+	Text      string                        `json:"text"`
+}
+
 type OrganizationPlanMilestoneUpdateInput struct {
-	OrganizationPlanID string                `json:"organizationPlanId"`
-	ID                 string                `json:"id"`
-	Name               *string               `json:"name,omitempty"`
-	Order              *int64                `json:"order,omitempty"`
-	DueDate            *time.Time            `json:"dueDate,omitempty"`
-	UpdatedAt          time.Time             `json:"updatedAt"`
-	Optional           *bool                 `json:"optional,omitempty"`
-	Retired            *bool                 `json:"retired,omitempty"`
-	Items              []*MilestoneItemInput `json:"items,omitempty"`
-	StatusDetails      *StatusDetailsInput   `json:"statusDetails,omitempty"`
-	OrganizationID     string                `json:"organizationId"`
-	Adhoc              *bool                 `json:"adhoc,omitempty"`
+	OrganizationPlanID string                                       `json:"organizationPlanId"`
+	ID                 string                                       `json:"id"`
+	Name               *string                                      `json:"name,omitempty"`
+	Order              *int64                                       `json:"order,omitempty"`
+	DueDate            *time.Time                                   `json:"dueDate,omitempty"`
+	UpdatedAt          time.Time                                    `json:"updatedAt"`
+	Optional           *bool                                        `json:"optional,omitempty"`
+	Retired            *bool                                        `json:"retired,omitempty"`
+	Items              []*OrganizationPlanMilestoneItemInput        `json:"items,omitempty"`
+	StatusDetails      *OrganizationPlanMilestoneStatusDetailsInput `json:"statusDetails,omitempty"`
+	OrganizationID     string                                       `json:"organizationId"`
+	Adhoc              *bool                                        `json:"adhoc,omitempty"`
+}
+
+type OrganizationPlanStatusDetailsInput struct {
+	Status    OnboardingPlanStatus `json:"status"`
+	UpdatedAt time.Time            `json:"updatedAt"`
+	Text      string               `json:"text"`
 }
 
 type OrganizationPlanUpdateInput struct {
-	ID             string              `json:"id"`
-	Name           *string             `json:"name,omitempty"`
-	Retired        *bool               `json:"retired,omitempty"`
-	StatusDetails  *StatusDetailsInput `json:"statusDetails,omitempty"`
-	OrganizationID string              `json:"organizationId"`
+	ID             string                              `json:"id"`
+	Name           *string                             `json:"name,omitempty"`
+	Retired        *bool                               `json:"retired,omitempty"`
+	StatusDetails  *OrganizationPlanStatusDetailsInput `json:"statusDetails,omitempty"`
+	OrganizationID string                              `json:"organizationId"`
 }
 
 type OrganizationUpdateInput struct {
@@ -2169,12 +2181,6 @@ type State struct {
 }
 
 type StatusDetails struct {
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	Text      string    `json:"text"`
-}
-
-type StatusDetailsInput struct {
 	Status    string    `json:"status"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	Text      string    `json:"text"`
@@ -3736,6 +3742,153 @@ func (e *MeetingStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e MeetingStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type OnboardingPlanMilestoneItemStatus string
+
+const (
+	OnboardingPlanMilestoneItemStatusNotDone     OnboardingPlanMilestoneItemStatus = "NOT_DONE"
+	OnboardingPlanMilestoneItemStatusSkipped     OnboardingPlanMilestoneItemStatus = "SKIPPED"
+	OnboardingPlanMilestoneItemStatusDone        OnboardingPlanMilestoneItemStatus = "DONE"
+	OnboardingPlanMilestoneItemStatusNotDoneLate OnboardingPlanMilestoneItemStatus = "NOT_DONE_LATE"
+	OnboardingPlanMilestoneItemStatusSkippedLate OnboardingPlanMilestoneItemStatus = "SKIPPED_LATE"
+	OnboardingPlanMilestoneItemStatusDoneLate    OnboardingPlanMilestoneItemStatus = "DONE_LATE"
+)
+
+var AllOnboardingPlanMilestoneItemStatus = []OnboardingPlanMilestoneItemStatus{
+	OnboardingPlanMilestoneItemStatusNotDone,
+	OnboardingPlanMilestoneItemStatusSkipped,
+	OnboardingPlanMilestoneItemStatusDone,
+	OnboardingPlanMilestoneItemStatusNotDoneLate,
+	OnboardingPlanMilestoneItemStatusSkippedLate,
+	OnboardingPlanMilestoneItemStatusDoneLate,
+}
+
+func (e OnboardingPlanMilestoneItemStatus) IsValid() bool {
+	switch e {
+	case OnboardingPlanMilestoneItemStatusNotDone, OnboardingPlanMilestoneItemStatusSkipped, OnboardingPlanMilestoneItemStatusDone, OnboardingPlanMilestoneItemStatusNotDoneLate, OnboardingPlanMilestoneItemStatusSkippedLate, OnboardingPlanMilestoneItemStatusDoneLate:
+		return true
+	}
+	return false
+}
+
+func (e OnboardingPlanMilestoneItemStatus) String() string {
+	return string(e)
+}
+
+func (e *OnboardingPlanMilestoneItemStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OnboardingPlanMilestoneItemStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OnboardingPlanMilestoneItemStatus", str)
+	}
+	return nil
+}
+
+func (e OnboardingPlanMilestoneItemStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type OnboardingPlanMilestoneStatus string
+
+const (
+	OnboardingPlanMilestoneStatusNotStarted     OnboardingPlanMilestoneStatus = "NOT_STARTED"
+	OnboardingPlanMilestoneStatusStarted        OnboardingPlanMilestoneStatus = "STARTED"
+	OnboardingPlanMilestoneStatusDone           OnboardingPlanMilestoneStatus = "DONE"
+	OnboardingPlanMilestoneStatusNotStartedLate OnboardingPlanMilestoneStatus = "NOT_STARTED_LATE"
+	OnboardingPlanMilestoneStatusStartedLate    OnboardingPlanMilestoneStatus = "STARTED_LATE"
+	OnboardingPlanMilestoneStatusDoneLate       OnboardingPlanMilestoneStatus = "DONE_LATE"
+)
+
+var AllOnboardingPlanMilestoneStatus = []OnboardingPlanMilestoneStatus{
+	OnboardingPlanMilestoneStatusNotStarted,
+	OnboardingPlanMilestoneStatusStarted,
+	OnboardingPlanMilestoneStatusDone,
+	OnboardingPlanMilestoneStatusNotStartedLate,
+	OnboardingPlanMilestoneStatusStartedLate,
+	OnboardingPlanMilestoneStatusDoneLate,
+}
+
+func (e OnboardingPlanMilestoneStatus) IsValid() bool {
+	switch e {
+	case OnboardingPlanMilestoneStatusNotStarted, OnboardingPlanMilestoneStatusStarted, OnboardingPlanMilestoneStatusDone, OnboardingPlanMilestoneStatusNotStartedLate, OnboardingPlanMilestoneStatusStartedLate, OnboardingPlanMilestoneStatusDoneLate:
+		return true
+	}
+	return false
+}
+
+func (e OnboardingPlanMilestoneStatus) String() string {
+	return string(e)
+}
+
+func (e *OnboardingPlanMilestoneStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OnboardingPlanMilestoneStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OnboardingPlanMilestoneStatus", str)
+	}
+	return nil
+}
+
+func (e OnboardingPlanMilestoneStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type OnboardingPlanStatus string
+
+const (
+	OnboardingPlanStatusNotStarted     OnboardingPlanStatus = "NOT_STARTED"
+	OnboardingPlanStatusOnTrack        OnboardingPlanStatus = "ON_TRACK"
+	OnboardingPlanStatusLate           OnboardingPlanStatus = "LATE"
+	OnboardingPlanStatusDone           OnboardingPlanStatus = "DONE"
+	OnboardingPlanStatusNotStartedLate OnboardingPlanStatus = "NOT_STARTED_LATE"
+	OnboardingPlanStatusDoneLate       OnboardingPlanStatus = "DONE_LATE"
+)
+
+var AllOnboardingPlanStatus = []OnboardingPlanStatus{
+	OnboardingPlanStatusNotStarted,
+	OnboardingPlanStatusOnTrack,
+	OnboardingPlanStatusLate,
+	OnboardingPlanStatusDone,
+	OnboardingPlanStatusNotStartedLate,
+	OnboardingPlanStatusDoneLate,
+}
+
+func (e OnboardingPlanStatus) IsValid() bool {
+	switch e {
+	case OnboardingPlanStatusNotStarted, OnboardingPlanStatusOnTrack, OnboardingPlanStatusLate, OnboardingPlanStatusDone, OnboardingPlanStatusNotStartedLate, OnboardingPlanStatusDoneLate:
+		return true
+	}
+	return false
+}
+
+func (e OnboardingPlanStatus) String() string {
+	return string(e)
+}
+
+func (e *OnboardingPlanStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OnboardingPlanStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OnboardingPlanStatus", str)
+	}
+	return nil
+}
+
+func (e OnboardingPlanStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
