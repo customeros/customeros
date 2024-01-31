@@ -183,7 +183,7 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 			AppSource: constants.AppSourceCustomerOsApi,
 		},
 		OrgId: orgId,
-		Adhoc: true,
+		Adhoc: adhoc,
 	}
 
 	tracing.LogObjectAsJson(span, "CreateOrganizationPlanMilestoneGrpcRequest", &grpcRequest)
