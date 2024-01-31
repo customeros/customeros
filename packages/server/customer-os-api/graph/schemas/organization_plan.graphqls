@@ -44,6 +44,7 @@ type OrganizationPlanMilestone implements SourceFields & Node {
     items:              [MilestoneItem!]!
     retired:            Boolean!
     statusDetails:      StatusDetails!
+    adhoc:              Boolean!
 }
 
 type StatusDetails {
@@ -87,6 +88,7 @@ input OrganizationPlanMilestoneInput {
     optional: Boolean!
     items: [String!]!
     organizationId: ID!
+    adhoc: Boolean!
 }
 
 input MilestoneItemInput {
@@ -107,6 +109,7 @@ input OrganizationPlanMilestoneUpdateInput {
     items: [MilestoneItemInput]
     statusDetails: StatusDetailsInput
     organizationId: ID!
+    adhoc: Boolean
 }
 
 input OrganizationPlanMilestoneReorderInput {

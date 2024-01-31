@@ -29,8 +29,8 @@ type OrganizationPlanService interface {
 	DuplicateOrganizationPlan(ctx context.Context, sourceOrganizationPlanId, orgId string) (string, error)
 	GetOrganizationPlanById(ctx context.Context, organizationPlanId string) (*neo4jentity.OrganizationPlanEntity, error)
 	GetOrganizationPlans(ctx context.Context, returnRetired *bool) (*neo4jentity.OrganizationPlanEntities, error)
-	CreateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, orgId, name string, order *int64, dueDate *time.Time, optional bool, items []string) (string, error)
-	UpdateOrganizationPlanMilestone(ctx context.Context, orgId, organizationPlanId, organizationPlanMilestoneId string, name *string, order *int64, dueDate *time.Time, items []*model.MilestoneItemInput, optional *bool, retired *bool, statusDetails *model.StatusDetailsInput) error
+	CreateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, orgId, name string, order *int64, dueDate *time.Time, optional, adhoc bool, items []string) (string, error)
+	UpdateOrganizationPlanMilestone(ctx context.Context, orgId, organizationPlanId, organizationPlanMilestoneId string, name *string, order *int64, dueDate *time.Time, items []*model.MilestoneItemInput, optional, adhoc *bool, retired *bool, statusDetails *model.StatusDetailsInput) error
 	GetOrganizationPlanMilestoneById(ctx context.Context, organizationPlanMilestoneId string) (*neo4jentity.OrganizationPlanMilestoneEntity, error)
 	GetOrganizationPlanMilestonesForOrganizationPlans(ctx context.Context, organizationPlanIds []string) (*neo4jentity.OrganizationPlanMilestoneEntities, error)
 	ReorderOrganizationPlanMilestones(ctx context.Context, organizationPlanId, orgId string, organizationPlanMilestoneIds []string) error
@@ -152,7 +152,7 @@ func (s *organizationPlanService) GetOrganizationPlanById(ctx context.Context, o
 	}
 }
 
-func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, orgId, name string, order *int64, dueDate *time.Time, optional bool, items []string) (string, error) {
+func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Context, organizationPlanId, orgId, name string, order *int64, dueDate *time.Time, optional, adhoc bool, items []string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.CreateOrganizationPlanMilestone")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -183,6 +183,7 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 			AppSource: constants.AppSourceCustomerOsApi,
 		},
 		OrgId: orgId,
+		Adhoc: true,
 	}
 
 	tracing.LogObjectAsJson(span, "CreateOrganizationPlanMilestoneGrpcRequest", &grpcRequest)
@@ -254,7 +255,7 @@ func (s *organizationPlanService) GetOrganizationPlanMilestonesForOrganizationPl
 	return &organizationPlanMilestoneEntities, nil
 }
 
-func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Context, orgId, organizationPlanId, organizationPlanMilestoneId string, name *string, order *int64, dueDate *time.Time, items []*model.MilestoneItemInput, optional *bool, retired *bool, statusDetails *model.StatusDetailsInput) error {
+func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Context, orgId, organizationPlanId, organizationPlanMilestoneId string, name *string, order *int64, dueDate *time.Time, items []*model.MilestoneItemInput, optional, adhoc *bool, retired *bool, statusDetails *model.StatusDetailsInput) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanService.UpdateOrganizationPlanMilestone")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -314,6 +315,10 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 	if statusDetails != nil {
 		grpcRequest.StatusDetails = statusDetailsInputToProtobuf(statusDetails)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_STATUS_DETAILS)
+	}
+	if adhoc != nil {
+		grpcRequest.Adhoc = utils.IfNotNilBool(adhoc)
+		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ADHOC)
 	}
 	grpcRequest.FieldsMask = fieldsMask
 

@@ -1097,6 +1097,7 @@ type ComplexityRoot struct {
 	}
 
 	OrganizationPlanMilestone struct {
+		Adhoc         func(childComplexity int) int
 		AppSource     func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		DueDate       func(childComplexity int) int
@@ -8180,6 +8181,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationPlan.UpdatedAt(childComplexity), true
 
+	case "OrganizationPlanMilestone.adhoc":
+		if e.complexity.OrganizationPlanMilestone.Adhoc == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanMilestone.Adhoc(childComplexity), true
+
 	case "OrganizationPlanMilestone.appSource":
 		if e.complexity.OrganizationPlanMilestone.AppSource == nil {
 			break
@@ -12705,6 +12713,7 @@ type OrganizationPlanMilestone implements SourceFields & Node {
     items:              [MilestoneItem!]!
     retired:            Boolean!
     statusDetails:      StatusDetails!
+    adhoc:              Boolean!
 }
 
 type StatusDetails {
@@ -12748,6 +12757,7 @@ input OrganizationPlanMilestoneInput {
     optional: Boolean!
     items: [String!]!
     organizationId: ID!
+    adhoc: Boolean!
 }
 
 input MilestoneItemInput {
@@ -12768,6 +12778,7 @@ input OrganizationPlanMilestoneUpdateInput {
     items: [MilestoneItemInput]
     statusDetails: StatusDetailsInput
     organizationId: ID!
+    adhoc: Boolean
 }
 
 input OrganizationPlanMilestoneReorderInput {
@@ -54529,6 +54540,8 @@ func (ec *executionContext) fieldContext_Mutation_organizationPlanMilestone_Crea
 				return ec.fieldContext_OrganizationPlanMilestone_retired(ctx, field)
 			case "statusDetails":
 				return ec.fieldContext_OrganizationPlanMilestone_statusDetails(ctx, field)
+			case "adhoc":
+				return ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestone", field.Name)
 		},
@@ -54642,6 +54655,8 @@ func (ec *executionContext) fieldContext_Mutation_organizationPlanMilestone_Upda
 				return ec.fieldContext_OrganizationPlanMilestone_retired(ctx, field)
 			case "statusDetails":
 				return ec.fieldContext_OrganizationPlanMilestone_statusDetails(ctx, field)
+			case "adhoc":
+				return ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestone", field.Name)
 		},
@@ -54755,6 +54770,8 @@ func (ec *executionContext) fieldContext_Mutation_organizationPlanMilestone_Bulk
 				return ec.fieldContext_OrganizationPlanMilestone_retired(ctx, field)
 			case "statusDetails":
 				return ec.fieldContext_OrganizationPlanMilestone_statusDetails(ctx, field)
+			case "adhoc":
+				return ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestone", field.Name)
 		},
@@ -54953,6 +54970,8 @@ func (ec *executionContext) fieldContext_Mutation_organizationPlanMilestone_Dupl
 				return ec.fieldContext_OrganizationPlanMilestone_retired(ctx, field)
 			case "statusDetails":
 				return ec.fieldContext_OrganizationPlanMilestone_statusDetails(ctx, field)
+			case "adhoc":
+				return ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestone", field.Name)
 		},
@@ -64461,6 +64480,8 @@ func (ec *executionContext) fieldContext_OrganizationPlan_milestones(ctx context
 				return ec.fieldContext_OrganizationPlanMilestone_retired(ctx, field)
 			case "statusDetails":
 				return ec.fieldContext_OrganizationPlanMilestone_statusDetails(ctx, field)
+			case "adhoc":
+				return ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestone", field.Name)
 		},
@@ -64533,6 +64554,8 @@ func (ec *executionContext) fieldContext_OrganizationPlan_retiredMilestones(ctx 
 				return ec.fieldContext_OrganizationPlanMilestone_retired(ctx, field)
 			case "statusDetails":
 				return ec.fieldContext_OrganizationPlanMilestone_statusDetails(ctx, field)
+			case "adhoc":
+				return ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestone", field.Name)
 		},
@@ -65219,6 +65242,50 @@ func (ec *executionContext) fieldContext_OrganizationPlanMilestone_statusDetails
 				return ec.fieldContext_StatusDetails_text(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type StatusDetails", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanMilestone_adhoc(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Adhoc, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanMilestone_adhoc(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -84424,7 +84491,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationPlanId", "name", "order", "dueDate", "createdAt", "optional", "items", "organizationId"}
+	fieldsInOrder := [...]string{"organizationPlanId", "name", "order", "dueDate", "createdAt", "optional", "items", "organizationId", "adhoc"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -84487,6 +84554,13 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneInput(ctx con
 				return it, err
 			}
 			it.OrganizationID = data
+		case "adhoc":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("adhoc"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Adhoc = data
 		}
 	}
 
@@ -84541,7 +84615,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneUpdateInput(c
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationPlanId", "id", "name", "order", "dueDate", "updatedAt", "optional", "retired", "items", "statusDetails", "organizationId"}
+	fieldsInOrder := [...]string{"organizationPlanId", "id", "name", "order", "dueDate", "updatedAt", "optional", "retired", "items", "statusDetails", "organizationId", "adhoc"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -84625,6 +84699,13 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneUpdateInput(c
 				return it, err
 			}
 			it.OrganizationID = data
+		case "adhoc":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("adhoc"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Adhoc = data
 		}
 	}
 
@@ -96411,6 +96492,11 @@ func (ec *executionContext) _OrganizationPlanMilestone(ctx context.Context, sel 
 			}
 		case "statusDetails":
 			out.Values[i] = ec._OrganizationPlanMilestone_statusDetails(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "adhoc":
+			out.Values[i] = ec._OrganizationPlanMilestone_adhoc(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
