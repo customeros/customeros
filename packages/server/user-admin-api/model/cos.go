@@ -41,6 +41,12 @@ type CreateTenantResponse struct {
 	Tenant string `json:"tenant_Merge"`
 }
 
+type TenantAddBillingProfileResponse struct {
+	TenantBillingProfileAdd struct {
+		Id string `json:"id"`
+	} `json:"tenant_AddBillingProfile"`
+}
+
 type CreateOrganizationResponse struct {
 	OrganizationCreate struct {
 		Id string `json:"id"`

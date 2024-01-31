@@ -78,6 +78,18 @@
 
     }
   ],
+  "tenantBillingProfiles": [
+    {
+      "legalName": "Openline Communications Ltd",
+      "email": "edi@openline.ai",
+      "addressLine1": "9th Floor, 107 Cheapside",
+      "locality": " London",
+      "country": "UK",
+      "zip": "EC2V 6DN",
+      "domesticPaymentsBankInfo": "ACH Routing Number: 026073150<br/>Account Number: 8311492202<br/>Account Type: Checking",
+      "internationalPaymentsBankInfo": "ACH Routing Number: 026073150<br/>Account Number: 8311492202<br/>Account Type: Checking"
+    }
+  ],
   "organizations": [
     {
       "id": "",

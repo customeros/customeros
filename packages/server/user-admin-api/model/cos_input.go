@@ -36,7 +36,16 @@ type TenantInput struct {
 	Name      string  `json:"name"`
 	AppSource *string `json:"appSource"`
 }
-
+type TenantBillingProfileInput struct {
+	LegalName                     string `json:"legalName"`
+	Email                         string `json:"email"`
+	AddressLine1                  string `json:"addressLine1"`
+	Locality                      string `json:"locality"`
+	Country                       string `json:"country"`
+	Zip                           string `json:"zip"`
+	DomesticPaymentsBankInfo      string `json:"domesticPaymentsBankInfo"`
+	InternationalPaymentsBankInfo string `json:"internationalPaymentsBankInfo"`
+}
 type ContactInput struct {
 	FirstName       *string     `json:"firstName,omitempty"`
 	LastName        *string     `json:"lastName,omitempty"`

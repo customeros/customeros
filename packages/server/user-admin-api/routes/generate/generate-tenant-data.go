@@ -143,6 +143,33 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 			})
 		}
 
+		//create tenant billingProfile
+		for _, tenantBillingProfile := range sourceData.TenantBillingProfiles {
+			tenantBillingProfileInput := cosModel.TenantBillingProfileInput{
+				LegalName:                     tenantBillingProfile.LegalName,
+				Email:                         tenantBillingProfile.Email,
+				AddressLine1:                  tenantBillingProfile.AddressLine1,
+				Locality:                      tenantBillingProfile.Locality,
+				Country:                       tenantBillingProfile.Country,
+				Zip:                           tenantBillingProfile.Zip,
+				DomesticPaymentsBankInfo:      tenantBillingProfile.DomesticPaymentsBankInfo,
+				InternationalPaymentsBankInfo: tenantBillingProfile.InternationalPaymentsBankInfo,
+			}
+			tenantBillingProfileId, err := services.CustomerOsClient.CreateTenantBillingProfile(tenant, username, tenantBillingProfileInput)
+			if err != nil {
+				context.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+			if tenantBillingProfileId == "" {
+				context.JSON(500, gin.H{
+					"error": "tenantBillingProfileId is nil",
+				})
+				return
+			}
+
+		}
 		//create orgs
 		for _, organization := range sourceData.Organizations {
 

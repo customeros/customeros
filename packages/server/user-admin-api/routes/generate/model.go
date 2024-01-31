@@ -17,6 +17,16 @@ type SourceData struct {
 		Email           string  `json:"email"`
 		ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 	} `json:"contacts"`
+	TenantBillingProfiles []struct {
+		LegalName                     string `json:"legalName"`
+		Email                         string `json:"email"`
+		AddressLine1                  string `json:"addressLine1"`
+		Locality                      string `json:"locality"`
+		Country                       string `json:"country"`
+		Zip                           string `json:"zip"`
+		DomesticPaymentsBankInfo      string `json:"domesticPaymentsBankInfo"`
+		InternationalPaymentsBankInfo string `json:"internationalPaymentsBankInfo"`
+	} `json:"tenantBillingProfiles"`
 	Organizations []struct {
 		Id                    string `json:"id"`
 		Name                  string `json:"name"`

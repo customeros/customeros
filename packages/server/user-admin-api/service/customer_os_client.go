@@ -31,6 +31,7 @@ type CustomerOsClient interface {
 	AddUserRole(tenant, userId string, role model.Role) (*model.UserResponse, error)
 	AddUserRoles(tenant, userId string, roles []model.Role) (*model.UserResponse, error)
 	CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error)
+	CreateTenantBillingProfile(tenant, username string, input model.TenantBillingProfileInput) (string, error)
 	CreateOrganization(tenant, username, organizationName, domain string) (string, error)
 	UpdateOrganizationOnboardingStatus(tenant, username string, onboardingStatus model.OrganizationUpdateOnboardingStatus) (string, error)
 
@@ -395,6 +396,34 @@ func (cosService *customerOsClient) CreateContact(tenant, username, firstName, l
 
 func (s *customerOsClient) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jReadSession(ctx, *s.driver, utils.WithDatabaseName(s.database))
+}
+
+func (s *customerOsClient) CreateTenantBillingProfile(tenant, username string, input model.TenantBillingProfileInput) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation TenantAddBillingProfile($input: TenantBillingProfileInput!) {
+				tenant_AddBillingProfile(input: $input) {
+					id
+			}
+		}`)
+
+	graphqlRequest.Var("input", input)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.TenantAddBillingProfileResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("tenantBillingProfile_Create: %w", err)
+	}
+
+	return graphqlResponse.TenantBillingProfileAdd.Id, nil
 }
 
 func (s *customerOsClient) CreateOrganization(tenant, username, organizationName, domain string) (string, error) {
