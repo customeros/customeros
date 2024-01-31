@@ -606,8 +606,9 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneLate(t *testing.T) {
 		10,
 		[]model.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskDone.String(), UpdatedAt: lateUpdateTime}, {Text: "item2Change", Status: model.TaskNotDone.String(), UpdatedAt: lateUpdateTime}},
 		[]string{event.FieldMaskName, event.FieldMaskOptional, event.FieldMaskItems, event.FieldMaskOrder, event.FieldMaskStatusDetails},
-		true,
-		true,
+		true,  // optional
+		false, // adhoc
+		true,  // retired
 		lateUpdateTime,
 		timeNow.Add(time.Hour*24), // due date
 		model.OrganizationPlanDetails{
@@ -732,8 +733,9 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T)
 		10,
 		[]model.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskDone.String(), UpdatedAt: lateUpdateTime}, {Text: "item2Change", Status: model.TaskDoneLate.String(), UpdatedAt: lateUpdateTime}},
 		[]string{event.FieldMaskName, event.FieldMaskOptional, event.FieldMaskItems, event.FieldMaskOrder, event.FieldMaskStatusDetails},
-		true,
-		true,
+		true,  // optional
+		false, // adhoc
+		true,  // retired
 		lateUpdateTime,
 		timeNow.Add(time.Hour*24), // due date
 		model.OrganizationPlanDetails{

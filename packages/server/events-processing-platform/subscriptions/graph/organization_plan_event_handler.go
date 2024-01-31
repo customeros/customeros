@@ -6,6 +6,7 @@ import (
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
@@ -266,25 +267,6 @@ func (h *OrganizationPlanEventHandler) OnReorderMilestones(ctx context.Context, 
 	return nil
 }
 
-//	func convertMasterPlanMilestonesToOrganizationPlanMilestones(masterPlanMilestonesNodes []*dbtype.Node, createdAt time.Time) []entity.OrganizationPlanMilestoneEntity {
-//		organizationPlanMilestones := make([]entity.OrganizationPlanMilestoneEntity, len(masterPlanMilestonesNodes))
-//		for i, masterPlanMilestoneNode := range masterPlanMilestonesNodes {
-//			mpMilestone := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneNode)
-//			organizationPlanMilestones[i] = entity.OrganizationPlanMilestoneEntity{
-//				Id:            uuid.New().String(),
-//				Name:          mpMilestone.Name,
-//				Order:         mpMilestone.Order,
-//				DueDate:       createdAt.Add(time.Duration(mpMilestone.DurationHours) * time.Hour),
-//				Items:         convertItemsStrToObject(mpMilestone.Items),
-//				Optional:      mpMilestone.Optional,
-//				CreatedAt:     createdAt,
-//				UpdatedAt:     createdAt,
-//				StatusDetails: entity.OrganizationPlanMilestoneStatusDetails{Status: model.MilestoneNotStarted.String(), UpdatedAt: createdAt, Comments: ""},
-//				Adhoc:         false,
-//			}
-//		}
-//		return organizationPlanMilestones
-//	}
 func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx context.Context, data neo4jrepository.OrganizationPlanMilestoneUpdateFields, tenant, opid string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanEventHandler.propagateStatusUpdatesFromMilestone")
 	defer span.Finish()
