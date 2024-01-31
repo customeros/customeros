@@ -195,14 +195,12 @@ export const OrganizationTimeline: FC = () => {
       <Virtuoso<TimelineEvent>
         ref={virtuosoRef}
         style={styles}
-        initialItemCount={timelineEmailEvents?.length}
         initialTopMostItemIndex={timelineEmailEvents?.length - 1}
-        data={timelineEmailEvents}
+        data={timelineEmailEvents ?? []}
         increaseViewportBy={300}
         atTopThreshold={100}
         context={virtuosoContext}
         itemContent={(index, timelineEvent) => {
-          if (!timelineEvent) return null;
           const showDate =
             index === 0
               ? true
