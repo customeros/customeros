@@ -42,6 +42,8 @@ type CustomerOsClient interface {
 	CreateServiceLine(tenant, username string, input interface{}) (string, error)
 	GetServiceLine(tenant, serviceLineId string) (*dbtype.Node, error)
 
+	DryRunNextInvoiceForContractInput(tenant, username, contractId string) (string, error)
+
 	CreateMeeting(tenant, username string, input model.MeetingInput) (string, error)
 
 	CreateInteractionSession(tenant, username string, options ...InteractionSessionBuilderOption) (*string, error)
@@ -625,6 +627,33 @@ func (s *customerOsClient) GetServiceLine(contractId, serviceLineId string) (*db
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (s *customerOsClient) DryRunNextInvoiceForContractInput(tenant, username, contractId string) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation invoice_NextDryRunForContract($contractId: ID!) {
+				invoice_NextDryRunForContract(contractId: $contractId)
+		}`)
+
+	graphqlRequest.Var("contractId", contractId)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]string
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("invoice_NextDryRunForContract_Create: %w", err)
+	}
+
+	id := graphqlResponse["invoice_NextDryRunForContract"]
+	return id, nil
 }
 
 func (s *customerOsClient) AddContactToOrganization(tenant, username, contactId, organizationId, jobTitle, description string) error {

@@ -47,6 +47,12 @@ type TenantAddBillingProfileResponse struct {
 	} `json:"tenant_AddBillingProfile"`
 }
 
+type NextInvoiceDryRunForContractResponse struct {
+	Invoice struct {
+		Id string `json:"id"`
+	} `json:"invoice_NextDryRunForContract"`
+}
+
 type CreateOrganizationResponse struct {
 	OrganizationCreate struct {
 		Id string `json:"id"`

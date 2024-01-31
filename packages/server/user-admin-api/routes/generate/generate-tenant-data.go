@@ -295,6 +295,24 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 					}
 
 					waitForServiceLineToExist(services, contractId, serviceLineId)
+
+					//run dry invoicing
+					//nextDryRunInvoiceForContractInput := cosModel.NextDryRunInvoiceForContractInput{
+					//	ContractId: contractId,
+					//}
+					tenantBillingProfileId, err := services.CustomerOsClient.DryRunNextInvoiceForContractInput(tenant, username, contractId)
+					if err != nil {
+						context.JSON(500, gin.H{
+							"error": err.Error(),
+						})
+						return
+					}
+					if tenantBillingProfileId == "" {
+						context.JSON(500, gin.H{
+							"error": "tenantBillingProfileId is nil",
+						})
+						return
+					}
 				}
 			}
 

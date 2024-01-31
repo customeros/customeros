@@ -46,6 +46,11 @@ type TenantBillingProfileInput struct {
 	DomesticPaymentsBankInfo      string `json:"domesticPaymentsBankInfo"`
 	InternationalPaymentsBankInfo string `json:"internationalPaymentsBankInfo"`
 }
+
+type NextDryRunInvoiceForContractInput struct {
+	ContractId string `json:"contractId"`
+}
+
 type ContactInput struct {
 	FirstName       *string     `json:"firstName,omitempty"`
 	LastName        *string     `json:"lastName,omitempty"`
