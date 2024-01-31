@@ -322,7 +322,7 @@ export function Invoice({
           {domesticBankingDetails && (
             <GridItem
               p={3}
-              borderRight='1px solid'
+              borderRight={internationalBankingDetails ? '1px solid' : 'none'}
               borderTop='1px solid'
               borderBottom='1px solid'
               borderColor='gray.300'
