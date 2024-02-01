@@ -4,6 +4,7 @@ import { FC, useRef } from 'react';
 
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
+import { Flex } from '@ui/layout/Flex';
 import { Invoice } from '@graphql/types';
 import { Table } from '@ui/presentation/Table';
 import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
@@ -20,7 +21,11 @@ export const InvoicesTable: FC<{
   const tableRef = useRef(null);
 
   if (totalElements === 0) {
-    return <EmptyState maxW={448} />;
+    return (
+      <Flex justifyContent='center'>
+        <EmptyState maxW={448} />
+      </Flex>
+    );
   }
 
   return (

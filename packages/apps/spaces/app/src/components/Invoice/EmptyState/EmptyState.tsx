@@ -8,20 +8,14 @@ import HalfCirclePattern from '../../../assets/HalfCirclePattern';
 
 export const EmptyState = ({
   maxW = 500,
-  withBorder,
+  isDashboard,
 }: {
-  withBorder?: boolean;
+  isDashboard?: boolean;
   maxW?: string | number;
 }) => {
   return (
     <Center h='100%' width={maxW}>
-      <Flex
-        direction='column'
-        h='100%'
-        width={maxW}
-        borderRight={withBorder ? '1px solid' : 'none'}
-        borderColor='gray.200'
-      >
+      <Flex direction='column' h='100%' width={maxW} borderColor='gray.200'>
         <Flex position='relative'>
           <FeaturedIcon
             colorScheme='primary'
@@ -29,8 +23,8 @@ export const EmptyState = ({
             width='152px'
             height='120'
             position='absolute'
-            top={withBorder ? '22%' : '20%'}
-            right={withBorder ? '35%' : '33%'}
+            top={isDashboard ? '22%' : '20%'}
+            right={isDashboard ? '35%' : '33%'}
           >
             <File04 boxSize='5' />
           </FeaturedIcon>
@@ -40,7 +34,7 @@ export const EmptyState = ({
           flexDir='column'
           textAlign='center'
           align='center'
-          transform={withBorder ? 'translateY(-280px)' : 'translateY(-250px)'}
+          transform={isDashboard ? 'translateY(-280px)' : 'translateY(-250px)'}
         >
           <Text color='gray.900' fontSize='md' fontWeight='semibold'>
             Awaiting your invoices

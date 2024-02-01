@@ -12,6 +12,7 @@ import { Invoice } from '@graphql/types';
 import { Heading } from '@ui/typography/Heading';
 import { Table, TableInstance } from '@ui/presentation/Table';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { filterOutDryRunInvoices } from '@shared/components/Invoice/utils';
 import { useGetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
 
@@ -33,6 +34,9 @@ export function InvoicesTable() {
       page: 0,
       limit: 40,
     },
+    where: {
+      ...filterOutDryRunInvoices,
+    },
   });
 
   useEffect(() => {
@@ -44,6 +48,7 @@ export function InvoicesTable() {
       router.replace(`/invoices?${newParams.toString()}`);
     }
   }, [selectedInvoiceId, isFetched]);
+
   useEffect(() => {
     if (tableRef.current && isFetched) {
       tableRef.current
@@ -54,7 +59,7 @@ export function InvoicesTable() {
   }, [tableRef, isFetched, selectedInvoiceId]);
 
   if (data?.invoices.totalElements === 0) {
-    return <EmptyState maxW={500} />;
+    return <EmptyState maxW={500} isDashboard />;
   }
 
   const handleOpenInvoice = (id: string) => {

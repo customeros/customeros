@@ -27,6 +27,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
 export type GetInvoicesQueryVariables = Types.Exact<{
   pagination: Types.Pagination;
   organizationId?: Types.InputMaybe<Types.Scalars['ID']['input']>;
+  where?: Types.InputMaybe<Types.Filter>;
 }>;
 
 export type GetInvoicesQuery = {
@@ -63,8 +64,12 @@ export type GetInvoicesQuery = {
 };
 
 export const GetInvoicesDocument = `
-    query getInvoices($pagination: Pagination!, $organizationId: ID) {
-  invoices(pagination: $pagination, organizationId: $organizationId) {
+    query getInvoices($pagination: Pagination!, $organizationId: ID, $where: Filter) {
+  invoices(
+    pagination: $pagination
+    organizationId: $organizationId
+    where: $where
+  ) {
     content {
       id
       organization {

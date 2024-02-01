@@ -1,10 +1,12 @@
 query getInvoices(
     $pagination: Pagination!
     $organizationId: ID
+    $where: Filter,
 ) {
     invoices(
         pagination: $pagination
         organizationId: $organizationId
+        where: $where
 
     ) {
         content {

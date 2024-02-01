@@ -28,13 +28,14 @@ import {
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
 import { ContractSubtitle } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractSubtitle';
-import { BillingDetails } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/BillingDetails/BillingDetails';
-import { ServiceLineItemsModal } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServiceLineItemsModal/ServiceLineItemsModal';
+import { useUpdatePanelModalStateContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
 import { Services } from './Services/Services';
 import { FormPeriodInput } from './PeriodInput';
 import { RenewalARRCard } from './RenewalARR/RenewalARRCard';
+import { ServiceLineItemsModal } from './ServiceLineItemsModal';
 import { ContractDTO, TimeToRenewalForm } from './Contract.dto';
+import { ContractBillingDetailsModal } from './ContractBillingDetailsModal';
 import { ContractStatusSelect } from './contractStatuses/ContractStatusSelect';
 import { billingFrequencyOptions, contractBillingCycleOptions } from '../utils';
 
@@ -54,6 +55,8 @@ export const ContractCard = ({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isExpanded, setIsExpanded] = useState(!data?.signedAt);
   const formId = `contract-form-${data.id}`;
+
+  const { setIsPanelModalOpen } = useUpdatePanelModalStateContext();
   const { onOpen, onClose, isOpen } = useDisclosure({
     id: 'billing-details-modal',
   });
@@ -70,6 +73,16 @@ export const ContractCard = ({
   const { data: billingDetailsData } = useGetContractQuery(client, {
     id: data.id,
   });
+
+  // this is needed to block scroll on safari when modal is open, scrollbar overflow issue
+  useEffect(() => {
+    if (isOpen || isServceItemsModalOpen) {
+      setIsPanelModalOpen(true);
+    }
+    if (!isOpen && !isServceItemsModalOpen) {
+      setIsPanelModalOpen(false);
+    }
+  }, [isOpen, isServceItemsModalOpen]);
 
   const updateContract = useUpdateContractMutation(client, {
     onMutate: ({ input }) => {
@@ -450,7 +463,7 @@ export const ContractCard = ({
           onModalOpen={onServiceLineItemsOpen}
         />
 
-        <BillingDetails
+        <ContractBillingDetailsModal
           isOpen={isOpen}
           contractId={data.id}
           onClose={onClose}

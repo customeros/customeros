@@ -40,19 +40,19 @@ export const BillingPanel = () => {
 
   const [
     isDomesticBankingDetailsSectionFocused,
-    setisDomesticBankingDetailsSectionFocused,
+    setIsDomesticBankingDetailsSectionFocused,
   ] = useState<boolean>(false);
   const [
     isDomesticBankingDetailsSectionHovered,
-    setisDomesticBankingDetailsSectionHovered,
+    setIsDomesticBankingDetailsSectionHovered,
   ] = useState<boolean>(false);
   const [
     isInternationalBankingDetailsSectionFocused,
-    setisInternationalBankingDetailsSectionFocused,
+    setIsInternationalBankingDetailsSectionFocused,
   ] = useState<boolean>(false);
   const [
     isInternationalBankingDetailsSectionHovered,
-    setisInternationalBankingDetailsSectionHovered,
+    setIsInternationalBankingDetailsSectionHovered,
   ] = useState<boolean>(false);
   const tenantBillingProfileId = data?.tenantBillingProfiles?.[0]?.id ?? '';
   const queryKey = useTenantBillingProfilesQuery.getKey();
@@ -118,7 +118,7 @@ export const BillingPanel = () => {
       subtotal: 100,
       issueDate: new Date().toISOString(),
       billedTo: {
-        addressLine: '29 Maple Lane',
+        addressLine1: '29 Maple Lane',
         addressLine2: 'Springfield, Haven County',
         locality: 'San Francisco',
         zip: '89302',
@@ -223,6 +223,7 @@ export const BillingPanel = () => {
         </CardHeader>
         <CardBody as={Flex} flexDir='column' px='6' w='full' gap={4}>
           <FormInput
+            autoComplete='off'
             label='Organization legal name'
             placeholder='Legal name'
             isLabelVisible
@@ -244,6 +245,7 @@ export const BillingPanel = () => {
             onMouseLeave={() => setIsInvoiceProviderDetailsHovered(false)}
           >
             <FormInput
+              autoComplete='off'
               label='Billing address'
               placeholder='Address line 1'
               isLabelVisible
@@ -258,6 +260,7 @@ export const BillingPanel = () => {
               onBlur={() => setIsInvoiceProviderFocused(false)}
             />
             <FormInput
+              autoComplete='off'
               label='Billing address line 2'
               name='addressLine2'
               placeholder='Address line 2'
@@ -268,6 +271,7 @@ export const BillingPanel = () => {
 
             <Flex>
               <FormInput
+                autoComplete='off'
                 label='Billing address locality'
                 name='locality'
                 placeholder='City'
@@ -276,6 +280,7 @@ export const BillingPanel = () => {
                 onBlur={() => setIsInvoiceProviderFocused(false)}
               />
               <FormInput
+                autoComplete='off'
                 label='Billing address zip/Postal code'
                 name='zip'
                 placeholder='ZIP/Potal code'
@@ -291,6 +296,7 @@ export const BillingPanel = () => {
               options={countryOptions}
             />
             <FormInput
+              autoComplete='off'
               label='Email'
               isLabelVisible
               labelProps={{
@@ -323,12 +329,12 @@ export const BillingPanel = () => {
               mb: 0,
               fontWeight: 'semibold',
             }}
-            onMouseEnter={() => setisDomesticBankingDetailsSectionHovered(true)}
+            onMouseEnter={() => setIsDomesticBankingDetailsSectionHovered(true)}
             onMouseLeave={() =>
-              setisDomesticBankingDetailsSectionHovered(false)
+              setIsDomesticBankingDetailsSectionHovered(false)
             }
-            onFocus={() => setisDomesticBankingDetailsSectionFocused(true)}
-            onBlur={() => setisDomesticBankingDetailsSectionFocused(false)}
+            onFocus={() => setIsDomesticBankingDetailsSectionFocused(true)}
+            onBlur={() => setIsDomesticBankingDetailsSectionFocused(false)}
           />
           <FormAutoresizeTextarea
             label='International banking details'
@@ -341,13 +347,13 @@ export const BillingPanel = () => {
               fontWeight: 'semibold',
             }}
             onMouseEnter={() =>
-              setisInternationalBankingDetailsSectionHovered(true)
+              setIsInternationalBankingDetailsSectionHovered(true)
             }
             onMouseLeave={() =>
-              setisInternationalBankingDetailsSectionHovered(false)
+              setIsInternationalBankingDetailsSectionHovered(false)
             }
-            onFocus={() => setisInternationalBankingDetailsSectionFocused(true)}
-            onBlur={() => setisInternationalBankingDetailsSectionFocused(false)}
+            onFocus={() => setIsInternationalBankingDetailsSectionFocused(true)}
+            onBlur={() => setIsInternationalBankingDetailsSectionFocused(false)}
           />
         </CardBody>
       </Card>
@@ -372,7 +378,7 @@ export const BillingPanel = () => {
               !isDomesticBankingDetailsSectionFocused)
           }
           from={{
-            addressLine: state.values.addressLine1 ?? '',
+            addressLine1: state.values.addressLine1 ?? '',
             addressLine2: state.values.addressLine2 ?? '',
             locality: state.values.locality ?? '',
             zip: state.values.zip ?? '',
