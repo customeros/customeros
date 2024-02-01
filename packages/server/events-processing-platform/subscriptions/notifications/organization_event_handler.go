@@ -1,15 +1,14 @@
 package notifications
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
+	"github.com/aws/aws-sdk-go/aws"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/aws_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -31,10 +30,11 @@ type OrganizationEventHandler struct {
 }
 
 func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Repositories, cfg *config.Config) *OrganizationEventHandler {
+	s3 := aws_client.NewS3Client(&aws.Config{Region: aws.String("eu-west-1")})
 	return &OrganizationEventHandler{
 		repositories:         repositories,
 		log:                  log,
-		notificationProvider: notifications.NewNovuNotificationProvider(log, cfg.Services.Novu.ApiKey),
+		notificationProvider: notifications.NewNovuNotificationProvider(log, cfg.Services.Novu.ApiKey, s3),
 		cfg:                  cfg,
 	}
 }
@@ -281,54 +281,4 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	err = h.notificationProvider.SendNotification(ctx, notification, span)
 
 	return err
-}
-
-// ///////// helper functions ///////////
-func mjmlToHtmlApi(mjml, mjmlAppId, mjmlSecret string) (string, error) {
-	mjmlMap := map[string]string{
-		"mjml": mjml,
-	}
-	mjmlJSON, err := json.Marshal(mjmlMap)
-	if err != nil {
-		return "", fmt.Errorf("(OrganizationEventHandler.mjmlToHtmlApi) error: %s", err.Error())
-	}
-	req, err := http.NewRequest("POST", "https://api.mjml.io/v1/render", bytes.NewReader(mjmlJSON))
-	if err != nil {
-		return "", fmt.Errorf("(OrganizationEventHandler.mjmlToHtmlApi) error: %s", err.Error())
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.SetBasicAuth(mjmlAppId, mjmlSecret)
-
-	// Make the HTTP request
-	client := &http.Client{}
-	response, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("(OrganizationEventHandler.mjmlToHtmlApi) error: %s", err.Error())
-	}
-	defer response.Body.Close()
-	var result struct {
-		HTML        string   `json:"html"`
-		Errors      []string `json:"errors"`
-		MJML        string   `json:"mjml"`
-		MJMLVersion string   `json:"mjml_version"`
-	}
-
-	if response.StatusCode != http.StatusOK {
-		var badResponse struct {
-			Message   string `json:"message"`
-			RequestID string `json:"request_id"`
-			StartedAt string `json:"started_at"`
-		}
-		err = json.NewDecoder(response.Body).Decode(&badResponse)
-		if err != nil {
-			return "", fmt.Errorf("(OrganizationEventHandler.mjmlToHtmlApi) error: %s", err.Error())
-		}
-		return "", fmt.Errorf("(OrganizationEventHandler.mjmlToHtmlApi) error: %s: %s", response.Status, badResponse.Message)
-	}
-
-	err = json.NewDecoder(response.Body).Decode(&result)
-	if err != nil {
-		return "", fmt.Errorf("(OrganizationEventHandler.mjmlToHtmlApi) error: %s", err.Error())
-	}
-	return result.HTML, err
 }

@@ -7,11 +7,8 @@ import (
 	"strings"
 
 	"github.com/Boostport/mjml-go"
-	"github.com/aws/aws-sdk-go/aws"
-	awsSes "github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	novu "github.com/novuhq/go-novu/lib"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/aws_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -20,19 +17,14 @@ import (
 type NovuProvider struct {
 	NovuClient *novu.APIClient
 	log        logger.Logger
+	s3Client   aws_client.S3ClientI
 }
 
-type NotifiableUser struct {
-	FirstName    string `json:"firstName"`
-	LastName     string `json:"lastName"`
-	Email        string `json:"email"`
-	SubscriberID string `json:"subscriberId"` // must be unique uuid for user
-}
-
-func newNovuProvider(log logger.Logger, apiKey string) *NovuProvider {
+func newNovuProvider(log logger.Logger, apiKey string, s3 aws_client.S3ClientI) *NovuProvider {
 	return &NovuProvider{
 		NovuClient: novu.NewAPIClient(apiKey, &novu.Config{}),
 		log:        log,
+		s3Client:   s3,
 	}
 }
 
@@ -92,46 +84,21 @@ func (np *NovuProvider) LoadEmailBody(workflowId string) (string, error) {
 		return "", nil
 	}
 
-	session, err := awsSes.NewSession(&aws.Config{Region: aws.String("eu-west-1")})
-	if err != nil {
-		return "", err
-	}
-
-	downloader := s3manager.NewDownloader(session)
-
-	buffer := &aws.WriteAtBuffer{}
-	_, err = downloader.Download(buffer,
-		&s3.GetObjectInput{
-			Bucket: aws.String("openline-production-mjml-templates"),
-			Key:    aws.String(fileName),
-		})
-	if err != nil {
-		return "", err
-	}
-
-	return string(buffer.Bytes()), nil
+	np.s3Client.ChangeRegion("eu-west-1")
+	return np.s3Client.Download("openline-production-mjml-templates", fileName)
 }
 
 func (np *NovuProvider) FillTemplate(template string, replace map[string]string) (string, error) {
-	_, ok := replace["{{userFirstName}}"]
-	if !ok {
-		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing userFirstName")
+	requiredVars := []string{
+		"{{userFirstName}}",
+		"{{actorFirstName}}",
+		"{{actorLastName}}",
+		"{{orgName}}",
+		"{{orgLink}}",
 	}
-	_, ok = replace["{{actorFirstName}}"]
-	if !ok {
-		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing actorFirstName")
-	}
-	_, ok = replace["{{actorLastName}}"]
-	if !ok {
-		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing actorLastName")
-	}
-	_, ok = replace["{{orgName}}"]
-	if !ok {
-		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing orgName")
-	}
-	_, ok = replace["{{orgLink}}"]
-	if !ok {
-		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing orgLink")
+	err := checkRequiredTemplateVars(replace, requiredVars)
+	if err != nil {
+		return "", err
 	}
 	mjmlf := template
 	for k, v := range replace {
@@ -144,6 +111,16 @@ func (np *NovuProvider) FillTemplate(template string, replace map[string]string)
 		return "", fmt.Errorf("(NovuProvider.FillTemplate) error: %s", mjmlError.Message)
 	}
 	return html, err
+}
+
+func checkRequiredTemplateVars(replace map[string]string, requiredVars []string) error {
+	for _, rv := range requiredVars {
+		if _, ok := replace[rv]; !ok {
+			return fmt.Errorf("(NovuProvider.FillTemplate) error: missing %s", rv)
+		}
+	}
+
+	return nil
 }
 
 func containsKey[M ~map[K]V, K comparable, V any](m M, k K) bool {

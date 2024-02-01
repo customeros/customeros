@@ -3,14 +3,11 @@ package notifications
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 	"testing"
 
 	"github.com/Boostport/mjml-go"
-	"github.com/aws/aws-sdk-go/aws"
-	awsSes "github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
@@ -19,6 +16,7 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/aws_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -33,6 +31,7 @@ type MockNotificationProvider struct {
 	called           bool
 	emailContent     string
 	notificationText string
+	s3               aws_client.S3ClientI
 }
 
 func (m *MockNotificationProvider) SendNotification(ctx context.Context, notification *notifications.NovuNotification, span opentracing.Span) error {
@@ -73,24 +72,8 @@ func (np *MockNotificationProvider) LoadEmailBody(workflowId string) (string, er
 		return "", nil
 	}
 
-	session, err := awsSes.NewSession(&aws.Config{Region: aws.String("eu-west-1")})
-	if err != nil {
-		return "", err
-	}
-
-	downloader := s3manager.NewDownloader(session)
-
-	buffer := &aws.WriteAtBuffer{}
-	_, err = downloader.Download(buffer,
-		&s3.GetObjectInput{
-			Bucket: aws.String("openline-production-mjml-templates"),
-			Key:    aws.String(fileName),
-		})
-	if err != nil {
-		return "", err
-	}
-
-	return string(buffer.Bytes()), nil
+	np.s3.ChangeRegion("eu-west-1")
+	return np.s3.Download("openline-production-mjml-templates", fileName)
 }
 
 func (np *MockNotificationProvider) FillTemplate(template string, replace map[string]string) (string, error) {
@@ -105,6 +88,20 @@ func (np *MockNotificationProvider) FillTemplate(template string, replace map[st
 		return "", fmt.Errorf("(NovuProvider.FillTemplate) error: %s", mjmlError.Message)
 	}
 	return html, err
+}
+
+type MockS3Client struct {
+	aws_client.S3ClientI
+}
+
+func (m *MockS3Client) Download(bucketName string, fileName string) (string, error) {
+	return EMAIL_TEMPLATE, nil
+}
+
+func (m *MockS3Client) ChangeRegion(region string) {}
+
+func (m *MockS3Client) Upload(bucketName string, fileName string, fileContent io.Reader) error {
+	return nil
 }
 
 func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
@@ -138,10 +135,12 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
-		repositories:         testDatabase.Repositories,
-		log:                  testLogger,
-		notificationProvider: &MockNotificationProvider{},
-		cfg:                  &config.Config{Subscriptions: config.Subscriptions{NotificationsSubscription: config.NotificationsSubscription{RedirectUrl: "https://app.openline.dev"}}},
+		repositories: testDatabase.Repositories,
+		log:          testLogger,
+		notificationProvider: &MockNotificationProvider{
+			s3: &MockS3Client{},
+		},
+		cfg: &config.Config{Subscriptions: config.Subscriptions{NotificationsSubscription: config.NotificationsSubscription{RedirectUrl: "https://app.openline.dev"}}},
 	}
 
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
@@ -183,3 +182,29 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 	require.True(t, emailContentHasCorrectData)
 	require.True(t, emailContentIsHTML)
 }
+
+///////////////////////////////////////// email template mjml for test /////////////////////////////////////////
+
+const EMAIL_TEMPLATE = `<mjml>
+<mj-body>
+  <mj-section>
+	<mj-column>
+	  <mj-text>
+		<p>Hello {{userFirstName}},</p>
+		<p>{{actorFirstName}} {{actorLastName}} made you the owner of the <a href="{{orgLink}}">{{orgName}}</a> account on CustomerOS.</p>
+		<p>You’ll now see <a href="{{orgLink}}">{{orgName}}</a> in your Portfolio, and you can:
+		<ul>
+		  <li>Find out everything about the company and their timeline</li>
+		  <li>Get familiar with the people at {{orgName}}</li>
+		  <li>Manage their contract and service line items</li>
+		  <li>Get their onboarding started and plan their success</li>
+		</ul>
+		</p>
+		<p>If you have questions about this assignment of ownership, you can ask {{actorFirstName}} {{actorLastName}} about it by simply replying to this email.</p>
+		<p>Have a great day!</p>
+		<p>The CustomerOS Team</p>
+	  </mj-text>
+	</mj-column>
+  </mj-section>
+</mj-body>
+</mjml>`
