@@ -26,7 +26,7 @@ type OrganizationPlan implements SourceFields & Node {
     retired:            Boolean!
     milestones:         [OrganizationPlanMilestone!]! @goField(forceResolver: true)
     retiredMilestones:  [OrganizationPlanMilestone!]! @goField(forceResolver: true)
-    statusDetails:      StatusDetails!
+    statusDetails:      OrganizationPlanStatusDetails!
     masterPlanId:       ID!
 }
 
@@ -43,7 +43,7 @@ type OrganizationPlanMilestone implements SourceFields & Node {
     optional:           Boolean!
     items:              [OrganizationPlanMilestoneItem!]!
     retired:            Boolean!
-    statusDetails:      StatusDetails!
+    statusDetails:      OrganizationPlanMilestoneStatusDetails!
     adhoc:              Boolean!
 }
 
@@ -74,8 +74,14 @@ enum OnboardingPlanMilestoneItemStatus {
     DONE_LATE
 }
 
-type StatusDetails {
-    status: String!
+type OrganizationPlanStatusDetails {
+    status: OnboardingPlanStatus!
+    updatedAt: Time!
+    text: String!
+}
+
+type OrganizationPlanMilestoneStatusDetails {
+    status: OnboardingPlanMilestoneStatus!
     updatedAt: Time!
     text: String!
 }
