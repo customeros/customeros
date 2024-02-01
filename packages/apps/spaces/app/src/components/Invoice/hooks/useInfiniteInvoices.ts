@@ -1,16 +1,32 @@
 import { useMemo } from 'react';
 
+import {
+  InfiniteData,
+  FetchNextPageOptions,
+  InfiniteQueryObserverResult,
+} from '@tanstack/react-query';
+
 import { Invoice } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { filterOutDryRunInvoices } from '@shared/components/Invoice/utils';
-import { useInfiniteGetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
+import {
+  GetInvoicesQuery,
+  useInfiniteGetInvoicesQuery,
+} from '@shared/graphql/getInvoices.generated';
 
 interface useInfiniteInvoicesReturn {
   isFetched: boolean;
   isFetching: boolean;
-  fetchNextPage: () => void; // Replace with the actual function type if different
   totalInvoicesCount: number;
   invoiceFlattenData: Invoice[];
+  fetchNextPage: (
+    options?: FetchNextPageOptions | undefined,
+  ) => Promise<
+    InfiniteQueryObserverResult<
+      InfiniteData<GetInvoicesQuery, unknown>,
+      unknown
+    >
+  >;
 }
 export function useInfiniteInvoices(
   organizationId?: string,
