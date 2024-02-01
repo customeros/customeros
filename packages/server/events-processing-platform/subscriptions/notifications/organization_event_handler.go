@@ -34,7 +34,7 @@ func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Rep
 	return &OrganizationEventHandler{
 		repositories:         repositories,
 		log:                  log,
-		notificationProvider: notifications.NewNovuNotificationProvider(log, cfg.Services.Novu.ApiKey, cfg.Subscriptions.NotificationsSubscription.EmailTemplatePath),
+		notificationProvider: notifications.NewNovuNotificationProvider(log, cfg.Services.Novu.ApiKey),
 		cfg:                  cfg,
 	}
 }
@@ -156,42 +156,17 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	if orgDbNode != nil {
 		org = neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	}
-	///////////////////////////////////       Get Email Content       ///////////////////////////////////
-	err = h.notificationProvider.LoadEmailBody(ctx, workflowId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.notificationProvider.LoadEmailBody")
-	}
 
+	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
 	orgName := org.Name
 	if orgName == "" {
 		orgName = "Unnamed"
 	}
-
-	html, err := h.notificationProvider.Template(ctx, map[string]string{
-		"{{userFirstName}}":  user.FirstName,
-		"{{actorFirstName}}": actor.FirstName,
-		"{{actorLastName}}":  actor.LastName,
-		"{{orgName}}":        orgName,
-		"{{orgLink}}":        fmt.Sprintf("%s/organization/%s", h.cfg.Subscriptions.NotificationsSubscription.RedirectUrl, orgId),
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		mjmlSecret := h.cfg.Services.MJML.SecretKey
-		mjmlAppId := h.cfg.Services.MJML.ApplicationId
-		html, err = mjmlToHtmlApi(h.notificationProvider.GetRawContent(), mjmlAppId, mjmlSecret)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "mjmlToHtmlApi")
-		}
-	}
-	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
-
 	payload := map[string]interface{}{
-		"html":           html,
+		// "html":           html, fill during send notification call
 		"subject":        fmt.Sprintf("%s %s added you as an owner", actor.FirstName, actor.LastName),
 		"email":          email.Email,
-		"orgName":        org.Name,
+		"orgName":        orgName,
 		"userFirstName":  user.FirstName,
 		"actorFirstName": actor.FirstName,
 		"actorLastName":  actor.LastName,
@@ -205,13 +180,27 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 	payload["overrides"] = overrides
 
+	notification := &notifications.NovuNotification{
+		WorkflowId: workflowId,
+		TemplateData: map[string]string{
+			"{{userFirstName}}":  user.FirstName,
+			"{{actorFirstName}}": actor.FirstName,
+			"{{actorLastName}}":  actor.LastName,
+			"{{orgName}}":        orgName,
+			"{{orgLink}}":        fmt.Sprintf("%s/organization/%s", h.cfg.Subscriptions.NotificationsSubscription.RedirectUrl, orgId),
+		},
+		To: &notifications.NotifiableUser{
+			FirstName:    user.FirstName,
+			LastName:     user.LastName,
+			Email:        email.Email,
+			SubscriberID: userId,
+		},
+		Subject: fmt.Sprintf("%s %s added you as an owner", actor.FirstName, actor.LastName),
+		Payload: payload,
+	}
+
 	// call notification service
-	err = h.notificationProvider.SendNotification(ctx, &notifications.NotifiableUser{
-		FirstName:    user.FirstName,
-		LastName:     user.LastName,
-		Email:        email.Email,
-		SubscriberID: userId,
-	}, payload, workflowId)
+	err = h.notificationProvider.SendNotification(ctx, notification, span)
 
 	return err
 }
@@ -271,19 +260,25 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	}
 	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
 
-	payload := map[string]interface{}{
-		"notificationText": fmt.Sprintf("%s %s made you the owner of %s", actor.FirstName, actor.LastName, org.Name),
-		"orgId":            orgId,
-		"isArchived":       org.Hide,
+	notification := &notifications.NovuNotification{
+		WorkflowId:   workflowId,
+		TemplateData: map[string]string{},
+		To: &notifications.NotifiableUser{
+			FirstName:    user.FirstName,
+			LastName:     user.LastName,
+			Email:        email.Email,
+			SubscriberID: userId,
+		},
+		Subject: fmt.Sprintf("%s %s added you as an owner", actor.FirstName, actor.LastName),
+		Payload: map[string]interface{}{
+			"notificationText": fmt.Sprintf("%s %s made you the owner of %s", actor.FirstName, actor.LastName, org.Name),
+			"orgId":            orgId,
+			"isArchived":       org.Hide,
+		},
 	}
 
 	// call notification service
-	err = h.notificationProvider.SendNotification(ctx, &notifications.NotifiableUser{
-		FirstName:    user.FirstName,
-		LastName:     user.LastName,
-		Email:        email.Email,
-		SubscriberID: userId,
-	}, payload, workflowId)
+	err = h.notificationProvider.SendNotification(ctx, notification, span)
 
 	return err
 }

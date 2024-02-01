@@ -4,32 +4,57 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/Boostport/mjml-go"
+	"github.com/aws/aws-sdk-go/aws"
+	awsSes "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	novu "github.com/novuhq/go-novu/lib"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go"
 )
 
 type NovuProvider struct {
-	NovuClient      *novu.APIClient
-	TemplatePath    string
-	log             logger.Logger
-	emailRawContent string
-	emailContent    string
+	NovuClient *novu.APIClient
+	log        logger.Logger
 }
 
-func newNovuProvider(log logger.Logger, apiKey, templatePath string) *NovuProvider {
+type NotifiableUser struct {
+	FirstName    string `json:"firstName"`
+	LastName     string `json:"lastName"`
+	Email        string `json:"email"`
+	SubscriberID string `json:"subscriberId"` // must be unique uuid for user
+}
+
+func newNovuProvider(log logger.Logger, apiKey string) *NovuProvider {
 	return &NovuProvider{
-		NovuClient:   novu.NewAPIClient(apiKey, &novu.Config{}),
-		log:          log,
-		TemplatePath: templatePath,
+		NovuClient: novu.NewAPIClient(apiKey, &novu.Config{}),
+		log:        log,
 	}
 }
 
-func (np *NovuProvider) SendNotification(ctx context.Context, u *NotifiableUser, payload map[string]interface{}, workflowId string) error {
+func (np *NovuProvider) SendNotification(ctx context.Context, notification *NovuNotification, span opentracing.Span) error {
+	payload := notification.Payload
+	u := notification.To
+	workflowId := notification.WorkflowId
+
+	rawEmailTemplate, err := np.LoadEmailBody(workflowId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if rawEmailTemplate != "" {
+		htmlEmailTemplate, err := np.FillTemplate(rawEmailTemplate, notification.TemplateData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		payload["html"] = htmlEmailTemplate
+	}
 	to := map[string]interface{}{
 		"lastName":     u.LastName,
 		"firstName":    u.FirstName,
@@ -46,7 +71,7 @@ func (np *NovuProvider) SendNotification(ctx context.Context, u *NotifiableUser,
 		}
 	}
 
-	_, err := np.NovuClient.EventApi.Trigger(ctx, workflowId, data)
+	_, err = np.NovuClient.EventApi.Trigger(ctx, workflowId, data)
 
 	if err != nil {
 		np.log.Errorf("(NotificationsSubscriber.NovuProvider.SendNotification) error: %s", err.Error())
@@ -56,36 +81,38 @@ func (np *NovuProvider) SendNotification(ctx context.Context, u *NotifiableUser,
 	return nil
 }
 
-func (np *NovuProvider) LoadEmailBody(ctx context.Context, workflowId string) error {
-	var emailPath string
+func (np *NovuProvider) LoadEmailBody(workflowId string) (string, error) {
+	var fileName string
 	switch workflowId {
 	case WorkflowIdOrgOwnerUpdateEmail:
-		if _, err := os.Stat(np.TemplatePath); os.IsNotExist(err) {
-			return fmt.Errorf("(NovuProvider.LoadEmailBody) error: %s", err.Error())
-		}
-		emailPath = fmt.Sprintf("%s/ownership.single.mjml", np.TemplatePath)
-	}
-	// Get the current directory
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("(NovuProvider.LoadEmailBody) Getwd: %s", err.Error())
+		fileName = "ownership.single.mjml"
 	}
 
-	// Build the full path to the template file
-	templatePath := filepath.Join(currentDir, emailPath)
-	if _, err := os.Stat(templatePath); err != nil {
-		return fmt.Errorf("(NovuProvider.LoadEmailBody) error: %s", err.Error())
+	if fileName == "" {
+		return "", nil
 	}
 
-	rawMjml, err := os.ReadFile(templatePath)
+	session, err := awsSes.NewSession(&aws.Config{Region: aws.String("eu-west-1")})
 	if err != nil {
-		return fmt.Errorf("(NovuProvider.LoadEmailBody) error: %s", err.Error())
+		return "", err
 	}
-	np.emailRawContent = string(rawMjml[:])
-	return nil
+
+	downloader := s3manager.NewDownloader(session)
+
+	buffer := &aws.WriteAtBuffer{}
+	_, err = downloader.Download(buffer,
+		&s3.GetObjectInput{
+			Bucket: aws.String("openline-production-mjml-templates"),
+			Key:    aws.String(fileName),
+		})
+	if err != nil {
+		return "", err
+	}
+
+	return string(buffer.Bytes()), nil
 }
 
-func (np *NovuProvider) Template(ctx context.Context, replace map[string]string) (string, error) {
+func (np *NovuProvider) FillTemplate(template string, replace map[string]string) (string, error) {
 	_, ok := replace["{{userFirstName}}"]
 	if !ok {
 		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing userFirstName")
@@ -106,28 +133,17 @@ func (np *NovuProvider) Template(ctx context.Context, replace map[string]string)
 	if !ok {
 		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing orgLink")
 	}
-	mjmlf := np.emailRawContent
+	mjmlf := template
 	for k, v := range replace {
 		mjmlf = strings.Replace(mjmlf, k, v, -1)
 	}
-	np.emailRawContent = mjmlf
-	// mjmlf := strings.Replace(string(np.emailRawContent[:]), "{{userFirstName}}", userFirstName, -1)
-	// mjmlf = strings.Replace(mjmlf, "{{actorFirstName}}", actorFirstName, -1)
-	// mjmlf = strings.Replace(mjmlf, "{{actorLastName}}", actorLastName, -1)
-	// mjmlf = strings.Replace(mjmlf, "{{orgName}}", orgName, -1)
-	// mjmlf = strings.Replace(mjmlf, "{{orgLink}}", orgLink, -1)
 
 	html, err := mjml.ToHTML(context.Background(), mjmlf)
 	var mjmlError mjml.Error
 	if errors.As(err, &mjmlError) {
-		return "", fmt.Errorf("(NovuProvider.Template) error: %s", mjmlError.Message)
+		return "", fmt.Errorf("(NovuProvider.FillTemplate) error: %s", mjmlError.Message)
 	}
-	np.emailContent = html
 	return html, err
-}
-
-func (np *NovuProvider) GetRawContent() string {
-	return np.emailRawContent
 }
 
 func containsKey[M ~map[K]V, K comparable, V any](m M, k K) bool {
