@@ -105,6 +105,7 @@ func TestInvoiceResolver_Invoices(t *testing.T) {
 		CreatedAt: timeNow,
 		UpdatedAt: timeNow,
 		Number:    "1",
+		DryRun:    false,
 	})
 	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoice1Id, neo4jentity.InvoiceLineEntity{
 		Name: "SLI 1",
@@ -114,6 +115,7 @@ func TestInvoiceResolver_Invoices(t *testing.T) {
 		CreatedAt: yesterday,
 		UpdatedAt: yesterday,
 		Number:    "2",
+		DryRun:    false,
 	})
 	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoice2Id, neo4jentity.InvoiceLineEntity{
 		Name: "SLI 2",
@@ -123,9 +125,20 @@ func TestInvoiceResolver_Invoices(t *testing.T) {
 		CreatedAt: yesterday,
 		UpdatedAt: yesterday,
 		Number:    "11",
+		DryRun:    false,
 	})
 	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoice3Id, neo4jentity.InvoiceLineEntity{
 		Name: "SLI 3",
+	})
+
+	invoice4Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		CreatedAt: yesterday,
+		UpdatedAt: yesterday,
+		Number:    "11",
+		DryRun:    true,
+	})
+	neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoice4Id, neo4jentity.InvoiceLineEntity{
+		Name: "SLI 4",
 	})
 
 	rawResponse := callGraphQL(t, "invoice/get_invoices", map[string]interface{}{

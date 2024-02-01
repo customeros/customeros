@@ -124,6 +124,12 @@ func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Paginati
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.Invoices", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	if where != nil {
+		tracing.LogObjectAsJson(span, "request.where", where)
+	}
+	if sort != nil {
+		tracing.LogObjectAsJson(span, "request.sort", sort)
+	}
 
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
@@ -134,7 +140,7 @@ func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Paginati
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get invoices")
-		return nil, nil
+		return nil, err
 	}
 	return &model.InvoicesPage{
 		Content:       mapper.MapEntitiesToInvoices(paginatedResult.Rows.(*neo4jentity.InvoiceEntities)),
