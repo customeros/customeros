@@ -312,7 +312,7 @@ func (ds *DomainScraperV1) runDataPrompt(analysis, domainUrl, socials, jsonStruc
 }
 
 func (ds *DomainScraperV1) addLinkedinData(apiKey, companyLinkedinId string, scrapedContent *WebscrapeResponseV1, httpClient *http.Client) (*WebscrapeResponseV1, error) {
-	linkedinData, err := ds.getLinkedinData(apiKey, companyLinkedinId, httpClient)
+	linkedinData, err := ds.getLinkedInData(apiKey, companyLinkedinId, httpClient)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get linkedin data")
 	}
@@ -343,11 +343,14 @@ func (ds *DomainScraperV1) addLinkedinData(apiKey, companyLinkedinId string, scr
 	return scrapedContent, nil
 }
 
-func (ds *DomainScraperV1) getLinkedinData(apiKey, companyLinkedinId string, httpClient *http.Client) (*LinkedinScrapeResponse, error) {
+func (ds *DomainScraperV1) getLinkedInData(apiKey, companyLinkedinId string, httpClient *http.Client) (*LinkedinScrapeResponse, error) {
 	url := fmt.Sprintf("https://api.coresignal.com/cdapi/v1/linkedin/company/collect/%s", companyLinkedinId)
 
 	linkedinScrape := &LinkedinScrapeResponse{}
-	req, _ := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return linkedinScrape, errors.Wrap(err, "failed to create linkedin scrape request")
+	}
 	req.Header.Set("accept", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
 
@@ -361,7 +364,7 @@ func (ds *DomainScraperV1) getLinkedinData(apiKey, companyLinkedinId string, htt
 		return nil, fmt.Errorf("StatusCode: %s", r.Status)
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&linkedinScrape); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&linkedinScrape); err != nil {
 		return nil, errors.Wrap(err, "failed to decode linkedin scrape response")
 	}
 
