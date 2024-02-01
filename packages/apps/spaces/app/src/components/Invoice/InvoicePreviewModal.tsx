@@ -10,7 +10,6 @@ import { InvoiceCustomer, InvoiceProvider } from '@graphql/types';
 import { GetInvoiceQuery } from '@shared/graphql/getInvoice.generated';
 import { InvoiceSkeleton } from '@shared/components/Invoice/InvoiceSkeleton';
 interface InvoicePreviewModalProps {
-  id: string;
   isError: boolean;
   isFetching: boolean;
   data: GetInvoiceQuery | undefined;
@@ -29,7 +28,6 @@ const extractAddressData = (invoiceData: InvoiceCustomer | InvoiceProvider) => {
 };
 
 export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
-  id,
   isFetching,
   isError,
   data,
@@ -69,7 +67,8 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
   return (
     <Invoice
       tax={data?.invoice?.vat}
-      note={''}
+      note={data?.invoice?.note}
+      logoUrl={data?.invoice?.provider?.logoUrl}
       from={providerAddressData}
       total={data?.invoice.totalAmount}
       dueDate={data?.invoice.dueDate}

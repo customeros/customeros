@@ -10,10 +10,10 @@ import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 interface InvoiceSummaryProps {
   tax: number;
   total: number;
-  note?: string;
   subtotal: number;
   currency: string;
   amountDue?: number;
+  note?: string | null;
 }
 
 export const InvoiceSummary: FC<InvoiceSummaryProps> = ({

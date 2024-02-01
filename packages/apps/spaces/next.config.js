@@ -9,6 +9,14 @@ const nextConfig = {
   swcMinify: true,
   images: {
     minimumCacheTTL: 31536000,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'customeros.ai',
+        port: '',
+        pathname: '/images/**',
+      },
+    ],
   },
   env: {
     SSR_PUBLIC_PATH: process.env.SSR_PUBLIC_PATH,

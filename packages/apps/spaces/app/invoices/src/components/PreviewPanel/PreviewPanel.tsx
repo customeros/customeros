@@ -50,7 +50,6 @@ export const PreviewPanel = ({ id }: { id: string }) => {
       </Flex>
 
       <InvoicePreviewModalContent
-        id={id ?? ''}
         data={data}
         isFetching={isFetching || isRestoring}
         isError={isError}
