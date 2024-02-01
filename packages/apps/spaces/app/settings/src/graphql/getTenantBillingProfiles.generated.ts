@@ -42,6 +42,7 @@ export type TenantBillingProfilesQuery = {
     domesticPaymentsBankInfo: string;
     internationalPaymentsBankInfo: string;
     country: string;
+    email: string;
   }>;
 };
 
@@ -58,6 +59,7 @@ export const TenantBillingProfilesDocument = `
     domesticPaymentsBankInfo
     internationalPaymentsBankInfo
     country
+    email
   }
 }
     `;

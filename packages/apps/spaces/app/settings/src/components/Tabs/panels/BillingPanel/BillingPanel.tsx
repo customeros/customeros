@@ -26,6 +26,7 @@ import {
   TenantBillingDetails,
   TenantBillingDetailsDto,
 } from './TenantBillingProfile.dto';
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const BillingPanel = () => {
   const client = getGraphQLClient();
@@ -289,6 +290,27 @@ export const BillingPanel = () => {
               formId={formId}
               options={countryOptions}
             />
+            <FormInput
+              label='Email'
+              isLabelVisible
+              labelProps={{
+                fontSize: 'sm',
+                mb: 0,
+                mt: 4,
+                fontWeight: 'semibold',
+              }}
+              formId={formId}
+              name='email'
+              textOverflow='ellipsis'
+              placeholder='Email'
+              type='email'
+              isInvalid={
+                !!state.values.email?.length &&
+                !emailRegex.test(state.values.email)
+              }
+              onFocus={() => setIsInvoiceProviderFocused(true)}
+              onBlur={() => setIsInvoiceProviderFocused(false)}
+            />
           </Flex>
 
           <FormAutoresizeTextarea
@@ -355,7 +377,7 @@ export const BillingPanel = () => {
             locality: state.values.locality ?? '',
             zip: state.values.zip ?? '',
             country: state?.values?.country?.label ?? '',
-            email: '',
+            email: state?.values?.email ?? '',
             name: state.values?.legalName ?? '',
           }}
           {...invoicePreviewStaticData}
