@@ -9,7 +9,7 @@ type InvoiceEntity struct {
 	Id                            string
 	CreatedAt                     time.Time `neo4jDb:"property:createdAt;lookupName:CREATED_AT;supportCaseSensitive:false"`
 	UpdatedAt                     time.Time
-	DryRun                        bool
+	DryRun                        bool          `neo4jDb:"property:dryRun;lookupName:DRY_RUN;supportCaseSensitive:false"`
 	Number                        string        `neo4jDb:"property:number;lookupName:NUMBER;supportCaseSensitive:false"`
 	Currency                      enum.Currency `neo4jDb:"property:currency;lookupName:CURRENCY;supportCaseSensitive:false"`
 	PeriodStartDate               time.Time
