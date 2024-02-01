@@ -15,7 +15,6 @@ import (
 )
 
 type OrganizationRepository interface {
-	GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId string, domains []string) (string, error)
 	CalculateAndGetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error)
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
 	GetOrganizationIdsForContact(ctx context.Context, tenant, contactId string) ([]string, error)
@@ -37,45 +36,6 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext, log logger.Logge
 		driver: driver,
 		log:    log,
 	}
-}
-
-func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId string, domains []string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMatchedOrganizationId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
-				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o1:Organization)-[:IS_LINKED_WITH {externalId:$organizationExternalId}]->(e)
-				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o2:Organization)-[:HAS_DOMAIN]->(d:Domain)
-					WHERE d.domain in $domains
-				with coalesce(o1, o2) as organization
-				where organization is not null
-				return organization.id limit 1`
-
-	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]interface{}{
-				"tenant":                 tenant,
-				"externalSystem":         externalSystem,
-				"organizationExternalId": externalId,
-				"domains":                domains,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Collect(ctx)
-	})
-	if err != nil {
-		return "", err
-	}
-	orgIDs := dbRecords.([]*db.Record)
-	if len(orgIDs) == 1 {
-		return orgIDs[0].Values[0].(string), nil
-	}
-	return "", nil
 }
 
 func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error) {
