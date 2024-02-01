@@ -1,6 +1,10 @@
 import React from 'react';
 
+import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
+import { FeaturedIcon } from '@ui/media/Icon';
+import { Heading } from '@ui/typography/Heading';
+import { FileX02 } from '@ui/media/icons/FileX02';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { InvoiceCustomer, InvoiceProvider } from '@graphql/types';
 import { GetInvoiceQuery } from '@shared/graphql/getInvoice.generated';
@@ -19,7 +23,7 @@ const extractAddressData = (invoiceData: InvoiceCustomer | InvoiceProvider) => {
     name: invoiceData?.name ?? '',
     country: invoiceData?.addressCountry ?? '',
     locality: invoiceData?.addressLocality ?? '',
-    addressLine: invoiceData?.addressLine1 ?? '',
+    addressLine1: invoiceData?.addressLine1 ?? '',
     addressLine2: invoiceData?.addressLine2 ?? '',
   };
 };
@@ -35,8 +39,28 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
   }
 
   if (!data?.invoice || isError) {
-    // eslint-disable-next-line react/no-unescaped-entities
-    return <Text> Sorry, we couldn't find this invoice</Text>;
+    return (
+      <Flex
+        as='article'
+        position='relative'
+        flexDirection='column'
+        alignItems='center'
+        px={4}
+        py={4}
+        mt={5}
+        overflow='hidden'
+      >
+        <FeaturedIcon colorScheme='warning'>
+          <FileX02 boxSize='7' />
+        </FeaturedIcon>
+        <Heading fontSize='md' mt={4} mb={1}>
+          Preview not available
+        </Heading>
+        <Text textAlign='center' fontSize='sm' color='gray.500'>
+          Sorry, selected invoice cannot be previewed at this moment
+        </Text>
+      </Flex>
+    );
   }
 
   const customerAddressData = extractAddressData(data?.invoice?.customer);

@@ -10,6 +10,7 @@ import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { ChevronDown } from '@ui/media/icons/ChevronDown';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { filterOutDryRunInvoices } from '@shared/components/Invoice/utils';
 import { useGetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { InvoicesTable } from '@organization/src/components/Tabs/panels/InvoicesPanel/InvoicesTable';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
@@ -32,16 +33,21 @@ export const InvoicesPanel = () => {
       page: 0,
       limit: 50,
     },
+    // todo uncomment in COS-1847 after COS-1848 is merged
+    where: {
+      ...filterOutDryRunInvoices,
+    },
     organizationId: id,
   });
 
   return (
     <OrganizationPanel title='Account'>
       <motion.div
+        key='invoices'
         variants={slideUpVariants}
         initial='initial'
         animate='animate'
-        exit='exit'
+        exit={{ x: -500, opacity: 0 }}
         style={{ width: '100%' }}
       >
         <Flex justifyContent='space-between' mb={2}>

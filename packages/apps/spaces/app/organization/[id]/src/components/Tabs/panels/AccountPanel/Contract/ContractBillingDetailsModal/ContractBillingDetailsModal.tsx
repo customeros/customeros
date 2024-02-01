@@ -6,34 +6,30 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
 import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
-import { FormInput } from '@ui/form/Input';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { File02 } from '@ui/media/icons/File02';
 import { Grid, GridItem } from '@ui/layout/Grid';
 import { Heading } from '@ui/typography/Heading';
-import { FormSelect } from '@ui/form/SyncSelect';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { getCurrencyOptions } from '@shared/util/currencyOptions';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
-  GetContractQuery,
-  useGetContractQuery,
-} from '@organization/src/graphql/getContract.generated';
-import {
   Modal,
-  ModalBody,
   ModalFooter,
   ModalHeader,
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal';
+import {
+  GetContractQuery,
+  useGetContractQuery,
+} from '@organization/src/graphql/getContract.generated';
 
 import { BillingDetailsDto } from './BillingDetails.dto';
+import { ContractBillingDetailsForm } from './ContractBillingDetailsForm';
 
 interface SubscriptionServiceModalProps {
   isOpen: boolean;
@@ -44,7 +40,7 @@ interface SubscriptionServiceModalProps {
 }
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export const BillingDetails = ({
+export const ContractBillingDetailsModal = ({
   isOpen,
   onClose,
   contractId,
@@ -64,7 +60,6 @@ export const BillingDetails = ({
   const queryClient = useQueryClient();
   const client = getGraphQLClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const currencyOptions = useMemo(() => getCurrencyOptions(), []);
   const { data: tenantBillingProfile } = useTenantBillingProfilesQuery(client);
 
   const updateContract = useUpdateContractMutation(client, {
@@ -150,7 +145,7 @@ export const BillingDetails = ({
       issueDate: new Date().toISOString(),
       from: tenantBillingProfile?.tenantBillingProfiles?.[0]
         ? {
-            addressLine:
+            addressLine1:
               tenantBillingProfile?.tenantBillingProfiles?.[0]?.addressLine1 ??
               '',
             addressLine2:
@@ -169,7 +164,7 @@ export const BillingDetails = ({
             name: tenantBillingProfile?.tenantBillingProfiles?.[0]?.legalName,
           }
         : {
-            addressLine: '29 Maple Lane',
+            addressLine1: '29 Maple Lane',
             addressLine2: 'Springfield, Haven County',
             locality: 'San Francisco',
             zip: '89302',
@@ -180,6 +175,12 @@ export const BillingDetails = ({
     }),
     [tenantBillingProfile?.tenantBillingProfiles?.[0]],
   );
+  const isEmailValid = useMemo(() => {
+    return (
+      !!state.values.invoiceEmail?.length &&
+      !emailRegex.test(state.values.invoiceEmail)
+    );
+  }, [state?.values?.invoiceEmail]);
 
   return (
     <Modal
@@ -221,129 +222,12 @@ export const BillingDetails = ({
                 contract details
               </Heading>
             </ModalHeader>
-            <ModalBody pb='0' gap={4} display='flex' flexDir='column' flex={1}>
-              <FormInput
-                label='Link to contract'
-                isLabelVisible
-                labelProps={{
-                  fontSize: 'sm',
-                  mb: 0,
-                  fontWeight: 'semibold',
-                }}
-                formId={formId}
-                name='contractUrl'
-                textOverflow='ellipsis'
-                placeholder='Paste or enter a contract link'
-              />
-
-              <FormInput
-                label='Organization legal name'
-                isLabelVisible
-                labelProps={{
-                  fontSize: 'sm',
-                  mb: 0,
-                  fontWeight: 'semibold',
-                }}
-                onMouseEnter={() => setIsBillingDetailsHovered(true)}
-                onMouseLeave={() => setIsBillingDetailsHovered(false)}
-                onFocus={() => setIsBillingDetailsFocused(true)}
-                onBlur={() => setIsBillingDetailsFocused(false)}
-                formId={formId}
-                name='organizationLegalName'
-                textOverflow='ellipsis'
-                placeholder='Organization legal name'
-              />
-
-              <Flex
-                flexDir='column'
-                onMouseEnter={() => setIsBillingDetailsHovered(true)}
-                onMouseLeave={() => setIsBillingDetailsHovered(false)}
-              >
-                <FormInput
-                  label='Billing address'
-                  isLabelVisible
-                  labelProps={{
-                    fontSize: 'sm',
-                    mb: 0,
-                    fontWeight: 'semibold',
-                  }}
-                  formId={formId}
-                  name='addressLine1'
-                  textOverflow='ellipsis'
-                  placeholder='Address line 1'
-                  onFocus={() => setIsBillingDetailsFocused(true)}
-                  onBlur={() => setIsBillingDetailsFocused(false)}
-                />
-                <FormInput
-                  label='Address line 2'
-                  formId={formId}
-                  name='addressLine2'
-                  textOverflow='ellipsis'
-                  placeholder='Address line 2'
-                  onFocus={() => setIsBillingDetailsFocused(true)}
-                  onBlur={() => setIsBillingDetailsFocused(false)}
-                />
-                <Flex>
-                  <FormInput
-                    label='City'
-                    formId={formId}
-                    name='locality'
-                    textOverflow='ellipsis'
-                    placeholder='City'
-                    onFocus={() => setIsBillingDetailsFocused(true)}
-                    onBlur={() => setIsBillingDetailsFocused(false)}
-                  />
-                  <FormInput
-                    label='ZIP/Postal code'
-                    formId={formId}
-                    name='zip'
-                    textOverflow='ellipsis'
-                    placeholder='ZIP/Potal code'
-                    onFocus={() => setIsBillingDetailsFocused(true)}
-                    onBlur={() => setIsBillingDetailsFocused(false)}
-                  />
-                </Flex>
-                <FormSelect
-                  label='Country'
-                  placeholder='Country'
-                  name='country'
-                  formId={formId}
-                  options={countryOptions}
-                  onFocus={() => setIsBillingDetailsFocused(true)}
-                  onBlur={() => setIsBillingDetailsFocused(false)}
-                />
-              </Flex>
-              <FormInput
-                label='Send invoice to'
-                isLabelVisible
-                labelProps={{
-                  fontSize: 'sm',
-                  mb: 0,
-                  fontWeight: 'semibold',
-                }}
-                formId={formId}
-                name='invoiceEmail'
-                textOverflow='ellipsis'
-                placeholder='Email'
-                type='email'
-                isInvalid={
-                  !!state.values.invoiceEmail?.length &&
-                  !emailRegex.test(state.values.invoiceEmail)
-                }
-                onMouseEnter={() => setIsBillingDetailsHovered(true)}
-                onMouseLeave={() => setIsBillingDetailsHovered(false)}
-                onFocus={() => setIsBillingDetailsFocused(true)}
-                onBlur={() => setIsBillingDetailsFocused(false)}
-              />
-              <FormSelect
-                label='Currency'
-                placeholder='Invoice currency'
-                isLabelVisible
-                name='currency'
-                formId={formId}
-                options={currencyOptions ?? []}
-              />
-            </ModalBody>
+            <ContractBillingDetailsForm
+              formId={formId}
+              isEmailValid={isEmailValid}
+              onSetIsBillingDetailsHovered={setIsBillingDetailsHovered}
+              onSetIsBillingDetailsFocused={setIsBillingDetailsFocused}
+            />
             <ModalFooter p='6'>
               <Button variant='outline' w='full' onClick={onClose}>
                 Cancel
@@ -368,7 +252,7 @@ export const BillingDetails = ({
                 }
                 currency={state?.values?.currency?.value}
                 billedTo={{
-                  addressLine: state.values.addressLine1 ?? '',
+                  addressLine1: state.values.addressLine1 ?? '',
                   addressLine2: state.values.addressLine2 ?? '',
                   locality: state.values.locality ?? '',
                   zip: state.values.zip ?? '',

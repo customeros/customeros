@@ -33,6 +33,10 @@ export function InvoicesTable() {
       page: 0,
       limit: 40,
     },
+    // todo uncomment in COS-1847 after COS-1848 is merged
+    // where: {
+    //   ...filterOutDryRunInvoices,
+    // },
   });
 
   useEffect(() => {

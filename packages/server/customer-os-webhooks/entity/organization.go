@@ -42,7 +42,7 @@ type OrganizationEntity struct {
 	}
 	RenewalLikelihood RenewalLikelihood
 	RenewalForecast   RenewalForecast
-	BillingDetails    BillingDetails
+	ContractBillingDetailsModal    ContractBillingDetailsModal
 }
 
 type RenewalLikelihood struct {
@@ -61,7 +61,7 @@ type RenewalForecast struct {
 	UpdatedById     *string
 }
 
-type BillingDetails struct {
+type ContractBillingDetailsModal struct {
 	Amount            *float64
 	Frequency         string
 	RenewalCycle      string

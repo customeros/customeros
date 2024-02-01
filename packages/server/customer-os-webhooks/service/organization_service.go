@@ -509,7 +509,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(dbNode dbtype.Node) 
 			UpdatedById:     utils.GetStringPropOrNil(props, "renewalForecastUpdatedBy"),
 			UpdatedAt:       utils.GetTimePropOrNil(props, "renewalForecastUpdatedAt"),
 		},
-		BillingDetails: entity.BillingDetails{
+		ContractBillingDetailsModal: entity.ContractBillingDetailsModal{
 			Amount:            utils.GetFloatPropOrNil(props, "billingDetailsAmount"),
 			Frequency:         utils.GetStringPropOrEmpty(props, "billingDetailsFrequency"),
 			RenewalCycle:      utils.GetStringPropOrEmpty(props, "billingDetailsRenewalCycle"),
