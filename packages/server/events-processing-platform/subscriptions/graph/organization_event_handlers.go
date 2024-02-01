@@ -214,8 +214,10 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	data := neo4jrepository.OrganizationUpdateFields{
 		UpdatedAt:                eventData.UpdatedAt,

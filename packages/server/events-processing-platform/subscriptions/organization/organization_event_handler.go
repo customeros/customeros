@@ -11,6 +11,7 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"strings"
+	"time"
 
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
@@ -323,9 +324,20 @@ func (h *organizationEventHandler) AdjustNewOrganizationFields(ctx context.Conte
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
 	market := h.mapMarketValue(eventData.Market)
 	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
+
+	// wait for organization to be created in neo4j before updating it
+	for attempt := 1; attempt <= constants.MaxRetriesCheckDataInNeo4j; attempt++ {
+		exists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization)
+		if err == nil && exists {
+			break
+		}
+		time.Sleep(utils.BackOffExponentialDelay(attempt))
+	}
 
 	if eventData.Market != market || eventData.Industry != industry {
 		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry, span)
