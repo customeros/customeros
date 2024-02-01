@@ -160,6 +160,12 @@
   text-align: left;
   line-height: 20px;
 }
+.invoice-subtitle-3 {
+  color: var(--dl-color-gray-500);
+  height: auto;
+  text-align: left;
+  line-height: 20px;
+}
 .invoice-printed-from {
   gap: 4px;
   display: flex;
