@@ -5,7 +5,7 @@ go 1.21
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
 require (
-	github.com/cucumber/godog v0.13.0
+	github.com/cucumber/godog v0.14.0
 	github.com/docker/docker v25.0.1+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.17.0
