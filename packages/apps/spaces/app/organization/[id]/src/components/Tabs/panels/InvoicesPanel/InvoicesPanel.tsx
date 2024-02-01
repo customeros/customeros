@@ -33,7 +33,6 @@ export const InvoicesPanel = () => {
       page: 0,
       limit: 50,
     },
-    // todo uncomment in COS-1847 after COS-1848 is merged
     where: {
       ...filterOutDryRunInvoices,
     },

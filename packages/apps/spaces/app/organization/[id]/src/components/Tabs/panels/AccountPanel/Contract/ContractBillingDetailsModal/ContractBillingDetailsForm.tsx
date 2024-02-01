@@ -11,8 +11,8 @@ import { getCurrencyOptions } from '@shared/util/currencyOptions';
 interface SubscriptionServiceModalProps {
   formId: string;
   isEmailValid: boolean;
-  onSetIsBillingDetailsHovered: (newState?: boolean) => void;
-  onSetIsBillingDetailsFocused: (newState?: boolean) => void;
+  onSetIsBillingDetailsHovered: (newState: boolean) => void;
+  onSetIsBillingDetailsFocused: (newState: boolean) => void;
 }
 
 export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
