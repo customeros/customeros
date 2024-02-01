@@ -11,10 +11,10 @@ import { Notes } from '../Notes';
 import { ContractCard } from '../Contract/ContractCard';
 
 interface ContractsProps {
-  isFetching: boolean;
+  isLoading: boolean;
   organization?: Organization | null;
 }
-export const Contracts: FC<ContractsProps> = ({ isFetching, organization }) => {
+export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
   const id = useParams()?.id as string;
 
   return (
@@ -24,7 +24,7 @@ export const Contracts: FC<ContractsProps> = ({ isFetching, organization }) => {
           <ARRForecast
             renewalSunnary={organization?.accountDetails?.renewalSummary}
             name={organization?.name || ''}
-            isInitialLoading={isFetching}
+            isInitialLoading={isLoading}
           />
           {organization?.contracts.map((contract) => (
             <Flex

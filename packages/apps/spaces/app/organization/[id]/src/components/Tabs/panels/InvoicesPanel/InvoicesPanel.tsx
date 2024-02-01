@@ -1,19 +1,21 @@
 'use client';
-import React from 'react';
+import React, { useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
 import { motion } from 'framer-motion';
+import { useIsRestoring } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { Invoice } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
+import { Table } from '@ui/presentation/Table';
 import { IconButton } from '@ui/form/IconButton';
 import { ChevronDown } from '@ui/media/icons/ChevronDown';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { filterOutDryRunInvoices } from '@shared/components/Invoice/utils';
-import { useGetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
-import { InvoicesTable } from '@organization/src/components/Tabs/panels/InvoicesPanel/InvoicesTable';
+import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
+import { useInfiniteInvoices } from '@shared/components/Invoice/hooks/useInfiniteInvoices';
+import { columns } from '@organization/src/components/Tabs/panels/InvoicesPanel/Columns/Columns';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 const slideUpVariants = {
   initial: { y: '100%', opacity: 0 },
@@ -26,18 +28,20 @@ const slideUpVariants = {
 };
 export const InvoicesPanel = () => {
   const id = useParams()?.id as string;
-  const client = getGraphQLClient();
+  const isRestoring = useIsRestoring();
   const router = useRouter();
-  const { data } = useGetInvoicesQuery(client, {
-    pagination: {
-      page: 0,
-      limit: 50,
-    },
-    where: {
-      ...filterOutDryRunInvoices,
-    },
-    organizationId: id,
-  });
+  const tableRef = useRef(null);
+  const { handleOpenInvoice } = useTimelineEventPreviewMethodsContext();
+
+  const { invoiceFlattenData, totalInvoicesCount, isFetching, fetchNextPage } =
+    useInfiniteInvoices(id);
+  if (totalInvoicesCount === 0) {
+    return (
+      <Flex justifyContent='center'>
+        <EmptyState maxW={448} />
+      </Flex>
+    );
+  }
 
   return (
     <OrganizationPanel title='Account'>
@@ -62,9 +66,20 @@ export const InvoicesPanel = () => {
           />
         </Flex>
         <Flex mx={-5}>
-          <InvoicesTable
-            invoices={(data?.invoices?.content as Array<Invoice>) ?? []}
-            totalElements={data?.invoices.totalElements}
+          <Table<Invoice>
+            data={invoiceFlattenData ?? []}
+            columns={columns}
+            enableRowSelection={false}
+            fullRowSelection={true}
+            onFullRowSelection={(id) => id && handleOpenInvoice(id)}
+            canFetchMore={true}
+            onFetchMore={fetchNextPage}
+            tableRef={tableRef}
+            isLoading={isRestoring ? false : isFetching}
+            totalItems={isRestoring ? 10 : totalInvoicesCount}
+            rowHeight={4}
+            borderColor='gray.100'
+            contentHeight={'80vh'}
           />
         </Flex>
       </motion.div>
