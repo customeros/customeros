@@ -13,6 +13,11 @@ const customLayout1 = "2006-01-02 15:04:05"
 const customLayout2 = "2006-01-02T15:04:05.000-0700"
 const customLayout3 = "2006-01-02T15:04:05-07:00"
 
+type YearMonth struct {
+	Year  int
+	Month time.Month
+}
+
 func ZeroTime() time.Time {
 	return time.Time{}
 }
@@ -154,4 +159,34 @@ func LastDayOfMonth(year, month int) time.Time {
 
 func StartOfDayInUTC(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+func AddOneMonthFallbackToLastDayOfMonth(date time.Time) time.Time {
+	// Calculate the next month
+	nextMonth := date.AddDate(0, 1, 0)
+
+	for i := 0; i < 4; i++ {
+		if date.Day()-nextMonth.Day() > 27 {
+			// Decrease the day by 1
+			nextMonth = nextMonth.AddDate(0, 0, -1)
+		}
+	}
+
+	// Keep the same day
+	return nextMonth
+}
+
+func GenerateYearMonths(start, end time.Time) []YearMonth {
+	yearMonths := []YearMonth{}
+
+	// Set the day to the 15th of the month for the start date
+	start = time.Date(start.Year(), start.Month(), 15, 0, 0, 0, 0, start.Location())
+	end = time.Date(end.Year(), end.Month(), 16, 0, 0, 0, 0, end.Location())
+	current := start
+	for current.Before(end) || current.Equal(end) {
+		yearMonths = append(yearMonths, YearMonth{Year: current.Year(), Month: current.Month()})
+		current = current.AddDate(0, 1, 0)
+	}
+
+	return yearMonths
 }
