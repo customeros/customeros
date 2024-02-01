@@ -1753,18 +1753,18 @@ func (OrganizationParticipant) IsIssueParticipant() {}
 func (OrganizationParticipant) IsMeetingParticipant() {}
 
 type OrganizationPlan struct {
-	ID                string                       `json:"id"`
-	CreatedAt         time.Time                    `json:"createdAt"`
-	UpdatedAt         time.Time                    `json:"updatedAt"`
-	Name              string                       `json:"name"`
-	Source            DataSource                   `json:"source"`
-	SourceOfTruth     DataSource                   `json:"sourceOfTruth"`
-	AppSource         string                       `json:"appSource"`
-	Retired           bool                         `json:"retired"`
-	Milestones        []*OrganizationPlanMilestone `json:"milestones"`
-	RetiredMilestones []*OrganizationPlanMilestone `json:"retiredMilestones"`
-	StatusDetails     *StatusDetails               `json:"statusDetails"`
-	MasterPlanID      string                       `json:"masterPlanId"`
+	ID                string                         `json:"id"`
+	CreatedAt         time.Time                      `json:"createdAt"`
+	UpdatedAt         time.Time                      `json:"updatedAt"`
+	Name              string                         `json:"name"`
+	Source            DataSource                     `json:"source"`
+	SourceOfTruth     DataSource                     `json:"sourceOfTruth"`
+	AppSource         string                         `json:"appSource"`
+	Retired           bool                           `json:"retired"`
+	Milestones        []*OrganizationPlanMilestone   `json:"milestones"`
+	RetiredMilestones []*OrganizationPlanMilestone   `json:"retiredMilestones"`
+	StatusDetails     *OrganizationPlanStatusDetails `json:"statusDetails"`
+	MasterPlanID      string                         `json:"masterPlanId"`
 }
 
 func (OrganizationPlan) IsSourceFields()                   {}
@@ -1782,20 +1782,20 @@ type OrganizationPlanInput struct {
 }
 
 type OrganizationPlanMilestone struct {
-	ID            string                           `json:"id"`
-	CreatedAt     time.Time                        `json:"createdAt"`
-	UpdatedAt     time.Time                        `json:"updatedAt"`
-	Name          string                           `json:"name"`
-	Source        DataSource                       `json:"source"`
-	SourceOfTruth DataSource                       `json:"sourceOfTruth"`
-	AppSource     string                           `json:"appSource"`
-	Order         int64                            `json:"order"`
-	DueDate       time.Time                        `json:"dueDate"`
-	Optional      bool                             `json:"optional"`
-	Items         []*OrganizationPlanMilestoneItem `json:"items"`
-	Retired       bool                             `json:"retired"`
-	StatusDetails *StatusDetails                   `json:"statusDetails"`
-	Adhoc         bool                             `json:"adhoc"`
+	ID            string                                  `json:"id"`
+	CreatedAt     time.Time                               `json:"createdAt"`
+	UpdatedAt     time.Time                               `json:"updatedAt"`
+	Name          string                                  `json:"name"`
+	Source        DataSource                              `json:"source"`
+	SourceOfTruth DataSource                              `json:"sourceOfTruth"`
+	AppSource     string                                  `json:"appSource"`
+	Order         int64                                   `json:"order"`
+	DueDate       time.Time                               `json:"dueDate"`
+	Optional      bool                                    `json:"optional"`
+	Items         []*OrganizationPlanMilestoneItem        `json:"items"`
+	Retired       bool                                    `json:"retired"`
+	StatusDetails *OrganizationPlanMilestoneStatusDetails `json:"statusDetails"`
+	Adhoc         bool                                    `json:"adhoc"`
 }
 
 func (OrganizationPlanMilestone) IsSourceFields()                   {}
@@ -1836,6 +1836,12 @@ type OrganizationPlanMilestoneReorderInput struct {
 	OrderedIds         []string `json:"orderedIds"`
 }
 
+type OrganizationPlanMilestoneStatusDetails struct {
+	Status    OnboardingPlanMilestoneStatus `json:"status"`
+	UpdatedAt time.Time                     `json:"updatedAt"`
+	Text      string                        `json:"text"`
+}
+
 type OrganizationPlanMilestoneStatusDetailsInput struct {
 	Status    OnboardingPlanMilestoneStatus `json:"status"`
 	UpdatedAt time.Time                     `json:"updatedAt"`
@@ -1855,6 +1861,12 @@ type OrganizationPlanMilestoneUpdateInput struct {
 	StatusDetails      *OrganizationPlanMilestoneStatusDetailsInput `json:"statusDetails,omitempty"`
 	OrganizationID     string                                       `json:"organizationId"`
 	Adhoc              *bool                                        `json:"adhoc,omitempty"`
+}
+
+type OrganizationPlanStatusDetails struct {
+	Status    OnboardingPlanStatus `json:"status"`
+	UpdatedAt time.Time            `json:"updatedAt"`
+	Text      string               `json:"text"`
 }
 
 type OrganizationPlanStatusDetailsInput struct {
@@ -2178,12 +2190,6 @@ type State struct {
 	Country *Country `json:"country"`
 	Name    string   `json:"name"`
 	Code    string   `json:"code"`
-}
-
-type StatusDetails struct {
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	Text      string    `json:"text"`
 }
 
 type SuggestedMergeOrganization struct {

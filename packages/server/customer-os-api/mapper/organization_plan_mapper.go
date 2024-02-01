@@ -97,23 +97,53 @@ func MapEntityToOrganizationPlanMilestoneItem(entity *neo4jentity.OrganizationPl
 	}
 }
 
-func MapEntityToOrganizationPlanStatusDetails(entity *neo4jentity.OrganizationPlanStatusDetails) *model.StatusDetails {
+func MapEntityToOrganizationPlanStatusDetails(entity *neo4jentity.OrganizationPlanStatusDetails) *model.OrganizationPlanStatusDetails {
 	if entity == nil {
 		return nil
 	}
-	return &model.StatusDetails{
-		Status:    entity.Status,
+	status := model.OnboardingPlanStatusNotStarted
+	switch entity.Status {
+	case model.OnboardingPlanStatusNotStarted.String():
+		status = model.OnboardingPlanStatusNotStarted
+	case model.OnboardingPlanStatusOnTrack.String():
+		status = model.OnboardingPlanStatusOnTrack
+	case model.OnboardingPlanStatusLate.String():
+		status = model.OnboardingPlanStatusLate
+	case model.OnboardingPlanStatusDone.String():
+		status = model.OnboardingPlanStatusDone
+	case model.OnboardingPlanStatusNotStartedLate.String():
+		status = model.OnboardingPlanStatusNotStartedLate
+	case model.OnboardingPlanStatusDoneLate.String():
+		status = model.OnboardingPlanStatusDoneLate
+	}
+	return &model.OrganizationPlanStatusDetails{
+		Status:    status,
 		UpdatedAt: entity.UpdatedAt,
 		Text:      entity.Comments,
 	}
 }
 
-func MapEntityToOrganizationPlanMilestoneStatusDetails(entity *neo4jentity.OrganizationPlanMilestoneStatusDetails) *model.StatusDetails {
+func MapEntityToOrganizationPlanMilestoneStatusDetails(entity *neo4jentity.OrganizationPlanMilestoneStatusDetails) *model.OrganizationPlanMilestoneStatusDetails {
 	if entity == nil {
 		return nil
 	}
-	return &model.StatusDetails{
-		Status:    entity.Status,
+	status := model.OnboardingPlanMilestoneStatusNotStarted
+	switch entity.Status {
+	case model.OnboardingPlanMilestoneStatusNotStarted.String():
+		status = model.OnboardingPlanMilestoneStatusNotStarted
+	case model.OnboardingPlanMilestoneStatusStarted.String():
+		status = model.OnboardingPlanMilestoneStatusStarted
+	case model.OnboardingPlanMilestoneStatusDone.String():
+		status = model.OnboardingPlanMilestoneStatusDone
+	case model.OnboardingPlanMilestoneStatusNotStartedLate.String():
+		status = model.OnboardingPlanMilestoneStatusNotStartedLate
+	case model.OnboardingPlanMilestoneStatusStartedLate.String():
+		status = model.OnboardingPlanMilestoneStatusStartedLate
+	case model.OnboardingPlanMilestoneStatusDoneLate.String():
+		status = model.OnboardingPlanMilestoneStatusDoneLate
+	}
+	return &model.OrganizationPlanMilestoneStatusDetails{
+		Status:    status,
 		UpdatedAt: entity.UpdatedAt,
 		Text:      entity.Comments,
 	}

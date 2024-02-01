@@ -1113,6 +1113,18 @@ type ComplexityRoot struct {
 		UpdatedAt func(childComplexity int) int
 	}
 
+	OrganizationPlanMilestoneStatusDetails struct {
+		Status    func(childComplexity int) int
+		Text      func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+	}
+
+	OrganizationPlanStatusDetails struct {
+		Status    func(childComplexity int) int
+		Text      func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+	}
+
 	PageView struct {
 		AppSource      func(childComplexity int) int
 		Application    func(childComplexity int) int
@@ -1289,12 +1301,6 @@ type ComplexityRoot struct {
 		Country func(childComplexity int) int
 		ID      func(childComplexity int) int
 		Name    func(childComplexity int) int
-	}
-
-	StatusDetails struct {
-		Status    func(childComplexity int) int
-		Text      func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
 	}
 
 	SuggestedMergeOrganization struct {
@@ -8279,6 +8285,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationPlanMilestoneItem.UpdatedAt(childComplexity), true
 
+	case "OrganizationPlanMilestoneStatusDetails.status":
+		if e.complexity.OrganizationPlanMilestoneStatusDetails.Status == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanMilestoneStatusDetails.Status(childComplexity), true
+
+	case "OrganizationPlanMilestoneStatusDetails.text":
+		if e.complexity.OrganizationPlanMilestoneStatusDetails.Text == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanMilestoneStatusDetails.Text(childComplexity), true
+
+	case "OrganizationPlanMilestoneStatusDetails.updatedAt":
+		if e.complexity.OrganizationPlanMilestoneStatusDetails.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanMilestoneStatusDetails.UpdatedAt(childComplexity), true
+
+	case "OrganizationPlanStatusDetails.status":
+		if e.complexity.OrganizationPlanStatusDetails.Status == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanStatusDetails.Status(childComplexity), true
+
+	case "OrganizationPlanStatusDetails.text":
+		if e.complexity.OrganizationPlanStatusDetails.Text == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanStatusDetails.Text(childComplexity), true
+
+	case "OrganizationPlanStatusDetails.updatedAt":
+		if e.complexity.OrganizationPlanStatusDetails.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanStatusDetails.UpdatedAt(childComplexity), true
+
 	case "PageView.appSource":
 		if e.complexity.PageView.AppSource == nil {
 			break
@@ -9496,27 +9544,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.State.Name(childComplexity), true
-
-	case "StatusDetails.status":
-		if e.complexity.StatusDetails.Status == nil {
-			break
-		}
-
-		return e.complexity.StatusDetails.Status(childComplexity), true
-
-	case "StatusDetails.text":
-		if e.complexity.StatusDetails.Text == nil {
-			break
-		}
-
-		return e.complexity.StatusDetails.Text(childComplexity), true
-
-	case "StatusDetails.updatedAt":
-		if e.complexity.StatusDetails.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.StatusDetails.UpdatedAt(childComplexity), true
 
 	case "SuggestedMergeOrganization.confidence":
 		if e.complexity.SuggestedMergeOrganization.Confidence == nil {
@@ -12696,7 +12723,7 @@ type OrganizationPlan implements SourceFields & Node {
     retired:            Boolean!
     milestones:         [OrganizationPlanMilestone!]! @goField(forceResolver: true)
     retiredMilestones:  [OrganizationPlanMilestone!]! @goField(forceResolver: true)
-    statusDetails:      StatusDetails!
+    statusDetails:      OrganizationPlanStatusDetails!
     masterPlanId:       ID!
 }
 
@@ -12713,7 +12740,7 @@ type OrganizationPlanMilestone implements SourceFields & Node {
     optional:           Boolean!
     items:              [OrganizationPlanMilestoneItem!]!
     retired:            Boolean!
-    statusDetails:      StatusDetails!
+    statusDetails:      OrganizationPlanMilestoneStatusDetails!
     adhoc:              Boolean!
 }
 
@@ -12744,8 +12771,14 @@ enum OnboardingPlanMilestoneItemStatus {
     DONE_LATE
 }
 
-type StatusDetails {
-    status: String!
+type OrganizationPlanStatusDetails {
+    status: OnboardingPlanStatus!
+    updatedAt: Time!
+    text: String!
+}
+
+type OrganizationPlanMilestoneStatusDetails {
+    status: OnboardingPlanMilestoneStatus!
     updatedAt: Time!
     text: String!
 }
@@ -64491,9 +64524,9 @@ func (ec *executionContext) _OrganizationPlan_statusDetails(ctx context.Context,
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.StatusDetails)
+	res := resTmp.(*model.OrganizationPlanStatusDetails)
 	fc.Result = res
-	return ec.marshalNStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐStatusDetails(ctx, field.Selections, res)
+	return ec.marshalNOrganizationPlanStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPlanStatusDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationPlan_statusDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64505,13 +64538,13 @@ func (ec *executionContext) fieldContext_OrganizationPlan_statusDetails(ctx cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "status":
-				return ec.fieldContext_StatusDetails_status(ctx, field)
+				return ec.fieldContext_OrganizationPlanStatusDetails_status(ctx, field)
 			case "updatedAt":
-				return ec.fieldContext_StatusDetails_updatedAt(ctx, field)
+				return ec.fieldContext_OrganizationPlanStatusDetails_updatedAt(ctx, field)
 			case "text":
-				return ec.fieldContext_StatusDetails_text(ctx, field)
+				return ec.fieldContext_OrganizationPlanStatusDetails_text(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type StatusDetails", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanStatusDetails", field.Name)
 		},
 	}
 	return fc, nil
@@ -65123,9 +65156,9 @@ func (ec *executionContext) _OrganizationPlanMilestone_statusDetails(ctx context
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.StatusDetails)
+	res := resTmp.(*model.OrganizationPlanMilestoneStatusDetails)
 	fc.Result = res
-	return ec.marshalNStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐStatusDetails(ctx, field.Selections, res)
+	return ec.marshalNOrganizationPlanMilestoneStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPlanMilestoneStatusDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationPlanMilestone_statusDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65137,13 +65170,13 @@ func (ec *executionContext) fieldContext_OrganizationPlanMilestone_statusDetails
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "status":
-				return ec.fieldContext_StatusDetails_status(ctx, field)
+				return ec.fieldContext_OrganizationPlanMilestoneStatusDetails_status(ctx, field)
 			case "updatedAt":
-				return ec.fieldContext_StatusDetails_updatedAt(ctx, field)
+				return ec.fieldContext_OrganizationPlanMilestoneStatusDetails_updatedAt(ctx, field)
 			case "text":
-				return ec.fieldContext_StatusDetails_text(ctx, field)
+				return ec.fieldContext_OrganizationPlanMilestoneStatusDetails_text(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type StatusDetails", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestoneStatusDetails", field.Name)
 		},
 	}
 	return fc, nil
@@ -65315,6 +65348,270 @@ func (ec *executionContext) _OrganizationPlanMilestoneItem_text(ctx context.Cont
 func (ec *executionContext) fieldContext_OrganizationPlanMilestoneItem_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "OrganizationPlanMilestoneItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanMilestoneStatusDetails_status(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanMilestoneStatusDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanMilestoneStatusDetails_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.OnboardingPlanMilestoneStatus)
+	fc.Result = res
+	return ec.marshalNOnboardingPlanMilestoneStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingPlanMilestoneStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanMilestoneStatusDetails_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanMilestoneStatusDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OnboardingPlanMilestoneStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanMilestoneStatusDetails_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanMilestoneStatusDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanMilestoneStatusDetails_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanMilestoneStatusDetails_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanMilestoneStatusDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanMilestoneStatusDetails_text(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanMilestoneStatusDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanMilestoneStatusDetails_text(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Text, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanMilestoneStatusDetails_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanMilestoneStatusDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanStatusDetails_status(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanStatusDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanStatusDetails_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.OnboardingPlanStatus)
+	fc.Result = res
+	return ec.marshalNOnboardingPlanStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingPlanStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanStatusDetails_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanStatusDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OnboardingPlanStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanStatusDetails_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanStatusDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanStatusDetails_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanStatusDetails_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanStatusDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanStatusDetails_text(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanStatusDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanStatusDetails_text(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Text, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanStatusDetails_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanStatusDetails",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -74721,138 +75018,6 @@ func (ec *executionContext) _State_code(ctx context.Context, field graphql.Colle
 func (ec *executionContext) fieldContext_State_code(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "State",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _StatusDetails_status(ctx context.Context, field graphql.CollectedField, obj *model.StatusDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_StatusDetails_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_StatusDetails_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "StatusDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _StatusDetails_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.StatusDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_StatusDetails_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_StatusDetails_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "StatusDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _StatusDetails_text(ctx context.Context, field graphql.CollectedField, obj *model.StatusDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_StatusDetails_text(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Text, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_StatusDetails_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "StatusDetails",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -96598,6 +96763,104 @@ func (ec *executionContext) _OrganizationPlanMilestoneItem(ctx context.Context, 
 	return out
 }
 
+var organizationPlanMilestoneStatusDetailsImplementors = []string{"OrganizationPlanMilestoneStatusDetails"}
+
+func (ec *executionContext) _OrganizationPlanMilestoneStatusDetails(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationPlanMilestoneStatusDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, organizationPlanMilestoneStatusDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OrganizationPlanMilestoneStatusDetails")
+		case "status":
+			out.Values[i] = ec._OrganizationPlanMilestoneStatusDetails_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._OrganizationPlanMilestoneStatusDetails_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "text":
+			out.Values[i] = ec._OrganizationPlanMilestoneStatusDetails_text(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var organizationPlanStatusDetailsImplementors = []string{"OrganizationPlanStatusDetails"}
+
+func (ec *executionContext) _OrganizationPlanStatusDetails(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationPlanStatusDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, organizationPlanStatusDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OrganizationPlanStatusDetails")
+		case "status":
+			out.Values[i] = ec._OrganizationPlanStatusDetails_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._OrganizationPlanStatusDetails_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "text":
+			out.Values[i] = ec._OrganizationPlanStatusDetails_text(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var pageViewImplementors = []string{"PageView", "Node", "SourceFields", "TimelineEvent"}
 
 func (ec *executionContext) _PageView(ctx context.Context, sel ast.SelectionSet, obj *model.PageView) graphql.Marshaler {
@@ -98832,55 +99095,6 @@ func (ec *executionContext) _State(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "code":
 			out.Values[i] = ec._State_code(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var statusDetailsImplementors = []string{"StatusDetails"}
-
-func (ec *executionContext) _StatusDetails(ctx context.Context, sel ast.SelectionSet, obj *model.StatusDetails) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, statusDetailsImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("StatusDetails")
-		case "status":
-			out.Values[i] = ec._StatusDetails_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "updatedAt":
-			out.Values[i] = ec._StatusDetails_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "text":
-			out.Values[i] = ec._StatusDetails_text(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -103491,6 +103705,16 @@ func (ec *executionContext) unmarshalNOrganizationPlanMilestoneReorderInput2gith
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNOrganizationPlanMilestoneStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPlanMilestoneStatusDetails(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationPlanMilestoneStatusDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._OrganizationPlanMilestoneStatusDetails(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNOrganizationPlanMilestoneUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPlanMilestoneUpdateInput(ctx context.Context, v interface{}) (model.OrganizationPlanMilestoneUpdateInput, error) {
 	res, err := ec.unmarshalInputOrganizationPlanMilestoneUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -103516,6 +103740,16 @@ func (ec *executionContext) unmarshalNOrganizationPlanMilestoneUpdateInput2ᚕ�
 func (ec *executionContext) unmarshalNOrganizationPlanMilestoneUpdateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPlanMilestoneUpdateInput(ctx context.Context, v interface{}) (*model.OrganizationPlanMilestoneUpdateInput, error) {
 	res, err := ec.unmarshalInputOrganizationPlanMilestoneUpdateInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOrganizationPlanStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPlanStatusDetails(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationPlanStatusDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._OrganizationPlanStatusDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNOrganizationPlanUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPlanUpdateInput(ctx context.Context, v interface{}) (model.OrganizationPlanUpdateInput, error) {
@@ -103950,16 +104184,6 @@ func (ec *executionContext) unmarshalNSortingDirection2githubᚗcomᚋopenline�
 
 func (ec *executionContext) marshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx context.Context, sel ast.SelectionSet, v model.SortingDirection) graphql.Marshaler {
 	return v
-}
-
-func (ec *executionContext) marshalNStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐStatusDetails(ctx context.Context, sel ast.SelectionSet, v *model.StatusDetails) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._StatusDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
