@@ -17,6 +17,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const APP_SOURCE = "user-admin-api"
@@ -455,6 +456,14 @@ func initializeUser(services *service.Services, provider, providerAccountId, ten
 			return nil, err
 		}
 		log.Printf("Initialize user - user created: %v", userByEmail)
+
+		for attempt := 1; attempt <= 5; attempt++ {
+			checkUserByEmail, err := services.CustomerOsClient.GetUserByEmail(tenant, email)
+			if err == nil && checkUserByEmail.ID != "" {
+				break
+			}
+			time.Sleep(commonUtils.BackOffExponentialDelay(attempt))
+		}
 	} else {
 		if !playerExists {
 			err = services.CustomerOsClient.CreatePlayer(tenant, userByEmail.ID, providerAccountId, email, provider)
