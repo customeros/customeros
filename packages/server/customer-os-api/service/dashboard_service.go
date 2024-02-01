@@ -194,19 +194,12 @@ func (s *dashboardService) GetDashboardMRRPerCustomerData(ctx context.Context, s
 
 	response := entityDashboard.DashboardDashboardMRRPerCustomerData{}
 
-	current := start
-	for current.Before(end) || current.Equal(end) {
-		fmt.Println(current.Month(), current.Year())
-
-		newData := &entityDashboard.DashboardDashboardMRRPerCustomerPerMonthData{
-			Year:  current.Year(),
-			Month: int(current.Month()),
+	for _, month := range utils.GenerateYearMonths(start, end) {
+		response.Months = append(response.Months, &entityDashboard.DashboardDashboardMRRPerCustomerPerMonthData{
+			Year:  month.Year,
+			Month: int(month.Month),
 			Value: 0,
-		}
-
-		response.Months = append(response.Months, newData)
-
-		current = current.AddDate(0, 1, 0)
+		})
 	}
 
 	countCustomers, err := s.repositories.OrganizationRepository.CountCustomers(ctx, common.GetContext(ctx).Tenant)
@@ -260,19 +253,12 @@ func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Con
 
 	response := entityDashboard.DashboardGrossRevenueRetentionData{}
 
-	current := start
-	for current.Before(end) || current.Equal(end) {
-		fmt.Println(current.Month(), current.Year())
-
-		newData := &entityDashboard.DashboardGrossRevenueRetentionPerMonthData{
-			Year:       current.Year(),
-			Month:      int(current.Month()),
+	for _, month := range utils.GenerateYearMonths(start, end) {
+		response.Months = append(response.Months, &entityDashboard.DashboardGrossRevenueRetentionPerMonthData{
+			Year:       month.Year,
+			Month:      int(month.Month),
 			Percentage: 0,
-		}
-
-		response.Months = append(response.Months, newData)
-
-		current = current.AddDate(0, 1, 0)
+		})
 	}
 
 	data, err := s.repositories.DashboardRepository.GetDashboardGRRData(ctx, common.GetContext(ctx).Tenant, start, end)
@@ -331,24 +317,17 @@ func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, sta
 
 	response := entityDashboard.DashboardARRBreakdownData{}
 
-	current := start
-	for current.Before(end) || current.Equal(end) {
-		fmt.Println(current.Month(), current.Year())
-
-		newData := &entityDashboard.DashboardARRBreakdownPerMonthData{
-			Year:            current.Year(),
-			Month:           int(current.Month()),
+	for _, month := range utils.GenerateYearMonths(start, end) {
+		response.Months = append(response.Months, &entityDashboard.DashboardARRBreakdownPerMonthData{
+			Year:            month.Year,
+			Month:           int(month.Month),
 			NewlyContracted: 0,
 			Renewals:        0,
 			Upsells:         0,
 			Downgrades:      0,
 			Cancellations:   0,
 			Churned:         0,
-		}
-
-		response.Months = append(response.Months, newData)
-
-		current = current.AddDate(0, 1, 0)
+		})
 	}
 
 	data, err := s.repositories.DashboardRepository.GetDashboardARRBreakdownData(ctx, common.GetContext(ctx).Tenant, start, end)
@@ -477,20 +456,13 @@ func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, st
 
 	response := entityDashboard.DashboardRetentionRateData{}
 
-	current := start
-	for current.Before(end) || current.Equal(end) {
-		fmt.Println(current.Month(), current.Year())
-
-		newData := &entityDashboard.DashboardRetentionRatePerMonthData{
-			Year:       current.Year(),
-			Month:      int(current.Month()),
+	for _, month := range utils.GenerateYearMonths(start, end) {
+		response.Months = append(response.Months, &entityDashboard.DashboardRetentionRatePerMonthData{
+			Year:       month.Year,
+			Month:      int(month.Month),
 			RenewCount: 0,
 			ChurnCount: 0,
-		}
-
-		response.Months = append(response.Months, newData)
-
-		current = current.AddDate(0, 1, 0)
+		})
 	}
 
 	contractsRenewalsData, err := s.repositories.DashboardRepository.GetDashboardRetentionRateContractsRenewalsData(ctx, common.GetContext(ctx).Tenant, start, end)
@@ -576,19 +548,12 @@ func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, sta
 
 	response := entityDashboard.DashboardNewCustomersData{}
 
-	current := start
-	for current.Before(end) || current.Equal(end) {
-		fmt.Println(current.Month(), current.Year())
-
-		newData := &entityDashboard.DashboardNewCustomerMonthData{
-			Year:  current.Year(),
-			Month: int(current.Month()),
+	for _, month := range utils.GenerateYearMonths(start, end) {
+		response.Months = append(response.Months, &entityDashboard.DashboardNewCustomerMonthData{
+			Year:  month.Year,
+			Month: int(month.Month),
 			Count: 0,
-		}
-
-		response.Months = append(response.Months, newData)
-
-		current = current.AddDate(0, 1, 0)
+		})
 	}
 
 	data, err := s.repositories.DashboardRepository.GetDashboardNewCustomersData(ctx, common.GetContext(ctx).Tenant, start, end)

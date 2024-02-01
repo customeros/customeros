@@ -225,3 +225,117 @@ func TestBackOffIncrementalDelay(t *testing.T) {
 		}
 	}
 }
+
+func TestAddOneMonthFallbackToLastDayOfMonth(t *testing.T) {
+	testCases := []struct {
+		input    time.Time
+		expected time.Time
+	}{
+		{
+			input:    time.Date(2024, time.January, 31, 0, 0, 0, 0, time.UTC),
+			expected: time.Date(2024, time.February, 29, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			input:    time.Date(2024, time.January, 15, 0, 0, 0, 0, time.UTC),
+			expected: time.Date(2024, time.February, 15, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			input:    time.Date(2024, time.March, 31, 0, 0, 0, 0, time.UTC),
+			expected: time.Date(2024, time.April, 30, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			input:    time.Date(2024, time.March, 1, 0, 0, 0, 0, time.UTC),
+			expected: time.Date(2024, time.April, 1, 0, 0, 0, 0, time.UTC),
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.input.Format("2006-01-02"), func(t *testing.T) {
+			result := AddOneMonthFallbackToLastDayOfMonth(testCase.input)
+			if !result.Equal(testCase.expected) {
+				t.Errorf("Expected: %s, Got: %s", testCase.expected.Format("2006-01-02"), result.Format("2006-01-02"))
+			}
+		})
+	}
+}
+
+func TestGenerateYearMonths(t *testing.T) {
+	// Test case 1: January 31, 2023 to March 5, 2024
+	start1 := time.Date(2023, time.January, 31, 0, 0, 0, 0, time.UTC)
+	end1 := time.Date(2024, time.March, 5, 0, 0, 0, 0, time.UTC)
+	expected1 := []YearMonth{
+		{Year: 2023, Month: time.January},
+		{Year: 2023, Month: time.February},
+		{Year: 2023, Month: time.March},
+		{Year: 2023, Month: time.April},
+		{Year: 2023, Month: time.May},
+		{Year: 2023, Month: time.June},
+		{Year: 2023, Month: time.July},
+		{Year: 2023, Month: time.August},
+		{Year: 2023, Month: time.September},
+		{Year: 2023, Month: time.October},
+		{Year: 2023, Month: time.November},
+		{Year: 2023, Month: time.December},
+		{Year: 2024, Month: time.January},
+		{Year: 2024, Month: time.February},
+		{Year: 2024, Month: time.March},
+	}
+
+	// Test case 2: March 1, 2022 to April 15, 2022
+	start2 := time.Date(2022, time.March, 1, 0, 0, 0, 0, time.UTC)
+	end2 := time.Date(2022, time.April, 15, 0, 0, 0, 0, time.UTC)
+	expected2 := []YearMonth{
+		{Year: 2022, Month: time.March},
+		{Year: 2022, Month: time.April},
+	}
+
+	// Test case 3: November 15, 2023 to November 16, 2023
+	start3 := time.Date(2023, time.November, 15, 0, 0, 0, 0, time.UTC)
+	end3 := time.Date(2023, time.November, 16, 0, 0, 0, 0, time.UTC)
+	expected3 := []YearMonth{
+		{Year: 2023, Month: time.November},
+	}
+
+	// Test case 4: December 1, 2024 to December 1, 2024
+	start4 := time.Date(2024, time.December, 1, 0, 0, 0, 0, time.UTC)
+	end4 := time.Date(2024, time.December, 1, 0, 0, 0, 0, time.UTC)
+	expected4 := []YearMonth{
+		{Year: 2024, Month: time.December},
+	}
+
+	// Test case 5: January 15, 2023 to February 15, 2023
+	start5 := time.Date(2023, time.January, 15, 0, 0, 0, 0, time.UTC)
+	end5 := time.Date(2023, time.February, 15, 0, 0, 0, 0, time.UTC)
+	expected5 := []YearMonth{
+		{Year: 2023, Month: time.January},
+		{Year: 2023, Month: time.February},
+	}
+
+	testCases := []struct {
+		start    time.Time
+		end      time.Time
+		expected []YearMonth
+	}{
+		{start1, end1, expected1},
+		{start2, end2, expected2},
+		{start3, end3, expected3},
+		{start4, end4, expected4},
+		{start5, end5, expected5},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.start.String()+"_"+tc.end.String(), func(t *testing.T) {
+			result := GenerateYearMonths(tc.start, tc.end)
+			if len(result) != len(tc.expected) {
+				t.Errorf("Expected length: %d, Got length: %d", len(tc.expected), len(result))
+				return
+			}
+
+			for i := range tc.expected {
+				if result[i] != tc.expected[i] {
+					t.Errorf("Mismatch at index %d, Expected: %+v, Got: %+v", i, tc.expected[i], result[i])
+				}
+			}
+		})
+	}
+}
