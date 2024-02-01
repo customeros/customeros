@@ -1,11 +1,12 @@
 package repository
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"
 	"gorm.io/gorm"
 )
 
 type InvoiceRepository interface {
-	GetNextInvoiceNumberSequenceValue() int
+	Reserve(invoiceNumber entity.InvoiceNumberEntity) error
 }
 
 type invoiceRepository struct {
@@ -14,28 +15,10 @@ type invoiceRepository struct {
 
 func NewInvoiceRepository(gormDb *gorm.DB) InvoiceRepository {
 	repo := invoiceRepository{gormDb: gormDb}
-	repo.createInvoiceNumberSequence()
 	return &repo
 }
 
-func (r *invoiceRepository) createInvoiceNumberSequence() {
-	// Create the sequence if it doesn't exist
-	createSequenceSQL := `
-        CREATE SEQUENCE IF NOT EXISTS invoice_number_sequence
-        START 1
-        INCREMENT 1
-        MAXVALUE 999999
-        CYCLE
-    `
-	result := r.gormDb.Exec(createSequenceSQL)
-	if result.Error != nil {
-		panic(result.Error)
-	}
-}
-
-func (r *invoiceRepository) GetNextInvoiceNumberSequenceValue() int {
-	var nextValue int
-	query := "SELECT nextval('invoice_number_sequence')"
-	r.gormDb.Raw(query).Scan(&nextValue)
-	return nextValue
+func (r *invoiceRepository) Reserve(invoiceNumber entity.InvoiceNumberEntity) error {
+	err := r.gormDb.Save(&invoiceNumber).Error
+	return err
 }

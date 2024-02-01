@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
@@ -12,12 +11,12 @@ import (
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"time"
 )
 
 type invoiceService struct {
@@ -66,7 +65,7 @@ func (s *invoiceService) NewInvoiceForContract(ctx context.Context, request *inv
 	invoiceId := uuid.New().String()
 
 	extraParams := map[string]any{
-		invoice.PARAM_INVOICE_NUMBER: s.prepareInvoiceNumber(utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.InvoicePeriodStart), utils.Now())),
+		invoice.PARAM_INVOICE_NUMBER: s.prepareInvoiceNumber(request.Tenant),
 	}
 
 	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, invoiceId, request, extraParams); err != nil {
@@ -78,19 +77,30 @@ func (s *invoiceService) NewInvoiceForContract(ctx context.Context, request *inv
 	return &invoicepb.InvoiceIdResponse{Id: invoiceId}, nil
 }
 
-func (s *invoiceService) prepareInvoiceNumber(t time.Time) string {
-	// Format year, month, and day as per your requirements
-	year := fmt.Sprintf("%02d", t.Year()%100) // Take the last 2 digits of the year
-	month := fmt.Sprintf("%02d", int(t.Month()))
-	day := fmt.Sprintf("%02d", t.Day())
+func (s *invoiceService) prepareInvoiceNumber(tenant string) string {
+	maxAttempts := 20
+	var invoiceNumber string
+	for attempt := 1; attempt < maxAttempts+1; attempt++ {
+		invoiceNumber = generateNewRandomInvoiceNumber()
+		invoiceNumberEntity := postgresentity.InvoiceNumberEntity{
+			InvoiceNumber: invoiceNumber,
+			Tenant:        tenant,
+			Attempts:      attempt,
+		}
+		innerErr := s.invoiceRepository.Reserve(invoiceNumberEntity)
+		if innerErr == nil {
+			break
+		}
+	}
 
-	// Format the sequence value as a 6-digit string
-	sequence := fmt.Sprintf("%06d", s.invoiceRepository.GetNextInvoiceNumberSequenceValue())
+	return invoiceNumber
+}
 
-	// Combine the formatted values
-	formattedString := year + month + day + sequence
-
-	return formattedString
+func generateNewRandomInvoiceNumber() string {
+	digits := "0123456789"
+	consonants := "BCDFGHJKLMNPQRSTVWXYZ"
+	invoiceNumber := utils.GenerateRandomStringFromCharset(3, consonants) + "-" + utils.GenerateRandomStringFromCharset(5, digits)
+	return invoiceNumber
 }
 
 func (s *invoiceService) FillInvoice(ctx context.Context, request *invoicepb.FillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
