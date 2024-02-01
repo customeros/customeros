@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo } from 'react';
+import React, { FC, useMemo } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { FormInput } from '@ui/form/Input';
@@ -11,16 +11,16 @@ import { getCurrencyOptions } from '@shared/util/currencyOptions';
 interface SubscriptionServiceModalProps {
   formId: string;
   isEmailValid: boolean;
-  onSetIsBillingDetailsHovered: (newState: boolean) => void;
-  onSetIsBillingDetailsFocused: (newState: boolean) => void;
+  onSetIsBillingDetailsHovered: (newState?: boolean) => void;
+  onSetIsBillingDetailsFocused: (newState?: boolean) => void;
 }
 
-export const ContractBillingDetailsForm = ({
+export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   formId,
   isEmailValid,
   onSetIsBillingDetailsFocused,
   onSetIsBillingDetailsHovered,
-}: SubscriptionServiceModalProps) => {
+}) => {
   const currencyOptions = useMemo(() => getCurrencyOptions(), []);
 
   return (
@@ -37,6 +37,7 @@ export const ContractBillingDetailsForm = ({
         name='contractUrl'
         textOverflow='ellipsis'
         placeholder='Paste or enter a contract link'
+        autoComplete='off'
       />
 
       <FormInput
@@ -55,6 +56,7 @@ export const ContractBillingDetailsForm = ({
         name='organizationLegalName'
         textOverflow='ellipsis'
         placeholder='Organization legal name'
+        autoComplete='off'
       />
 
       <Flex
@@ -76,6 +78,7 @@ export const ContractBillingDetailsForm = ({
           placeholder='Address line 1'
           onFocus={() => onSetIsBillingDetailsFocused(true)}
           onBlur={() => onSetIsBillingDetailsFocused(false)}
+          autoComplete='off'
         />
         <FormInput
           label='Address line 2'
@@ -85,6 +88,7 @@ export const ContractBillingDetailsForm = ({
           placeholder='Address line 2'
           onFocus={() => onSetIsBillingDetailsFocused(true)}
           onBlur={() => onSetIsBillingDetailsFocused(false)}
+          autoComplete='off'
         />
         <Flex>
           <FormInput
@@ -95,6 +99,7 @@ export const ContractBillingDetailsForm = ({
             placeholder='City'
             onFocus={() => onSetIsBillingDetailsFocused(true)}
             onBlur={() => onSetIsBillingDetailsFocused(false)}
+            autoComplete='off'
           />
           <FormInput
             label='ZIP/Postal code'
@@ -104,6 +109,7 @@ export const ContractBillingDetailsForm = ({
             placeholder='ZIP/Potal code'
             onFocus={() => onSetIsBillingDetailsFocused(true)}
             onBlur={() => onSetIsBillingDetailsFocused(false)}
+            autoComplete='off'
           />
         </Flex>
         <FormSelect
@@ -134,6 +140,7 @@ export const ContractBillingDetailsForm = ({
         onMouseLeave={() => onSetIsBillingDetailsHovered(false)}
         onFocus={() => onSetIsBillingDetailsFocused(true)}
         onBlur={() => onSetIsBillingDetailsFocused(false)}
+        autoComplete='off'
       />
       <FormSelect
         label='Currency'
