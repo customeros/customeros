@@ -2,7 +2,8 @@
   width: 100%;
   display: flex;
   overflow: auto;
-  min-height: 100vh;
+  min-height: 22.5cm;
+  height: 22.5cm;
   align-items: center;
   flex-direction: column;
 }
@@ -462,9 +463,6 @@
   width: 50%;
   align-self: stretch;
   align-items: flex-start;
-  border-color: var(--dl-color-gray-300);
-  border-style: solid;
-  border-width: 0 0.5px 0 0;
   flex-direction: column;
 }
 .invoice-payment-details-header-container {
@@ -489,6 +487,9 @@
   align-items: flex-start;
   flex-shrink: 0;
   flex-direction: column;
+  border-color: var(--dl-color-gray-300);
+  border-style: solid;
+  border-width: 0 0 0 0.5px;
 }
 .invoice-footer-container {
   width: 100%;
