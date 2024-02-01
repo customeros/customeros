@@ -6,7 +6,7 @@ import (
 )
 
 type CustomerOsIdsRepository interface {
-	Reserve(aiPrompt entity.CustomerOsIds) error
+	Reserve(customerOsIds entity.CustomerOsIds) error
 }
 
 type customerOsIdsRepository struct {

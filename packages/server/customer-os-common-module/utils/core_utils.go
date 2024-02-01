@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"math/rand"
 	"net/url"
 	"reflect"
 	"runtime"
@@ -398,4 +399,18 @@ func IsValidTLD(input string) bool {
 
 func IsEmptyString(s *string) bool {
 	return s == nil || *s == ""
+}
+
+func GenerateRandomStringFromCharset(length int, charset string) string {
+	// Create a new source based on the current time's Unix timestamp (in nanoseconds)
+	source := rand.NewSource(time.Now().UnixNano())
+	// Initialize a random number generator (RNG) with the source
+	rng := rand.New(source)
+
+	var output string
+	for i := 0; i < length; i++ {
+		randChar := charset[rng.Intn(len(charset))]
+		output += string(randChar)
+	}
+	return output
 }
