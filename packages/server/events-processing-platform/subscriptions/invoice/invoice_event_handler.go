@@ -515,11 +515,12 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 
 	for _, line := range invoiceLineEntities {
 		data["InvoiceLineItems"] = append(data["InvoiceLineItems"].([]map[string]string), map[string]string{
-			"Name":        line.Name,
-			"Description": "",
-			"Quantity":    fmt.Sprintf("%d", line.Quantity),
-			"UnitPrice":   invoiceEntity.Currency.Symbol() + fmt.Sprintf("%.2f", line.Price),
-			"Amount":      invoiceEntity.Currency.Symbol() + fmt.Sprintf("%.2f", line.Amount),
+			"Name":               line.Name,
+			"InvoicePeriodStart": invoiceEntity.PeriodStartDate.Format("02 Jan 2006"),
+			"InvoicePeriodEnd":   invoiceEntity.PeriodEndDate.Format("02 Jan 2006"),
+			"Quantity":           fmt.Sprintf("%d", line.Quantity),
+			"UnitPrice":          invoiceEntity.Currency.Symbol() + fmt.Sprintf("%.2f", line.Price),
+			"Amount":             invoiceEntity.Currency.Symbol() + fmt.Sprintf("%.2f", line.Amount),
 		})
 	}
 
