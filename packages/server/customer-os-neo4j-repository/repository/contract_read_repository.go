@@ -288,7 +288,6 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 	span.LogFields(log.Object("referenceTime", referenceTime))
 
 	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
-			OPTIONAL MATCH (sli)<-[:INVOICED]-(il:InvoiceLine)
 			WHERE 
 				ts.invoicingEnabled = true AND
 				(o.hide = false OR o.hide IS NULL) AND
@@ -300,8 +299,10 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 				(c.billingCycle IN $validBillingCycles) AND
 				c.nextInvoiceDate IS NOT NULL AND
 				date(sli.startedAt) + duration({days: 1}) < date(c.nextInvoiceDate) AND
+				date(sli.startedAt) + < date($referenceTime) AND
 				(c.endedAt IS NULL OR date(c.endedAt) > date($referenceTime)) AND
 				(c.techOffCycleInvoicingStartedAt IS NULL OR date(c.techOffCycleInvoicingStartedAt) < date($referenceTime))
+				AND NOT (sli)<-[:INVOICED]-(:InvoiceLine)
 			RETURN distinct(c), t.name limit 100`
 	params := map[string]any{
 		"referenceTime": referenceTime,
