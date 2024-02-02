@@ -57,6 +57,7 @@ export const AboutPanel = () => {
   const parentRelationshipReadOnly = useFeatureIsOn(
     'parent-relationship-selector-read-only',
   );
+  const orgNameReadOnly = useFeatureIsOn('org-name-readonly');
   const { updateOrganization, addSocial, invalidateQuery } =
     useAboutPanelMethods({ id });
 
@@ -174,13 +175,14 @@ export const AboutPanel = () => {
           <FormInput
             name='name'
             fontSize='lg'
+            ref={nameRef}
             autoComplete='off'
             fontWeight='semibold'
             variant='unstyled'
             borderRadius='unset'
             placeholder='Company name'
             formId='organization-about'
-            ref={nameRef}
+            isReadOnly={orgNameReadOnly}
           />
           {data?.organization?.referenceId && (
             <Box h='full' ml='4'>
