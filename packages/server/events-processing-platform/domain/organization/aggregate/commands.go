@@ -484,7 +484,7 @@ func (a *OrganizationAggregate) linkDomain(ctx context.Context, cmd *command.Lin
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
-	if aggregate.AllowCheckIfEventIsRedundant(cmd.AppSource, cmd.LoggedInUserId) {
+	if aggregate.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
 		if utils.Contains(a.Organization.Domains, strings.TrimSpace(cmd.Domain)) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
