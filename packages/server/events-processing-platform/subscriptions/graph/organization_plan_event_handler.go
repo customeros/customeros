@@ -2,12 +2,15 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	orgModel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -75,6 +78,14 @@ func (h *OrganizationPlanEventHandler) OnCreate(ctx context.Context, evt eventst
 		h.log.Errorf("Error linking organization to plan %s: %s", eventData.OrganizationPlanId, err.Error())
 		return err
 	}
+
+	// propagate to organization onboarding status
+	err = h.propagateStatusToOrg(ctx, eventData.Tenant, eventData.OrganizationPlanId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while propagating status to organization for organization plan %s: %s", eventData.OrganizationPlanId, err.Error())
+	}
+
 	return err
 }
 
@@ -110,6 +121,17 @@ func (h *OrganizationPlanEventHandler) OnUpdate(ctx context.Context, evt eventst
 		h.log.Errorf("Error while updating organization plan %s: %s", eventData.OrganizationPlanId, err.Error())
 		return err
 	}
+
+	// if plan status changed, propagate to organization
+	if data.UpdateStatusDetails {
+		err = h.propagateStatusToOrg(ctx, eventData.Tenant, eventData.OrganizationPlanId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while propagating status to organization for organization plan %s: %s", eventData.OrganizationPlanId, err.Error())
+			return err
+		}
+	}
+
 	return err
 }
 
@@ -152,6 +174,14 @@ func (h *OrganizationPlanEventHandler) OnCreateMilestone(ctx context.Context, ev
 		h.log.Errorf("Error while saving organization plan milestone %s: %s", eventData.OrganizationPlanId, err.Error())
 		return err
 	}
+
+	// propagate to organization plan
+	err = h.propagateStatusUpdatesFromMilestone(ctx, eventData.Tenant, eventData.OrganizationPlanId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while propagating status updates from milestone for organization plan %s: %s", eventData.OrganizationPlanId, err.Error())
+	}
+
 	return err
 }
 
@@ -231,7 +261,7 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 	}
 	// if milestone status changed, propagate to organization plan.
 	if data.UpdateStatusDetails {
-		h.propagateStatusUpdatesFromMilestone(ctx, data, eventData.Tenant, eventData.OrganizationPlanId)
+		h.propagateStatusUpdatesFromMilestone(ctx, eventData.Tenant, eventData.OrganizationPlanId)
 	}
 	return err
 }
@@ -267,7 +297,7 @@ func (h *OrganizationPlanEventHandler) OnReorderMilestones(ctx context.Context, 
 	return nil
 }
 
-func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx context.Context, data neo4jrepository.OrganizationPlanMilestoneUpdateFields, tenant, opid string) error {
+func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx context.Context, tenant, opid string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanEventHandler.propagateStatusUpdatesFromMilestone")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagEntityId, opid)
@@ -288,8 +318,6 @@ func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx c
 
 	op := neo4jmapper.MapDbNodeToOrganizationPlanEntity(opNode)
 
-	opMilestones := convertMilestonesToOrganizationPlanMilestones(opmNode)
-
 	opdata := neo4jrepository.OrganizationPlanUpdateFields{
 		Name:    op.Name,
 		Retired: op.Retired,
@@ -308,7 +336,8 @@ func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx c
 	allMilestonesDone := true
 	late := false
 	started := false
-	for _, milestone := range opMilestones {
+	for _, milestoneNode := range opmNode {
+		milestone := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(milestoneNode)
 		if milestone.StatusDetails.Status != model.MilestoneDone.String() && milestone.StatusDetails.Status != model.MilestoneDoneLate.String() {
 			allMilestonesDone = false
 		}
@@ -352,9 +381,105 @@ func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx c
 			h.log.Errorf("Error while updating organization plan %s: %s", opid, err.Error())
 			return err
 		}
+
+		// if plan status changed, propagate to organization
+		err = h.propagateStatusToOrg(ctx, tenant, opid)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while propagating status to organization for organization plan %s: %s", opid, err.Error())
+			return err
+		}
 	}
 
 	return nil
+}
+
+func (h *OrganizationPlanEventHandler) propagateStatusToOrg(ctx context.Context, tenant, opid string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanEventHandler.propagateStatusToOrg")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagEntityId, opid)
+
+	// propagate to organization
+	orgNode, err := h.repositories.Neo4jRepositories.OrganizationPlanReadRepository.GetOrganizationFromOrganizationPlan(ctx, tenant, opid)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while retrieving organization for organization plan %s: %s", opid, err.Error())
+		return err
+	}
+	org := neo4jmapper.MapDbNodeToOrganizationEntity(orgNode)
+
+	// get all organization plans
+	opNodes, err := h.repositories.Neo4jRepositories.OrganizationPlanReadRepository.GetOrganizationPlansForOrganization(ctx, tenant, org.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while retrieving organization plans for organization %s: %s", org.ID, err.Error())
+		return err
+	}
+	// check if all organization plans are done
+	allPlansDone := true
+	late := false
+	started := false
+	for _, opNode := range opNodes {
+		op := neo4jmapper.MapDbNodeToOrganizationPlanEntity(opNode)
+		if op.StatusDetails.Status != model.Done.String() && op.StatusDetails.Status != model.DoneLate.String() {
+			allPlansDone = false
+		}
+		if op.StatusDetails.Status == model.DoneLate.String() || op.StatusDetails.Status == model.NotStartedLate.String() || op.StatusDetails.Status == model.Late.String() {
+			late = true
+		}
+		if op.StatusDetails.Status != model.NotStarted.String() && op.StatusDetails.Status != model.NotStartedLate.String() {
+			started = true
+		}
+	}
+
+	var statusStr string
+	updatedAtNow := time.Now().UTC()
+	// update organization status
+	if allPlansDone {
+		statusStr = orgModel.Done.String()
+	} else if late {
+		statusStr = orgModel.Late.String()
+	} else if started {
+		statusStr = orgModel.OnTrack.String()
+	} else {
+		statusStr = orgModel.NotStarted.String()
+	}
+
+	// if status changed, write to Org DB Node and save change action
+	if org.OnboardingDetails.Status != statusStr {
+		err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateOnboardingStatus(ctx, tenant, org.ID, statusStr, org.OnboardingDetails.Comments, getOrderForOnboardingStatus(statusStr), updatedAtNow)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to update onboarding status for organization %s: %s", org.ID, err.Error())
+			return err
+		}
+
+		err = h.saveOnboardingStatusChangeAction(ctx, tenant, org.ID, statusStr, org.OnboardingDetails.Comments, span, updatedAtNow)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to save onboarding status change action for organization %s: %s", org.ID, err.Error())
+		}
+	}
+
+	return nil
+}
+
+func (h *OrganizationPlanEventHandler) saveOnboardingStatusChangeAction(ctx context.Context, tenant, organizationId, status, comments string, span opentracing.Span, updatedAt time.Time) error {
+	metadata, _ := utils.ToJson(ActionOnboardingStatusMetadata{
+		Status:     status,
+		Comments:   comments,
+		UserId:     "",
+		ContractId: "",
+	})
+
+	message := fmt.Sprintf("The onboarding status was automatically set to %s", onboardingStatusReadableStringForActionMessage(status))
+
+	extraActionProperties := map[string]interface{}{
+		"status":   status,
+		"comments": comments,
+	}
+	_, err := h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, organizationId, neo4jenum.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, updatedAt, extraActionProperties)
+	return err
 }
 
 /////////////////////////////////////////////////// helper functions ///////////////////////////////////////////////////
@@ -366,15 +491,6 @@ func checkAllItemStatusesAreDoneOrSkipped(items []model.OrganizationPlanMileston
 		}
 	}
 	return true
-}
-
-func convertMilestonesToOrganizationPlanMilestones(opMilestonesNodes []*dbtype.Node) []entity.OrganizationPlanMilestoneEntity {
-	organizationPlanMilestones := make([]entity.OrganizationPlanMilestoneEntity, len(opMilestonesNodes))
-	for i, opMilestoneNode := range opMilestonesNodes {
-		milestone := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(opMilestoneNode)
-		organizationPlanMilestones[i] = *milestone
-	}
-	return organizationPlanMilestones
 }
 
 func convertItemsStrToObject(items []string) []entity.OrganizationPlanMilestoneItem {
