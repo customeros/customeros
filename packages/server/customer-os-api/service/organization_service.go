@@ -347,6 +347,23 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		return err
 	}
 
+	// fetch existing subsidiaries of the parent organization
+	existingSubsidiaries, err := s.GetSubsidiariesForOrganizations(ctx, []string{parentOrganizationId})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error fetching existing subsidiaries: {%v}", err.Error())
+		return err
+	}
+	for _, subsidiary := range *existingSubsidiaries {
+		if subsidiary.ID != subOrganizationId {
+			err = s.RemoveSubsidiary(ctx, parentOrganizationId, subsidiary.ID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("error removing existing subsidiary: {%v}", err.Error())
+			}
+		}
+	}
+
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
 		Tenant:               common.GetTenantFromContext(ctx),
