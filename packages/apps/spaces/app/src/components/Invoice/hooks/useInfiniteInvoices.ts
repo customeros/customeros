@@ -55,7 +55,7 @@ export function useInfiniteInvoices(
           }
 
           return {
-            pagination: { page: allPages.length + 1, limit: 5 },
+            pagination: { page: allPages.length + 1, limit: 40 },
             organizationId,
             where: { ...filterOutDryRunInvoices },
           };
