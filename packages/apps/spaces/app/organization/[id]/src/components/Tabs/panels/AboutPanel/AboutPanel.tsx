@@ -1,10 +1,15 @@
 'use client';
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
-import { useDebounce, useWillUnmount, useDeepCompareEffect } from 'rooks';
+import {
+  useDebounce,
+  useDidMount,
+  useWillUnmount,
+  useDeepCompareEffect,
+} from 'rooks';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
@@ -115,6 +120,24 @@ export const AboutPanel = () => {
             return next;
         }
       }
+      if (action.type === 'FIELD_BLUR') {
+        if (action.payload.name === 'name') {
+          const trimmedValue = (action.payload?.value || '')?.trim();
+          if (!trimmedValue?.length) {
+            mutateOrganization(state.values, {
+              name: 'Unnamed',
+            });
+
+            return {
+              ...next,
+              values: {
+                ...next.values,
+                name: 'Unnamed',
+              },
+            };
+          }
+        }
+      }
 
       return next;
     },
@@ -124,12 +147,12 @@ export const AboutPanel = () => {
     setDefaultValues(defaultValues);
   }, [defaultValues]);
 
-  useEffect(() => {
-    if (defaultValues.name === 'Unnamed' && nameRef.current) {
+  useDidMount(() => {
+    if (nameRef.current?.value === 'Unnamed') {
       nameRef.current?.focus();
       nameRef.current?.setSelectionRange(0, 7);
     }
-  }, [defaultValues.name, nameRef]);
+  });
 
   useWillUnmount(() => {
     debouncedMutateOrganization.flush();
