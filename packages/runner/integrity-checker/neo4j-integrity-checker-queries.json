@@ -54,7 +54,7 @@
     },
     {
       "name": "Check orphan nodes",
-      "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain AND NOT n:TechnicalNode return count(n)"
+      "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain AND NOT n:TechnicalNode AND NOT n:Attachment return count(n)"
     },
     {
       "name": "Check emails not shared between users",
@@ -130,7 +130,7 @@
     },
     {
       "name": "Check contract and invoice link consistency",
-      "query": "CALL {\n    MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false AND date(coalesce(c.nextInvoiceDate, c.invoicingStartDate, datetime())) <= date(i.periodEndDate) RETURN count(i) as cnt\n    UNION ALL\n    MATCH (c:Contract) WHERE c.techInvoicingStartedAt IS NOT NULL WITH c OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice) WHERE i IS NULL RETURN count(c) as cnt\n} RETURN sum(cnt)",
+      "query": "CALL {\n    MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false AND date(coalesce(c.nextInvoiceDate, c.invoicingStartDate, datetime())) <= date(i.periodEndDate) RETURN count(i) as cnt\n    UNION ALL\n    MATCH (c:Contract) WHERE c.techInvoicingStartedAt IS NOT NULL WITH c OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false and i.createdAt > c.techInvoicingStartedAt-duration({hours: 1}) WITH i,c WHERE i IS NULL RETURN count(c) as cnt\n} RETURN sum(cnt)",
       "description": "Checks: 1 - Check that contract next invoice date is not before invoice period end date. 2 - Check that contract with techInvoicingStartedAt date has at least one invoice."
     },
     {
