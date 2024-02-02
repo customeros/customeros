@@ -185,7 +185,7 @@ export const Branches: React.FC<BranchesProps> = ({
     },
   });
   const handleCreateOrganization = useCallback(() => {
-    createOrganization.mutate({ input: { name: '' } });
+    createOrganization.mutate({ input: { name: 'Unnamed' } });
   }, [createOrganization]);
 
   return (

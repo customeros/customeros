@@ -11,7 +11,7 @@ export const AvatarHeader = () => {
   const { createOrganization } = useOrganizationsPageMethods();
 
   const handleCreateOrganization = () => {
-    createOrganization.mutate({ input: { name: '' } });
+    createOrganization.mutate({ input: { name: 'Unnamed' } });
   };
 
   return (

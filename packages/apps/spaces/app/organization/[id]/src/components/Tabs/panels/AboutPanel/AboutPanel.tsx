@@ -1,4 +1,5 @@
 'use client';
+import { useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
@@ -53,6 +54,7 @@ export const AboutPanel = () => {
   const showParentRelationshipSelector = useFeatureIsOn(
     'show-parent-relationship-selector',
   );
+  const nameRef = useRef<HTMLInputElement | null>(null);
   const parentRelationshipReadOnly = useFeatureIsOn(
     'parent-relationship-selector-read-only',
   );
@@ -128,6 +130,13 @@ export const AboutPanel = () => {
     setDefaultValues(defaultValues);
   }, [defaultValues]);
 
+  useEffect(() => {
+    if (defaultValues.name === 'Unnamed' && nameRef.current) {
+      nameRef.current?.focus();
+      nameRef.current?.setSelectionRange(0, 7);
+    }
+  }, [defaultValues.name, nameRef]);
+
   const handleAddSocial = ({
     newValue,
     onSuccess,
@@ -173,6 +182,7 @@ export const AboutPanel = () => {
             borderRadius='unset'
             placeholder='Company name'
             formId='organization-about'
+            ref={nameRef}
           />
           {data?.organization?.referenceId && (
             <Box h='full' ml='4'>
