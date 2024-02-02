@@ -3,25 +3,27 @@ package notifications
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
+	"io"
 	"strings"
 	"testing"
 
 	"github.com/Boostport/mjml-go"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/aws_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/notifications"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,12 +31,27 @@ type MockNotificationProvider struct {
 	called           bool
 	emailContent     string
 	notificationText string
-	TemplatePath     string
-	emailRawContent  string
+	s3               aws_client.S3ClientI
 }
 
-func (m *MockNotificationProvider) SendNotification(ctx context.Context, u *notifications.NotifiableUser, payload map[string]interface{}, workflowId string) error {
+func (m *MockNotificationProvider) SendNotification(ctx context.Context, notification *notifications.NovuNotification, span opentracing.Span) error {
 	m.called = true
+	payload := notification.Payload
+	workflowId := notification.WorkflowId
+	rawEmailTemplate, err := m.LoadEmailBody(workflowId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if rawEmailTemplate != "" {
+		htmlEmailTemplate, err := m.FillTemplate(rawEmailTemplate, notification.TemplateData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		payload["html"] = htmlEmailTemplate
+	}
 	switch workflowId {
 	case notifications.WorkflowIdOrgOwnerUpdateEmail:
 		m.emailContent = payload["html"].(string)
@@ -43,71 +60,48 @@ func (m *MockNotificationProvider) SendNotification(ctx context.Context, u *noti
 	}
 	return nil
 }
-func (m *MockNotificationProvider) LoadEmailBody(ctx context.Context, workflowId string) error {
-	var emailPath string
+
+func (np *MockNotificationProvider) LoadEmailBody(workflowId string) (string, error) {
+	var fileName string
 	switch workflowId {
 	case notifications.WorkflowIdOrgOwnerUpdateEmail:
-		if _, err := os.Stat(m.TemplatePath); os.IsNotExist(err) {
-			return fmt.Errorf("(MockProvider.LoadEmailBody) error: %s", err.Error())
-		}
-		emailPath = fmt.Sprintf("%s/ownership.single.mjml", m.TemplatePath)
-	}
-	// Get the current directory
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return errors.Wrap(err, "os.Getwd")
+		fileName = "ownership.single.mjml"
 	}
 
-	// Build the full path to the template file
-	templatePath := filepath.Join(currentDir, emailPath)
-	if _, err := os.Stat(templatePath); err != nil {
-		return fmt.Errorf("(MockProvider.LoadEmailBody) error: %s", err.Error())
+	if fileName == "" {
+		return "", nil
 	}
 
-	rawMjml, err := os.ReadFile(templatePath)
-	if err != nil {
-		return fmt.Errorf("(MockProvider.LoadEmailBody) error: %s", err.Error())
-	}
-	m.emailRawContent = string(rawMjml[:])
-	return nil
+	np.s3.ChangeRegion("eu-west-1")
+	return np.s3.Download("openline-production-mjml-templates", fileName)
 }
-func (m *MockNotificationProvider) Template(ctx context.Context, replace map[string]string) (string, error) {
-	_, ok := replace["{{userFirstName}}"]
-	if !ok {
-		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing userFirstName")
-	}
-	_, ok = replace["{{actorFirstName}}"]
-	if !ok {
-		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing actorFirstName")
-	}
-	_, ok = replace["{{actorLastName}}"]
-	if !ok {
-		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing actorLastName")
-	}
-	_, ok = replace["{{orgName}}"]
-	if !ok {
-		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing orgName")
-	}
-	_, ok = replace["{{orgLink}}"]
-	if !ok {
-		return "", fmt.Errorf("(NovuProvider.Template) error: %s", "missing orgLink")
-	}
-	mjmlf := m.emailRawContent
+
+func (np *MockNotificationProvider) FillTemplate(template string, replace map[string]string) (string, error) {
+	mjmlf := template
 	for k, v := range replace {
 		mjmlf = strings.Replace(mjmlf, k, v, -1)
 	}
-	m.emailRawContent = mjmlf
 
 	html, err := mjml.ToHTML(context.Background(), mjmlf)
 	var mjmlError mjml.Error
 	if errors.As(err, &mjmlError) {
-		return "", fmt.Errorf("(NovuProvider.Template) error: %s", mjmlError.Message)
+		return "", fmt.Errorf("(NovuProvider.FillTemplate) error: %s", mjmlError.Message)
 	}
-	m.emailContent = html
 	return html, err
 }
-func (m *MockNotificationProvider) GetRawContent() string {
-	return m.emailRawContent
+
+type MockS3Client struct {
+	aws_client.S3ClientI
+}
+
+func (m *MockS3Client) Download(bucketName string, fileName string) (string, error) {
+	return EMAIL_TEMPLATE, nil
+}
+
+func (m *MockS3Client) ChangeRegion(region string) {}
+
+func (m *MockS3Client) Upload(bucketName string, fileName string, fileContent io.Reader) error {
+	return nil
 }
 
 func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
@@ -141,17 +135,13 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
-		repositories:         testDatabase.Repositories,
-		log:                  testLogger,
-		notificationProvider: &MockNotificationProvider{TemplatePath: "./email_templates"},
-		cfg: &config.Config{Services: config.Services{MJML: struct {
-			ApplicationId string "env:\"MJML_APPLICATION_ID,required\" envDefault:\"\""
-			SecretKey     string "env:\"MJML_SECRET_KEY,required\" envDefault:\"\""
-		}{ApplicationId: "", SecretKey: ""}}, Subscriptions: config.Subscriptions{NotificationsSubscription: config.NotificationsSubscription{RedirectUrl: "https://app.openline.dev", EmailTemplatePath: "./email_templates"}}},
+		repositories: testDatabase.Repositories,
+		log:          testLogger,
+		notificationProvider: &MockNotificationProvider{
+			s3: &MockS3Client{},
+		},
+		cfg: &config.Config{Subscriptions: config.Subscriptions{NotificationsSubscription: config.NotificationsSubscription{RedirectUrl: "https://app.openline.dev"}}},
 	}
-
-	require.Equal(t, "", orgEventHandler.cfg.Services.MJML.ApplicationId)
-	require.Equal(t, "", orgEventHandler.cfg.Services.MJML.SecretKey)
 
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -188,8 +178,33 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 	emailContentIsHTML := strings.Contains(orgEventHandler.notificationProvider.(*MockNotificationProvider).emailContent, "<!doctype html>")
 	require.True(t, orgEventHandler.notificationProvider.(*MockNotificationProvider).called)
 	require.Equal(t, orgEventHandler.notificationProvider.(*MockNotificationProvider).notificationText, expectedInAppNotification)
-	require.NotEqual(t, "", orgEventHandler.notificationProvider.(*MockNotificationProvider).emailRawContent)
 	require.NotEqual(t, "", orgEventHandler.notificationProvider.(*MockNotificationProvider).emailContent)
 	require.True(t, emailContentHasCorrectData)
 	require.True(t, emailContentIsHTML)
 }
+
+///////////////////////////////////////// email template mjml for test /////////////////////////////////////////
+
+const EMAIL_TEMPLATE = `<mjml>
+<mj-body>
+  <mj-section>
+	<mj-column>
+	  <mj-text>
+		<p>Hello {{userFirstName}},</p>
+		<p>{{actorFirstName}} {{actorLastName}} made you the owner of the <a href="{{orgLink}}">{{orgName}}</a> account on CustomerOS.</p>
+		<p>You’ll now see <a href="{{orgLink}}">{{orgName}}</a> in your Portfolio, and you can:
+		<ul>
+		  <li>Find out everything about the company and their timeline</li>
+		  <li>Get familiar with the people at {{orgName}}</li>
+		  <li>Manage their contract and service line items</li>
+		  <li>Get their onboarding started and plan their success</li>
+		</ul>
+		</p>
+		<p>If you have questions about this assignment of ownership, you can ask {{actorFirstName}} {{actorLastName}} about it by simply replying to this email.</p>
+		<p>Have a great day!</p>
+		<p>The CustomerOS Team</p>
+	  </mj-text>
+	</mj-column>
+  </mj-section>
+</mj-body>
+</mjml>`
