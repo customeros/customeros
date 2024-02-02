@@ -42,12 +42,16 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
     },
     sort: undefined,
     where: {
-      filter: {
-        property: 'ORGANIZATION',
-        value: searchTerm,
-        operation: ComparisonOperator.Contains,
-        caseSensitive: false,
-      },
+      AND: [
+        {
+          filter: {
+            property: 'ORGANIZATION',
+            value: searchTerm,
+            operation: ComparisonOperator.Contains,
+            caseSensitive: false,
+          },
+        },
+      ],
     },
   });
   const queryKey = useOrganizationQuery.getKey({ id });
