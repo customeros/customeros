@@ -17,9 +17,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
+const (
+	PostmarkMessageStreamInvoice = "invoices"
+)
+
 type PostmarkEmail struct {
-	WorkflowId   string
-	TemplateData map[string]string
+	WorkflowId    string
+	MessageStream string
+	TemplateData  map[string]string
 
 	From    string
 	To      string
@@ -69,6 +74,10 @@ func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail 
 		Subject:    postmarkEmail.Subject,
 		HTMLBody:   htmlEmailTemplate,
 		TrackOpens: true,
+	}
+
+	if postmarkEmail.MessageStream != "" {
+		email.MessageStream = postmarkEmail.MessageStream
 	}
 
 	if postmarkEmail.Attachments != nil {

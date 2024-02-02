@@ -634,10 +634,11 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	}
 
 	err = h.postmarkProvider.SendNotification(ctx, notifications.PostmarkEmail{
-		WorkflowId: notifications.WorkflowInvoicePaid,
-		From:       invoiceEntity.Provider.Email,
-		To:         invoiceEntity.Customer.Email,
-		Subject:    "Paid Invoice " + invoiceEntity.Number + " from " + invoiceEntity.Provider.Name,
+		WorkflowId:    notifications.WorkflowInvoicePaid,
+		MessageStream: notifications.PostmarkMessageStreamInvoice,
+		From:          invoiceEntity.Provider.Email,
+		To:            invoiceEntity.Customer.Email,
+		Subject:       "Paid Invoice " + invoiceEntity.Number + " from " + invoiceEntity.Provider.Name,
 		TemplateData: map[string]string{
 			"{{tenantLogo}}":     invoiceEntity.Provider.LogoUrl,
 			"{{userFirstName}}":  invoiceEntity.Customer.Name,
@@ -715,10 +716,11 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	}
 
 	err = h.postmarkProvider.SendNotification(ctx, notifications.PostmarkEmail{
-		WorkflowId: notifications.WorkflowInvoiceReady,
-		From:       invoiceEntity.Provider.Email,
-		To:         invoiceEntity.Customer.Email,
-		Subject:    "New invoice " + invoiceEntity.Number,
+		WorkflowId:    notifications.WorkflowInvoiceReady,
+		MessageStream: notifications.PostmarkMessageStreamInvoice,
+		From:          invoiceEntity.Provider.Email,
+		To:            invoiceEntity.Customer.Email,
+		Subject:       "New invoice " + invoiceEntity.Number,
 		TemplateData: map[string]string{
 			"{{tenantLogo}}":       invoiceEntity.Provider.LogoUrl,
 			"{{organizationName}}": invoiceEntity.Customer.Name,
