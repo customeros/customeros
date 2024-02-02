@@ -22,6 +22,7 @@ type OrganizationPlanReadRepository interface {
 	GetOrganizationPlansForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
 	GetMilestoneDueDate(ctx context.Context, tenant, organizationPlanMilestoneId string) (time.Time, error)
 	GetMilestonesForOrganizationPlan(ctx context.Context, tenant, organizationPlanId string) ([]*dbtype.Node, error)
+	GetOrganizationFromOrganizationPlan(ctx context.Context, tenant, organizationPlanId string) (*dbtype.Node, error)
 }
 
 type organizationPlanReadRepository struct {
@@ -324,4 +325,34 @@ func (r *organizationPlanReadRepository) GetMilestoneDueDate(ctx context.Context
 	}
 	span.LogFields(log.Bool("result.found", result != nil))
 	return result.(time.Time), nil
+}
+
+func (r *organizationPlanReadRepository) GetOrganizationFromOrganizationPlan(ctx context.Context, tenant, organizationPlanId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetOrganizationFromOrganizationPlan")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationPlanId)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(:OrganizationPlan {id:$id})-[:ORGANIZATION_PLAN_BELONGS_TO_ORGANIZATION]->(o:Organization) RETURN o`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     organizationPlanId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Bool("result.found", result != nil))
+	return result.(*dbtype.Node), nil
 }
