@@ -24,7 +24,7 @@ interface TaskProps {
 export const Task = memo(({ index, formId, defaultValue }: TaskProps) => {
   const [showSkip, setShowSkip] = useState(false);
   const { getInputProps } = useField('items', formId);
-  const { value, onChange, onBlur } = getInputProps();
+  const { value, onChange } = getInputProps();
   const itemValue = value?.[index] as TaskDatum;
 
   const milestoneDueDate = useField('dueDate', formId).getInputProps()
@@ -67,30 +67,31 @@ export const Task = memo(({ index, formId, defaultValue }: TaskProps) => {
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       if (!itemValue) return;
+      const isChecked = e.target.checked;
 
       const updatedItem = produce<TaskDatum>(itemValue, (draft) => {
         const isLate = taskUpdatedAt > milestoneDueAt;
 
-        draft.status = (() => {
-          if (e.target.checked) {
-            return isLate
-              ? OnboardingPlanMilestoneItemStatus.DoneLate
-              : OnboardingPlanMilestoneItemStatus.Done;
-          }
-
-          return isLate
+        if (isChecked) {
+          draft.status = isLate
+            ? OnboardingPlanMilestoneItemStatus.DoneLate
+            : OnboardingPlanMilestoneItemStatus.Done;
+        } else {
+          draft.status = isLate
             ? OnboardingPlanMilestoneItemStatus.NotDoneLate
             : OnboardingPlanMilestoneItemStatus.NotDone;
-        })();
+        }
 
         draft.updatedAt = new Date().toISOString();
       });
 
-      onChange?.(
-        (value as TaskDatum[]).map((v, i) => (i === index ? updatedItem : v)),
+      const next = (value as TaskDatum[]).map((v, i) =>
+        i === index ? updatedItem : v,
       );
+
+      onChange?.(next);
     },
-    [onChange, index, value],
+    [onChange, index, value, taskUpdatedAt, milestoneDueAt],
   );
 
   const handleSkip = useCallback(() => {
@@ -120,14 +121,7 @@ export const Task = memo(({ index, formId, defaultValue }: TaskProps) => {
     });
 
     onChange?.(nextItems);
-  }, [onChange, index, value]);
-
-  const handleBlur = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      // onBlur?.();
-    },
-    [onBlur, index, value],
-  );
+  }, [onChange, index, value, taskUpdatedAt, milestoneDueAt]);
 
   return (
     <Flex
@@ -139,7 +133,6 @@ export const Task = memo(({ index, formId, defaultValue }: TaskProps) => {
         mr='2'
         size='md'
         isChecked={isDone}
-        onBlur={handleBlur}
         onChange={handleChange}
         colorScheme={colorScheme}
       />

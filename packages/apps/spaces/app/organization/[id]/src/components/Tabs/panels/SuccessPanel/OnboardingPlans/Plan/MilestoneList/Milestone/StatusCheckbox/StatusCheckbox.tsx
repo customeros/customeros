@@ -6,13 +6,16 @@ interface StatusCheckboxProps extends CheckboxProps {
   showCustomIcon?: boolean;
 }
 
-export const StatusCheckbox = (props: StatusCheckboxProps) => {
+export const StatusCheckbox = ({
+  showCustomIcon,
+  ...props
+}: StatusCheckboxProps) => {
   return (
     <Checkbox
       mr='2'
       size='md'
       icon={
-        props?.showCustomIcon ? (
+        showCustomIcon ? (
           <ArrowNarrowDownRight
             boxSize='3.5'
             color={`${props.colorScheme}.400`}

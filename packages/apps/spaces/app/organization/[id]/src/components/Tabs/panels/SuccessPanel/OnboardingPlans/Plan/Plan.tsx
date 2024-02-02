@@ -9,6 +9,7 @@ import { pulseOpacity } from '@ui/utils/keyframes';
 import { Collapse } from '@ui/transitions/Collapse';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
+import { OnboardingPlanMilestoneStatus } from '@shared/types/__generated__/graphql.types';
 
 import { PlanMenu } from './PlanMenu';
 import { PlanDueDate } from './PlanDueDate';
@@ -107,15 +108,23 @@ export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
   };
 
   const nextDueMilestone = plan.milestones.find(
-    (m) => m.statusDetails?.status === 'NOT_STARTED' && m.retired === false,
+    (m) =>
+      [
+        OnboardingPlanMilestoneStatus.Started,
+        OnboardingPlanMilestoneStatus.StartedLate,
+        OnboardingPlanMilestoneStatus.NotStarted,
+        OnboardingPlanMilestoneStatus.NotStartedLate,
+      ].includes(m.statusDetails?.status) && m.retired === false,
   );
 
   return (
     <Flex
-      p='4'
+      px='3'
+      pb='2'
       pt='3'
       w='full'
       bg='gray.50'
+      id='plm'
       flexDir='column'
       borderRadius='lg'
       border='1px solid'
@@ -126,7 +135,13 @@ export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
         isTemporary ? `${pulseOpacity} 0.7s alternate ease-in-out` : undefined
       }
     >
-      <Flex mb='3' align='center' flexDir='column' alignItems='flex-start'>
+      <Flex
+        mx='1'
+        mb='3'
+        align='center'
+        flexDir='column'
+        alignItems='flex-start'
+      >
         <Flex align='center' justify='space-between' w='full'>
           <Text fontSize='sm' fontWeight='semibold' noOfLines={1}>
             {plan.name}

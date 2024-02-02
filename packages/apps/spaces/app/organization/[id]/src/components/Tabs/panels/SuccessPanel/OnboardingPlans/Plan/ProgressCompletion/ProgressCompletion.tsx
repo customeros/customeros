@@ -1,5 +1,7 @@
 import { Box } from '@ui/layout/Box';
 import { wave } from '@ui/utils/keyframes';
+import { Card, CardBody } from '@ui/presentation/Card';
+import { OnboardingPlanMilestoneStatus } from '@shared/types/__generated__/graphql.types';
 import {
   Step,
   Stepper,
@@ -12,8 +14,6 @@ import {
 
 import { PlanDatum } from '../../types';
 
-// import { Flex } from '@ui/layout/Flex';
-
 interface ProgressCompletionProps {
   plan: PlanDatum;
 }
@@ -25,46 +25,50 @@ export const ProgressCompletion = ({ plan: _ }: ProgressCompletionProps) => {
   });
 
   return (
-    <Stepper index={activeStep}>
-      <Step key={0}>
-        <StepIndicator>
-          <StepStatus
-            complete={<StepIcon />}
-            incomplete={<ProgressCompletionCircle completion={50} />}
-            active={
-              <ProgressCompletionCircle completion={15} colorScheme='success' />
-            }
+    <Card variant='outlinedElevated' mb='2' mx='1'>
+      <CardBody>
+        <Stepper colorScheme='success' index={activeStep}>
+          <ProgressStep
+            index={0}
+            completion={50}
+            milestoneStatus={OnboardingPlanMilestoneStatus.Done}
           />
-        </StepIndicator>
-        <StepSeparator />
-      </Step>
+          <ProgressStep
+            index={1}
+            completion={50}
+            milestoneStatus={OnboardingPlanMilestoneStatus.Started}
+          />
+          <ProgressStep
+            index={2}
+            completion={50}
+            milestoneStatus={OnboardingPlanMilestoneStatus.NotStarted}
+          />
+        </Stepper>
+      </CardBody>
+    </Card>
+  );
+};
 
-      <Step key={1}>
-        <StepIndicator>
-          <StepStatus
-            complete={<StepIcon />}
-            incomplete={<ProgressCompletionCircle completion={50} />}
-            active={
-              <ProgressCompletionCircle completion={15} colorScheme='success' />
-            }
-          />
-        </StepIndicator>
-        <StepSeparator />
-      </Step>
+interface ProgressStep {
+  index: number;
+  completion?: number;
+  milestoneStatus: OnboardingPlanMilestoneStatus;
+}
 
-      <Step key={2}>
-        <StepIndicator>
-          <StepStatus
-            complete={<StepIcon />}
-            incomplete={<ProgressCompletionCircle completion={50} />}
-            active={
-              <ProgressCompletionCircle completion={15} colorScheme='success' />
-            }
-          />
-        </StepIndicator>
-        <StepSeparator />
-      </Step>
-    </Stepper>
+const ProgressStep = ({ index, completion, milestoneStatus }: ProgressStep) => {
+  return (
+    <Step key={index}>
+      <StepIndicator border='unset'>
+        <StepStatus
+          complete={<StepIcon />}
+          incomplete={<ProgressCompletionCircle completion={completion} />}
+          active={
+            <ProgressCompletionCircle completion={15} colorScheme='success' />
+          }
+        />
+      </StepIndicator>
+      <StepSeparator />
+    </Step>
   );
 };
 
