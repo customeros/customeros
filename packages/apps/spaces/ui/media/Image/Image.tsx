@@ -12,6 +12,7 @@ export const Image: ChakraComponent<'img', NextImageProps> = chakra(NextImage, {
       'width',
       'height',
       'fill',
+      'style',
       'loader',
       'quality',
       'priority',

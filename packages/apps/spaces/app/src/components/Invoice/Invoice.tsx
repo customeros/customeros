@@ -28,7 +28,6 @@ type Address = {
 
 type InvoiceProps = {
   tax: number;
-  note: string;
   from: Address;
   total: number;
   dueDate: string;
@@ -38,7 +37,9 @@ type InvoiceProps = {
   issueDate: string;
   billedTo: Address;
   amountDue?: number;
+  note?: string | null;
   invoiceNumber: string;
+  logoUrl?: string | null;
   lines: Array<InvoiceLine>;
   isBilledToFocused?: boolean;
   isInvoiceProviderFocused?: boolean;
@@ -64,6 +65,7 @@ export function Invoice({
   isBilledToFocused,
   isInvoiceProviderFocused,
   currency = 'USD',
+  logoUrl,
   domesticBankingDetails,
   internationalBankingDetails,
   isInternationalBankingDetailsSectionFocused,
@@ -88,7 +90,11 @@ export function Invoice({
     >
       <Flex flexDir='column'>
         <Flex flexDir='column' mt={2}>
-          <InvoiceHeader invoiceNumber={invoiceNumber} status={status} />
+          <InvoiceHeader
+            invoiceNumber={invoiceNumber}
+            status={status}
+            logoUrl={logoUrl}
+          />
 
           <Flex
             mt={2}

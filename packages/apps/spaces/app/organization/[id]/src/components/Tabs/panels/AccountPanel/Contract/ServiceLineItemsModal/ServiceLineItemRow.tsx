@@ -88,6 +88,7 @@ export const ServiceLineItemRow = ({
           onChange={(event) => handleChange('name', event.target.value)}
           key={`name-${index}`}
           textDecoration={service.isDeleted ? 'line-through' : 'unset'}
+          autoComplete='off'
         />
       </ServiceLineItemInputWrapper>
       <ServiceLineItemInputWrapper width='20%' isDeleted={service.isDeleted}>
@@ -143,6 +144,7 @@ export const ServiceLineItemRow = ({
             fontSize='sm'
             value={service.quantity}
             p={0}
+            autoComplete='off'
             onChange={(event) => handleChange('quantity', event.target.value)}
           />
         </NumberInput>
