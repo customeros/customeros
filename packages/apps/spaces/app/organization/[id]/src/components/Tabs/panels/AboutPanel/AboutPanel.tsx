@@ -3,8 +3,8 @@ import { useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
-import { useDeepCompareEffect } from 'rooks';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
+import { useDebounce, useWillUnmount, useDeepCompareEffect } from 'rooks';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
@@ -16,7 +16,6 @@ import { Tooltip } from '@ui/overlay/Tooltip';
 import { Organization } from '@graphql/types';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { VStack, HStack } from '@ui/layout/Stack';
-import { useThrottle } from '@shared/hooks/useThrottle';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { FormNumberInputGroup } from '@ui/form/InputGroup';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
@@ -77,12 +76,7 @@ export const AboutPanel = () => {
     });
   };
 
-  const throttledMutatOrganization = useThrottle(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mutateOrganization as any,
-    300,
-    [updateOrganization.mutate],
-  );
+  const debouncedMutateOrganization = useDebounce(mutateOrganization, 500);
 
   const { setDefaultValues } = useForm<OrganizationAboutForm>({
     formId: 'organization-about',
@@ -112,7 +106,7 @@ export const AboutPanel = () => {
             ) {
               return next;
             }
-            throttledMutatOrganization(state.values, {
+            debouncedMutateOrganization(state.values, {
               [action.payload.name]: trimmedValue,
             });
             break;
@@ -136,6 +130,10 @@ export const AboutPanel = () => {
       nameRef.current?.setSelectionRange(0, 7);
     }
   }, [defaultValues.name, nameRef]);
+
+  useWillUnmount(() => {
+    debouncedMutateOrganization.flush();
+  });
 
   const handleAddSocial = ({
     newValue,
