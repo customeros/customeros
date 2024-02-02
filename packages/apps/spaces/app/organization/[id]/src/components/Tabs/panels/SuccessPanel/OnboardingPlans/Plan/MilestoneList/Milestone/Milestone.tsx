@@ -14,6 +14,10 @@ import { Card, CardBody } from '@ui/presentation/Card';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { CheckSquareBroken } from '@ui/media/icons/CheckSquareBroken';
+import {
+  OnboardingPlanMilestoneStatus,
+  OnboardingPlanMilestoneItemStatus,
+} from '@graphql/types';
 
 import { Tasks } from './Tasks';
 import { MilestoneMenu } from './MilestoneMenu';
@@ -26,11 +30,15 @@ type MilestoneForm = {
   id: string;
   name: string;
   dueDate: string;
-  items: { text: string; status: string; updatedAt: string }[];
+  items: {
+    text: string;
+    updatedAt: string;
+    status: OnboardingPlanMilestoneItemStatus;
+  }[];
   statusDetails: {
     text: string;
-    status: string;
     updatedAt: string;
+    status: OnboardingPlanMilestoneStatus;
   };
 };
 
@@ -83,23 +91,10 @@ export const Milestone = ({
 
       if (action.type === 'FIELD_CHANGE') {
         if (action.payload.name === 'items') {
-          const isAllDone =
-            next.values?.items?.length &&
-            next.values.items.every((v) =>
-              ['DONE', 'SKIPPED'].includes(v.status),
-            );
-
           const nextValues = produce(next, (draft) => {
-            const prevStatus = draft.values.statusDetails.status;
-
-            if (isAllDone && prevStatus !== 'DONE') {
-              draft.values.statusDetails.status = 'DONE';
-              draft.values.statusDetails.updatedAt = new Date().toISOString();
-            }
-            if (!isAllDone && prevStatus === 'DONE') {
-              draft.values.statusDetails.status = 'NOT_STARTED';
-              draft.values.statusDetails.updatedAt = new Date().toISOString();
-            }
+            draft.values.statusDetails.status = computeMilestoneStatus(
+              draft.values,
+            );
           });
 
           const nextMilestone = mapFormToMilestone(
@@ -122,26 +117,64 @@ export const Milestone = ({
     },
   });
 
+  const isPastDueDate = new Date(state?.values?.dueDate) < new Date();
+  const isLate = useMemo(() => {
+    if (
+      [
+        OnboardingPlanMilestoneStatus.DoneLate,
+        OnboardingPlanMilestoneStatus.StartedLate,
+        OnboardingPlanMilestoneStatus.NotStartedLate,
+      ].includes(milestone?.statusDetails?.status)
+    )
+      return true;
+
+    if (!state?.values?.items?.length) return isPastDueDate;
+
+    return state?.values?.items?.some((item) =>
+      [
+        OnboardingPlanMilestoneItemStatus.DoneLate,
+        OnboardingPlanMilestoneItemStatus.NotDoneLate,
+        OnboardingPlanMilestoneItemStatus.SkippedLate,
+      ].includes(item.status),
+    );
+  }, [state.values.items, milestone?.statusDetails?.status, isPastDueDate]);
+
   const isChecked = useMemo(() => {
-    if (['DONE', 'SUCCESSFUL'].includes(milestone?.statusDetails?.status))
+    if (
+      [
+        OnboardingPlanMilestoneStatus.Done,
+        OnboardingPlanMilestoneStatus.DoneLate,
+      ].includes(milestone?.statusDetails?.status)
+    )
       return true;
 
     if (!state?.values?.items?.length) return false;
 
-    return state?.values?.items?.every((item) => item.status === 'DONE');
+    return state?.values?.items?.every((item) =>
+      [
+        OnboardingPlanMilestoneItemStatus.Done,
+        OnboardingPlanMilestoneItemStatus.DoneLate,
+        OnboardingPlanMilestoneItemStatus.Skipped,
+        OnboardingPlanMilestoneItemStatus.SkippedLate,
+      ].includes(item.status),
+    );
   }, [state.values.items, milestone?.statusDetails?.status]);
 
   const checkboxColorScheme = useMemo(() => {
-    const isPastDueDate = new Date(state?.values?.dueDate) < new Date();
-
-    if (isChecked) return isPastDueDate ? 'warning' : 'success';
-    if (isPastDueDate) return 'warning';
+    if (isChecked) return isLate ? 'warning' : 'success';
+    if (isLate) return 'warning';
 
     return 'gray';
-  }, [state.values.items, isChecked]);
+  }, [isChecked, isLate]);
 
   const doneTakskCount = useMemo(
-    () => milestone?.items?.filter((i) => i.status === 'DONE').length,
+    () =>
+      milestone?.items?.filter((i) =>
+        [
+          OnboardingPlanMilestoneItemStatus.Done,
+          OnboardingPlanMilestoneItemStatus.DoneLate,
+        ].includes(i.status),
+      ).length,
     [milestone.items],
   );
 
@@ -192,6 +225,7 @@ export const Milestone = ({
             <Flex>
               <PlanStatusCheckbox
                 formId={formId}
+                onToggleMilestone={handleToggle}
                 colorScheme={checkboxColorScheme}
                 readOnly={milestone.items?.length > 0}
                 showCustomIcon={milestone.items?.length > 0 && !isChecked}
@@ -261,6 +295,7 @@ interface PlanStatusCheckboxProps {
   readOnly?: boolean;
   colorScheme: string;
   showCustomIcon?: boolean;
+  onToggleMilestone?: () => void;
 }
 
 const PlanStatusCheckbox = ({
@@ -268,11 +303,18 @@ const PlanStatusCheckbox = ({
   readOnly,
   colorScheme,
   showCustomIcon,
+  onToggleMilestone,
 }: PlanStatusCheckboxProps) => {
   const { getInputProps } = useField('statusDetails', formId);
   const { value, onChange, onBlur, ...inputProps } = getInputProps();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) {
+      onToggleMilestone?.();
+
+      return;
+    }
+
     onChange?.({
       ...value,
       status: e.target.checked ? 'DONE' : 'NOT_STARTED',
@@ -293,11 +335,13 @@ const PlanStatusCheckbox = ({
       mr='2'
       size='md'
       onBlur={handleBlur}
-      readOnly={readOnly}
       onChange={handleChange}
       colorScheme={colorScheme}
       showCustomIcon={showCustomIcon}
-      isChecked={value.status === 'DONE'}
+      isChecked={[
+        OnboardingPlanMilestoneStatus.Done,
+        OnboardingPlanMilestoneStatus.DoneLate,
+      ].includes(value.status as unknown as OnboardingPlanMilestoneStatus)}
       {...inputProps}
     />
   );
@@ -313,7 +357,7 @@ const mapMilestoneToForm = (
     dueDate: milestone?.dueDate ?? null,
     statusDetails: milestone?.statusDetails ?? {
       text: '',
-      status: '',
+      status: OnboardingPlanMilestoneStatus.NotStarted,
       updatedAt: '',
     },
   };
@@ -330,4 +374,43 @@ const mapFormToMilestone = (
     dueDate: formValues.dueDate,
     statusDetails: formValues.statusDetails,
   };
+};
+
+/// Status Logic
+
+const checkTaskDone = (status: OnboardingPlanMilestoneItemStatus) => {
+  return [
+    OnboardingPlanMilestoneItemStatus.Done,
+    OnboardingPlanMilestoneItemStatus.DoneLate,
+    OnboardingPlanMilestoneItemStatus.Skipped,
+    OnboardingPlanMilestoneItemStatus.SkippedLate,
+  ].includes(status);
+};
+
+const checkMilestoneDone = (status: OnboardingPlanMilestoneStatus) => {
+  return [
+    OnboardingPlanMilestoneStatus.Done,
+    OnboardingPlanMilestoneStatus.DoneLate,
+  ].includes(status);
+};
+
+const computeMilestoneStatus = (milestone: MilestoneForm) => {
+  const isPastDueDate = new Date(milestone?.dueDate) < new Date();
+  const allTasksDone = milestone?.items?.every((i) => checkTaskDone(i.status));
+  const isMilestonePreviouslyDone = checkMilestoneDone(
+    milestone.statusDetails.status,
+  );
+
+  if (allTasksDone && !isMilestonePreviouslyDone) {
+    return isPastDueDate
+      ? OnboardingPlanMilestoneStatus.DoneLate
+      : OnboardingPlanMilestoneStatus.Done;
+  }
+  if (!allTasksDone && isMilestonePreviouslyDone) {
+    return isPastDueDate
+      ? OnboardingPlanMilestoneStatus.NotStartedLate
+      : OnboardingPlanMilestoneStatus.NotStarted;
+  }
+
+  return milestone.statusDetails.status;
 };

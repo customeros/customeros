@@ -1,6 +1,5 @@
 import { useRouter } from 'next/navigation';
 
-import { useDisclosure } from '@ui/utils';
 import { Map01 } from '@ui/media/icons/Map01';
 import { IconButton } from '@ui/form/IconButton';
 import { Archive } from '@ui/media/icons/Archive';
@@ -16,17 +15,22 @@ import {
 
 interface PlanMenuProps {
   id: string;
+  isOpen: boolean;
+  onOpen: () => void;
+  onClose: () => void;
   onRemovePlan: () => void;
   onAddMilestone: () => void;
 }
 
 export const PlanMenu = ({
   id,
+  isOpen,
+  onOpen,
+  onClose,
   onRemovePlan,
   onAddMilestone,
 }: PlanMenuProps) => {
   const router = useRouter();
-  const { isOpen, onClose, onOpen } = useDisclosure();
 
   const handleEditMasterPlan = () => {
     router.push(`/settings?tab=master-plans&show=active&planId=${id}`);

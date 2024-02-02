@@ -70,7 +70,6 @@ export const OnboardingMenu = () => {
             <Text noOfLines={1}>{m.name}</Text>
           </MenuItem>
         ))}
-        <MenuItem>Plan 2</MenuItem>
         <MenuDivider />
         <MenuItem onClick={handleEditMasterPlans}>Edit master plans</MenuItem>
       </MenuList>

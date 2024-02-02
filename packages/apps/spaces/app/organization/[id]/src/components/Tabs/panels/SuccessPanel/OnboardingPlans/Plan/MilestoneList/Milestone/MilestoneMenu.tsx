@@ -1,5 +1,5 @@
-import { useDisclosure } from '@ui/utils';
 import { IconButton } from '@ui/form/IconButton';
+import { Portal, useDisclosure } from '@ui/utils';
 import { MinusCircle } from '@ui/media/icons/MinusCircle';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
@@ -23,7 +23,12 @@ export const MilestoneMenu = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <Menu isOpen={isOpen} onClose={onClose} onOpen={onOpen}>
+    <Menu
+      isOpen={isOpen}
+      onClose={onClose}
+      onOpen={onOpen}
+      placement='bottom-end'
+    >
       <MenuButton
         as={IconButton}
         size='xs'
@@ -33,11 +38,13 @@ export const MilestoneMenu = ({
         {...buttonProps}
         opacity={isOpen ? 1 : buttonProps.opacity}
       />
-      <MenuList minW='10rem'>
-        <MenuItem onClick={onRetire} icon={<MinusCircle color='gray.500' />}>
-          Remove
-        </MenuItem>
-      </MenuList>
+      <Portal>
+        <MenuList minW='10rem'>
+          <MenuItem onClick={onRetire} icon={<MinusCircle color='gray.500' />}>
+            Remove
+          </MenuItem>
+        </MenuList>
+      </Portal>
     </Menu>
   );
 };

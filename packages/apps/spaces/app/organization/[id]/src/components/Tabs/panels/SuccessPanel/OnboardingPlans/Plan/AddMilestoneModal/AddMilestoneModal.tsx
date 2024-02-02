@@ -1,7 +1,9 @@
 import addHours from 'date-fns/addHours';
 
+import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { Heading } from '@ui/typography/Heading';
+import { MasterPlanMilestone } from '@graphql/types';
 import { Card, CardBody } from '@ui/presentation/Card';
 import { PlusSquare } from '@ui/media/icons/PlusSquare';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
@@ -17,12 +19,19 @@ import {
   ModalCloseButton,
 } from '@ui/overlay/Modal';
 
+import { NewMilestoneInput } from '../../types';
+
+type MasterPlanMilestoneInput = Pick<
+  MasterPlanMilestone,
+  'name' | 'durationHours' | 'order' | 'items'
+>;
+
 interface AddMilestoneModalProps {
   isOpen: boolean;
   onClose: () => void;
   masterPlanId: string;
   existingMilestoneNames: string[];
-  onAddMilestone: (name: string, dueDate: string) => void;
+  onAddMilestone: (input: NewMilestoneInput) => void;
 }
 
 export const AddMilestoneModal = ({
@@ -42,13 +51,21 @@ export const AddMilestoneModal = ({
     (m) => !existingMilestoneNames.includes(m.name),
   );
 
-  const handleAdd = (name: string, durationHours: number) => () => {
-    const dueDate = addHours(new Date(), durationHours).toISOString();
-    onAddMilestone(name, dueDate);
-  };
+  const handleAdd =
+    ({ order, name, durationHours, items }: MasterPlanMilestoneInput) =>
+    () => {
+      const dueDate = addHours(new Date(), durationHours).toISOString();
+
+      onAddMilestone({
+        name,
+        order,
+        items,
+        dueDate,
+      });
+    };
 
   return (
-    <Modal closeOnEsc isOpen={isOpen} onClose={onClose}>
+    <Modal closeOnEsc isOpen={isOpen} onClose={onClose} scrollBehavior='inside'>
       <ModalOverlay />
       <ModalContent
         borderRadius='2xl'
@@ -69,14 +86,20 @@ export const AddMilestoneModal = ({
         </ModalHeader>
 
         <ModalCloseButton />
-        <ModalBody>
+        <ModalBody as={VStack} spacing='2'>
           {filteredMilestones.length ? (
             filteredMilestones.map((milestone) => (
               <Card
+                w='full'
                 key={milestone.id}
                 cursor='pointer'
                 variant='outlinedElevated'
-                onClick={handleAdd(milestone.name, milestone.durationHours)}
+                onClick={handleAdd({
+                  name: milestone.name,
+                  order: milestone.order,
+                  items: milestone.items,
+                  durationHours: milestone.durationHours,
+                })}
               >
                 <CardBody pl='3' pb='4'>
                   <Text fontWeight='medium' w='full'>

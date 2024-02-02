@@ -8,7 +8,9 @@ import { Input } from '@ui/form/Input';
 import { Text } from '@ui/typography/Text';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { SkipForward } from '@ui/media/icons/SkipForward';
+import { OnboardingPlanMilestoneItemStatus } from '@graphql/types';
 
 import { TaskDatum } from '../../../../types';
 import { StatusCheckbox } from '../StatusCheckbox';
@@ -22,107 +24,146 @@ interface TaskProps {
 export const Task = memo(({ index, formId, defaultValue }: TaskProps) => {
   const [showSkip, setShowSkip] = useState(false);
   const { getInputProps } = useField('items', formId);
-  const { value, onChange } = getInputProps();
+  const { value, onChange, onBlur } = getInputProps();
   const itemValue = value?.[index] as TaskDatum;
 
   const milestoneDueDate = useField('dueDate', formId).getInputProps()
     ?.value as string;
 
-  const taskStatus = itemValue?.status ?? 'NOT_DONE';
+  const taskStatus =
+    itemValue?.status ?? OnboardingPlanMilestoneItemStatus.NotDone;
   const taskUpdatedAt = new Date(itemValue?.updatedAt).valueOf();
-  const taskUpdatedAtDate = new Date(itemValue?.updatedAt).toLocaleDateString();
+  const taskUpdatedAtDate = DateTimeUtils.format(
+    itemValue?.updatedAt,
+    DateTimeUtils.dateWithShortYear,
+  );
   const milestoneDueAt = new Date(milestoneDueDate).valueOf();
 
+  const isDone = [
+    OnboardingPlanMilestoneItemStatus.Done,
+    OnboardingPlanMilestoneItemStatus.DoneLate,
+  ].includes(taskStatus);
+  const isSkipped = [
+    OnboardingPlanMilestoneItemStatus.Skipped,
+    OnboardingPlanMilestoneItemStatus.SkippedLate,
+  ].includes(taskStatus);
+
   const colorScheme = (() => {
-    const isLate = taskUpdatedAt > milestoneDueAt;
-
-    if (taskStatus === 'SKIPPED') return 'gray';
-
-    if (['DONE'].includes(taskStatus)) {
-      return isLate ? 'warning' : 'success';
+    switch (taskStatus) {
+      case OnboardingPlanMilestoneItemStatus.NotDone:
+      case OnboardingPlanMilestoneItemStatus.Skipped:
+      case OnboardingPlanMilestoneItemStatus.SkippedLate:
+        return 'gray';
+      case OnboardingPlanMilestoneItemStatus.Done:
+        return 'success';
+      case OnboardingPlanMilestoneItemStatus.DoneLate:
+      case OnboardingPlanMilestoneItemStatus.NotDoneLate:
+        return 'warning';
+      default:
+        return 'gray';
     }
-
-    return isLate ? 'warning' : 'gray';
   })();
 
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      const nextItems = produce<TaskDatum[]>(value, (draft) => {
-        const item = draft[index];
-        if (!item) return;
+      if (!itemValue) return;
 
-        item.status = e.target.checked ? 'DONE' : 'NOT_DONE';
-        item.updatedAt = new Date().toISOString();
+      const updatedItem = produce<TaskDatum>(itemValue, (draft) => {
+        const isLate = taskUpdatedAt > milestoneDueAt;
+
+        draft.status = (() => {
+          if (e.target.checked) {
+            return isLate
+              ? OnboardingPlanMilestoneItemStatus.DoneLate
+              : OnboardingPlanMilestoneItemStatus.Done;
+          }
+
+          return isLate
+            ? OnboardingPlanMilestoneItemStatus.NotDoneLate
+            : OnboardingPlanMilestoneItemStatus.NotDone;
+        })();
+
+        draft.updatedAt = new Date().toISOString();
       });
 
-      onChange?.(nextItems);
+      onChange?.(
+        (value as TaskDatum[]).map((v, i) => (i === index ? updatedItem : v)),
+      );
     },
-    [onChange, index],
+    [onChange, index, value],
   );
 
   const handleSkip = useCallback(() => {
     const nextItems = produce<TaskDatum[]>(value, (draft) => {
-      const item = draft[index];
+      const item = draft?.[index];
       if (!item) return;
 
-      item.status = item.status !== 'SKIPPED' ? 'SKIPPED' : 'NOT_DONE';
+      const isPastDueDate = taskUpdatedAt > milestoneDueAt;
+
+      item.status = (() => {
+        switch (item.status) {
+          case OnboardingPlanMilestoneItemStatus.NotDone:
+            return isPastDueDate
+              ? OnboardingPlanMilestoneItemStatus.SkippedLate
+              : OnboardingPlanMilestoneItemStatus.Skipped;
+          case OnboardingPlanMilestoneItemStatus.Skipped:
+          case OnboardingPlanMilestoneItemStatus.SkippedLate:
+            return isPastDueDate
+              ? OnboardingPlanMilestoneItemStatus.NotDoneLate
+              : OnboardingPlanMilestoneItemStatus.NotDone;
+          default:
+            return item.status;
+        }
+      })();
+
       item.updatedAt = new Date().toISOString();
     });
 
     onChange?.(nextItems);
-  }, [onChange, index]);
+  }, [onChange, index, value]);
 
-  // const handleBlur = useCallback(
-  //   (e: ChangeEvent<HTMLInputElement>) => {
-  //     setIsFocused(false);
-  //     setShowRemove(false);
-
-  //     const nextItems = produce<string[]>(value, (draft) => {
-  //       const val = e.target.value;
-  //       if (!val.length) {
-  //         draft.splice(index, 1);
-
-  //         return;
-  //       }
-
-  //       draft[index] = e.target.value;
-  //     });
-
-  //     onBlur?.(nextItems);
-  //   },
-  //   [onBlur, index],
-  // );
+  const handleBlur = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      // onBlur?.();
+    },
+    [onBlur, index, value],
+  );
 
   return (
     <Flex
       w='full'
-      onMouseEnter={() => setShowSkip(true)}
-      onMouseLeave={() => setShowSkip(false)}
+      onMouseEnter={() => (!isSkipped ? setShowSkip(true) : undefined)}
+      onMouseLeave={() => (!isSkipped ? setShowSkip(false) : undefined)}
     >
       <StatusCheckbox
         mr='2'
         size='md'
+        isChecked={isDone}
+        onBlur={handleBlur}
         onChange={handleChange}
         colorScheme={colorScheme}
-        isChecked={value[index].status === 'DONE'}
       />
       <Input
         w='full'
         fontSize='sm'
         variant='unstyled'
         borderRadius='unset'
-        value={value[index].text}
+        defaultValue={value[index].text}
         placeholder='Task name'
-        fontStyle={taskStatus === 'SKIPPED' ? 'italic' : 'normal'}
+        fontStyle={isSkipped ? 'italic' : 'normal'}
       />
-      {taskStatus === 'DONE' && <Text>{taskUpdatedAtDate}</Text>}
-      {taskStatus !== 'DONE' && (
-        <Tooltip label={taskStatus === 'SKIPPED' ? 'Skipped' : 'Skip this'}>
+      {isDone && (
+        <Text fontSize='sm' color='gray.500' whiteSpace='nowrap'>
+          {taskUpdatedAtDate}
+        </Text>
+      )}
+      {!isDone && (
+        <Tooltip label={isSkipped ? 'Skipped' : 'Skip this'}>
           <IconButton
             size='xs'
             variant='ghost'
             onClick={handleSkip}
-            opacity={showSkip ? 1 : 0}
+            opacity={showSkip || isSkipped ? 1 : 0}
             aria-label='Skip Milestone Task'
             icon={<SkipForward color='gray.400' />}
           />

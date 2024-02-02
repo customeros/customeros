@@ -8,7 +8,7 @@ export const MainSection = ({ children }: { children?: React.ReactNode }) => {
       flex='3'
       h='100%'
       bg='#FCFCFC'
-      borderRadius='2xl'
+      borderRadius='unset'
       flexDirection='column'
       overflow='hidden'
       boxShadow='none'
