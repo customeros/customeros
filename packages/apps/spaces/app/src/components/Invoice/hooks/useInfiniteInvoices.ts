@@ -37,7 +37,7 @@ export function useInfiniteInvoices(
     useInfiniteGetInvoicesQuery(
       client,
       {
-        pagination: { page: 1, limit: 40 },
+        pagination: { page: 0, limit: 40 },
         where: { ...filterOutDryRunInvoices },
         organizationId,
       },
