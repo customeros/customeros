@@ -298,11 +298,18 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 				c.invoiceEmail <> "" AND
 				(c.billingCycle IN $validBillingCycles) AND
 				c.nextInvoiceDate IS NOT NULL AND
-				date(sli.startedAt) + duration({days: 1}) < date(c.nextInvoiceDate) AND
-				date(sli.startedAt) + < date($referenceTime) AND
 				(c.endedAt IS NULL OR date(c.endedAt) > date($referenceTime)) AND
-				(c.techOffCycleInvoicingStartedAt IS NULL OR date(c.techOffCycleInvoicingStartedAt) < date($referenceTime))
 				AND NOT (sli)<-[:INVOICED]-(:InvoiceLine)
+				date(sli.startedAt) + duration({days: 1}) < date(c.nextInvoiceDate) AND
+				date(sli.startedAt) < date($referenceTime) AND
+				(c.techOffCycleInvoicingStartedAt IS NULL OR date(c.techOffCycleInvoicingStartedAt) < date($referenceTime))
+			WITH c, sli, t 
+				OPTIONAL MATCH (c)-[:HAS_SERVICE]->(invoicedSli:ServiceLineItem)<-[:INVOICED]-(il:InvoiceLine)
+					WHERE EXISTS((invoicedSli)<-[:INVOICED]-(il))
+			WITH c, sli, t, invoicedSli
+				ORDER BY c, sli, invoicedSli.startedAt DESC
+			WITH c, sli, t, head(collect(invoicedSli)) as lastInvoicedSli
+				WHERE lastInvoicedSli IS NULL OR date(lastInvoicedSli.startedAt) < date(sli.startedAt) 
 			RETURN distinct(c), t.name limit 100`
 	params := map[string]any{
 		"referenceTime": referenceTime,
