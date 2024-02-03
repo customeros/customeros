@@ -299,7 +299,7 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 				(c.billingCycle IN $validBillingCycles) AND
 				c.nextInvoiceDate IS NOT NULL AND
 				(c.endedAt IS NULL OR date(c.endedAt) > date($referenceTime)) AND
-				AND NOT (sli)<-[:INVOICED]-(:InvoiceLine)
+				NOT EXISTS((sli)<-[:INVOICED]-(:InvoiceLine)) AND
 				date(sli.startedAt) + duration({days: 1}) < date(c.nextInvoiceDate) AND
 				date(sli.startedAt) < date($referenceTime) AND
 				(c.techOffCycleInvoicingStartedAt IS NULL OR date(c.techOffCycleInvoicingStartedAt) < date($referenceTime))
