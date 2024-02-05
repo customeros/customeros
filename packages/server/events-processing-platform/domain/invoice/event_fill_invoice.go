@@ -13,6 +13,7 @@ type InvoiceFillEvent struct {
 	UpdatedAt                     time.Time                `json:"updatedAt"`
 	Amount                        float64                  `json:"amount"`
 	VAT                           float64                  `json:"vat"`
+	SubtotalAmount                float64                  `json:"subtotalAmount" `
 	TotalAmount                   float64                  `json:"totalAmount" `
 	InvoiceLines                  []InvoiceLineEvent       `json:"invoiceLines" validate:"required"`
 	ContractId                    string                   `json:"contractId"`
@@ -53,12 +54,13 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, in
 	domesticPaymentsBankInfo, internationalPaymentsBankInfo,
 	customerName, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerEmail,
 	providerLogoUrl, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
-	note, status, invoiceNumber string, amount, vat, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
+	note, status, invoiceNumber string, amount, vat, subtotalAmount, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
 	eventData := InvoiceFillEvent{
 		Tenant:                        aggregate.GetTenant(),
 		UpdatedAt:                     updatedAt,
 		Amount:                        amount,
 		VAT:                           vat,
+		SubtotalAmount:                subtotalAmount,
 		TotalAmount:                   totalAmount,
 		Currency:                      invoice.Currency,
 		ContractId:                    invoice.ContractId,

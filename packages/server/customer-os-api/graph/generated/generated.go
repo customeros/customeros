@@ -580,6 +580,7 @@ type ComplexityRoot struct {
 		Source                        func(childComplexity int) int
 		SourceOfTruth                 func(childComplexity int) int
 		Status                        func(childComplexity int) int
+		SubtotalAmount                func(childComplexity int) int
 		TotalAmount                   func(childComplexity int) int
 		UpdatedAt                     func(childComplexity int) int
 		Vat                           func(childComplexity int) int
@@ -4345,6 +4346,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Invoice.Status(childComplexity), true
+
+	case "Invoice.subtotalAmount":
+		if e.complexity.Invoice.SubtotalAmount == nil {
+			break
+		}
+
+		return e.complexity.Invoice.SubtotalAmount(childComplexity), true
 
 	case "Invoice.totalAmount":
 		if e.complexity.Invoice.TotalAmount == nil {
@@ -11842,6 +11850,7 @@ type Invoice implements SourceFields & Node {
     dueDate:            Time!
     amount:             Float!
     vat:                Float!
+    subtotalAmount:     Float!
     totalAmount:        Float!
     currency:           String!
     repositoryFileId:   String!
@@ -34793,6 +34802,50 @@ func (ec *executionContext) fieldContext_Invoice_vat(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Invoice_subtotalAmount(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_subtotalAmount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SubtotalAmount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_subtotalAmount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Invoice_totalAmount(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Invoice_totalAmount(ctx, field)
 	if err != nil {
@@ -36264,6 +36317,8 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 				return ec.fieldContext_Invoice_amount(ctx, field)
 			case "vat":
 				return ec.fieldContext_Invoice_vat(ctx, field)
+			case "subtotalAmount":
+				return ec.fieldContext_Invoice_subtotalAmount(ctx, field)
 			case "totalAmount":
 				return ec.fieldContext_Invoice_totalAmount(ctx, field)
 			case "currency":
@@ -69766,6 +69821,8 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 				return ec.fieldContext_Invoice_amount(ctx, field)
 			case "vat":
 				return ec.fieldContext_Invoice_vat(ctx, field)
+			case "subtotalAmount":
+				return ec.fieldContext_Invoice_subtotalAmount(ctx, field)
 			case "totalAmount":
 				return ec.fieldContext_Invoice_totalAmount(ctx, field)
 			case "currency":
@@ -91850,6 +91907,11 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "vat":
 			out.Values[i] = ec._Invoice_vat(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "subtotalAmount":
+			out.Values[i] = ec._Invoice_subtotalAmount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

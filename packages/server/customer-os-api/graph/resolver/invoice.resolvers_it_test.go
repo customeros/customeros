@@ -39,6 +39,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 		DueDate:          timeNow,
 		Amount:           100,
 		Vat:              19,
+		SubtotalAmount:   100,
 		TotalAmount:      119,
 		RepositoryFileId: "ABC",
 		Note:             "Note",
@@ -76,6 +77,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Equal(t, timeNow, invoice.DueDate)
 	require.Equal(t, 100.0, invoice.Amount)
 	require.Equal(t, 19.0, invoice.Vat)
+	require.Equal(t, 100.0, invoice.SubtotalAmount)
 	require.Equal(t, 119.0, invoice.TotalAmount)
 	require.Equal(t, "ABC", invoice.RepositoryFileID)
 	require.Equal(t, "Note", *invoice.Note)

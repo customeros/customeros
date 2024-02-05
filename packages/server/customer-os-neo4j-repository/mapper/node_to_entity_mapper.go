@@ -27,6 +27,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		BillingCycle:                  enum.DecodeBillingCycle(utils.GetStringPropOrEmpty(props, "billingCycle")),
 		Amount:                        utils.GetFloatPropOrZero(props, "amount"),
 		Vat:                           utils.GetFloatPropOrZero(props, "vat"),
+		SubtotalAmount:                utils.GetFloatPropOrZero(props, "subtotalAmount"),
 		TotalAmount:                   utils.GetFloatPropOrZero(props, "totalAmount"),
 		RepositoryFileId:              utils.GetStringPropOrEmpty(props, "repositoryFileId"),
 		Source:                        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),

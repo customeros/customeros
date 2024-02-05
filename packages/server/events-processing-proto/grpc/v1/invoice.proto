@@ -40,16 +40,17 @@ message FillInvoiceRequest {
   string invoiceId = 3;
   double amount = 4;
   double vat = 5;
-  double total = 6;
-  repeated InvoiceLine invoiceLines = 7;
-  google.protobuf.Timestamp updatedAt = 8;
-  string appSource = 9;
-  InvoiceStatus status = 10;
-  string Note = 11;
-  string DomesticPaymentsBankInfo = 12;
-  string InternationalPaymentsBankInfo = 13;
-  FillInvoiceCustomer Customer = 14;
-  FillInvoiceProvider Provider = 15;
+  double subtotal = 6;
+  double total = 7;
+  repeated InvoiceLine invoiceLines = 8;
+  google.protobuf.Timestamp updatedAt = 9;
+  string appSource = 10;
+  InvoiceStatus status = 11;
+  string Note = 12;
+  string DomesticPaymentsBankInfo = 13;
+  string InternationalPaymentsBankInfo = 14;
+  FillInvoiceCustomer Customer = 15;
+  FillInvoiceProvider Provider = 16;
 }
 
 message FillInvoiceCustomer {

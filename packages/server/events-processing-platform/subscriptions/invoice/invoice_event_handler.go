@@ -104,7 +104,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 		}
 	}
 
-	amount, vat, totalAmount := float64(0), float64(0), float64(0)
+	amount, vat, subtotal, totalAmount := float64(0), float64(0), float64(0), float64(0)
 	invoiceLines := []*invoicepb.InvoiceLine{}
 
 	referenceTime := invoiceEntity.PeriodStartDate
@@ -131,6 +131,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 			calculatedSLIAmount = utils.TruncateFloat64(calculatedSLIAmount, 2)
 			calculatedSLIVat := utils.TruncateFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
 			amount += calculatedSLIAmount
+			subtotal += calculatedSLIAmount
 			vat += calculatedSLIVat
 			invoiceLine := invoicepb.InvoiceLine{
 				Name:                    sliEntity.Name,
@@ -234,6 +235,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 		contractEntity.InvoiceNote,
 		amount,
 		vat,
+		subtotal,
 		totalAmount,
 		invoiceLines,
 		span)
@@ -284,7 +286,7 @@ func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed n
 func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, domesticPaymentsBankInfo, internationalPaymentsBankInfo,
 	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry,
 	providerLogoUrl, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
-	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
+	note string, amount, vat, subtotal, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
 	_, err := h.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
@@ -314,6 +316,7 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 		},
 		Amount:       amount,
 		Vat:          vat,
+		Subtotal:     subtotal,
 		Total:        total,
 		InvoiceLines: invoiceLines,
 		UpdatedAt:    utils.ConvertTimeToTimestampPtr(&now),
