@@ -10,12 +10,12 @@
   <p>
     <h3>
       <b>
-        Openline customerOS
+        CustomerOS
       </b>
     </h3>
   </p>
   <p>
-    Openline customerOS is the easiest way to consolidate, warehouse, and build applications with your customer data.
+    CustomerOS is the easiest way to consolidate, warehouse, and build applications with your customer data.
   </p>
   <p>
 
@@ -29,8 +29,8 @@
   <p>
     <sub>
       Built with ❤︎ by the
-      <a href="https://openline.ai">
-        Openline
+      <a href="https://customeros.ai">
+        CustomerOS
       </a>
       community!
     </sub>
@@ -40,7 +40,7 @@
 
 ## 👋 Overview
 
-Openline customerOS is an open source development platform that enables the flexible and rapid development of customer-centric applications.
+CustomerOS is an open source development platform that enables the flexible and rapid development of customer-centric applications.
 
 | Feature               | Description | Status|
 |-----------------------|-------------|-------|
@@ -61,7 +61,7 @@ Openline customerOS is an open source development platform that enables the flex
 
 ## 🚀 Installation
 
-1. Download and install the [Openline CLI][cli]
+1. Download and install the [CustomerOS CLI][cli]
 2. Run the following command
 
 ```sh-session
