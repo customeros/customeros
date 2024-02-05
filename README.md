@@ -1,7 +1,7 @@
 <div align="center">
   <a href="https://customeros.ai">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/.github/CustomerOS-logo-darkmode-small.svg.svg">
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/.github/CustomerOS-logo-darkmode-small.svg">
       <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/.github/CustomerOS-logo-small.svg">
       <img alt="CustomerOS Logo" src="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/.github/CustomerOS-logo-small.svg">
       </picture>
