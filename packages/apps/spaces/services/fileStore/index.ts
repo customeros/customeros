@@ -1,3 +1,6 @@
+import axios from 'axios';
+
+import { useCustomerLogo } from '@shared/state/CustomerLogo.atom';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 export async function DownloadInvoice(
@@ -32,5 +35,40 @@ export async function DownloadInvoice(
         'Something went wrong while downloading the invoice',
         'download-invoice-error',
       );
+    });
+}
+
+export function FetchLogo({
+  id,
+  setLogoUrl,
+}: {
+  id: string;
+  setLogoUrl: (args: any) => void;
+}) {
+  return fetch(`/fs/file/${id}/download`)
+    .then(async (response: any) => {
+      const blob = await response.blob();
+      console.log('🏷️ ----- response: ', response);
+      const reader = new FileReader();
+      reader.onload = function () {
+        const img = new Image();
+        img.src = reader.result as string;
+        const dataUrl = reader.result as any;
+        if (dataUrl) {
+          setLogoUrl({
+            logoUrl: dataUrl,
+            dimensions: {
+              width: img.width || '136px',
+              height: img.height || '36px',
+            },
+          });
+        } else {
+          console.log('🏷️ ----- : ERROR');
+        }
+      };
+      reader.readAsDataURL(blob);
+    })
+    .catch((reason: any) => {
+      console.log('🏷️ ----- : ERROR CATCH', reason);
     });
 }

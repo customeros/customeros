@@ -22,6 +22,18 @@ const nextConfig = {
         port: '',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 'fs.customeros.ai',
+        port: '',
+        pathname: '/file/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'customer-os.imgix.net',
+        port: '',
+        pathname: '/images/**',
+      },
     ],
   },
   env: {

@@ -4,12 +4,17 @@ import { useForm } from 'react-inverted-form';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
-import { useDebounce } from 'rooks';
+import { ScaleFade } from '@chakra-ui/transition';
+import { useDebounce, useWillUnmount } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/VatInput';
+import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
+import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
+import { useUpdateTenantSettingsMutation } from '@settings/graphql/updateTenantSettings.generated';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
 import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateTenantBillingProfile.generated';
+import { TenantBillingPanelDetailsForm } from '@settings/components/Tabs/panels/BillingPanel/TenantBillingDetailsForm';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
@@ -17,6 +22,7 @@ import { Gb } from '@ui/media/logos/Gb';
 import { Us } from '@ui/media/logos/Us';
 import { Eu } from '@ui/media/logos/Eu';
 import { Text } from '@ui/typography/Text';
+import { Switch } from '@ui/form/Switch';
 import { FormInput } from '@ui/form/Input';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Heading } from '@ui/typography/Heading';
@@ -38,7 +44,33 @@ export const BillingPanel = () => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
 
-  const { data, isFetchedAfterMount } = useTenantBillingProfilesQuery(client);
+  const { data: tenantSettingsData } = useTenantSettingsQuery(client);
+  const queryKey = useTenantSettingsQuery.getKey();
+
+  const updateTenantSettingsMutation = useUpdateTenantSettingsMutation(client, {
+    onMutate: ({ input: { patch, ...newSettings } }) => {
+      queryClient.cancelQueries({ queryKey });
+      console.log('🏷️ ----- : here ');
+      const previousSettings = tenantSettingsData?.tenantSettings;
+      queryClient.setQueryData(queryKey, {
+        tenantSettings: {
+          ...previousSettings,
+          ...newSettings,
+        },
+      });
+
+      return { previousSettings };
+    },
+    onError: (err, newSettings, context) => {
+      queryClient.setQueryData(queryKey, context?.previousSettings);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
+  const isInvoicingEnabled =
+    tenantSettingsData?.tenantSettings?.invoicingEnabled;
   const [isInvoiceProviderFocused, setIsInvoiceProviderFocused] =
     useState<boolean>(false);
   const [isInvoiceProviderDetailsHovered, setIsInvoiceProviderDetailsHovered] =
@@ -453,6 +485,29 @@ export const BillingPanel = () => {
             }
           />
         </CardBody>
+
+          <ScaleFade in={isInvoicingEnabled}>
+              {isInvoicingEnabled && (
+                  <TenantBillingPanelDetailsForm
+                      setIsDomesticBankingDetailsSectionFocused={
+                          setIsDomesticBankingDetailsSectionFocused
+                      }
+                      setIsInvoiceProviderDetailsHovered={
+                          setIsInvoiceProviderDetailsHovered
+                      }
+                      setIsInvoiceProviderFocused={setIsInvoiceProviderFocused}
+                      setIsInternationalBankingDetailsSectionFocused={
+                          setIsInternationalBankingDetailsSectionFocused
+                      }
+                      setIsDomesticBankingDetailsSectionHovered={
+                          setIsDomesticBankingDetailsSectionHovered
+                      }
+                      setIsInternationalBankingDetailsSectionHovered={
+                          setIsInternationalBankingDetailsSectionHovered
+                      }
+                  />
+              )}
+          </ScaleFade>
       </Card>
       <Box borderRight='1px solid' borderColor='gray.300' maxH='100vh'>
         <Invoice

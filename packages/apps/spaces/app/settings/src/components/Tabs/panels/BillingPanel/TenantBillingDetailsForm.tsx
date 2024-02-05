@@ -1,0 +1,330 @@
+'use client';
+
+import { useForm } from 'react-inverted-form';
+import React, { useMemo, useState, useEffect } from 'react';
+
+import { produce } from 'immer';
+import { useDebounce } from 'rooks';
+import { useQueryClient } from '@tanstack/react-query';
+import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
+import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
+import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
+import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateTenantBillingProfile.generated';
+
+import { Flex } from '@ui/layout/Flex';
+import { FormInput } from '@ui/form/Input';
+import { CardBody } from '@ui/layout/Card';
+import { FormSelect } from '@ui/form/SyncSelect';
+import { TenantBillingProfile } from '@graphql/types';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { countryOptions } from '@shared/util/countryOptions';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+
+import {
+  TenantBillingDetails,
+  TenantBillingDetailsDto,
+} from './TenantBillingProfile.dto';
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export const TenantBillingPanelDetailsForm = ({
+  setIsInvoiceProviderDetailsHovered,
+  setIsInvoiceProviderFocused,
+  setIsDomesticBankingDetailsSectionHovered,
+  setIsDomesticBankingDetailsSectionFocused,
+  setIsInternationalBankingDetailsSectionHovered,
+  setIsInternationalBankingDetailsSectionFocused,
+}: {
+  setIsInvoiceProviderFocused: (newState: boolean) => void;
+  setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
+  setIsDomesticBankingDetailsSectionHovered: (newState: boolean) => void;
+  setIsDomesticBankingDetailsSectionFocused: (newState: boolean) => void;
+  setIsInternationalBankingDetailsSectionHovered: (newState: boolean) => void;
+  setIsInternationalBankingDetailsSectionFocused: (newState: boolean) => void;
+}) => {
+  const client = getGraphQLClient();
+  const queryClient = useQueryClient();
+
+  const { data, isFetchedAfterMount } = useTenantBillingProfilesQuery(client);
+
+  const tenantBillingProfileId = data?.tenantBillingProfiles?.[0]?.id ?? '';
+  const queryKey = useTenantBillingProfilesQuery.getKey();
+
+  const createBillingProfileMutation = useCreateBillingProfileMutation(client, {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+  const updateBillingProfileMutation = useTenantUpdateBillingProfileMutation(
+    client,
+    {
+      onMutate: ({ input }) => {
+        queryClient.cancelQueries({ queryKey });
+
+        useTenantBillingProfilesQuery.mutateCacheEntry(queryClient)(
+          (cacheEntry) => {
+            return produce(cacheEntry, (draft) => {
+              const selectedProfile = draft?.tenantBillingProfiles?.findIndex(
+                (profileId) =>
+                  profileId.id === data?.tenantBillingProfiles?.[0]?.id,
+              );
+
+              if (
+                selectedProfile &&
+                draft?.tenantBillingProfiles?.[selectedProfile]
+              ) {
+                draft.tenantBillingProfiles[selectedProfile] = {
+                  ...draft.tenantBillingProfiles[selectedProfile],
+                  ...(input as TenantBillingProfile),
+                };
+              }
+            });
+          },
+        );
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey });
+      },
+    },
+  );
+  const formId = 'tenant-billing-profile-form';
+  const invoicePreviewStaticData = useMemo(
+    () => ({
+      status: 'Preview',
+      invoiceNumber: 'INV-003',
+      lines: [
+        {
+          amount: 100,
+          createdAt: new Date().toISOString(),
+          id: 'dummy-id',
+          name: 'Professional tier',
+          price: 50,
+          quantity: 2,
+          totalAmount: 100,
+          vat: 0,
+        },
+      ],
+      tax: 0,
+      note: '',
+      total: 100,
+      dueDate: new Date().toISOString(),
+      subtotal: 100,
+      issueDate: new Date().toISOString(),
+      billedTo: {
+        addressLine1: '29 Maple Lane',
+        addressLine2: 'Springfield, Haven County',
+        locality: 'San Francisco',
+        zip: '89302',
+        country: 'United States',
+        email: 'invoices@acme.com',
+        name: 'Acme Corp.',
+      },
+    }),
+    [],
+  );
+
+  const newDefaults = new TenantBillingDetailsDto();
+
+  const handleUpdateData = useDebounce((d: TenantBillingDetails) => {
+    const payload = TenantBillingDetailsDto.toPayload(d);
+
+    updateBillingProfileMutation.mutate({
+      input: {
+        id: tenantBillingProfileId,
+        ...payload,
+      },
+    });
+  }, 500);
+  const { state, setDefaultValues } = useForm({
+    formId,
+    defaultValues: newDefaults,
+    stateReducer: (_, action, next) => {
+      if (action.type === 'FIELD_CHANGE') {
+        if (action.payload.name === 'country') {
+          const payload = TenantBillingDetailsDto.toPayload(next.values);
+          updateBillingProfileMutation.mutate({
+            input: {
+              id: tenantBillingProfileId,
+              ...payload,
+            },
+          });
+
+          return {
+            ...next,
+          };
+        }
+        if (action.payload.name !== 'country') {
+          handleUpdateData({
+            ...next.values,
+          });
+
+          return {
+            ...next,
+          };
+        }
+      }
+
+      return next;
+    },
+  });
+
+  useEffect(() => {
+    return handleUpdateData.flush();
+  }, []);
+
+  useEffect(() => {
+    if (isFetchedAfterMount && !data?.tenantBillingProfiles.length) {
+      createBillingProfileMutation.mutate({
+        input: {},
+      });
+    }
+  }, [isFetchedAfterMount, data]);
+
+  useEffect(() => {
+    if (
+      isFetchedAfterMount &&
+      !!data?.tenantBillingProfiles.length &&
+      data?.tenantBillingProfiles?.[0]
+    ) {
+      const newDefaults = new TenantBillingDetailsDto(
+        data?.tenantBillingProfiles?.[0] as TenantBillingProfile,
+      );
+      setDefaultValues(newDefaults);
+    }
+  }, [isFetchedAfterMount, data]);
+
+  return (
+    <CardBody as={Flex} flexDir='column' px='6' w='full' gap={4}>
+      <LogoUploader />
+      <FormInput
+        autoComplete='off'
+        label='Organization legal name'
+        placeholder='Legal name'
+        isLabelVisible
+        labelProps={{
+          fontSize: 'sm',
+          mb: 0,
+          fontWeight: 'semibold',
+        }}
+        name='legalName'
+        formId={formId}
+        onMouseEnter={() => setIsInvoiceProviderDetailsHovered(true)}
+        onMouseLeave={() => setIsInvoiceProviderDetailsHovered(false)}
+        onFocus={() => setIsInvoiceProviderFocused(true)}
+        onBlur={() => setIsInvoiceProviderFocused(false)}
+      />
+      <Flex
+        flexDir='column'
+        onMouseEnter={() => setIsInvoiceProviderDetailsHovered(true)}
+        onMouseLeave={() => setIsInvoiceProviderDetailsHovered(false)}
+      >
+        <FormInput
+          autoComplete='off'
+          label='Billing address'
+          placeholder='Address line 1'
+          isLabelVisible
+          labelProps={{
+            fontSize: 'sm',
+            mb: 0,
+            fontWeight: 'semibold',
+          }}
+          name='addressLine1'
+          formId={formId}
+          onFocus={() => setIsInvoiceProviderFocused(true)}
+          onBlur={() => setIsInvoiceProviderFocused(false)}
+        />
+        <FormInput
+          autoComplete='off'
+          label='Billing address line 2'
+          name='addressLine2'
+          placeholder='Address line 2'
+          formId={formId}
+          onFocus={() => setIsInvoiceProviderFocused(true)}
+          onBlur={() => setIsInvoiceProviderFocused(false)}
+        />
+
+        <Flex>
+          <FormInput
+            autoComplete='off'
+            label='Billing address locality'
+            name='locality'
+            placeholder='City'
+            formId={formId}
+            onFocus={() => setIsInvoiceProviderFocused(true)}
+            onBlur={() => setIsInvoiceProviderFocused(false)}
+          />
+          <FormInput
+            autoComplete='off'
+            label='Billing address zip/Postal code'
+            name='zip'
+            placeholder='ZIP/Potal code'
+            formId={formId}
+            onFocus={() => setIsInvoiceProviderFocused(true)}
+            onBlur={() => setIsInvoiceProviderFocused(false)}
+          />
+        </Flex>
+        <FormSelect
+          name='country'
+          placeholder='Country'
+          formId={formId}
+          options={countryOptions}
+        />
+        <FormInput
+          autoComplete='off'
+          label='Email'
+          isLabelVisible
+          labelProps={{
+            fontSize: 'sm',
+            mb: 0,
+            mt: 4,
+            fontWeight: 'semibold',
+          }}
+          formId={formId}
+          name='email'
+          textOverflow='ellipsis'
+          placeholder='Email'
+          type='email'
+          isInvalid={
+            !!state.values.email?.length && !emailRegex.test(state.values.email)
+          }
+          onFocus={() => setIsInvoiceProviderFocused(true)}
+          onBlur={() => setIsInvoiceProviderFocused(false)}
+        />
+      </Flex>
+
+      <FormAutoresizeTextarea
+        label='Domestic banking details'
+        isLabelVisible
+        name='domesticPaymentsBankInfo'
+        formId={formId}
+        labelProps={{
+          fontSize: 'sm',
+          mb: 0,
+          fontWeight: 'semibold',
+        }}
+        onMouseEnter={() => setIsDomesticBankingDetailsSectionHovered(true)}
+        onMouseLeave={() => setIsDomesticBankingDetailsSectionHovered(false)}
+        onFocus={() => setIsDomesticBankingDetailsSectionFocused(true)}
+        onBlur={() => setIsDomesticBankingDetailsSectionFocused(false)}
+      />
+      <FormAutoresizeTextarea
+        label='International banking details'
+        isLabelVisible
+        name='internationalPaymentsBankInfo'
+        formId={formId}
+        labelProps={{
+          fontSize: 'sm',
+          mb: 0,
+          fontWeight: 'semibold',
+        }}
+        onMouseEnter={() =>
+          setIsInternationalBankingDetailsSectionHovered(true)
+        }
+        onMouseLeave={() =>
+          setIsInternationalBankingDetailsSectionHovered(false)
+        }
+        onFocus={() => setIsInternationalBankingDetailsSectionFocused(true)}
+        onBlur={() => setIsInternationalBankingDetailsSectionFocused(false)}
+      />
+    </CardBody>
+  );
+};
