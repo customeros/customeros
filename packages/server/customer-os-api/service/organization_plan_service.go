@@ -213,7 +213,8 @@ func (s *organizationPlanService) GetOrganizationPlanMilestoneById(ctx context.C
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Organization plan milestone with id {%s} not found", organizationPlanMilestoneId))
 		return nil, wrappedErr
 	} else {
-		return neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(organizationPlanMilestoneDbNode), nil
+		opm := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(organizationPlanMilestoneDbNode)
+		return opm, nil
 	}
 }
 
@@ -262,7 +263,7 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 	span.SetTag(tracing.SpanTagEntityId, organizationPlanMilestoneId)
 	span.LogFields(log.Object("name", name), log.Object("order", order), log.Object("dueDate", dueDate), log.Object("items", items), log.Object("optional", optional), log.Object("retired", retired))
 
-	if name == nil && retired == nil && order == nil && dueDate == nil && optional == nil && items == nil {
+	if name == nil && retired == nil && order == nil && dueDate == nil && optional == nil && items == nil && adhoc == nil && statusDetails == nil {
 		// nothing to update
 		return nil
 	}
