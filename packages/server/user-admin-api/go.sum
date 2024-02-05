@@ -191,8 +191,6 @@ github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-a
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231120145804-10b6738ad211/go.mod h1:H9g1bMNSvYuL+yY+vnmdWglM8Y9StsmmfFeD6dZz3yM=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231227140027-08b87eac2360 h1:hrAzbJa7o8kAqQ3FDXnBxiNjd2HbBy1LGgmA7/0uP6o=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231227140027-08b87eac2360/go.mod h1:Oc92B30isxSVWumCR70ZhHptIcffRM5E/ZvpX2Mi/20=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240130190820-d6caf9d4db61 h1:8dokdu1GHuaZxDg1OIs4zMr3ySJMY7YOHKp1oDEa1XQ=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240130190820-d6caf9d4db61/go.mod h1:DVhy/gubIjeEbYBgVyWtK92hq5EUL7aD5x4K9jVoNRg=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20231223141039-1ccda1d986b4 h1:hc3QAjLLTCjN+2wtydJGru5edgPu5BKzOoBayGcm4ps=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20231223141039-1ccda1d986b4/go.mod h1:IsC9IawrEeGaGY0HeIPwgs4DSUbpSFdxo8EFhn175Qo=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
@@ -371,8 +369,8 @@ gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EV
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
-gorm.io/driver/postgres v1.5.4 h1:Iyrp9Meh3GmbSuyIAGyjkN+n9K+GHX9b9MqsTL4EJCo=
-gorm.io/driver/postgres v1.5.4/go.mod h1:Bgo89+h0CRcdA33Y6frlaHHVuTdOf87pmyzwW9C/BH0=
+gorm.io/driver/postgres v1.5.5 h1:r1VBTQQrOAlUux3JI9V7rdxVWBPPnzxa315qNJUzmjI=
+gorm.io/driver/postgres v1.5.5/go.mod h1:Bgo89+h0CRcdA33Y6frlaHHVuTdOf87pmyzwW9C/BH0=
 gorm.io/gorm v1.25.6 h1:V92+vVda1wEISSOMtodHVRcUIOPYa2tgQtyF+DfFx+A=
 gorm.io/gorm v1.25.6/go.mod h1:hbnx/Oo0ChWMn1BIhpy1oYozzpM15i4YPuHDmfYtwg8=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
