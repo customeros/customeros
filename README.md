@@ -1,10 +1,10 @@
 <div align="center">
-  <a href="https://openline.ai">
-    <img
-      src="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/.github/TeamHero.svg"
-      alt="Openline Logo"
-      height="64"
-    />
+  <a href="https://customeros.ai">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/.github/CustomerOS-logo-darkmode-small.svg.svg">
+      <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/.github/CustomerOS-logo-small.svg">
+      <img alt="CustomerOS Logo" src="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/.github/CustomerOS-logo-small.svg">
+      </picture>
   </a>
   <br />
   <p>
