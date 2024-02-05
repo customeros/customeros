@@ -232,20 +232,29 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		UpdateStatusDetails: eventData.UpdateStatusDetails(),
 		UpdateAdhoc:         eventData.UpdateAdhoc(),
 	}
-
 	// check if milestone status should update
 	if eventData.UpdateItems() {
-		if checkAllItemStatusesAreDoneOrSkipped(eventData.Items) {
-			if eventData.UpdatedAt.After(dueDate) {
+		allItemsDone, late, started := allItemsDoneLateStarted(eventData.Items)
+		late = late || eventData.UpdatedAt.After(dueDate) && eventData.UpdatedAt.Day() != dueDate.Day()
+		if allItemsDone {
+			if late {
 				data.StatusDetails.Status = model.MilestoneDoneLate.String()
 			} else {
 				data.StatusDetails.Status = model.MilestoneDone.String()
 			}
 		} else {
-			if eventData.UpdatedAt.After(dueDate) {
-				data.StatusDetails.Status = model.MilestoneStartedLate.String()
+			if started {
+				if late {
+					data.StatusDetails.Status = model.MilestoneStartedLate.String()
+				} else {
+					data.StatusDetails.Status = model.MilestoneStarted.String()
+				}
 			} else {
-				data.StatusDetails.Status = model.MilestoneStarted.String()
+				if late {
+					data.StatusDetails.Status = model.MilestoneNotStartedLate.String()
+				} else {
+					data.StatusDetails.Status = model.MilestoneNotStarted.String()
+				}
 			}
 		}
 		data.StatusDetails.UpdatedAt = eventData.UpdatedAt
@@ -484,13 +493,22 @@ func (h *OrganizationPlanEventHandler) saveOnboardingStatusChangeAction(ctx cont
 
 /////////////////////////////////////////////////// helper functions ///////////////////////////////////////////////////
 
-func checkAllItemStatusesAreDoneOrSkipped(items []model.OrganizationPlanMilestoneItem) bool {
+func allItemsDoneLateStarted(items []model.OrganizationPlanMilestoneItem) (bool, bool, bool) {
+	allItemsDone := true
+	late := false
+	started := false
 	for _, item := range items {
-		if item.Status == model.TaskNotDone.String() || item.Status == model.TaskNotDoneLate.String() {
-			return false
+		if item.Status != model.TaskDone.String() || item.Status != model.TaskDoneLate.String() {
+			allItemsDone = false
+		}
+		if item.Status == model.TaskDoneLate.String() || item.Status == model.TaskNotDoneLate.String() || item.Status == model.TaskSkippedLate.String() {
+			late = true
+		}
+		if item.Status == model.TaskDone.String() || item.Status == model.TaskDoneLate.String() || item.Status == model.TaskSkipped.String() || item.Status == model.TaskSkippedLate.String() {
+			started = true
 		}
 	}
-	return true
+	return allItemsDone, late, started
 }
 
 func convertItemsStrToObject(items []string) []entity.OrganizationPlanMilestoneItem {
