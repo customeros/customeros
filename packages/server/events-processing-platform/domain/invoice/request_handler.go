@@ -16,7 +16,7 @@ import (
 
 type InvoiceRequestHandler interface {
 	Handle(ctx context.Context, tenant, objectId string, request any, params ...map[string]any) (any, error)
-	HandleWithRetry(ctx context.Context, tenant, objectId string, aggregateRequired bool, request any) (any, error)
+	HandleWithRetry(ctx context.Context, tenant, objectId string, aggregateRequired bool, request any, params ...map[string]any) (any, error)
 	HandleTemp(ctx context.Context, tenant, objectId string, request any) (any, error)
 }
 
@@ -58,12 +58,15 @@ func (h *invoiceRequestHandler) Handle(ctx context.Context, tenant, objectId str
 	return result, h.es.Save(ctx, invoiceAggregate)
 }
 
-func (h *invoiceRequestHandler) HandleWithRetry(ctx context.Context, tenant, objectId string, aggregateRequired bool, request any) (any, error) {
+func (h *invoiceRequestHandler) HandleWithRetry(ctx context.Context, tenant, objectId string, aggregateRequired bool, request any, params ...map[string]any) (any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceRequestHandler.HandleWithRetry")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	tracing.LogObjectAsJson(span, "request", request)
 	span.LogFields(log.Bool("aggregateRequired", aggregateRequired))
+	if params != nil && len(params) > 0 {
+		span.LogFields(log.Object("params", params))
+	}
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
 		invoiceAggregate, err := LoadInvoiceAggregate(ctx, h.es, tenant, objectId, *eventstore.NewLoadAggregateOptions())
@@ -77,7 +80,11 @@ func (h *invoiceRequestHandler) HandleWithRetry(ctx context.Context, tenant, obj
 			return nil, eventstore.ErrAggregateNotFound
 		}
 
-		result, err := invoiceAggregate.HandleRequest(ctx, request)
+		var requestParams map[string]any
+		if params != nil && len(params) > 0 {
+			requestParams = params[0]
+		}
+		result, err := invoiceAggregate.HandleRequest(ctx, request, requestParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err

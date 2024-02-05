@@ -17,7 +17,6 @@ type InvoiceCreateFields struct {
 	ContractId      string                  `json:"contractId"`
 	Currency        neo4jenum.Currency      `json:"currency"`
 	DryRun          bool                    `json:"dryRun"`
-	InvoiceNumber   string                  `json:"invoiceNumber"`
 	PeriodStartDate time.Time               `json:"periodStartDate"`
 	PeriodEndDate   time.Time               `json:"periodEndDate"`
 	CreatedAt       time.Time               `json:"createdAt"`
@@ -112,7 +111,6 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 								i.sourceOfTruth=$sourceOfTruth,
 								i.appSource=$appSource,
 								i.dryRun=$dryRun,
-								i.number=$number,
 								i.currency=$currency,
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
@@ -132,7 +130,6 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"sourceOfTruth": data.SourceFields.Source,
 		"appSource":     data.SourceFields.AppSource,
 		"dryRun":        data.DryRun,
-		"number":        data.InvoiceNumber,
 		"currency":      data.Currency.String(),
 		"periodStart":   data.PeriodStartDate,
 		"periodEnd":     data.PeriodEndDate,
@@ -162,7 +159,6 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i:Invoice_%s,
 								i.currency=$currency,
 								i.dryRun=$dryRun,
-								i.number=$number,
 								i.currency=$currency,
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
@@ -191,6 +187,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.providerAddressCountry=$providerAddressCountry
 							SET 
 								i.updatedAt=$updatedAt,
+								i.number=$number,
 								i.amount=$amount,
 								i.vat=$vat,
 								i.totalAmount=$totalAmount,

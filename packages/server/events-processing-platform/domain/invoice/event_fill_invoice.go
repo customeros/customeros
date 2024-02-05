@@ -53,7 +53,7 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, in
 	domesticPaymentsBankInfo, internationalPaymentsBankInfo,
 	customerName, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry, customerEmail,
 	providerLogoUrl, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
-	note, status string, amount, vat, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
+	note, status, invoiceNumber string, amount, vat, totalAmount float64, invoiceLines []InvoiceLineEvent) (eventstore.Event, error) {
 	eventData := InvoiceFillEvent{
 		Tenant:                        aggregate.GetTenant(),
 		UpdatedAt:                     updatedAt,
@@ -66,7 +66,7 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, in
 		BillingCycle:                  invoice.BillingCycle,
 		PeriodStartDate:               invoice.PeriodStartDate,
 		PeriodEndDate:                 invoice.PeriodEndDate,
-		InvoiceNumber:                 invoice.InvoiceNumber,
+		InvoiceNumber:                 invoiceNumber,
 		DryRun:                        invoice.DryRun,
 		Status:                        status,
 		Note:                          note,

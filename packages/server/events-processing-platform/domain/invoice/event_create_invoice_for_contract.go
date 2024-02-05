@@ -9,21 +9,22 @@ import (
 )
 
 type InvoiceForContractCreateEvent struct {
-	Tenant          string             `json:"tenant" validate:"required"`
-	ContractId      string             `json:"organizationId" validate:"required"`
-	CreatedAt       time.Time          `json:"createdAt"`
-	DueDate         time.Time          `json:"dueDate"`
-	SourceFields    commonmodel.Source `json:"sourceFields"`
-	DryRun          bool               `json:"dryRun"`
-	InvoiceNumber   string             `json:"invoiceNumber"`
-	Currency        string             `json:"currency"`
-	PeriodStartDate time.Time          `json:"periodStartDate"`
-	PeriodEndDate   time.Time          `json:"periodEndDate"`
-	BillingCycle    string             `json:"billingCycle"`
-	Note            string             `json:"note"`
+	Tenant       string             `json:"tenant" validate:"required"`
+	ContractId   string             `json:"organizationId" validate:"required"`
+	CreatedAt    time.Time          `json:"createdAt"`
+	DueDate      time.Time          `json:"dueDate"`
+	SourceFields commonmodel.Source `json:"sourceFields"`
+	DryRun       bool               `json:"dryRun"`
+	//Deprecated
+	InvoiceNumber   string    `json:"invoiceNumber"`
+	Currency        string    `json:"currency"`
+	PeriodStartDate time.Time `json:"periodStartDate"`
+	PeriodEndDate   time.Time `json:"periodEndDate"`
+	BillingCycle    string    `json:"billingCycle"`
+	Note            string    `json:"note"`
 }
 
-func NewInvoiceForContractCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, contractId, currency, invoiceNumber, billingCycle, note string, dryRun bool, createdAt, periodStartDate, periodEndDate time.Time) (eventstore.Event, error) {
+func NewInvoiceForContractCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, contractId, currency, billingCycle, note string, dryRun bool, createdAt, periodStartDate, periodEndDate time.Time) (eventstore.Event, error) {
 	eventData := InvoiceForContractCreateEvent{
 		Tenant:          aggregate.GetTenant(),
 		ContractId:      contractId,
@@ -31,7 +32,6 @@ func NewInvoiceForContractCreateEvent(aggregate eventstore.Aggregate, sourceFiel
 		DueDate:         createdAt,
 		SourceFields:    sourceFields,
 		Currency:        currency,
-		InvoiceNumber:   invoiceNumber,
 		DryRun:          dryRun,
 		PeriodStartDate: periodStartDate,
 		PeriodEndDate:   periodEndDate,

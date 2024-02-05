@@ -69,9 +69,9 @@ func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any, param
 
 	switch r := request.(type) {
 	case *invoicepb.NewInvoiceForContractRequest:
-		return nil, a.CreateNewInvoiceForContract(ctx, r, invoiceNumber)
+		return nil, a.CreateNewInvoiceForContract(ctx, r)
 	case *invoicepb.FillInvoiceRequest:
-		return nil, a.FillInvoice(ctx, r)
+		return nil, a.FillInvoice(ctx, r, invoiceNumber)
 	case *invoicepb.GenerateInvoicePdfRequest:
 		return nil, a.CreatePdfRequestedEvent(ctx, r)
 	case *invoicepb.PdfGeneratedInvoiceRequest:
@@ -114,7 +114,7 @@ func (a *InvoiceAggregate) CreatePdfGeneratedEvent(ctx context.Context, request 
 	return a.Apply(event)
 }
 
-func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, request *invoicepb.NewInvoiceForContractRequest, invoiceNumber string) error {
+func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, request *invoicepb.NewInvoiceForContractRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.CreateNewInvoiceForContract")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
@@ -124,16 +124,12 @@ func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, requ
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	if invoiceNumber == "" {
-		invoiceNumber = uuid.New().String()
-	}
-
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	periodStartDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodStart)
 	periodEndDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodEnd)
 	billingCycle := BillingCycle(request.BillingCycle)
 
-	createEvent, err := NewInvoiceForContractCreateEvent(a, sourceFields, request.ContractId, request.Currency, invoiceNumber, billingCycle.String(), request.Note, request.DryRun, createdAtNotNil, *periodStartDate, *periodEndDate)
+	createEvent, err := NewInvoiceForContractCreateEvent(a, sourceFields, request.ContractId, request.Currency, billingCycle.String(), request.Note, request.DryRun, createdAtNotNil, *periodStartDate, *periodEndDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceCreateEvent")
@@ -147,7 +143,7 @@ func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, requ
 	return a.Apply(createEvent)
 }
 
-func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.FillInvoiceRequest) error {
+func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.FillInvoiceRequest, invoiceNumber string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.FillInvoice")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
@@ -158,6 +154,11 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 		err := errors.New("invoice is nil")
 		tracing.TraceErr(span, err)
 		return err
+	}
+
+	invoiceNumberForEvent := invoiceNumber
+	if a.Invoice.InvoiceNumber != "" {
+		invoiceNumberForEvent = a.Invoice.InvoiceNumber
 	}
 
 	// prepare invoice lines
@@ -189,7 +190,7 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 		request.DomesticPaymentsBankInfo, request.InternationalPaymentsBankInfo,
 		request.Customer.Name, request.Customer.AddressLine1, request.Customer.AddressLine2, request.Customer.Zip, request.Customer.Locality, request.Customer.Country, request.Customer.Email,
 		request.Provider.LogoUrl, request.Provider.Name, request.Provider.Email, request.Provider.AddressLine1, request.Provider.AddressLine2, request.Provider.Zip, request.Provider.Locality, request.Provider.Country,
-		request.Note, invoiceStatus, request.Amount, request.Vat, request.Total, invoiceLines)
+		request.Note, invoiceStatus, invoiceNumberForEvent, request.Amount, request.Vat, request.Total, invoiceLines)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceFillEvent")
@@ -370,7 +371,6 @@ func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
 	a.Invoice.DueDate = eventData.DueDate
 	a.Invoice.ContractId = eventData.ContractId
 	a.Invoice.SourceFields = eventData.SourceFields
-	a.Invoice.InvoiceNumber = eventData.InvoiceNumber
 	a.Invoice.DryRun = eventData.DryRun
 	a.Invoice.Currency = eventData.Currency
 	a.Invoice.PeriodStartDate = eventData.PeriodStartDate
@@ -387,6 +387,7 @@ func (a *InvoiceAggregate) onFillInvoice(evt eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 
+	a.Invoice.InvoiceNumber = eventData.InvoiceNumber
 	a.Invoice.UpdatedAt = eventData.UpdatedAt
 	a.Invoice.Amount = eventData.Amount
 	a.Invoice.VAT = eventData.VAT
