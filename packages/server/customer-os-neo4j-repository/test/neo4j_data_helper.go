@@ -770,7 +770,8 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 					sli.endedAt=$endedAt,
 					sli.createdAt=$createdAt,
 					sli.updatedAt=$updatedAt,
-	                sli.parentId=$parentId
+	                sli.parentId=$parentId,
+					sli.vatRate=toFloat($vatRate)
 				`, tenant)
 
 	params := map[string]any{
@@ -793,6 +794,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 		"createdAt":        serviceLineItem.CreatedAt,
 		"updatedAt":        serviceLineItem.UpdatedAt,
 		"parentId":         serviceLineItem.ParentID,
+		"vatRate":          serviceLineItem.VatRate,
 	}
 
 	if serviceLineItem.EndedAt != nil {

@@ -190,6 +190,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Quantity:  2,
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test1",
+		VatRate:   0.1,
 	})
 	serviceLineItemId2 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:      "service line item 2",
@@ -200,6 +201,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Quantity:  23,
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test2",
+		VatRate:   0.2,
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization":    1,
@@ -242,6 +244,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.Equal(t, int64(2), firstServiceLineItem.Quantity)
 	require.Equal(t, model.DataSourceOpenline, firstServiceLineItem.Source)
 	require.Equal(t, "test1", firstServiceLineItem.AppSource)
+	require.Equal(t, 0.1, firstServiceLineItem.VatRate)
 
 	secondServiceLineItem := contractEntity.ServiceLineItems[1]
 	require.Equal(t, serviceLineItemId2, secondServiceLineItem.ID)
@@ -253,6 +256,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.Equal(t, int64(23), secondServiceLineItem.Quantity)
 	require.Equal(t, model.DataSourceOpenline, secondServiceLineItem.Source)
 	require.Equal(t, "test2", secondServiceLineItem.AppSource)
+	require.Equal(t, 0.2, secondServiceLineItem.VatRate)
 }
 
 func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {

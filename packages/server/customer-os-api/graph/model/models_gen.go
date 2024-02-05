@@ -2099,6 +2099,7 @@ type ServiceLineItem struct {
 	AppSource     string            `json:"appSource"`
 	ExternalLinks []*ExternalSystem `json:"externalLinks"`
 	ParentID      string            `json:"parentId"`
+	VatRate       float64           `json:"vatRate"`
 }
 
 func (ServiceLineItem) IsNode()            {}

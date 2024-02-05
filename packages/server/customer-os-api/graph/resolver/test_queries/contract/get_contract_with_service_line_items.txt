@@ -20,6 +20,7 @@ query GetContract($contractId: ID!) {
       source
       sourceOfTruth
       appSource
+      vatRate
     }
   }
 }
