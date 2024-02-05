@@ -22,6 +22,7 @@ message CreateServiceLineItemGrpcRequest {
   google.protobuf.Timestamp updatedAt = 10;
   google.protobuf.Timestamp startedAt = 11;
   google.protobuf.Timestamp endedAt = 12;
+  double vatRate = 13;
 }
 
 message UpdateServiceLineItemGrpcRequest {
@@ -37,6 +38,7 @@ message UpdateServiceLineItemGrpcRequest {
   string comments = 10;
   bool isRetroactiveCorrection = 11;
   string contractId = 12;
+  double vatRate = 13;
 }
 
 // Permanently delete service line item request

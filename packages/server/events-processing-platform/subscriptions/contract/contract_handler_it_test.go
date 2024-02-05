@@ -458,10 +458,10 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsBeforeNextRen
 		},
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
-	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Price:     float64(1000),
 		Quantity:  int64(1),
-		Billed:    string(servicelineitemmodel.AnnuallyBilledString),
+		Billed:    neo4jenum.BilledTypeAnnually,
 		CreatedAt: utils.Now(),
 	})
 

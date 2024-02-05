@@ -30,6 +30,8 @@ type ServiceLineItemCreateFields struct {
 	Name                       string       `json:"name"`
 	Billed                     string       `json:"billed"`
 	Comments                   string       `json:"comments"`
+	VatRate                    float64      `json:"vatRate"`
+	PreviousVatRate            float64      `json:"previousVatRate"`
 }
 
 type ServiceLineItemUpdateFields struct {
@@ -40,6 +42,7 @@ type ServiceLineItemUpdateFields struct {
 	Comments  string    `json:"comments"`
 	Source    string    `json:"source"`
 	UpdatedAt time.Time `json:"updatedAt"`
+	VatRate   float64   `json:"vatRate"`
 }
 
 type ServiceLineItemWriteRepository interface {
@@ -83,7 +86,8 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 								sli.quantity=$quantity,
 								sli.billed=$billed,
 								sli.parentId=$parentId,
-				                sli.comments=$comments
+				                sli.comments=$comments,
+								sli.vatRate=toFloat($vatRate)
 							`, tenant)
 	params := map[string]any{
 		"tenant":            tenant,
@@ -102,12 +106,14 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 		"name":              data.Name,
 		"billed":            data.Billed,
 		"comments":          data.Comments,
+		"vatRate":           data.VatRate,
 	}
 	if data.IsNewVersionForExistingSLI {
-		cypher += `, sli.previousQuantity=$previousQuantity, sli.previousPrice=$previousPrice, sli.previousBilled=$previousBilled`
+		cypher += `, sli.previousQuantity=$previousQuantity, sli.previousPrice=$previousPrice, sli.previousBilled=$previousBilled, sli.previousVatRate=toFloat($previousVatRate)`
 		params["previousQuantity"] = data.PreviousQuantity
 		params["previousPrice"] = data.PreviousPrice
 		params["previousBilled"] = data.PreviousBilled
+		params["previousVatRate"] = data.PreviousVatRate
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -133,6 +139,7 @@ func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tenant, ser
 								sli.price = CASE WHEN sli.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $price ELSE sli.price END,
 								sli.quantity = CASE WHEN sli.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $quantity ELSE sli.quantity END,
 								sli.billed = CASE WHEN sli.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $billed ELSE sli.billed END,
+								sli.vatRate = CASE WHEN sli.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN toFloat($vatRate) ELSE sli.vatRate END,
 								sli.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE sli.sourceOfTruth END,
 								sli.updatedAt=$updatedAt,
 				                sli.comments=$comments
@@ -142,6 +149,7 @@ func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tenant, ser
 		"updatedAt":         data.UpdatedAt,
 		"price":             data.Price,
 		"quantity":          data.Quantity,
+		"vatRate":           data.VatRate,
 		"name":              data.Name,
 		"billed":            data.Billed,
 		"comments":          data.Comments,

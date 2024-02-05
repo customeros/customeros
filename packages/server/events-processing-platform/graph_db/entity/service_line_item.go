@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"time"
 )
@@ -23,10 +22,4 @@ type ServiceLineItemEntity struct {
 	Comments      string
 	ParentId      string
 	IsCanceled    bool
-}
-
-type ServiceLineItemEntities []ServiceLineItemEntity
-
-func (sli ServiceLineItemEntity) IsEnded() bool {
-	return sli.EndedAt != nil && sli.EndedAt.Before(utils.Now())
 }

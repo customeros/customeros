@@ -5,9 +5,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	servicelineitemmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
@@ -112,7 +111,7 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
 		return err
 	}
-	contractEntity := mapper.MapDbNodeToContractEntity(contractDbNode)
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 	opportunityEntity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 
 	var renewalLikelihood neo4jenum.RenewalLikelihood
@@ -262,29 +261,30 @@ func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, co
 		tracing.TraceErr(span, err)
 		return 0, err
 	}
-	serviceLineItems := entity.ServiceLineItemEntities{}
+	serviceLineItems := neo4jentity.ServiceLineItemEntities{}
 	for _, sliDbNode := range sliDbNodes {
-		serviceLineItems = append(serviceLineItems, *graph_db.MapDbNodeToServiceLineItemEntity(*sliDbNode))
+		sli := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
+		serviceLineItems = append(serviceLineItems, *sli)
 	}
 
 	span.LogFields(log.Int("service line items count", len(serviceLineItems)))
 	for _, sli := range serviceLineItems {
 		if sli.IsEnded() {
-			span.LogFields(log.Bool(fmt.Sprintf("service line item {%s} ended", sli.Id), true))
+			span.LogFields(log.Bool(fmt.Sprintf("service line item {%s} ended", sli.ID), true))
 			continue
 		}
-		span.LogFields(log.Object(fmt.Sprintf("service line item {%s}:", sli.Id), sli))
+		span.LogFields(log.Object(fmt.Sprintf("service line item {%s}:", sli.ID), sli))
 		annualPrice := float64(0)
-		if sli.Billed == string(servicelineitemmodel.AnnuallyBilledString) {
+		if sli.Billed == neo4jenum.BilledTypeAnnually {
 			annualPrice = float64(sli.Price) * float64(sli.Quantity)
-		} else if sli.Billed == string(servicelineitemmodel.MonthlyBilledString) {
+		} else if sli.Billed == neo4jenum.BilledTypeMonthly {
 			annualPrice = float64(sli.Price) * float64(sli.Quantity)
 			annualPrice *= 12
-		} else if sli.Billed == string(servicelineitemmodel.QuarterlyBilledString) {
+		} else if sli.Billed == neo4jenum.BilledTypeQuarterly {
 			annualPrice = float64(sli.Price) * float64(sli.Quantity)
 			annualPrice *= 4
 		}
-		span.LogFields(log.Float64(fmt.Sprintf("service line item {%s} added ARR value:", sli.Id), annualPrice))
+		span.LogFields(log.Float64(fmt.Sprintf("service line item {%s} added ARR value:", sli.ID), annualPrice))
 		// Add to total ARR
 		arr += annualPrice
 	}
@@ -355,7 +355,7 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
 		return nil, nil, true
 	}
-	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
+	contract := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 	// if contract is not frequency based, return
 	if !neo4jenum.IsFrequencyBasedRenewalCycle(contract.RenewalCycle) {
