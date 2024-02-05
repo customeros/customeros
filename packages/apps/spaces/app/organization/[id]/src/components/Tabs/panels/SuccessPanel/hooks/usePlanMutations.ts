@@ -41,6 +41,7 @@ export const usePlanMutations = ({
           draft?.organizationPlansForOrganization?.unshift({
             masterPlanId: 'temp',
             id: 'temp',
+            createdAt: new Date().toISOString(),
             name: name ?? 'Unnamed plan',
             milestones: [],
             retired: false,
