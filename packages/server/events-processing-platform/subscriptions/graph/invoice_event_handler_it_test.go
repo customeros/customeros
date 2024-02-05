@@ -29,12 +29,30 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	eventHandler := &InvoiceEventHandler{
 		log:          testLogger,
 		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
 	yesterday := now.AddDate(0, 0, -1)
 	tomorrow := now.AddDate(0, 0, 1)
 	invoiceId := uuid.New().String()
+
+	// prepare grpc mock
+	calledRequestFillInvoice := false
+	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		RequestFillInvoice: func(context context.Context, inv *invoicepb.RequestFillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, invoiceId, inv.InvoiceId)
+			require.Equal(t, "", inv.LoggedInUserId)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			calledRequestFillInvoice = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: invoiceId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, invoiceId)
 	newEvent, err := invoice.NewInvoiceForContractCreateEvent(
@@ -88,6 +106,8 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Equal(t, neo4jenum.CurrencyEUR, createdInvoice.Currency)
 	require.Equal(t, "", createdInvoice.RepositoryFileId)
 	require.Equal(t, "some note", createdInvoice.Note)
+
+	require.True(t, calledRequestFillInvoice)
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {

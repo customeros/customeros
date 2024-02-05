@@ -11,6 +11,7 @@ import (
 
 const (
 	InvoiceCreateForContractV1 = "V1_INVOICE_CREATE_FOR_CONTRACT"
+	InvoiceFillRequestedV1     = "V1_INVOICE_FILL_REQUESTED"
 	InvoiceFillV1              = "V1_INVOICE_FILL"
 	InvoicePdfRequestedV1      = "V1_INVOICE_PDF_REQUESTED"
 	InvoicePdfGeneratedV1      = "V1_INVOICE_PDF_GENERATED"

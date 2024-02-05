@@ -69,7 +69,10 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 		h.log.Errorf("Error while saving invoice %s: %s", invoiceId, err.Error())
 		return err
 	}
-	return err
+
+	_ = h.callRequestFillInvoiceGRPC(ctx, eventData.Tenant, invoiceId, eventData.ContractId, span)
+
+	return nil
 }
 
 func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstore.Event) error {
@@ -223,7 +226,23 @@ func (s *InvoiceEventHandler) callGeneratePdfRequestGRPC(ctx context.Context, te
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error sending the generate pdf request for invoice %s: %s", invoiceId, err.Error())
+		s.log.Errorf("error sending the generate pdf request for invoice {%s}: {%s}", invoiceId, err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *InvoiceEventHandler) callRequestFillInvoiceGRPC(ctx context.Context, tenant, invoiceId, contractId string, span opentracing.Span) error {
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := s.grpcClients.InvoiceClient.RequestFillInvoice(ctx, &invoicepb.RequestFillInvoiceRequest{
+		Tenant:     tenant,
+		InvoiceId:  invoiceId,
+		ContractId: contractId,
+		AppSource:  constants.AppSourceEventProcessingPlatform,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error sending the request to fill invoice {%s}: {%s}", invoiceId, err.Error())
 		return err
 	}
 	return nil

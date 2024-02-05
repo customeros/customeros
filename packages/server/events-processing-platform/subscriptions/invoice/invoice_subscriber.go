@@ -123,8 +123,8 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	}
 
 	switch evt.GetEventType() {
-	case invoice.InvoiceCreateForContractV1:
-		return s.invoiceEventHandler.onInvoiceCreateForContractV1(ctx, evt)
+	case invoice.InvoiceFillRequestedV1:
+		return s.invoiceEventHandler.onInvoiceFillRequestedV1(ctx, evt)
 	case invoice.InvoicePdfRequestedV1:
 		return s.invoiceEventHandler.generateInvoicePDFV1(ctx, evt)
 	case invoice.InvoicePdfGeneratedV1:
