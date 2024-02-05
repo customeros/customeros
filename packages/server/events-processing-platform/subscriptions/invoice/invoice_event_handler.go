@@ -499,6 +499,12 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		return errors.New("invoiceLinesNodes is nil")
 	}
 
+	invoiceHasVat := false
+
+	if invoiceEntity.Vat > 0 {
+		invoiceHasVat = true
+	}
+
 	data := map[string]interface{}{
 		"CustomerName":                  invoiceEntity.Customer.Name,
 		"CustomerEmail":                 invoiceEntity.Customer.Email,
@@ -518,8 +524,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"InvoiceIssueDate":              invoiceEntity.CreatedAt.Format("02 Jan 2006"),
 		"InvoiceDueDate":                invoiceEntity.DueDate.Format("02 Jan 2006"),
 		"InvoiceCurrency":               invoiceEntity.Currency.String() + "" + invoiceEntity.Currency.Symbol(),
-		"InvoiceSubtotal":               fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
-		"InvoiceTax":                    "0.00",
+		"InvoiceSubtotal":               fmt.Sprintf("%.2f", invoiceEntity.SubtotalAmount),
 		"InvoiceTotal":                  fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 		"InvoiceAmountDue":              fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 		"InvoiceLineItems":              []map[string]string{},
@@ -528,15 +533,26 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"InternationalPaymentsBankInfo": invoiceEntity.InternationalPaymentsBankInfo,
 	}
 
+	if invoiceHasVat {
+		data["InvoiceVat"] = fmt.Sprintf("%.2f", invoiceEntity.Vat)
+	}
+
 	for _, line := range invoiceLineEntities {
-		data["InvoiceLineItems"] = append(data["InvoiceLineItems"].([]map[string]string), map[string]string{
+		invoiceLineItem := map[string]string{
 			"Name":               line.Name,
 			"InvoicePeriodStart": invoiceEntity.PeriodStartDate.Format("02 Jan 2006"),
 			"InvoicePeriodEnd":   invoiceEntity.PeriodEndDate.Format("02 Jan 2006"),
 			"Quantity":           fmt.Sprintf("%d", line.Quantity),
 			"UnitPrice":          invoiceEntity.Currency.Symbol() + fmt.Sprintf("%.2f", line.Price),
 			"Amount":             invoiceEntity.Currency.Symbol() + fmt.Sprintf("%.2f", line.Amount),
-		})
+			"Vat":                invoiceEntity.Currency.Symbol() + fmt.Sprintf("%.2f", line.Vat),
+		}
+
+		if invoiceHasVat {
+			invoiceLineItem["InvoiceHasVat"] = "true"
+		}
+
+		data["InvoiceLineItems"] = append(data["InvoiceLineItems"].([]map[string]string), invoiceLineItem)
 	}
 
 	//prepare the temp html file

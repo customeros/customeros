@@ -209,15 +209,21 @@
                                 Service
                             </div>
                             <div class="invoice-printed-frame44408">
-                                <div class="invoice-printed-column1 TextsmSemibold">
+                                <div class="invoice-printed-column1 TextsmSemibold pr-0 {{if .InvoiceVat}}invoice-with-vat-column-size{{else}}{{end}}">
                                     Qty
                                 </div>
-                                <div class="invoice-printed-column1 TextsmSemibold">
+                                <div class="invoice-printed-column1 TextsmSemibold pr-0 {{if .InvoiceVat}}invoice-with-vat-column-size{{else}}{{end}}">
                                     Unit Price
                                 </div>
-                                <div class="invoice-printed-column1 TextsmSemibold pr-0">
+                                <div class="invoice-printed-column1 TextsmSemibold pr-0 {{if .InvoiceVat}}invoice-with-vat-column-size{{else}}{{end}}">
                                     Amount
                                 </div>
+                                {{if .InvoiceVat}}
+                                <div class="invoice-printed-column1 TextsmSemibold pr-0 {{if .InvoiceVat}}invoice-with-vat-column-size{{else}}{{end}}">
+                                    Tax
+                                </div>
+                                {{else}}
+                                {{end}}
                             </div>
                         </div>
 
@@ -233,15 +239,21 @@
                                         </div>
                                     </div>
                                     <div class="invoice-printed-frame44408">
-                                        <div class="invoice-printed-column1 TextsmRegular">
+                                        <div class="invoice-printed-column1 TextsmRegular pr-0 {{if .InvoiceHasVat}}invoice-with-vat-column-size{{else}}{{end}}">
                                             {{.Quantity}}
                                         </div>
-                                        <div class="invoice-printed-column1 TextsmRegular">
+                                        <div class="invoice-printed-column1 TextsmRegular pr-0 {{if .InvoiceHasVat}}invoice-with-vat-column-size{{else}}{{end}}">
                                             {{.UnitPrice}}
                                         </div>
-                                        <div class="invoice-printed-column1 TextsmRegular pr-0">
+                                        <div class="invoice-printed-column1 TextsmRegular pr-0 {{if .InvoiceHasVat}}invoice-with-vat-column-size{{else}}{{end}}">
                                             {{.Amount}}
                                         </div>
+                                        {{if .InvoiceHasVat}}
+                                        <div class="invoice-printed-column1 TextsmRegular pr-0 {{if .InvoiceHasVat}}invoice-with-vat-column-size{{else}}{{end}}">
+                                            {{.Vat}}
+                                        </div>
+                                        {{else}}
+                                        {{end}}
                                     </div>
                                 </div>
                             {{end}}
@@ -257,14 +269,17 @@
                                 {{.InvoiceCurrency}} {{.InvoiceSubtotal}}
                             </div>
                         </div>
+                        {{if .InvoiceVat}}
                         <div class="invoice-subtotal-container">
                             <div class="invoice-title-4 TextsmRegular">
-                                Tax (0%)
+                                Tax
                             </div>
                             <div class="invoice-text-right TextsmRegular">
-                                {{.InvoiceCurrency}} {{.InvoiceTax}}
+                                {{.InvoiceCurrency}} {{.InvoiceVat}}
                             </div>
                         </div>
+                        {{else}}
+                        {{end}}
                         <div class="invoice-subtotal-container no-border-bottom">
                             <div class="invoice-title-3 TextsmMedium">
                                 Total
