@@ -32,7 +32,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.27.0
 	google.golang.org/grpc v1.61.0
 	google.golang.org/protobuf v1.32.0
-	gorm.io/driver/postgres v1.5.4
+	gorm.io/driver/postgres v1.5.5
 	gorm.io/gorm v1.25.6
 )
 
