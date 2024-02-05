@@ -36,6 +36,7 @@ export type OrganizationOnboardingPlansQuery = {
     name: string;
     retired: boolean;
     masterPlanId: string;
+    createdAt: any;
     milestones: Array<{
       __typename?: 'OrganizationPlanMilestone';
       id: string;
@@ -45,22 +46,22 @@ export type OrganizationOnboardingPlansQuery = {
       optional: boolean;
       retired: boolean;
       items: Array<{
-        __typename?: 'MilestoneItem';
-        status: string;
+        __typename?: 'OrganizationPlanMilestoneItem';
+        status: Types.OnboardingPlanMilestoneItemStatus;
         text: string;
         updatedAt: any;
       }>;
       statusDetails: {
-        __typename?: 'StatusDetails';
+        __typename?: 'OrganizationPlanMilestoneStatusDetails';
         updatedAt: any;
-        status: string;
+        status: Types.OnboardingPlanMilestoneStatus;
         text: string;
       };
     }>;
     statusDetails: {
-      __typename?: 'StatusDetails';
+      __typename?: 'OrganizationPlanStatusDetails';
       updatedAt: any;
-      status: string;
+      status: Types.OnboardingPlanStatus;
       text: string;
     };
   }>;
@@ -73,6 +74,7 @@ export const OrganizationOnboardingPlansDocument = `
     name
     retired
     masterPlanId
+    createdAt
     milestones {
       id
       name

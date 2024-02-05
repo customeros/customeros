@@ -1,4 +1,5 @@
 export {
+  Portal,
   useOutsideClick,
   useDisclosure,
   useToken,

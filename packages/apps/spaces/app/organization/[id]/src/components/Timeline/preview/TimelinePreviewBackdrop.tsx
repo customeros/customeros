@@ -41,7 +41,7 @@ export const TimelinePreviewBackdrop = ({
       backdropFilter='blur(3px)'
       justify='center'
       id='timeline-preview-backdrop'
-      background={isMounted ? 'rgba(16, 24, 40, 0.45)' : 'rgba(16, 24, 40, 0)'}
+      background={isMounted ? 'rgba(16, 24, 40, 0.25)' : 'rgba(16, 24, 40, 0)'}
       align='center'
       transition='all 0.1s linear'
       onMouseDown={(e) => {

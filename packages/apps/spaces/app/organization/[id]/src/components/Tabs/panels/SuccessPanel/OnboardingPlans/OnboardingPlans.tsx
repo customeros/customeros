@@ -24,7 +24,7 @@ export const OnboardingPlans = () => {
   };
 
   return (
-    <VStack w='full' overflowY='auto' maxH='calc(100vh - 132px)'>
+    <VStack w='full' overflowY='auto' maxH='calc(100vh - 148px)' mt='4'>
       {activePlans?.map((plan) => (
         <Plan
           plan={plan}

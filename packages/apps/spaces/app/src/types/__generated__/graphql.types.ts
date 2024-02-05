@@ -1791,19 +1791,6 @@ export type MeetingsPage = Pages & {
   totalPages: Scalars['Int']['output'];
 };
 
-export type MilestoneItem = {
-  __typename?: 'MilestoneItem';
-  status: Scalars['String']['output'];
-  text: Scalars['String']['output'];
-  updatedAt: Scalars['Time']['output'];
-};
-
-export type MilestoneItemInput = {
-  status: Scalars['String']['input'];
-  text: Scalars['String']['input'];
-  updatedAt: Scalars['Time']['input'];
-};
-
 export type Mutation = {
   __typename?: 'Mutation';
   analysis_Create: Analysis;
@@ -2730,6 +2717,33 @@ export type OnboardingDetails = {
   updatedAt?: Maybe<Scalars['Time']['output']>;
 };
 
+export enum OnboardingPlanMilestoneItemStatus {
+  Done = 'DONE',
+  DoneLate = 'DONE_LATE',
+  NotDone = 'NOT_DONE',
+  NotDoneLate = 'NOT_DONE_LATE',
+  Skipped = 'SKIPPED',
+  SkippedLate = 'SKIPPED_LATE',
+}
+
+export enum OnboardingPlanMilestoneStatus {
+  Done = 'DONE',
+  DoneLate = 'DONE_LATE',
+  NotStarted = 'NOT_STARTED',
+  NotStartedLate = 'NOT_STARTED_LATE',
+  Started = 'STARTED',
+  StartedLate = 'STARTED_LATE',
+}
+
+export enum OnboardingPlanStatus {
+  Done = 'DONE',
+  DoneLate = 'DONE_LATE',
+  Late = 'LATE',
+  NotStarted = 'NOT_STARTED',
+  NotStartedLate = 'NOT_STARTED_LATE',
+  OnTrack = 'ON_TRACK',
+}
+
 export enum OnboardingStatus {
   Done = 'DONE',
   Late = 'LATE',
@@ -2942,7 +2956,7 @@ export type OrganizationPlan = Node &
     retiredMilestones: Array<OrganizationPlanMilestone>;
     source: DataSource;
     sourceOfTruth: DataSource;
-    statusDetails: StatusDetails;
+    statusDetails: OrganizationPlanStatusDetails;
     updatedAt: Scalars['Time']['output'];
   };
 
@@ -2955,22 +2969,24 @@ export type OrganizationPlanInput = {
 export type OrganizationPlanMilestone = Node &
   SourceFields & {
     __typename?: 'OrganizationPlanMilestone';
+    adhoc: Scalars['Boolean']['output'];
     appSource: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
     dueDate: Scalars['Time']['output'];
     id: Scalars['ID']['output'];
-    items: Array<MilestoneItem>;
+    items: Array<OrganizationPlanMilestoneItem>;
     name: Scalars['String']['output'];
     optional: Scalars['Boolean']['output'];
     order: Scalars['Int64']['output'];
     retired: Scalars['Boolean']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
-    statusDetails: StatusDetails;
+    statusDetails: OrganizationPlanMilestoneStatusDetails;
     updatedAt: Scalars['Time']['output'];
   };
 
 export type OrganizationPlanMilestoneInput = {
+  adhoc: Scalars['Boolean']['input'];
   createdAt: Scalars['Time']['input'];
   dueDate: Scalars['Time']['input'];
   items: Array<Scalars['String']['input']>;
@@ -2981,23 +2997,63 @@ export type OrganizationPlanMilestoneInput = {
   organizationPlanId: Scalars['ID']['input'];
 };
 
+export type OrganizationPlanMilestoneItem = {
+  __typename?: 'OrganizationPlanMilestoneItem';
+  status: OnboardingPlanMilestoneItemStatus;
+  text: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+};
+
+export type OrganizationPlanMilestoneItemInput = {
+  status: OnboardingPlanMilestoneItemStatus;
+  text: Scalars['String']['input'];
+  updatedAt: Scalars['Time']['input'];
+};
+
 export type OrganizationPlanMilestoneReorderInput = {
   orderedIds: Array<Scalars['ID']['input']>;
   organizationId: Scalars['ID']['input'];
   organizationPlanId: Scalars['ID']['input'];
 };
 
+export type OrganizationPlanMilestoneStatusDetails = {
+  __typename?: 'OrganizationPlanMilestoneStatusDetails';
+  status: OnboardingPlanMilestoneStatus;
+  text: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+};
+
+export type OrganizationPlanMilestoneStatusDetailsInput = {
+  status: OnboardingPlanMilestoneStatus;
+  text: Scalars['String']['input'];
+  updatedAt: Scalars['Time']['input'];
+};
+
 export type OrganizationPlanMilestoneUpdateInput = {
+  adhoc?: InputMaybe<Scalars['Boolean']['input']>;
   dueDate?: InputMaybe<Scalars['Time']['input']>;
   id: Scalars['ID']['input'];
-  items?: InputMaybe<Array<InputMaybe<MilestoneItemInput>>>;
+  items?: InputMaybe<Array<InputMaybe<OrganizationPlanMilestoneItemInput>>>;
   name?: InputMaybe<Scalars['String']['input']>;
   optional?: InputMaybe<Scalars['Boolean']['input']>;
   order?: InputMaybe<Scalars['Int64']['input']>;
   organizationId: Scalars['ID']['input'];
   organizationPlanId: Scalars['ID']['input'];
   retired?: InputMaybe<Scalars['Boolean']['input']>;
-  statusDetails?: InputMaybe<StatusDetailsInput>;
+  statusDetails?: InputMaybe<OrganizationPlanMilestoneStatusDetailsInput>;
+  updatedAt: Scalars['Time']['input'];
+};
+
+export type OrganizationPlanStatusDetails = {
+  __typename?: 'OrganizationPlanStatusDetails';
+  status: OnboardingPlanStatus;
+  text: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+};
+
+export type OrganizationPlanStatusDetailsInput = {
+  status: OnboardingPlanStatus;
+  text: Scalars['String']['input'];
   updatedAt: Scalars['Time']['input'];
 };
 
@@ -3006,7 +3062,7 @@ export type OrganizationPlanUpdateInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   organizationId: Scalars['ID']['input'];
   retired?: InputMaybe<Scalars['Boolean']['input']>;
-  statusDetails?: InputMaybe<StatusDetailsInput>;
+  statusDetails?: InputMaybe<OrganizationPlanStatusDetailsInput>;
 };
 
 export type OrganizationUpdateInput = {
@@ -3673,19 +3729,6 @@ export type State = {
   country: Country;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-};
-
-export type StatusDetails = {
-  __typename?: 'StatusDetails';
-  status: Scalars['String']['output'];
-  text: Scalars['String']['output'];
-  updatedAt: Scalars['Time']['output'];
-};
-
-export type StatusDetailsInput = {
-  status: Scalars['String']['input'];
-  text: Scalars['String']['input'];
-  updatedAt: Scalars['Time']['input'];
 };
 
 export type SuggestedMergeOrganization = {

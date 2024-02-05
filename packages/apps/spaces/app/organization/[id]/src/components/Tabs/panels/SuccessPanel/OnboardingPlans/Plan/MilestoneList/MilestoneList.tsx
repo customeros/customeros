@@ -4,8 +4,6 @@ import { Milestone } from './Milestone';
 import { MilestoneDatum } from '../../types';
 
 interface MilestoneListProps {
-  title: string;
-  emptyText: string;
   milestones: MilestoneDatum[];
   onCreateMilestone: () => void;
   openMilestoneId: string | null;
@@ -17,8 +15,6 @@ interface MilestoneListProps {
 }
 
 export const MilestoneList = ({
-  title,
-  emptyText,
   milestones,
   openMilestoneId,
   onSyncMilestone,
@@ -29,7 +25,7 @@ export const MilestoneList = ({
   onMakeMilestoneOptional,
 }: MilestoneListProps) => {
   return (
-    <VStack>
+    <VStack mb='2' mt='3'>
       {milestones?.map((milestone, idx, arr) => (
         <Milestone
           key={milestone.id}
