@@ -498,7 +498,7 @@ func allItemsDoneLateStarted(items []model.OrganizationPlanMilestoneItem) (bool,
 	late := false
 	started := false
 	for _, item := range items {
-		if item.Status != model.TaskDone.String() || item.Status != model.TaskDoneLate.String() {
+		if item.Status != model.TaskDone.String() && item.Status != model.TaskDoneLate.String() {
 			allItemsDone = false
 		}
 		if item.Status == model.TaskDoneLate.String() || item.Status == model.TaskNotDoneLate.String() || item.Status == model.TaskSkippedLate.String() {
