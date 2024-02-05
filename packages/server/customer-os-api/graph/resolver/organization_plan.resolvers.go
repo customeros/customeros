@@ -385,23 +385,13 @@ func (r *queryResolver) OrganizationPlansForOrganization(ctx context.Context, or
 			}
 		}
 		// update plan status in place for UI, the milestones updates will propagate status through the DB
-		if allMilestonesDone {
-			if planLate {
+		if planLate {
+			if allMilestonesDone {
 				op.StatusDetails.Status = model.OnboardingPlanStatusDoneLate
-			} else {
-				op.StatusDetails.Status = model.OnboardingPlanStatusDone
-			}
-		} else if planStarted {
-			if planLate {
+			} else if planStarted {
 				op.StatusDetails.Status = model.OnboardingPlanStatusLate
 			} else {
-				op.StatusDetails.Status = model.OnboardingPlanStatusOnTrack
-			}
-		} else {
-			if planLate {
 				op.StatusDetails.Status = model.OnboardingPlanStatusNotStartedLate
-			} else {
-				op.StatusDetails.Status = model.OnboardingPlanStatusNotStarted
 			}
 		}
 	}
