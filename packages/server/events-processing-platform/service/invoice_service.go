@@ -247,3 +247,22 @@ func (s *invoiceService) checkContractExists(ctx context.Context, tenant, contra
 
 	return true, nil // The contract exists
 }
+
+func (s *invoiceService) RequestFillInvoice(ctx context.Context, request *invoicepb.RequestFillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.RequestFillInvoice")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.InvoiceId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
+	}
+
+	if _, err := s.invoiceRequestHandler.HandleWithRetry(ctx, request.Tenant, request.InvoiceId, true, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(RequestFillInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
+}

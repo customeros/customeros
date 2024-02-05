@@ -145,6 +145,14 @@ message PayInvoiceNotificationRequest {
   string appSource = 4;
 }
 
+message RequestFillInvoiceRequest {
+  string tenant = 1;
+  string invoiceId = 2;
+  string contractId = 3;
+  string loggedInUserId = 4;
+  string appSource = 5;
+}
+
 message InvoiceIdResponse {
   string id = 1;
 }
@@ -158,4 +166,5 @@ service InvoiceGrpcService {
   rpc SimulateInvoice(SimulateInvoiceRequest) returns (InvoiceIdResponse);
   rpc UpdateInvoice(UpdateInvoiceRequest) returns (InvoiceIdResponse);
   rpc PayInvoiceNotification(PayInvoiceNotificationRequest) returns (InvoiceIdResponse);
+  rpc RequestFillInvoice(RequestFillInvoiceRequest) returns (InvoiceIdResponse);
 }

@@ -7,6 +7,7 @@ import (
 
 type MockInvoiceServiceCallbacks struct {
 	GenerateInvoicePdf func(ctx context.Context, proto *invoicepb.GenerateInvoicePdfRequest) (*invoicepb.InvoiceIdResponse, error)
+	RequestFillInvoice func(ctx context.Context, proto *invoicepb.RequestFillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
 }
 
 var InvoiceCallbacks = &MockInvoiceServiceCallbacks{}
@@ -24,4 +25,11 @@ func (MockInvoiceService) GenerateInvoicePdf(ctx context.Context, proto *invoice
 		panic("InvoiceCallbacks.GenerateInvoicePdf is not set")
 	}
 	return InvoiceCallbacks.GenerateInvoicePdf(ctx, proto)
+}
+
+func (MockInvoiceService) RequestFillInvoice(ctx context.Context, proto *invoicepb.RequestFillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+	if InvoiceCallbacks.RequestFillInvoice == nil {
+		panic("InvoiceCallbacks.RequestFillInvoice is not set")
+	}
+	return InvoiceCallbacks.RequestFillInvoice(ctx, proto)
 }

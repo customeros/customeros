@@ -82,6 +82,8 @@ func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any, param
 		return nil, a.UpdateInvoice(ctx, r)
 	case *invoicepb.PayInvoiceNotificationRequest:
 		return nil, a.CreatePayInvoiceNotificationEvent(ctx, r)
+	case *invoicepb.RequestFillInvoiceRequest:
+		return nil, a.CreateFillRequestedEvent(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -224,6 +226,28 @@ func (a *InvoiceAggregate) CreatePdfRequestedEvent(ctx context.Context, r *invoi
 	return a.Apply(event)
 }
 
+func (a *InvoiceAggregate) CreateFillRequestedEvent(ctx context.Context, r *invoicepb.RequestFillInvoiceRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.CreateFillRequestedEvent")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := NewInvoiceFillRequestedEvent(a, r.ContractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewInvoiceFillRequestedEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: r.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    r.AppSource,
+	})
+
+	return a.Apply(event)
+}
+
 func (a *InvoiceAggregate) CreatePayInvoiceNotificationEvent(ctx context.Context, r *invoicepb.PayInvoiceNotificationRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.CreatePayInvoiceNotificationEvent")
 	defer span.Finish()
@@ -323,6 +347,7 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		return a.onUpdateInvoice(evt)
 	case InvoicePayV1,
 		InvoicePdfRequestedV1,
+		InvoiceFillRequestedV1,
 		InvoicePaidV1,
 		InvoicePayNotificationV1:
 		return nil

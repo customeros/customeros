@@ -61,12 +61,12 @@ func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Reposito
 	}
 }
 
-func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoiceCreateForContractV1")
+func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoiceFillRequestedV1")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData invoice.InvoiceForContractCreateEvent
+	var eventData invoice.InvoiceFillRequestedEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -74,6 +74,20 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 	tracing.LogObjectAsJson(span, "eventData", eventData)
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	invoiceDbNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error getting invoice {%s}: {%s}", invoiceId, err.Error())
+		return err
+	}
+	if invoiceDbNode == nil {
+		err = errors.Errorf("invoice {%s} not found", invoiceId)
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error getting invoice {%s}: {%s}", invoiceId, err.Error())
+		return err
+	}
+	invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(invoiceDbNode)
 
 	sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetAllForContract(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
@@ -93,7 +107,7 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 	amount, vat, totalAmount := float64(0), float64(0), float64(0)
 	invoiceLines := []*invoicepb.InvoiceLine{}
 
-	referenceTime := eventData.PeriodStartDate
+	referenceTime := invoiceEntity.PeriodStartDate
 	for _, sliEntity := range sliEntities {
 		// skip for now one time and usage SLIs
 		if sliEntity.Billed == neo4jenum.BilledTypeOnce || sliEntity.Billed == neo4jenum.BilledTypeUsage {
@@ -113,7 +127,7 @@ func (h *InvoiceEventHandler) onInvoiceCreateForContractV1(ctx context.Context, 
 		}
 		// process monthly, quarterly and annually SLIs
 		if sliEntity.Billed == neo4jenum.BilledTypeMonthly || sliEntity.Billed == neo4jenum.BilledTypeQuarterly || sliEntity.Billed == neo4jenum.BilledTypeAnnually {
-			calculatedSLIAmount := calculateSLIAmountForCycleInvoicing(sliEntity.Quantity, sliEntity.Price, sliEntity.Billed, neo4jenum.DecodeBillingCycle(eventData.BillingCycle))
+			calculatedSLIAmount := calculateSLIAmountForCycleInvoicing(sliEntity.Quantity, sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycle)
 			calculatedSLIAmount = utils.TruncateFloat64(calculatedSLIAmount, 2)
 			amount += calculatedSLIAmount
 			vat += float64(0)
