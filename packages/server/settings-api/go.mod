@@ -14,7 +14,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.17.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231010053057-7f0277709731
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231010053057-7f0277709731
-	gorm.io/driver/postgres v1.5.4
+	gorm.io/driver/postgres v1.5.5
 	gorm.io/gorm v1.25.6
 )
 
