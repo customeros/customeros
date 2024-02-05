@@ -129,15 +129,16 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 		if sliEntity.Billed == neo4jenum.BilledTypeMonthly || sliEntity.Billed == neo4jenum.BilledTypeQuarterly || sliEntity.Billed == neo4jenum.BilledTypeAnnually {
 			calculatedSLIAmount := calculateSLIAmountForCycleInvoicing(sliEntity.Quantity, sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycle)
 			calculatedSLIAmount = utils.TruncateFloat64(calculatedSLIAmount, 2)
+			calculatedSLIVat := utils.TruncateFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
 			amount += calculatedSLIAmount
-			vat += float64(0)
+			vat += calculatedSLIVat
 			invoiceLine := invoicepb.InvoiceLine{
 				Name:                    sliEntity.Name,
 				Price:                   sliEntity.Price,
 				Quantity:                sliEntity.Quantity,
 				Amount:                  calculatedSLIAmount,
-				Total:                   calculatedSLIAmount,
-				Vat:                     float64(0),
+				Total:                   calculatedSLIAmount + calculatedSLIVat,
+				Vat:                     calculatedSLIVat,
 				ServiceLineItemId:       sliEntity.ID,
 				ServiceLineItemParentId: sliEntity.ParentID,
 			}
