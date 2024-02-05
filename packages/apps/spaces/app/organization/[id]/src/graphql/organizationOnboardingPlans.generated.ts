@@ -36,6 +36,7 @@ export type OrganizationOnboardingPlansQuery = {
     name: string;
     retired: boolean;
     masterPlanId: string;
+    createdAt: any;
     milestones: Array<{
       __typename?: 'OrganizationPlanMilestone';
       id: string;
@@ -73,6 +74,7 @@ export const OrganizationOnboardingPlansDocument = `
     name
     retired
     masterPlanId
+    createdAt
     milestones {
       id
       name

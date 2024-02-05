@@ -4,6 +4,7 @@ query organizationOnboardingPlans($organizationId: ID!) {
     name
     retired
     masterPlanId
+    createdAt
     milestones {
       id
       name

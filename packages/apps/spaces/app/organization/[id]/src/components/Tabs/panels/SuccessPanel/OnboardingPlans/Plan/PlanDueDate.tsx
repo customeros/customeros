@@ -1,21 +1,17 @@
 import differenceInDays from 'date-fns/differenceInDays';
 
 import { Text } from '@ui/typography/Text';
-import { DateTimeUtils } from '@spaces/utils/date';
-
 interface PlanDueDateProps {
   value: string;
   isDone: boolean;
 }
 
 export const PlanDueDate = ({ value, isDone }: PlanDueDateProps) => {
+  if (isDone) return null;
+
   const days = differenceInDays(new Date(value), new Date());
 
   const displayText = (() => {
-    if (isDone) {
-      return `Done on ${DateTimeUtils.format(value, DateTimeUtils.date)}`;
-    }
-
     const suffix = days === 1 ? 'day' : 'days';
     const prefix = days < 0 ? 'late by' : days === 0 ? 'due' : 'due in';
 

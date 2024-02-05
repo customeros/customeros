@@ -9,7 +9,10 @@ import { pulseOpacity } from '@ui/utils/keyframes';
 import { Collapse } from '@ui/transitions/Collapse';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
-import { OnboardingPlanMilestoneStatus } from '@shared/types/__generated__/graphql.types';
+import {
+  OnboardingPlanStatus,
+  OnboardingPlanMilestoneStatus,
+} from '@shared/types/__generated__/graphql.types';
 
 import { PlanMenu } from './PlanMenu';
 import { PlanDueDate } from './PlanDueDate';
@@ -46,6 +49,7 @@ export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
     .sort((a, b) => a.order - b.order);
 
   const hasMilestones = activeMilestones.length > 0;
+  const hasOneMilestone = activeMilestones.length === 1;
   const existingMilestoneNames = activeMilestones.map(
     (milestone) => milestone.name,
   );
@@ -117,6 +121,11 @@ export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
       ].includes(m.statusDetails?.status) && m.retired === false,
   );
 
+  const isPlanDone = [
+    OnboardingPlanStatus.Done,
+    OnboardingPlanStatus.DoneLate,
+  ].includes(plan.statusDetails.status);
+
   return (
     <Flex
       px='3'
@@ -137,10 +146,10 @@ export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
     >
       <Flex
         mx='1'
-        mb='3'
         align='center'
         flexDir='column'
         alignItems='flex-start'
+        // mb={isPlanDone ? '0' : '3'}
       >
         <Flex align='center' justify='space-between' w='full'>
           <Text fontSize='sm' fontWeight='semibold' noOfLines={1}>
@@ -152,7 +161,7 @@ export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
             opacity={isHovered || planMenu.isOpen ? '1' : '0'}
             transition='opacity 0.2s ease-out'
           >
-            {hasMilestones && (
+            {((hasMilestones && !hasOneMilestone) || isPlanDone) && (
               <IconButton
                 size='xs'
                 variant='ghost'
@@ -188,9 +197,9 @@ export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
                 </Text>
               )}
               <PlanDueDate
-                isDone={plan.statusDetails.status === 'DONE'}
+                isDone={isPlanDone}
                 value={
-                  plan.statusDetails.status === 'DONE'
+                  isPlanDone
                     ? plan.statusDetails.updatedAt
                     : nextDueMilestone?.dueDate
                 }
@@ -204,7 +213,7 @@ export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
         </Flex>
       </Flex>
 
-      <Collapse in={isOpen}>
+      <Collapse in={(hasOneMilestone && !isPlanDone) || isOpen}>
         <MilestoneList
           milestones={activeMilestones}
           openMilestoneId={openMilestoneId}

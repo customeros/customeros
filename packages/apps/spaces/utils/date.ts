@@ -9,6 +9,7 @@ import {
   isSameDay as isSameDayDateFns,
   addMonths as addMonthsDateFns,
   formatDuration as formatDurationDateFns,
+  differenceInDays as differenceInDaysDateFns,
   differenceInMonths as differenceInMonthsDateFns,
 } from 'date-fns';
 
@@ -122,6 +123,13 @@ export class DateTimeUtils {
     dateRight: string,
   ): number {
     return differenceInMonthsDateFns(
+      this.getDate(dateLeft),
+      this.getDate(dateRight),
+    );
+  }
+
+  public static differenceInDays(dateLeft: string, dateRight: string): number {
+    return differenceInDaysDateFns(
       this.getDate(dateLeft),
       this.getDate(dateRight),
     );

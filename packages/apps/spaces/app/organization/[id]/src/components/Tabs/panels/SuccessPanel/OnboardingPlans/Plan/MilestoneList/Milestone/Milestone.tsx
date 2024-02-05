@@ -7,6 +7,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { useOutsideClick } from '@ui/utils';
 import { IconButton } from '@ui/form/IconButton';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { pulseOpacity } from '@ui/utils/keyframes';
 import { Collapse } from '@ui/transitions/Collapse';
 import { Card, CardBody } from '@ui/presentation/Card';
@@ -289,19 +290,10 @@ const PlanStatusCheckbox = ({
     });
   };
 
-  const handleBlur = (e: ChangeEvent<HTMLInputElement>) => {
-    onChange?.({
-      ...value,
-      status: e.target.checked ? 'DONE' : 'NOT_STARTED',
-      updatedAt: new Date().toISOString(),
-    });
-  };
-
   return (
     <StatusCheckbox
       mr='2'
       size='md'
-      onBlur={handleBlur}
       onChange={handleChange}
       colorScheme={colorScheme}
       showCustomIcon={showCustomIcon}
@@ -376,7 +368,12 @@ const checkMilestoneDone = (milestone: MilestoneForm) => {
 };
 
 const checkMilestoneLate = (milestone: MilestoneForm) => {
-  const isPastDueDate = new Date(milestone?.dueDate) < new Date();
+  const isPastDueDate = (() => {
+    if (!milestone?.dueDate) return false;
+    if (DateTimeUtils.isToday(milestone?.dueDate)) return false;
+
+    return DateTimeUtils.isBeforeNow(milestone?.dueDate);
+  })();
 
   if (
     [

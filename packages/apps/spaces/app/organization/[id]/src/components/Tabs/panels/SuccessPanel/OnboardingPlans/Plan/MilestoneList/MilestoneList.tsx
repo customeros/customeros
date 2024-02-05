@@ -25,7 +25,7 @@ export const MilestoneList = ({
   onMakeMilestoneOptional,
 }: MilestoneListProps) => {
   return (
-    <VStack>
+    <VStack mb='2' mt='3'>
       {milestones?.map((milestone, idx, arr) => (
         <Milestone
           key={milestone.id}
