@@ -249,6 +249,10 @@
   box-sizing: border-box;
 }
 
+.invoice-with-vat-column-size {
+  flex: 1 0 25%!important;
+}
+
 .pr-0 {
     padding-right: 0px;
 }
