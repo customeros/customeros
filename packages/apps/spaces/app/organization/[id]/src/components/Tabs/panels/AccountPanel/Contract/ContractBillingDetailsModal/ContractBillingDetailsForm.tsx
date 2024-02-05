@@ -106,7 +106,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             formId={formId}
             name='zip'
             textOverflow='ellipsis'
-            placeholder='ZIP/Potal code'
+            placeholder='ZIP/Postal code'
             onFocus={() => onSetIsBillingDetailsFocused(true)}
             onBlur={() => onSetIsBillingDetailsFocused(false)}
             autoComplete='off'

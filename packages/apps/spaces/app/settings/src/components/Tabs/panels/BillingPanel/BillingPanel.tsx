@@ -283,7 +283,7 @@ export const BillingPanel = () => {
                 autoComplete='off'
                 label='Billing address zip/Postal code'
                 name='zip'
-                placeholder='ZIP/Potal code'
+                placeholder='ZIP/Postal code'
                 formId={formId}
                 onFocus={() => setIsInvoiceProviderFocused(true)}
                 onBlur={() => setIsInvoiceProviderFocused(false)}

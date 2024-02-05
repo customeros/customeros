@@ -143,6 +143,10 @@ export const ContractCard = ({
     (variables: { input: ContractUpdateInput }) => {
       updateContract.mutate({
         ...variables,
+        input: {
+          ...variables.input,
+          patch: true,
+        },
       });
     },
     300,

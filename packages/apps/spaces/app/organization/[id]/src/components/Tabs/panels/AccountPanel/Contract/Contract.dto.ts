@@ -83,6 +83,7 @@ export class ContractDTO implements TimeToRenewalForm {
     data: TimeToRenewalForm,
   ): Omit<ContractUpdateInput, 'contractId'> {
     return {
+      patch: true,
       endedAt: data?.endedAt,
       invoicingStartDate: data?.invoicingStartDate,
       serviceStartedAt: data?.serviceStartedAt,
