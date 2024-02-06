@@ -376,6 +376,7 @@ func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
 	a.Invoice.ContractId = eventData.ContractId
 	a.Invoice.SourceFields = eventData.SourceFields
 	a.Invoice.DryRun = eventData.DryRun
+	a.Invoice.OffCycle = eventData.OffCycle
 	a.Invoice.Currency = eventData.Currency
 	a.Invoice.PeriodStartDate = eventData.PeriodStartDate
 	a.Invoice.PeriodEndDate = eventData.PeriodEndDate

@@ -11,7 +11,7 @@ import (
 
 func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.InvoiceEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	invoiceEntity := entity.InvoiceEntity{

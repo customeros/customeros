@@ -18,6 +18,7 @@ type Invoice struct {
 	UpdatedAt        time.Time               `json:"updatedAt"`
 	SourceFields     commonmodel.Source      `json:"source"`
 	DryRun           bool                    `json:"dryRun"`
+	OffCycle         bool                    `json:"offCycle"`
 	InvoiceNumber    string                  `json:"invoiceNumber"`
 	Currency         string                  `json:"currency"`
 	PeriodStartDate  time.Time               `json:"periodStartDate"`
