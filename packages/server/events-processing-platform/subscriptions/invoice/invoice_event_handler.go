@@ -90,10 +90,24 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 	}
 	invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(invoiceDbNode)
 
-	sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetAllForContract(ctx, eventData.Tenant, eventData.ContractId)
+	if invoiceEntity.OffCycle {
+		return h.fillOffCycleInvoice(ctx, eventData.Tenant, eventData.ContractId, *invoiceEntity)
+	} else {
+		return h.fillCycleInvoice(ctx, eventData.Tenant, eventData.ContractId, *invoiceEntity)
+	}
+}
+
+func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, contractId string, invoiceEntity neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.fillCycleInvoice")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
+	span.LogFields(log.String("contractId", contractId))
+
+	sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetAllForContract(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error getting service line items for contract %s: %s", eventData.ContractId, err.Error())
+		h.log.Errorf("Error getting service line items for contract %s: %s", contractId, err.Error())
 		return err
 	}
 
@@ -172,7 +186,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 	var tenantBillingProfileEntity *neo4jentity.TenantBillingProfileEntity
 
 	//load contract from neo4j
-	contract, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
+	contract, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetContractById")
@@ -184,7 +198,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 	}
 
 	//load tenant settings from neo4j
-	tenantSettings, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
+	tenantSettings, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetTenantSettings")
@@ -197,7 +211,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 	}
 
 	//load tenant billing profile from neo4j
-	tenantBillingProfiles, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, eventData.Tenant)
+	tenantBillingProfiles, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetTenantSettings")
@@ -222,8 +236,8 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 	}
 
 	err = h.callFillInvoice(ctx,
-		eventData.Tenant,
-		invoiceId,
+		tenant,
+		invoiceEntity.Id,
 		tenantBillingProfileEntity.DomesticPaymentsBankInfo,
 		tenantBillingProfileEntity.InternationalPaymentsBankInfo,
 		contractEntity.OrganizationLegalName,
@@ -244,6 +258,18 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 		tracing.TraceErr(span, err)
 		return err
 	}
+	return nil
+}
+
+func (h *InvoiceEventHandler) fillOffCycleInvoice(ctx context.Context, tenant, contractId string, invoiceEntity neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.fillOffCycleInvoice")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
+	span.LogFields(log.String("contractId", contractId))
+
+	// TODO implement it
+
 	return nil
 }
 
