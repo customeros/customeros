@@ -87,7 +87,8 @@ type ContractWriteRepository interface {
 	ContractCausedOnboardingStatusChange(ctx context.Context, tenant, contractId string) error
 	MarkStatusRenewalRequested(ctx context.Context, tenant, contractId string) error
 	MarkRolloutRenewalRequested(ctx context.Context, tenant, contractId string) error
-	MarkInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
+	MarkCycleInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
+	MarkOffCycleInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
 }
 
 type contractWriteRepository struct {
@@ -440,14 +441,37 @@ func (r *contractWriteRepository) MarkRolloutRenewalRequested(ctx context.Contex
 	return err
 }
 
-func (r *contractWriteRepository) MarkInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkInvoicingStarted")
+func (r *contractWriteRepository) MarkCycleInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkCycleInvoicingStarted")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 				SET c.techInvoicingStartedAt=$invoicingStartedAt`
+	params := map[string]any{
+		"tenant":             tenant,
+		"contractId":         contractId,
+		"invoicingStartedAt": invoicingStartedAt,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *contractWriteRepository) MarkOffCycleInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkOffCycleInvoicingStarted")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
+				SET c.techOffCycleInvoicingStartedAt=$invoicingStartedAt`
 	params := map[string]any{
 		"tenant":             tenant,
 		"contractId":         contractId,

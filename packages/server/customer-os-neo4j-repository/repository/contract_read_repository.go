@@ -302,7 +302,7 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 				NOT EXISTS((sli)<-[:INVOICED]-(:InvoiceLine)) AND
 				date(sli.startedAt) + duration({days: 1}) < date(c.nextInvoiceDate) AND
 				date(sli.startedAt) < date($referenceTime) AND
-				(c.techOffCycleInvoicingStartedAt IS NULL OR date(c.techOffCycleInvoicingStartedAt) < date($referenceTime))
+				(c.techOffCycleInvoicingStartedAt IS NULL OR date(c.techOffCycleInvoicingStartedAt) < date($referenceTime) OR c.techOffCycleInvoicingStartedAt + duration({hours: 1}) < $referenceTime)
 			WITH c, sli, t 
 				OPTIONAL MATCH (c)-[:HAS_SERVICE]->(invoicedSli:ServiceLineItem)<-[:INVOICED]-(il:InvoiceLine)
 					WHERE EXISTS((invoicedSli)<-[:INVOICED]-(il))
