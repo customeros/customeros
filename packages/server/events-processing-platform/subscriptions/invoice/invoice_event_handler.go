@@ -27,6 +27,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -660,35 +661,37 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return errors.New("invoiceNode is nil")
 	}
 
-	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId, span)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error downloading invoice pdf for invoice %s: %s", invoiceId, err.Error())
-		return err
-	}
-
-	err = h.postmarkProvider.SendNotification(ctx, notifications.PostmarkEmail{
+	postmarkEmail := notifications.PostmarkEmail{
 		WorkflowId:    notifications.WorkflowInvoicePaid,
 		MessageStream: notifications.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            invoiceEntity.Customer.Email,
 		Subject:       "Paid Invoice " + invoiceEntity.Number + " from " + invoiceEntity.Provider.Name,
 		TemplateData: map[string]string{
-			"{{tenantLogo}}":     invoiceEntity.Provider.LogoUrl,
 			"{{userFirstName}}":  invoiceEntity.Customer.Name,
 			"{{invoiceNumber}}":  invoiceEntity.Number,
 			"{{currencySymbol}}": invoiceEntity.Currency.Symbol(),
 			"{{amtDue}}":         fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 			"{{paymentDate}}":    invoiceEntity.DueDate.Format("02 Jan 2006"),
 		},
-		Attachments: []notifications.PostmarkEmailAttachment{
-			{
-				Filename:       "Invoice " + invoiceEntity.Number + ".pdf",
-				ContentEncoded: base64.StdEncoding.EncodeToString(*invoiceFileBytes),
-				ContentType:    "application/pdf",
-			},
-		},
-	}, span)
+		Attachments: []notifications.PostmarkEmailAttachment{},
+	}
+
+	err = h.AppendInvoiceFileToEmailAsAttachment(eventData.Tenant, *invoiceEntity, &postmarkEmail, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error appending invoice file to email attachment for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	err = h.AppendProviderLogoToEmail(*invoiceEntity, &postmarkEmail)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, span)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -706,7 +709,6 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 
 	return nil
 }
-
 func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoicePayNotificationV1")
 	defer span.Finish()
@@ -742,35 +744,37 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return errors.New("invoiceEntity.PaymentDetails.PaymentLink is empty")
 	}
 
-	invoiceFileBytes, err := h.fsc.DownloadFile(eventData.Tenant, invoiceEntity.RepositoryFileId, span)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error downloading invoice pdf for invoice %s: %s", invoiceId, err.Error())
-		return err
-	}
-
-	err = h.postmarkProvider.SendNotification(ctx, notifications.PostmarkEmail{
+	postmarkEmail := notifications.PostmarkEmail{
 		WorkflowId:    notifications.WorkflowInvoiceReady,
 		MessageStream: notifications.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            invoiceEntity.Customer.Email,
 		Subject:       "New invoice " + invoiceEntity.Number,
 		TemplateData: map[string]string{
-			"{{tenantLogo}}":       invoiceEntity.Provider.LogoUrl,
 			"{{organizationName}}": invoiceEntity.Customer.Name,
 			"{{invoiceNumber}}":    invoiceEntity.Number,
 			"{{currencySymbol}}":   invoiceEntity.Currency.Symbol(),
 			"{{amtDue}}":           fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 			"{{paymentLink}}":      invoiceEntity.PaymentDetails.PaymentLink,
 		},
-		Attachments: []notifications.PostmarkEmailAttachment{
-			{
-				Filename:       "Invoice " + invoiceEntity.Number + ".pdf",
-				ContentEncoded: base64.StdEncoding.EncodeToString(*invoiceFileBytes),
-				ContentType:    "application/pdf",
-			},
-		},
-	}, span)
+		Attachments: []notifications.PostmarkEmailAttachment{},
+	}
+
+	err = h.AppendInvoiceFileToEmailAsAttachment(eventData.Tenant, *invoiceEntity, &postmarkEmail, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error appending invoice file to email attachment for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	err = h.AppendProviderLogoToEmail(*invoiceEntity, &postmarkEmail)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, span)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -785,6 +789,51 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		h.log.Errorf("Error setting invoice pay notification sent at for invoice %s: %s", invoiceId, err.Error())
 		return err
 	}
+
+	return nil
+}
+
+func (h *InvoiceEventHandler) AppendInvoiceFileToEmailAsAttachment(tenant string, invoice neo4jentity.InvoiceEntity, postmarkEmail *notifications.PostmarkEmail, span opentracing.Span) error {
+	invoiceFileBytes, err := h.fsc.DownloadFile(tenant, invoice.RepositoryFileId, span)
+	if err != nil {
+		return err
+	}
+
+	postmarkEmail.Attachments = append(postmarkEmail.Attachments, notifications.PostmarkEmailAttachment{
+		Filename:       "Invoice " + invoice.Number + ".pdf",
+		ContentEncoded: base64.StdEncoding.EncodeToString(*invoiceFileBytes),
+		ContentType:    "application/pdf",
+	})
+
+	return nil
+}
+
+func (h *InvoiceEventHandler) AppendProviderLogoToEmail(invoice neo4jentity.InvoiceEntity, postmarkEmail *notifications.PostmarkEmail) error {
+	if invoice.Provider.LogoUrl == "" {
+		return nil
+	}
+
+	lg, err := downloadProviderLogoAsResourceFile(invoice.Provider.LogoUrl)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(lg.Name())
+	var logoBytes []byte
+	if logoBytes, err = io.ReadAll(lg); err != nil {
+		return err
+	}
+
+	logoFileType, err := utils.GetFileType(logoBytes)
+	if err != nil {
+		return err
+	}
+
+	postmarkEmail.Attachments = append(postmarkEmail.Attachments, notifications.PostmarkEmailAttachment{
+		Filename:       "provider-logo-file-encoded",
+		ContentEncoded: base64.StdEncoding.EncodeToString(logoBytes),
+		ContentType:    logoFileType.MIME.Value,
+		ContentID:      "cid:provider-logo-file-encoded",
+	})
 
 	return nil
 }

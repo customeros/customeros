@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -118,6 +119,9 @@ func buildEmailChannelData(email *parsemail.Email, err error) (*string, error) {
 }
 
 func (s *mailService) SendMail(request *model.MailReplyRequest, username *string) (*parsemail.Email, error) {
+	contextWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
+	defer cancel()
+
 	retMail := parsemail.Email{}
 	retMail.HTMLBody = request.Content
 	subject := request.Subject
@@ -129,7 +133,7 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 		return nil, fmt.Errorf("unable to retrieve tenant for %s", *username)
 	}
 
-	gSrv, err := s.services.AuthServices.GoogleService.GetGmailService(*username, tenant.Tenant)
+	gSrv, err := s.services.AuthServices.GoogleService.GetGmailService(contextWithTimeout, *username, tenant.Tenant)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
 	}

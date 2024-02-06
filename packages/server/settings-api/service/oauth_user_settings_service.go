@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/model"
@@ -8,7 +9,7 @@ import (
 )
 
 type OAuthUserSettingsService interface {
-	GetOAuthUserSettings(playerIdentityId string) (*model.OAuthUserSettingsResponse, error)
+	GetOAuthUserSettings(ctx context.Context, playerIdentityId string) (*model.OAuthUserSettingsResponse, error)
 }
 
 type oAuthUserSettingsService struct {
@@ -23,8 +24,8 @@ func NewUserSettingsService(repositories *repository.PostgresRepositories, log l
 	}
 }
 
-func (u oAuthUserSettingsService) GetOAuthUserSettings(playerIdentityId string) (*model.OAuthUserSettingsResponse, error) {
-	authProvider, err := u.repositories.AuthRepositories.OAuthTokenRepository.GetByPlayerIdAndProvider(playerIdentityId, entity.ProviderGoogle)
+func (u oAuthUserSettingsService) GetOAuthUserSettings(ctx context.Context, playerIdentityId string) (*model.OAuthUserSettingsResponse, error) {
+	authProvider, err := u.repositories.AuthRepositories.OAuthTokenRepository.GetByPlayerIdAndProvider(ctx, playerIdentityId, entity.ProviderGoogle)
 	if err != nil {
 		return nil, err
 	}

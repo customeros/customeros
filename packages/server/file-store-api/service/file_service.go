@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/h2non/filetype"
 	"github.com/machinebox/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
@@ -60,16 +61,17 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName, basePath, fileId s
 		return nil, err
 	}
 
-	head := make([]byte, 1024)
-	_, err = multipartFile.Read(head)
+	headBytes, err := utils.GetFileTypeHeadFromMultipart(multipartFile)
 	if err != nil {
 		return nil, err
 	}
 
-	//TODO docx is not recognized
-	//https://github.com/h2non/filetype/issues/121
-	kind, _ := filetype.Match(head)
-	if kind == filetype.Unknown {
+	fileType, err := utils.GetFileType(headBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	if fileType == filetype.Unknown {
 		fmt.Println("Unknown multipartFile type")
 		return nil, errors.New("Unknown multipartFile type")
 	}
@@ -87,7 +89,7 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName, basePath, fileId s
 		fileId = uuid.New().String()
 	}
 
-	err = uploadFileToS3(s.cfg, session, tenantName, basePath, fileId+"."+kind.Extension, multipartFileHeader)
+	err = uploadFileToS3(s.cfg, session, tenantName, basePath, fileId+"."+fileType.Extension, multipartFileHeader)
 	if err != nil {
 		log.Fatal(err)
 	}

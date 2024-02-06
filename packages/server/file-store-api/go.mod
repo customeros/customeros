@@ -16,12 +16,12 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
 	github.com/neo4j/neo4j-go-driver/v5 v5.17.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240130063933-c7a7474fecba
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240206104907-b429ee046270
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 	github.com/vektah/gqlparser/v2 v2.5.11
-	gorm.io/driver/postgres v1.5.4
-	gorm.io/gorm v1.25.6
+	gorm.io/driver/postgres v1.5.6
+	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 )
 
 require (
@@ -43,14 +43,14 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.3 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20231201235250-de7065d80cb9 // indirect
-	github.com/jackc/pgx/v5 v5.5.2 // indirect
+	github.com/jackc/pgx/v5 v5.5.3 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
-	github.com/leodido/go-urn v1.3.0 // indirect
+	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/matryer/is v1.4.1 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

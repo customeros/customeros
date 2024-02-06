@@ -39,6 +39,7 @@ type PostmarkEmailAttachment struct {
 	Filename       string
 	ContentEncoded string
 	ContentType    string
+	ContentID      string
 }
 
 type PostmarkProvider struct {
@@ -86,6 +87,7 @@ func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail 
 				Name:        attachment.Filename,
 				Content:     attachment.ContentEncoded,
 				ContentType: attachment.ContentType,
+				ContentID:   attachment.ContentID,
 			})
 		}
 	}
