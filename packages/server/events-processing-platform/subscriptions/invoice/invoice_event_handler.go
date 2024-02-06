@@ -312,9 +312,12 @@ func (h *InvoiceEventHandler) fillOffCycleInvoice(ctx context.Context, tenant, c
 
 	totalAmount = amount + vat
 
-	// TODO if nr of invoice lines is 0 or totalAmount is 0, invoke event to delete the draft off-cycle invoice
-
-	return h.prepareAndCallFillInvoice(ctx, tenant, contractId, invoiceEntity, amount, vat, subtotal, totalAmount, invoiceLines, span)
+	if totalAmount == 0 || len(invoiceLines) == 0 {
+		// TODO if nr of invoice lines is 0 or totalAmount is 0, invoke event to delete the draft off-cycle invoice
+		return nil
+	} else {
+		return h.prepareAndCallFillInvoice(ctx, tenant, contractId, invoiceEntity, amount, vat, subtotal, totalAmount, invoiceLines, span)
+	}
 }
 
 func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
