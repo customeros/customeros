@@ -13137,6 +13137,7 @@ input ServiceLineItemInput {
     billed:             BilledType
     price:              Float
     quantity:           Int64
+    vatRate:            Float
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
     startedAt:          Time
@@ -13149,6 +13150,7 @@ input ServiceLineItemUpdateInput {
     billed:             BilledType
     price:              Float
     quantity:           Int64
+    vatRate:            Float
     comments:           String
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
@@ -13161,6 +13163,7 @@ input ServiceLineItemBulkUpdateItem {
     billed:                  BilledType
     price:                   Float
     quantity:                Int64
+    vatRate:                 Float
     comments:                String
     isRetroactiveCorrection: Boolean
 }
@@ -85614,7 +85617,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateItem(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "comments", "isRetroactiveCorrection"}
+	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "vatRate", "comments", "isRetroactiveCorrection"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -85656,6 +85659,13 @@ func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateItem(ctx cont
 				return it, err
 			}
 			it.Quantity = data
+		case "vatRate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vatRate"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VatRate = data
 		case "comments":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comments"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -85717,7 +85727,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "name", "billed", "price", "quantity", "appSource", "externalReference", "startedAt", "endedAt"}
+	fieldsInOrder := [...]string{"contractId", "name", "billed", "price", "quantity", "vatRate", "appSource", "externalReference", "startedAt", "endedAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -85759,6 +85769,13 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 				return it, err
 			}
 			it.Quantity = data
+		case "vatRate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vatRate"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VatRate = data
 		case "appSource":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -85800,7 +85817,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "comments", "appSource", "externalReference", "isRetroactiveCorrection"}
+	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "vatRate", "comments", "appSource", "externalReference", "isRetroactiveCorrection"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -85842,6 +85859,13 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 				return it, err
 			}
 			it.Quantity = data
+		case "vatRate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vatRate"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VatRate = data
 		case "comments":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comments"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)

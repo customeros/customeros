@@ -6,6 +6,7 @@ serviceLineItemCreate(
       billed: MONTHLY
       price: 30
       quantity: 2
+      vatRate: 20
     }
   ) {
     id

@@ -2117,6 +2117,7 @@ type ServiceLineItemBulkUpdateItem struct {
 	Billed                  *BilledType `json:"billed,omitempty"`
 	Price                   *float64    `json:"price,omitempty"`
 	Quantity                *int64      `json:"quantity,omitempty"`
+	VatRate                 *float64    `json:"vatRate,omitempty"`
 	Comments                *string     `json:"comments,omitempty"`
 	IsRetroactiveCorrection *bool       `json:"isRetroactiveCorrection,omitempty"`
 }
@@ -2132,6 +2133,7 @@ type ServiceLineItemInput struct {
 	Billed            *BilledType                   `json:"billed,omitempty"`
 	Price             *float64                      `json:"price,omitempty"`
 	Quantity          *int64                        `json:"quantity,omitempty"`
+	VatRate           *float64                      `json:"vatRate,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 	StartedAt         *time.Time                    `json:"startedAt,omitempty"`
@@ -2144,6 +2146,7 @@ type ServiceLineItemUpdateInput struct {
 	Billed                  *BilledType                   `json:"billed,omitempty"`
 	Price                   *float64                      `json:"price,omitempty"`
 	Quantity                *int64                        `json:"quantity,omitempty"`
+	VatRate                 *float64                      `json:"vatRate,omitempty"`
 	Comments                *string                       `json:"comments,omitempty"`
 	AppSource               *string                       `json:"appSource,omitempty"`
 	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
