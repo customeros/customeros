@@ -286,18 +286,20 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		LoggedInUserId:              common.GetUserIdFromContext(ctx),
 		AppSource:                   constants.AppSourceCustomerOsApi,
 		OrgId:                       orgId,
+		Name:                        utils.IfNotNilString(name),
+		Retired:                     utils.IfNotNilBool(retired),
+		Order:                       utils.IfNotNilInt64(order),
+		Optional:                    utils.IfNotNilBool(optional),
+		Adhoc:                       utils.IfNotNilBool(adhoc),
 	}
 	fieldsMask := make([]orgplanpb.OrganizationPlanMilestoneFieldMask, 0)
 	if name != nil {
-		grpcRequest.Name = utils.IfNotNilString(name)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_NAME)
 	}
 	if retired != nil {
-		grpcRequest.Retired = utils.IfNotNilBool(retired)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_RETIRED)
 	}
 	if order != nil {
-		grpcRequest.Order = utils.IfNotNilInt64(order)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ORDER)
 	}
 	if dueDate != nil {
@@ -306,7 +308,6 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_DUE_DATE)
 	}
 	if optional != nil {
-		grpcRequest.Optional = utils.IfNotNilBool(optional)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_OPTIONAL)
 	}
 	if items != nil {
@@ -318,7 +319,6 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_STATUS_DETAILS)
 	}
 	if adhoc != nil {
-		grpcRequest.Adhoc = utils.IfNotNilBool(adhoc)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ADHOC)
 	}
 	grpcRequest.FieldsMask = fieldsMask
