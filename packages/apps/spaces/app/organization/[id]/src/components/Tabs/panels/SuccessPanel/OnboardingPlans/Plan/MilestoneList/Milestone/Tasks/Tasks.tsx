@@ -30,7 +30,7 @@ export const Tasks = ({ formId, defaultValue }: TasksProps) => {
   return (
     <VStack align='flex-start' spacing='1' pl='6'>
       {(value as TaskDatum[])?.map((item, idx) => (
-        <Task key={idx} index={idx} formId={formId} defaultValue={item} />
+        <Task key={idx} index={idx} formId={formId} />
       ))}
       {/* <Button
         ml='-12px'
