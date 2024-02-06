@@ -64,6 +64,7 @@ func (a *ServiceLineItemAggregate) onServiceLineItemCreate(evt eventstore.Event)
 	a.ServiceLineItem.StartedAt = eventData.StartedAt
 	a.ServiceLineItem.EndedAt = eventData.EndedAt
 	a.ServiceLineItem.Comments = eventData.Comments
+	a.ServiceLineItem.VatRate = eventData.VatRate
 
 	return nil
 }
@@ -85,6 +86,7 @@ func (a *ServiceLineItemAggregate) onServiceLineItemUpdate(evt eventstore.Event)
 		a.ServiceLineItem.Source.SourceOfTruth = eventData.Source.Source
 	}
 	a.ServiceLineItem.Comments = eventData.Comments
+	a.ServiceLineItem.VatRate = eventData.VatRate
 
 	return nil
 }

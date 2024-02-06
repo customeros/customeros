@@ -24,6 +24,7 @@ func MapEntityToServiceLineItem(entity *neo4jentity.ServiceLineItemEntity) *mode
 		Quantity:      entity.Quantity,
 		Comments:      entity.Comments,
 		ParentID:      entity.ParentID,
+		VatRate:       entity.VatRate,
 	}
 }
 

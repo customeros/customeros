@@ -47,6 +47,12 @@ func (a *ServiceLineItemAggregate) createServiceLineItem(ctx context.Context, cm
 		cmd.DataFields.Quantity = 0
 	}
 
+	// Adjust vat rate
+	if cmd.DataFields.VatRate < 0 {
+		cmd.DataFields.VatRate = 0
+	}
+	cmd.DataFields.VatRate = utils.TruncateFloat64(cmd.DataFields.VatRate, 2)
+
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
 	startedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.StartedAt, createdAtNotNil)
@@ -103,6 +109,12 @@ func (a *ServiceLineItemAggregate) updateServiceLineItem(ctx context.Context, cm
 		(a.ServiceLineItem.Billed != model.OnceBilled.String() && cmd.DataFields.Billed == model.OnceBilled) {
 		return errors.New(constants.FieldValidation + ": cannot change billed type from 'once' to a frequency-based option or vice versa")
 	}
+
+	// Adjust vat rate
+	if cmd.DataFields.VatRate < 0 {
+		cmd.DataFields.VatRate = 0
+	}
+	cmd.DataFields.VatRate = utils.TruncateFloat64(cmd.DataFields.VatRate, 2)
 
 	// Prepare the data for the update event
 	updateEvent, err := event.NewServiceLineItemUpdateEvent(

@@ -289,29 +289,6 @@ func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) neo4jentity.TimelineEvent {
 }
 
 // Deprecated
-func MapDbNodeToServiceLineItemEntity(node dbtype.Node) *entity.ServiceLineItemEntity {
-	props := utils.GetPropsFromNode(node)
-	serviceLineItem := entity.ServiceLineItemEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
-		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		Billed:        utils.GetStringPropOrEmpty(props, "billed"),
-		Price:         utils.GetFloatPropOrZero(props, "price"),
-		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
-		Comments:      utils.GetStringPropOrEmpty(props, "comments"),
-		ParentId:      utils.GetStringPropOrEmpty(props, "parentId"),
-		IsCanceled:    utils.GetBoolPropOrFalse(props, "isCanceled"),
-	}
-	return &serviceLineItem
-}
-
-// Deprecated
 func MapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
 	props := utils.GetPropsFromNode(node)
 	return &entity.EmailEntity{

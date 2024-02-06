@@ -26,6 +26,7 @@ type ServiceLineItem implements Node {
     appSource:          String!
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
     parentId:           ID!
+    vatRate:            Float!
 }
 
 input ServiceLineItemInput {
@@ -34,6 +35,7 @@ input ServiceLineItemInput {
     billed:             BilledType
     price:              Float
     quantity:           Int64
+    vatRate:            Float
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
     startedAt:          Time
@@ -46,6 +48,7 @@ input ServiceLineItemUpdateInput {
     billed:             BilledType
     price:              Float
     quantity:           Int64
+    vatRate:            Float
     comments:           String
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
@@ -58,6 +61,7 @@ input ServiceLineItemBulkUpdateItem {
     billed:                  BilledType
     price:                   Float
     quantity:                Int64
+    vatRate:                 Float
     comments:                String
     isRetroactiveCorrection: Boolean
 }

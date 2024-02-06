@@ -4,10 +4,8 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
-	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
@@ -39,7 +37,8 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 			require.Equal(t, "Service Line Item 1", serviceLineItem.Name)
 			require.Equal(t, commonpb.BilledType_MONTHLY_BILLED, serviceLineItem.Billed)
 			require.Equal(t, int64(2), serviceLineItem.Quantity)
-			require.Equal(t, float64(30), serviceLineItem.Price)
+			require.Equal(t, 30.0, serviceLineItem.Price)
+			require.Equal(t, 20.0, serviceLineItem.VatRate)
 
 			calledCreateServiceLineItem = true
 			neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
@@ -76,7 +75,7 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	serviceLineItemIdParentId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{Name: "service"})
 	//Using serviceLineItemIdParentId as the parent id
@@ -94,6 +93,7 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 			require.Equal(t, float64(30), serviceLineItem.Price)
 			require.Equal(t, "test comments", serviceLineItem.Comments)
 			require.Equal(t, true, serviceLineItem.IsRetroactiveCorrection)
+			require.Equal(t, 10.5, serviceLineItem.VatRate)
 			calledUpdateServiceLineItem = true
 			return &servicelineitempb.ServiceLineItemIdGrpcResponse{
 				Id: serviceLineItemId,
@@ -125,7 +125,7 @@ func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{})
 
@@ -166,7 +166,7 @@ func TestMutationResolver_ServiceLineItemClose(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{})
 

@@ -8,6 +8,7 @@ mutation UpdateServiceLineItem($serviceLineItemId: ID!) {
       quantity: 2
       comments: "test comments"
       isRetroactiveCorrection: true
+      vatRate: 10.5
     }
   ) {
     id

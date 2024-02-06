@@ -43,6 +43,7 @@ func (r *mutationResolver) ServiceLineItemCreate(ctx context.Context, input mode
 		SliName:           utils.IfNotNilString(input.Name),
 		SliPrice:          utils.IfNotNilFloat64(input.Price),
 		SliQuantity:       utils.IfNotNilInt64(input.Quantity),
+		SliVatRate:        utils.IfNotNilFloat64(input.VatRate),
 	}
 
 	serviceLineItemId, err := r.Services.ServiceLineItemService.Create(ctx, data)
@@ -81,6 +82,7 @@ func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input mode
 		SliQuantity:             utils.IfNotNilInt64(input.Quantity),
 		SliBilledType:           billedType,
 		SliComments:             utils.IfNotNilString(input.Comments),
+		SliVatRate:              utils.IfNotNilFloat64(input.VatRate),
 		Source:                  neo4jentity.DataSourceOpenline,
 		AppSource:               utils.IfNotNilString(input.AppSource),
 	}
