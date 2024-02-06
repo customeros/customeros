@@ -55,11 +55,13 @@ func (h *updateOrganizationPlanHandler) Handle(ctx context.Context, baseRequest 
 		}
 
 		updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
-
-		statusDetails := model.OrganizationPlanDetails{
-			Status:    request.StatusDetails.Status,
-			UpdatedAt: updatedAtNotNil,
-			Comments:  request.StatusDetails.Comments,
+		statusDetails := model.OrganizationPlanDetails{}
+		if request.StatusDetails != nil {
+			statusDetails = model.OrganizationPlanDetails{
+				Status:    request.StatusDetails.Status,
+				UpdatedAt: updatedAtNotNil,
+				Comments:  request.StatusDetails.Comments,
+			}
 		}
 
 		evt, err := event.NewOrganizationPlanUpdateEvent(orgAggregate, request.OrganizationPlanId, request.Name, request.Retired, updatedAtNotNil, extractOrganizationPlanFieldsMask(request.FieldsMask), statusDetails)
