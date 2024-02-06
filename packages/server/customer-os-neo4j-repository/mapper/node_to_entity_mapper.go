@@ -19,6 +19,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		CreatedAt:                     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:                     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		DryRun:                        utils.GetBoolPropOrFalse(props, "dryRun"),
+		OffCycle:                      utils.GetBoolPropOrFalse(props, "offCycle"),
 		Number:                        utils.GetStringPropOrEmpty(props, "number"),
 		PeriodStartDate:               utils.GetTimePropOrEpochStart(props, "periodStartDate"),
 		PeriodEndDate:                 utils.GetTimePropOrEpochStart(props, "periodEndDate"),

@@ -32,6 +32,7 @@ message NewInvoiceForContractRequest {
   string currency = 11; // mandatory
   BillingCycle billingCycle = 12;
   string note = 13;
+  bool offCycle = 14;
 }
 
 message FillInvoiceRequest {

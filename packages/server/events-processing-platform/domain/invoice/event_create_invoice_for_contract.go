@@ -22,9 +22,10 @@ type InvoiceForContractCreateEvent struct {
 	PeriodEndDate   time.Time `json:"periodEndDate"`
 	BillingCycle    string    `json:"billingCycle"`
 	Note            string    `json:"note"`
+	OffCycle        bool      `json:"offCycle,omitempty"`
 }
 
-func NewInvoiceForContractCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, contractId, currency, billingCycle, note string, dryRun bool, createdAt, periodStartDate, periodEndDate time.Time) (eventstore.Event, error) {
+func NewInvoiceForContractCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, contractId, currency, billingCycle, note string, dryRun, offCycle bool, createdAt, periodStartDate, periodEndDate time.Time) (eventstore.Event, error) {
 	eventData := InvoiceForContractCreateEvent{
 		Tenant:          aggregate.GetTenant(),
 		ContractId:      contractId,
@@ -37,6 +38,7 @@ func NewInvoiceForContractCreateEvent(aggregate eventstore.Aggregate, sourceFiel
 		PeriodEndDate:   periodEndDate,
 		BillingCycle:    billingCycle,
 		Note:            note,
+		OffCycle:        offCycle,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
