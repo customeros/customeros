@@ -30,6 +30,7 @@ type InvoiceCreateFields struct {
 type InvoiceFillFields struct {
 	Amount                        float64                 `json:"amount"`
 	VAT                           float64                 `json:"vat"`
+	SubtotalAmount                float64                 `json:"subtotalAmount"`
 	TotalAmount                   float64                 `json:"totalAmount"`
 	UpdatedAt                     time.Time               `json:"updatedAt"`
 	ContractId                    string                  `json:"contractId"`
@@ -165,6 +166,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.billingCycle=$billingCycle,
 								i.amount=$amount,
 								i.vat=$vat,
+								i.subtotalAmount=$subtotalAmount,
 								i.totalAmount=$totalAmount,
 								i.status=$status,
 								i.note=$note,
@@ -190,6 +192,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.number=$number,
 								i.amount=$amount,
 								i.vat=$vat,
+								i.subtotalAmount=$subtotalAmount,
 								i.totalAmount=$totalAmount,
 								i.status=$status,
 								i.note=$note,
@@ -220,6 +223,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 		"updatedAt":                     data.UpdatedAt,
 		"amount":                        data.Amount,
 		"vat":                           data.VAT,
+		"subtotalAmount":                data.SubtotalAmount,
 		"totalAmount":                   data.TotalAmount,
 		"dryRun":                        data.DryRun,
 		"number":                        data.InvoiceNumber,

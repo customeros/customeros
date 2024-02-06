@@ -190,7 +190,7 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 		request.DomesticPaymentsBankInfo, request.InternationalPaymentsBankInfo,
 		request.Customer.Name, request.Customer.AddressLine1, request.Customer.AddressLine2, request.Customer.Zip, request.Customer.Locality, request.Customer.Country, request.Customer.Email,
 		request.Provider.LogoUrl, request.Provider.Name, request.Provider.Email, request.Provider.AddressLine1, request.Provider.AddressLine2, request.Provider.Zip, request.Provider.Locality, request.Provider.Country,
-		request.Note, invoiceStatus, invoiceNumberForEvent, request.Amount, request.Vat, request.Total, invoiceLines)
+		request.Note, invoiceStatus, invoiceNumberForEvent, request.Amount, request.Vat, request.Subtotal, request.Total, invoiceLines)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceFillEvent")

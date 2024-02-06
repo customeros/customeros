@@ -182,6 +182,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		"INV-001",
 		100,
 		20,
+		100,
 		120,
 		[]invoice.InvoiceLineEvent{
 			{
@@ -243,6 +244,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
 	require.Equal(t, float64(100), invoiceEntity.Amount)
 	require.Equal(t, float64(20), invoiceEntity.Vat)
+	require.Equal(t, float64(100), invoiceEntity.SubtotalAmount)
 	require.Equal(t, float64(120), invoiceEntity.TotalAmount)
 	require.Equal(t, "a", invoiceEntity.DomesticPaymentsBankInfo)
 	require.Equal(t, "b", invoiceEntity.InternationalPaymentsBankInfo)

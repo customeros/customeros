@@ -24,6 +24,7 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 		DueDate:                       entity.DueDate,
 		Amount:                        entity.Amount,
 		Vat:                           entity.Vat,
+		SubtotalAmount:                entity.SubtotalAmount,
 		TotalAmount:                   entity.TotalAmount,
 		Currency:                      entity.Currency.String(),
 		RepositoryFileID:              entity.RepositoryFileId,

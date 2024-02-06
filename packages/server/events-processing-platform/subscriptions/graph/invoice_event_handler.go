@@ -117,6 +117,7 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		ProviderAddressCountry:        eventData.Provider.Country,
 		Amount:                        eventData.Amount,
 		VAT:                           eventData.VAT,
+		SubtotalAmount:                eventData.SubtotalAmount,
 		TotalAmount:                   eventData.TotalAmount,
 		Status:                        neo4jenum.DecodeInvoiceStatus(eventData.Status),
 	}
