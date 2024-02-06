@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -29,6 +30,9 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 	}
 
 	rg.POST("/signin", func(ginContext *gin.Context) {
+		contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
+		defer cancel()
+
 		log.Printf("Sign in User")
 		apiKey := ginContext.GetHeader("X-Openline-Api-Key")
 		if apiKey != config.Service.ApiKey {
@@ -79,7 +83,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 		// Handle Google provider
 		if signInRequest.Provider == "google" {
 			if isRequestEnablingOAuthSync(signInRequest) {
-				var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
+				var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
 				if oauthToken == nil {
 					oauthToken = &entity.OAuthTokenEntity{}
 				}
@@ -99,10 +103,17 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				if isRequestEnablingGoogleCalendarSync(signInRequest) {
 					oauthToken.GoogleCalendarSyncEnabled = true
 				}
-				services.AuthServices.OAuthTokenService.Save(*oauthToken)
+				_, err := services.AuthServices.OAuthTokenService.Save(contextWithTimeout, *oauthToken)
+				if err != nil {
+					log.Printf("unable to save oauth token: %v", err.Error())
+					ginContext.JSON(http.StatusInternalServerError, gin.H{
+						"result": fmt.Sprintf("unable to save oauth token: %v", err.Error()),
+					})
+					return
+				}
 			}
 		} else if signInRequest.Provider == "azure-ad" {
-			var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
+			var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
 			if oauthToken == nil {
 				oauthToken = &entity.OAuthTokenEntity{}
 			}
@@ -116,7 +127,14 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
 			oauthToken.Scope = signInRequest.OAuthToken.Scope
 			oauthToken.NeedsManualRefresh = false
-			services.AuthServices.OAuthTokenService.Save(*oauthToken)
+			_, err := services.AuthServices.OAuthTokenService.Save(contextWithTimeout, *oauthToken)
+			if err != nil {
+				log.Printf("unable to save oauth token: %v", err.Error())
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("unable to save oauth token: %v", err.Error()),
+				})
+				return
+			}
 		} else {
 			log.Printf("Unsupported provider: %s", signInRequest.Provider)
 			ginContext.JSON(http.StatusBadRequest, gin.H{
@@ -129,6 +147,9 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 	})
 
 	rg.POST("/revoke", func(ginContext *gin.Context) {
+		contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
+		defer cancel()
+
 		log.Printf("revoke oauth token")
 
 		apiKey := ginContext.GetHeader("X-Openline-Api-Key")
@@ -163,7 +184,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			return
 		}
 
-		var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(revokeRequest.ProviderAccountId, provider)
+		var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, provider)
 
 		if oauthToken.RefreshToken != "" {
 			// Handle revocation based on provider
@@ -184,7 +205,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 
 				if resp.StatusCode == http.StatusOK {
 					// Successfully revoked, delete the token
-					err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(revokeRequest.ProviderAccountId, provider)
+					err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, provider)
 					if err != nil {
 						ginContext.JSON(http.StatusInternalServerError, gin.H{})
 						return
