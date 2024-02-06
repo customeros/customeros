@@ -288,6 +288,11 @@ func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.Updat
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUpdateInvoiceEvent")
 	}
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+		Tenant: r.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    r.AppSource,
+	})
 	events = append(events, updateEvent)
 
 	// if status updated, and set from non-paid to paid
@@ -299,14 +304,13 @@ func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.Updat
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewInvoicePaidEvent")
 		}
+		aggregate.EnrichEventWithMetadataExtended(&paidEvent, span, aggregate.EventMetadata{
+			Tenant: r.Tenant,
+			UserId: r.LoggedInUserId,
+			App:    r.AppSource,
+		})
 		events = append(events, paidEvent)
 	}
-
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
-		Tenant: r.Tenant,
-		UserId: r.LoggedInUserId,
-		App:    r.AppSource,
-	})
 
 	return a.ApplyAll(events)
 }
