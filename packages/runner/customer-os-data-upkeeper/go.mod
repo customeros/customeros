@@ -10,9 +10,9 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.17.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240130211015-e7cbb6876afb
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240130211015-e7cbb6876afb
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240130211015-e7cbb6876afb
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240206124855-41e62c88e5c9
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240206124855-41e62c88e5c9
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240206124855-41e62c88e5c9
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
@@ -25,6 +25,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/h2non/filetype v1.1.3 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20231201235250-de7065d80cb9 // indirect
 	github.com/jackc/pgx/v5 v5.5.2 // indirect
