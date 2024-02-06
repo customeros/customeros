@@ -111,7 +111,28 @@ func main() {
 	//testRefreshLastTouchpoint()
 	//testAddTenantBillingProfile()
 	//PaidInvoiceNotification()
-	PleasePayInvoiceNotification()
+	//PleasePayInvoiceNotification()
+	//testCreateInvoice()
+}
+
+func testCreateInvoice() {
+	today := utils.Now()
+	in1Month := today.AddDate(0, 1, 0)
+	result, err := clients.InvoiceClient.NewInvoiceForContract(context.Background(), &invoicepb.NewInvoiceForContractRequest{
+		Tenant:             tenant,
+		ContractId:         "e9833f2c-e4c6-43ed-a35c-3c7726b5bb0d",
+		Currency:           "USD",
+		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&today),
+		InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&in1Month),
+		OffCycle:           true,
+		SourceFields: &commonpb.SourceFields{
+			AppSource: appSource,
+		},
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	print(result.Id)
 }
 
 func PaidInvoiceNotification() {
@@ -171,7 +192,6 @@ func testRequestGenerateActionItemsRequest() {
 }
 
 func testCreateOrganization() {
-	tenant := "openline"
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
 	website := ""
 
@@ -605,9 +625,8 @@ func testUserLinkWithEmail() {
 }
 
 func testCreateContract() {
-	tenant := "openline"
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	organizationId := "a6119e17-9a2c-4b8b-85d9-f0007ea49c13"
+	organizationId := "85d19ca8-ff7e-460b-b1b3-22c5bbf0efa4"
 	yesterday := utils.Now().AddDate(0, 0, -1)
 
 	result, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
