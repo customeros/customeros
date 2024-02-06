@@ -99,7 +99,7 @@ func (r *invoiceLineReadRepository) GetAllForInvoices(ctx context.Context, tenan
 }
 
 func (r *invoiceLineReadRepository) GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx context.Context, tenant, sliParentId string) (*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceLineReadRepository.GetAllForInvoice")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.Object("sliParentId", sliParentId))

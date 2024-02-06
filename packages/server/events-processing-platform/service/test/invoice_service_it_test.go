@@ -48,6 +48,7 @@ func TestInvoiceService_NewOnCycleInvoiceForContract(t *testing.T) {
 		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&yesterday),
 		InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&nextWeek),
 		DryRun:             false,
+		OffCycle:           true,
 	}
 
 	// Execute service method
