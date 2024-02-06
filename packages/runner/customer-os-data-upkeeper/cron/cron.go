@@ -44,10 +44,17 @@ func StartCron(cont *container.Container) *cron.Cron {
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateInvoice, func() {
-		lockAndRunJob(cont, invoiceGroup, generateInvoices)
+		lockAndRunJob(cont, invoiceGroup, generateCycleInvoices)
 	})
 	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "generateInvoices", err.Error())
+		cont.Log.Fatalf("Could not add cron job %s: %v", "generateCycleInvoices", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateOffCycleInvoice, func() {
+		lockAndRunJob(cont, invoiceGroup, generateOffCycleInvoices)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "generateOffCycleInvoices", err.Error())
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendPayInvoiceNotification, func() {
@@ -84,8 +91,12 @@ func webScrapeOrganizations(cont *container.Container) {
 	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).WebScrapeOrganizations()
 }
 
-func generateInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateInvoices()
+func generateCycleInvoices(cont *container.Container) {
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateCycleInvoices()
+}
+
+func generateOffCycleInvoices(cont *container.Container) {
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateOffCycleInvoices()
 }
 
 func sendPayInvoiceNotifications(cont *container.Container) {
