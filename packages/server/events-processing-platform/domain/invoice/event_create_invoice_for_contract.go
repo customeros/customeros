@@ -9,20 +9,18 @@ import (
 )
 
 type InvoiceForContractCreateEvent struct {
-	Tenant       string             `json:"tenant" validate:"required"`
-	ContractId   string             `json:"organizationId" validate:"required"`
-	CreatedAt    time.Time          `json:"createdAt"`
-	DueDate      time.Time          `json:"dueDate"`
-	SourceFields commonmodel.Source `json:"sourceFields"`
-	DryRun       bool               `json:"dryRun"`
-	//Deprecated
-	InvoiceNumber   string    `json:"invoiceNumber"`
-	Currency        string    `json:"currency"`
-	PeriodStartDate time.Time `json:"periodStartDate"`
-	PeriodEndDate   time.Time `json:"periodEndDate"`
-	BillingCycle    string    `json:"billingCycle"`
-	Note            string    `json:"note"`
-	OffCycle        bool      `json:"offCycle,omitempty"`
+	Tenant          string             `json:"tenant" validate:"required"`
+	ContractId      string             `json:"organizationId" validate:"required"`
+	CreatedAt       time.Time          `json:"createdAt"`
+	DueDate         time.Time          `json:"dueDate"`
+	SourceFields    commonmodel.Source `json:"sourceFields"`
+	DryRun          bool               `json:"dryRun"`
+	Currency        string             `json:"currency"`
+	PeriodStartDate time.Time          `json:"periodStartDate"`
+	PeriodEndDate   time.Time          `json:"periodEndDate"`
+	BillingCycle    string             `json:"billingCycle" validate:"required_if=OffCycle false"`
+	Note            string             `json:"note"`
+	OffCycle        bool               `json:"offCycle,omitempty"`
 }
 
 func NewInvoiceForContractCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, contractId, currency, billingCycle, note string, dryRun, offCycle bool, createdAt, periodStartDate, periodEndDate time.Time) (eventstore.Event, error) {
