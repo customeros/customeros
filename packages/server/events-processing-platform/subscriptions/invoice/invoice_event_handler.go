@@ -30,6 +30,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sort"
 	"time"
 )
 
@@ -181,6 +182,190 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 
 	totalAmount = amount + vat
 
+	return h.prepareAndCallFillInvoice(ctx, tenant, contractId, invoiceEntity, amount, vat, subtotal, totalAmount, invoiceLines, span)
+}
+
+func (h *InvoiceEventHandler) fillOffCycleInvoice(ctx context.Context, tenant, contractId string, invoiceEntity neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.fillOffCycleInvoice")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
+	span.LogFields(log.String("contractId", contractId))
+
+	sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetAllForContract(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting service line items for contract %s: %s", contractId, err.Error())
+		return err
+	}
+
+	var sliEntities neo4jentity.ServiceLineItemEntities
+	for _, sliDbNode := range sliDbNodes {
+		sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
+		if sliEntity != nil {
+			sliEntities = append(sliEntities, *neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode))
+		}
+	}
+	// filter out not applicable SLIs
+	referenceDate := invoiceEntity.PeriodStartDate
+	filteredSliEntities := neo4jentity.ServiceLineItemEntities{}
+	for _, sliEntity := range sliEntities {
+		// process only monthly, quarterly and annually SLIs
+		if sliEntity.Billed != neo4jenum.BilledTypeMonthly &&
+			sliEntity.Billed != neo4jenum.BilledTypeQuarterly &&
+			sliEntity.Billed != neo4jenum.BilledTypeAnnually {
+			continue
+		}
+		// SLIs that started on or after reference date are not applicable
+		if sliEntity.StartedAt.After(referenceDate) || sliEntity.StartedAt.Equal(referenceDate) {
+			continue
+		}
+		filteredSliEntities = append(filteredSliEntities, sliEntity)
+	}
+	// sort SLIs by startedAt
+	sort.Slice(filteredSliEntities, func(i, j int) bool {
+		return filteredSliEntities[i].StartedAt.Before(filteredSliEntities[j].StartedAt)
+	})
+	// group SLIs by parent id
+	sliByParentID := map[string][]neo4jentity.ServiceLineItemEntity{}
+	for _, sliEntity := range filteredSliEntities {
+		sliByParentID[sliEntity.ParentID] = append(sliByParentID[sliEntity.ParentID], sliEntity)
+	}
+
+	span.LogFields(log.Int("result - amount of SLIs to process", len(filteredSliEntities)))
+
+	amount, vat, subtotal, totalAmount := float64(0), float64(0), float64(0), float64(0)
+	invoiceLines := []*invoicepb.InvoiceLine{}
+
+	// iterate SLIs by parent id
+	for parentId, slis := range sliByParentID {
+		// get latest SLI that is active on reference date
+		var sliToInvoice *neo4jentity.ServiceLineItemEntity
+		for _, sliEntity := range slis {
+			if sliEntity.IsActiveAt(invoiceEntity.PeriodStartDate) {
+				sliToInvoice = &sliEntity
+			}
+		}
+		// if no SLI is active on reference date, skip
+		if sliToInvoice == nil {
+			span.LogFields(log.String("result - no active SLI for parent id", parentId))
+			continue
+		}
+		// get invoice line for latest invoiced SLI per parent
+		ilDbNodeAndInvoiceId, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, tenant, parentId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error getting latest invoice line for sli parent id {%s}: {%s}", parentId, err.Error())
+			return err
+		}
+		proratedInvoicedSLIAmount := float64(0)
+		if ilDbNodeAndInvoiceId != nil {
+			previousInvoiceDbNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, tenant, ilDbNodeAndInvoiceId.LinkedNodeId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Error getting invoice {%s}: {%s}", ilDbNodeAndInvoiceId.LinkedNodeId, err.Error())
+				return err
+			}
+			previousInvoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(previousInvoiceDbNode)
+			// if previous invoice is for different cycle, charge full amount
+			if !previousInvoiceEntity.PeriodEndDate.Before(invoiceEntity.PeriodEndDate) {
+				// calculate already invoiced amount, prorated for the period
+				invoiceLineEntity := neo4jmapper.MapDbNodeToInvoiceLineEntity(ilDbNodeAndInvoiceId.Node)
+				calculatedInvoicedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(invoiceLineEntity.Quantity, invoiceLineEntity.Price, invoiceLineEntity.BilledType, neo4jenum.BillingCycleAnnuallyBilling)
+				proratedInvoicedSLIAmount = prorateAnnualSLIAmount(sliToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedInvoicedSLIAmountFor1Year)
+				proratedInvoicedSLIAmount = utils.TruncateFloat64(proratedInvoicedSLIAmount, 2)
+			}
+		}
+
+		calculatedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(sliToInvoice.Quantity, sliToInvoice.Price, sliToInvoice.Billed, neo4jenum.BillingCycleAnnuallyBilling)
+		proratedSLIAmount := prorateAnnualSLIAmount(sliToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedSLIAmountFor1Year)
+		proratedSLIAmount = utils.TruncateFloat64(proratedSLIAmount, 2)
+		finalSLIAmount := proratedSLIAmount - proratedInvoicedSLIAmount
+		span.LogFields(log.Float64(fmt.Sprintf("result - final amount for SLI with parent id %s", parentId), finalSLIAmount))
+		if finalSLIAmount <= 0 {
+			continue
+		}
+		calculatedSLIVat := utils.TruncateFloat64(finalSLIAmount*sliToInvoice.VatRate/100, 2)
+		amount += finalSLIAmount
+		subtotal += finalSLIAmount
+		vat += calculatedSLIVat
+		invoiceLine := invoicepb.InvoiceLine{
+			Name:                    sliToInvoice.Name,
+			Price:                   sliToInvoice.Price,
+			Quantity:                sliToInvoice.Quantity,
+			Amount:                  finalSLIAmount,
+			Total:                   finalSLIAmount + calculatedSLIVat,
+			Vat:                     calculatedSLIVat,
+			ServiceLineItemId:       sliToInvoice.ID,
+			ServiceLineItemParentId: sliToInvoice.ParentID,
+		}
+		switch sliToInvoice.Billed {
+		case neo4jenum.BilledTypeMonthly:
+			invoiceLine.BilledType = commonpb.BilledType_MONTHLY_BILLED
+		case neo4jenum.BilledTypeQuarterly:
+			invoiceLine.BilledType = commonpb.BilledType_QUARTERLY_BILLED
+		case neo4jenum.BilledTypeAnnually:
+			invoiceLine.BilledType = commonpb.BilledType_ANNUALLY_BILLED
+		}
+		invoiceLines = append(invoiceLines, &invoiceLine)
+	}
+
+	totalAmount = amount + vat
+
+	// TODO if nr of invoice lines is 0 or totalAmount is 0, invoke event to delete the draft off-cycle invoice
+
+	return h.prepareAndCallFillInvoice(ctx, tenant, contractId, invoiceEntity, amount, vat, subtotal, totalAmount, invoiceLines, span)
+}
+
+func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
+	sliAmount := float64(quantity) * price
+	if sliAmount == 0 {
+		return sliAmount
+	}
+	switch cycle {
+	case neo4jenum.BillingCycleMonthlyBilling:
+		switch billed {
+		case neo4jenum.BilledTypeMonthly:
+			return sliAmount
+		case neo4jenum.BilledTypeQuarterly:
+			return sliAmount / 3
+		case neo4jenum.BilledTypeAnnually:
+			return sliAmount / 12
+		}
+	case neo4jenum.BillingCycleQuarterlyBilling:
+		switch billed {
+		case neo4jenum.BilledTypeMonthly:
+			return sliAmount * 3
+		case neo4jenum.BilledTypeQuarterly:
+			return sliAmount
+		case neo4jenum.BilledTypeAnnually:
+			return sliAmount / 4
+		}
+	case neo4jenum.BillingCycleAnnuallyBilling:
+		switch billed {
+		case neo4jenum.BilledTypeMonthly:
+			return sliAmount * 12
+		case neo4jenum.BilledTypeQuarterly:
+			return sliAmount * 4
+		case neo4jenum.BilledTypeAnnually:
+			return sliAmount
+		}
+	}
+	return float64(0)
+}
+
+func prorateAnnualSLIAmount(startDate, endDate time.Time, amount float64) float64 {
+	start := utils.StartOfDayInUTC(startDate)
+	end := utils.StartOfDayInUTC(endDate)
+	days := end.Sub(start).Hours() / 24
+	proratedAmount := amount * (days / 365)
+	if proratedAmount <= 0 {
+		return 0
+	}
+	return proratedAmount
+}
+
+func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, tenant string, contractId string, invoiceEntity neo4jentity.InvoiceEntity, amount float64, vat float64, subtotal float64, totalAmount float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	var contractEntity *neo4jentity.ContractEntity
 	var tenantSettingsEntity *neo4jentity.TenantSettingsEntity
 	var tenantBillingProfileEntity *neo4jentity.TenantBillingProfileEntity
@@ -259,55 +444,6 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 		return err
 	}
 	return nil
-}
-
-func (h *InvoiceEventHandler) fillOffCycleInvoice(ctx context.Context, tenant, contractId string, invoiceEntity neo4jentity.InvoiceEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.fillOffCycleInvoice")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
-	span.LogFields(log.String("contractId", contractId))
-
-	// TODO implement it
-
-	return nil
-}
-
-func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
-	sliAmount := float64(quantity) * price
-	if sliAmount == 0 {
-		return sliAmount
-	}
-	switch cycle {
-	case neo4jenum.BillingCycleMonthlyBilling:
-		switch billed {
-		case neo4jenum.BilledTypeMonthly:
-			return sliAmount
-		case neo4jenum.BilledTypeQuarterly:
-			return sliAmount / 3
-		case neo4jenum.BilledTypeAnnually:
-			return sliAmount / 12
-		}
-	case neo4jenum.BillingCycleQuarterlyBilling:
-		switch billed {
-		case neo4jenum.BilledTypeMonthly:
-			return sliAmount * 3
-		case neo4jenum.BilledTypeQuarterly:
-			return sliAmount
-		case neo4jenum.BilledTypeAnnually:
-			return sliAmount / 4
-		}
-	case neo4jenum.BillingCycleAnnuallyBilling:
-		switch billed {
-		case neo4jenum.BilledTypeMonthly:
-			return sliAmount * 12
-		case neo4jenum.BilledTypeQuarterly:
-			return sliAmount * 4
-		case neo4jenum.BilledTypeAnnually:
-			return sliAmount
-		}
-	}
-	return float64(0)
 }
 
 func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, domesticPaymentsBankInfo, internationalPaymentsBankInfo,
