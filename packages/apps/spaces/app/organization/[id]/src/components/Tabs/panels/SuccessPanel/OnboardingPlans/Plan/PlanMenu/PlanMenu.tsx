@@ -57,7 +57,12 @@ export const PlanMenu = ({
         <MenuItem icon={<Archive color='gray.500' />} onClick={onRemovePlan}>
           Archive
         </MenuItem>
-        <MenuDivider />
+        <MenuDivider
+          mx='2'
+          borderBottom='unset'
+          borderTop='1px dashed'
+          borderColor='gray.300'
+        />
         <MenuItem
           icon={<Map01 color='gray.500' />}
           onClick={handleEditMasterPlan}

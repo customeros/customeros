@@ -18,10 +18,9 @@ import { StatusCheckbox } from '../StatusCheckbox';
 interface TaskProps {
   index: number;
   formId: string;
-  defaultValue: TaskDatum;
 }
 
-export const Task = memo(({ index, formId, defaultValue }: TaskProps) => {
+export const Task = memo(({ index, formId }: TaskProps) => {
   const [showSkip, setShowSkip] = useState(false);
   const { getInputProps } = useField('items', formId);
   const { value, onChange } = getInputProps();
@@ -70,7 +69,7 @@ export const Task = memo(({ index, formId, defaultValue }: TaskProps) => {
       const isChecked = e.target.checked;
 
       const updatedItem = produce<TaskDatum>(itemValue, (draft) => {
-        const isLate = taskUpdatedAt > milestoneDueAt;
+        const isLate = new Date().valueOf() > milestoneDueAt;
 
         if (isChecked) {
           draft.status = isLate

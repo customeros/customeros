@@ -9,16 +9,13 @@ import { pulseOpacity } from '@ui/utils/keyframes';
 import { Collapse } from '@ui/transitions/Collapse';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
-import {
-  OnboardingPlanStatus,
-  OnboardingPlanMilestoneStatus,
-} from '@shared/types/__generated__/graphql.types';
 
 import { PlanMenu } from './PlanMenu';
 import { PlanDueDate } from './PlanDueDate';
 import { MilestoneList } from './MilestoneList';
 import { AddMilestoneModal } from './AddMilestoneModal';
 import { ProgressCompletion } from './ProgressCompletion';
+import { checkPlanDone, checkMilestoneDue } from './utils';
 import { usePlanMutations } from '../../hooks/usePlanMutations';
 import { PlanDatum, MilestoneDatum, NewMilestoneInput } from '../types';
 import { useMilestoneMutations } from '../../hooks/useMilestoneMutations';
@@ -29,7 +26,7 @@ interface PlanProps {
   onToggle?: (planId: string) => void;
 }
 
-export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
+export const Plan = ({ plan, isOpen: _isOpen, onToggle }: PlanProps) => {
   const organizationId = useParams()?.id as string;
   const [isHovered, setIsHovered] = useState(false);
   const planMenu = useDisclosure({ id: `${plan.id}-menu` });
@@ -111,20 +108,9 @@ export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
     });
   };
 
-  const nextDueMilestone = plan.milestones.find(
-    (m) =>
-      [
-        OnboardingPlanMilestoneStatus.Started,
-        OnboardingPlanMilestoneStatus.StartedLate,
-        OnboardingPlanMilestoneStatus.NotStarted,
-        OnboardingPlanMilestoneStatus.NotStartedLate,
-      ].includes(m.statusDetails?.status) && m.retired === false,
-  );
-
-  const isPlanDone = [
-    OnboardingPlanStatus.Done,
-    OnboardingPlanStatus.DoneLate,
-  ].includes(plan.statusDetails.status);
+  const isPlanDone = checkPlanDone(plan);
+  const nextDueMilestone = plan.milestones.find(checkMilestoneDue);
+  const isOpen = (hasOneMilestone && !isPlanDone) || _isOpen;
 
   return (
     <Flex
@@ -144,13 +130,7 @@ export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
         isTemporary ? `${pulseOpacity} 0.7s alternate ease-in-out` : undefined
       }
     >
-      <Flex
-        mx='1'
-        align='center'
-        flexDir='column'
-        alignItems='flex-start'
-        // mb={isPlanDone ? '0' : '3'}
-      >
+      <Flex mx='1' align='center' flexDir='column' alignItems='flex-start'>
         <Flex align='center' justify='space-between' w='full'>
           <Text fontSize='sm' fontWeight='semibold' noOfLines={1}>
             {plan.name}
@@ -213,7 +193,7 @@ export const Plan = ({ plan, isOpen, onToggle }: PlanProps) => {
         </Flex>
       </Flex>
 
-      <Collapse in={(hasOneMilestone && !isPlanDone) || isOpen}>
+      <Collapse in={isOpen}>
         <MilestoneList
           milestones={activeMilestones}
           openMilestoneId={openMilestoneId}
