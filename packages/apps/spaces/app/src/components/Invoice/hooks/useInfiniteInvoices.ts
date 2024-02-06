@@ -17,6 +17,7 @@ import {
 interface useInfiniteInvoicesReturn {
   isFetched: boolean;
   isFetching: boolean;
+  hasNextPage: boolean;
   totalInvoicesCount: number;
   invoiceFlattenData: Invoice[];
   fetchNextPage: (
@@ -33,7 +34,7 @@ export function useInfiniteInvoices(
 ): useInfiniteInvoicesReturn {
   const client = getGraphQLClient();
 
-  const { data, isFetching, isFetched, fetchNextPage } =
+  const { data, isFetching, isFetched, fetchNextPage, hasNextPage } =
     useInfiniteGetInvoicesQuery(
       client,
       {
@@ -42,12 +43,13 @@ export function useInfiniteInvoices(
         organizationId,
       },
       {
-        enabled: true,
+        enabled: false,
         initialPageParam: 1,
         getNextPageParam: (lastPage, allPages) => {
           const content = allPages.flatMap(
             (page) => page.invoices?.content ?? [],
           );
+
           const totalElements = lastPage.invoices?.totalElements ?? 0;
 
           if (content.length >= totalElements) {
@@ -63,15 +65,15 @@ export function useInfiniteInvoices(
       },
     );
 
-  const invoiceFlattenData = useMemo(
-    () => (data?.pages?.flatMap((o) => o.invoices?.content) as Invoice[]) || [],
-    [data],
-  );
+  const invoiceFlattenData = useMemo(() => {
+    return (
+      (data?.pages?.flatMap((o) => o.invoices?.content) as Invoice[]) || []
+    );
+  }, [data]);
 
-  const totalInvoicesCount = useMemo(
-    () => data?.pages?.[0]?.invoices?.totalElements ?? 0,
-    [data?.pages?.[0]?.invoices?.totalElements],
-  );
+  const totalInvoicesCount = useMemo(() => {
+    return data?.pages?.[0]?.invoices?.totalElements ?? 0;
+  }, [data?.pages?.[0]?.invoices?.totalElements]);
 
   return {
     invoiceFlattenData,
@@ -79,5 +81,6 @@ export function useInfiniteInvoices(
     isFetching,
     isFetched,
     fetchNextPage,
+    hasNextPage,
   };
 }

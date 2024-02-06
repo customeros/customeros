@@ -33,8 +33,13 @@ export const InvoicesPanel = () => {
   const tableRef = useRef(null);
   const { handleOpenInvoice } = useTimelineEventPreviewMethodsContext();
 
-  const { invoiceFlattenData, totalInvoicesCount, isFetching, fetchNextPage } =
-    useInfiniteInvoices(id);
+  const {
+    invoiceFlattenData,
+    totalInvoicesCount,
+    isFetching,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteInvoices(id);
   if (totalInvoicesCount === 0) {
     return (
       <Flex justifyContent='center'>
@@ -72,7 +77,7 @@ export const InvoicesPanel = () => {
             enableRowSelection={false}
             fullRowSelection={true}
             onFullRowSelection={(id) => id && handleOpenInvoice(id)}
-            canFetchMore={true}
+            canFetchMore={hasNextPage}
             onFetchMore={fetchNextPage}
             tableRef={tableRef}
             isLoading={isRestoring ? false : isFetching}

@@ -22,13 +22,13 @@ export function InvoicesTable() {
   const router = useRouter();
 
   const tableRef = useRef<TableInstance<Invoice>>(null);
-
   const {
     invoiceFlattenData,
     totalInvoicesCount,
     isFetching,
     isFetched,
     fetchNextPage,
+    hasNextPage,
   } = useInfiniteInvoices();
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export function InvoicesTable() {
           onFullRowSelection={(id) => id && handleOpenInvoice(id)}
           enableRowSelection={false}
           fullRowSelection={true}
-          canFetchMore={true}
+          canFetchMore={hasNextPage}
           onFetchMore={fetchNextPage}
           isLoading={isRestoring ? false : isFetching}
           totalItems={isRestoring ? 10 : totalInvoicesCount || 0}
