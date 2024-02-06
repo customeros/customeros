@@ -1,6 +1,7 @@
 mutation UpdateContact($contactId: ID!){
     contact_Update(
         input: {
+            patch: true
             id: $contactId
             prefix: "DR"
             name: "updated name"

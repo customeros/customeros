@@ -15,10 +15,11 @@ type UpsertContactCommand struct {
 	ExternalSystem  cmnmod.ExternalSystem
 	CreatedAt       *time.Time
 	UpdatedAt       *time.Time
+	FieldsMask      []string
 }
 
 func NewUpsertContactCommand(contactId, tenant, userId string, source cmnmod.Source, externalSystem cmnmod.ExternalSystem,
-	dataFields models.ContactDataFields, createdAt, updatedAt *time.Time, create bool) *UpsertContactCommand {
+	dataFields models.ContactDataFields, createdAt, updatedAt *time.Time, create bool, fieldsMask []string) *UpsertContactCommand {
 	return &UpsertContactCommand{
 		BaseCommand:     eventstore.NewBaseCommand(contactId, tenant, userId),
 		DataFields:      dataFields,
@@ -27,6 +28,7 @@ func NewUpsertContactCommand(contactId, tenant, userId string, source cmnmod.Sou
 		CreatedAt:       createdAt,
 		UpdatedAt:       updatedAt,
 		IsCreateCommand: create,
+		FieldsMask:      fieldsMask,
 	}
 }
 

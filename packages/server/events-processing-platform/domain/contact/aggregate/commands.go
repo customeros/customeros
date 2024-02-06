@@ -80,7 +80,7 @@ func (a *ContactAggregate) updateContact(ctx context.Context, cmd *command.Upser
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
-	updateEvent, err := event.NewContactUpdateEvent(a, cmd.Source.Source, cmd.DataFields, cmd.ExternalSystem, updatedAtNotNil)
+	updateEvent, err := event.NewContactUpdateEvent(a, cmd.Source.Source, cmd.DataFields, cmd.ExternalSystem, updatedAtNotNil, cmd.FieldsMask)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactUpdateEvent")

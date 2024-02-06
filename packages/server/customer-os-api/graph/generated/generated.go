@@ -10823,34 +10823,15 @@ Updates data fields associated with an existing customer record in customerOS.
 **An ` + "`" + `update` + "`" + ` object.**
 """
 input ContactUpdateInput {
-
-    """
-    The unique ID associated with the contact in customerOS.
-    **Required.**
-    """
-    id: ID!
-
-    "The prefix associate with the contact in customerOS."
-    prefix: String
-
-    """
-    The first name of the contact in customerOS.
-    """
-    firstName: String
-    name: String
-    description: String
-    timezone: String
-    profilePhotoUrl: String
-
-    """
-    The last name of the contact in customerOS.
-    """
-    lastName: String
-
-    label: String @deprecated(reason: "Use ` + "`" + `tags` + "`" + ` instead")
-
-    "Id of the contact owner (user)"
-    ownerId: ID @deprecated(reason: "Not supported in update flow yet")
+    id:                 ID!
+    patch:              Boolean
+    firstName:          String
+    lastName:           String
+    name:               String
+    prefix:             String
+    description:        String
+    timezone:           String
+    profilePhotoUrl:    String
 }
 
 input ContactTagInput {
@@ -81734,7 +81715,7 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "prefix", "firstName", "name", "description", "timezone", "profilePhotoUrl", "lastName", "label", "ownerId"}
+	fieldsInOrder := [...]string{"id", "patch", "firstName", "lastName", "name", "prefix", "description", "timezone", "profilePhotoUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -81748,13 +81729,13 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.ID = data
-		case "prefix":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefix"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+		case "patch":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("patch"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Prefix = data
+			it.Patch = data
 		case "firstName":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -81762,6 +81743,13 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.FirstName = data
+		case "lastName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastName = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -81769,6 +81757,13 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.Name = data
+		case "prefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Prefix = data
 		case "description":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -81790,27 +81785,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.ProfilePhotoURL = data
-		case "lastName":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.LastName = data
-		case "label":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Label = data
-		case "ownerId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerId"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.OwnerID = data
 		}
 	}
 

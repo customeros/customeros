@@ -324,11 +324,9 @@ func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.Contac
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", input.ID))
+	tracing.LogObjectAsJson(span, "request", input)
 
-	contactId, err := r.Services.ContactService.Update(ctx, &service.ContactUpdateData{
-		ContactEntity: mapper.MapContactUpdateInputToEntity(input),
-	})
+	contactId, err := r.Services.ContactService.Update(ctx, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update contact %s", input.ID)

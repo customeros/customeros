@@ -368,6 +368,7 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 			require.Equal(t, string(neo4jentity.DataSourceOpenline), contact.SourceFields.Source)
 			require.Equal(t, tenantName, contact.Tenant)
 			require.Equal(t, testUserId, contact.LoggedInUserId)
+			require.Equal(t, 7, len(contact.FieldsMask))
 			return &contactgrpc.ContactIdGrpcResponse{
 				Id: contactId,
 			}, nil

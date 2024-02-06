@@ -18,6 +18,16 @@ const (
 	ContactOrganizationLinkV1 = "V1_CONTACT_ORGANIZATION_LINK"
 )
 
+const (
+	FieldMaskFirstName       = "firstName"
+	FieldMaskLastName        = "lastName"
+	FieldMaskName            = "name"
+	FieldMaskPrefix          = "prefix"
+	FieldMaskDescription     = "description"
+	FieldMaskTimezone        = "timezone"
+	FieldMaskProfilePhotoUrl = "profilePhotoUrl"
+)
+
 type ContactCreateEvent struct {
 	Tenant          string                `json:"tenant" validate:"required"`
 	FirstName       string                `json:"firstName"`
@@ -63,48 +73,6 @@ func NewContactCreateEvent(aggregate eventstore.Aggregate, dataFields models.Con
 	event := eventstore.NewBaseEvent(aggregate, ContactCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactCreateEvent")
-	}
-	return event, nil
-}
-
-type ContactUpdateEvent struct {
-	Tenant          string                `json:"tenant" validate:"required"`
-	Source          string                `json:"source"`
-	UpdatedAt       time.Time             `json:"updatedAt"`
-	FirstName       string                `json:"firstName"`
-	LastName        string                `json:"lastName"`
-	Name            string                `json:"name"`
-	Prefix          string                `json:"prefix"`
-	Description     string                `json:"description"`
-	Timezone        string                `json:"timezone"`
-	ProfilePhotoUrl string                `json:"profilePhotoUrl"`
-	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
-}
-
-func NewContactUpdateEvent(aggregate eventstore.Aggregate, source string, dataFields models.ContactDataFields, externalSystem cmnmod.ExternalSystem, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := ContactUpdateEvent{
-		Tenant:          aggregate.GetTenant(),
-		FirstName:       dataFields.FirstName,
-		LastName:        dataFields.LastName,
-		Prefix:          dataFields.Prefix,
-		Description:     dataFields.Description,
-		Timezone:        dataFields.Timezone,
-		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
-		Name:            dataFields.Name,
-		UpdatedAt:       updatedAt,
-		Source:          source,
-	}
-	if externalSystem.Available() {
-		eventData.ExternalSystem = externalSystem
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContactUpdateEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, ContactUpdateV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactUpdateEvent")
 	}
 	return event, nil
 }
