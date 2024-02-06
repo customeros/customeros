@@ -370,22 +370,15 @@ type ContactTagInput struct {
 // Updates data fields associated with an existing customer record in customerOS.
 // **An `update` object.**
 type ContactUpdateInput struct {
-	// The unique ID associated with the contact in customerOS.
-	// **Required.**
-	ID string `json:"id"`
-	// The prefix associate with the contact in customerOS.
-	Prefix *string `json:"prefix,omitempty"`
-	// The first name of the contact in customerOS.
+	ID              string  `json:"id"`
+	Patch           *bool   `json:"patch,omitempty"`
 	FirstName       *string `json:"firstName,omitempty"`
+	LastName        *string `json:"lastName,omitempty"`
 	Name            *string `json:"name,omitempty"`
+	Prefix          *string `json:"prefix,omitempty"`
 	Description     *string `json:"description,omitempty"`
 	Timezone        *string `json:"timezone,omitempty"`
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
-	// The last name of the contact in customerOS.
-	LastName *string `json:"lastName,omitempty"`
-	Label    *string `json:"label,omitempty"`
-	// Id of the contact owner (user)
-	OwnerID *string `json:"ownerId,omitempty"`
 }
 
 // Specifies how many pages of contact information has been returned in the query response.

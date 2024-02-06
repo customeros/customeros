@@ -108,15 +108,22 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.ContactUpdateFields{
-		FirstName:       eventData.FirstName,
-		LastName:        eventData.LastName,
-		Prefix:          eventData.Prefix,
-		Description:     eventData.Description,
-		Timezone:        eventData.Timezone,
-		ProfilePhotoUrl: eventData.ProfilePhotoUrl,
-		Name:            eventData.Name,
-		UpdatedAt:       eventData.UpdatedAt,
-		Source:          eventData.Source,
+		FirstName:             eventData.FirstName,
+		LastName:              eventData.LastName,
+		Prefix:                eventData.Prefix,
+		Description:           eventData.Description,
+		Timezone:              eventData.Timezone,
+		ProfilePhotoUrl:       eventData.ProfilePhotoUrl,
+		Name:                  eventData.Name,
+		UpdatedAt:             eventData.UpdatedAt,
+		Source:                eventData.Source,
+		UpdateFirstName:       eventData.UpdateFirstName(),
+		UpdateLastName:        eventData.UpdateLastName(),
+		UpdateName:            eventData.UpdateName(),
+		UpdatePrefix:          eventData.UpdatePrefix(),
+		UpdateDescription:     eventData.UpdateDescription(),
+		UpdateTimezone:        eventData.UpdateTimezone(),
+		UpdateProfilePhotoUrl: eventData.UpdateProfilePhotoUrl(),
 	}
 	err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateContact(ctx, eventData.Tenant, contactId, data)
 	if err != nil {

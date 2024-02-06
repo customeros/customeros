@@ -41,21 +41,6 @@ func MapCustomerContactInputToEntity(input model.CustomerContactInput) *entity.C
 	return &contactEntity
 }
 
-func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.ContactEntity {
-	contactEntity := entity.ContactEntity{
-		Id:              input.ID,
-		Name:            utils.IfNotNilString(input.Name),
-		FirstName:       utils.IfNotNilString(input.FirstName),
-		LastName:        utils.IfNotNilString(input.LastName),
-		Prefix:          utils.IfNotNilString(input.Prefix),
-		Description:     utils.IfNotNilString(input.Description),
-		Timezone:        utils.IfNotNilString(input.Timezone),
-		ProfilePhotoUrl: utils.IfNotNilString(input.ProfilePhotoURL),
-		SourceOfTruth:   neo4jentity.DataSourceOpenline,
-	}
-	return &contactEntity
-}
-
 func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 	return &model.Contact{
 		ID:              contact.Id,

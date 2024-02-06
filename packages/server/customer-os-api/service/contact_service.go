@@ -28,7 +28,7 @@ import (
 
 type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (string, error)
-	Update(ctx context.Context, contactUpdateData *ContactUpdateData) (string, error)
+	Update(ctx context.Context, input model.ContactUpdateInput) (string, error)
 	GetById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	GetFirstContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
 	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.ContactEntity, error)
@@ -63,10 +63,6 @@ type ContactCreateData struct {
 type CustomerContactCreateData struct {
 	ContactEntity *entity.ContactEntity
 	EmailEntity   *entity.EmailEntity
-}
-
-type ContactUpdateData struct {
-	ContactEntity *entity.ContactEntity
 }
 
 type contactService struct {
@@ -216,49 +212,72 @@ func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId,
 	}
 }
 
-func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactUpdateData) (string, error) {
+func (s *contactService) Update(ctx context.Context, input model.ContactUpdateInput) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("contactUpdateData", contactUpdateData))
+	tracing.LogObjectAsJson(span, "input", input)
 
-	if contactUpdateData.ContactEntity == nil {
-		err := fmt.Errorf("(ContactService.Update) contact entity is nil")
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return "", err
-	} else if contactUpdateData.ContactEntity.Id == "" {
+	if input.ID == "" {
 		err := fmt.Errorf("(ContactService.Update) contact id is missing")
 		s.log.Error(err.Error())
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	currentContactEntity, err := s.GetById(ctx, contactUpdateData.ContactEntity.Id)
+	currentContactEntity, err := s.GetById(ctx, input.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Error(err)
 		return "", err
 	}
 
-	contactDetails := *contactUpdateData.ContactEntity
-
 	upsertContactRequest := contactpb.UpsertContactGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(neo4jentity.DataSourceOpenline),
-			AppSource: utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi),
+			AppSource: constants.AppSourceCustomerOsApi,
 		},
 		LoggedInUserId:  common.GetUserIdFromContext(ctx),
-		Id:              contactDetails.Id,
-		Prefix:          contactDetails.Prefix,
-		Name:            contactDetails.Name,
-		FirstName:       contactDetails.FirstName,
-		LastName:        contactDetails.LastName,
-		Description:     contactDetails.Description,
-		Timezone:        contactDetails.Timezone,
-		ProfilePhotoUrl: utils.StringFirstNonEmpty(contactDetails.ProfilePhotoUrl, currentContactEntity.ProfilePhotoUrl),
+		Id:              input.ID,
+		Prefix:          utils.IfNotNilString(input.Prefix),
+		Name:            utils.IfNotNilString(input.Name),
+		FirstName:       utils.IfNotNilString(input.FirstName),
+		LastName:        utils.IfNotNilString(input.LastName),
+		Description:     utils.IfNotNilString(input.Description),
+		Timezone:        utils.IfNotNilString(input.Timezone),
+		ProfilePhotoUrl: utils.StringFirstNonEmpty(utils.IfNotNilString(input.ProfilePhotoURL), currentContactEntity.ProfilePhotoUrl),
 	}
+	if input.Patch != nil && *input.Patch {
+		var fieldsMask []contactpb.ContactFieldMask
+		if input.FirstName != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_FIRST_NAME)
+		}
+		if input.LastName != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_LAST_NAME)
+		}
+		if input.Prefix != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_PREFIX)
+		}
+		if input.Name != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_NAME)
+		}
+		if input.Description != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_DESCRIPTION)
+		}
+		if input.Timezone != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_TIMEZONE)
+		}
+		if input.ProfilePhotoURL != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_PROFILE_PHOTO_URL)
+		}
+		if len(fieldsMask) == 0 {
+			span.LogFields(log.String("result", "No fields to update"))
+			return input.ID, nil
+		}
+		upsertContactRequest.FieldsMask = fieldsMask
+	}
+
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
 	if err != nil {
