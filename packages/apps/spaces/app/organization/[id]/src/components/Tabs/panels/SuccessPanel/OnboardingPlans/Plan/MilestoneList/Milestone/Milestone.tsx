@@ -7,7 +7,6 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { useOutsideClick } from '@ui/utils';
 import { IconButton } from '@ui/form/IconButton';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { pulseOpacity } from '@ui/utils/keyframes';
 import { Collapse } from '@ui/transitions/Collapse';
 import { Card, CardBody } from '@ui/presentation/Card';
@@ -20,27 +19,17 @@ import {
 } from '@graphql/types';
 
 import { Tasks } from './Tasks';
+import { MilestoneForm } from './types';
 import { MilestoneMenu } from './MilestoneMenu';
 import { MilestoneName } from './MilestoneName';
 import { MilestoneDatum } from '../../../types';
 import { StatusCheckbox } from './StatusCheckbox';
 import { MilestoneDueDate } from './MilestoneDueDate';
-
-type MilestoneForm = {
-  id: string;
-  name: string;
-  dueDate: string;
-  items: {
-    text: string;
-    updatedAt: string;
-    status: OnboardingPlanMilestoneItemStatus;
-  }[];
-  statusDetails: {
-    text: string;
-    updatedAt: string;
-    status: OnboardingPlanMilestoneStatus;
-  };
-};
+import {
+  checkMilestoneDone,
+  checkMilestoneLate,
+  computeMilestoneStatus,
+} from './utils';
 
 interface MilestoneProps {
   isLast?: boolean;
@@ -190,7 +179,7 @@ export const Milestone = ({
           : 'unset'
       }
     >
-      <CardBody pl='3' pb='4'>
+      <CardBody pb='4' py='3'>
         <Flex flexDir='column' justify='flex-start'>
           <Flex align='center'>
             <Flex>
@@ -237,10 +226,15 @@ export const Milestone = ({
             />
           </Flex>
 
-          <Flex align='center' justify='space-between' pl='6' mb='2'>
+          <Flex
+            pl='6'
+            align='center'
+            justify='space-between'
+            mb={isOpen ? '2' : '0'}
+          >
             <MilestoneDueDate isDone={isChecked} value={state.values.dueDate} />
             {!!milestone?.items?.length && (
-              <Flex align='center' gap='6px' mr='0.5' {...hoveredProps}>
+              <Flex align='center' gap='6px' mr='0.5'>
                 <CheckSquareBroken color='gray.400' />
                 <Text fontSize='sm' color='gray.500'>
                   {`${doneTakskCount}/${milestone?.items?.length ?? 0}`}
@@ -333,82 +327,4 @@ const mapFormToMilestone = (
     dueDate: formValues?.dueDate,
     statusDetails: formValues?.statusDetails,
   };
-};
-
-/// Status Logic
-const checkTaskDone = (status: OnboardingPlanMilestoneItemStatus) => {
-  return [
-    OnboardingPlanMilestoneItemStatus.Done,
-    OnboardingPlanMilestoneItemStatus.DoneLate,
-    OnboardingPlanMilestoneItemStatus.Skipped,
-    OnboardingPlanMilestoneItemStatus.SkippedLate,
-  ].includes(status);
-};
-
-const checkTaskLate = (status: OnboardingPlanMilestoneItemStatus) => {
-  return [
-    OnboardingPlanMilestoneItemStatus.DoneLate,
-    OnboardingPlanMilestoneItemStatus.NotDoneLate,
-    OnboardingPlanMilestoneItemStatus.SkippedLate,
-  ].includes(status);
-};
-
-const checkMilestoneDone = (milestone: MilestoneForm) => {
-  if (
-    [
-      OnboardingPlanMilestoneStatus.Done,
-      OnboardingPlanMilestoneStatus.DoneLate,
-    ].includes(milestone?.statusDetails?.status)
-  )
-    return true;
-
-  if (!milestone?.items?.length) return false;
-
-  return milestone?.items?.every((item) => checkTaskDone(item?.status));
-};
-
-const checkMilestoneLate = (milestone: MilestoneForm) => {
-  const isPastDueDate = (() => {
-    if (!milestone?.dueDate) return false;
-    if (DateTimeUtils.isToday(milestone?.dueDate)) return false;
-
-    return DateTimeUtils.isBeforeNow(milestone?.dueDate);
-  })();
-
-  if (
-    [
-      OnboardingPlanMilestoneStatus.DoneLate,
-      OnboardingPlanMilestoneStatus.StartedLate,
-      OnboardingPlanMilestoneStatus.NotStartedLate,
-    ].includes(milestone?.statusDetails?.status)
-  )
-    return true;
-
-  if (!milestone?.items?.length) return isPastDueDate;
-
-  return milestone?.items?.some((item) => checkTaskLate(item?.status));
-};
-
-const computeMilestoneStatus = (milestone: MilestoneForm) => {
-  const isPastDueDate = new Date(milestone?.dueDate) < new Date();
-  const allTasksDone = milestone?.items?.every((i) => checkTaskDone(i.status));
-  const someTasksDone = milestone?.items?.some((i) => checkTaskDone(i.status));
-
-  if (allTasksDone) {
-    return isPastDueDate
-      ? OnboardingPlanMilestoneStatus.DoneLate
-      : OnboardingPlanMilestoneStatus.Done;
-  }
-  if (!allTasksDone && someTasksDone) {
-    return isPastDueDate
-      ? OnboardingPlanMilestoneStatus.StartedLate
-      : OnboardingPlanMilestoneStatus.Started;
-  }
-  if (!allTasksDone && !someTasksDone) {
-    return isPastDueDate
-      ? OnboardingPlanMilestoneStatus.NotStartedLate
-      : OnboardingPlanMilestoneStatus.NotStarted;
-  }
-
-  return milestone?.statusDetails?.status;
 };
