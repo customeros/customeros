@@ -17,7 +17,11 @@ type Config struct {
 	Jaeger           tracing.JaegerConfig
 	Cron             cronconf.Config
 	EventsProcessing EventsProcessingConfig
-	ProcessConfig    ProcessConfig
+	PlatformAdminApi struct {
+		Url    string `env:"PLATFORM_ADMIN_API_URL"`
+		ApiKey string `env:"PLATFORM_ADMIN_API_KEY"`
+	}
+	ProcessConfig ProcessConfig
 }
 
 type EventsProcessingConfig struct {

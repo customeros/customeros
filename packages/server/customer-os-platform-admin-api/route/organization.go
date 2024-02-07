@@ -19,7 +19,7 @@ func AddOrganizationRoutes(ctx context.Context, route *gin.Engine, services *ser
 	route.POST("/organization/refreshLastTouchpoint",
 		handler.TracingEnhancer(ctx, "/organization/refreshLastTouchpoint"),
 		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.PLATFORM_ADMIN_API, commonservice.WithCache(cache)),
-		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, services.CommonServices.CommonRepositories, commonservice.WithCache(cache)),
+		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, services.CommonServices.CommonRepositories, commonservice.WithCache(cache)),
 		refreshLastTouchpointHandler(services, log))
 }
 
@@ -28,7 +28,10 @@ func refreshLastTouchpointHandler(services *service.Services, log logger.Logger)
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RefreshLastTouchpoint", c.Request.Header)
 		defer span.Finish()
 
-		userId := c.Keys[commonservice.KEY_USER_ID].(string)
+		userId := ""
+		if user, ok := c.Get(commonservice.KEY_USER_ID); ok {
+			userId = user.(string)
+		}
 
 		tenants, err := services.Repositories.TenantRepository.GetTenants(ctx)
 		if err != nil {
