@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 
 import { useIsRestoring } from '@tanstack/react-query';
