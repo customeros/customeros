@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"context"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -14,6 +15,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"time"
 )
 
 const (
@@ -84,6 +86,8 @@ func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any, param
 		return nil, a.CreatePayInvoiceNotificationEvent(ctx, r)
 	case *invoicepb.RequestFillInvoiceRequest:
 		return nil, a.CreateFillRequestedEvent(ctx, r)
+	case *invoicepb.PermanentlyDeleteDraftInvoiceRequest:
+		return nil, a.PermanentlyDeleteDraftInvoice(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -190,7 +194,7 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 		request.DomesticPaymentsBankInfo, request.InternationalPaymentsBankInfo,
 		request.Customer.Name, request.Customer.AddressLine1, request.Customer.AddressLine2, request.Customer.Zip, request.Customer.Locality, request.Customer.Country, request.Customer.Email,
 		request.Provider.LogoUrl, request.Provider.Name, request.Provider.Email, request.Provider.AddressLine1, request.Provider.AddressLine2, request.Provider.Zip, request.Provider.Locality, request.Provider.Country,
-		request.Note, invoiceStatus, invoiceNumberForEvent, request.Amount, request.Vat, request.Subtotal, request.Total, invoiceLines)
+		request.Note, invoiceStatus, invoiceNumberForEvent, request.Amount, request.Vat, request.Total, invoiceLines)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceFillEvent")
@@ -340,6 +344,47 @@ func (a *InvoiceAggregate) PayInvoice(ctx context.Context, request *invoicepb.Pa
 	return a.Apply(payEvent)
 }
 
+func (a *InvoiceAggregate) PermanentlyDeleteDraftInvoice(ctx context.Context, request *invoicepb.PermanentlyDeleteDraftInvoiceRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.PermanentlyDeleteDraftInvoice")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	if a.Invoice == nil {
+		err := errors.New("invoice is nil")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if a.Invoice.Status != neo4jenum.InvoiceStatusDraft.String() {
+		err := errors.New("invoice status is not draft")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if len(a.Invoice.InvoiceLines) > 0 {
+		err := errors.New("invoice has invoice lines")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	deleteEvent, err := NewInvoiceDeleteEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoicePayEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&deleteEvent, span, aggregate.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	streamMetadata := esdb.StreamMetadata{}
+	streamMetadata.SetMaxAge(time.Duration(constants.StreamMetadataMaxAgeSecondsExtended) * time.Second)
+	a.SetStreamMetadata(&streamMetadata)
+
+	return a.Apply(deleteEvent)
+}
+
 func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case InvoiceCreateForContractV1:
@@ -354,7 +399,8 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		InvoicePdfRequestedV1,
 		InvoiceFillRequestedV1,
 		InvoicePaidV1,
-		InvoicePayNotificationV1:
+		InvoicePayNotificationV1,
+		InvoiceDeleteV1:
 		return nil
 	default:
 		err := eventstore.ErrInvalidEventType
@@ -382,6 +428,7 @@ func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
 	a.Invoice.PeriodEndDate = eventData.PeriodEndDate
 	a.Invoice.BillingCycle = eventData.BillingCycle
 	a.Invoice.Note = eventData.Note
+	a.Invoice.Status = neo4jenum.InvoiceStatusDraft.String()
 
 	return nil
 }

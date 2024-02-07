@@ -118,7 +118,6 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		ProviderAddressCountry:        eventData.Provider.Country,
 		Amount:                        eventData.Amount,
 		VAT:                           eventData.VAT,
-		SubtotalAmount:                eventData.SubtotalAmount,
 		TotalAmount:                   eventData.TotalAmount,
 		Status:                        neo4jenum.DecodeInvoiceStatus(eventData.Status),
 	}
@@ -247,4 +246,27 @@ func (s *InvoiceEventHandler) callRequestFillInvoiceGRPC(ctx context.Context, te
 		return err
 	}
 	return nil
+}
+
+func (h *InvoiceEventHandler) OnInvoiceDeleteV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.OnInvoiceDeleteV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData invoice.InvoiceDeleteEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteInvoice(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while deleting invoice {%s}: {%s}", invoiceId, err.Error())
+		return err
+	}
+	return err
 }

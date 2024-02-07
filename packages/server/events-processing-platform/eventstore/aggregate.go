@@ -2,6 +2,7 @@ package eventstore
 
 import (
 	"fmt"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 )
 
 const (
@@ -63,6 +64,8 @@ type AggregateRoot interface {
 	String() string
 	IsWithAppliedEvents() bool
 	IsTemporal() bool
+	SetStreamMetadata(streamMetadata *esdb.StreamMetadata)
+	GetStreamMetadata() *esdb.StreamMetadata
 	Load
 	Apply
 }
@@ -80,6 +83,7 @@ type AggregateBase struct {
 	Type              AggregateType
 	withAppliedEvents bool
 	when              when
+	streamMetadata    *esdb.StreamMetadata
 }
 
 // NewAggregateBase AggregateBase constructor, contains all main fields and methods,
@@ -175,6 +179,14 @@ func (a *AggregateBase) WithAppliedEvents() {
 
 func (a *AggregateBase) IsWithAppliedEvents() bool {
 	return a.withAppliedEvents
+}
+
+func (a *AggregateBase) GetStreamMetadata() *esdb.StreamMetadata {
+	return a.streamMetadata
+}
+
+func (a *AggregateBase) SetStreamMetadata(streamMetadata *esdb.StreamMetadata) {
+	a.streamMetadata = streamMetadata
 }
 
 // Load add existing events from event store to aggregate using When interface method

@@ -30,7 +30,6 @@ type Invoice implements SourceFields & Node {
     dueDate:            Time!
     amount:             Float!
     vat:                Float!
-    subtotalAmount:     Float!
     totalAmount:        Float!
     currency:           String!
     repositoryFileId:   String!

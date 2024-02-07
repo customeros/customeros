@@ -157,46 +157,52 @@ func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) erro
 				as.log.Errorf("(Save) esdbClient.SetStreamMetadata: {%s}", err.Error())
 			}
 		}
-
-		return nil
-	}
-
-	readOps := esdb.ReadStreamOptions{Direction: esdb.Backwards, From: esdb.End{}}
-	stream, err := as.esdbClient.ReadStream(context.Background(), aggregate.GetID(), readOps, 1)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		as.log.Errorf("(Save) esdbClient.ReadStream: {%+v}", err)
-		return errors.Wrap(err, "esdbClient.ReadStream")
-	}
-	defer stream.Close()
-
-	lastEvent, err := stream.Recv()
-	if err != nil {
-		tracing.TraceErr(span, err)
-		as.log.Errorf("(Save) stream.Recv: {%+v}", err)
-		return errors.Wrap(err, "stream.Recv")
-	}
-
-	expectedRevision = esdb.Revision(lastEvent.OriginalEvent().EventNumber)
-	span.LogFields(log.Object("expectedRevision", expectedRevision))
-	as.log.Debugf("(Save) expectedRevision: {%T}", expectedRevision)
-
-	appendStream, err := as.esdbClient.AppendToStream(
-		ctx,
-		aggregate.GetID(),
-		esdb.AppendToStreamOptions{ExpectedRevision: expectedRevision},
-		eventsData...,
-	)
-	if err != nil {
-		// skip tracing error if wrong expected version, retry will be done
-		if !es.IsEventStoreErrorCodeWrongExpectedVersion(err) {
+	} else {
+		readOps := esdb.ReadStreamOptions{Direction: esdb.Backwards, From: esdb.End{}}
+		stream, err := as.esdbClient.ReadStream(context.Background(), aggregate.GetID(), readOps, 1)
+		if err != nil {
 			tracing.TraceErr(span, err)
+			as.log.Errorf("(Save) esdbClient.ReadStream: {%+v}", err)
+			return errors.Wrap(err, "esdbClient.ReadStream")
 		}
-		as.log.Errorf("(Save) esdbClient.AppendToStream: {%+v}", err)
-		return err
-	}
+		defer stream.Close()
 
-	as.log.Debugf("(Save) stream: {%+v}", appendStream)
+		lastEvent, err := stream.Recv()
+		if err != nil {
+			tracing.TraceErr(span, err)
+			as.log.Errorf("(Save) stream.Recv: {%+v}", err)
+			return errors.Wrap(err, "stream.Recv")
+		}
+
+		expectedRevision = esdb.Revision(lastEvent.OriginalEvent().EventNumber)
+		span.LogFields(log.Object("expectedRevision", expectedRevision))
+		as.log.Debugf("(Save) expectedRevision: {%T}", expectedRevision)
+
+		appendStream, err := as.esdbClient.AppendToStream(
+			ctx,
+			aggregate.GetID(),
+			esdb.AppendToStreamOptions{ExpectedRevision: expectedRevision},
+			eventsData...,
+		)
+		if err != nil {
+			// skip tracing error if wrong expected version, retry will be done
+			if !es.IsEventStoreErrorCodeWrongExpectedVersion(err) {
+				tracing.TraceErr(span, err)
+			}
+			as.log.Errorf("(Save) esdbClient.AppendToStream: {%+v}", err)
+			return err
+		}
+		as.log.Debugf("(Save) stream: {%+v}", appendStream)
+	}
+	if aggregate.GetStreamMetadata() != nil {
+		_, err := as.esdbClient.SetStreamMetadata(ctx, aggregate.GetID(), esdb.AppendToStreamOptions{}, *aggregate.GetStreamMetadata())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			as.log.Errorf("(Save) esdbClient.SetStreamMetadata: {%+v}", err)
+			return errors.Wrap(err, "esdbClient.SetStreamMetadata")
+		}
+
+	}
 	aggregate.ClearUncommittedEvents()
 	return nil
 }

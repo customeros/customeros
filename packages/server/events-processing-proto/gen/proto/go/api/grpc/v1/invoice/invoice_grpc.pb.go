@@ -31,6 +31,7 @@ type InvoiceGrpcServiceClient interface {
 	UpdateInvoice(ctx context.Context, in *UpdateInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PayInvoiceNotification(ctx context.Context, in *PayInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	RequestFillInvoice(ctx context.Context, in *RequestFillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
+	PermanentlyDeleteDraftInvoice(ctx context.Context, in *PermanentlyDeleteDraftInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 }
 
 type invoiceGrpcServiceClient struct {
@@ -122,6 +123,15 @@ func (c *invoiceGrpcServiceClient) RequestFillInvoice(ctx context.Context, in *R
 	return out, nil
 }
 
+func (c *invoiceGrpcServiceClient) PermanentlyDeleteDraftInvoice(ctx context.Context, in *PermanentlyDeleteDraftInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
+	out := new(InvoiceIdResponse)
+	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/PermanentlyDeleteDraftInvoice", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InvoiceGrpcServiceServer is the server API for InvoiceGrpcService service.
 // All implementations should embed UnimplementedInvoiceGrpcServiceServer
 // for forward compatibility
@@ -135,6 +145,7 @@ type InvoiceGrpcServiceServer interface {
 	UpdateInvoice(context.Context, *UpdateInvoiceRequest) (*InvoiceIdResponse, error)
 	PayInvoiceNotification(context.Context, *PayInvoiceNotificationRequest) (*InvoiceIdResponse, error)
 	RequestFillInvoice(context.Context, *RequestFillInvoiceRequest) (*InvoiceIdResponse, error)
+	PermanentlyDeleteDraftInvoice(context.Context, *PermanentlyDeleteDraftInvoiceRequest) (*InvoiceIdResponse, error)
 }
 
 // UnimplementedInvoiceGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -167,6 +178,9 @@ func (UnimplementedInvoiceGrpcServiceServer) PayInvoiceNotification(context.Cont
 }
 func (UnimplementedInvoiceGrpcServiceServer) RequestFillInvoice(context.Context, *RequestFillInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestFillInvoice not implemented")
+}
+func (UnimplementedInvoiceGrpcServiceServer) PermanentlyDeleteDraftInvoice(context.Context, *PermanentlyDeleteDraftInvoiceRequest) (*InvoiceIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PermanentlyDeleteDraftInvoice not implemented")
 }
 
 // UnsafeInvoiceGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -342,6 +356,24 @@ func _InvoiceGrpcService_RequestFillInvoice_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InvoiceGrpcService_PermanentlyDeleteDraftInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PermanentlyDeleteDraftInvoiceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvoiceGrpcServiceServer).PermanentlyDeleteDraftInvoice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/InvoiceGrpcService/PermanentlyDeleteDraftInvoice",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvoiceGrpcServiceServer).PermanentlyDeleteDraftInvoice(ctx, req.(*PermanentlyDeleteDraftInvoiceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InvoiceGrpcService_ServiceDesc is the grpc.ServiceDesc for InvoiceGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -384,6 +416,10 @@ var InvoiceGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RequestFillInvoice",
 			Handler:    _InvoiceGrpcService_RequestFillInvoice_Handler,
+		},
+		{
+			MethodName: "PermanentlyDeleteDraftInvoice",
+			Handler:    _InvoiceGrpcService_PermanentlyDeleteDraftInvoice_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

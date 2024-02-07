@@ -21,7 +21,6 @@ type InvoiceEntity struct {
 	Provider                      InvoiceProvider
 	Amount                        float64 `neo4jDb:"property:amount;lookupName:AMOUNT;supportCaseSensitive:false"`
 	Vat                           float64 `neo4jDb:"property:vat;lookupName:VAT;supportCaseSensitive:false"`
-	SubtotalAmount                float64 `neo4jDb:"property:subtotalAmount;lookupName:SUBTOTAL_AMOUNT;supportCaseSensitive:false"`
 	TotalAmount                   float64 `neo4jDb:"property:totalAmount;lookupName:TOTAL_AMOUNT;supportCaseSensitive:false"`
 	RepositoryFileId              string
 	BillingCycle                  enum.BillingCycle

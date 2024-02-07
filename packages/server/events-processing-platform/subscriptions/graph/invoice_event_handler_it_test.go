@@ -184,7 +184,6 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		"INV-001",
 		100,
 		20,
-		100,
 		120,
 		[]invoice.InvoiceLineEvent{
 			{
@@ -246,7 +245,6 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
 	require.Equal(t, float64(100), invoiceEntity.Amount)
 	require.Equal(t, float64(20), invoiceEntity.Vat)
-	require.Equal(t, float64(100), invoiceEntity.SubtotalAmount)
 	require.Equal(t, float64(120), invoiceEntity.TotalAmount)
 	require.Equal(t, "a", invoiceEntity.DomesticPaymentsBankInfo)
 	require.Equal(t, "b", invoiceEntity.InternationalPaymentsBankInfo)
@@ -416,4 +414,36 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
 	require.Equal(t, neo4jenum.InvoiceStatusPaid, invoiceEntity.Status)
 	require.Equal(t, "link-1", invoiceEntity.PaymentDetails.PaymentLink)
+}
+
+func TestInvoiceEventHandler_OnInvoiceDeleteV1(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	id := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
+
+	// Prepare the event handler
+	eventHandler := &InvoiceEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, id)
+	invoiceDeleteEvent, err := invoice.NewInvoiceDeleteEvent(
+		aggregate,
+	)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = eventHandler.OnInvoiceDeleteV1(context.Background(), invoiceDeleteEvent)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelInvoice:                    0,
+		neo4jutil.NodeLabelInvoice + "_" + tenantName: 0,
+	})
 }
