@@ -10,6 +10,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { pulseOpacity } from '@ui/utils/keyframes';
 import { Collapse } from '@ui/transitions/Collapse';
 import { Card, CardBody } from '@ui/presentation/Card';
+import { useThrottle } from '@shared/hooks/useThrottle';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { CheckSquareBroken } from '@ui/media/icons/CheckSquareBroken';
@@ -73,6 +74,9 @@ export const Milestone = ({
   );
   const formId = `${milestone.id}-plan-milestone-form`;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const torttledSync = useThrottle(onSync as any, 500, []);
+
   const { setDefaultValues, state } = useForm<MilestoneForm>({
     formId,
     defaultValues,
@@ -91,7 +95,7 @@ export const Milestone = ({
 
           const nextMilestone = mapFormToMilestone(milestone, nextValues);
           if (!isEqual(nextMilestone, milestone)) {
-            onSync?.(nextMilestone);
+            torttledSync?.(nextMilestone);
           }
 
           return {
