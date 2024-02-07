@@ -43,7 +43,6 @@ export function useInfiniteInvoices(
         organizationId,
       },
       {
-        enabled: false,
         initialPageParam: 1,
         getNextPageParam: (lastPage, allPages) => {
           const content = allPages.flatMap(
