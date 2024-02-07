@@ -1514,6 +1514,9 @@ func (this MeetingsPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
 
+type Mutation struct {
+}
+
 type Note struct {
 	ID            string        `json:"id"`
 	Content       *string       `json:"content,omitempty"`
@@ -2029,6 +2032,9 @@ type PlayerUser struct {
 	User    *User  `json:"user"`
 	Default bool   `json:"default"`
 	Tenant  string `json:"tenant"`
+}
+
+type Query struct {
 }
 
 type RenewalRecord struct {
