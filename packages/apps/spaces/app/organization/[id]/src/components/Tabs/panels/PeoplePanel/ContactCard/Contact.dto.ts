@@ -70,14 +70,17 @@ export class ContactFormDto implements ContactForm {
     return new ContactFormDto(data);
   }
 
-  static toDto(payload: ContactForm): UpdateContactMutationVariables {
+  static toDto(
+    payload: Partial<
+      Omit<ContactForm & { timezone?: string | null }, 'id' | 'role'>
+    >,
+    id: string,
+  ): UpdateContactMutationVariables {
     return {
       input: {
-        id: payload.id,
-        firstName: payload.name,
-        description: payload.note,
-        prefix: payload.title,
-        timezone: payload.timezone?.value,
+        ...payload,
+        id,
+        patch: true,
       },
     };
   }

@@ -416,20 +416,11 @@ export type ContactTagInput = {
  */
 export type ContactUpdateInput = {
   description?: InputMaybe<Scalars['String']['input']>;
-  /** The first name of the contact in customerOS. */
   firstName?: InputMaybe<Scalars['String']['input']>;
-  /**
-   * The unique ID associated with the contact in customerOS.
-   * **Required.**
-   */
   id: Scalars['ID']['input'];
-  label?: InputMaybe<Scalars['String']['input']>;
-  /** The last name of the contact in customerOS. */
   lastName?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  /** Id of the contact owner (user) */
-  ownerId?: InputMaybe<Scalars['ID']['input']>;
-  /** The prefix associate with the contact in customerOS. */
+  patch?: InputMaybe<Scalars['Boolean']['input']>;
   prefix?: InputMaybe<Scalars['String']['input']>;
   profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
@@ -1317,6 +1308,7 @@ export type Invoice = Node &
     source: DataSource;
     sourceOfTruth: DataSource;
     status?: Maybe<InvoiceStatus>;
+    subtotalAmount: Scalars['Float']['output'];
     totalAmount: Scalars['Float']['output'];
     updatedAt: Scalars['Time']['output'];
     vat: Scalars['Float']['output'];
@@ -3633,6 +3625,7 @@ export type ServiceLineItem = Node & {
   sourceOfTruth: DataSource;
   startedAt: Scalars['Time']['output'];
   updatedAt: Scalars['Time']['output'];
+  vatRate: Scalars['Float']['output'];
 };
 
 export type ServiceLineItemBulkUpdateInput = {
@@ -3649,6 +3642,7 @@ export type ServiceLineItemBulkUpdateItem = {
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;
+  vatRate?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type ServiceLineItemCloseInput = {
@@ -3666,6 +3660,7 @@ export type ServiceLineItemInput = {
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   startedAt?: InputMaybe<Scalars['Time']['input']>;
+  vatRate?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type ServiceLineItemUpdateInput = {
@@ -3678,6 +3673,7 @@ export type ServiceLineItemUpdateInput = {
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceLineItemId: Scalars['ID']['input'];
+  vatRate?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type Social = Node &

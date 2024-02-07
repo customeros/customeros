@@ -156,12 +156,24 @@ export const ContactCard = ({
     formId,
     defaultValues: data,
     stateReducer: (state, action, next) => {
+      if (
+        action.type === 'FIELD_CHANGE' &&
+        action.payload.name === 'timezone'
+      ) {
+        updateContact.mutate(
+          ContactFormDto.toDto(
+            { timezone: action.payload.value?.value },
+            data.id,
+          ),
+        );
+
+        return next;
+      }
       if (action.type === 'FIELD_BLUR') {
         switch (action.payload.name) {
           case 'name':
-          case 'timezone':
           case 'note': {
-            updateContact.mutate(ContactFormDto.toDto({ ...state.values }));
+            updateContact.mutate(ContactFormDto.toDto(action.payload, data.id));
             break;
           }
           case 'title':
