@@ -20,9 +20,14 @@ import { toastError } from '@ui/presentation/Toast';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
-import { Contract, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { useGetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
+import {
+  Contract,
+  ContractStatus,
+  ContractUpdateInput,
+  ContractRenewalCycle,
+} from '@graphql/types';
 import {
   GetContractsQuery,
   useGetContractsQuery,
@@ -156,7 +161,6 @@ export const ContractCard = ({
     organizationName,
     ...(data ?? {}),
   });
-
   const { setDefaultValues, state } = useForm<TimeToRenewalForm>({
     formId,
     defaultValues,
@@ -166,15 +170,12 @@ export const ContractCard = ({
           case 'renewalPeriods':
             return next;
           case 'name': {
-            updateContractDebounced({
-              input: {
+            updateContractDebounced(
+              ContractDTO.toPayload({
                 contractId: data.id,
-                ...ContractDTO.toPayload({
-                  ...state.values,
-                  [action.payload.name]: action.payload.value,
-                }),
-              },
-            });
+                name: action.payload.value,
+              }),
+            );
 
             return next;
           }
@@ -185,16 +186,16 @@ export const ContractCard = ({
               renewalPeriods = '2';
             }
 
-            updateContract.mutate({
-              input: {
+            updateContract.mutate(
+              ContractDTO.toPayload({
                 contractId: data.id,
-                ...ContractDTO.toPayload({
-                  ...state.values,
-                  renewalCycle: action.payload.value,
-                  renewalPeriods,
-                }),
-              },
-            });
+                renewalCycle:
+                  state.values.renewalCycle?.value === 'MULTI_YEAR'
+                    ? ContractRenewalCycle.AnnualRenewal
+                    : state.values.renewalCycle?.value,
+                renewalPeriods,
+              }),
+            );
 
             return {
               ...next,
@@ -204,19 +205,36 @@ export const ContractCard = ({
               },
             };
           }
+          case 'serviceStartedAt':
+          case 'endedAt':
+          case 'invoicingStartDate':
+            updateContract.mutate(
+              ContractDTO.toPayload({
+                contractId: data.id,
+                [action.payload.name]: action.payload.value,
+              }),
+            );
+
+            return next;
+          case 'billingCycle':
+            updateContract.mutate(
+              ContractDTO.toPayload({
+                contractId: data.id,
+                [action.payload.name]: action.payload.value?.value,
+              }),
+            );
+
+            return next;
           case 'contractUrl':
+            updateContractDebounced(
+              ContractDTO.toPayload({
+                contractId: data.id,
+                contractUrl: action.payload.value,
+              }),
+            );
+
             return next;
           default: {
-            updateContract.mutate({
-              input: {
-                contractId: data.id,
-                ...ContractDTO.toPayload({
-                  ...state.values,
-                  [action.payload.name]: action.payload.value,
-                }),
-              },
-            });
-
             return next;
           }
         }
@@ -224,15 +242,17 @@ export const ContractCard = ({
 
       if (action.type === 'FIELD_BLUR') {
         if (action.payload.name === 'renewalPeriods') {
-          updateContract.mutate({
-            input: {
+          updateContract.mutate(
+            ContractDTO.toPayload({
               contractId: data.id,
-              ...ContractDTO.toPayload({
-                ...state.values,
-                [action.payload.name]: action.payload.value,
-              }),
-            },
-          });
+              renewalPeriods:
+                state.values?.renewalCycle?.value === 'MULTI_YEAR'
+                  ? parseInt(action.payload?.value || '2')
+                  : action.payload?.value
+                  ? parseInt(action.payload?.value)
+                  : undefined,
+            }),
+          );
 
           return {
             ...next,
