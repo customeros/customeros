@@ -72,7 +72,10 @@ export class ContactFormDto implements ContactForm {
 
   static toDto(
     payload: Partial<
-      Omit<ContactForm & { timezone?: string | null }, 'id' | 'role'>
+      Omit<
+        ContactForm & { timezone?: string | null; description?: string | null },
+        'id' | 'role'
+      >
     >,
     id: string,
   ): UpdateContactMutationVariables {

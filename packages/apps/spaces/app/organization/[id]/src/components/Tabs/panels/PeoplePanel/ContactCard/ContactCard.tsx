@@ -171,9 +171,22 @@ export const ContactCard = ({
       }
       if (action.type === 'FIELD_BLUR') {
         switch (action.payload.name) {
-          case 'name':
+          case 'name': {
+            updateContact.mutate(
+              ContactFormDto.toDto(
+                { [action.payload.name]: action.payload.value },
+                data.id,
+              ),
+            );
+            break;
+          }
           case 'note': {
-            updateContact.mutate(ContactFormDto.toDto(action.payload, data.id));
+            updateContact.mutate(
+              ContactFormDto.toDto(
+                { description: action.payload.value },
+                data.id,
+              ),
+            );
             break;
           }
           case 'title':
