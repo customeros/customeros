@@ -6,9 +6,9 @@ import { Link } from '@ui/navigation/Link';
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { Input, InputProps } from '@ui/form/Input';
+import { formatSocialUrl } from '@ui/form/UrlInput/util';
 import { InputGroup, InputLeftElement } from '@ui/form/InputGroup';
 
-import { formatSocialUrl } from '../util';
 import { SocialIcon } from './SocialIcons';
 
 interface SocialInputGroupProps extends InputProps {

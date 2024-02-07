@@ -22,11 +22,3 @@ export function formatSocialUrl(value = '') {
 
   return url;
 }
-
-export type RenewalFrequency =
-  | 'WEEKLY'
-  | 'BIWEEKLY'
-  | 'MONTHLY'
-  | 'QUARTERLY'
-  | 'BIANNUALLY'
-  | 'ANNUALLY';

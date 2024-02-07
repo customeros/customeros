@@ -15,6 +15,7 @@ import { FormInput } from '@ui/form/Input';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { Organization } from '@graphql/types';
 import { FormSelect } from '@ui/form/SyncSelect';
+import { FormUrlInput } from '@ui/form/UrlInput';
 import { VStack, HStack } from '@ui/layout/Stack';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { FormNumberInputGroup } from '@ui/form/InputGroup';
@@ -26,7 +27,6 @@ import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/br
 import { OwnerInput } from '@organization/src/components/Tabs/panels/AboutPanel/owner/OwnerInput';
 import { ParentOrgInput } from '@organization/src/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
 
-import { FormUrlInput } from './FormUrlInput';
 import { FormSocialInput } from '../../shared/FormSocialInput';
 import { useAboutPanelMethods } from './hooks/useAboutPanelMethods';
 import {
