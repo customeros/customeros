@@ -41,7 +41,7 @@ message FillInvoiceRequest {
   string invoiceId = 3;
   double amount = 4;
   double vat = 5;
-  double subtotal = 6;
+  double subtotal = 6 [deprecated = true];
   double total = 7;
   repeated InvoiceLine invoiceLines = 8;
   google.protobuf.Timestamp updatedAt = 9;
@@ -155,6 +155,13 @@ message RequestFillInvoiceRequest {
   string appSource = 5;
 }
 
+message PermanentlyDeleteDraftInvoiceRequest {
+  string tenant = 1;
+  string invoiceId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
 message InvoiceIdResponse {
   string id = 1;
 }
@@ -169,4 +176,5 @@ service InvoiceGrpcService {
   rpc UpdateInvoice(UpdateInvoiceRequest) returns (InvoiceIdResponse);
   rpc PayInvoiceNotification(PayInvoiceNotificationRequest) returns (InvoiceIdResponse);
   rpc RequestFillInvoice(RequestFillInvoiceRequest) returns (InvoiceIdResponse);
+  rpc PermanentlyDeleteDraftInvoice(PermanentlyDeleteDraftInvoiceRequest) returns (InvoiceIdResponse);
 }

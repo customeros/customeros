@@ -120,7 +120,7 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 		}
 	}
 
-	amount, vat, subtotal, totalAmount := float64(0), float64(0), float64(0), float64(0)
+	amount, vat, totalAmount := float64(0), float64(0), float64(0)
 	invoiceLines := []*invoicepb.InvoiceLine{}
 
 	referenceTime := invoiceEntity.PeriodStartDate
@@ -147,7 +147,6 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 			calculatedSLIAmount = utils.TruncateFloat64(calculatedSLIAmount, 2)
 			calculatedSLIVat := utils.TruncateFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
 			amount += calculatedSLIAmount
-			subtotal += calculatedSLIAmount
 			vat += calculatedSLIVat
 			invoiceLine := invoicepb.InvoiceLine{
 				Name:                    sliEntity.Name,
@@ -182,7 +181,7 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 
 	totalAmount = amount + vat
 
-	return h.prepareAndCallFillInvoice(ctx, tenant, contractId, invoiceEntity, amount, vat, subtotal, totalAmount, invoiceLines, span)
+	return h.prepareAndCallFillInvoice(ctx, tenant, contractId, invoiceEntity, amount, vat, totalAmount, invoiceLines, span)
 }
 
 func (h *InvoiceEventHandler) fillOffCycleInvoice(ctx context.Context, tenant, contractId string, invoiceEntity neo4jentity.InvoiceEntity) error {
@@ -234,7 +233,7 @@ func (h *InvoiceEventHandler) fillOffCycleInvoice(ctx context.Context, tenant, c
 
 	span.LogFields(log.Int("result - amount of SLIs to process", len(filteredSliEntities)))
 
-	amount, vat, subtotal, totalAmount := float64(0), float64(0), float64(0), float64(0)
+	amount, vat, totalAmount := float64(0), float64(0), float64(0)
 	invoiceLines := []*invoicepb.InvoiceLine{}
 
 	// iterate SLIs by parent id
@@ -287,7 +286,6 @@ func (h *InvoiceEventHandler) fillOffCycleInvoice(ctx context.Context, tenant, c
 		}
 		calculatedSLIVat := utils.TruncateFloat64(finalSLIAmount*sliToInvoice.VatRate/100, 2)
 		amount += finalSLIAmount
-		subtotal += finalSLIAmount
 		vat += calculatedSLIVat
 		invoiceLine := invoicepb.InvoiceLine{
 			Name:                    sliToInvoice.Name,
@@ -313,10 +311,18 @@ func (h *InvoiceEventHandler) fillOffCycleInvoice(ctx context.Context, tenant, c
 	totalAmount = amount + vat
 
 	if totalAmount == 0 || len(invoiceLines) == 0 {
-		// TODO if nr of invoice lines is 0 or totalAmount is 0, invoke event to delete the draft off-cycle invoice
-		return nil
+		_, err = h.grpcClients.InvoiceClient.PermanentlyDeleteDraftInvoice(ctx, &invoicepb.PermanentlyDeleteDraftInvoiceRequest{
+			Tenant:    tenant,
+			InvoiceId: invoiceEntity.Id,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error permanently deleting draft invoice {%s}: {%s}", invoiceEntity.Id, err.Error())
+		}
+		return err
 	} else {
-		return h.prepareAndCallFillInvoice(ctx, tenant, contractId, invoiceEntity, amount, vat, subtotal, totalAmount, invoiceLines, span)
+		return h.prepareAndCallFillInvoice(ctx, tenant, contractId, invoiceEntity, amount, vat, totalAmount, invoiceLines, span)
 	}
 }
 
@@ -368,7 +374,7 @@ func prorateAnnualSLIAmount(startDate, endDate time.Time, amount float64) float6
 	return proratedAmount
 }
 
-func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, tenant string, contractId string, invoiceEntity neo4jentity.InvoiceEntity, amount float64, vat float64, subtotal float64, totalAmount float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
+func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, tenant string, contractId string, invoiceEntity neo4jentity.InvoiceEntity, amount, vat, totalAmount float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	var contractEntity *neo4jentity.ContractEntity
 	var tenantSettingsEntity *neo4jentity.TenantSettingsEntity
 	var tenantBillingProfileEntity *neo4jentity.TenantBillingProfileEntity
@@ -438,7 +444,6 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 		contractEntity.InvoiceNote,
 		amount,
 		vat,
-		subtotal,
 		totalAmount,
 		invoiceLines,
 		span)
@@ -452,7 +457,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoiceId, domesticPaymentsBankInfo, internationalPaymentsBankInfo,
 	customerName, customerEmail, customerAddressLine1, customerAddressLine2, customerAddressZip, customerAddressLocality, customerAddressCountry,
 	providerLogoUrl, providerName, providerEmail, providerAddressLine1, providerAddressLine2, providerAddressZip, providerAddressLocality, providerAddressCountry,
-	note string, amount, vat, subtotal, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
+	note string, amount, vat, total float64, invoiceLines []*invoicepb.InvoiceLine, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	now := time.Now()
 	_, err := h.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{
@@ -482,7 +487,6 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 		},
 		Amount:       amount,
 		Vat:          vat,
-		Subtotal:     subtotal,
 		Total:        total,
 		InvoiceLines: invoiceLines,
 		UpdatedAt:    utils.ConvertTimeToTimestampPtr(&now),
@@ -693,7 +697,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		"InvoiceIssueDate":              invoiceEntity.CreatedAt.Format("02 Jan 2006"),
 		"InvoiceDueDate":                invoiceEntity.DueDate.Format("02 Jan 2006"),
 		"InvoiceCurrency":               invoiceEntity.Currency.String() + "" + invoiceEntity.Currency.Symbol(),
-		"InvoiceSubtotal":               fmt.Sprintf("%.2f", invoiceEntity.SubtotalAmount),
+		"InvoiceSubtotal":               fmt.Sprintf("%.2f", invoiceEntity.Amount),
 		"InvoiceTotal":                  fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 		"InvoiceAmountDue":              fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 		"InvoiceLineItems":              []map[string]string{},

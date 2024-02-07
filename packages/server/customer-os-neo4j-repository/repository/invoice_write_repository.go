@@ -31,7 +31,6 @@ type InvoiceCreateFields struct {
 type InvoiceFillFields struct {
 	Amount                        float64                 `json:"amount"`
 	VAT                           float64                 `json:"vat"`
-	SubtotalAmount                float64                 `json:"subtotalAmount"`
 	TotalAmount                   float64                 `json:"totalAmount"`
 	UpdatedAt                     time.Time               `json:"updatedAt"`
 	ContractId                    string                  `json:"contractId"`
@@ -79,6 +78,7 @@ type InvoiceWriteRepository interface {
 	MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
 	SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	SetPayInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
+	DeleteInvoice(ctx context.Context, tenant, invoiceId string) error
 }
 
 type invoiceWriteRepository struct {
@@ -169,7 +169,6 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.billingCycle=$billingCycle,
 								i.amount=$amount,
 								i.vat=$vat,
-								i.subtotalAmount=$subtotalAmount,
 								i.totalAmount=$totalAmount,
 								i.status=$status,
 								i.note=$note,
@@ -195,7 +194,6 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.number=$number,
 								i.amount=$amount,
 								i.vat=$vat,
-								i.subtotalAmount=$subtotalAmount,
 								i.totalAmount=$totalAmount,
 								i.status=$status,
 								i.note=$note,
@@ -226,7 +224,6 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 		"updatedAt":                     data.UpdatedAt,
 		"amount":                        data.Amount,
 		"vat":                           data.VAT,
-		"subtotalAmount":                data.SubtotalAmount,
 		"totalAmount":                   data.TotalAmount,
 		"dryRun":                        data.DryRun,
 		"number":                        data.InvoiceNumber,
@@ -410,6 +407,30 @@ func (r *invoiceWriteRepository) SetPayInvoiceNotificationSentAt(ctx context.Con
 		"tenant":    tenant,
 		"invoiceId": invoiceId,
 		"now":       utils.Now(),
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *invoiceWriteRepository) DeleteInvoice(ctx context.Context, tenant, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.DeleteInvoice")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[r1:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})<-[r2:HAS_INVOICE]-(:Contract)
+							WHERE i:Invoice_%s
+							DELETE r1,r2,i`, tenant)
+	params := map[string]any{
+		"tenant":    tenant,
+		"invoiceId": invoiceId,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

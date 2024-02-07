@@ -1035,7 +1035,6 @@ type Invoice struct {
 	DueDate                       time.Time        `json:"dueDate"`
 	Amount                        float64          `json:"amount"`
 	Vat                           float64          `json:"vat"`
-	SubtotalAmount                float64          `json:"subtotalAmount"`
 	TotalAmount                   float64          `json:"totalAmount"`
 	Currency                      string           `json:"currency"`
 	RepositoryFileID              string           `json:"repositoryFileId"`
