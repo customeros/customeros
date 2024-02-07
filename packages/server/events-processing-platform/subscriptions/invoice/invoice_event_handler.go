@@ -573,7 +573,7 @@ func (h *InvoiceEventHandler) invokeInvoiceReadyWebhook(ctx context.Context, ten
 	}
 
 	// convert amount to the smallest currency unit
-	amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.Amount)
+	amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.TotalAmount)
 	if err != nil {
 		return fmt.Errorf("error converting amount to smallest currency unit: %v", err.Error())
 	}
