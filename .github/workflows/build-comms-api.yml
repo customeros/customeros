@@ -50,7 +50,7 @@ jobs:
         id: test-folders
         run: |
           test_folders=$(go list ./... | grep -v /gen | grep -v /test | paste -sd "," -)
-          echo "::set-output name=test_folders::$test_folders"
+          echo "{name}={test_folders} >> $GITHUB_OUTPUT
 
       - name: Test
         run: |
