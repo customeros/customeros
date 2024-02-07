@@ -16,6 +16,12 @@ const nextConfig = {
         port: '',
         pathname: '/images/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'customer-os.imgix.net',
+        port: '',
+        pathname: '**',
+      },
     ],
   },
   env: {
