@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/events_processing_client"
@@ -10,10 +11,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go/log"
+	"net/http"
 )
 
 type OrganizationService interface {
 	WebScrapeOrganizations()
+	RefreshLastTouchpoint()
 }
 
 type organizationService struct {
@@ -73,5 +76,41 @@ func (s *organizationService) webScrapeOrganizations(ctx context.Context) {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error web scraping organization {%s}: %s", record.OrganizationId, err.Error())
 		}
+	}
+}
+
+func (s *organizationService) RefreshLastTouchpoint() {
+	if s.eventsProcessingClient == nil {
+		s.log.Warn("eventsProcessingClient is nil. Will not update next cycle date.")
+		return
+	}
+
+	headers := map[string]string{
+		"X-Openline-TENANT":  "openlineai",
+		"X-Openline-API-KEY": s.cfg.PlatformAdminApi.ApiKey,
+	}
+
+	req, err := http.NewRequest("POST", s.cfg.PlatformAdminApi.Url+"/organization/refreshLastTouchpoint", nil)
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return
+	}
+
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("RefreshLastTouchpoint: Error sending request:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("RefreshLastTouchpoint: Error response:", resp.Status)
+		return
 	}
 }

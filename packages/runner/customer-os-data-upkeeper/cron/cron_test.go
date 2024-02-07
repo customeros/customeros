@@ -28,6 +28,7 @@ func TestStartCron(t *testing.T) {
 			CronScheduleGenerateInvoice:            "0 0 */1 * * *",
 			CronScheduleGenerateOffCycleInvoice:    "0 0 */1 * * *",
 			CronScheduleSendPayInvoiceNotification: "0 0 */1 * * *",
+			CronScheduleRefreshLastTouchpoint:      "0 0 */1 * * *",
 		},
 	}
 
