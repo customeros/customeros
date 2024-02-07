@@ -119,7 +119,6 @@ export const Plan = ({ plan, isOpen: _isOpen, onToggle }: PlanProps) => {
       pt='3'
       w='full'
       bg='gray.50'
-      id='plm'
       flexDir='column'
       borderRadius='lg'
       border='1px solid'
