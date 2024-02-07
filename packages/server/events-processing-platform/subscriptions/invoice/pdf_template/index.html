@@ -220,7 +220,7 @@
                                 </div>
                                 {{if .InvoiceVat}}
                                 <div class="invoice-printed-column1 TextsmSemibold pr-0 {{if .InvoiceVat}}invoice-with-vat-column-size{{else}}{{end}}">
-                                    Tax
+                                    VAT
                                 </div>
                                 {{else}}
                                 {{end}}
@@ -272,7 +272,7 @@
                         {{if .InvoiceVat}}
                         <div class="invoice-subtotal-container">
                             <div class="invoice-title-4 TextsmRegular">
-                                Tax
+                                VAT
                             </div>
                             <div class="invoice-text-right TextsmRegular">
                                 {{.InvoiceCurrency}} {{.InvoiceVat}}
