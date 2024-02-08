@@ -1,5 +1,5 @@
 generate:
-	export PATH="${PATH}:$(shell go env GOPATH)/bin";go generate ./...
+	#export PATH="${PATH}:$(shell go env GOPATH)/bin";go generate ./...
 
 clean:
 	rm -rf bin
