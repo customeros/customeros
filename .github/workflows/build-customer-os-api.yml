@@ -55,7 +55,7 @@ jobs:
           echo "test_folders=$test_folders" >> $GITHUB_OUTPUT
 
       - name: Test
-        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out -coverpkg=${{ steps.test-folders.outputs.test_folders }} ./...
+        run: gotestsum --junitfile unit-tests.xml ./...
 
       - name: Test Report
         uses: mikepenz/action-junit-report@v4
