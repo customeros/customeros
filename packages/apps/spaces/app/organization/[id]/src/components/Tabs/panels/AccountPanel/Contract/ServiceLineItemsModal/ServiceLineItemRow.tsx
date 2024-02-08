@@ -176,7 +176,7 @@ export const ServiceLineItemRow = ({
             aria-label='Recurring'
             placeholder='Frequency'
             name='billed'
-            onChange={(newValue) => handleChange('billed', newValue)}
+            onChange={(newValue) => handleChange('billed', newValue.value)}
             options={subscriptionOptions}
             value={subscriptionOptions.find((e) => e.value === service.billed)}
             chakraStyles={{
