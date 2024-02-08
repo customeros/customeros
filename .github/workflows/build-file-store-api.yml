@@ -40,16 +40,17 @@ jobs:
           go-version: stable
 
       - name: Build
+        working-directory: ./packages/server/file-store-api
         run: make all
 
       - name: Configure Test Folders
         id: test-folders
         run: |
           test_folders=$(go list ./... | grep -v /gen | grep -v /test | paste -sd "," -)
-          echo "::set-output name=test_folders::$test_folders"
+          echo "test_folders=$test_folders" >> $GITHUB_OUTPUT
 
       - name: Test
-        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out -coverpkg=${{ steps.test-folders.outputs.test_folders }} ./...
+        run: gotestsum --junitfile unit-tests.xml ./...
 
       - name: Test Report
         uses: mikepenz/action-junit-report@v4

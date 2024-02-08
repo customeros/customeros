@@ -6,7 +6,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 require (
 	github.com/99designs/gqlgen v0.17.43
-	github.com/aws/aws-sdk-go v1.50.11
+	github.com/aws/aws-sdk-go v1.50.13
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
@@ -16,12 +16,12 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
 	github.com/neo4j/neo4j-go-driver/v5 v5.17.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240206104907-b429ee046270
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240207193037-052750975350
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 	github.com/vektah/gqlparser/v2 v2.5.11
 	gorm.io/driver/postgres v1.5.6
-	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
+	gorm.io/gorm v1.25.7
 )
 
 require (
@@ -69,10 +69,10 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/arch v0.7.0 // indirect
-	golang.org/x/crypto v0.18.0 // indirect
-	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/grpc v1.61.0 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
