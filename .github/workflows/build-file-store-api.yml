@@ -6,7 +6,7 @@ on:
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/file-store-api/**
-      - .github/workflows/build-filestore-api.yml
+      - .github/workflows/build-file-store-api.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
