@@ -12,6 +12,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/model"
 )
 
+// Organization is the resolver for the organization field.
+func (r *invoiceResolver) Organization(ctx context.Context, obj *model.Invoice) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: Organization - organization"))
+}
+
 // InvoiceLines is the resolver for the invoiceLines field.
 func (r *invoiceResolver) InvoiceLines(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error) {
 	panic(fmt.Errorf("not implemented: InvoiceLines - invoiceLines"))
