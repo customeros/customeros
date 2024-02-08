@@ -19,7 +19,7 @@ func NewWebServer(t *testing.T) (*httptest.Server, *graphql.Client, *resolver.Re
 	graphqlClient := graphql.NewClient(server.URL + "/query")
 
 	t.Cleanup(func() {
-		log.Printf("Shutting down webserver")
+		log.Printf("shutting down webserver")
 		server.Close()
 	})
 	return server, graphqlClient, resolver
