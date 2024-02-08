@@ -1,12 +1,5 @@
 import { useField } from 'react-inverted-form';
-import {
-  memo,
-  useRef,
-  useState,
-  useEffect,
-  useCallback,
-  ChangeEvent,
-} from 'react';
+import { memo, useRef, useState, useCallback, ChangeEvent } from 'react';
 
 import { useKey } from 'rooks';
 import { produce } from 'immer';
@@ -26,24 +19,17 @@ import { StatusCheckbox } from '../StatusCheckbox';
 interface TaskProps {
   index: number;
   formId: string;
-  isFocused?: boolean;
-  shouldFocus?: boolean;
-  onInputBlur?: () => void;
-  onInputFocus?: () => void;
+  isLast?: boolean;
+  defaultValue?: string;
+  shouldFocusRef?: React.MutableRefObject<number | null>;
 }
 
 export const Task = memo(
-  ({
-    index,
-    formId,
-    isFocused,
-    shouldFocus,
-    onInputFocus,
-    onInputBlur,
-  }: TaskProps) => {
+  ({ index, formId, shouldFocusRef, isLast, defaultValue }: TaskProps) => {
     const ref = useRef<HTMLInputElement>(null);
 
     const [showSkip, setShowSkip] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
 
     const { getInputProps } = useField('items', formId);
     const { value, onChange, onBlur } = getInputProps();
@@ -126,17 +112,27 @@ export const Task = memo(
         });
 
         onChange?.(nextItems);
+
+        if (shouldFocusRef) {
+          shouldFocusRef.current = index;
+        }
       },
       [onChange, index, value],
     );
 
     const handleInputBlur = useCallback(
       (e: ChangeEvent<HTMLInputElement>) => {
-        onInputBlur?.();
+        setIsFocused(false);
 
         const nextItems = produce<TaskDatum[]>(value, (draft) => {
           const item = draft?.[index];
           if (!item) return;
+
+          if (!e.target.value) {
+            draft.splice(index, 1);
+
+            return;
+          }
 
           item.text = e.target.value;
         });
@@ -184,10 +180,12 @@ export const Task = memo(
     }, [onChange, index, value, taskUpdatedAt, milestoneDueAt]);
 
     const handleAdd = () => {
+      setIsFocused(false);
+
       const nextItems = produce<TaskDatum[]>(value, (draft) => {
         const isPastDueDate = taskUpdatedAt > milestoneDueAt;
 
-        draft.splice(index + 1, 0, {
+        draft.push({
           text: '',
           updatedAt: new Date().toISOString(),
           status: isPastDueDate
@@ -195,6 +193,10 @@ export const Task = memo(
             : OnboardingPlanMilestoneItemStatus.NotDone,
         });
       });
+
+      if (shouldFocusRef) {
+        shouldFocusRef.current = value.length;
+      }
 
       onChange?.(nextItems);
     };
@@ -210,12 +212,6 @@ export const Task = memo(
       }
     });
 
-    useEffect(() => {
-      if (shouldFocus && !isFocused) {
-        ref?.current?.focus();
-      }
-    }, [shouldFocus, isFocused]);
-
     return (
       <Flex
         w='full'
@@ -229,7 +225,7 @@ export const Task = memo(
           onChange={handleChange}
           colorScheme={colorScheme}
         />
-        <Input
+        <MemoizedInput
           w='full'
           ref={ref}
           fontSize='sm'
@@ -237,10 +233,11 @@ export const Task = memo(
           borderRadius='unset'
           placeholder='Task name'
           onBlur={handleInputBlur}
-          value={value?.[index]?.text}
           onChange={handleInputChange}
+          value={value?.[index]?.text ?? defaultValue}
+          autoFocus={shouldFocusRef?.current === index}
           onFocus={() => {
-            onInputFocus?.();
+            setIsFocused(true);
           }}
           fontStyle={isSkipped ? 'italic' : 'normal'}
         />
@@ -264,4 +261,7 @@ export const Task = memo(
       </Flex>
     );
   },
+  (prev, next) => prev.defaultValue === next.defaultValue,
 );
+
+const MemoizedInput = memo(Input);

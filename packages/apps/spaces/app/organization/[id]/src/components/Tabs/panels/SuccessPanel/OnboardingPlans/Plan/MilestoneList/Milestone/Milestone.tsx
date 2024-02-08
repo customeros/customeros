@@ -1,6 +1,7 @@
 import { useForm, useField } from 'react-inverted-form';
 import { useRef, useMemo, useState, useEffect, ChangeEvent } from 'react';
 
+import { useDebounce } from 'rooks';
 import isEqual from 'lodash/isEqual';
 
 import { Flex } from '@ui/layout/Flex';
@@ -10,7 +11,6 @@ import { IconButton } from '@ui/form/IconButton';
 import { pulseOpacity } from '@ui/utils/keyframes';
 import { Collapse } from '@ui/transitions/Collapse';
 import { Card, CardBody } from '@ui/presentation/Card';
-import { useThrottle } from '@shared/hooks/useThrottle';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { CheckSquareBroken } from '@ui/media/icons/CheckSquareBroken';
@@ -23,9 +23,9 @@ import { Tasks } from './Tasks';
 import { MilestoneForm } from './types';
 import { MilestoneMenu } from './MilestoneMenu';
 import { MilestoneName } from './MilestoneName';
-import { MilestoneDatum } from '../../../types';
 import { StatusCheckbox } from './StatusCheckbox';
 import { MilestoneDueDate } from './MilestoneDueDate';
+import { TaskDatum, MilestoneDatum } from '../../../types';
 import {
   checkMilestoneDone,
   checkMilestoneLate,
@@ -36,12 +36,12 @@ interface MilestoneProps {
   isLast?: boolean;
   isOpen?: boolean;
   isActiveItem?: boolean;
-  milestone: MilestoneDatum;
   onToggle?: (id: string) => void;
   onRemove?: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onMakeOptional?: (id: string) => void;
   onSync?: (milestone: MilestoneDatum) => void;
+  milestone: MilestoneDatum & { items: TaskDatum[] };
 }
 
 export const Milestone = ({
@@ -75,7 +75,7 @@ export const Milestone = ({
   const formId = `${milestone.id}-plan-milestone-form`;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const torttledSync = useThrottle(onSync as any, 500, []);
+  const debouncedSync = useDebounce(onSync as any, 500);
 
   const { setDefaultValues, state } = useForm<MilestoneForm>({
     formId,
@@ -95,7 +95,7 @@ export const Milestone = ({
 
           const nextMilestone = mapFormToMilestone(milestone, nextValues);
           if (!isEqual(nextMilestone, milestone)) {
-            torttledSync?.(nextMilestone);
+            debouncedSync?.(nextMilestone);
           }
 
           return {
@@ -106,6 +106,24 @@ export const Milestone = ({
 
         if (!isEqual(nextMilestone, milestone)) {
           onSync?.(nextMilestone);
+        }
+      }
+
+      if (action.type === 'FIELD_BLUR') {
+        if (action.payload.name === 'items') {
+          const nextValues = {
+            ...next.values,
+            statusDetails: {
+              ...next.values.statusDetails,
+              status: computeMilestoneStatus(next.values),
+            },
+          };
+
+          const nextMilestone = mapFormToMilestone(milestone, nextValues);
+
+          if (!isEqual(nextMilestone, milestone)) {
+            onSync?.(nextMilestone);
+          }
         }
       }
 
@@ -162,8 +180,8 @@ export const Milestone = ({
     milestone.order,
     milestone.dueDate,
     milestone.optional,
-    JSON.stringify(milestone.items || []),
-    JSON.stringify(milestone.statusDetails || {}),
+    // JSON.stringify(milestone.items || []),
+    // JSON.stringify(milestone.statusDetails || {}),
   ]);
 
   useOutsideClick({ ref: cardRef, handler: handleToggle, enabled: isOpen });
@@ -248,7 +266,10 @@ export const Milestone = ({
           </Flex>
 
           <Collapse in={isOpen} animateOpacity style={{ overflow: 'visible' }}>
-            <Tasks formId={formId} defaultValue={milestone.items} />
+            <Tasks
+              formId={formId}
+              defaultValue={state?.values?.items?.map((i) => i?.text)}
+            />
           </Collapse>
         </Flex>
       </CardBody>
@@ -305,7 +326,7 @@ const PlanStatusCheckbox = ({
 };
 
 const mapMilestoneToForm = (
-  milestone?: MilestoneDatum | null,
+  milestone?: (MilestoneDatum & { items: TaskDatum[] }) | null,
 ): MilestoneForm => {
   return {
     id: milestone?.id ?? '',
