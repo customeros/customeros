@@ -1,0 +1,172 @@
+name: customer-os-realtime
+
+on:
+  push:
+    branches: ["otter"]
+    paths:
+      - packages/server/customer_os_realtime/**
+      - .github/workflows/build-customer-os-realtime.yml
+  pull_request:
+    paths:
+      - packages/server/customer_os_realtime/**
+      - .github/workflows/build-customer-os-realtime.yml
+  release:
+    types: [created, edited]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/customer-os-realtime
+
+permissions:
+  contents: read
+  pull-requests: read
+  packages: write
+
+defaults:
+  run:
+    working-directory: ./packages/server/customer_os_realtime
+    
+jobs:
+    dependencies:
+        runs-on: ubuntu-latest
+        strategy:
+          matrix:
+            elixir: ['1.16.1']
+            otp: ['26.2.1']
+        steps:
+            - name: Cancel previous runs
+              uses: styfle/cancel-workflow-action@0.9.0
+              with:
+                access_token: ${{ github.token }}
+            - name: Checkout Github repo
+              uses: actions/checkout@v4
+            - name: Sets up an Erlang/OTP environment
+              uses: erlef/setup-beam@v1
+              with:
+                elixir-version: ${{ matrix.elixir }}
+                otp-version: ${{ matrix.otp }}
+            - name: Retrieve cached dependencies
+              uses: actions/cache@v2
+              id: mix-cache
+              with:
+                path: |
+                    deps
+                    _build
+                    priv/plts
+                key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
+            - name: Install dependencies
+              if: steps.mix-cache.outputs.cache-hit != 'true'
+              run: |
+                mkdir -p priv/plts
+                mix local.rebar --force
+                mix local.hex --force
+                mix deps.get
+                mix deps.compile
+                mix dialyzer --plt
+    
+    static-code-analysis:
+        needs: dependencies
+        runs-on: ubuntu-latest
+        strategy:
+          matrix:
+            elixir: ['1.16.1']
+            otp: ['26.2.1']
+        steps:
+        - name: Cancel previous runs
+          uses: styfle/cancel-workflow-action@0.9.0
+          with:
+            access_token: ${{ github.token }}
+        - name: Checkout Github repo
+          uses: actions/checkout@v2
+        - name: Sets up an Erlang/OTP environment
+          uses: erlef/setup-beam@v1
+          with:
+            elixir-version: ${{ matrix.elixir }}
+            otp-version: ${{ matrix.otp }}
+        - name: Retrieve cached dependencies
+          uses: actions/cache@v2
+          id: mix-cache
+          with:
+            path: |
+                deps
+                _build
+                priv/plts
+            key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
+        - run: mix format --check-formatted
+        - run: mix credo
+        - run: mix dialyzer --no-check --ignore-exit-status
+    
+    test:
+        runs-on: ubuntu-latest
+        needs: dependencies
+        strategy:
+          matrix:
+            elixir: ['1.16.1']
+            otp: ['26.2.1']
+        # services:
+        #   db:
+        #     image: postgres:latest
+        #     ports: ['5432:5432']
+        #     env:
+        #       POSTGRES_PASSWORD: postgres
+        #     options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        steps:
+        - name: Cancel previous runs
+          uses: styfle/cancel-workflow-action@0.9.0
+          with:
+            access_token: ${{ github.token }}
+        - name: Checkout Github repo
+          uses: actions/checkout@v4
+        - name: Sets up an Erlang/OTP environment
+          uses: erlef/setup-beam@v1
+          with:
+            elixir-version: ${{ matrix.elixir }}
+            otp-version: ${{ matrix.otp }}
+        - name: Retrieve cached dependencies
+          uses: actions/cache@v2
+          id: mix-cache
+          with:
+            path: |
+                deps
+                _build
+                priv/plts
+            key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
+        - run: mix test --trace --slowest 10
+    build-publish:
+        needs:
+          - static-code-analysis
+          - test
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Prepare sources for docker build
+          run: |
+            mkdir tmp-sources
+            mkdir tmp-sources/customer_os_realtime
+
+            rsync -av --progress --exclude="tmp-sources" * tmp-sources/customer_os_realtime
+
+            cp Dockerfile tmp-sources/Dockerfile
+
+        - name: Log in to the Container registry
+          uses: docker/login-action@v3.0.0
+          with:
+            registry: ${{ env.REGISTRY }}
+            username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
+            password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
+
+        - name: Extract metadata (tags, labels) for Docker
+          id: meta
+          uses: docker/metadata-action@v5.5.1
+          with:
+            images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+        - name: Push Docker image
+          uses: docker/build-push-action@v5.1.0
+          with:
+            context: packages/server/customer_os_realtime/tmp-sources/.
+            push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
+            tags: ${{ steps.meta.outputs.tags }}
+            labels: ${{ steps.meta.outputs.labels }}
