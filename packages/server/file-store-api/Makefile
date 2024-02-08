@@ -18,6 +18,6 @@ bin/file-store-api:
 
 install:
 	go install gotest.tools/gotestsum@latest
-	go get github.com/99designs/gqlgen@v0.17.31
+	go get github.com/99designs/gqlgen@v0.17.43
 
 all: install build
