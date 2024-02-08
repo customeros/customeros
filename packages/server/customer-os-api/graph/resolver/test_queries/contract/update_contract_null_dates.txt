@@ -1,0 +1,18 @@
+mutation UpdateContract($contractId: ID!) {
+contract_Update(
+    input: {
+        patch: true
+        contractId: $contractId
+        serviceStartedAt: "0001-01-01T00:00:00.000000Z"
+        signedAt: "0001-01-01T00:00:00.000000Z"
+        endedAt: "0001-01-01T00:00:00.000000Z"
+        invoicingStartDate: "0001-01-01T00:00:00.000000Z"
+    }
+  ) {
+    id
+    signedAt
+    serviceStartedAt
+    endedAt
+    invoicingStartDate
+  }
+}
