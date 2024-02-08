@@ -3,6 +3,7 @@ import { useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useDebounce, useWillUnmount, useDeepCompareEffect } from 'rooks';
 
@@ -50,6 +51,9 @@ export const AboutPanel = () => {
   const id = useParams()?.id as string;
   const [_, copyToClipboard] = useCopyToClipboard();
   const { data } = useOrganizationQuery(client, { id });
+  const queryKey = useOrganizationQuery.getKey({ id });
+  const queryClient = useQueryClient();
+
   const showParentRelationshipSelector = useFeatureIsOn(
     'show-parent-relationship-selector',
   );
@@ -100,6 +104,8 @@ export const AboutPanel = () => {
           case 'valueProposition':
           case 'targetAudience':
           case 'lastFundingAmount': {
+            queryClient.cancelQueries({ queryKey });
+
             const trimmedValue = (action.payload?.value || '')?.trim();
             if (
               //@ts-expect-error fixme
@@ -107,6 +113,7 @@ export const AboutPanel = () => {
             ) {
               return next;
             }
+            debouncedMutateOrganization.cancel();
             debouncedMutateOrganization(state.values, {
               [action.payload.name]: trimmedValue,
             });
@@ -114,6 +121,27 @@ export const AboutPanel = () => {
           }
           default:
             return next;
+        }
+      }
+
+      if (action.type === 'FIELD_BLUR') {
+        if (action.payload.name === 'name') {
+          const trimmedValue = (action.payload?.value || '')?.trim();
+          if (!trimmedValue?.length) {
+            mutateOrganization(state.values, {
+              name: 'Unnamed',
+            });
+
+            return {
+              ...next,
+              values: {
+                ...next.values,
+                name: 'Unnamed',
+              },
+            };
+          } else {
+            debouncedMutateOrganization.flush();
+          }
         }
       }
 
@@ -126,11 +154,11 @@ export const AboutPanel = () => {
   }, [defaultValues]);
 
   useEffect(() => {
-    if (defaultValues.name === 'Unnamed' && nameRef.current) {
+    if (nameRef.current?.value === 'Unnamed') {
       nameRef.current?.focus();
       nameRef.current?.setSelectionRange(0, 7);
     }
-  }, [defaultValues.name, nameRef]);
+  }, [nameRef]);
 
   useWillUnmount(() => {
     debouncedMutateOrganization.flush();
