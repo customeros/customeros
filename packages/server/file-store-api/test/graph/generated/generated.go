@@ -570,6 +570,7 @@ type ComplexityRoot struct {
 		InvoiceLines                  func(childComplexity int) int
 		Note                          func(childComplexity int) int
 		Number                        func(childComplexity int) int
+		Organization                  func(childComplexity int) int
 		PeriodEndDate                 func(childComplexity int) int
 		PeriodStartDate               func(childComplexity int) int
 		Provider                      func(childComplexity int) int
@@ -577,6 +578,7 @@ type ComplexityRoot struct {
 		Source                        func(childComplexity int) int
 		SourceOfTruth                 func(childComplexity int) int
 		Status                        func(childComplexity int) int
+		SubtotalAmount                func(childComplexity int) int
 		TotalAmount                   func(childComplexity int) int
 		UpdatedAt                     func(childComplexity int) int
 		Vat                           func(childComplexity int) int
@@ -783,12 +785,6 @@ type ComplexityRoot struct {
 		Content       func(childComplexity int) int
 		TotalElements func(childComplexity int) int
 		TotalPages    func(childComplexity int) int
-	}
-
-	MilestoneItem struct {
-		Status    func(childComplexity int) int
-		Text      func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -1094,6 +1090,7 @@ type ComplexityRoot struct {
 	}
 
 	OrganizationPlanMilestone struct {
+		Adhoc         func(childComplexity int) int
 		AppSource     func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		DueDate       func(childComplexity int) int
@@ -1107,6 +1104,24 @@ type ComplexityRoot struct {
 		SourceOfTruth func(childComplexity int) int
 		StatusDetails func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
+	}
+
+	OrganizationPlanMilestoneItem struct {
+		Status    func(childComplexity int) int
+		Text      func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+	}
+
+	OrganizationPlanMilestoneStatusDetails struct {
+		Status    func(childComplexity int) int
+		Text      func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+	}
+
+	OrganizationPlanStatusDetails struct {
+		Status    func(childComplexity int) int
+		Text      func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
 	}
 
 	PageView struct {
@@ -1267,6 +1282,7 @@ type ComplexityRoot struct {
 		SourceOfTruth func(childComplexity int) int
 		StartedAt     func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
+		VatRate       func(childComplexity int) int
 	}
 
 	Social struct {
@@ -1285,12 +1301,6 @@ type ComplexityRoot struct {
 		Country func(childComplexity int) int
 		ID      func(childComplexity int) int
 		Name    func(childComplexity int) int
-	}
-
-	StatusDetails struct {
-		Status    func(childComplexity int) int
-		Text      func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
 	}
 
 	SuggestedMergeOrganization struct {
@@ -1497,6 +1507,8 @@ type InteractionSessionResolver interface {
 	DescribedBy(ctx context.Context, obj *model.InteractionSession) ([]*model.Analysis, error)
 }
 type InvoiceResolver interface {
+	Organization(ctx context.Context, obj *model.Invoice) (*model.Organization, error)
+
 	InvoiceLines(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error)
 }
 type IssueResolver interface {
@@ -4274,6 +4286,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Invoice.Number(childComplexity), true
 
+	case "Invoice.organization":
+		if e.complexity.Invoice.Organization == nil {
+			break
+		}
+
+		return e.complexity.Invoice.Organization(childComplexity), true
+
 	case "Invoice.periodEndDate":
 		if e.complexity.Invoice.PeriodEndDate == nil {
 			break
@@ -4322,6 +4341,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Invoice.Status(childComplexity), true
+
+	case "Invoice.subtotalAmount":
+		if e.complexity.Invoice.SubtotalAmount == nil {
+			break
+		}
+
+		return e.complexity.Invoice.SubtotalAmount(childComplexity), true
 
 	case "Invoice.totalAmount":
 		if e.complexity.Invoice.TotalAmount == nil {
@@ -5428,27 +5454,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MeetingsPage.TotalPages(childComplexity), true
-
-	case "MilestoneItem.status":
-		if e.complexity.MilestoneItem.Status == nil {
-			break
-		}
-
-		return e.complexity.MilestoneItem.Status(childComplexity), true
-
-	case "MilestoneItem.text":
-		if e.complexity.MilestoneItem.Text == nil {
-			break
-		}
-
-		return e.complexity.MilestoneItem.Text(childComplexity), true
-
-	case "MilestoneItem.updatedAt":
-		if e.complexity.MilestoneItem.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.MilestoneItem.UpdatedAt(childComplexity), true
 
 	case "Mutation.analysis_Create":
 		if e.complexity.Mutation.AnalysisCreate == nil {
@@ -8164,6 +8169,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationPlan.UpdatedAt(childComplexity), true
 
+	case "OrganizationPlanMilestone.adhoc":
+		if e.complexity.OrganizationPlanMilestone.Adhoc == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanMilestone.Adhoc(childComplexity), true
+
 	case "OrganizationPlanMilestone.appSource":
 		if e.complexity.OrganizationPlanMilestone.AppSource == nil {
 			break
@@ -8254,6 +8266,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OrganizationPlanMilestone.UpdatedAt(childComplexity), true
+
+	case "OrganizationPlanMilestoneItem.status":
+		if e.complexity.OrganizationPlanMilestoneItem.Status == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanMilestoneItem.Status(childComplexity), true
+
+	case "OrganizationPlanMilestoneItem.text":
+		if e.complexity.OrganizationPlanMilestoneItem.Text == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanMilestoneItem.Text(childComplexity), true
+
+	case "OrganizationPlanMilestoneItem.updatedAt":
+		if e.complexity.OrganizationPlanMilestoneItem.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanMilestoneItem.UpdatedAt(childComplexity), true
+
+	case "OrganizationPlanMilestoneStatusDetails.status":
+		if e.complexity.OrganizationPlanMilestoneStatusDetails.Status == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanMilestoneStatusDetails.Status(childComplexity), true
+
+	case "OrganizationPlanMilestoneStatusDetails.text":
+		if e.complexity.OrganizationPlanMilestoneStatusDetails.Text == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanMilestoneStatusDetails.Text(childComplexity), true
+
+	case "OrganizationPlanMilestoneStatusDetails.updatedAt":
+		if e.complexity.OrganizationPlanMilestoneStatusDetails.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanMilestoneStatusDetails.UpdatedAt(childComplexity), true
+
+	case "OrganizationPlanStatusDetails.status":
+		if e.complexity.OrganizationPlanStatusDetails.Status == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanStatusDetails.Status(childComplexity), true
+
+	case "OrganizationPlanStatusDetails.text":
+		if e.complexity.OrganizationPlanStatusDetails.Text == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanStatusDetails.Text(childComplexity), true
+
+	case "OrganizationPlanStatusDetails.updatedAt":
+		if e.complexity.OrganizationPlanStatusDetails.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanStatusDetails.UpdatedAt(childComplexity), true
 
 	case "PageView.appSource":
 		if e.complexity.PageView.AppSource == nil {
@@ -9389,6 +9464,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceLineItem.UpdatedAt(childComplexity), true
 
+	case "ServiceLineItem.vatRate":
+		if e.complexity.ServiceLineItem.VatRate == nil {
+			break
+		}
+
+		return e.complexity.ServiceLineItem.VatRate(childComplexity), true
+
 	case "Social.appSource":
 		if e.complexity.Social.AppSource == nil {
 			break
@@ -9472,27 +9554,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.State.Name(childComplexity), true
-
-	case "StatusDetails.status":
-		if e.complexity.StatusDetails.Status == nil {
-			break
-		}
-
-		return e.complexity.StatusDetails.Status(childComplexity), true
-
-	case "StatusDetails.text":
-		if e.complexity.StatusDetails.Text == nil {
-			break
-		}
-
-		return e.complexity.StatusDetails.Text(childComplexity), true
-
-	case "StatusDetails.updatedAt":
-		if e.complexity.StatusDetails.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.StatusDetails.UpdatedAt(childComplexity), true
 
 	case "SuggestedMergeOrganization.confidence":
 		if e.complexity.SuggestedMergeOrganization.Confidence == nil {
@@ -10154,7 +10215,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputMeetingInput,
 		ec.unmarshalInputMeetingParticipantInput,
 		ec.unmarshalInputMeetingUpdateInput,
-		ec.unmarshalInputMilestoneItemInput,
 		ec.unmarshalInputNoteInput,
 		ec.unmarshalInputNoteUpdateInput,
 		ec.unmarshalInputOnboardingStatusInput,
@@ -10163,8 +10223,11 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputOrganizationInput,
 		ec.unmarshalInputOrganizationPlanInput,
 		ec.unmarshalInputOrganizationPlanMilestoneInput,
+		ec.unmarshalInputOrganizationPlanMilestoneItemInput,
 		ec.unmarshalInputOrganizationPlanMilestoneReorderInput,
+		ec.unmarshalInputOrganizationPlanMilestoneStatusDetailsInput,
 		ec.unmarshalInputOrganizationPlanMilestoneUpdateInput,
+		ec.unmarshalInputOrganizationPlanStatusDetailsInput,
 		ec.unmarshalInputOrganizationPlanUpdateInput,
 		ec.unmarshalInputOrganizationUpdateInput,
 		ec.unmarshalInputPagination,
@@ -10180,7 +10243,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSocialInput,
 		ec.unmarshalInputSocialUpdateInput,
 		ec.unmarshalInputSortBy,
-		ec.unmarshalInputStatusDetailsInput,
 		ec.unmarshalInputTagIdOrNameInput,
 		ec.unmarshalInputTagInput,
 		ec.unmarshalInputTagUpdateInput,
@@ -10718,34 +10780,15 @@ Updates data fields associated with an existing customer record in customerOS.
 **An ` + "`" + `update` + "`" + ` object.**
 """
 input ContactUpdateInput {
-
-    """
-    The unique ID associated with the contact in customerOS.
-    **Required.**
-    """
-    id: ID!
-
-    "The prefix associate with the contact in customerOS."
-    prefix: String
-
-    """
-    The first name of the contact in customerOS.
-    """
-    firstName: String
-    name: String
-    description: String
-    timezone: String
-    profilePhotoUrl: String
-
-    """
-    The last name of the contact in customerOS.
-    """
-    lastName: String
-
-    label: String @deprecated(reason: "Use ` + "`" + `tags` + "`" + ` instead")
-
-    "Id of the contact owner (user)"
-    ownerId: ID @deprecated(reason: "Not supported in update flow yet")
+    id:                 ID!
+    patch:              Boolean
+    firstName:          String
+    lastName:           String
+    name:               String
+    prefix:             String
+    description:        String
+    timezone:           String
+    profilePhotoUrl:    String
 }
 
 input ContactTagInput {
@@ -11745,6 +11788,7 @@ type Invoice implements SourceFields & Node {
     sourceOfTruth:      DataSource!
     appSource:          String!
 
+    organization:       Organization! @goField(forceResolver: true)
     dryRun:             Boolean!
     number:             String!
     periodStartDate:    Time!
@@ -11752,6 +11796,7 @@ type Invoice implements SourceFields & Node {
     dueDate:            Time!
     amount:             Float!
     vat:                Float!
+    subtotalAmount:     Float!
     totalAmount:        Float!
     currency:           String!
     repositoryFileId:   String!
@@ -12633,7 +12678,7 @@ type OrganizationPlan implements SourceFields & Node {
     retired:            Boolean!
     milestones:         [OrganizationPlanMilestone!]! @goField(forceResolver: true)
     retiredMilestones:  [OrganizationPlanMilestone!]! @goField(forceResolver: true)
-    statusDetails:      StatusDetails!
+    statusDetails:      OrganizationPlanStatusDetails!
     masterPlanId:       ID!
 }
 
@@ -12648,25 +12693,65 @@ type OrganizationPlanMilestone implements SourceFields & Node {
     order:              Int64!
     dueDate:            Time!
     optional:           Boolean!
-    items:              [MilestoneItem!]!
+    items:              [OrganizationPlanMilestoneItem!]!
     retired:            Boolean!
-    statusDetails:      StatusDetails!
+    statusDetails:      OrganizationPlanMilestoneStatusDetails!
+    adhoc:              Boolean!
 }
 
-type StatusDetails {
-    status: String!
+enum OnboardingPlanStatus {
+    NOT_STARTED
+    ON_TRACK
+    LATE
+    DONE
+    NOT_STARTED_LATE
+    DONE_LATE
+}
+
+enum OnboardingPlanMilestoneStatus {
+    NOT_STARTED
+    STARTED
+    DONE
+    NOT_STARTED_LATE
+    STARTED_LATE
+    DONE_LATE
+}
+
+enum OnboardingPlanMilestoneItemStatus {
+    NOT_DONE
+    SKIPPED
+    DONE
+    NOT_DONE_LATE
+    SKIPPED_LATE
+    DONE_LATE
+}
+
+type OrganizationPlanStatusDetails {
+    status: OnboardingPlanStatus!
     updatedAt: Time!
     text: String!
 }
 
-type MilestoneItem {
-    status: String!
+type OrganizationPlanMilestoneStatusDetails {
+    status: OnboardingPlanMilestoneStatus!
     updatedAt: Time!
     text: String!
 }
 
-input StatusDetailsInput {
-    status: String!
+input OrganizationPlanStatusDetailsInput {
+    status: OnboardingPlanStatus!
+    updatedAt: Time!
+    text: String!
+}
+
+input OrganizationPlanMilestoneStatusDetailsInput {
+    status: OnboardingPlanMilestoneStatus!
+    updatedAt: Time!
+    text: String!
+}
+
+type OrganizationPlanMilestoneItem {
+    status: OnboardingPlanMilestoneItemStatus!
     updatedAt: Time!
     text: String!
 }
@@ -12681,7 +12766,7 @@ input OrganizationPlanUpdateInput {
     id: ID!
     name: String
     retired: Boolean
-    statusDetails: StatusDetailsInput
+    statusDetails: OrganizationPlanStatusDetailsInput
     organizationId: ID!
 }
 
@@ -12694,10 +12779,11 @@ input OrganizationPlanMilestoneInput {
     optional: Boolean!
     items: [String!]!
     organizationId: ID!
+    adhoc: Boolean!
 }
 
-input MilestoneItemInput {
-    status: String!
+input OrganizationPlanMilestoneItemInput {
+    status: OnboardingPlanMilestoneItemStatus!
     updatedAt: Time!
     text: String!
 }
@@ -12711,9 +12797,10 @@ input OrganizationPlanMilestoneUpdateInput {
     updatedAt: Time!
     optional: Boolean
     retired: Boolean
-    items: [MilestoneItemInput]
-    statusDetails: StatusDetailsInput
+    items: [OrganizationPlanMilestoneItemInput]
+    statusDetails: OrganizationPlanMilestoneStatusDetailsInput
     organizationId: ID!
+    adhoc: Boolean
 }
 
 input OrganizationPlanMilestoneReorderInput {
@@ -12979,6 +13066,7 @@ type ServiceLineItem implements Node {
     appSource:          String!
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
     parentId:           ID!
+    vatRate:            Float!
 }
 
 input ServiceLineItemInput {
@@ -12987,6 +13075,7 @@ input ServiceLineItemInput {
     billed:             BilledType
     price:              Float
     quantity:           Int64
+    vatRate:            Float
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
     startedAt:          Time
@@ -12999,6 +13088,7 @@ input ServiceLineItemUpdateInput {
     billed:             BilledType
     price:              Float
     quantity:           Int64
+    vatRate:            Float
     comments:           String
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
@@ -13011,6 +13101,7 @@ input ServiceLineItemBulkUpdateItem {
     billed:                  BilledType
     price:                   Float
     quantity:                Int64
+    vatRate:                 Float
     comments:                String
     isRetroactiveCorrection: Boolean
 }
@@ -23754,6 +23845,8 @@ func (ec *executionContext) fieldContext_Contract_serviceLineItems(ctx context.C
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
 			case "parentId":
 				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
+			case "vatRate":
+				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -34201,6 +34294,158 @@ func (ec *executionContext) fieldContext_Invoice_appSource(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Invoice_organization(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_organization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Invoice().Organization(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_organization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Invoice_dryRun(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Invoice_dryRun(ctx, field)
 	if err != nil {
@@ -34497,6 +34742,50 @@ func (ec *executionContext) _Invoice_vat(ctx context.Context, field graphql.Coll
 }
 
 func (ec *executionContext) fieldContext_Invoice_vat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_subtotalAmount(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_subtotalAmount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SubtotalAmount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_subtotalAmount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Invoice",
 		Field:      field,
@@ -35964,6 +36253,8 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 				return ec.fieldContext_Invoice_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Invoice_appSource(ctx, field)
+			case "organization":
+				return ec.fieldContext_Invoice_organization(ctx, field)
 			case "dryRun":
 				return ec.fieldContext_Invoice_dryRun(ctx, field)
 			case "number":
@@ -35978,6 +36269,8 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 				return ec.fieldContext_Invoice_amount(ctx, field)
 			case "vat":
 				return ec.fieldContext_Invoice_vat(ctx, field)
+			case "subtotalAmount":
+				return ec.fieldContext_Invoice_subtotalAmount(ctx, field)
 			case "totalAmount":
 				return ec.fieldContext_Invoice_totalAmount(ctx, field)
 			case "currency":
@@ -42374,138 +42667,6 @@ func (ec *executionContext) fieldContext_MeetingsPage_totalElements(ctx context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MilestoneItem_status(ctx context.Context, field graphql.CollectedField, obj *model.MilestoneItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MilestoneItem_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MilestoneItem_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MilestoneItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MilestoneItem_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.MilestoneItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MilestoneItem_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MilestoneItem_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MilestoneItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MilestoneItem_text(ctx context.Context, field graphql.CollectedField, obj *model.MilestoneItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MilestoneItem_text(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Text, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MilestoneItem_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MilestoneItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -54321,6 +54482,8 @@ func (ec *executionContext) fieldContext_Mutation_organizationPlanMilestone_Crea
 				return ec.fieldContext_OrganizationPlanMilestone_retired(ctx, field)
 			case "statusDetails":
 				return ec.fieldContext_OrganizationPlanMilestone_statusDetails(ctx, field)
+			case "adhoc":
+				return ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestone", field.Name)
 		},
@@ -54434,6 +54597,8 @@ func (ec *executionContext) fieldContext_Mutation_organizationPlanMilestone_Upda
 				return ec.fieldContext_OrganizationPlanMilestone_retired(ctx, field)
 			case "statusDetails":
 				return ec.fieldContext_OrganizationPlanMilestone_statusDetails(ctx, field)
+			case "adhoc":
+				return ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestone", field.Name)
 		},
@@ -54547,6 +54712,8 @@ func (ec *executionContext) fieldContext_Mutation_organizationPlanMilestone_Bulk
 				return ec.fieldContext_OrganizationPlanMilestone_retired(ctx, field)
 			case "statusDetails":
 				return ec.fieldContext_OrganizationPlanMilestone_statusDetails(ctx, field)
+			case "adhoc":
+				return ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestone", field.Name)
 		},
@@ -54745,6 +54912,8 @@ func (ec *executionContext) fieldContext_Mutation_organizationPlanMilestone_Dupl
 				return ec.fieldContext_OrganizationPlanMilestone_retired(ctx, field)
 			case "statusDetails":
 				return ec.fieldContext_OrganizationPlanMilestone_statusDetails(ctx, field)
+			case "adhoc":
+				return ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestone", field.Name)
 		},
@@ -56171,6 +56340,8 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemCreate(ctx cont
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
 			case "parentId":
 				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
+			case "vatRate":
+				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -56290,6 +56461,8 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemUpdate(ctx cont
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
 			case "parentId":
 				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
+			case "vatRate":
+				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -64253,6 +64426,8 @@ func (ec *executionContext) fieldContext_OrganizationPlan_milestones(ctx context
 				return ec.fieldContext_OrganizationPlanMilestone_retired(ctx, field)
 			case "statusDetails":
 				return ec.fieldContext_OrganizationPlanMilestone_statusDetails(ctx, field)
+			case "adhoc":
+				return ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestone", field.Name)
 		},
@@ -64325,6 +64500,8 @@ func (ec *executionContext) fieldContext_OrganizationPlan_retiredMilestones(ctx 
 				return ec.fieldContext_OrganizationPlanMilestone_retired(ctx, field)
 			case "statusDetails":
 				return ec.fieldContext_OrganizationPlanMilestone_statusDetails(ctx, field)
+			case "adhoc":
+				return ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestone", field.Name)
 		},
@@ -64358,9 +64535,9 @@ func (ec *executionContext) _OrganizationPlan_statusDetails(ctx context.Context,
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.StatusDetails)
+	res := resTmp.(*model.OrganizationPlanStatusDetails)
 	fc.Result = res
-	return ec.marshalNStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐStatusDetails(ctx, field.Selections, res)
+	return ec.marshalNOrganizationPlanStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanStatusDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationPlan_statusDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64372,13 +64549,13 @@ func (ec *executionContext) fieldContext_OrganizationPlan_statusDetails(ctx cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "status":
-				return ec.fieldContext_StatusDetails_status(ctx, field)
+				return ec.fieldContext_OrganizationPlanStatusDetails_status(ctx, field)
 			case "updatedAt":
-				return ec.fieldContext_StatusDetails_updatedAt(ctx, field)
+				return ec.fieldContext_OrganizationPlanStatusDetails_updatedAt(ctx, field)
 			case "text":
-				return ec.fieldContext_StatusDetails_text(ctx, field)
+				return ec.fieldContext_OrganizationPlanStatusDetails_text(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type StatusDetails", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanStatusDetails", field.Name)
 		},
 	}
 	return fc, nil
@@ -64894,9 +65071,9 @@ func (ec *executionContext) _OrganizationPlanMilestone_items(ctx context.Context
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.MilestoneItem)
+	res := resTmp.([]*model.OrganizationPlanMilestoneItem)
 	fc.Result = res
-	return ec.marshalNMilestoneItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐMilestoneItemᚄ(ctx, field.Selections, res)
+	return ec.marshalNOrganizationPlanMilestoneItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneItemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationPlanMilestone_items(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64908,13 +65085,13 @@ func (ec *executionContext) fieldContext_OrganizationPlanMilestone_items(ctx con
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "status":
-				return ec.fieldContext_MilestoneItem_status(ctx, field)
+				return ec.fieldContext_OrganizationPlanMilestoneItem_status(ctx, field)
 			case "updatedAt":
-				return ec.fieldContext_MilestoneItem_updatedAt(ctx, field)
+				return ec.fieldContext_OrganizationPlanMilestoneItem_updatedAt(ctx, field)
 			case "text":
-				return ec.fieldContext_MilestoneItem_text(ctx, field)
+				return ec.fieldContext_OrganizationPlanMilestoneItem_text(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type MilestoneItem", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestoneItem", field.Name)
 		},
 	}
 	return fc, nil
@@ -64990,9 +65167,9 @@ func (ec *executionContext) _OrganizationPlanMilestone_statusDetails(ctx context
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.StatusDetails)
+	res := resTmp.(*model.OrganizationPlanMilestoneStatusDetails)
 	fc.Result = res
-	return ec.marshalNStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐStatusDetails(ctx, field.Selections, res)
+	return ec.marshalNOrganizationPlanMilestoneStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneStatusDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationPlanMilestone_statusDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65004,13 +65181,453 @@ func (ec *executionContext) fieldContext_OrganizationPlanMilestone_statusDetails
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "status":
-				return ec.fieldContext_StatusDetails_status(ctx, field)
+				return ec.fieldContext_OrganizationPlanMilestoneStatusDetails_status(ctx, field)
 			case "updatedAt":
-				return ec.fieldContext_StatusDetails_updatedAt(ctx, field)
+				return ec.fieldContext_OrganizationPlanMilestoneStatusDetails_updatedAt(ctx, field)
 			case "text":
-				return ec.fieldContext_StatusDetails_text(ctx, field)
+				return ec.fieldContext_OrganizationPlanMilestoneStatusDetails_text(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type StatusDetails", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestoneStatusDetails", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanMilestone_adhoc(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanMilestone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanMilestone_adhoc(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Adhoc, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanMilestone_adhoc(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanMilestone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanMilestoneItem_status(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanMilestoneItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanMilestoneItem_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.OnboardingPlanMilestoneItemStatus)
+	fc.Result = res
+	return ec.marshalNOnboardingPlanMilestoneItemStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingPlanMilestoneItemStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanMilestoneItem_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanMilestoneItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OnboardingPlanMilestoneItemStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanMilestoneItem_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanMilestoneItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanMilestoneItem_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanMilestoneItem_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanMilestoneItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanMilestoneItem_text(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanMilestoneItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanMilestoneItem_text(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Text, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanMilestoneItem_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanMilestoneItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanMilestoneStatusDetails_status(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanMilestoneStatusDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanMilestoneStatusDetails_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.OnboardingPlanMilestoneStatus)
+	fc.Result = res
+	return ec.marshalNOnboardingPlanMilestoneStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingPlanMilestoneStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanMilestoneStatusDetails_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanMilestoneStatusDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OnboardingPlanMilestoneStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanMilestoneStatusDetails_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanMilestoneStatusDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanMilestoneStatusDetails_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanMilestoneStatusDetails_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanMilestoneStatusDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanMilestoneStatusDetails_text(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanMilestoneStatusDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanMilestoneStatusDetails_text(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Text, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanMilestoneStatusDetails_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanMilestoneStatusDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanStatusDetails_status(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanStatusDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanStatusDetails_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.OnboardingPlanStatus)
+	fc.Result = res
+	return ec.marshalNOnboardingPlanStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingPlanStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanStatusDetails_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanStatusDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OnboardingPlanStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanStatusDetails_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanStatusDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanStatusDetails_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanStatusDetails_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanStatusDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanStatusDetails_text(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanStatusDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanStatusDetails_text(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Text, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanStatusDetails_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanStatusDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -69144,6 +69761,8 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 				return ec.fieldContext_Invoice_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Invoice_appSource(ctx, field)
+			case "organization":
+				return ec.fieldContext_Invoice_organization(ctx, field)
 			case "dryRun":
 				return ec.fieldContext_Invoice_dryRun(ctx, field)
 			case "number":
@@ -69158,6 +69777,8 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 				return ec.fieldContext_Invoice_amount(ctx, field)
 			case "vat":
 				return ec.fieldContext_Invoice_vat(ctx, field)
+			case "subtotalAmount":
+				return ec.fieldContext_Invoice_subtotalAmount(ctx, field)
 			case "totalAmount":
 				return ec.fieldContext_Invoice_totalAmount(ctx, field)
 			case "currency":
@@ -71177,6 +71798,8 @@ func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Conte
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
 			case "parentId":
 				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
+			case "vatRate":
+				return ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -73883,6 +74506,50 @@ func (ec *executionContext) fieldContext_ServiceLineItem_parentId(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _ServiceLineItem_vatRate(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceLineItem_vatRate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.VatRate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ServiceLineItem_vatRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceLineItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Social_id(ctx context.Context, field graphql.CollectedField, obj *model.Social) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Social_id(ctx, field)
 	if err != nil {
@@ -74410,138 +75077,6 @@ func (ec *executionContext) _State_code(ctx context.Context, field graphql.Colle
 func (ec *executionContext) fieldContext_State_code(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "State",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _StatusDetails_status(ctx context.Context, field graphql.CollectedField, obj *model.StatusDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_StatusDetails_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_StatusDetails_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "StatusDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _StatusDetails_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.StatusDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_StatusDetails_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_StatusDetails_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "StatusDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _StatusDetails_text(ctx context.Context, field graphql.CollectedField, obj *model.StatusDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_StatusDetails_text(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Text, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_StatusDetails_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "StatusDetails",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -81239,7 +81774,7 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "prefix", "firstName", "name", "description", "timezone", "profilePhotoUrl", "lastName", "label", "ownerId"}
+	fieldsInOrder := [...]string{"id", "patch", "firstName", "lastName", "name", "prefix", "description", "timezone", "profilePhotoUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -81255,15 +81790,15 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.ID = data
-		case "prefix":
+		case "patch":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefix"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("patch"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Prefix = data
+			it.Patch = data
 		case "firstName":
 			var err error
 
@@ -81273,6 +81808,15 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.FirstName = data
+		case "lastName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastName = data
 		case "name":
 			var err error
 
@@ -81282,6 +81826,15 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.Name = data
+		case "prefix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Prefix = data
 		case "description":
 			var err error
 
@@ -81309,33 +81862,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.ProfilePhotoURL = data
-		case "lastName":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.LastName = data
-		case "label":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Label = data
-		case "ownerId":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerId"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.OwnerID = data
 		}
 	}
 
@@ -84274,53 +84800,6 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputMilestoneItemInput(ctx context.Context, obj interface{}) (model.MilestoneItemInput, error) {
-	var it model.MilestoneItemInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"status", "updatedAt", "text"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "status":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Status = data
-		case "updatedAt":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
-			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.UpdatedAt = data
-		case "text":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Text = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputNoteInput(ctx context.Context, obj interface{}) (model.NoteInput, error) {
 	var it model.NoteInput
 	asMap := map[string]interface{}{}
@@ -84918,7 +85397,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationPlanId", "name", "order", "dueDate", "createdAt", "optional", "items", "organizationId"}
+	fieldsInOrder := [...]string{"organizationPlanId", "name", "order", "dueDate", "createdAt", "optional", "items", "organizationId", "adhoc"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -84997,6 +85476,62 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneInput(ctx con
 				return it, err
 			}
 			it.OrganizationID = data
+		case "adhoc":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("adhoc"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Adhoc = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneItemInput(ctx context.Context, obj interface{}) (model.OrganizationPlanMilestoneItemInput, error) {
+	var it model.OrganizationPlanMilestoneItemInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"status", "updatedAt", "text"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "status":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalNOnboardingPlanMilestoneItemStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingPlanMilestoneItemStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "updatedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "text":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Text = data
 		}
 	}
 
@@ -85050,6 +85585,53 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneReorderInput(
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneStatusDetailsInput(ctx context.Context, obj interface{}) (model.OrganizationPlanMilestoneStatusDetailsInput, error) {
+	var it model.OrganizationPlanMilestoneStatusDetailsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"status", "updatedAt", "text"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "status":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalNOnboardingPlanMilestoneStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingPlanMilestoneStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "updatedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "text":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Text = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneUpdateInput(ctx context.Context, obj interface{}) (model.OrganizationPlanMilestoneUpdateInput, error) {
 	var it model.OrganizationPlanMilestoneUpdateInput
 	asMap := map[string]interface{}{}
@@ -85057,7 +85639,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneUpdateInput(c
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationPlanId", "id", "name", "order", "dueDate", "updatedAt", "optional", "retired", "items", "statusDetails", "organizationId"}
+	fieldsInOrder := [...]string{"organizationPlanId", "id", "name", "order", "dueDate", "updatedAt", "optional", "retired", "items", "statusDetails", "organizationId", "adhoc"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -85140,7 +85722,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneUpdateInput(c
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("items"))
-			data, err := ec.unmarshalOMilestoneItemInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐMilestoneItemInput(ctx, v)
+			data, err := ec.unmarshalOOrganizationPlanMilestoneItemInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneItemInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -85149,7 +85731,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneUpdateInput(c
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusDetails"))
-			data, err := ec.unmarshalOStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐStatusDetailsInput(ctx, v)
+			data, err := ec.unmarshalOOrganizationPlanMilestoneStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneStatusDetailsInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -85163,6 +85745,62 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneUpdateInput(c
 				return it, err
 			}
 			it.OrganizationID = data
+		case "adhoc":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("adhoc"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Adhoc = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputOrganizationPlanStatusDetailsInput(ctx context.Context, obj interface{}) (model.OrganizationPlanStatusDetailsInput, error) {
+	var it model.OrganizationPlanStatusDetailsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"status", "updatedAt", "text"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "status":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalNOnboardingPlanStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingPlanStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "updatedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "text":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Text = data
 		}
 	}
 
@@ -85214,7 +85852,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanUpdateInput(ctx contex
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusDetails"))
-			data, err := ec.unmarshalOStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐStatusDetailsInput(ctx, v)
+			data, err := ec.unmarshalOOrganizationPlanStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanStatusDetailsInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -85768,7 +86406,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateItem(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "comments", "isRetroactiveCorrection"}
+	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "vatRate", "comments", "isRetroactiveCorrection"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -85820,6 +86458,15 @@ func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateItem(ctx cont
 				return it, err
 			}
 			it.Quantity = data
+		case "vatRate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vatRate"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VatRate = data
 		case "comments":
 			var err error
 
@@ -85889,7 +86536,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "name", "billed", "price", "quantity", "appSource", "externalReference", "startedAt", "endedAt"}
+	fieldsInOrder := [...]string{"contractId", "name", "billed", "price", "quantity", "vatRate", "appSource", "externalReference", "startedAt", "endedAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -85941,6 +86588,15 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 				return it, err
 			}
 			it.Quantity = data
+		case "vatRate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vatRate"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VatRate = data
 		case "appSource":
 			var err error
 
@@ -85990,7 +86646,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "comments", "appSource", "externalReference", "isRetroactiveCorrection"}
+	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "vatRate", "comments", "appSource", "externalReference", "isRetroactiveCorrection"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -86042,6 +86698,15 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 				return it, err
 			}
 			it.Quantity = data
+		case "vatRate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vatRate"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VatRate = data
 		case "comments":
 			var err error
 
@@ -86226,53 +86891,6 @@ func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interf
 				return it, err
 			}
 			it.CaseSensitive = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputStatusDetailsInput(ctx context.Context, obj interface{}) (model.StatusDetailsInput, error) {
-	var it model.StatusDetailsInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"status", "updatedAt", "text"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "status":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Status = data
-		case "updatedAt":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
-			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.UpdatedAt = data
-		case "text":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Text = data
 		}
 	}
 
@@ -91439,6 +92057,26 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "organization":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Invoice_organization(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "dryRun":
 
 			out.Values[i] = ec._Invoice_dryRun(ctx, field, obj)
@@ -91484,6 +92122,13 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 		case "vat":
 
 			out.Values[i] = ec._Invoice_vat(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "subtotalAmount":
+
+			out.Values[i] = ec._Invoice_subtotalAmount(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -93095,48 +93740,6 @@ func (ec *executionContext) _MeetingsPage(ctx context.Context, sel ast.Selection
 		case "totalElements":
 
 			out.Values[i] = ec._MeetingsPage_totalElements(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var milestoneItemImplementors = []string{"MilestoneItem"}
-
-func (ec *executionContext) _MilestoneItem(ctx context.Context, sel ast.SelectionSet, obj *model.MilestoneItem) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, milestoneItemImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("MilestoneItem")
-		case "status":
-
-			out.Values[i] = ec._MilestoneItem_status(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "updatedAt":
-
-			out.Values[i] = ec._MilestoneItem_updatedAt(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "text":
-
-			out.Values[i] = ec._MilestoneItem_text(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -95941,6 +96544,139 @@ func (ec *executionContext) _OrganizationPlanMilestone(ctx context.Context, sel 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "adhoc":
+
+			out.Values[i] = ec._OrganizationPlanMilestone_adhoc(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var organizationPlanMilestoneItemImplementors = []string{"OrganizationPlanMilestoneItem"}
+
+func (ec *executionContext) _OrganizationPlanMilestoneItem(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationPlanMilestoneItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, organizationPlanMilestoneItemImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OrganizationPlanMilestoneItem")
+		case "status":
+
+			out.Values[i] = ec._OrganizationPlanMilestoneItem_status(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._OrganizationPlanMilestoneItem_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "text":
+
+			out.Values[i] = ec._OrganizationPlanMilestoneItem_text(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var organizationPlanMilestoneStatusDetailsImplementors = []string{"OrganizationPlanMilestoneStatusDetails"}
+
+func (ec *executionContext) _OrganizationPlanMilestoneStatusDetails(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationPlanMilestoneStatusDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, organizationPlanMilestoneStatusDetailsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OrganizationPlanMilestoneStatusDetails")
+		case "status":
+
+			out.Values[i] = ec._OrganizationPlanMilestoneStatusDetails_status(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._OrganizationPlanMilestoneStatusDetails_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "text":
+
+			out.Values[i] = ec._OrganizationPlanMilestoneStatusDetails_text(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var organizationPlanStatusDetailsImplementors = []string{"OrganizationPlanStatusDetails"}
+
+func (ec *executionContext) _OrganizationPlanStatusDetails(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationPlanStatusDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, organizationPlanStatusDetailsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OrganizationPlanStatusDetails")
+		case "status":
+
+			out.Values[i] = ec._OrganizationPlanStatusDetails_status(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._OrganizationPlanStatusDetails_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "text":
+
+			out.Values[i] = ec._OrganizationPlanStatusDetails_text(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -98008,6 +98744,13 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "vatRate":
+
+			out.Values[i] = ec._ServiceLineItem_vatRate(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -98127,48 +98870,6 @@ func (ec *executionContext) _State(ctx context.Context, sel ast.SelectionSet, ob
 		case "code":
 
 			out.Values[i] = ec._State_code(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var statusDetailsImplementors = []string{"StatusDetails"}
-
-func (ec *executionContext) _StatusDetails(ctx context.Context, sel ast.SelectionSet, obj *model.StatusDetails) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, statusDetailsImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("StatusDetails")
-		case "status":
-
-			out.Values[i] = ec._StatusDetails_status(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "updatedAt":
-
-			out.Values[i] = ec._StatusDetails_updatedAt(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "text":
-
-			out.Values[i] = ec._StatusDetails_text(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -102155,60 +102856,6 @@ func (ec *executionContext) marshalNMeetingsPage2ᚖgithubᚗcomᚋopenlineᚑai
 	return ec._MeetingsPage(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMilestoneItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐMilestoneItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MilestoneItem) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMilestoneItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐMilestoneItem(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNMilestoneItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐMilestoneItem(ctx context.Context, sel ast.SelectionSet, v *model.MilestoneItem) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._MilestoneItem(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNNote2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v model.Note) graphql.Marshaler {
 	return ec._Note(ctx, sel, &v)
 }
@@ -102343,6 +102990,36 @@ func (ec *executionContext) marshalNNotedEntity2ᚕgithubᚗcomᚋopenlineᚑai�
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNOnboardingPlanMilestoneItemStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingPlanMilestoneItemStatus(ctx context.Context, v interface{}) (model.OnboardingPlanMilestoneItemStatus, error) {
+	var res model.OnboardingPlanMilestoneItemStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOnboardingPlanMilestoneItemStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingPlanMilestoneItemStatus(ctx context.Context, sel ast.SelectionSet, v model.OnboardingPlanMilestoneItemStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNOnboardingPlanMilestoneStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingPlanMilestoneStatus(ctx context.Context, v interface{}) (model.OnboardingPlanMilestoneStatus, error) {
+	var res model.OnboardingPlanMilestoneStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOnboardingPlanMilestoneStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingPlanMilestoneStatus(ctx context.Context, sel ast.SelectionSet, v model.OnboardingPlanMilestoneStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNOnboardingPlanStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingPlanStatus(ctx context.Context, v interface{}) (model.OnboardingPlanStatus, error) {
+	var res model.OnboardingPlanStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOnboardingPlanStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingPlanStatus(ctx context.Context, sel ast.SelectionSet, v model.OnboardingPlanStatus) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOnboardingStatus(ctx context.Context, v interface{}) (model.OnboardingStatus, error) {
@@ -102597,9 +103274,73 @@ func (ec *executionContext) unmarshalNOrganizationPlanMilestoneInput2githubᚗco
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNOrganizationPlanMilestoneItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.OrganizationPlanMilestoneItem) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNOrganizationPlanMilestoneItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneItem(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNOrganizationPlanMilestoneItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneItem(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationPlanMilestoneItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._OrganizationPlanMilestoneItem(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNOrganizationPlanMilestoneReorderInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneReorderInput(ctx context.Context, v interface{}) (model.OrganizationPlanMilestoneReorderInput, error) {
 	res, err := ec.unmarshalInputOrganizationPlanMilestoneReorderInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOrganizationPlanMilestoneStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneStatusDetails(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationPlanMilestoneStatusDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._OrganizationPlanMilestoneStatusDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNOrganizationPlanMilestoneUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneUpdateInput(ctx context.Context, v interface{}) (model.OrganizationPlanMilestoneUpdateInput, error) {
@@ -102627,6 +103368,16 @@ func (ec *executionContext) unmarshalNOrganizationPlanMilestoneUpdateInput2ᚕ�
 func (ec *executionContext) unmarshalNOrganizationPlanMilestoneUpdateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneUpdateInput(ctx context.Context, v interface{}) (*model.OrganizationPlanMilestoneUpdateInput, error) {
 	res, err := ec.unmarshalInputOrganizationPlanMilestoneUpdateInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOrganizationPlanStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanStatusDetails(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationPlanStatusDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._OrganizationPlanStatusDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNOrganizationPlanUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanUpdateInput(ctx context.Context, v interface{}) (model.OrganizationPlanUpdateInput, error) {
@@ -103061,16 +103812,6 @@ func (ec *executionContext) unmarshalNSortingDirection2githubᚗcomᚋopenline�
 
 func (ec *executionContext) marshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐSortingDirection(ctx context.Context, sel ast.SelectionSet, v model.SortingDirection) graphql.Marshaler {
 	return v
-}
-
-func (ec *executionContext) marshalNStatusDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐStatusDetails(ctx context.Context, sel ast.SelectionSet, v *model.StatusDetails) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._StatusDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -104794,34 +105535,6 @@ func (ec *executionContext) marshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑa
 	return v
 }
 
-func (ec *executionContext) unmarshalOMilestoneItemInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐMilestoneItemInput(ctx context.Context, v interface{}) ([]*model.MilestoneItemInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.MilestoneItemInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOMilestoneItemInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐMilestoneItemInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) unmarshalOMilestoneItemInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐMilestoneItemInput(ctx context.Context, v interface{}) (*model.MilestoneItemInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputMilestoneItemInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐNoteInput(ctx context.Context, v interface{}) (*model.NoteInput, error) {
 	if v == nil {
 		return nil, nil
@@ -104934,6 +105647,50 @@ func (ec *executionContext) marshalOOrganizationPage2ᚖgithubᚗcomᚋopenline�
 		return graphql.Null
 	}
 	return ec._OrganizationPage(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOOrganizationPlanMilestoneItemInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneItemInput(ctx context.Context, v interface{}) ([]*model.OrganizationPlanMilestoneItemInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.OrganizationPlanMilestoneItemInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOOrganizationPlanMilestoneItemInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneItemInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOOrganizationPlanMilestoneItemInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneItemInput(ctx context.Context, v interface{}) (*model.OrganizationPlanMilestoneItemInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputOrganizationPlanMilestoneItemInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOOrganizationPlanMilestoneStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanMilestoneStatusDetailsInput(ctx context.Context, v interface{}) (*model.OrganizationPlanMilestoneStatusDetailsInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputOrganizationPlanMilestoneStatusDetailsInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOOrganizationPlanStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPlanStatusDetailsInput(ctx context.Context, v interface{}) (*model.OrganizationPlanStatusDetailsInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputOrganizationPlanStatusDetailsInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (*model.Pagination, error) {
@@ -105069,14 +105826,6 @@ func (ec *executionContext) unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputSortBy(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOStatusDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐStatusDetailsInput(ctx context.Context, v interface{}) (*model.StatusDetailsInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputStatusDetailsInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
