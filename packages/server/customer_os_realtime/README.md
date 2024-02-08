@@ -1,5 +1,24 @@
 # CustomerOsRealtime
 
+## Setup
+
+### Elixir
+To install Elixir run
+
+    brew install elixir
+
+This will install both elixir and erlang in your machine, check with `elixir -v`
+
+To use phoenix you must also install Hex:
+
+    mix local.hex
+
+Now let's get phoenix:
+
+    mix archive.install hex phx_new
+
+Well done.
+
 To start your Phoenix server:
 
   * Run `mix setup` to install and setup dependencies

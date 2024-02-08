@@ -4,8 +4,6 @@ defmodule CustomerOsRealtimeWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, html: {CustomerOsRealtimeWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -16,14 +14,11 @@ defmodule CustomerOsRealtimeWeb.Router do
 
   scope "/", CustomerOsRealtimeWeb do
     pipe_through :browser
-
-    get "/", PageController, :home
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", CustomerOsRealtimeWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", CustomerOsRealtimeWeb do
+    pipe_through :api
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:customer_os_realtime, :dev_routes) do
@@ -35,10 +30,10 @@ defmodule CustomerOsRealtimeWeb.Router do
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
-      pipe_through :browser
+      pipe_through [:fetch_session, :protect_from_forgery]
 
       live_dashboard "/dashboard", metrics: CustomerOsRealtimeWeb.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
+      # forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
 end
