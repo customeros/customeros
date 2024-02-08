@@ -14,6 +14,7 @@ defmodule CustomerOsRealtime.Application do
       # Start a worker by calling: CustomerOsRealtime.Worker.start_link(arg)
       # {CustomerOsRealtime.Worker, arg},
       # Start to serve requests, typically the last entry
+      CustomerOsRealtimeWeb.Presence,
       CustomerOsRealtimeWeb.Endpoint
     ]
 

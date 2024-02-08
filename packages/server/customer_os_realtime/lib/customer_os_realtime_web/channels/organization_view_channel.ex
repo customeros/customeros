@@ -1,12 +1,13 @@
 defmodule CustomerOsRealtimeWeb.OrganizationChannel do
   require Logger
   use CustomerOsRealtimeWeb, :channel
+  alias CustomerOsRealtimeWeb.Presence
 
   @impl true
   def join("organization:lobby", _payload, socket) do
     Logger.debug("Reached join handler in organization_view_channel.ex")
-    # self = self()
-    # send(self, :after_join)
+    send(self(), :after_join)
+    # {:ok, assign(socket, :user_id)}
     {:ok, socket}
 
     # if authorized?(payload) do
@@ -16,17 +17,20 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
     # end
   end
 
-  # # Helper function for merging states
+  @impl true
+  def handle_info(:after_join, socket) do
+    {:ok, _} = Presence.track(socket, socket.assigns.user_id, %{
+      online_at: inspect(System.system_time(:second))
+    })
+
+    push(socket, "presence_state", Presence.list(socket))
+    # push(socket, "feed", %{list: feed_items(socket)}) # TODO: push CRDT state to the client
+    {:noreply, socket}
+  end
+  # # Helper functions
   # defp merge_states(crdt_state, client_state) do
   #   Map.merge(client_state, crdt_state)
   # end
-
-  # @impl true
-  # def handle_info(:after_join, socket) do
-  #   push(socket, "feed", %{list: feed_items(socket)})
-  #   {:noreply, socket}
-  # end
-
   # defp feed_items(socket) do
   #   # Use the socket to fetch the feed items
   #   # if client has data already in the socket, use that
@@ -52,7 +56,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
   # by sending replies to requests from the client
   @impl true
   def handle_in("ping", payload, socket) do
-    Logger.info("Reached ping handler in chat_channel.ex")
+    Logger.info("Reached ping handler in organization_view_channel.ex")
     {:reply, {:ok, payload}, socket}
   end
 
@@ -60,7 +64,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
   # broadcast to everyone in the current topic (chat:lobby).
   @impl true
   def handle_in("shout", payload, socket) do
-    Logger.info("Reached shout handler in chat_channel.ex")
+    Logger.info("Reached shout handler in organization_view_channel.ex")
     broadcast!(socket, "shout", payload)
     {:noreply, socket}
   end
