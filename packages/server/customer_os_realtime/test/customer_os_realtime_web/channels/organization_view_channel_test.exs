@@ -1,6 +1,6 @@
 defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
   use CustomerOsRealtimeWeb.ChannelCase
-  alias CustomerOsRealtimeWeb.Conversation
+  require Logger
   alias CustomerOsRealtimeWeb.UserSocket
 
   setup do
@@ -16,7 +16,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
     #   # #   end
     #   # # end)
     token = Phoenix.Token.sign(@endpoint, "user", "user.id")
-    {:ok, socket} = connect(UserSocket, %{"token" => token})
+    {:ok, socket} = connect(UserSocket, %{"user_token" => token})
     {:ok, _, ^socket} = subscribe_and_join(
       socket, "organization:lobby", %{}
     )
@@ -26,6 +26,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
 
   test "ping replies with status ok", %{socket: socket} do
     ref = push(socket, "ping", %{"hello" => "there"})
+    Logger.debug("Ref: #{inspect(ref)}")
     assert_reply ref, :ok, %{"hello" => "there"}
   end
 
