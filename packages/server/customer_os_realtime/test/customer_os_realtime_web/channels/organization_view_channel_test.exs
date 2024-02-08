@@ -6,6 +6,12 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
       RealtimeWeb.UserSocket
       |> socket("user_id", %{some: :assign})
       |> subscribe_and_join(CustomerOsRealtimeWeb.OrganizationChannel, "organization:lobby")
+      # on_exit(fn ->
+      #   for pid <- CustomerOsRealtimeWeb.Presence.fetchers_pids() do
+      #     ref = Process.monitor(pid)
+      #     assert_receive {:DOWN, ^ref, _, _, _}, 1000
+      #   end
+      # end)
 
     %{socket: socket}
   end
