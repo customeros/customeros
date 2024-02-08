@@ -1,10 +1,9 @@
 import { VStack } from '@ui/layout/Stack';
 
 import { Milestone } from './Milestone';
-import { MilestoneDatum } from '../../types';
+import { TaskDatum, MilestoneDatum } from '../../types';
 
 interface MilestoneListProps {
-  milestones: MilestoneDatum[];
   onCreateMilestone: () => void;
   openMilestoneId: string | null;
   onToggleMilestone: (id: string) => void;
@@ -12,6 +11,7 @@ interface MilestoneListProps {
   onDuplicateMilestone: (id: string) => void;
   onMakeMilestoneOptional?: (id: string) => void;
   onSyncMilestone: (milestone: MilestoneDatum) => void;
+  milestones: (MilestoneDatum & { items: TaskDatum[] })[];
 }
 
 export const MilestoneList = ({

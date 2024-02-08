@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 
+import omit from 'lodash/omit';
+
 import { Flex } from '@ui/layout/Flex';
 import { useDisclosure } from '@ui/utils';
 import { Text } from '@ui/typography/Text';
@@ -17,13 +19,18 @@ import { AddMilestoneModal } from './AddMilestoneModal';
 import { ProgressCompletion } from './ProgressCompletion';
 import { checkPlanDone, checkMilestoneDue } from './utils';
 import { usePlanMutations } from '../../hooks/usePlanMutations';
-import { PlanDatum, MilestoneDatum, NewMilestoneInput } from '../types';
 import { useMilestoneMutations } from '../../hooks/useMilestoneMutations';
+import {
+  PlanDatum,
+  TaskDatum,
+  MilestoneDatum,
+  NewMilestoneInput,
+} from '../types';
 
 interface PlanProps {
-  plan: PlanDatum;
   isOpen?: boolean;
   onToggle?: (planId: string) => void;
+  plan: PlanDatum & { milestones: (MilestoneDatum & { items: TaskDatum[] })[] };
 }
 
 export const Plan = ({ plan, isOpen: _isOpen, onToggle }: PlanProps) => {
@@ -43,7 +50,9 @@ export const Plan = ({ plan, isOpen: _isOpen, onToggle }: PlanProps) => {
   const isTemporary = plan.id.startsWith('temp');
   const activeMilestones = plan.milestones
     .filter((m) => !m.retired)
-    .sort((a, b) => a.order - b.order);
+    .sort((a, b) => a.order - b.order) as (MilestoneDatum & {
+    items: TaskDatum[];
+  })[];
 
   const hasMilestones = activeMilestones.length > 0;
   const hasOneMilestone = activeMilestones.length === 1;
@@ -73,6 +82,7 @@ export const Plan = ({ plan, isOpen: _isOpen, onToggle }: PlanProps) => {
     updateMilestone.mutate({
       input: {
         ...milestone,
+        items: milestone.items.map((item) => omit(item, 'id')),
         organizationId,
         organizationPlanId: plan.id,
         updatedAt: new Date().toISOString(),
