@@ -5864,7 +5864,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Ended_Contract_Monthly_Renewal_1_SLI_
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2023, 11)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -5880,8 +5880,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Ended_Contract_Monthly_Renewal_1_SLI_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 5, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 6, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 5)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 5)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
@@ -5908,7 +5909,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 3)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -5924,8 +5925,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 10, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 5)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 5)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
@@ -5958,7 +5960,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 5, 2, neo4jenum.BilledTypeMonthly, 5, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 3)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -5974,8 +5976,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 10, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 5)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 5)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
@@ -6007,7 +6010,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_Q
 	neo4jtest.InsertServiceLineItemCanceled(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 5, 1, sli1StartedAt, sli1EndedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 3)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6023,8 +6026,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_Q
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 10, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
@@ -6057,7 +6061,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Ended_Contract_Monthly_Renewal_1_SLI_
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 3)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6073,8 +6077,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Ended_Contract_Monthly_Renewal_1_SLI_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 10, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
@@ -6105,7 +6110,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 3)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6121,8 +6126,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 10, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
@@ -6155,7 +6161,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 5, 1, neo4jenum.BilledTypeQuarterly, 3, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6171,8 +6177,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 13, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 3)
@@ -6207,7 +6214,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_A
 	neo4jtest.InsertServiceLineItemCanceled(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 5, 1, sli1StartedAt, sli1EndedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6223,8 +6230,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_A
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -6272,7 +6280,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Ended_Contract_Monthly_Renewal_1_SLI_
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6288,8 +6296,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Ended_Contract_Monthly_Renewal_1_SLI_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -6335,7 +6344,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6351,8 +6360,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -6400,7 +6410,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 10, 1, neo4jenum.BilledTypeAnnually, 5, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6416,8 +6426,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Monthly_Renewal_1_SLI_V
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -6463,7 +6474,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 3)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6479,8 +6490,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 10, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 15)
@@ -6513,7 +6525,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 5, 2, neo4jenum.BilledTypeMonthly, 5, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6529,8 +6541,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 13, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 15)
@@ -6564,7 +6577,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 3)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6580,8 +6593,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 9, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 10, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 5)
@@ -6614,7 +6628,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 5, 1, neo4jenum.BilledTypeQuarterly, 3, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6630,8 +6644,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 13, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 3)
@@ -6665,7 +6680,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6681,8 +6696,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -6730,7 +6746,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 10, 1, neo4jenum.BilledTypeAnnually, 5, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6746,8 +6762,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Quarterly_Renewal_1_SLI
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -6793,7 +6810,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V1
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6809,8 +6826,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V1
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 13, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -6846,7 +6864,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V2
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 5, 2, neo4jenum.BilledTypeMonthly, 5, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6862,8 +6880,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V2
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 13, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -6897,7 +6916,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V1
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6913,8 +6932,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V1
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 13, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -6950,7 +6970,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V2
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 5, 1, neo4jenum.BilledTypeQuarterly, 3, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2024, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -6966,8 +6986,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V2
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 12, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 13, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7001,7 +7022,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V1
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7017,8 +7038,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V1
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7066,7 +7088,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V2
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 10, 1, neo4jenum.BilledTypeAnnually, 5, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7082,8 +7104,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_Annual_Renewal_1_SLI_V2
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7130,7 +7153,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7146,8 +7169,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7194,7 +7218,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7210,8 +7234,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7260,7 +7285,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 5, 2, neo4jenum.BilledTypeMonthly, 5, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7276,8 +7301,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7326,7 +7352,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeMonthly, 5, 2, neo4jenum.BilledTypeMonthly, 5, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7342,8 +7368,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7390,7 +7417,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7406,8 +7433,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7454,7 +7482,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7470,8 +7498,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7520,7 +7549,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 5, 1, neo4jenum.BilledTypeQuarterly, 3, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7536,8 +7565,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7586,7 +7616,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeQuarterly, 5, 1, neo4jenum.BilledTypeQuarterly, 3, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7602,8 +7632,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7650,7 +7681,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7666,8 +7697,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7714,7 +7746,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 5, 1, sli1StartedAt)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7730,8 +7762,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7780,7 +7813,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 10, 1, neo4jenum.BilledTypeAnnually, 5, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2022, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7796,8 +7829,21 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_1_Multi_Year_Renewal_1_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 37, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2022, 6, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2022, 7, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2022, 8, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2022, 9, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2022, 10, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2022, 11, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2022, 12, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 1, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 2, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 3, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 4, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 5, 0)
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 5)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)
@@ -7846,7 +7892,7 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_
 	neo4jtest.InsertServiceLineItemWithParent(ctx, driver, tenantName, contractId, neo4jenum.BilledTypeAnnually, 10, 1, neo4jenum.BilledTypeAnnually, 5, 1, sli2date, sliId)
 
 	format := "2006-01-02T15:04:05.000Z"
-	startTime := neo4jtest.FirstTimeOfMonth(2023, 7)
+	startTime := neo4jtest.FirstTimeOfMonth(2023, 6)
 	endTime := neo4jtest.FirstTimeOfMonth(2025, 6)
 
 	rawResponse := callGraphQL(t, "dashboard_view/dashboard_arr_breakdown",
@@ -7862,8 +7908,9 @@ func Test_Dashboard_ARR_Breakdown_Renewals_Live_Contract_2_Multi_Year_Renewal_1_
 	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
 	require.Nil(t, err)
 
-	require.Equal(t, 24, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
+	require.Equal(t, 25, len(dashboardReport.Dashboard_ARRBreakdown.PerMonth))
 
+	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 6, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 7, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 8, 0)
 	assertRenewalsMonthData(t, &dashboardReport.Dashboard_ARRBreakdown, 2023, 9, 0)

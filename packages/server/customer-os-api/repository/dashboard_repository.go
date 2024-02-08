@@ -1423,7 +1423,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, pp, LAST(versions) AS lastSliVersion
 					WITH year, month, beginOfMonth, endOfMonth, cssa, crc, crp, pp, lastSliVersion
 					WHERE
-						CASE WHEN crc = 'ANNUALLY' THEN (CASE WHEN crp IS NULL THEN cssa.MONTH = beginOfMonth.MONTH ELSE cssa.MONTH = beginOfMonth.MONTH AND (beginOfMonth.YEAR - cssa.YEAR) %s = 0 END) ELSE 1 = 1 END AND
+						CASE WHEN crc = 'ANNUALLY' THEN (CASE WHEN crp IS NULL THEN cssa.YEAR < beginOfMonth.YEAR AND cssa.MONTH = beginOfMonth.MONTH ELSE cssa.YEAR < beginOfMonth.YEAR AND cssa.MONTH = beginOfMonth.MONTH AND (beginOfMonth.YEAR - cssa.YEAR) %s = 0 END) ELSE 1 = 1 END AND
 						CASE WHEN crc = 'QUARTERLY' THEN
 							(lastSliVersion.billed IN ['MONTHLY', 'QUARTERLY'] AND beginOfMonth.MONTH IN [cssa.MONTH - 9, cssa.MONTH - 6, cssa.MONTH - 3, cssa.MONTH, cssa.MONTH + 3, cssa.MONTH + 6, cssa.MONTH + 9]) OR
 							(lastSliVersion.billed = 'ANNUALLY' AND beginOfMonth.MONTH = cssa.MONTH)
