@@ -35,3 +35,5 @@ customer_os_realtime-*.tar
 npm-debug.log
 /assets/node_modules/
 
+.vscode/
+.elixir_ls/

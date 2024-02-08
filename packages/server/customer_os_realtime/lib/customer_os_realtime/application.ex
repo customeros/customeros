@@ -11,8 +11,6 @@ defmodule CustomerOsRealtime.Application do
       CustomerOsRealtimeWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:customer_os_realtime, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: CustomerOsRealtime.PubSub},
-      # Start the Finch HTTP client for sending emails
-      {Finch, name: CustomerOsRealtime.Finch},
       # Start a worker by calling: CustomerOsRealtime.Worker.start_link(arg)
       # {CustomerOsRealtime.Worker, arg},
       # Start to serve requests, typically the last entry

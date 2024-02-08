@@ -14,10 +14,7 @@ config :customer_os_realtime, CustomerOsRealtimeWeb.Endpoint,
   code_reloader: true,
   debug_errors: true,
   secret_key_base: "YhZZx2x6lsMGrDZRg8cpZiRf9cQf6UWo9hz9wyqAb/5Ym+sc0cIfW5PS8yHi8hB5",
-  watchers: [
-    esbuild: {Esbuild, :install_and_run, [:customer_os_realtime, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:customer_os_realtime, ~w(--watch)]}
-  ]
+  watchers: []
 
 # ## SSL Support
 #
@@ -67,6 +64,3 @@ config :phoenix, :plug_init_mode, :runtime
 
 # Include HEEx debug annotations as HTML comments in rendered markup
 config :phoenix_live_view, :debug_heex_annotations, true
-
-# Disable swoosh api client as it is only required for production adapters.
-config :swoosh, :api_client, false

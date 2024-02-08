@@ -9,7 +9,7 @@ defmodule CustomerOsRealtimeWeb.UserSocket do
 
   ## Channels
 
-  channel "chat:*", CustomerOsRealtimeWeb.ChatChannel
+  channel "organization:*", CustomerOsRealtimeWeb.OrganizationChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
