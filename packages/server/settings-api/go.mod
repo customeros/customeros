@@ -15,7 +15,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20240206104907-b429ee046270
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240206104907-b429ee046270
 	gorm.io/driver/postgres v1.5.6
-	gorm.io/gorm v1.25.7
+	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 )
 
 require (
