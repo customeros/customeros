@@ -3,6 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { debounce } from 'lodash';
+import { useDeepCompareEffect } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
@@ -60,7 +61,6 @@ export const ContractCard = ({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isExpanded, setIsExpanded] = useState(!data?.signedAt);
   const formId = `contract-form-${data.id}`;
-
   const { setIsPanelModalOpen } = useUpdatePanelModalStateContext();
   const { onOpen, onClose, isOpen } = useDisclosure({
     id: 'billing-details-modal',
@@ -90,7 +90,7 @@ export const ContractCard = ({
   }, [isOpen, isServceItemsModalOpen]);
 
   const updateContract = useUpdateContractMutation(client, {
-    onMutate: ({ input }) => {
+    onMutate: ({ input: { patch, contractId, ...input } }) => {
       queryClient.cancelQueries({ queryKey });
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
         return produce(currentCache, (draft) => {
@@ -103,8 +103,15 @@ export const ContractCard = ({
               if (index !== updatedContractIndex) {
                 return contractData;
               }
+              const result = Object.entries(input).find(
+                ([_, value]) => value === '0001-01-01T00:00:00.000000Z',
+              );
 
-              return { ...input };
+              return {
+                ...contractData,
+                ...input,
+                ...(result ? { [result[0]]: null } : {}),
+              };
             });
           }
         });
@@ -137,10 +144,11 @@ export const ContractCard = ({
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      queryClient.invalidateQueries({ queryKey });
+
       timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey });
         queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
-      }, 800);
+      }, 500);
     },
   });
 
@@ -164,6 +172,7 @@ export const ContractCard = ({
   const { setDefaultValues, state } = useForm<TimeToRenewalForm>({
     formId,
     defaultValues,
+    debug: true,
     stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
@@ -211,11 +220,19 @@ export const ContractCard = ({
             updateContract.mutate(
               ContractDTO.toPayload({
                 contractId: data.id,
-                [action.payload.name]: action.payload.value,
+                [action.payload.name]: action.payload.value
+                  ? action.payload.value
+                  : '0001-01-01T00:00:00.000000Z',
               }),
             );
 
-            return next;
+            return {
+              ...next,
+              values: {
+                ...next.values,
+                [action.payload.name]: action.payload.value ?? null,
+              },
+            };
           case 'billingCycle':
             updateContract.mutate(
               ContractDTO.toPayload({
@@ -268,13 +285,9 @@ export const ContractCard = ({
     },
   });
 
-  useEffect(() => {
+  useDeepCompareEffect(() => {
     setDefaultValues(defaultValues);
-  }, [
-    defaultValues.renewalCycle,
-    defaultValues.endedAt?.toISOString(),
-    defaultValues.serviceStartedAt?.toISOString(),
-  ]);
+  }, [defaultValues]);
 
   useEffect(() => {
     return () => {
@@ -417,6 +430,7 @@ export const ContractCard = ({
               name='serviceStartedAt'
               inset='120% auto auto 0px'
               calendarIconHidden
+              value={state.values.serviceStartedAt}
             />
             <DatePicker
               label='Contract ends'
@@ -425,6 +439,7 @@ export const ContractCard = ({
               formId={formId}
               name='endedAt'
               calendarIconHidden
+              value={state.values.endedAt}
             />
           </Flex>
           <Flex gap='4' flexGrow={0} mb={2}>
@@ -454,7 +469,9 @@ export const ContractCard = ({
               name='invoicingStartDate'
               inset='120% auto auto 0px'
               calendarIconHidden
+              value={state.values.invoicingStartDate}
             />
+
             <FormSelect
               label='Billing period'
               placeholder='Billing period'
