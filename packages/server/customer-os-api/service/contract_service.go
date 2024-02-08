@@ -22,6 +22,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"time"
 )
 
 type ContractService interface {
@@ -180,15 +181,11 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 
 	fieldMask := []contractpb.ContractFieldMask{}
 	contractUpdateRequest := contractpb.UpdateContractGrpcRequest{
-		Tenant:             common.GetTenantFromContext(ctx),
-		Id:                 input.ContractID,
-		LoggedInUserId:     common.GetUserIdFromContext(ctx),
-		Name:               utils.IfNotNilString(input.Name),
-		ContractUrl:        utils.IfNotNilString(input.ContractURL),
-		SignedAt:           utils.ConvertTimeToTimestampPtr(input.SignedAt),
-		ServiceStartedAt:   utils.ConvertTimeToTimestampPtr(input.ServiceStartedAt),
-		InvoicingStartDate: utils.ConvertTimeToTimestampPtr(input.InvoicingStartDate),
-		EndedAt:            utils.ConvertTimeToTimestampPtr(input.EndedAt),
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             input.ContractID,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		Name:           utils.IfNotNilString(input.Name),
+		ContractUrl:    utils.IfNotNilString(input.ContractURL),
 		SourceFields: &commonpb.SourceFields{
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: utils.StringFirstNonEmpty(utils.IfNotNilString(input.AppSource), constants.AppSourceCustomerOsApi),
@@ -206,6 +203,41 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 	if input.Currency != nil {
 		contractUpdateRequest.Currency = mapper.MapCurrencyFromModel(*input.Currency).String()
 	}
+
+	nullTime := time.Time{}
+
+	if input.SignedAt != nil {
+		if *input.SignedAt != nullTime {
+			contractUpdateRequest.SignedAt = utils.ConvertTimeToTimestampPtr(input.SignedAt)
+		} else {
+			contractUpdateRequest.SignedAt = nil
+		}
+	}
+
+	if input.ServiceStartedAt != nil {
+		if *input.ServiceStartedAt != nullTime {
+			contractUpdateRequest.ServiceStartedAt = utils.ConvertTimeToTimestampPtr(input.ServiceStartedAt)
+		} else {
+			contractUpdateRequest.ServiceStartedAt = nil
+		}
+	}
+
+	if input.EndedAt != nil {
+		if *input.EndedAt != nullTime {
+			contractUpdateRequest.EndedAt = utils.ConvertTimeToTimestampPtr(input.EndedAt)
+		} else {
+			contractUpdateRequest.EndedAt = nil
+		}
+	}
+
+	if input.InvoicingStartDate != nil {
+		if *input.InvoicingStartDate != nullTime {
+			contractUpdateRequest.InvoicingStartDate = utils.ConvertTimeToTimestampPtr(input.InvoicingStartDate)
+		} else {
+			contractUpdateRequest.InvoicingStartDate = nil
+		}
+	}
+
 	// prepare renewal cycle
 	if input.RenewalCycle != nil {
 		switch *input.RenewalCycle {
