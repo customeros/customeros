@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { useForm } from 'react-inverted-form';
 
+import { useDeepCompareEffect } from 'rooks';
 import { UseMutationResult } from '@tanstack/react-query';
 
 import { Dot } from '@ui/media/Dot';
@@ -114,7 +115,7 @@ const RenewalDetailsForm = ({
     [data?.renewalLikelihood, data?.amount, data?.comments, data?.owner?.id],
   );
 
-  const { handleSubmit } = useForm({
+  const { handleSubmit, setDefaultValues } = useForm({
     formId,
     defaultValues,
     onSubmit: async ({ amount, owner, reason, renewalLikelihood }) => {
@@ -129,6 +130,10 @@ const RenewalDetailsForm = ({
       });
     },
   });
+
+  useDeepCompareEffect(() => {
+    setDefaultValues(defaultValues);
+  }, [defaultValues]);
 
   return (
     <>
