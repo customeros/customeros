@@ -76,6 +76,7 @@ message OrganizationPlanMilestoneItem {
     string status = 1;
     google.protobuf.Timestamp updatedAt = 2;
     string text = 3;
+    string uuid = 4;
 }
 
 // Update milestone requires items to be a list of objects, which would contain the status, text and updatedAt
