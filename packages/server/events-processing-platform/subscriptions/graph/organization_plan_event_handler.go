@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -518,6 +519,7 @@ func convertItemsStrToObject(items []string) []entity.OrganizationPlanMilestoneI
 			Text:      item,
 			UpdatedAt: time.Now().UTC(),
 			Status:    model.TaskNotDone.String(),
+			Uuid:      uuid.New().String(),
 		}
 	}
 	return milestoneItems
@@ -530,6 +532,7 @@ func convertItemsModelToEntity(items []model.OrganizationPlanMilestoneItem) []en
 			Text:      item.Text,
 			UpdatedAt: time.Now().UTC(),
 			Status:    item.Status,
+			Uuid:      item.Uuid,
 		}
 	}
 	return milestoneItems
