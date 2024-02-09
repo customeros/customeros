@@ -1110,6 +1110,7 @@ type ComplexityRoot struct {
 	OrganizationPlanMilestoneItem struct {
 		Status    func(childComplexity int) int
 		Text      func(childComplexity int) int
+		UUID      func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
 	}
 
@@ -8279,6 +8280,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationPlanMilestoneItem.Text(childComplexity), true
 
+	case "OrganizationPlanMilestoneItem.uuid":
+		if e.complexity.OrganizationPlanMilestoneItem.UUID == nil {
+			break
+		}
+
+		return e.complexity.OrganizationPlanMilestoneItem.UUID(childComplexity), true
+
 	case "OrganizationPlanMilestoneItem.updatedAt":
 		if e.complexity.OrganizationPlanMilestoneItem.UpdatedAt == nil {
 			break
@@ -12791,6 +12799,7 @@ type OrganizationPlanMilestoneItem {
     status: OnboardingPlanMilestoneItemStatus!
     updatedAt: Time!
     text: String!
+    uuid: ID!
 }
 
 input OrganizationPlanInput {
@@ -12823,6 +12832,7 @@ input OrganizationPlanMilestoneItemInput {
     status: OnboardingPlanMilestoneItemStatus!
     updatedAt: Time!
     text: String!
+    uuid: ID
 }
 
 input OrganizationPlanMilestoneUpdateInput {
@@ -65081,6 +65091,8 @@ func (ec *executionContext) fieldContext_OrganizationPlanMilestone_items(ctx con
 				return ec.fieldContext_OrganizationPlanMilestoneItem_updatedAt(ctx, field)
 			case "text":
 				return ec.fieldContext_OrganizationPlanMilestoneItem_text(ctx, field)
+			case "uuid":
+				return ec.fieldContext_OrganizationPlanMilestoneItem_uuid(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationPlanMilestoneItem", field.Name)
 		},
@@ -65355,6 +65367,50 @@ func (ec *executionContext) fieldContext_OrganizationPlanMilestoneItem_text(ctx 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationPlanMilestoneItem_uuid(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPlanMilestoneItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationPlanMilestoneItem_uuid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UUID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationPlanMilestoneItem_uuid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationPlanMilestoneItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -84794,7 +84850,7 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneItemInput(ctx
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"status", "updatedAt", "text"}
+	fieldsInOrder := [...]string{"status", "updatedAt", "text", "uuid"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -84822,6 +84878,13 @@ func (ec *executionContext) unmarshalInputOrganizationPlanMilestoneItemInput(ctx
 				return it, err
 			}
 			it.Text = data
+		case "uuid":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("uuid"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UUID = data
 		}
 	}
 
@@ -96820,6 +96883,11 @@ func (ec *executionContext) _OrganizationPlanMilestoneItem(ctx context.Context, 
 			}
 		case "text":
 			out.Values[i] = ec._OrganizationPlanMilestoneItem_text(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "uuid":
+			out.Values[i] = ec._OrganizationPlanMilestoneItem_uuid(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

@@ -172,6 +172,7 @@ func GrpcItemsToDomainItems(items []*orgplanpb.OrganizationPlanMilestoneItem) []
 			Status:    item.Status,
 			Text:      item.Text,
 			UpdatedAt: item.UpdatedAt.AsTime(),
+			Uuid:      item.Uuid,
 		})
 	}
 	return domainItems
