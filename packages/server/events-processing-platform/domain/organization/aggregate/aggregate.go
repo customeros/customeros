@@ -169,6 +169,9 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt
 
+	if !eventData.Hide {
+		a.Organization.Hide = false
+	}
 	if eventData.Source != a.Organization.Source.SourceOfTruth && a.Organization.Source.SourceOfTruth == constants.SourceOpenline {
 		if a.Organization.Name == "" && eventData.UpdateName() {
 			a.Organization.Name = eventData.Name

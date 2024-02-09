@@ -283,7 +283,7 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 		cypher += `org.description = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.description = '' THEN $description ELSE org.description END,`
 	}
 	if data.UpdateHide {
-		cypher += `org.hide = CASE WHEN $overwrite=true OR (org.sourceOfTruth=$source AND $hide = false) THEN $hide ELSE org.hide END,`
+		cypher += `org.hide = CASE WHEN $overwrite=true OR $hide = false THEN $hide ELSE org.hide END,`
 	}
 	if data.UpdateIsCustomer {
 		cypher += `org.isCustomer = CASE WHEN $overwrite=true OR (org.sourceOfTruth=$source AND $isCustomer = true) THEN $isCustomer ELSE org.isCustomer END,`
