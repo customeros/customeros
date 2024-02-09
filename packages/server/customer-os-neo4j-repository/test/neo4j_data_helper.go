@@ -97,7 +97,15 @@ func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithCon
 					tbp.internationalPaymentsSwiftBic=$internationalPaymentsSwiftBic,
 					tbp.internationalPaymentsBankName=$internationalPaymentsBankName,
 					tbp.internationalPaymentsBankAddress=$internationalPaymentsBankAddress,
-					tbp.internationalPaymentsInstructions=$internationalPaymentsInstructions`, tenant)
+					tbp.internationalPaymentsInstructions=$internationalPaymentsInstructions,
+					tbp.vatNumber=$vatNumber,
+					tbp.sendInvoicesFrom=$sendInvoicesFrom,
+					tbp.canPayWithCard=$canPayWithCard,
+					tbp.canPayWithDirectDebitSEPA=$canPayWithDirectDebitSEPA,
+					tbp.canPayWithDirectDebitACH=$canPayWithDirectDebitACH,
+					tbp.canPayWithDirectDebitBacs=$canPayWithDirectDebitBacs,
+					tbp.canPayWithPigeon=$canPayWithPigeon
+`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":                            tenant,
 		"profileId":                         profileId,
@@ -121,6 +129,13 @@ func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithCon
 		"internationalPaymentsBankName":     profile.InternationalPaymentsBankName,
 		"internationalPaymentsBankAddress":  profile.InternationalPaymentsBankAddress,
 		"internationalPaymentsInstructions": profile.InternationalPaymentsInstructions,
+		"vatNumber":                         profile.VatNumber,
+		"sendInvoicesFrom":                  profile.SendInvoicesFrom,
+		"canPayWithCard":                    profile.CanPayWithCard,
+		"canPayWithDirectDebitSEPA":         profile.CanPayWithDirectDebitSEPA,
+		"canPayWithDirectDebitACH":          profile.CanPayWithDirectDebitACH,
+		"canPayWithDirectDebitBacs":         profile.CanPayWithDirectDebitBacs,
+		"canPayWithPigeon":                  profile.CanPayWithPigeon,
 	})
 	return profileId
 }
