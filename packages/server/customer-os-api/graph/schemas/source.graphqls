@@ -10,4 +10,5 @@ enum DataSource {
     SALESFORCE
     STRIPE
     MIXPANEL
+    CLOSE
 }
