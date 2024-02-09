@@ -11,55 +11,61 @@ import (
 )
 
 type ContractUpdateEvent struct {
-	Tenant                string                     `json:"tenant" validate:"required"`
-	Name                  string                     `json:"name"`
-	ContractUrl           string                     `json:"contractUrl"`
-	UpdatedAt             time.Time                  `json:"updatedAt"`
-	ServiceStartedAt      *time.Time                 `json:"serviceStartedAt,omitempty"`
-	SignedAt              *time.Time                 `json:"signedAt,omitempty"`
-	EndedAt               *time.Time                 `json:"endedAt,omitempty"`
-	RenewalCycle          string                     `json:"renewalCycle"`
-	RenewalPeriods        *int64                     `json:"renewalPeriods,omitempty"`
-	Status                string                     `json:"status"`
-	ExternalSystem        commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
-	Source                string                     `json:"source"`
-	InvoicingStartDate    *time.Time                 `json:"invoicingStartDate,omitempty"`
-	Currency              string                     `json:"currency,omitempty"`
-	BillingCycle          string                     `json:"billingCycle,omitempty"`
-	AddressLine1          string                     `json:"addressLine1,omitempty"`
-	AddressLine2          string                     `json:"addressLine2,omitempty"`
-	Locality              string                     `json:"locality,omitempty"`
-	Country               string                     `json:"country,omitempty"`
-	Zip                   string                     `json:"zip,omitempty"`
-	OrganizationLegalName string                     `json:"organizationLegalName,omitempty"`
-	InvoiceEmail          string                     `json:"invoiceEmail,omitempty"`
-	InvoiceNote           string                     `json:"invoiceNote,omitempty"`
-	FieldsMask            []string                   `json:"fieldsMask,omitempty"`
-	NextInvoiceDate       *time.Time                 `json:"nextInvoiceDate,omitempty"`
+	Tenant                 string                     `json:"tenant" validate:"required"`
+	Name                   string                     `json:"name"`
+	ContractUrl            string                     `json:"contractUrl"`
+	UpdatedAt              time.Time                  `json:"updatedAt"`
+	ServiceStartedAt       *time.Time                 `json:"serviceStartedAt,omitempty"`
+	SignedAt               *time.Time                 `json:"signedAt,omitempty"`
+	EndedAt                *time.Time                 `json:"endedAt,omitempty"`
+	RenewalCycle           string                     `json:"renewalCycle"`
+	RenewalPeriods         *int64                     `json:"renewalPeriods,omitempty"`
+	Status                 string                     `json:"status"`
+	ExternalSystem         commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
+	Source                 string                     `json:"source"`
+	InvoicingStartDate     *time.Time                 `json:"invoicingStartDate,omitempty"`
+	Currency               string                     `json:"currency,omitempty"`
+	BillingCycle           string                     `json:"billingCycle,omitempty"`
+	AddressLine1           string                     `json:"addressLine1,omitempty"`
+	AddressLine2           string                     `json:"addressLine2,omitempty"`
+	Locality               string                     `json:"locality,omitempty"`
+	Country                string                     `json:"country,omitempty"`
+	Zip                    string                     `json:"zip,omitempty"`
+	OrganizationLegalName  string                     `json:"organizationLegalName,omitempty"`
+	InvoiceEmail           string                     `json:"invoiceEmail,omitempty"`
+	InvoiceNote            string                     `json:"invoiceNote,omitempty"`
+	FieldsMask             []string                   `json:"fieldsMask,omitempty"`
+	NextInvoiceDate        *time.Time                 `json:"nextInvoiceDate,omitempty"`
+	CanPayWithCard         bool                       `json:"canPayWithCard,omitempty"`
+	CanPayWithDirectDebit  bool                       `json:"canPayWithDirectDebit,omitempty"`
+	CanPayWithBankTransfer bool                       `json:"canPayWithBankTransfer,omitempty"`
 }
 
 func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source string, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
 	eventData := ContractUpdateEvent{
-		Tenant:                aggr.GetTenant(),
-		Name:                  dataFields.Name,
-		ContractUrl:           dataFields.ContractUrl,
-		ServiceStartedAt:      dataFields.ServiceStartedAt,
-		SignedAt:              dataFields.SignedAt,
-		EndedAt:               dataFields.EndedAt,
-		RenewalCycle:          dataFields.RenewalCycle,
-		RenewalPeriods:        dataFields.RenewalPeriods,
-		Status:                dataFields.Status.String(),
-		Currency:              dataFields.Currency,
-		BillingCycle:          dataFields.BillingCycle,
-		AddressLine1:          dataFields.AddressLine1,
-		AddressLine2:          dataFields.AddressLine2,
-		Locality:              dataFields.Locality,
-		Country:               dataFields.Country,
-		Zip:                   dataFields.Zip,
-		OrganizationLegalName: dataFields.OrganizationLegalName,
-		UpdatedAt:             updatedAt,
-		Source:                source,
-		FieldsMask:            fieldsMask,
+		Tenant:                 aggr.GetTenant(),
+		Name:                   dataFields.Name,
+		ContractUrl:            dataFields.ContractUrl,
+		ServiceStartedAt:       dataFields.ServiceStartedAt,
+		SignedAt:               dataFields.SignedAt,
+		EndedAt:                dataFields.EndedAt,
+		RenewalCycle:           dataFields.RenewalCycle,
+		RenewalPeriods:         dataFields.RenewalPeriods,
+		Status:                 dataFields.Status.String(),
+		Currency:               dataFields.Currency,
+		BillingCycle:           dataFields.BillingCycle,
+		AddressLine1:           dataFields.AddressLine1,
+		AddressLine2:           dataFields.AddressLine2,
+		Locality:               dataFields.Locality,
+		Country:                dataFields.Country,
+		Zip:                    dataFields.Zip,
+		OrganizationLegalName:  dataFields.OrganizationLegalName,
+		CanPayWithCard:         dataFields.CanPayWithCard,
+		CanPayWithDirectDebit:  dataFields.CanPayWithDirectDebit,
+		CanPayWithBankTransfer: dataFields.CanPayWithBankTransfer,
+		UpdatedAt:              updatedAt,
+		Source:                 source,
+		FieldsMask:             fieldsMask,
 	}
 	if eventData.UpdateNextInvoiceDate() {
 		eventData.NextInvoiceDate = utils.ToDatePtr(dataFields.NextInvoiceDate)
@@ -163,6 +169,18 @@ func (e ContractUpdateEvent) UpdateInvoiceEmail() bool {
 
 func (e ContractUpdateEvent) UpdateInvoiceNote() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInvoiceNote)
+}
+
+func (e ContractUpdateEvent) UpdateCanPayWithCard() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithCard)
+}
+
+func (e ContractUpdateEvent) UpdateCanPayWithDirectDebit() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithDirectDebit)
+}
+
+func (e ContractUpdateEvent) UpdateCanPayWithBankTransfer() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithBankTransfer)
 }
 
 func (e ContractUpdateEvent) UpdateNextInvoiceDate() bool {

@@ -34,48 +34,51 @@ type ContractCreateFields struct {
 }
 
 type ContractUpdateFields struct {
-	Name                        string                 `json:"name"`
-	ContractUrl                 string                 `json:"contractUrl"`
-	Status                      string                 `json:"status"`
-	Source                      string                 `json:"source"`
-	RenewalPeriods              *int64                 `json:"renewalPeriods"`
-	RenewalCycle                string                 `json:"renewalCycle"`
-	UpdatedAt                   time.Time              `json:"updatedAt"`
-	ServiceStartedAt            *time.Time             `json:"serviceStartedAt"`
-	SignedAt                    *time.Time             `json:"signedAt"`
-	EndedAt                     *time.Time             `json:"endedAt"`
-	BillingCycle                neo4jenum.BillingCycle `json:"billingCycle"`
-	Currency                    neo4jenum.Currency     `json:"currency"`
-	InvoicingStartDate          *time.Time             `json:"invoicingStartDate,omitempty"`
-	NextInvoiceDate             *time.Time             `json:"nextInvoiceDate,omitempty"`
-	AddressLine1                string                 `json:"addressLine1"`
-	AddressLine2                string                 `json:"addressLine2"`
-	Locality                    string                 `json:"locality"`
-	Country                     string                 `json:"country"`
-	Zip                         string                 `json:"zip"`
-	OrganizationLegalName       string                 `json:"organizationLegalName"`
-	InvoiceEmail                string                 `json:"invoiceEmail"`
-	InvoiceNote                 string                 `json:"invoiceNote"`
-	UpdateName                  bool                   `json:"updateName"`
-	UpdateContractUrl           bool                   `json:"updateContractUrl"`
-	UpdateStatus                bool                   `json:"updateStatus"`
-	UpdateRenewalPeriods        bool                   `json:"updateRenewalPeriods"`
-	UpdateRenewalCycle          bool                   `json:"updateRenewalCycle"`
-	UpdateServiceStartedAt      bool                   `json:"updateServiceStartedAt"`
-	UpdateSignedAt              bool                   `json:"updateSignedAt"`
-	UpdateEndedAt               bool                   `json:"updateEndedAt"`
-	UpdateBillingCycle          bool                   `json:"updateBillingCycle"`
-	UpdateCurrency              bool                   `json:"updateCurrency"`
-	UpdateInvoicingStartDate    bool                   `json:"updateInvoicingStartDate"`
-	UpdateNextInvoiceDate       bool                   `json:"updateNextInvoiceDate"`
-	UpdateAddressLine1          bool                   `json:"updateAddressLine1"`
-	UpdateAddressLine2          bool                   `json:"updateAddressLine2"`
-	UpdateLocality              bool                   `json:"updateLocality"`
-	UpdateCountry               bool                   `json:"updateCountry"`
-	UpdateZip                   bool                   `json:"updateZip"`
-	UpdateOrganizationLegalName bool                   `json:"updateOrganizationLegalName"`
-	UpdateInvoiceEmail          bool                   `json:"updateInvoiceEmail"`
-	UpdateInvoiceNote           bool                   `json:"updateInvoiceNote"`
+	Name                         string                 `json:"name"`
+	ContractUrl                  string                 `json:"contractUrl"`
+	Status                       string                 `json:"status"`
+	Source                       string                 `json:"source"`
+	RenewalPeriods               *int64                 `json:"renewalPeriods"`
+	RenewalCycle                 string                 `json:"renewalCycle"`
+	UpdatedAt                    time.Time              `json:"updatedAt"`
+	ServiceStartedAt             *time.Time             `json:"serviceStartedAt"`
+	SignedAt                     *time.Time             `json:"signedAt"`
+	EndedAt                      *time.Time             `json:"endedAt"`
+	BillingCycle                 neo4jenum.BillingCycle `json:"billingCycle"`
+	Currency                     neo4jenum.Currency     `json:"currency"`
+	InvoicingStartDate           *time.Time             `json:"invoicingStartDate,omitempty"`
+	NextInvoiceDate              *time.Time             `json:"nextInvoiceDate,omitempty"`
+	AddressLine1                 string                 `json:"addressLine1"`
+	AddressLine2                 string                 `json:"addressLine2"`
+	Locality                     string                 `json:"locality"`
+	Country                      string                 `json:"country"`
+	Zip                          string                 `json:"zip"`
+	OrganizationLegalName        string                 `json:"organizationLegalName"`
+	InvoiceEmail                 string                 `json:"invoiceEmail"`
+	InvoiceNote                  string                 `json:"invoiceNote"`
+	UpdateName                   bool                   `json:"updateName"`
+	UpdateContractUrl            bool                   `json:"updateContractUrl"`
+	UpdateStatus                 bool                   `json:"updateStatus"`
+	UpdateRenewalPeriods         bool                   `json:"updateRenewalPeriods"`
+	UpdateRenewalCycle           bool                   `json:"updateRenewalCycle"`
+	UpdateServiceStartedAt       bool                   `json:"updateServiceStartedAt"`
+	UpdateSignedAt               bool                   `json:"updateSignedAt"`
+	UpdateEndedAt                bool                   `json:"updateEndedAt"`
+	UpdateBillingCycle           bool                   `json:"updateBillingCycle"`
+	UpdateCurrency               bool                   `json:"updateCurrency"`
+	UpdateInvoicingStartDate     bool                   `json:"updateInvoicingStartDate"`
+	UpdateNextInvoiceDate        bool                   `json:"updateNextInvoiceDate"`
+	UpdateAddressLine1           bool                   `json:"updateAddressLine1"`
+	UpdateAddressLine2           bool                   `json:"updateAddressLine2"`
+	UpdateLocality               bool                   `json:"updateLocality"`
+	UpdateCountry                bool                   `json:"updateCountry"`
+	UpdateZip                    bool                   `json:"updateZip"`
+	UpdateOrganizationLegalName  bool                   `json:"updateOrganizationLegalName"`
+	UpdateInvoiceEmail           bool                   `json:"updateInvoiceEmail"`
+	UpdateInvoiceNote            bool                   `json:"updateInvoiceNote"`
+	UpdateCanPayWithCard         bool                   `json:"updateCanPayWithCard"`
+	UpdateCanPayWithDirectDebit  bool                   `json:"updateCanPayWithDirectDebit"`
+	UpdateCanPayWithBankTransfer bool                   `json:"updateCanPayWithBankTransfer"`
 }
 
 type ContractWriteRepository interface {
@@ -264,6 +267,18 @@ func (r *contractWriteRepository) UpdateAndReturn(ctx context.Context, tenant, c
 	if data.UpdateNextInvoiceDate {
 		cypher += `, ct.nextInvoiceDate=$nextInvoiceDate `
 		params["nextInvoiceDate"] = utils.ToNeo4jDateAsAny(data.NextInvoiceDate)
+	}
+	if data.UpdateCanPayWithCard {
+		cypher += `, ct.canPayWithCard=$canPayWithCard `
+		params["canPayWithCard"] = data.UpdateCanPayWithCard
+	}
+	if data.UpdateCanPayWithDirectDebit {
+		cypher += `, ct.canPayWithDirectDebit=$canPayWithDirectDebit `
+		params["canPayWithDirectDebit"] = data.UpdateCanPayWithDirectDebit
+	}
+	if data.UpdateCanPayWithBankTransfer {
+		cypher += `, ct.canPayWithBankTransfer=$canPayWithBankTransfer `
+		params["canPayWithBankTransfer"] = data.UpdateCanPayWithBankTransfer
 	}
 	cypher += ` RETURN ct`
 

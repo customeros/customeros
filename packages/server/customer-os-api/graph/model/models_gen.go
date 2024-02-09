@@ -457,27 +457,30 @@ type ContractInput struct {
 }
 
 type ContractUpdateInput struct {
-	ContractID            string                `json:"contractId"`
-	Patch                 *bool                 `json:"patch,omitempty"`
-	Name                  *string               `json:"name,omitempty"`
-	ContractURL           *string               `json:"contractUrl,omitempty"`
-	RenewalCycle          *ContractRenewalCycle `json:"renewalCycle,omitempty"`
-	RenewalPeriods        *int64                `json:"renewalPeriods,omitempty"`
-	ServiceStartedAt      *time.Time            `json:"serviceStartedAt,omitempty"`
-	SignedAt              *time.Time            `json:"signedAt,omitempty"`
-	EndedAt               *time.Time            `json:"endedAt,omitempty"`
-	AppSource             *string               `json:"appSource,omitempty"`
-	Currency              *Currency             `json:"currency,omitempty"`
-	InvoicingStartDate    *time.Time            `json:"invoicingStartDate,omitempty"`
-	BillingCycle          *ContractBillingCycle `json:"billingCycle,omitempty"`
-	AddressLine1          *string               `json:"addressLine1,omitempty"`
-	AddressLine2          *string               `json:"addressLine2,omitempty"`
-	Locality              *string               `json:"locality,omitempty"`
-	Country               *string               `json:"country,omitempty"`
-	Zip                   *string               `json:"zip,omitempty"`
-	OrganizationLegalName *string               `json:"organizationLegalName,omitempty"`
-	InvoiceEmail          *string               `json:"invoiceEmail,omitempty"`
-	InvoiceNote           *string               `json:"invoiceNote,omitempty"`
+	ContractID             string                `json:"contractId"`
+	Patch                  *bool                 `json:"patch,omitempty"`
+	Name                   *string               `json:"name,omitempty"`
+	ContractURL            *string               `json:"contractUrl,omitempty"`
+	RenewalCycle           *ContractRenewalCycle `json:"renewalCycle,omitempty"`
+	RenewalPeriods         *int64                `json:"renewalPeriods,omitempty"`
+	ServiceStartedAt       *time.Time            `json:"serviceStartedAt,omitempty"`
+	SignedAt               *time.Time            `json:"signedAt,omitempty"`
+	EndedAt                *time.Time            `json:"endedAt,omitempty"`
+	AppSource              *string               `json:"appSource,omitempty"`
+	Currency               *Currency             `json:"currency,omitempty"`
+	InvoicingStartDate     *time.Time            `json:"invoicingStartDate,omitempty"`
+	BillingCycle           *ContractBillingCycle `json:"billingCycle,omitempty"`
+	AddressLine1           *string               `json:"addressLine1,omitempty"`
+	AddressLine2           *string               `json:"addressLine2,omitempty"`
+	Locality               *string               `json:"locality,omitempty"`
+	Country                *string               `json:"country,omitempty"`
+	Zip                    *string               `json:"zip,omitempty"`
+	OrganizationLegalName  *string               `json:"organizationLegalName,omitempty"`
+	InvoiceEmail           *string               `json:"invoiceEmail,omitempty"`
+	CanPayWithCard         *bool                 `json:"canPayWithCard,omitempty"`
+	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
+	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
+	InvoiceNote            *string               `json:"invoiceNote,omitempty"`
 }
 
 type Country struct {

@@ -36,6 +36,9 @@ enum ContractFieldMask {
   CONTRACT_FIELD_INVOICE_EMAIL = 17;
   CONTRACT_FIELD_INVOICE_NOTE = 18;
   CONTRACT_FIELD_NEXT_INVOICE_DATE = 19; // to update next invoice date field mask must be specified explicitly
+  CONTRACT_FIELD_CAN_PAY_WITH_CARD = 20;
+  CONTRACT_FIELD_CAN_PAY_WITH_DIRECT_DEBIT = 21;
+  CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER = 22;
 }
 
 // CreateContract request message
@@ -86,6 +89,9 @@ message UpdateContractGrpcRequest {
   repeated ContractFieldMask fieldsMask = 24;
   string invoiceNote = 25;
   google.protobuf.Timestamp nextInvoiceDate = 26;
+  bool canPayWithCard = 27;
+  bool canPayWithDirectDebit = 28;
+  bool canPayWithBankTransfer = 29;
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {

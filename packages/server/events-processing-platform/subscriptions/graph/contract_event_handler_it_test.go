@@ -877,3 +877,48 @@ func TestContractEventHandler_OnUpdateStatus_Live(t *testing.T) {
 	require.Equal(t, "test contract is now live", action.Content)
 	require.Equal(t, `{"status":"LIVE","contract-name":"test contract","comment":"test contract is now LIVE"}`, action.Metadata)
 }
+
+func TestContractEventHandler_OnUpdate_CanPayWithCardSet(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1})
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
+	}
+	now := utils.Now()
+
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
+		model.ContractDataFields{
+			CanPayWithCard: true,
+		},
+		commonmodel.ExternalSystem{},
+		constants.SourceOpenline,
+		now,
+		[]string{})
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err, "failed to execute event handler")
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Contract": 1, "Contract_" + tenantName: 1})
+
+	contractDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	require.Nil(t, err)
+	require.NotNil(t, contractDbNode)
+
+	// verify contract
+	contract := mapper.MapDbNodeToContractEntity(contractDbNode)
+	require.Equal(t, contractId, contract.Id)
+	require.Equal(t, true, contract.CanPayWithCard)
+}
