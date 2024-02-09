@@ -2,9 +2,8 @@ import { useForm } from 'react-inverted-form';
 import React, { useRef, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
-import { debounce } from 'lodash';
-import { useDeepCompareEffect } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
+import { useDebounce, useDeepCompareEffect } from 'rooks';
 
 import { Flex } from '@ui/layout/Flex';
 import { useDisclosure } from '@ui/utils';
@@ -152,7 +151,7 @@ export const ContractCard = ({
     },
   });
 
-  const updateContractDebounced = debounce(
+  const updateContractDebounced = useDebounce(
     (variables: { input: ContractUpdateInput }) => {
       updateContract.mutate({
         ...variables,
@@ -162,7 +161,7 @@ export const ContractCard = ({
         },
       });
     },
-    300,
+    500,
   );
 
   const defaultValues = ContractDTO.toForm({
@@ -291,10 +290,10 @@ export const ContractCard = ({
 
   useEffect(() => {
     return () => {
-      updateContractDebounced.flush();
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      updateContractDebounced.flush();
     };
   }, []);
 
