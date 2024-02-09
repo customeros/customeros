@@ -1,10 +1,8 @@
 'use client';
-import { useParams } from 'next/navigation';
+import { useMemo } from 'react';
 import { useForm } from 'react-inverted-form';
-import { useRef, useMemo, useEffect } from 'react';
 
-import { produce } from 'immer';
-import { useQueryClient } from '@tanstack/react-query';
+import { UseMutationResult } from '@tanstack/react-query';
 
 import { Dot } from '@ui/media/Dot';
 import { Box } from '@ui/layout/Box';
@@ -13,7 +11,6 @@ import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Heading } from '@ui/typography/Heading';
-import { toastError } from '@ui/presentation/Toast';
 import { Button, ButtonGroup } from '@ui/form/Button';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { FormCurrencyInput } from '@ui/form/CurrencyInput';
@@ -22,20 +19,19 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { FormElement, FormElementProps } from '@ui/form/FormElement';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
-import {
-  Opportunity,
-  InternalStage,
-  OpportunityRenewalLikelihood,
-} from '@graphql/types';
-import {
-  GetContractsQuery,
-  useGetContractsQuery,
-} from '@organization/src/graphql/getContracts.generated';
-import { useUpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
+import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
+import { UpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
 import {
   getButtonStyles,
   likelihoodButtons,
 } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/RenewalARR/utils';
+import {
+  Exact,
+  Opportunity,
+  InternalStage,
+  OpportunityRenewalLikelihood,
+  OpportunityRenewalUpdateInput,
+} from '@graphql/types';
 import {
   Modal,
   ModalBody,
@@ -45,17 +41,24 @@ import {
   ModalOverlay,
   ModalCloseButton,
 } from '@ui/overlay/Modal';
-
+type UpdateOpportunityMutation = UseMutationResult<
+  UpdateOpportunityRenewalMutation,
+  unknown,
+  Exact<{ input: OpportunityRenewalUpdateInput }>,
+  { previousEntries: GetContractsQuery | undefined }
+>;
 interface RenewalDetailsProps {
   isOpen: boolean;
   data: Opportunity;
   onClose: () => void;
+  updateOpportunityMutation: UpdateOpportunityMutation;
 }
 
 export const RenewalDetailsModal = ({
   data,
   isOpen,
   onClose,
+  updateOpportunityMutation,
 }: RenewalDetailsProps) => {
   return (
     <Modal
@@ -63,7 +66,11 @@ export const RenewalDetailsModal = ({
       onClose={onClose}
     >
       <ModalOverlay />
-      <RenewalDetailsForm data={data} onClose={onClose} />
+      <RenewalDetailsForm
+        data={data}
+        onClose={onClose}
+        updateOpportunityMutation={updateOpportunityMutation}
+      />
     </Modal>
   );
 };
@@ -71,14 +78,16 @@ export const RenewalDetailsModal = ({
 interface RenewalDetailsFormProps {
   data: Opportunity;
   onClose?: () => void;
+  updateOpportunityMutation: UpdateOpportunityMutation;
 }
 
-const RenewalDetailsForm = ({ data, onClose }: RenewalDetailsFormProps) => {
-  const orgId = useParams()?.id as string;
+const RenewalDetailsForm = ({
+  data,
+  onClose,
+  updateOpportunityMutation,
+}: RenewalDetailsFormProps) => {
   const client = getGraphQLClient();
-  const queryClient = useQueryClient();
   const formId = `renewal-details-form-${data.id}`;
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { data: usersData } = useGetUsersQuery(client, {
     pagination: {
@@ -86,73 +95,6 @@ const RenewalDetailsForm = ({ data, onClose }: RenewalDetailsFormProps) => {
       page: 1,
     },
   });
-
-  const getContractsQueryKey = useGetContractsQuery.getKey({
-    id: orgId,
-  });
-
-  const updateOpportunityMutation = useUpdateOpportunityRenewalMutation(
-    client,
-    {
-      onMutate: ({ input }) => {
-        queryClient.cancelQueries({ queryKey: getContractsQueryKey });
-
-        queryClient.setQueryData<GetContractsQuery>(
-          getContractsQueryKey,
-          (currentCache) => {
-            if (!currentCache || !currentCache?.organization) return;
-
-            return produce(currentCache, (draft) => {
-              if (draft?.['organization']?.['contracts']) {
-                draft['organization']['contracts']?.map(
-                  (contractData, index) => {
-                    return (contractData.opportunities ?? []).map(
-                      (opportunity) => {
-                        const { opportunityId, ...rest } = input;
-                        if ((opportunity as Opportunity).id === opportunityId) {
-                          return {
-                            ...opportunity,
-                            ...rest,
-                            renewalUpdatedByUserAt: new Date().toISOString(),
-                          };
-                        }
-
-                        return opportunity;
-                      },
-                    );
-                  },
-                );
-              }
-            });
-          },
-        );
-        const previousEntries =
-          queryClient.getQueryData<GetContractsQuery>(getContractsQueryKey);
-
-        return { previousEntries };
-      },
-      onError: (_, __, context) => {
-        queryClient.setQueryData<GetContractsQuery>(
-          getContractsQueryKey,
-          context?.previousEntries,
-        );
-        toastError(
-          'Failed to update renewal details',
-          'update-renewal-details-error',
-        );
-      },
-      onSettled: () => {
-        onClose?.();
-
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-        }
-        timeoutRef.current = setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: getContractsQueryKey });
-        }, 1000);
-      },
-    },
-  );
 
   const options = useMemo(() => {
     return usersData?.users?.content
@@ -187,14 +129,6 @@ const RenewalDetailsForm = ({ data, onClose }: RenewalDetailsFormProps) => {
       });
     },
   });
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
 
   return (
     <>
