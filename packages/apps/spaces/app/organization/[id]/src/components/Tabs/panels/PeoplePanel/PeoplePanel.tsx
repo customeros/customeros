@@ -24,9 +24,18 @@ export const PeoplePanel = () => {
   const id = useParams()?.id as string;
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
-  const { data, isInitialLoading } = useOrganizationPeoplePanelQuery(client, {
-    id,
-  });
+  const { data, isLoading: isInitialLoading } = useOrganizationPeoplePanelQuery(
+    client,
+    {
+      id,
+    },
+    {
+      staleTime: 1000,
+      refetchOnWindowFocus: 'always',
+      refetchOnReconnect: 'always',
+      refetchOnMount: 'always',
+    },
+  );
   const createContact = useCreateContactMutation(client);
   const addContactToOrganization = useAddOrganizationToContactMutation(client, {
     onSuccess: () => invalidateQuery(queryClient, id),

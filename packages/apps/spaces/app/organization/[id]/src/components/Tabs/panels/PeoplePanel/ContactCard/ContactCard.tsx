@@ -3,6 +3,7 @@ import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 import { useRef, useState, useEffect, MouseEvent } from 'react';
 
+import { useDeepCompareEffect } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import differenceInCalendarMonths from 'date-fns/differenceInCalendarMonths';
@@ -152,7 +153,7 @@ export const ContactCard = ({
       )} at ${organizationName}`;
   })();
 
-  const { state } = useForm<ContactForm>({
+  const { state, setDefaultValues } = useForm<ContactForm>({
     formId,
     defaultValues: data,
     stateReducer: (state, action, next) => {
@@ -262,6 +263,10 @@ export const ContactCard = ({
       return next;
     },
   });
+
+  useDeepCompareEffect(() => {
+    setDefaultValues(data);
+  }, [data]);
 
   const handleDelete = (e: MouseEvent) => {
     e.stopPropagation();
