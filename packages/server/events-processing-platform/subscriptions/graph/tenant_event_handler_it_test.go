@@ -52,6 +52,13 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 			LegalName:                     "legalName",
 			DomesticPaymentsBankInfo:      "domesticPaymentsBankInfo",
 			InternationalPaymentsBankInfo: "internationalPaymentsBankInfo",
+			VatNumber:                     "vatNumber",
+			SendInvoicesFrom:              "sendInvoicesFrom",
+			CanPayWithCard:                true,
+			CanPayWithDirectDebitSEPA:     true,
+			CanPayWithDirectDebitACH:      true,
+			CanPayWithDirectDebitBacs:     true,
+			CanPayWithPigeon:              true,
 		},
 		timeNow,
 		[]string{},
@@ -87,6 +94,13 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 	require.Equal(t, "legalName", tenantBillingProfileEntity.LegalName)
 	require.Equal(t, "domesticPaymentsBankInfo", tenantBillingProfileEntity.DomesticPaymentsBankInfo)
 	require.Equal(t, "internationalPaymentsBankInfo", tenantBillingProfileEntity.InternationalPaymentsBankInfo)
+	require.Equal(t, "vatNumber", tenantBillingProfileEntity.VatNumber)
+	require.Equal(t, "sendInvoicesFrom", tenantBillingProfileEntity.SendInvoicesFrom)
+	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithCard)
+	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithDirectDebitSEPA)
+	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithDirectDebitACH)
+	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithDirectDebitBacs)
+	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithPigeon)
 }
 
 func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {

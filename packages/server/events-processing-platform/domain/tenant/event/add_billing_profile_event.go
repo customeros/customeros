@@ -32,6 +32,13 @@ type TenantBillingProfileCreateEvent struct {
 	InternationalPaymentsBankName     string             `json:"internationalPaymentsBankName"`
 	InternationalPaymentsBankAddress  string             `json:"internationalPaymentsBankAddress"`
 	InternationalPaymentsInstructions string             `json:"internationalPaymentsInstructions"`
+	VatNumber                         string             `json:"vatNumber"`
+	SendInvoicesFrom                  string             `json:"sendInvoicesFrom"`
+	CanPayWithCard                    bool               `json:"canPayWithCard"`
+	CanPayWithDirectDebitSEPA         bool               `json:"canPayWithDirectDebitSEPA"`
+	CanPayWithDirectDebitACH          bool               `json:"canPayWithDirectDebitACH"`
+	CanPayWithDirectDebitBacs         bool               `json:"canPayWithDirectDebitBacs"`
+	CanPayWithPigeon                  bool               `json:"canPayWithPigeon"`
 }
 
 func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, id string, request *tenantpb.AddBillingProfileRequest, createdAt time.Time) (eventstore.Event, error) {
@@ -58,6 +65,13 @@ func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFi
 		InternationalPaymentsBankName:     request.InternationalPaymentsBankName,
 		InternationalPaymentsBankAddress:  request.InternationalPaymentsBankAddress,
 		InternationalPaymentsInstructions: request.InternationalPaymentsInstructions,
+		VatNumber:                         request.VatNumber,
+		SendInvoicesFrom:                  request.SendInvoicesFrom,
+		CanPayWithCard:                    request.CanPayWithCard,
+		CanPayWithDirectDebitSEPA:         request.CanPayWithDirectDebitSEPA,
+		CanPayWithDirectDebitACH:          request.CanPayWithDirectDebitACH,
+		CanPayWithDirectDebitBacs:         request.CanPayWithDirectDebitBacs,
+		CanPayWithPigeon:                  request.CanPayWithPigeon,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

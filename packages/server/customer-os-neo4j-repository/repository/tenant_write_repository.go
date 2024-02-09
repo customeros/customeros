@@ -35,6 +35,13 @@ type TenantBillingProfileCreateFields struct {
 	InternationalPaymentsBankName     string       `json:"internationalPaymentsBankName"`
 	InternationalPaymentsBankAddress  string       `json:"internationalPaymentsBankAddress"`
 	InternationalPaymentsInstructions string       `json:"internationalPaymentsInstructions"`
+	VatNumber                         string       `json:"vatNumber"`
+	SendInvoicesFrom                  string       `json:"sendInvoicesFrom"`
+	CanPayWithCard                    bool         `json:"canPayWithCard"`
+	CanPayWithDirectDebitSEPA         bool         `json:"canPayWithDirectDebitSEPA"`
+	CanPayWithDirectDebitACH          bool         `json:"canPayWithDirectDebitACH"`
+	CanPayWithDirectDebitBacs         bool         `json:"canPayWithDirectDebitBacs"`
+	CanPayWithPigeon                  bool         `json:"canPayWithPigeon"`
 }
 
 type TenantBillingProfileUpdateFields struct {
@@ -51,6 +58,13 @@ type TenantBillingProfileUpdateFields struct {
 	Zip                                 string    `json:"zip"`
 	DomesticPaymentsBankInfo            string    `json:"domesticPaymentsBankInfo"`
 	InternationalPaymentsBankInfo       string    `json:"internationalPaymentsBankInfo"`
+	VatNumber                           string    `json:"vatNumber"`
+	SendInvoicesFrom                    string    `json:"sendInvoicesFrom"`
+	CanPayWithCard                      bool      `json:"canPayWithCard"`
+	CanPayWithDirectDebitSEPA           bool      `json:"canPayWithDirectDebitSEPA"`
+	CanPayWithDirectDebitACH            bool      `json:"canPayWithDirectDebitACH"`
+	CanPayWithDirectDebitBacs           bool      `json:"canPayWithDirectDebitBacs"`
+	CanPayWithPigeon                    bool      `json:"canPayWithPigeon"`
 	UpdateEmail                         bool      `json:"updateEmail"`
 	UpdatePhone                         bool      `json:"updatePhone"`
 	UpdateLegalName                     bool      `json:"updateLegalName"`
@@ -62,6 +76,13 @@ type TenantBillingProfileUpdateFields struct {
 	UpdateZip                           bool      `json:"updateZip"`
 	UpdateDomesticPaymentsBankInfo      bool      `json:"updateDomesticPaymentsBankInfo"`
 	UpdateInternationalPaymentsBankInfo bool      `json:"updateInternationalPaymentsBankInfo"`
+	UpdateVatNumber                     bool      `json:"updateVatNumber"`
+	UpdateSendInvoicesFrom              bool      `json:"updateSendInvoicesFrom"`
+	UpdateCanPayWithCard                bool      `json:"updateCanPayWithCard"`
+	UpdateCanPayWithDirectDebitSEPA     bool      `json:"updateCanPayWithDirectDebitSEPA"`
+	UpdateCanPayWithDirectDebitACH      bool      `json:"updateCanPayWithDirectDebitACH"`
+	UpdateCanPayWithDirectDebitBacs     bool      `json:"updateCanPayWithDirectDebitBacs"`
+	UpdateCanPayWithPigeon              bool      `json:"updateCanPayWithPigeon"`
 }
 
 type TenantSettingsFields struct {
@@ -123,7 +144,14 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 								tbp.internationalPaymentsSwiftBic=$internationalPaymentsSwiftBic,
 								tbp.internationalPaymentsBankName=$internationalPaymentsBankName,
 								tbp.internationalPaymentsBankAddress=$internationalPaymentsBankAddress,
-								tbp.internationalPaymentsInstructions=$internationalPaymentsInstructions
+								tbp.internationalPaymentsInstructions=$internationalPaymentsInstructions,
+								tbp.vatNumber=$vatNumber,	
+								tbp.sendInvoicesFrom=$sendInvoicesFrom,
+								tbp.canPayWithCard=$canPayWithCard,
+								tbp.canPayWithDirectDebitSEPA=$canPayWithDirectDebitSEPA,
+								tbp.canPayWithDirectDebitACH=$canPayWithDirectDebitACH,	
+								tbp.canPayWithDirectDebitBacs=$canPayWithDirectDebitBacs,
+								tbp.canPayWithPigeon=$canPayWithPigeon
 							`, tenant)
 	params := map[string]any{
 		"tenant":                            tenant,
@@ -151,6 +179,13 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 		"internationalPaymentsBankName":     data.InternationalPaymentsBankName,
 		"internationalPaymentsBankAddress":  data.InternationalPaymentsBankAddress,
 		"internationalPaymentsInstructions": data.InternationalPaymentsInstructions,
+		"vatNumber":                         data.VatNumber,
+		"sendInvoicesFrom":                  data.SendInvoicesFrom,
+		"canPayWithCard":                    data.CanPayWithCard,
+		"canPayWithDirectDebitSEPA":         data.CanPayWithDirectDebitSEPA,
+		"canPayWithDirectDebitACH":          data.CanPayWithDirectDebitACH,
+		"canPayWithDirectDebitBacs":         data.CanPayWithDirectDebitBacs,
+		"canPayWithPigeon":                  data.CanPayWithPigeon,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -220,6 +255,34 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 	if data.UpdateInternationalPaymentsBankInfo {
 		cypher += `,tbp.internationalPaymentsBankInfo=$internationalPaymentsBankInfo`
 		params["internationalPaymentsBankInfo"] = data.InternationalPaymentsBankInfo
+	}
+	if data.UpdateVatNumber {
+		cypher += `,tbp.vatNumber=$vatNumber`
+		params["vatNumber"] = data.VatNumber
+	}
+	if data.UpdateSendInvoicesFrom {
+		cypher += `,tbp.sendInvoicesFrom=$sendInvoicesFrom`
+		params["sendInvoicesFrom"] = data.SendInvoicesFrom
+	}
+	if data.UpdateCanPayWithCard {
+		cypher += `,tbp.canPayWithCard=$canPayWithCard`
+		params["canPayWithCard"] = data.CanPayWithCard
+	}
+	if data.UpdateCanPayWithDirectDebitSEPA {
+		cypher += `,tbp.canPayWithDirectDebitSEPA=$canPayWithDirectDebitSEPA`
+		params["canPayWithDirectDebitSEPA"] = data.CanPayWithDirectDebitSEPA
+	}
+	if data.UpdateCanPayWithDirectDebitACH {
+		cypher += `,tbp.canPayWithDirectDebitACH=$canPayWithDirectDebitACH`
+		params["canPayWithDirectDebitACH"] = data.CanPayWithDirectDebitACH
+	}
+	if data.UpdateCanPayWithDirectDebitBacs {
+		cypher += `,tbp.canPayWithDirectDebitBacs=$canPayWithDirectDebitBacs`
+		params["canPayWithDirectDebitBacs"] = data.CanPayWithDirectDebitBacs
+	}
+	if data.UpdateCanPayWithPigeon {
+		cypher += `,tbp.canPayWithPigeon=$canPayWithPigeon`
+		params["canPayWithPigeon"] = data.CanPayWithPigeon
 	}
 
 	span.LogFields(log.String("cypher", cypher))

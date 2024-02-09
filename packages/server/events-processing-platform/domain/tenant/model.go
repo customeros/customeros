@@ -44,6 +44,13 @@ type TenantBillingProfile struct {
 	InternationalPaymentsBankName     string             `json:"internationalPaymentsBankName"`
 	InternationalPaymentsBankAddress  string             `json:"internationalPaymentsBankAddress"`
 	InternationalPaymentsInstructions string             `json:"internationalPaymentsInstructions"`
+	VatNumber                         string             `json:"vatNumber"`
+	SendInvoicesFrom                  string             `json:"sendInvoicesFrom"`
+	CanPayWithCard                    bool               `json:"canPayWithCard"`
+	CanPayWithDirectDebitSEPA         bool               `json:"canPayWithDirectDebitSEPA"`
+	CanPayWithDirectDebitACH          bool               `json:"canPayWithDirectDebitACH"`
+	CanPayWithDirectDebitBacs         bool               `json:"canPayWithDirectDebitBacs"`
+	CanPayWithPigeon                  bool               `json:"canPayWithPigeon"`
 }
 
 func (t Tenant) HasBillingProfile(id string) bool {

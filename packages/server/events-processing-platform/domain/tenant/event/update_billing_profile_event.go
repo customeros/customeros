@@ -24,6 +24,13 @@ type TenantBillingProfileUpdateEvent struct {
 	LegalName                     string    `json:"legalName,omitempty"`
 	DomesticPaymentsBankInfo      string    `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo string    `json:"internationalPaymentsBankInfo,omitempty"`
+	VatNumber                     string    `json:"vatNumber"`
+	SendInvoicesFrom              string    `json:"sendInvoicesFrom"`
+	CanPayWithCard                bool      `json:"canPayWithCard"`
+	CanPayWithDirectDebitSEPA     bool      `json:"canPayWithDirectDebitSEPA"`
+	CanPayWithDirectDebitACH      bool      `json:"canPayWithDirectDebitACH"`
+	CanPayWithDirectDebitBacs     bool      `json:"canPayWithDirectDebitBacs"`
+	CanPayWithPigeon              bool      `json:"canPayWithPigeon"`
 	FieldsMask                    []string  `json:"fieldsMask,omitempty"`
 }
 
@@ -43,6 +50,13 @@ func NewTenantBillingProfileUpdateEvent(aggregate eventstore.Aggregate, id strin
 		LegalName:                     request.LegalName,
 		DomesticPaymentsBankInfo:      request.DomesticPaymentsBankInfo,
 		InternationalPaymentsBankInfo: request.InternationalPaymentsBankInfo,
+		VatNumber:                     request.VatNumber,
+		SendInvoicesFrom:              request.SendInvoicesFrom,
+		CanPayWithCard:                request.CanPayWithCard,
+		CanPayWithDirectDebitSEPA:     request.CanPayWithDirectDebitSEPA,
+		CanPayWithDirectDebitACH:      request.CanPayWithDirectDebitACH,
+		CanPayWithDirectDebitBacs:     request.CanPayWithDirectDebitBacs,
+		CanPayWithPigeon:              request.CanPayWithPigeon,
 		FieldsMask:                    fieldsMaks,
 	}
 
@@ -100,4 +114,32 @@ func (e TenantBillingProfileUpdateEvent) UpdateDomesticPaymentsBankInfo() bool {
 
 func (e TenantBillingProfileUpdateEvent) UpdateInternationalPaymentsBankInfo() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInternationalPaymentsBankInfo)
+}
+
+func (e TenantBillingProfileUpdateEvent) UpdateVatNumber() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskVatNumber)
+}
+
+func (e TenantBillingProfileUpdateEvent) UpdateSendInvoicesFrom() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskSendInvoicesFrom)
+}
+
+func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithCard() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithCard)
+}
+
+func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithDirectDebitSEPA() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithDirectDebitSEPA)
+}
+
+func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithDirectDebitACH() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithDirectDebitACH)
+}
+
+func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithDirectDebitBacs() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithDirectDebitBacs)
+}
+
+func (e TenantBillingProfileUpdateEvent) UpdateCanPayWithPigeon() bool {
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskCanPayWithPigeon)
 }

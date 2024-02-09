@@ -39,6 +39,13 @@ type TenantBillingProfile implements SourceFields & Node {
     legalName:          String!
     domesticPaymentsBankInfo:      String!
     internationalPaymentsBankInfo: String!
+    vatNumber: String!
+    sendInvoicesFrom: String!
+    canPayWithCard: Boolean!
+    canPayWithDirectDebitSEPA: Boolean!
+    canPayWithDirectDebitACH: Boolean!
+    canPayWithDirectDebitBacs: Boolean!
+    canPayWithPigeon: Boolean!
 }
 
 input TenantInput {
@@ -58,6 +65,13 @@ input TenantBillingProfileInput {
     legalName:          String
     domesticPaymentsBankInfo:      String
     internationalPaymentsBankInfo: String
+    vatNumber: String!
+    sendInvoicesFrom: String!
+    canPayWithCard: Boolean!
+    canPayWithDirectDebitSEPA: Boolean!
+    canPayWithDirectDebitACH: Boolean!
+    canPayWithDirectDebitBacs: Boolean!
+    canPayWithPigeon: Boolean!
 }
 
 input TenantBillingProfileUpdateInput {
@@ -74,6 +88,13 @@ input TenantBillingProfileUpdateInput {
     legalName:          String
     domesticPaymentsBankInfo:      String
     internationalPaymentsBankInfo: String
+    vatNumber: String
+    sendInvoicesFrom: String
+    canPayWithCard: Boolean
+    canPayWithDirectDebitSEPA: Boolean
+    canPayWithDirectDebitACH: Boolean
+    canPayWithDirectDebitBacs: Boolean
+    canPayWithPigeon: Boolean
 }
 
 input TenantSettingsInput {

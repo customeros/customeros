@@ -17,6 +17,7 @@ type OpportunityEntity struct {
 	InternalStage          enum.InternalStage
 	ExternalStage          string
 	EstimatedClosedAt      *time.Time
+	ClosedAt               *time.Time
 	GeneralNotes           string
 	NextSteps              string
 	RenewedAt              time.Time

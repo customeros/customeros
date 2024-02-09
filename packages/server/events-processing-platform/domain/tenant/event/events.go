@@ -18,6 +18,13 @@ const (
 	FieldMaskLegalName                     = "legalName"
 	FieldMaskDomesticPaymentsBankInfo      = "domesticPaymentsBankInfo"
 	FieldMaskInternationalPaymentsBankInfo = "internationalPaymentsBankInfo"
+	FieldMaskVatNumber                     = "vatNumber"
+	FieldMaskSendInvoicesFrom              = "sendInvoicesFrom"
+	FieldMaskCanPayWithCard                = "canPayWithCard"
+	FieldMaskCanPayWithDirectDebitSEPA     = "canPayWithDirectDebitSEPA"
+	FieldMaskCanPayWithDirectDebitACH      = "canPayWithDirectDebitACH"
+	FieldMaskCanPayWithDirectDebitBacs     = "canPayWithDirectDebitBacs"
+	FieldMaskCanPayWithPigeon              = "canPayWithPigeon"
 
 	FieldMaskLogoUrl          = "logoUrl"
 	FieldMaskDefaultCurrency  = "defaultCurrency"

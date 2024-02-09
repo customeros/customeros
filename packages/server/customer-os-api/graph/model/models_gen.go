@@ -2284,6 +2284,13 @@ type TenantBillingProfile struct {
 	LegalName                     string     `json:"legalName"`
 	DomesticPaymentsBankInfo      string     `json:"domesticPaymentsBankInfo"`
 	InternationalPaymentsBankInfo string     `json:"internationalPaymentsBankInfo"`
+	VatNumber                     string     `json:"vatNumber"`
+	SendInvoicesFrom              string     `json:"sendInvoicesFrom"`
+	CanPayWithCard                bool       `json:"canPayWithCard"`
+	CanPayWithDirectDebitSepa     bool       `json:"canPayWithDirectDebitSEPA"`
+	CanPayWithDirectDebitAch      bool       `json:"canPayWithDirectDebitACH"`
+	CanPayWithDirectDebitBacs     bool       `json:"canPayWithDirectDebitBacs"`
+	CanPayWithPigeon              bool       `json:"canPayWithPigeon"`
 }
 
 func (TenantBillingProfile) IsSourceFields()                   {}
@@ -2306,6 +2313,13 @@ type TenantBillingProfileInput struct {
 	LegalName                     *string `json:"legalName,omitempty"`
 	DomesticPaymentsBankInfo      *string `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo *string `json:"internationalPaymentsBankInfo,omitempty"`
+	VatNumber                     string  `json:"vatNumber"`
+	SendInvoicesFrom              string  `json:"sendInvoicesFrom"`
+	CanPayWithCard                bool    `json:"canPayWithCard"`
+	CanPayWithDirectDebitSepa     bool    `json:"canPayWithDirectDebitSEPA"`
+	CanPayWithDirectDebitAch      bool    `json:"canPayWithDirectDebitACH"`
+	CanPayWithDirectDebitBacs     bool    `json:"canPayWithDirectDebitBacs"`
+	CanPayWithPigeon              bool    `json:"canPayWithPigeon"`
 }
 
 type TenantBillingProfileUpdateInput struct {
@@ -2322,6 +2336,13 @@ type TenantBillingProfileUpdateInput struct {
 	LegalName                     *string `json:"legalName,omitempty"`
 	DomesticPaymentsBankInfo      *string `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo *string `json:"internationalPaymentsBankInfo,omitempty"`
+	VatNumber                     *string `json:"vatNumber,omitempty"`
+	SendInvoicesFrom              *string `json:"sendInvoicesFrom,omitempty"`
+	CanPayWithCard                *bool   `json:"canPayWithCard,omitempty"`
+	CanPayWithDirectDebitSepa     *bool   `json:"canPayWithDirectDebitSEPA,omitempty"`
+	CanPayWithDirectDebitAch      *bool   `json:"canPayWithDirectDebitACH,omitempty"`
+	CanPayWithDirectDebitBacs     *bool   `json:"canPayWithDirectDebitBacs,omitempty"`
+	CanPayWithPigeon              *bool   `json:"canPayWithPigeon,omitempty"`
 }
 
 type TenantInput struct {

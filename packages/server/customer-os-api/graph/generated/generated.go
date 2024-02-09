@@ -1354,6 +1354,11 @@ type ComplexityRoot struct {
 		AddressLine2                  func(childComplexity int) int
 		AddressLine3                  func(childComplexity int) int
 		AppSource                     func(childComplexity int) int
+		CanPayWithCard                func(childComplexity int) int
+		CanPayWithDirectDebitAch      func(childComplexity int) int
+		CanPayWithDirectDebitBacs     func(childComplexity int) int
+		CanPayWithDirectDebitSepa     func(childComplexity int) int
+		CanPayWithPigeon              func(childComplexity int) int
 		Country                       func(childComplexity int) int
 		CreatedAt                     func(childComplexity int) int
 		DomesticPaymentsBankInfo      func(childComplexity int) int
@@ -1363,9 +1368,11 @@ type ComplexityRoot struct {
 		LegalName                     func(childComplexity int) int
 		Locality                      func(childComplexity int) int
 		Phone                         func(childComplexity int) int
+		SendInvoicesFrom              func(childComplexity int) int
 		Source                        func(childComplexity int) int
 		SourceOfTruth                 func(childComplexity int) int
 		UpdatedAt                     func(childComplexity int) int
+		VatNumber                     func(childComplexity int) int
 		Zip                           func(childComplexity int) int
 	}
 
@@ -9792,6 +9799,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TenantBillingProfile.AppSource(childComplexity), true
 
+	case "TenantBillingProfile.canPayWithCard":
+		if e.complexity.TenantBillingProfile.CanPayWithCard == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.CanPayWithCard(childComplexity), true
+
+	case "TenantBillingProfile.canPayWithDirectDebitACH":
+		if e.complexity.TenantBillingProfile.CanPayWithDirectDebitAch == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.CanPayWithDirectDebitAch(childComplexity), true
+
+	case "TenantBillingProfile.canPayWithDirectDebitBacs":
+		if e.complexity.TenantBillingProfile.CanPayWithDirectDebitBacs == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.CanPayWithDirectDebitBacs(childComplexity), true
+
+	case "TenantBillingProfile.canPayWithDirectDebitSEPA":
+		if e.complexity.TenantBillingProfile.CanPayWithDirectDebitSepa == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.CanPayWithDirectDebitSepa(childComplexity), true
+
+	case "TenantBillingProfile.canPayWithPigeon":
+		if e.complexity.TenantBillingProfile.CanPayWithPigeon == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.CanPayWithPigeon(childComplexity), true
+
 	case "TenantBillingProfile.country":
 		if e.complexity.TenantBillingProfile.Country == nil {
 			break
@@ -9855,6 +9897,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TenantBillingProfile.Phone(childComplexity), true
 
+	case "TenantBillingProfile.sendInvoicesFrom":
+		if e.complexity.TenantBillingProfile.SendInvoicesFrom == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.SendInvoicesFrom(childComplexity), true
+
 	case "TenantBillingProfile.source":
 		if e.complexity.TenantBillingProfile.Source == nil {
 			break
@@ -9875,6 +9924,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TenantBillingProfile.UpdatedAt(childComplexity), true
+
+	case "TenantBillingProfile.vatNumber":
+		if e.complexity.TenantBillingProfile.VatNumber == nil {
+			break
+		}
+
+		return e.complexity.TenantBillingProfile.VatNumber(childComplexity), true
 
 	case "TenantBillingProfile.zip":
 		if e.complexity.TenantBillingProfile.Zip == nil {
@@ -13294,6 +13350,13 @@ type TenantBillingProfile implements SourceFields & Node {
     legalName:          String!
     domesticPaymentsBankInfo:      String!
     internationalPaymentsBankInfo: String!
+    vatNumber: String!
+    sendInvoicesFrom: String!
+    canPayWithCard: Boolean!
+    canPayWithDirectDebitSEPA: Boolean!
+    canPayWithDirectDebitACH: Boolean!
+    canPayWithDirectDebitBacs: Boolean!
+    canPayWithPigeon: Boolean!
 }
 
 input TenantInput {
@@ -13313,6 +13376,13 @@ input TenantBillingProfileInput {
     legalName:          String
     domesticPaymentsBankInfo:      String
     internationalPaymentsBankInfo: String
+    vatNumber: String!
+    sendInvoicesFrom: String!
+    canPayWithCard: Boolean!
+    canPayWithDirectDebitSEPA: Boolean!
+    canPayWithDirectDebitACH: Boolean!
+    canPayWithDirectDebitBacs: Boolean!
+    canPayWithPigeon: Boolean!
 }
 
 input TenantBillingProfileUpdateInput {
@@ -13329,6 +13399,13 @@ input TenantBillingProfileUpdateInput {
     legalName:          String
     domesticPaymentsBankInfo:      String
     internationalPaymentsBankInfo: String
+    vatNumber: String
+    sendInvoicesFrom: String
+    canPayWithCard: Boolean
+    canPayWithDirectDebitSEPA: Boolean
+    canPayWithDirectDebitACH: Boolean
+    canPayWithDirectDebitBacs: Boolean
+    canPayWithPigeon: Boolean
 }
 
 input TenantSettingsInput {
@@ -57310,6 +57387,20 @@ func (ec *executionContext) fieldContext_Mutation_tenant_AddBillingProfile(ctx c
 				return ec.fieldContext_TenantBillingProfile_domesticPaymentsBankInfo(ctx, field)
 			case "internationalPaymentsBankInfo":
 				return ec.fieldContext_TenantBillingProfile_internationalPaymentsBankInfo(ctx, field)
+			case "vatNumber":
+				return ec.fieldContext_TenantBillingProfile_vatNumber(ctx, field)
+			case "sendInvoicesFrom":
+				return ec.fieldContext_TenantBillingProfile_sendInvoicesFrom(ctx, field)
+			case "canPayWithCard":
+				return ec.fieldContext_TenantBillingProfile_canPayWithCard(ctx, field)
+			case "canPayWithDirectDebitSEPA":
+				return ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitSEPA(ctx, field)
+			case "canPayWithDirectDebitACH":
+				return ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitACH(ctx, field)
+			case "canPayWithDirectDebitBacs":
+				return ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitBacs(ctx, field)
+			case "canPayWithPigeon":
+				return ec.fieldContext_TenantBillingProfile_canPayWithPigeon(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TenantBillingProfile", field.Name)
 		},
@@ -57431,6 +57522,20 @@ func (ec *executionContext) fieldContext_Mutation_tenant_UpdateBillingProfile(ct
 				return ec.fieldContext_TenantBillingProfile_domesticPaymentsBankInfo(ctx, field)
 			case "internationalPaymentsBankInfo":
 				return ec.fieldContext_TenantBillingProfile_internationalPaymentsBankInfo(ctx, field)
+			case "vatNumber":
+				return ec.fieldContext_TenantBillingProfile_vatNumber(ctx, field)
+			case "sendInvoicesFrom":
+				return ec.fieldContext_TenantBillingProfile_sendInvoicesFrom(ctx, field)
+			case "canPayWithCard":
+				return ec.fieldContext_TenantBillingProfile_canPayWithCard(ctx, field)
+			case "canPayWithDirectDebitSEPA":
+				return ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitSEPA(ctx, field)
+			case "canPayWithDirectDebitACH":
+				return ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitACH(ctx, field)
+			case "canPayWithDirectDebitBacs":
+				return ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitBacs(ctx, field)
+			case "canPayWithPigeon":
+				return ec.fieldContext_TenantBillingProfile_canPayWithPigeon(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TenantBillingProfile", field.Name)
 		},
@@ -72222,6 +72327,20 @@ func (ec *executionContext) fieldContext_Query_tenantBillingProfiles(ctx context
 				return ec.fieldContext_TenantBillingProfile_domesticPaymentsBankInfo(ctx, field)
 			case "internationalPaymentsBankInfo":
 				return ec.fieldContext_TenantBillingProfile_internationalPaymentsBankInfo(ctx, field)
+			case "vatNumber":
+				return ec.fieldContext_TenantBillingProfile_vatNumber(ctx, field)
+			case "sendInvoicesFrom":
+				return ec.fieldContext_TenantBillingProfile_sendInvoicesFrom(ctx, field)
+			case "canPayWithCard":
+				return ec.fieldContext_TenantBillingProfile_canPayWithCard(ctx, field)
+			case "canPayWithDirectDebitSEPA":
+				return ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitSEPA(ctx, field)
+			case "canPayWithDirectDebitACH":
+				return ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitACH(ctx, field)
+			case "canPayWithDirectDebitBacs":
+				return ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitBacs(ctx, field)
+			case "canPayWithPigeon":
+				return ec.fieldContext_TenantBillingProfile_canPayWithPigeon(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TenantBillingProfile", field.Name)
 		},
@@ -72332,6 +72451,20 @@ func (ec *executionContext) fieldContext_Query_tenantBillingProfile(ctx context.
 				return ec.fieldContext_TenantBillingProfile_domesticPaymentsBankInfo(ctx, field)
 			case "internationalPaymentsBankInfo":
 				return ec.fieldContext_TenantBillingProfile_internationalPaymentsBankInfo(ctx, field)
+			case "vatNumber":
+				return ec.fieldContext_TenantBillingProfile_vatNumber(ctx, field)
+			case "sendInvoicesFrom":
+				return ec.fieldContext_TenantBillingProfile_sendInvoicesFrom(ctx, field)
+			case "canPayWithCard":
+				return ec.fieldContext_TenantBillingProfile_canPayWithCard(ctx, field)
+			case "canPayWithDirectDebitSEPA":
+				return ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitSEPA(ctx, field)
+			case "canPayWithDirectDebitACH":
+				return ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitACH(ctx, field)
+			case "canPayWithDirectDebitBacs":
+				return ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitBacs(ctx, field)
+			case "canPayWithPigeon":
+				return ec.fieldContext_TenantBillingProfile_canPayWithPigeon(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TenantBillingProfile", field.Name)
 		},
@@ -77359,6 +77492,314 @@ func (ec *executionContext) fieldContext_TenantBillingProfile_internationalPayme
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_vatNumber(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_vatNumber(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.VatNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_vatNumber(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_sendInvoicesFrom(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_sendInvoicesFrom(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SendInvoicesFrom, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_sendInvoicesFrom(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_canPayWithCard(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_canPayWithCard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanPayWithCard, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_canPayWithCard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_canPayWithDirectDebitSEPA(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitSEPA(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanPayWithDirectDebitSepa, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_canPayWithDirectDebitSEPA(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_canPayWithDirectDebitACH(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitACH(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanPayWithDirectDebitAch, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_canPayWithDirectDebitACH(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_canPayWithDirectDebitBacs(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_canPayWithDirectDebitBacs(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanPayWithDirectDebitBacs, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_canPayWithDirectDebitBacs(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillingProfile_canPayWithPigeon(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillingProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillingProfile_canPayWithPigeon(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanPayWithPigeon, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillingProfile_canPayWithPigeon(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -86145,7 +86586,7 @@ func (ec *executionContext) unmarshalInputTenantBillingProfileInput(ctx context.
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "phone", "addressLine1", "addressLine2", "addressLine3", "locality", "country", "zip", "legalName", "domesticPaymentsBankInfo", "internationalPaymentsBankInfo"}
+	fieldsInOrder := [...]string{"email", "phone", "addressLine1", "addressLine2", "addressLine3", "locality", "country", "zip", "legalName", "domesticPaymentsBankInfo", "internationalPaymentsBankInfo", "vatNumber", "sendInvoicesFrom", "canPayWithCard", "canPayWithDirectDebitSEPA", "canPayWithDirectDebitACH", "canPayWithDirectDebitBacs", "canPayWithPigeon"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -86229,6 +86670,55 @@ func (ec *executionContext) unmarshalInputTenantBillingProfileInput(ctx context.
 				return it, err
 			}
 			it.InternationalPaymentsBankInfo = data
+		case "vatNumber":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vatNumber"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VatNumber = data
+		case "sendInvoicesFrom":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sendInvoicesFrom"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SendInvoicesFrom = data
+		case "canPayWithCard":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithCard"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithCard = data
+		case "canPayWithDirectDebitSEPA":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebitSEPA"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithDirectDebitSepa = data
+		case "canPayWithDirectDebitACH":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebitACH"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithDirectDebitAch = data
+		case "canPayWithDirectDebitBacs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebitBacs"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithDirectDebitBacs = data
+		case "canPayWithPigeon":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithPigeon"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithPigeon = data
 		}
 	}
 
@@ -86242,7 +86732,7 @@ func (ec *executionContext) unmarshalInputTenantBillingProfileUpdateInput(ctx co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "patch", "email", "phone", "addressLine1", "addressLine2", "addressLine3", "locality", "country", "zip", "legalName", "domesticPaymentsBankInfo", "internationalPaymentsBankInfo"}
+	fieldsInOrder := [...]string{"id", "patch", "email", "phone", "addressLine1", "addressLine2", "addressLine3", "locality", "country", "zip", "legalName", "domesticPaymentsBankInfo", "internationalPaymentsBankInfo", "vatNumber", "sendInvoicesFrom", "canPayWithCard", "canPayWithDirectDebitSEPA", "canPayWithDirectDebitACH", "canPayWithDirectDebitBacs", "canPayWithPigeon"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -86340,6 +86830,55 @@ func (ec *executionContext) unmarshalInputTenantBillingProfileUpdateInput(ctx co
 				return it, err
 			}
 			it.InternationalPaymentsBankInfo = data
+		case "vatNumber":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vatNumber"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VatNumber = data
+		case "sendInvoicesFrom":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sendInvoicesFrom"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SendInvoicesFrom = data
+		case "canPayWithCard":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithCard"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithCard = data
+		case "canPayWithDirectDebitSEPA":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebitSEPA"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithDirectDebitSepa = data
+		case "canPayWithDirectDebitACH":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebitACH"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithDirectDebitAch = data
+		case "canPayWithDirectDebitBacs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebitBacs"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithDirectDebitBacs = data
+		case "canPayWithPigeon":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithPigeon"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithPigeon = data
 		}
 	}
 
@@ -99688,6 +100227,41 @@ func (ec *executionContext) _TenantBillingProfile(ctx context.Context, sel ast.S
 			}
 		case "internationalPaymentsBankInfo":
 			out.Values[i] = ec._TenantBillingProfile_internationalPaymentsBankInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "vatNumber":
+			out.Values[i] = ec._TenantBillingProfile_vatNumber(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sendInvoicesFrom":
+			out.Values[i] = ec._TenantBillingProfile_sendInvoicesFrom(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "canPayWithCard":
+			out.Values[i] = ec._TenantBillingProfile_canPayWithCard(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "canPayWithDirectDebitSEPA":
+			out.Values[i] = ec._TenantBillingProfile_canPayWithDirectDebitSEPA(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "canPayWithDirectDebitACH":
+			out.Values[i] = ec._TenantBillingProfile_canPayWithDirectDebitACH(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "canPayWithDirectDebitBacs":
+			out.Values[i] = ec._TenantBillingProfile_canPayWithDirectDebitBacs(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "canPayWithPigeon":
+			out.Values[i] = ec._TenantBillingProfile_canPayWithPigeon(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
