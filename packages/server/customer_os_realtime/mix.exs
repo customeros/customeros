@@ -9,7 +9,8 @@ defmodule CustomerOsRealtime.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      dialyzer: [plt_add_deps: :apps_direct] #, plt_add_apps: [:some_app, :another_app]
     ]
   end
 
@@ -41,7 +42,8 @@ defmodule CustomerOsRealtime.MixProject do
       {:phoenix_live_view, "~> 0.20.2"},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.2"}
+      {:bandit, "~> 1.2"},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
     ]
   end
 
