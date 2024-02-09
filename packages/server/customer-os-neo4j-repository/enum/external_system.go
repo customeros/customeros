@@ -12,6 +12,7 @@ const (
 	Salesforce     ExternalSystemId = "salesforce"
 	Stripe         ExternalSystemId = "stripe"
 	Mixpanel       ExternalSystemId = "mixpanel"
+	Close          ExternalSystemId = "close"
 )
 
 func (e ExternalSystemId) String() string {
@@ -38,6 +39,8 @@ func DecodeExternalSystemId(value string) ExternalSystemId {
 		return Stripe
 	case "mixpanel":
 		return Mixpanel
+	case "close":
+		return Close
 	}
 	return ""
 }

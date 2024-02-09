@@ -11553,6 +11553,7 @@ enum ExternalSystemType {
     SALESFORCE
     STRIPE
     MIXPANEL
+    CLOSE
 }
 
 type ExternalSystem {
@@ -13211,6 +13212,7 @@ input SocialUpdateInput {
     SALESFORCE
     STRIPE
     MIXPANEL
+    CLOSE
 }`, BuiltIn: false},
 	{Name: "../schemas/state.graphqls", Input: `type State {
     id: ID!

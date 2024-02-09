@@ -3050,6 +3050,7 @@ const (
 	DataSourceSalesforce     DataSource = "SALESFORCE"
 	DataSourceStripe         DataSource = "STRIPE"
 	DataSourceMixpanel       DataSource = "MIXPANEL"
+	DataSourceClose          DataSource = "CLOSE"
 )
 
 var AllDataSource = []DataSource{
@@ -3064,11 +3065,12 @@ var AllDataSource = []DataSource{
 	DataSourceSalesforce,
 	DataSourceStripe,
 	DataSourceMixpanel,
+	DataSourceClose,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel:
+	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel, DataSourceClose:
 		return true
 	}
 	return false
@@ -3236,6 +3238,7 @@ const (
 	ExternalSystemTypeSalesforce     ExternalSystemType = "SALESFORCE"
 	ExternalSystemTypeStripe         ExternalSystemType = "STRIPE"
 	ExternalSystemTypeMixpanel       ExternalSystemType = "MIXPANEL"
+	ExternalSystemTypeClose          ExternalSystemType = "CLOSE"
 )
 
 var AllExternalSystemType = []ExternalSystemType{
@@ -3248,11 +3251,12 @@ var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeSalesforce,
 	ExternalSystemTypeStripe,
 	ExternalSystemTypeMixpanel,
+	ExternalSystemTypeClose,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce, ExternalSystemTypeStripe, ExternalSystemTypeMixpanel:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce, ExternalSystemTypeStripe, ExternalSystemTypeMixpanel, ExternalSystemTypeClose:
 		return true
 	}
 	return false
