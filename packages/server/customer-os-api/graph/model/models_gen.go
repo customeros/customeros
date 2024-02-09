@@ -1818,12 +1818,14 @@ type OrganizationPlanMilestoneItem struct {
 	Status    OnboardingPlanMilestoneItemStatus `json:"status"`
 	UpdatedAt time.Time                         `json:"updatedAt"`
 	Text      string                            `json:"text"`
+	UUID      string                            `json:"uuid"`
 }
 
 type OrganizationPlanMilestoneItemInput struct {
 	Status    OnboardingPlanMilestoneItemStatus `json:"status"`
 	UpdatedAt time.Time                         `json:"updatedAt"`
 	Text      string                            `json:"text"`
+	UUID      *string                           `json:"uuid,omitempty"`
 }
 
 type OrganizationPlanMilestoneReorderInput struct {

@@ -94,6 +94,7 @@ func MapEntityToOrganizationPlanMilestoneItem(entity *neo4jentity.OrganizationPl
 		Status:    status,
 		UpdatedAt: entity.UpdatedAt,
 		Text:      entity.Text,
+		UUID:      entity.Uuid,
 	}
 }
 

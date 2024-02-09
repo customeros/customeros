@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -546,10 +547,17 @@ func milestoneStatusDetailsInputToProtobuf(sd *model.OrganizationPlanMilestoneSt
 func modelItemsToPbItems(items []*model.OrganizationPlanMilestoneItemInput) []*orgplanpb.OrganizationPlanMilestoneItem {
 	out := make([]*orgplanpb.OrganizationPlanMilestoneItem, 0, len(items))
 	for _, v := range items {
+		var iUuid string
+		if v.UUID == nil {
+			iUuid = uuid.New().String()
+		} else {
+			iUuid = *v.UUID
+		}
 		out = append(out, &orgplanpb.OrganizationPlanMilestoneItem{
 			Status:    v.Status.String(),
 			UpdatedAt: utils.ConvertTimeToTimestampPtr(&v.UpdatedAt),
 			Text:      v.Text,
+			Uuid:      iUuid,
 		})
 	}
 	return out
