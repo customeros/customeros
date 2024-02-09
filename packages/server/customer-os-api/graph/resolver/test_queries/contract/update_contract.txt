@@ -21,6 +21,9 @@ contract_Update(
         invoiceNote: "test invoice note"
         billingCycle: ANNUAL_BILLING
         currency: USD
+        canPayWithCard: true
+        canPayWithDirectDebit: true
+        canPayWithBankTransfer: true
     }
   ) {
     id

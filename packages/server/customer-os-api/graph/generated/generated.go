@@ -10935,6 +10935,9 @@ input ContractUpdateInput {
     zip:                String
     organizationLegalName: String
     invoiceEmail:       String
+    canPayWithCard:     Boolean
+    canPayWithDirectDebit:     Boolean
+    canPayWithBankTransfer: Boolean
     invoiceNote:        String
 }
 
@@ -81845,7 +81848,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "patch", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource", "currency", "invoicingStartDate", "billingCycle", "addressLine1", "addressLine2", "locality", "country", "zip", "organizationLegalName", "invoiceEmail", "invoiceNote"}
+	fieldsInOrder := [...]string{"contractId", "patch", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource", "currency", "invoicingStartDate", "billingCycle", "addressLine1", "addressLine2", "locality", "country", "zip", "organizationLegalName", "invoiceEmail", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoiceNote"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -81992,6 +81995,27 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.InvoiceEmail = data
+		case "canPayWithCard":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithCard"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithCard = data
+		case "canPayWithDirectDebit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithDirectDebit"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithDirectDebit = data
+		case "canPayWithBankTransfer":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canPayWithBankTransfer"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanPayWithBankTransfer = data
 		case "invoiceNote":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoiceNote"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)

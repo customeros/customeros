@@ -168,6 +168,15 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	if eventData.UpdateNextInvoiceDate() {
 		a.Contract.NextInvoiceDate = eventData.NextInvoiceDate
 	}
+	if eventData.UpdateCanPayWithCard() {
+		a.Contract.CanPayWithCard = eventData.CanPayWithCard
+	}
+	if eventData.UpdateCanPayWithDirectDebit() {
+		a.Contract.CanPayWithDirectDebit = eventData.CanPayWithDirectDebit
+	}
+	if eventData.UpdateCanPayWithBankTransfer() {
+		a.Contract.CanPayWithBankTransfer = eventData.CanPayWithBankTransfer
+	}
 
 	if eventData.ExternalSystem.Available() {
 		found := false
