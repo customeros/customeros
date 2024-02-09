@@ -302,9 +302,9 @@ export const integrationsData: IntegrationItem[] = [
     ],
   },
   {
-    key: 'closecom',
+    key: 'close-oauth',
     state: 'INACTIVE',
-    identifier: 'closecom',
+    identifier: 'close-oauth',
     name: 'Close.com',
     icon: 'integrationOptionLogos/close.com.svg',
     fields: [
@@ -313,6 +313,7 @@ export const integrationsData: IntegrationItem[] = [
         label: 'API Key',
       },
     ],
+    isFromIntegrationApp: true,
   },
 
   {
