@@ -399,7 +399,7 @@ func mapMilestoneEntityToNeo4jProperties(entity entity.OrganizationPlanMilestone
 
 func mapMilestoneItemToNeo4jProperties(item entity.OrganizationPlanMilestoneItem) string {
 	ji, _ := json.Marshal(item)
-	return string(ji[:]) // fmt.Sprintf(`{"text":%s,"status":%s,"updatedAt":%s}`, item.Text, item.Status, item.UpdatedAt)
+	return string(ji[:]) // fmt.Sprintf(`{"text":%s,"status":%s,"updatedAt":%s,"uuid":%s}`, item.Text, item.Status, item.UpdatedAt, item.Uuid)
 }
 
 func mapMilestoneItemsToNeo4jProperties(items []entity.OrganizationPlanMilestoneItem) []string {
