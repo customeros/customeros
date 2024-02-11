@@ -425,7 +425,8 @@ func (r *organizationWriteRepository) SetVisibility(ctx context.Context, tenant,
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.Bool("hide", hide))
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
+			WHERE org:Organization_%s
 		 SET	org.hide = $hide,
 				org.updatedAt = $now`, tenant)
 	params := map[string]any{
