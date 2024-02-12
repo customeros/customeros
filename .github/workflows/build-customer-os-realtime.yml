@@ -91,7 +91,7 @@ jobs:
                 deps
                 _build
                 priv/plts
-            key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
+            key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-invalid-${{ hashFiles('mix.lock') }}
         - name: Install dependencies
           if: steps.mix-cache.outputs.cache-hit != 'true'
           run: |
@@ -138,7 +138,7 @@ jobs:
                 deps
                 _build
                 priv/plts
-            key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
+            key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-invalid-${{ hashFiles('mix.lock') }}
         - name: Install dependencies
           if: steps.mix-cache.outputs.cache-hit != 'true'
           run: |
