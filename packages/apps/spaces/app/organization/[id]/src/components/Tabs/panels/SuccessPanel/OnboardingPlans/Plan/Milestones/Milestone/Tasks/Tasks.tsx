@@ -54,7 +54,6 @@ export const Tasks = memo(
             formId={formId}
             defaultValue={m.text}
             shouldFocusRef={shouldFocusRef}
-            isLast={idx === (value as TaskDatum[]).length - 1}
           />
         ))}
         <Button
