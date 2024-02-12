@@ -40,7 +40,6 @@ type Repositories struct {
 	PlayerRepository              PlayerRepository
 	ActionRepository              ActionRepository
 	ActionItemRepository          ActionItemRepository
-	LogEntryRepository            LogEntryRepository
 	CommentRepository             CommentRepository
 	ServiceLineItemRepository     ServiceLineItemRepository
 	OpportunityRepository         OpportunityRepository
@@ -89,7 +88,6 @@ func InitRepos(driver *neo4j.DriverWithContext, database string) *Repositories {
 	repositories.PlayerRepository = NewPlayerRepository(driver)
 	repositories.ActionRepository = NewActionRepository(driver)
 	repositories.ActionItemRepository = NewActionItemRepository(driver)
-	repositories.LogEntryRepository = NewLogEntryRepository(driver)
 	repositories.CommentRepository = NewCommentRepository(driver, database)
 	repositories.ServiceLineItemRepository = NewServiceLineItemRepository(driver, database)
 	repositories.OpportunityRepository = NewOpportunityRepository(driver, database)

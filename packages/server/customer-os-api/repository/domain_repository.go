@@ -39,7 +39,9 @@ func (r *domainRepository) GetForOrganizations(ctx context.Context, tenant strin
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
-	result, err := utils.ExecuteQuery(ctx, *r.driver, r.database, cypher, params)
+	result, err := utils.ExecuteQuery(ctx, *r.driver, r.database, cypher, params, func(err error) {
+		tracing.TraceErr(span, err)
+	})
 	if err != nil {
 		return nil, err
 	}

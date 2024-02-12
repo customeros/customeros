@@ -57,7 +57,7 @@ func (r *userRepository) FindUserByEmail(parentCtx context.Context, tenant strin
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
-	result, err := r.executeQuery(ctx, cypher, params)
+	result, err := r.executeQuery(ctx, cypher, params, span)
 	if err != nil {
 		return nil, err
 	}
@@ -537,6 +537,8 @@ func (r *userRepository) GetOwnerForContract(parentCtx context.Context, tx neo4j
 	}
 }
 
-func (r *userRepository) executeQuery(ctx context.Context, cypher string, params map[string]any) (*neo4j.EagerResult, error) {
-	return utils.ExecuteQuery(ctx, *r.driver, r.database, cypher, params)
+func (r *userRepository) executeQuery(ctx context.Context, cypher string, params map[string]any, span opentracing.Span) (*neo4j.EagerResult, error) {
+	return utils.ExecuteQuery(ctx, *r.driver, r.database, cypher, params, func(err error) {
+		tracing.TraceErr(span, err)
+	})
 }
