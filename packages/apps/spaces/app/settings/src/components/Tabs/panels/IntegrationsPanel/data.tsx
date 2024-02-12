@@ -16,6 +16,15 @@ export interface IntegrationItem {
 
 export const integrationsData: IntegrationItem[] = [
   {
+    key: 'customeros-custom-payment-provider',
+    state: 'INACTIVE',
+    icon: '/integrationOptionLogos/customer-os.png',
+    identifier: 'customeros-custom-payment-provider',
+    name: 'Custom payment provider',
+    fields: [],
+    isFromIntegrationApp: true,
+  },
+  {
     key: 'gsuite',
     state: 'INACTIVE',
     icon: '/integrationOptionLogos/google-icon.svg',
