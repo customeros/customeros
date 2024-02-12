@@ -160,7 +160,7 @@ func (r *emailRepository) GetAllFor(ctx context.Context, tenant string, entityTy
 		"tenant":   tenant,
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
-	result, err := r.executeQuery(ctx, cypher, params)
+	result, err := r.executeQuery(ctx, cypher, params, span)
 	if err != nil {
 		return nil, err
 	}
@@ -439,6 +439,8 @@ func (r *emailRepository) GetById(ctx context.Context, emailId string) (*dbtype.
 	return result.(*dbtype.Node), nil
 }
 
-func (r *emailRepository) executeQuery(ctx context.Context, cypher string, params map[string]any) (*neo4j.EagerResult, error) {
-	return utils.ExecuteQuery(ctx, *r.driver, r.database, cypher, params)
+func (r *emailRepository) executeQuery(ctx context.Context, cypher string, params map[string]any, span opentracing.Span) (*neo4j.EagerResult, error) {
+	return utils.ExecuteQuery(ctx, *r.driver, r.database, cypher, params, func(err error) {
+		tracing.TraceErr(span, err)
+	})
 }

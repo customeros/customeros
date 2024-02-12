@@ -179,9 +179,6 @@ func (s *meetingSyncService) syncMeeting(ctx context.Context, meetingSyncMutex *
 				s.log.Errorf(reason)
 				break
 			}
-			if !failedSync {
-				s.services.OrganizationService.UpdateLastTouchpointByContactIdExternalId(ctx, tenant, contactExternalId, meetingInput.ExternalSystem)
-			}
 		}
 	}
 	if failedSync == false {

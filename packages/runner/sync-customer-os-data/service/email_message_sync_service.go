@@ -207,9 +207,6 @@ func (s *emailMessageSyncService) syncEmailMessage(ctx context.Context, messageI
 				s.log.Errorf(reason)
 			}
 		}
-		if !failedSync {
-			s.services.OrganizationService.UpdateLastTouchpointByContactEmailId(ctx, tenant, emailId)
-		}
 	}
 
 	//to
@@ -242,12 +239,6 @@ func (s *emailMessageSyncService) syncEmailMessage(ctx context.Context, messageI
 			tracing.TraceErr(span, err)
 			reason = fmt.Sprintf("failed set BCC users %v for interaction event %v in tenant %v :%v", messageInput.ExternalContactsIds, sessionId, tenant, err)
 			s.log.Errorf(reason)
-		}
-	}
-
-	if !failedSync {
-		for _, v := range messageInput.ExternalContactsIds {
-			s.services.OrganizationService.UpdateLastTouchpointByContactIdExternalId(ctx, tenant, v, messageInput.ExternalSystem)
 		}
 	}
 
