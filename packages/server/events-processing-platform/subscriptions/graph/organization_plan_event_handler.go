@@ -263,6 +263,52 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		data.UpdateStatusDetails = true
 	}
 
+	if eventData.UpdateDueDate() && !eventData.UpdateItems() {
+		lateStatus := (eventData.StatusDetails.Status == model.MilestoneNotStartedLate.String() || eventData.StatusDetails.Status == model.MilestoneStartedLate.String() || eventData.StatusDetails.Status == model.MilestoneDoneLate.String())
+		milestoneLate := eventData.UpdatedAt.After(dueDate) && eventData.UpdatedAt.Day() != dueDate.Day() || lateStatus
+		// change milestone status if due date changed
+		if milestoneLate {
+			if data.StatusDetails.Status == model.MilestoneDone.String() {
+				data.StatusDetails.Status = model.MilestoneDoneLate.String()
+			} else if data.StatusDetails.Status == model.MilestoneNotStarted.String() {
+				data.StatusDetails.Status = model.MilestoneNotStartedLate.String()
+			} else if data.StatusDetails.Status == model.MilestoneStarted.String() {
+				data.StatusDetails.Status = model.MilestoneStartedLate.String()
+			}
+		} else {
+			if data.StatusDetails.Status == model.MilestoneDoneLate.String() {
+				data.StatusDetails.Status = model.MilestoneDone.String()
+			} else if data.StatusDetails.Status == model.MilestoneNotStartedLate.String() {
+				data.StatusDetails.Status = model.MilestoneNotStarted.String()
+			} else if data.StatusDetails.Status == model.MilestoneStartedLate.String() {
+				data.StatusDetails.Status = model.MilestoneStarted.String()
+			}
+		}
+		data.StatusDetails.UpdatedAt = eventData.UpdatedAt
+		data.UpdateStatusDetails = true
+
+		// propagate status downstream to items
+		for _, item := range eventData.Items {
+			if milestoneLate {
+				if item.Status == model.TaskDone.String() {
+					item.Status = model.TaskDoneLate.String()
+				} else if item.Status == model.TaskNotDone.String() {
+					item.Status = model.TaskNotDoneLate.String()
+				} else if item.Status == model.TaskSkipped.String() {
+					item.Status = model.TaskSkippedLate.String()
+				}
+			} else {
+				if item.Status == model.TaskDoneLate.String() {
+					item.Status = model.TaskDone.String()
+				} else if item.Status == model.TaskNotDoneLate.String() {
+					item.Status = model.TaskNotDone.String()
+				} else if item.Status == model.TaskSkippedLate.String() {
+					item.Status = model.TaskSkipped.String()
+				}
+			}
+		}
+	}
+
 	err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, eventData.OrganizationPlanId, eventData.MilestoneId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
