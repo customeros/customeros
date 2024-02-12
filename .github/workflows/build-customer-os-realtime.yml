@@ -164,7 +164,7 @@ jobs:
 
             rsync -av --progress --exclude="tmp-sources" * tmp-sources/customer_os_realtime
 
-            cp rel/* tmp-sources/rel/
+            cp -r rel/* tmp-sources/rel/
 
             cp Dockerfile tmp-sources/Dockerfile
 
