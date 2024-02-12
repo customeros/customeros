@@ -6,17 +6,23 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { produce } from 'immer';
 import { useDebounce } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
+import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/VatInput';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
 import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateTenantBillingProfile.generated';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
+import { Gb } from '@ui/media/logos/Gb';
+import { Us } from '@ui/media/logos/Us';
+import { Eu } from '@ui/media/logos/Eu';
+import { Text } from '@ui/typography/Text';
 import { FormInput } from '@ui/form/Input';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Heading } from '@ui/typography/Heading';
+import { Divider } from '@ui/presentation/Divider';
 import { TenantBillingProfile } from '@graphql/types';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { FormSwitch } from '@ui/form/Switch/FromSwitch';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
 import { countryOptions } from '@shared/util/countryOptions';
@@ -38,22 +44,6 @@ export const BillingPanel = () => {
   const [isInvoiceProviderDetailsHovered, setIsInvoiceProviderDetailsHovered] =
     useState<boolean>(false);
 
-  const [
-    isDomesticBankingDetailsSectionFocused,
-    setIsDomesticBankingDetailsSectionFocused,
-  ] = useState<boolean>(false);
-  const [
-    isDomesticBankingDetailsSectionHovered,
-    setIsDomesticBankingDetailsSectionHovered,
-  ] = useState<boolean>(false);
-  const [
-    isInternationalBankingDetailsSectionFocused,
-    setIsInternationalBankingDetailsSectionFocused,
-  ] = useState<boolean>(false);
-  const [
-    isInternationalBankingDetailsSectionHovered,
-    setIsInternationalBankingDetailsSectionHovered,
-  ] = useState<boolean>(false);
   const tenantBillingProfileId = data?.tenantBillingProfiles?.[0]?.id ?? '';
   const queryKey = useTenantBillingProfilesQuery.getKey();
 
@@ -134,40 +124,69 @@ export const BillingPanel = () => {
 
   const handleUpdateData = useDebounce((d: TenantBillingDetails) => {
     const payload = TenantBillingDetailsDto.toPayload(d);
-
     updateBillingProfileMutation.mutate({
       input: {
         id: tenantBillingProfileId,
         ...payload,
       },
     });
-  }, 500);
+  }, 2500);
   const { state, setDefaultValues } = useForm({
     formId,
     defaultValues: newDefaults,
     stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        if (action.payload.name === 'country') {
-          const payload = TenantBillingDetailsDto.toPayload(next.values);
-          updateBillingProfileMutation.mutate({
-            input: {
-              id: tenantBillingProfileId,
-              ...payload,
-            },
-          });
+        switch (action.payload.name) {
+          case 'country':
+          case 'canPayWithDirectDebitSEPA':
+          case 'canPayWithDirectDebitACH':
+          case 'canPayWithDirectDebitBacs':
+          case 'canPayWithCard':
+          case 'canPayWithPigeon': {
+            const payload = TenantBillingDetailsDto.toPayload(next.values);
+            updateBillingProfileMutation.mutate({
+              input: {
+                id: tenantBillingProfileId,
+                ...payload,
+              },
+            });
 
-          return {
-            ...next,
-          };
+            return next;
+          }
+          case 'vatNumber':
+          case 'sendInvoicesFrom':
+          case 'organizationLegalName':
+          case 'addressLine1':
+          case 'addressLine2':
+          case 'addressLine3':
+          case 'zip':
+          case 'locality': {
+            handleUpdateData({
+              ...next.values,
+            });
+
+            return next;
+          }
+          default:
+            return next;
         }
-        if (action.payload.name !== 'country') {
-          handleUpdateData({
-            ...next.values,
-          });
+      }
+      if (action.type === 'FIELD_BLUR') {
+        switch (action.payload.name) {
+          case 'vatNumber':
+          case 'sendInvoicesFrom':
+          case 'organizationLegalName':
+          case 'addressLine1':
+          case 'addressLine2':
+          case 'addressLine3':
+          case 'zip':
+          case 'locality': {
+            handleUpdateData.flush();
 
-          return {
-            ...next,
-          };
+            return next;
+          }
+          default:
+            return next;
         }
       }
 
@@ -277,7 +296,7 @@ export const BillingPanel = () => {
               onBlur={() => setIsInvoiceProviderFocused(false)}
             />
 
-            <Flex>
+            <Flex gap={2}>
               <FormInput
                 autoComplete='off'
                 label='Billing address locality'
@@ -303,9 +322,27 @@ export const BillingPanel = () => {
               formId={formId}
               options={countryOptions}
             />
+            <VatInput
+              formId={formId}
+              name='vatNumber'
+              autoComplete='off'
+              label='VAT number'
+              isLabelVisible
+              labelProps={{
+                fontSize: 'sm',
+                mb: 0,
+                mt: 4,
+                fontWeight: 'semibold',
+              }}
+              textOverflow='ellipsis'
+              placeholder='VAT number'
+              onFocus={() => setIsInvoiceProviderFocused(true)}
+              onBlur={() => setIsInvoiceProviderFocused(false)}
+            />
+
             <FormInput
               autoComplete='off'
-              label='Email'
+              label='Send invoice from'
               isLabelVisible
               labelProps={{
                 fontSize: 'sm',
@@ -327,63 +364,100 @@ export const BillingPanel = () => {
             />
           </Flex>
 
-          <FormAutoresizeTextarea
-            label='Domestic banking details'
-            isLabelVisible
-            name='domesticPaymentsBankInfo'
+          <Flex position='relative' alignItems='center'>
+            <Text color='gray.500' fontSize='xs' whiteSpace='nowrap' mr={2}>
+              Customer can pay using
+            </Text>
+            <Divider background='gray.200' />
+          </Flex>
+
+          <FormSwitch
+            name='canPayWithCard'
             formId={formId}
-            labelProps={{
-              fontSize: 'sm',
-              mb: 0,
-              fontWeight: 'semibold',
-            }}
-            onMouseEnter={() => setIsDomesticBankingDetailsSectionHovered(true)}
-            onMouseLeave={() =>
-              setIsDomesticBankingDetailsSectionHovered(false)
+            size='sm'
+            label={
+              <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
+                Credit or Debit cards
+              </Text>
             }
-            onFocus={() => setIsDomesticBankingDetailsSectionFocused(true)}
-            onBlur={() => setIsDomesticBankingDetailsSectionFocused(false)}
           />
-          <FormAutoresizeTextarea
-            label='International banking details'
-            isLabelVisible
-            name='internationalPaymentsBankInfo'
+
+          <Flex flexDir='column' gap={2}>
+            <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
+              Direct debit via
+            </Text>
+            <FormSwitch
+              name='canPayWithDirectDebitSEPA'
+              formId={formId}
+              size='sm'
+              label={
+                <Text
+                  fontSize='sm'
+                  fontWeight='medium'
+                  whiteSpace='nowrap'
+                  as='label'
+                >
+                  <Eu mr={2} />
+                  SEPA
+                </Text>
+              }
+            />
+            <FormSwitch
+              name='canPayWithDirectDebitACH'
+              formId={formId}
+              size='sm'
+              label={
+                <Text
+                  fontSize='sm'
+                  fontWeight='medium'
+                  whiteSpace='nowrap'
+                  as='label'
+                >
+                  <Us mr={2} />
+                  ACH
+                </Text>
+              }
+            />
+
+            <FormSwitch
+              name='canPayWithDirectDebitBacs'
+              formId={formId}
+              size='sm'
+              label={
+                <Text
+                  fontSize='sm'
+                  fontWeight='medium'
+                  whiteSpace='nowrap'
+                  as='label'
+                >
+                  <Gb mr={2} />
+                  Bacs
+                </Text>
+              }
+            />
+          </Flex>
+          {/*<Flex justifyContent='space-between' alignItems='center'>*/}
+          {/*  <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>*/}
+          {/*    Bank transfer*/}
+          {/*  </Text>*/}
+          {/*  <Switch size='sm' />*/}
+          {/*</Flex>*/}
+          <FormSwitch
+            name='canPayWithPigeon'
             formId={formId}
-            labelProps={{
-              fontSize: 'sm',
-              mb: 0,
-              fontWeight: 'semibold',
-            }}
-            onMouseEnter={() =>
-              setIsInternationalBankingDetailsSectionHovered(true)
+            size='sm'
+            label={
+              <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
+                Carrier pigeon
+              </Text>
             }
-            onMouseLeave={() =>
-              setIsInternationalBankingDetailsSectionHovered(false)
-            }
-            onFocus={() => setIsInternationalBankingDetailsSectionFocused(true)}
-            onBlur={() => setIsInternationalBankingDetailsSectionFocused(false)}
           />
         </CardBody>
       </Card>
       <Box borderRight='1px solid' borderColor='gray.300' maxH='100vh'>
         <Invoice
           isInvoiceProviderFocused={
-            isInvoiceProviderFocused ||
-            (isInvoiceProviderDetailsHovered &&
-              !isInternationalBankingDetailsSectionFocused &&
-              !isDomesticBankingDetailsSectionFocused)
-          }
-          isDomesticBankingDetailsSectionFocused={
-            isDomesticBankingDetailsSectionFocused ||
-            (isDomesticBankingDetailsSectionHovered &&
-              !isInvoiceProviderFocused &&
-              !isInternationalBankingDetailsSectionFocused)
-          }
-          isInternationalBankingDetailsSectionFocused={
-            isInternationalBankingDetailsSectionFocused ||
-            (isInternationalBankingDetailsSectionHovered &&
-              !isInvoiceProviderFocused &&
-              !isDomesticBankingDetailsSectionFocused)
+            isInvoiceProviderFocused || isInvoiceProviderDetailsHovered
           }
           from={{
             addressLine1: state.values.addressLine1 ?? '',
@@ -393,12 +467,9 @@ export const BillingPanel = () => {
             country: state?.values?.country?.label ?? '',
             email: state?.values?.email ?? '',
             name: state.values?.legalName ?? '',
+            vatNumber: state.values?.vatNumber ?? '',
           }}
           {...invoicePreviewStaticData}
-          domesticBankingDetails={state?.values?.domesticPaymentsBankInfo}
-          internationalBankingDetails={
-            state?.values?.internationalPaymentsBankInfo
-          }
         />
       </Box>
     </Flex>

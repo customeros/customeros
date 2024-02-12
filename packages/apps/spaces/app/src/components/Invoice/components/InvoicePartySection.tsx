@@ -12,6 +12,7 @@ type InvoiceHeaderProps = {
   email?: string;
   country?: string;
   locality?: string;
+  vatNumber?: string;
   isBlurred?: boolean;
   isFocused?: boolean;
   addressLine1?: string;
@@ -28,6 +29,7 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
   locality = '',
   addressLine1 = '',
   addressLine2 = '',
+  vatNumber = '',
   title,
 }) => (
   <Flex
@@ -64,6 +66,11 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
     <Text fontSize='sm' fontWeight='medium' mb={1} lineHeight={1.2}>
       {name}
     </Text>
+    {/*{vatNumber && (*/}
+    {/*  <Text fontSize='xs' mb={1} lineHeight={1.2}>*/}
+    {/*    VAT number: {vatNumber}*/}
+    {/*  </Text>*/}
+    {/*)}*/}
 
     <Text fontSize='sm' lineHeight={1.2} color='gray.500'>
       {addressLine1}

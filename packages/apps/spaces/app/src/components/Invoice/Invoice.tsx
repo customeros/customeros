@@ -11,7 +11,6 @@ import { ServicesTable } from './ServicesTable';
 import {
   InvoiceHeader,
   InvoiceSummary,
-  BankingDetails,
   InvoicePartySection,
 } from './components';
 
@@ -22,6 +21,7 @@ type Address = {
   name?: string;
   country?: string;
   locality: string;
+  vatNumber?: string;
   addressLine1: string;
   addressLine2?: string;
 };
@@ -43,8 +43,6 @@ type InvoiceProps = {
   lines: Array<InvoiceLine>;
   isBilledToFocused?: boolean;
   isInvoiceProviderFocused?: boolean;
-  domesticBankingDetails?: string | null;
-  internationalBankingDetails?: string | null;
   isDomesticBankingDetailsSectionFocused?: boolean;
   isInternationalBankingDetailsSectionFocused?: boolean;
 };
@@ -66,8 +64,6 @@ export function Invoice({
   isInvoiceProviderFocused,
   currency = 'USD',
   logoUrl,
-  domesticBankingDetails,
-  internationalBankingDetails,
   isInternationalBankingDetailsSectionFocused,
   isDomesticBankingDetailsSectionFocused,
 }: InvoiceProps) {
@@ -145,6 +141,7 @@ export function Invoice({
               locality={billedTo.locality}
               addressLine1={billedTo?.addressLine1}
               addressLine2={billedTo?.addressLine2}
+              vatNumber={billedTo?.vatNumber}
             />
             <InvoicePartySection
               title='From'
@@ -157,6 +154,7 @@ export function Invoice({
               locality={from?.locality}
               addressLine1={from?.addressLine1}
               addressLine2={from?.addressLine2}
+              vatNumber={from?.vatNumber}
             />
           </Flex>
         </Flex>
@@ -179,19 +177,19 @@ export function Invoice({
         </Flex>
       </Flex>
 
-      {(domesticBankingDetails || internationalBankingDetails) && (
-        <BankingDetails
-          isBlurred={Boolean(isInvoiceMetaSectionBlurred)}
-          domesticBankingDetails={domesticBankingDetails}
-          internationalBankingDetails={internationalBankingDetails}
-          isDomesticBankingDetailsSectionFocused={
-            isDomesticBankingDetailsSectionFocused
-          }
-          isInternationalBankingDetailsSectionFocused={
-            isInternationalBankingDetailsSectionFocused
-          }
-        />
-      )}
+      {/*{(domesticBankingDetails || internationalBankingDetails) && (*/}
+      {/*  <BankingDetails*/}
+      {/*    isBlurred={Boolean(isInvoiceMetaSectionBlurred)}*/}
+      {/*    domesticBankingDetails={domesticBankingDetails}*/}
+      {/*    internationalBankingDetails={internationalBankingDetails}*/}
+      {/*    isDomesticBankingDetailsSectionFocused={*/}
+      {/*      isDomesticBankingDetailsSectionFocused*/}
+      {/*    }*/}
+      {/*    isInternationalBankingDetailsSectionFocused={*/}
+      {/*      isInternationalBankingDetailsSectionFocused*/}
+      {/*    }*/}
+      {/*  />*/}
+      {/*)}*/}
     </Flex>
   );
 }
