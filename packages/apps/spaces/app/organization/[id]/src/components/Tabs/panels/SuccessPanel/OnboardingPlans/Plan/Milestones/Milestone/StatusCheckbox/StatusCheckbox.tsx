@@ -10,31 +10,42 @@ export const StatusCheckbox = ({
   showCustomIcon,
   ...props
 }: StatusCheckboxProps) => {
+  const customeIconColor = (() => {
+    switch (props.colorScheme) {
+      case 'gray':
+        return 'gray.400';
+      case 'warning':
+        return 'warning.600';
+      case 'success':
+        return 'success.500';
+      default:
+        return 'gray.400';
+    }
+  })();
+
   return (
     <Checkbox
       mr='2'
       size='md'
       icon={
         showCustomIcon ? (
-          <ArrowNarrowDownRight
-            boxSize='3.5'
-            color={`${props.colorScheme}.400`}
-          />
+          <ArrowNarrowDownRight boxSize='3.5' color={customeIconColor} />
         ) : undefined
       }
       {...props}
       sx={{
         '& > span': {
-          bg: `${props.colorScheme}.100`,
-          borderColor: `${props.colorScheme}.300`,
+          bg: `${props.colorScheme}.50`,
+          borderColor: customeIconColor,
           _hover: {
-            borderColor: `${props.colorScheme}.400`,
+            bg: `${props.colorScheme}.100`,
           },
           _focus: {
+            borderColor: customeIconColor,
             bg: `${props.colorScheme}.100`,
           },
           '& > svg': {
-            color: `${props.colorScheme}.400`,
+            color: customeIconColor,
           },
         },
       }}

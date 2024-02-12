@@ -12,25 +12,22 @@ import { Collapse } from '@ui/transitions/Collapse';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 
-import { PlanMenu } from './PlanMenu';
-import { PlanDueDate } from './PlanDueDate';
-import { MilestoneList } from './MilestoneList';
-import { AddMilestoneModal } from './AddMilestoneModal';
-import { ProgressCompletion } from './ProgressCompletion';
+import { Milestones } from './Milestones';
 import { checkPlanDone, checkMilestoneDue } from './utils';
 import { usePlanMutations } from '../../hooks/usePlanMutations';
+import { PlanDatum, MilestoneDatum, NewMilestoneInput } from '../types';
 import { useMilestoneMutations } from '../../hooks/useMilestoneMutations';
 import {
-  PlanDatum,
-  TaskDatum,
-  MilestoneDatum,
-  NewMilestoneInput,
-} from '../types';
+  PlanMenu,
+  PlanDueDate,
+  AddMilestoneModal,
+  ProgressCompletion,
+} from './components';
 
 interface PlanProps {
+  plan: PlanDatum;
   isOpen?: boolean;
   onToggle?: (planId: string) => void;
-  plan: PlanDatum & { milestones: (MilestoneDatum & { items: TaskDatum[] })[] };
 }
 
 export const Plan = ({ plan, isOpen: _isOpen, onToggle }: PlanProps) => {
@@ -50,9 +47,7 @@ export const Plan = ({ plan, isOpen: _isOpen, onToggle }: PlanProps) => {
   const isTemporary = plan.id.startsWith('temp');
   const activeMilestones = plan.milestones
     .filter((m) => !m.retired)
-    .sort((a, b) => a.order - b.order) as (MilestoneDatum & {
-    items: TaskDatum[];
-  })[];
+    .sort((a, b) => a.order - b.order);
 
   const hasMilestones = activeMilestones.length > 0;
   const hasOneMilestone = activeMilestones.length === 1;
@@ -101,6 +96,7 @@ export const Plan = ({ plan, isOpen: _isOpen, onToggle }: PlanProps) => {
         organizationId,
         organizationPlanId: plan.id,
         updatedAt: new Date().toISOString(),
+        items: foundMilestone.items.map((item) => omit(item, 'id')),
       },
     });
   };
@@ -187,6 +183,7 @@ export const Plan = ({ plan, isOpen: _isOpen, onToggle }: PlanProps) => {
               )}
               <PlanDueDate
                 isDone={isPlanDone}
+                status={nextDueMilestone?.statusDetails?.status}
                 value={
                   isPlanDone
                     ? plan.statusDetails.updatedAt
@@ -203,15 +200,12 @@ export const Plan = ({ plan, isOpen: _isOpen, onToggle }: PlanProps) => {
       </Flex>
 
       <Collapse in={isOpen}>
-        <MilestoneList
+        <Milestones
           milestones={activeMilestones}
           openMilestoneId={openMilestoneId}
-          onCreateMilestone={() => {}}
-          onDuplicateMilestone={() => {}}
           onSyncMilestone={handleUpdateMilestone}
           onRemoveMilestone={handleRemoveMilestone}
           onToggleMilestone={handleToggleMilestone}
-          onMakeMilestoneOptional={() => {}}
         />
       </Collapse>
 

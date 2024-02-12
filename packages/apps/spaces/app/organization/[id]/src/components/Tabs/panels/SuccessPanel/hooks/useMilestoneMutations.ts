@@ -39,6 +39,7 @@ export const useMilestoneMutations = (
   const updateMilestone = useUpdateOnboardingPlanMilestoneMutation(client, {
     onMutate: ({ input }) => {
       queryClient.cancelQueries({ queryKey });
+
       const { previousEntries } = mutateCacheEntry((cacheEntry) => {
         return produce(cacheEntry, (draft) => {
           const task = draft?.organizationPlansForOrganization?.find(
@@ -56,6 +57,7 @@ export const useMilestoneMutations = (
             milestone.retired = input.retired;
           }
           milestone.items = (input?.items ?? []).map((i) => ({
+            uuid: i?.uuid || '',
             status: i?.status || OnboardingPlanMilestoneItemStatus.NotDone,
             text: i?.text || '',
             updatedAt: i?.updatedAt ?? '',
@@ -74,7 +76,7 @@ export const useMilestoneMutations = (
         'update-org-plan-milestone',
       );
     },
-    onSettled: invalidateQuery,
+    onSettled: () => setTimeout(invalidateQuery, 200),
   });
 
   const addMilestone = useAddOnboardingPlanMilestoneMutation(client, {

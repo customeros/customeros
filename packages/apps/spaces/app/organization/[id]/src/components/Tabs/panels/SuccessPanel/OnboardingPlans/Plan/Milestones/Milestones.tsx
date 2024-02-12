@@ -3,27 +3,21 @@ import { VStack } from '@ui/layout/Stack';
 import { Milestone } from './Milestone';
 import { TaskDatum, MilestoneDatum } from '../../types';
 
-interface MilestoneListProps {
-  onCreateMilestone: () => void;
+interface MilestonesProps {
   openMilestoneId: string | null;
   onToggleMilestone: (id: string) => void;
   onRemoveMilestone: (id: string) => void;
-  onDuplicateMilestone: (id: string) => void;
-  onMakeMilestoneOptional?: (id: string) => void;
   onSyncMilestone: (milestone: MilestoneDatum) => void;
   milestones: (MilestoneDatum & { items: TaskDatum[] })[];
 }
 
-export const MilestoneList = ({
+export const Milestones = ({
   milestones,
   openMilestoneId,
   onSyncMilestone,
-  onCreateMilestone,
   onRemoveMilestone,
   onToggleMilestone,
-  onDuplicateMilestone,
-  onMakeMilestoneOptional,
-}: MilestoneListProps) => {
+}: MilestonesProps) => {
   return (
     <VStack mb='2' mt='3'>
       {milestones?.map((milestone, idx, arr) => (
@@ -34,8 +28,6 @@ export const MilestoneList = ({
           onToggle={onToggleMilestone}
           onRemove={onRemoveMilestone}
           isLast={idx === arr.length - 1}
-          onDuplicate={onDuplicateMilestone}
-          onMakeOptional={onMakeMilestoneOptional}
           isOpen={openMilestoneId === milestone.id}
         />
       ))}

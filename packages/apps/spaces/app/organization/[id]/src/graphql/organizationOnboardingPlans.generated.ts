@@ -47,6 +47,7 @@ export type OrganizationOnboardingPlansQuery = {
       retired: boolean;
       items: Array<{
         __typename?: 'OrganizationPlanMilestoneItem';
+        uuid: string;
         status: Types.OnboardingPlanMilestoneItemStatus;
         text: string;
         updatedAt: any;
@@ -82,6 +83,7 @@ export const OrganizationOnboardingPlansDocument = `
       dueDate
       optional
       items {
+        uuid
         status
         text
         updatedAt
