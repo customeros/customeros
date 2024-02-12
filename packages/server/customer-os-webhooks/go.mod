@@ -17,7 +17,7 @@ require (
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-contrib/zap v0.2.0
 	github.com/gin-gonic/gin v1.9.1
-	github.com/go-playground/validator/v10 v10.17.0
+	github.com/go-playground/validator/v10 v10.18.0
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.17.0
@@ -119,13 +119,13 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/arch v0.7.0 // indirect
-	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea // indirect
 	golang.org/x/mod v0.11.0 // indirect
-	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/oauth2 v0.16.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.10.0 // indirect
 	google.golang.org/api v0.162.0 // indirect
