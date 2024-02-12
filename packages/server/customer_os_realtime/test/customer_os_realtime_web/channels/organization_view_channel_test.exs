@@ -10,12 +10,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
       CustomerOsRealtimeWeb.UserSocket
       # |> connect(%{"user_token" => token})
       # TODO(@max-openline): replace this direct assign to use `payload` during join action
-      |> socket("user_id", %{
-        user_id: "USER.ID",
-        username: "Max Mustermann",
-        typing: true,
-        some: :assign
-      })
+      |> socket("user_id", %{user_id: "USER.ID", username: "Max Mustermann", typing: true})
       |> subscribe_and_join(CustomerOsRealtimeWeb.OrganizationChannel, "organization:lobby", %{
         "user_token" => token
       })
@@ -45,7 +40,8 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
   end
 
   test "broadcasting presence", %{socket: socket} do
-    {:ok, _, _} = subscribe_and_join(socket, "organization:lobby", %{})
+    {:ok, _, _} =
+      subscribe_and_join(socket, "organization:lobby", %{})
 
     user_data = %{
       "USER.ID" => %{

@@ -7,18 +7,20 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
   alias CustomerOsRealtimeWeb.Presence
 
   @impl true
-  def join("organization:lobby", _payload, socket) do
+  def join(
+        "organization:lobby",
+        # %{user_id: user_id, username: username, typing: typing},
+        _payload,
+        socket
+      ) do
     Logger.debug("Reached join handler in organization_view_channel.ex")
-    # %{"user_token" => user_token} = payload
-    # case Phoenix.Token.verify(socket, "user", user_token) do
-    #   {:ok, user_id} ->
-    #     {:ok, assign(socket, :user_id, user_id)}
-    #   {:error, _} ->
-    #     :error
-    # end
-    # TODO assign user_id, username, typing from the payload to the socket.assigns
+    # socket =
+    #   socket
+    #   |> assign(:user_id, user_id)
+    #   |> assign(:username, username)
+    #   |> assign(:typing, typing)
+
     send(self(), :after_join)
-    # {:ok, assign(socket, :user_id)}
     {:ok, socket}
 
     # if authorized?(payload) do
@@ -39,7 +41,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
       })
 
     push(socket, "presence_state", Presence.list(socket))
-    # push(socket, "feed", %{list: feed_items(socket)}) # TODO: push CRDT state to the client
+    # push(socket, "feed", %{list: feed_items(socket)}) # push CRDT state to the client
     {:noreply, socket}
   end
 

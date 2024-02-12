@@ -28,7 +28,7 @@ defmodule CustomerOsRealtimeWeb.SettingsChannel do
       })
 
     push(socket, "presence_state", Presence.list(socket))
-    # push(socket, "feed", %{list: feed_items(socket)}) # TODO: push CRDT state to the client
+    # push(socket, "feed", %{list: feed_items(socket)})
     {:noreply, socket}
   end
 
