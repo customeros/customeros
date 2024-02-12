@@ -12,7 +12,7 @@ import {
 
 import { Input, InputProps } from './Input';
 
-interface FormInputProps extends InputProps {
+export interface FormInputProps extends InputProps {
   name: string;
   formId: string;
   label?: string;

@@ -42,6 +42,13 @@ export type TenantBillingProfileQuery = {
     domesticPaymentsBankInfo: string;
     internationalPaymentsBankInfo: string;
     country: string;
+    vatNumber: string;
+    sendInvoicesFrom: string;
+    canPayWithDirectDebitACH: boolean;
+    canPayWithDirectDebitSEPA: boolean;
+    canPayWithDirectDebitBacs: boolean;
+    canPayWithCard: boolean;
+    canPayWithPigeon: boolean;
   };
 };
 
@@ -58,6 +65,13 @@ export const TenantBillingProfileDocument = `
     domesticPaymentsBankInfo
     internationalPaymentsBankInfo
     country
+    vatNumber
+    sendInvoicesFrom
+    canPayWithDirectDebitACH
+    canPayWithDirectDebitSEPA
+    canPayWithDirectDebitBacs
+    canPayWithCard
+    canPayWithPigeon
   }
 }
     `;

@@ -67,6 +67,7 @@
     "react-datepicker": "^6.1.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "7.47.0",
+    "react-imask": "^7.4.0",
     "react-inverted-form": "^1.2.13",
     "react-lottie": "^1.2.4",
     "react-markdown": "^9.0.0",
