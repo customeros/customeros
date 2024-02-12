@@ -16,6 +16,15 @@ export interface IntegrationItem {
 
 export const integrationsData: IntegrationItem[] = [
   {
+    key: 'unthread',
+    state: 'INACTIVE',
+    icon: '/integrationOptionLogos/unthread.png',
+    identifier: 'unthread',
+    name: 'Unthread',
+    fields: [],
+    isFromIntegrationApp: true,
+  },
+  {
     key: 'customeros-custom-payment-provider',
     state: 'INACTIVE',
     icon: '/integrationOptionLogos/customer-os.png',
