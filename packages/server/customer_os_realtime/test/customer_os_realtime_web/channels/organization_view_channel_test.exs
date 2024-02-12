@@ -8,14 +8,9 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
     {:ok, _, socket} =
       CustomerOsRealtimeWeb.UserSocket
       # |> connect(%{"user_token" => token})
+      # TODO(@max-openline): replace this direct assign to use `payload` during join action
       |> socket("user_id", %{user_id: "USER.ID", username: "Max Mustermann", typing: true, some: :assign})
       |> subscribe_and_join(CustomerOsRealtimeWeb.OrganizationChannel, "organization:lobby", %{"user_token" => token})
-      # # on_exit(fn ->
-      # #   for pid <- CustomerOsRealtimeWeb.Presence.fetchers_pids() do
-      # #     ref = Process.monitor(pid)
-      # #     assert_receive {:DOWN, ^ref, _, _, _}, 1000
-      # #   end
-      # # end)
     # token = Phoenix.Token.sign(@endpoint, "user", "user.id")
     # {:ok, socket} = connect(UserSocket, %{"user_token" => token})
     # {:ok, _, ^socket} = subscribe_and_join(socket, "organization:lobby")
@@ -74,7 +69,13 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
         }
       }
     }
-    assert_push "presence_state", ^user_data
-    assert_broadcast "presence_diff", ^diff_payload
+    assert_push "presence_state", user_data
+    assert_broadcast "presence_diff", diff_payload
+    on_exit(fn ->
+      for pid <- CustomerOsRealtimeWeb.Presence.fetchers_pids() do
+        ref = Process.monitor(pid)
+        assert_receive {:DOWN, ^ref, _, _, _}, 1000
+      end
+    end)
   end
 end
