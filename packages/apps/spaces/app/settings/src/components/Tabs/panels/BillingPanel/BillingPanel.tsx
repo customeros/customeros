@@ -182,7 +182,15 @@ export const BillingPanel = () => {
   useEffect(() => {
     if (isFetchedAfterMount && !data?.tenantBillingProfiles.length) {
       createBillingProfileMutation.mutate({
-        input: {},
+        input: {
+          canPayWithDirectDebitACH: false,
+          canPayWithDirectDebitSEPA: false,
+          canPayWithDirectDebitBacs: false,
+          canPayWithCard: false,
+          canPayWithPigeon: false,
+          sendInvoicesFrom: '',
+          vatNumber: '',
+        },
       });
     }
   }, [isFetchedAfterMount, data]);

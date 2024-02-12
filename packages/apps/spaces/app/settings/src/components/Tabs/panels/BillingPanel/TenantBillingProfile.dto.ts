@@ -67,6 +67,13 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
       legalName: data?.legalName,
       domesticPaymentsBankInfo: data?.domesticPaymentsBankInfo,
       internationalPaymentsBankInfo: data?.internationalPaymentsBankInfo,
+      canPayWithDirectDebitACH: false, // todo change when implemented
+      canPayWithDirectDebitSEPA: false,
+      canPayWithDirectDebitBacs: false,
+      canPayWithCard: false,
+      canPayWithPigeon: false,
+      sendInvoicesFrom: '',
+      vatNumber: '',
     };
   }
 }
