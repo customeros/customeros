@@ -524,6 +524,9 @@ export type ContractUpdateInput = {
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   appSource?: InputMaybe<Scalars['String']['input']>;
   billingCycle?: InputMaybe<ContractBillingCycle>;
+  canPayWithBankTransfer?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithDirectDebit?: InputMaybe<Scalars['Boolean']['input']>;
   contractId: Scalars['ID']['input'];
   contractUrl?: InputMaybe<Scalars['String']['input']>;
   country?: InputMaybe<Scalars['String']['input']>;
@@ -865,6 +868,7 @@ export type DashboardTimeToOnboardPerMonth = {
 };
 
 export enum DataSource {
+  Close = 'CLOSE',
   Hubspot = 'HUBSPOT',
   Intercom = 'INTERCOM',
   Mixpanel = 'MIXPANEL',
@@ -1042,6 +1046,7 @@ export type ExternalSystemReferenceInput = {
 
 export enum ExternalSystemType {
   Calcom = 'CALCOM',
+  Close = 'CLOSE',
   Hubspot = 'HUBSPOT',
   Intercom = 'INTERCOM',
   Mixpanel = 'MIXPANEL',
@@ -1308,7 +1313,6 @@ export type Invoice = Node &
     source: DataSource;
     sourceOfTruth: DataSource;
     status?: Maybe<InvoiceStatus>;
-    subtotalAmount: Scalars['Float']['output'];
     totalAmount: Scalars['Float']['output'];
     updatedAt: Scalars['Time']['output'];
     vat: Scalars['Float']['output'];
@@ -2994,12 +2998,14 @@ export type OrganizationPlanMilestoneItem = {
   status: OnboardingPlanMilestoneItemStatus;
   text: Scalars['String']['output'];
   updatedAt: Scalars['Time']['output'];
+  uuid: Scalars['ID']['output'];
 };
 
 export type OrganizationPlanMilestoneItemInput = {
   status: OnboardingPlanMilestoneItemStatus;
   text: Scalars['String']['input'];
   updatedAt: Scalars['Time']['input'];
+  uuid?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type OrganizationPlanMilestoneReorderInput = {
@@ -3798,6 +3804,11 @@ export type TenantBillingProfile = Node &
     addressLine2: Scalars['String']['output'];
     addressLine3: Scalars['String']['output'];
     appSource: Scalars['String']['output'];
+    canPayWithCard: Scalars['Boolean']['output'];
+    canPayWithDirectDebitACH: Scalars['Boolean']['output'];
+    canPayWithDirectDebitBacs: Scalars['Boolean']['output'];
+    canPayWithDirectDebitSEPA: Scalars['Boolean']['output'];
+    canPayWithPigeon: Scalars['Boolean']['output'];
     country: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
     domesticPaymentsBankInfo: Scalars['String']['output'];
@@ -3807,9 +3818,11 @@ export type TenantBillingProfile = Node &
     legalName: Scalars['String']['output'];
     locality: Scalars['String']['output'];
     phone: Scalars['String']['output'];
+    sendInvoicesFrom: Scalars['String']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
     updatedAt: Scalars['Time']['output'];
+    vatNumber: Scalars['String']['output'];
     zip: Scalars['String']['output'];
   };
 
@@ -3817,6 +3830,11 @@ export type TenantBillingProfileInput = {
   addressLine1?: InputMaybe<Scalars['String']['input']>;
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   addressLine3?: InputMaybe<Scalars['String']['input']>;
+  canPayWithCard: Scalars['Boolean']['input'];
+  canPayWithDirectDebitACH: Scalars['Boolean']['input'];
+  canPayWithDirectDebitBacs: Scalars['Boolean']['input'];
+  canPayWithDirectDebitSEPA: Scalars['Boolean']['input'];
+  canPayWithPigeon: Scalars['Boolean']['input'];
   country?: InputMaybe<Scalars['String']['input']>;
   domesticPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
@@ -3824,6 +3842,8 @@ export type TenantBillingProfileInput = {
   legalName?: InputMaybe<Scalars['String']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
+  sendInvoicesFrom: Scalars['String']['input'];
+  vatNumber: Scalars['String']['input'];
   zip?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -3831,6 +3851,11 @@ export type TenantBillingProfileUpdateInput = {
   addressLine1?: InputMaybe<Scalars['String']['input']>;
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   addressLine3?: InputMaybe<Scalars['String']['input']>;
+  canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithDirectDebitACH?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithDirectDebitBacs?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithDirectDebitSEPA?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithPigeon?: InputMaybe<Scalars['Boolean']['input']>;
   country?: InputMaybe<Scalars['String']['input']>;
   domesticPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
@@ -3840,6 +3865,8 @@ export type TenantBillingProfileUpdateInput = {
   locality?: InputMaybe<Scalars['String']['input']>;
   patch?: InputMaybe<Scalars['Boolean']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
+  sendInvoicesFrom?: InputMaybe<Scalars['String']['input']>;
+  vatNumber?: InputMaybe<Scalars['String']['input']>;
   zip?: InputMaybe<Scalars['String']['input']>;
 };
 
