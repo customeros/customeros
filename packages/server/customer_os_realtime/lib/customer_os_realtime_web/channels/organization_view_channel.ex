@@ -27,17 +27,19 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
 
   @impl true
   def handle_info(:after_join, socket) do
-    {:ok, _} = Presence.track(socket, socket.assigns.user_id, %{
-      online_at: inspect(System.system_time(:second)),
-      metadata: %{"source" => "customerOS"},
-      username: socket.assigns.username,
-      typing: socket.assigns.typing
-    })
+    {:ok, _} =
+      Presence.track(socket, socket.assigns.user_id, %{
+        online_at: inspect(System.system_time(:second)),
+        metadata: %{"source" => "customerOS"},
+        username: socket.assigns.username,
+        typing: socket.assigns.typing
+      })
 
     push(socket, "presence_state", Presence.list(socket))
     # push(socket, "feed", %{list: feed_items(socket)}) # TODO: push CRDT state to the client
     {:noreply, socket}
   end
+
   # # Helper functions
   # defp merge_states(crdt_state, client_state) do
   #   Map.merge(client_state, crdt_state)

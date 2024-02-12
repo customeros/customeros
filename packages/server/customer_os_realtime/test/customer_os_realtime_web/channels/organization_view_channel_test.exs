@@ -5,17 +5,27 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
 
   setup do
     token = Phoenix.Token.sign(@endpoint, "user", "user.id")
+
     {:ok, _, socket} =
       CustomerOsRealtimeWeb.UserSocket
       # |> connect(%{"user_token" => token})
       # TODO(@max-openline): replace this direct assign to use `payload` during join action
-      |> socket("user_id", %{user_id: "USER.ID", username: "Max Mustermann", typing: true, some: :assign})
-      |> subscribe_and_join(CustomerOsRealtimeWeb.OrganizationChannel, "organization:lobby", %{"user_token" => token})
+      |> socket("user_id", %{
+        user_id: "USER.ID",
+        username: "Max Mustermann",
+        typing: true,
+        some: :assign
+      })
+      |> subscribe_and_join(CustomerOsRealtimeWeb.OrganizationChannel, "organization:lobby", %{
+        "user_token" => token
+      })
+
     # token = Phoenix.Token.sign(@endpoint, "user", "user.id")
     # {:ok, socket} = connect(UserSocket, %{"user_token" => token})
     # {:ok, _, ^socket} = subscribe_and_join(socket, "organization:lobby")
 
-    %{socket: socket} # room: "organization:lobby"
+    # room: "organization:lobby"
+    %{socket: socket}
   end
 
   test "ping replies with status ok", %{socket: socket} do
@@ -36,6 +46,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
 
   test "broadcasting presence", %{socket: socket} do
     {:ok, _, _} = subscribe_and_join(socket, "organization:lobby", %{})
+
     user_data = %{
       "USER.ID" => %{
         metas: [
@@ -51,6 +62,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
         ]
       }
     }
+
     diff_payload = %{
       leaves: %{},
       joins: %{
@@ -63,14 +75,16 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
               phx_ref: "F7I0nelpA_5MCgBk",
               online_at: inspect(System.system_time(:second)),
               username: "Max Mustermann",
-              typing: true,
+              typing: true
             }
           ]
         }
       }
     }
+
     assert_push "presence_state", user_data
     assert_broadcast "presence_diff", diff_payload
+
     on_exit(fn ->
       for pid <- CustomerOsRealtimeWeb.Presence.fetchers_pids() do
         ref = Process.monitor(pid)

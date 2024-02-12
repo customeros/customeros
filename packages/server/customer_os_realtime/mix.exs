@@ -10,7 +10,8 @@ defmodule CustomerOsRealtime.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      dialyzer: [plt_add_deps: :apps_direct] #, plt_add_apps: [:some_app, :another_app]
+      # , plt_add_apps: [:some_app, :another_app]
+      dialyzer: [plt_add_deps: :apps_direct]
     ]
   end
 
@@ -44,7 +45,7 @@ defmodule CustomerOsRealtime.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:delta_crdt, "~> 0.6.3"},
+      {:delta_crdt, "~> 0.6.3"}
     ]
   end
 

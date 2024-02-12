@@ -21,7 +21,6 @@ config :customer_os_realtime, CustomerOsRealtimeWeb.Endpoint,
   pubsub_server: CustomerOsRealtime.PubSub,
   live_view: [signing_salt: "jVLoUB9r"]
 
-
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",

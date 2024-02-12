@@ -9,7 +9,8 @@ defmodule CustomerOsRealtime.Application do
   def start(_type, _args) do
     children = [
       CustomerOsRealtimeWeb.Telemetry,
-      {DNSCluster, query: Application.get_env(:customer_os_realtime, :dns_cluster_query) || :ignore},
+      {DNSCluster,
+       query: Application.get_env(:customer_os_realtime, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: CustomerOsRealtime.PubSub},
       # Start a worker by calling: CustomerOsRealtime.Worker.start_link(arg)
       # {CustomerOsRealtime.Worker, arg},
