@@ -1,12 +1,11 @@
 import { useForm } from 'react-inverted-form';
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 import { useDebounce } from 'rooks';
 import isEqual from 'lodash/isEqual';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { useOutsideClick } from '@ui/utils';
 import { IconButton } from '@ui/form/IconButton';
 import { pulseOpacity } from '@ui/utils/keyframes';
 import { Collapse } from '@ui/transitions/Collapse';
@@ -53,7 +52,6 @@ export const Milestone = ({
   milestone,
   isActiveItem,
 }: MilestoneProps) => {
-  const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isDueDateOpen, setIsDueDateOpen] = useState(false);
   const isMutating = milestone.id.startsWith('temp');
@@ -181,12 +179,9 @@ export const Milestone = ({
     milestone.optional,
   ]);
 
-  useOutsideClick({ ref: cardRef, handler: handleToggle, enabled: isOpen });
-
   return (
     <Card
       w='full'
-      ref={cardRef}
       variant='outlinedElevated'
       cursor={isActiveItem ? 'grabbing' : undefined}
       pointerEvents={isMutating ? 'none' : undefined}

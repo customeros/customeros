@@ -125,8 +125,13 @@ export const theme = extendTheme({
           borderRadius: 'full',
         },
         '.react-datepicker__day--disabled': {
-          color: 'var(--gray300)',
-          border: 'var(--gray300)',
+          color: 'gray.400',
+          border: 'unset',
+          backgroundColor: 'white',
+        },
+        '.react-datepicker__day--disabled:hover': {
+          color: 'gray.400',
+          border: 'unset',
           backgroundColor: 'white',
         },
         '.react-datepicker__day--outside-month': {

@@ -6,13 +6,12 @@ import { produce } from 'immer';
 
 import { Flex } from '@ui/layout/Flex';
 import { Input } from '@ui/form/Input';
-import { Text } from '@ui/typography/Text';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { SkipForward } from '@ui/media/icons/SkipForward';
 import { OnboardingPlanMilestoneItemStatus } from '@graphql/types';
 
+import { TaskDoneDate } from './components';
 import { TaskDatum } from '../../../../types';
 import { StatusCheckbox } from '../StatusCheckbox';
 
@@ -20,17 +19,17 @@ const MemoizedInput = memo(Input);
 interface TaskProps {
   index: number;
   formId: string;
-  isLast?: boolean;
   defaultValue?: string;
   shouldFocusRef?: React.MutableRefObject<number | null>;
 }
 
 export const Task = memo(
-  ({ index, formId, shouldFocusRef, isLast, defaultValue }: TaskProps) => {
+  ({ index, formId, shouldFocusRef, defaultValue }: TaskProps) => {
     const ref = useRef<HTMLInputElement>(null);
 
     const [showSkip, setShowSkip] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
     const { getInputProps } = useField('items', formId);
     const { value, onChange, onBlur } = getInputProps();
@@ -42,10 +41,6 @@ export const Task = memo(
     const taskStatus =
       itemValue?.status ?? OnboardingPlanMilestoneItemStatus.NotDone;
     const taskUpdatedAt = new Date(itemValue?.updatedAt).valueOf();
-    const taskUpdatedAtDate = DateTimeUtils.format(
-      itemValue?.updatedAt,
-      DateTimeUtils.dateWithShortYear,
-    );
     const milestoneDueAt = new Date(milestoneDueDate).valueOf();
 
     const isDone = [
@@ -72,6 +67,27 @@ export const Task = memo(
           return 'gray';
       }
     })();
+
+    const computeNextStatus = (
+      prevStatus: OnboardingPlanMilestoneItemStatus,
+    ) => {
+      const isPastDueDate = taskUpdatedAt > milestoneDueAt;
+
+      switch (prevStatus) {
+        case OnboardingPlanMilestoneItemStatus.NotDone:
+        case OnboardingPlanMilestoneItemStatus.NotDoneLate:
+          return isPastDueDate
+            ? OnboardingPlanMilestoneItemStatus.SkippedLate
+            : OnboardingPlanMilestoneItemStatus.Skipped;
+        case OnboardingPlanMilestoneItemStatus.Skipped:
+        case OnboardingPlanMilestoneItemStatus.SkippedLate:
+          return isPastDueDate
+            ? OnboardingPlanMilestoneItemStatus.NotDoneLate
+            : OnboardingPlanMilestoneItemStatus.NotDone;
+        default:
+          return prevStatus;
+      }
+    };
 
     const handleChange = useCallback(
       (e: ChangeEvent<HTMLInputElement>) => {
@@ -156,25 +172,7 @@ export const Task = memo(
         const item = draft?.[index];
         if (!item) return;
 
-        const isPastDueDate = taskUpdatedAt > milestoneDueAt;
-
-        item.status = (() => {
-          switch (item.status) {
-            case OnboardingPlanMilestoneItemStatus.NotDone:
-            case OnboardingPlanMilestoneItemStatus.NotDoneLate:
-              return isPastDueDate
-                ? OnboardingPlanMilestoneItemStatus.SkippedLate
-                : OnboardingPlanMilestoneItemStatus.Skipped;
-            case OnboardingPlanMilestoneItemStatus.Skipped:
-            case OnboardingPlanMilestoneItemStatus.SkippedLate:
-              return isPastDueDate
-                ? OnboardingPlanMilestoneItemStatus.NotDoneLate
-                : OnboardingPlanMilestoneItemStatus.NotDone;
-            default:
-              return item.status;
-          }
-        })();
-
+        item.status = computeNextStatus(item.status);
         item.updatedAt = new Date().toISOString();
       });
 
@@ -200,6 +198,18 @@ export const Task = memo(
       if (shouldFocusRef) {
         shouldFocusRef.current = value.length;
       }
+
+      onChange?.(nextItems);
+    };
+
+    const handleUpdateDoneDate = (date: string) => {
+      const nextItems = produce<TaskDatum[]>(value, (draft) => {
+        const item = draft?.[index];
+        if (!item) return;
+
+        item.updatedAt = date;
+        item.status = computeNextStatus(item.status);
+      });
 
       onChange?.(nextItems);
     };
@@ -245,9 +255,13 @@ export const Task = memo(
           fontStyle={isSkipped ? 'italic' : 'normal'}
         />
         {isDone && (
-          <Text fontSize='sm' color='gray.500' whiteSpace='nowrap'>
-            {taskUpdatedAtDate}
-          </Text>
+          <TaskDoneDate
+            isOpen={isCalendarOpen}
+            value={itemValue?.updatedAt}
+            onChange={handleUpdateDoneDate}
+            onOpen={() => setIsCalendarOpen(true)}
+            onClose={() => setIsCalendarOpen(false)}
+          />
         )}
         {!isDone && (
           <Tooltip label={isSkipped ? 'Skipped' : 'Skip this'}>

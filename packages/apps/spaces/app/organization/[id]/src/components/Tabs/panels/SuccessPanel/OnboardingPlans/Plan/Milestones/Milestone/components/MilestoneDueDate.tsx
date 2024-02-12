@@ -49,10 +49,10 @@ export const MilestoneDueDate = ({
           <Text
             as='label'
             fontSize='sm'
-            color='gray.500'
             whiteSpace='nowrap'
             cursor='pointer'
             pointerEvents={isOpen ? 'none' : 'auto'}
+            color={isOpen ? 'primary.500' : 'gray.500'}
           >
             {getMilestoneDueDate(value, status, isDone)}
           </Text>
