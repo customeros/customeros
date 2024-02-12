@@ -42,6 +42,7 @@ defmodule CustomerOsRealtimeWeb.UserSocket do
       {:error, _} ->
         :error
     end
+    {:ok, socket}
   end
 
 

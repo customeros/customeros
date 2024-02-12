@@ -6,6 +6,14 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
   @impl true
   def join("organization:lobby", _payload, socket) do
     Logger.debug("Reached join handler in organization_view_channel.ex")
+    # %{"user_token" => user_token} = payload
+    # case Phoenix.Token.verify(socket, "user", user_token) do
+    #   {:ok, user_id} ->
+    #     {:ok, assign(socket, :user_id, user_id)}
+    #   {:error, _} ->
+    #     :error
+    # end
+    # TODO assign user_id, username, typing from the payload to the socket.assigns
     send(self(), :after_join)
     # {:ok, assign(socket, :user_id)}
     {:ok, socket}
@@ -20,7 +28,10 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
   @impl true
   def handle_info(:after_join, socket) do
     {:ok, _} = Presence.track(socket, socket.assigns.user_id, %{
-      online_at: inspect(System.system_time(:second))
+      online_at: inspect(System.system_time(:second)),
+      metadata: %{"source" => "customerOS"},
+      username: socket.assigns.username,
+      typing: socket.assigns.typing
     })
 
     push(socket, "presence_state", Presence.list(socket))
