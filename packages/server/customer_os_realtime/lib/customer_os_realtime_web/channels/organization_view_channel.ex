@@ -1,4 +1,7 @@
 defmodule CustomerOsRealtimeWeb.OrganizationChannel do
+  @moduledoc """
+  This is the Channel that tracks Organization view.
+  """
   require Logger
   use CustomerOsRealtimeWeb, :channel
   alias CustomerOsRealtimeWeb.Presence

@@ -1,4 +1,7 @@
 defmodule CustomerOsRealtimeWeb.FinderChannel do
+  @moduledoc """
+  This is the Channel that tracks Finder view.
+  """
   require Logger
   use CustomerOsRealtimeWeb, :channel
   alias CustomerOsRealtimeWeb.Presence

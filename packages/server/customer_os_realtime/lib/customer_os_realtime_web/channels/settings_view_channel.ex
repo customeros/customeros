@@ -1,4 +1,7 @@
 defmodule CustomerOsRealtimeWeb.SettingsChannel do
+  @moduledoc """
+  This is the Channel that tracks Settings view.
+  """
   require Logger
   use CustomerOsRealtimeWeb, :channel
   alias CustomerOsRealtimeWeb.Presence
