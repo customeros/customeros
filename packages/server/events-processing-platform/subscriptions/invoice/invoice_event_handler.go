@@ -41,6 +41,7 @@ type RequestBodyInvoiceReady struct {
 	StripeCustomerId             string `json:"stripeCustomerId"`
 	InvoiceId                    string `json:"invoiceId"`
 	InvoiceDescription           string `json:"invoiceDescription"`
+	CustomerOsId                 string `json:"customerOsId"`
 }
 
 type InvoiceEventHandler struct {
@@ -589,6 +590,7 @@ func (h *InvoiceEventHandler) invokeInvoiceReadyWebhook(ctx context.Context, ten
 		StripeCustomerId:             stripeCustomerId,
 		InvoiceId:                    invoice.Id,
 		InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
+		CustomerOsId:                 organizationEntity.CustomerOsId,
 	}
 
 	// Convert the request body to JSON
