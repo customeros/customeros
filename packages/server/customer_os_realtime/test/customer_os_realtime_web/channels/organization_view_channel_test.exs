@@ -1,25 +1,18 @@
 defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
   use CustomerOsRealtimeWeb.ChannelCase
   require Logger
-  # alias CustomerOsRealtimeWeb.UserSocket
 
   setup do
     token = Phoenix.Token.sign(@endpoint, "user", "user.id")
 
     {:ok, _, socket} =
       CustomerOsRealtimeWeb.UserSocket
-      # |> connect(%{"user_token" => token})
-      # TODO(@max-openline): replace this direct assign to use `payload` during join action
+      # (@max-openline): replace this direct assign to use `payload` during join action
       |> socket("user_id", %{user_id: "USER.ID", username: "Max Mustermann", typing: true})
       |> subscribe_and_join(CustomerOsRealtimeWeb.OrganizationChannel, "organization:lobby", %{
         "user_token" => token
       })
 
-    # token = Phoenix.Token.sign(@endpoint, "user", "user.id")
-    # {:ok, socket} = connect(UserSocket, %{"user_token" => token})
-    # {:ok, _, ^socket} = subscribe_and_join(socket, "organization:lobby")
-
-    # room: "organization:lobby"
     %{socket: socket}
   end
 

@@ -10,14 +10,7 @@ defmodule CustomerOsRealtimeWeb.SettingsChannel do
   def join("settings:lobby", _payload, socket) do
     Logger.debug("Reached join handler in settings_view_channel.ex")
     send(self(), :after_join)
-    # {:ok, assign(socket, :user_id)}
     {:ok, socket}
-
-    # if authorized?(payload) do
-    #   {:ok, socket}
-    # else
-    #   {:error, %{reason: "unauthorized"}}
-    # end
   end
 
   @impl true
@@ -28,7 +21,6 @@ defmodule CustomerOsRealtimeWeb.SettingsChannel do
       })
 
     push(socket, "presence_state", Presence.list(socket))
-    # push(socket, "feed", %{list: feed_items(socket)})
     {:noreply, socket}
   end
 

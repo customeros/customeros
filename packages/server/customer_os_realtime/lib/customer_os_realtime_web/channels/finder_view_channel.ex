@@ -10,14 +10,7 @@ defmodule CustomerOsRealtimeWeb.FinderChannel do
   def join("finder:lobby", _payload, socket) do
     Logger.debug("Reached join handler in finder_view_channel.ex")
     send(self(), :after_join)
-    # {:ok, assign(socket, :user_id)}
     {:ok, socket}
-
-    # if authorized?(payload) do
-    #   {:ok, socket}
-    # else
-    #   {:error, %{reason: "unauthorized"}}
-    # end
   end
 
   @impl true
@@ -28,7 +21,6 @@ defmodule CustomerOsRealtimeWeb.FinderChannel do
       })
 
     push(socket, "presence_state", Presence.list(socket))
-    # push(socket, "feed", %{list: feed_items(socket)})
     {:noreply, socket}
   end
 
