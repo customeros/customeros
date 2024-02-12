@@ -16,6 +16,7 @@ import { OnboardingPlanMilestoneItemStatus } from '@graphql/types';
 import { TaskDatum } from '../../../../types';
 import { StatusCheckbox } from '../StatusCheckbox';
 
+const MemoizedInput = memo(Input);
 interface TaskProps {
   index: number;
   formId: string;
@@ -160,6 +161,7 @@ export const Task = memo(
         item.status = (() => {
           switch (item.status) {
             case OnboardingPlanMilestoneItemStatus.NotDone:
+            case OnboardingPlanMilestoneItemStatus.NotDoneLate:
               return isPastDueDate
                 ? OnboardingPlanMilestoneItemStatus.SkippedLate
                 : OnboardingPlanMilestoneItemStatus.Skipped;
@@ -187,6 +189,7 @@ export const Task = memo(
 
         draft.push({
           text: '',
+          uuid: crypto.randomUUID(),
           updatedAt: new Date().toISOString(),
           status: isPastDueDate
             ? OnboardingPlanMilestoneItemStatus.NotDoneLate
@@ -263,5 +266,3 @@ export const Task = memo(
   },
   (prev, next) => prev.defaultValue === next.defaultValue,
 );
-
-const MemoizedInput = memo(Input);

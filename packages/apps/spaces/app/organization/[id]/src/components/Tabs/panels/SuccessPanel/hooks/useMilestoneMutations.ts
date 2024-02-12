@@ -74,7 +74,7 @@ export const useMilestoneMutations = (
         'update-org-plan-milestone',
       );
     },
-    onSettled: invalidateQuery,
+    onSettled: () => setTimeout(invalidateQuery, 200),
   });
 
   const addMilestone = useAddOnboardingPlanMilestoneMutation(client, {

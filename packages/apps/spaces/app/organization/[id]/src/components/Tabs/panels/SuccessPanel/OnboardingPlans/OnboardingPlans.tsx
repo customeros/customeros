@@ -24,7 +24,7 @@ export const OnboardingPlans = () => {
         draft.milestones.forEach((milestone) => {
           milestone.items = milestone.items.map((m) => ({
             ...m,
-            id: crypto.randomUUID(),
+            uuid: m.uuid || crypto.randomUUID(),
           }));
         });
       }),

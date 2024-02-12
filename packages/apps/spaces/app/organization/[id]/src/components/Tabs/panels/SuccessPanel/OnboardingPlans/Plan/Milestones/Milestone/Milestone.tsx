@@ -1,5 +1,5 @@
-import { useForm, useField } from 'react-inverted-form';
-import { useRef, useMemo, useState, useEffect, ChangeEvent } from 'react';
+import { useForm } from 'react-inverted-form';
+import { useRef, useMemo, useState, useEffect } from 'react';
 
 import { useDebounce } from 'rooks';
 import isEqual from 'lodash/isEqual';
@@ -21,16 +21,18 @@ import {
 
 import { Tasks } from './Tasks';
 import { MilestoneForm } from './types';
-import { MilestoneMenu } from './MilestoneMenu';
-import { MilestoneName } from './MilestoneName';
-import { StatusCheckbox } from './StatusCheckbox';
-import { MilestoneDueDate } from './MilestoneDueDate';
 import { TaskDatum, MilestoneDatum } from '../../../types';
 import {
   checkMilestoneDone,
   checkMilestoneLate,
   computeMilestoneStatus,
 } from './utils';
+import {
+  MilestoneMenu,
+  MilestoneName,
+  MilestoneDueDate,
+  MilestoneCheckbox,
+} from './components';
 
 interface MilestoneProps {
   isLast?: boolean;
@@ -38,8 +40,6 @@ interface MilestoneProps {
   isActiveItem?: boolean;
   onToggle?: (id: string) => void;
   onRemove?: (id: string) => void;
-  onDuplicate?: (id: string) => void;
-  onMakeOptional?: (id: string) => void;
   onSync?: (milestone: MilestoneDatum) => void;
   milestone: MilestoneDatum & { items: TaskDatum[] };
 }
@@ -51,12 +51,11 @@ export const Milestone = ({
   onToggle,
   onRemove,
   milestone,
-  onDuplicate,
   isActiveItem,
-  onMakeOptional,
 }: MilestoneProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [isDueDateOpen, setIsDueDateOpen] = useState(false);
   const isMutating = milestone.id.startsWith('temp');
   const hasTasks = milestone.items?.length > 0;
 
@@ -169,8 +168,8 @@ export const Milestone = ({
 
   const handleToggle = () => onToggle?.(milestone.id);
   const handleRetire = () => onRemove?.(milestone.id);
-  const handleDuplicate = () => onDuplicate?.(milestone.id);
-  const handleMakeOptional = () => onMakeOptional?.(milestone.id);
+  const handleOpenDueDate = () => setIsDueDateOpen(true);
+  const handleCloseDueDate = () => setIsDueDateOpen(false);
 
   useEffect(() => {
     setDefaultValues(defaultValues);
@@ -180,8 +179,6 @@ export const Milestone = ({
     milestone.order,
     milestone.dueDate,
     milestone.optional,
-    // JSON.stringify(milestone.items || []),
-    // JSON.stringify(milestone.statusDetails || {}),
   ]);
 
   useOutsideClick({ ref: cardRef, handler: handleToggle, enabled: isOpen });
@@ -205,7 +202,7 @@ export const Milestone = ({
         <Flex flexDir='column' justify='flex-start'>
           <Flex align='center'>
             <Flex>
-              <PlanStatusCheckbox
+              <MilestoneCheckbox
                 formId={formId}
                 onToggleMilestone={handleToggle}
                 colorScheme={checkboxColorScheme}
@@ -241,9 +238,8 @@ export const Milestone = ({
             )}
             <MilestoneMenu
               onRetire={handleRetire}
-              onDuplicate={handleDuplicate}
               isOptional={milestone.optional}
-              onMakeOptional={handleMakeOptional}
+              onSetDueDate={handleOpenDueDate}
               {...hoveredProps}
             />
           </Flex>
@@ -253,8 +249,16 @@ export const Milestone = ({
             align='center'
             justify='space-between'
             mb={isOpen ? '2' : '0'}
+            transition='margin 0.2s ease-in-out'
           >
-            <MilestoneDueDate isDone={isChecked} value={state.values.dueDate} />
+            <MilestoneDueDate
+              formId={formId}
+              isDone={isChecked}
+              isOpen={isDueDateOpen}
+              onOpen={handleOpenDueDate}
+              onClose={handleCloseDueDate}
+              status={state?.values?.statusDetails?.status}
+            />
             {!!milestone?.items?.length && (
               <Flex align='center' gap='6px' mr='0.5'>
                 <CheckSquareBroken color='gray.400' />
@@ -268,60 +272,12 @@ export const Milestone = ({
           <Collapse in={isOpen} animateOpacity style={{ overflow: 'visible' }}>
             <Tasks
               formId={formId}
-              defaultValue={state?.values?.items?.map((i) => i?.text)}
+              milestoneDueDate={state?.values?.dueDate ?? ''}
             />
           </Collapse>
         </Flex>
       </CardBody>
     </Card>
-  );
-};
-
-interface PlanStatusCheckboxProps {
-  formId: string;
-  readOnly?: boolean;
-  colorScheme: string;
-  showCustomIcon?: boolean;
-  onToggleMilestone?: () => void;
-}
-
-const PlanStatusCheckbox = ({
-  formId,
-  readOnly,
-  colorScheme,
-  showCustomIcon,
-  onToggleMilestone,
-}: PlanStatusCheckboxProps) => {
-  const { getInputProps } = useField('statusDetails', formId);
-  const { value, onChange, onBlur, ...inputProps } = getInputProps();
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (readOnly) {
-      onToggleMilestone?.();
-
-      return;
-    }
-
-    onChange?.({
-      ...value,
-      status: e.target.checked ? 'DONE' : 'NOT_STARTED',
-      updatedAt: new Date().toISOString(),
-    });
-  };
-
-  return (
-    <StatusCheckbox
-      mr='2'
-      size='md'
-      onChange={handleChange}
-      colorScheme={colorScheme}
-      showCustomIcon={showCustomIcon}
-      isChecked={[
-        OnboardingPlanMilestoneStatus.Done,
-        OnboardingPlanMilestoneStatus.DoneLate,
-      ].includes(value.status as unknown as OnboardingPlanMilestoneStatus)}
-      {...inputProps}
-    />
   );
 };
 
@@ -348,8 +304,8 @@ const mapFormToMilestone = (
   return {
     ...milestoneDatum,
     name: formValues?.name,
-    items: formValues?.items,
     dueDate: formValues?.dueDate,
+    items: formValues?.items ?? [],
     statusDetails: formValues?.statusDetails,
   };
 };

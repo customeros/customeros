@@ -116,7 +116,15 @@ export const ProgressCompletion = ({ plan }: ProgressCompletionProps) => {
     );
 
   return (
-    <Card variant='outlinedElevated' mb='2' mx='1' mt='3'>
+    <Card
+      mb='2'
+      mx='1'
+      mt='3'
+      variant='outlinedElevated'
+      _hover={{
+        boxShadow: 'xs',
+      }}
+    >
       <CardBody>
         <VStack spacing='2' w='full'>
           {rows.map((row, index) => (
@@ -160,6 +168,9 @@ export const ProgressCompletion = ({ plan }: ProgressCompletionProps) => {
                     completion={isHidden ? 0 : getCompletion(milestone)}
                     label={isHidden ? 'hidden milestone' : milestone?.name}
                     colorScheme={isHidden ? 'gray' : getColorScheme(milestone)}
+                    status={
+                      isHidden ? undefined : milestone.statusDetails.status
+                    }
                   />
                 );
               })}
@@ -180,6 +191,7 @@ interface ProgressStep {
   itemsCount?: number;
   completion?: 0 | 50 | 100;
   completedItemsCount?: number;
+  status?: OnboardingPlanMilestoneStatus;
 }
 
 const ProgressStep = ({
@@ -191,6 +203,7 @@ const ProgressStep = ({
   colorScheme,
   itemsCount = 0,
   completedItemsCount,
+  status = OnboardingPlanMilestoneStatus.NotStarted,
 }: ProgressStep) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -210,7 +223,7 @@ const ProgressStep = ({
           <PopoverContent
             bg='gray.700'
             color='gray.25'
-            width='200px'
+            width='264px'
             borderRadius='8px'
           >
             <PopoverArrow bg='gray.700' />
@@ -221,7 +234,7 @@ const ProgressStep = ({
               <Flex justify='space-between'>
                 {dueDate && (
                   <Text color='gray.300'>
-                    {getMilestoneDueDate(dueDate, completion === 100)}
+                    {getMilestoneDueDate(dueDate, status, completion === 100)}
                   </Text>
                 )}
                 <Flex align='center' gap='2'>

@@ -2,6 +2,7 @@ import { memo, useRef } from 'react';
 import { useField } from 'react-inverted-form';
 
 import { produce } from 'immer';
+import setHours from 'date-fns/setHours';
 
 import { Button } from '@ui/form/Button';
 import { VStack } from '@ui/layout/Stack';
@@ -13,21 +14,28 @@ import { TaskDatum } from '../../../../types';
 
 interface TasksProps {
   formId: string;
-  defaultValue?: string[];
+  milestoneDueDate: string;
 }
 
 export const Tasks = memo(
-  ({ formId }: TasksProps) => {
+  ({ formId, milestoneDueDate }: TasksProps) => {
     const { getInputProps } = useField('items', formId);
     const { value, onChange } = getInputProps();
     const shouldFocusRef = useRef<number | null>(null);
 
     const handleAddTask = () => {
       const nextItems = produce<TaskDatum[]>(value, (draft) => {
+        const dueDate = setHours(new Date(milestoneDueDate), 0);
+        const nowDate = setHours(new Date(), 0);
+        const isPastDue = dueDate < nowDate;
+
         draft.push({
           text: '',
+          uuid: crypto.randomUUID(),
           updatedAt: new Date().toISOString(),
-          status: OnboardingPlanMilestoneItemStatus.NotDone,
+          status: isPastDue
+            ? OnboardingPlanMilestoneItemStatus.NotDoneLate
+            : OnboardingPlanMilestoneItemStatus.NotDone,
         });
       });
 
@@ -41,8 +49,8 @@ export const Tasks = memo(
       <VStack align='flex-start' spacing='1' pl='6'>
         {(value as TaskDatum[])?.map((m, idx) => (
           <Task
-            key={m.updatedAt}
             index={idx}
+            key={m.uuid}
             formId={formId}
             defaultValue={m.text}
             shouldFocusRef={shouldFocusRef}
