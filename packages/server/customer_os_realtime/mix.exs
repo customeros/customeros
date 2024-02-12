@@ -44,6 +44,7 @@ defmodule CustomerOsRealtime.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:delta_crdt, "~> 0.6.3"},
     ]
   end
 
