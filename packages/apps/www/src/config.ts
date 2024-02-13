@@ -95,19 +95,22 @@ export const SIDEBAR: Sidebar = {
     "Contracts API": [
       { text: "API Reference", link: "en/api/contract-api"},
       { text: "Contract Events", link: "en/api/contract-events"},
-      { text: "Contract Object", link: "en/api/contract-object"},
     ],
     "Invoices API": [
       { text: "API Reference", link: "en/api/invoice-api"},
       { text: "Invoice Events", link: "en/api/invoice-events"},
-      { text: "Invoice Object", link: "en/api/invoice-object"},
-      { text: "Line Items Object", link: "en/api/invoice-line-items-object"},
-      { text: "Tax Object", link: "en/api/invoice-tax-object"},
     ],
     "Organizations API": [
       { text: "API Reference", link: "en/api/organization-api"},
       { text: "Organization Events", link: "en/api/organization-events"},
-      { text: "Organization Object", link: "en/api/organization-object"},
+    ],
+    "API Data Objects": [
+      { text: "contract", link: "en/api/contract-object"},
+      { text: "invoice", link: "en/api/invoice-object"},
+      { text: "lineItems", link: "en/api/invoice-line-items-object"},
+      {text: "metadata", link: "en/api/metadata-object"},
+      { text: "organization", link: "en/api/organization-object"},
+      { text: "tax", link: "en/api/invoice-tax-object"},
     ],
     CLI: [
       { text: "Getting Started", link: "en/cli/getting-started" },
