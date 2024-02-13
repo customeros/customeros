@@ -10,30 +10,39 @@ lang: en
 
 ```json
 {
-  "triggerEvent": "invoice.finalized",
   "data": {
-    "id": "96d612a8-b086-4dae-9f10-a12796f30c55",
-    "object": "invoice",
+    "metadata": {
+        "id": "96d612a8-b086-4dae-9f10-a12796f30c55",
+        "created": "2024-02-01T19:42:00.656805391Z",
+        "lastUpdated": "2024-02-01T20:53:13.381944294Z",
+    },
     "amountDue": 0.0,
     "amountPaid": 0.0,
     "amountRemaining": 0.0,
     "contract": {
-      "id": "96d612a8-b086-4dae-9f10-a12796f30c55",
+      "metadata": {
+        "id": "96d612a8-b086-4dae-9f10-a12796f30c55",
+        "created": "2024-02-01T19:42:00.656805391Z",
+        "lastUpdated": "2024-02-01T20:53:13.381944294Z",
+      },
       "invoicingStarted": "2024-01-26T00:00:00Z",
       "name": "My Contract"
     },
-    "created": "2024-02-01T19:42:00.656805391Z",
     "currency": "usd",
     "due": "2024-02-01T19:42:00.656805391Z",
+    "invoiceNumber": "LAM-23423",
+    "invoicePeriodStart": "2024-01-26T00:00:00Z",
+    "invoicePeriodEnd": "2024-01-26T00:00:00Z", 
     "invoiceUrl": "https://customeros.ai/invoices/96d612a8-b086-4dae-9f10-a12796f30c55",
-    "lastUpdated": "2024-02-01T20:53:13.381944294Z",
     "lineItems": [
       {
-        "id": "6d235a8-b086-4dae-9f10-a12796f30c55",
+        "metadata": {
+            "id": "6d235a8-b086-4dae-9f10-a12796f30c55",
+            "created": "2024-02-01T19:42:00.656805391Z", 
+        },
         "amountDue": 0.0,
-        "created": "2024-02-01T19:42:00.656805391Z", 
         "description": "My Subscription Plan",
-        "price": 0.0,
+        "unitPrice": 0.0,
         "quantity": 0,
         "tax": {
           "salesTax": 0.0,
@@ -42,31 +51,29 @@ lang: en
       }
     ],
     "note": "",
-    "number": "LAM-23423",
     "organization": {
-      "id": "96d612a8-b086-4dae-9f10-a12796f30c55",
+      "metadata": {
+        "id": "96d612a8-b086-4dae-9f10-a12796f30c55",
+        "created": "2024-02-01T19:42:00.656805391Z",
+        "lastUpdated": "2024-02-01T20:53:13.381944294Z",
+      },
       "customerOsId": "C-SDF-WER",  
       "name": "Acme Corp"
     },
     "paid": false,
-    "periodStart": "2024-01-26T00:00:00Z",
-    "periodEnd": "2024-01-26T00:00:00Z", 
     "subtotal": 0.0,
-    "status": "OPEN", 
+    "status": "DUE", 
     "tax": {
+      "metadata": {
+        "created": "2024-02-01T19:42:00.656805391Z",
+        "lastUpdated": "2024-02-01T20:53:13.381944294Z",
+      },
       "salesTax": 0.0,
       "vat": 200.0
-    }
+    },
   }
 }
 ```
-
-
-### id
-Unique `string` idenfying the invoice object.  This property is always set.
-
-### object
-`String` representing the object's type.  Objects of the same type share the same value. 
 
 ### amountDue
 `Float` representing the total amount due for this invoice, including any applicable taxes.
@@ -77,8 +84,8 @@ Unique `string` idenfying the invoice object.  This property is always set.
 ### amountRemaining
 `Float` representing the difference between the `amountDue` and `amountPaid`.
 
-### created
-ISO 8601 `timestamp` of when the invoice object was created.
+### contract
+The [`contract` object](contract-object)
 
 ### currency
 `Enum` representing the three-letter ISO currency code, in lower case.
@@ -86,25 +93,45 @@ ISO 8601 `timestamp` of when the invoice object was created.
 ### due
 ISO 8601 `timestamp` representing the date payment for this invoice is due.
 
+### invoiceNumber
+A unique, identifying `string` that appears on the invoice.
+
+### invoicePeriodStart
+ISO 8601 `timestamp` of the first day in the invoice period.
+
+### invoicePeriodEnd
+ISO 8601 `timestamp` of the last day in the invoice period.
+
 ### invoiceUrl
 A nullable `string` representing the URL for the hosted invoice page which allows customers to view and pay an invoice.
 
-### lastUpdated
-ISO 8601 `timestamp` of when the invoice was last updated.
-
 ### lineItems
+The invoice [`line items` object](invoice-line-items-object)
 
+### metadata
+The [`metadata` object](metadata-object)
 
 ### note
-
-### number
+A `string` representing any notes on the invoice.  Can be an empty string.
 
 ### organization
+The [`organization` object](organization-object)
 
 ### paid
+A `boolean` indicating if the invoice has been paid in full.
 
 ### subtotal
+A `float` representing the sum of all line items minus tax/VAT.
 
 ### status
+An `enum` representing the current status of the invoice.  Valid values are:
+- DRAFT
+- DUE
+- PAID
+- OVERDUE
+- UNCOLLECTABLE
+- VOIDED
 
 ### tax
+The invoice [`tax` object](invoice-tax-object)
+
