@@ -3,6 +3,9 @@ package route
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -15,18 +18,16 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	"io"
-	"net/http"
 )
 
 func AddSyncEmailRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	//route.POST("/sync/emails",
 	//	handler.TracingEnhancer(ctx, "/sync/emails"),
-	//	commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
+	//	commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
 	//	syncEmailsHandler(services, log))
 	route.POST("/sync/email",
 		handler.TracingEnhancer(ctx, "/sync/email"),
-		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
+		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
 		syncEmailHandler(services, log))
 }
 

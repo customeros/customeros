@@ -37,7 +37,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/ask",
-		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.ANTHROPIC_API, commonservice.WithCache(caches.NewCommonCache())),
+		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.ANTHROPIC_API, commonservice.WithCache(caches.NewCommonCache())),
 		func(c *gin.Context) {
 			var request dto.AnthropicApiRequest
 
