@@ -21,6 +21,7 @@ type BaseData struct {
 	UpdatedAt            *time.Time `json:"updatedAtTime,omitempty"`
 	SyncId               string     `json:"syncId,omitempty"`
 	AppSource            string     `json:"appSource,omitempty"`
+	Source               string     `json:"source,omitempty"` // used if ExternalSystem is empty
 	UpdateOnly           bool       `json:"updateOnly"`
 }
 
