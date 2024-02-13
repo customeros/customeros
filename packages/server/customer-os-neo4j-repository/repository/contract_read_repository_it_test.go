@@ -22,8 +22,9 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices(t *testing.T
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
-		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		InvoicingEnabled:  true,
+		InvoicingPostpaid: false,
+		DefaultCurrency:   neo4jenum.CurrencyUSD,
 	})
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
@@ -57,8 +58,9 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_Organization
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
-		InvoicingEnabled: true,
-		DefaultCurrency:  neo4jenum.CurrencyUSD,
+		InvoicingEnabled:  true,
+		InvoicingPostpaid: true,
+		DefaultCurrency:   neo4jenum.CurrencyUSD,
 	})
 
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})

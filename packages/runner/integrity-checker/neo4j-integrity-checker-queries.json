@@ -1,10 +1,6 @@
 {
   "queries": [
     {
-      "name": "Check domains",
-      "query": "MATCH (d:Domain) WHERE d.domain IS NULL or d.domain = '' RETURN count(d)"
-    },
-    {
       "name": "Check for domain nodes with missing domain property",
       "query": "MATCH (d:Domain) WHERE d.domain IS NULL or d.domain = '' RETURN count(d)"
     },

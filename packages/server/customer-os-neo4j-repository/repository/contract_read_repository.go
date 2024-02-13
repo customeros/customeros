@@ -240,7 +240,7 @@ func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context
 
 	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(:ServiceLineItem)
 			WHERE 
-				ts.invoicingEnabled = true AND
+				ts.invoicingEnabled = true AND 
 				(o.hide = false OR o.hide IS NULL) AND
 				(c.currency <> "" OR ts.defaultCurrency <> "") AND
 				c.organizationLegalName IS NOT NULL AND 
@@ -251,7 +251,7 @@ func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context
 				(c.nextInvoiceDate IS NULL OR date(c.nextInvoiceDate) <= date($referenceTime)) AND
 				(date(c.invoicingStartDate) <= date($referenceTime)) AND
 				(c.endedAt IS NULL OR date(c.endedAt) > date(coalesce(c.nextInvoiceDate, c.invoicingStartDate))) AND
-				(c.techInvoicingStartedAt IS NULL OR c.techInvoicingStartedAt + duration({hours: 1}) < $referenceTime)
+				(c.techInvoicingStartedAt IS NULL OR c.techInvoicingStartedAt + duration({hours: 4}) < $referenceTime)
 			RETURN distinct(c), t.name limit 100`
 	params := map[string]any{
 		"referenceTime": referenceTime,
@@ -289,7 +289,8 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 
 	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
 			WHERE 
-				ts.invoicingEnabled = true AND
+				ts.invoicingEnabled = true AND 
+				ts.invoicingPostpaid = false  AND 
 				(o.hide = false OR o.hide IS NULL) AND
 				(c.currency <> "" OR ts.defaultCurrency <> "") AND
 				c.organizationLegalName IS NOT NULL AND 

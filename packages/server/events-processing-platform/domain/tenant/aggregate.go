@@ -352,6 +352,8 @@ func extractTenantSettingsFieldsMask(inputFieldsMask []tenantpb.TenantSettingsFi
 			fieldsMask = append(fieldsMask, event.FieldMaskDefaultCurrency)
 		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED:
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoicingEnabled)
+		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_POSTPAID:
+			fieldsMask = append(fieldsMask, event.FieldMaskInvoicingPostpaid)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)

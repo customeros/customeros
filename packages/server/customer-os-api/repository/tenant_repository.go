@@ -83,14 +83,16 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant neo4jentity.TenantE
 			ts.id=randomUUID(),
 		  	ts.createdAt=$now,
 			ts.updatedAt=$now,
-			ts.invoicingEnabled=$invoicingEnabled
+			ts.invoicingEnabled=$invoicingEnabled,
+			ts.invoicingPostpaid=$invoicingPostpaid
 		 RETURN t`
 	params := map[string]any{
-		"name":             tenant.Name,
-		"source":           tenant.Source,
-		"appSource":        tenant.AppSource,
-		"now":              utils.Now(),
-		"invoicingEnabled": false,
+		"name":              tenant.Name,
+		"source":            tenant.Source,
+		"appSource":         tenant.AppSource,
+		"now":               utils.Now(),
+		"invoicingEnabled":  false,
+		"invoicingPostpaid": false,
 	}
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
