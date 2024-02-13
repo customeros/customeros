@@ -67,6 +67,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 		"some note",
 		true,
 		true,
+		true,
 		now,
 		yesterday,
 		tomorrow,
@@ -97,6 +98,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Equal(t, now, createdInvoice.DueDate)
 	require.Equal(t, true, createdInvoice.DryRun)
 	require.Equal(t, true, createdInvoice.OffCycle)
+	require.Equal(t, true, createdInvoice.Postpaid)
 	require.Equal(t, "", createdInvoice.Number)
 	require.Equal(t, yesterday, createdInvoice.PeriodStartDate)
 	require.Equal(t, tomorrow, createdInvoice.PeriodEndDate)

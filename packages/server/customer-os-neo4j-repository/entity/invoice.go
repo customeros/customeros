@@ -28,6 +28,7 @@ type InvoiceEntity struct {
 	Note                          string
 	PaymentDetails                PaymentDetails
 	OffCycle                      bool
+	Postpaid                      bool
 
 	Source        DataSource
 	SourceOfTruth DataSource

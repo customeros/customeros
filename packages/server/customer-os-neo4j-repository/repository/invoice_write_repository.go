@@ -18,6 +18,7 @@ type InvoiceCreateFields struct {
 	Currency        neo4jenum.Currency      `json:"currency"`
 	DryRun          bool                    `json:"dryRun"`
 	OffCycle        bool                    `json:"offCycle"`
+	Postpaid        bool                    `json:"postpaid"`
 	PeriodStartDate time.Time               `json:"periodStartDate"`
 	PeriodEndDate   time.Time               `json:"periodEndDate"`
 	CreatedAt       time.Time               `json:"createdAt"`
@@ -114,6 +115,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 								i.appSource=$appSource,
 								i.dryRun=$dryRun,
 								i.offCycle=$offCycle,
+								i.postpaid=$postpaid,
 								i.currency=$currency,
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
@@ -140,6 +142,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"billingCycle":  data.BillingCycle.String(),
 		"status":        data.Status.String(),
 		"note":          data.Note,
+		"postpaid":      data.Postpaid,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

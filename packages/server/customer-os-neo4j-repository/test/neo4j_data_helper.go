@@ -965,7 +965,8 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 				i.note=$note,
 				i.customerEmail=$customerEmail,
 				i.paymentLink=$paymentLink,
-				i.offCycle=$offCycle
+				i.offCycle=$offCycle,
+				i.postpaid=$postpaid
 			WITH c, i 
 			MERGE (c)-[:HAS_INVOICE]->(i) 
 				`, tenant)
@@ -994,6 +995,7 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 		"customerEmail":    invoice.Customer.Email,
 		"paymentLink":      invoice.PaymentDetails.PaymentLink,
 		"offCycle":         invoice.OffCycle,
+		"postpaid":         invoice.Postpaid,
 	}
 
 	ExecuteWriteQuery(ctx, driver, query, params)
