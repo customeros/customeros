@@ -88,12 +88,19 @@ export const SIDEBAR: Sidebar = {
     Integrations: [
       { text: "Integrations", link: "en/integrations" },
     ],
-    APIs: [
+    "API Overview": [
       { text: "Getting Started", link: "en/api/getting-started" },
-      { text: "CustomerOS Contact & Org APIs", link: "en/api/customer-apis" },
-      { text: "CustomerOS Admin APIs", link: "en/api/admin-apis" },
-      { text: "Email Reachability API", link: "en/api/email-reachability" },
-      { text: "Domain Info API", link: "en/api/domain-info" },
+      { text: "Webhooks", link: "en/api/webooks"},
+    ],
+    "Contracts API": [
+      { text: "API Reference", link: "en/api/contract-api"},
+      { text: "Contract Events", link: "en/api/contract-events"},
+      { text: "Contract Object", link: "en/api/contract-object"},
+    ],
+    "Invoices API": [
+      { text: "API Reference", link: "en/api/invoice-api"},
+      { text: "Invoice Events", link: "en/api/invoice-events"},
+      { text: "Invoice Object", link: "en/api/invoice-object"},
     ],
     CLI: [
       { text: "Getting Started", link: "en/cli/getting-started" },
