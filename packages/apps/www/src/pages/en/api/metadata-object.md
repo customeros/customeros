@@ -16,7 +16,7 @@ lang: en
 ```
 
 ### id
-Unique `string` idenfying the object.  This property is always set.
+Unique `string` identifying the object.  This property is always set.
 
 ### created
 ISO 8601 `timestamp` of when the object was created.
