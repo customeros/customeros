@@ -14,9 +14,9 @@ RUN cd /workspace/build/customer-os-common-module && go mod download && go mod v
 COPY customer-os-common-module/. /workspace/build/customer-os-common-module/
 RUN cd /workspace/build/customer-os-common-module && go build
 
-#copy and build customer-os-api
-COPY customer-os-api/go.mod /workspace/build/settings-api/go.mod
-COPY customer-os-api/go.sum /workspace/build/settings-api/go.sum
+#copy and build settings-api
+COPY settings-api/go.mod /workspace/build/settings-api/go.mod
+COPY settings-api/go.sum /workspace/build/settings-api/go.sum
 
 RUN cd /workspace/build/settings-api && go mod download && go mod verify
 
