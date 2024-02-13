@@ -11,5 +11,5 @@ type TenantApiKey struct {
 }
 
 func (TenantApiKey) TableName() string {
-	return "api_keys"
+	return "tenant_api_keys"
 }
