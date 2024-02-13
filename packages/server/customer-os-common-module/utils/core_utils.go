@@ -414,3 +414,13 @@ func GenerateRandomStringFromCharset(length int, charset string) string {
 	}
 	return output
 }
+
+func ExtractName(email string) string {
+	atIndex := strings.Index(email, "@")
+	if atIndex == -1 {
+		return ""
+	}
+
+	name := strings.TrimSpace(email[:atIndex])
+	return name
+}
