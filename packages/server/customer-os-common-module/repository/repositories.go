@@ -1,12 +1,13 @@
 package repository
 
 import (
+	"log"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
+	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"gorm.io/gorm"
-	"log"
 )
 
 type Repositories struct {
@@ -18,6 +19,7 @@ type Repositories struct {
 	UserRepository                  neo4jrepo.UserRepository
 	TenantRepository                neo4jrepo.TenantRepository
 	StateRepository                 neo4jrepo.StateRepository
+	ApiKeyRepository                repository.ApiKeyRepository
 }
 
 func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositories {
@@ -30,6 +32,7 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 		UserRepository:                  neo4jrepo.NewUserRepository(driver),
 		TenantRepository:                neo4jrepo.NewTenantRepository(driver),
 		StateRepository:                 neo4jrepo.NewStateRepository(driver),
+		ApiKeyRepository:                repository.NewApiKeyRepo(db),
 	}
 
 	var err error
@@ -59,6 +62,12 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 	}
 
 	err = db.AutoMigrate(&entity.PersonalEmailProvider{})
+	if err != nil {
+		log.Print(err)
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.ApiKey{})
 	if err != nil {
 		log.Print(err)
 		panic(err)
