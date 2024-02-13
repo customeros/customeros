@@ -90,7 +90,7 @@ export const SIDEBAR: Sidebar = {
     ],
     "API Overview": [
       { text: "Getting Started", link: "en/api/getting-started" },
-      { text: "Webhooks", link: "en/api/webooks"},
+      { text: "Webhooks", link: "en/api/webhooks"},
     ],
     "Contracts API": [
       { text: "API Reference", link: "en/api/contract-api"},
