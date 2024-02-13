@@ -64,10 +64,11 @@ func (r *timelineEventReadRepository) GetTimelineEvent(ctx context.Context, tena
 			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 		}
 	})
+	span.LogFields(log.Bool("result.found", result != nil))
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	span.LogFields(log.Bool("result.found", result != nil))
 	return result.(*dbtype.Node), nil
 }
 

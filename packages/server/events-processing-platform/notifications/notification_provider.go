@@ -3,7 +3,9 @@ package notifications
 import (
 	"context"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/aws_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -21,13 +23,19 @@ type NotifiableUser struct {
 	SubscriberID string `json:"subscriberId"` // must be unique uuid for user
 }
 
-type NotificationProvider interface {
-	SendNotification(ctx context.Context, u *NotifiableUser, payload map[string]interface{}, workflowId string) error
-	LoadEmailBody(ctx context.Context, workflowId string) error
-	Template(ctx context.Context, replace map[string]string) (string, error)
-	GetRawContent() string
+type NovuNotification struct {
+	WorkflowId   string
+	TemplateData map[string]string
+
+	To      *NotifiableUser
+	Subject string
+	Payload map[string]interface{}
 }
 
-func NewNovuNotificationProvider(log logger.Logger, apiKey, templatePath string) NotificationProvider {
-	return newNovuProvider(log, apiKey, templatePath)
+type NotificationProvider interface {
+	SendNotification(ctx context.Context, notification *NovuNotification, span opentracing.Span) error
+}
+
+func NewNovuNotificationProvider(log logger.Logger, apiKey string, s3Client aws_client.S3ClientI) NotificationProvider {
+	return newNovuProvider(log, apiKey, s3Client)
 }

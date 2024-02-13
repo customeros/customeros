@@ -196,13 +196,13 @@ func ConvertInvoiceHtmlToPdf(pdfConverterUrl string, tmpFile *os.File, invoiceDa
 	return &pdfBytes, nil
 }
 
-func addProviderLogoAsResourceFile(writer *multipart.Writer, logoURL string) error {
+func downloadProviderLogoAsResourceFile(logoURL string) (*os.File, error) {
 	fileExtension := GetFileExtensionFromUrl(logoURL)
 	// Create a temporary file
 	tmpFile, err := os.CreateTemp("", "downloaded-logo-*"+fileExtension)
 	if err != nil {
 		fmt.Println("Error creating temporary file:", err)
-		return err
+		return nil, err
 	}
 	defer os.Remove(tmpFile.Name())
 	defer tmpFile.Close()
@@ -211,7 +211,7 @@ func addProviderLogoAsResourceFile(writer *multipart.Writer, logoURL string) err
 	response, err := http.Get(logoURL)
 	if err != nil {
 		fmt.Println("Error downloading image:", err)
-		return err
+		return nil, err
 	}
 	defer response.Body.Close()
 
@@ -219,10 +219,15 @@ func addProviderLogoAsResourceFile(writer *multipart.Writer, logoURL string) err
 	_, err = io.Copy(tmpFile, response.Body)
 	if err != nil {
 		fmt.Println("Error saving image to file:", err)
-		return err
+		return nil, err
 	}
 
-	logoFile, err := getFileByName(tmpFile.Name())
+	return getFileByName(tmpFile.Name())
+}
+
+func addProviderLogoAsResourceFile(writer *multipart.Writer, logoURL string) error {
+	fileExtension := GetFileExtensionFromUrl(logoURL)
+	logoFile, err := downloadProviderLogoAsResourceFile(logoURL)
 
 	err = addMultipartFile(writer, logoFile, "provider-logo"+fileExtension)
 	if err != nil {

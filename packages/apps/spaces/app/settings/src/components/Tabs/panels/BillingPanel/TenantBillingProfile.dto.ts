@@ -11,11 +11,18 @@ export interface TenantBillingDetails {
   phone?: string | null;
   locality?: string | null;
   legalName?: string | null;
+  vatNumber?: string | null;
   addressLine1?: string | null;
   addressLine2?: string | null;
   addressLine3?: string | null;
+  canPayWithCard?: boolean | null;
+  sendInvoicesFrom?: string | null;
+  canPayWithPigeon?: boolean | null;
   country?: SelectOption<string> | null;
   domesticPaymentsBankInfo?: string | null;
+  canPayWithDirectDebitACH?: boolean | null;
+  canPayWithDirectDebitSEPA?: boolean | null;
+  canPayWithDirectDebitBacs?: boolean | null;
   internationalPaymentsBankInfo?: string | null;
 }
 
@@ -31,6 +38,13 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
   legalName?: string | null;
   domesticPaymentsBankInfo?: string | null;
   internationalPaymentsBankInfo?: string | null;
+  canPayWithDirectDebitACH;
+  canPayWithDirectDebitSEPA;
+  canPayWithDirectDebitBacs;
+  canPayWithCard;
+  canPayWithPigeon;
+  sendInvoicesFrom;
+  vatNumber;
 
   constructor(data?: TenantBillingProfile | null) {
     this.email = data?.email;
@@ -44,6 +58,13 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
     this.legalName = data?.legalName;
     this.domesticPaymentsBankInfo = data?.domesticPaymentsBankInfo;
     this.internationalPaymentsBankInfo = data?.internationalPaymentsBankInfo;
+    this.canPayWithDirectDebitACH = data?.canPayWithDirectDebitACH;
+    this.canPayWithDirectDebitSEPA = data?.canPayWithDirectDebitSEPA;
+    this.canPayWithDirectDebitBacs = data?.canPayWithDirectDebitBacs;
+    this.canPayWithCard = data?.canPayWithCard;
+    this.canPayWithPigeon = data?.canPayWithPigeon;
+    this.sendInvoicesFrom = data?.sendInvoicesFrom;
+    this.vatNumber = data?.vatNumber;
   }
 
   static toForm(data?: TenantBillingProfile): TenantBillingDetails {
@@ -67,6 +88,13 @@ export class TenantBillingDetailsDto implements TenantBillingDetails {
       legalName: data?.legalName,
       domesticPaymentsBankInfo: data?.domesticPaymentsBankInfo,
       internationalPaymentsBankInfo: data?.internationalPaymentsBankInfo,
+      canPayWithDirectDebitACH: !!data?.canPayWithDirectDebitACH,
+      canPayWithDirectDebitSEPA: !!data?.canPayWithDirectDebitSEPA,
+      canPayWithDirectDebitBacs: !!data?.canPayWithDirectDebitBacs,
+      canPayWithCard: !!data?.canPayWithCard,
+      canPayWithPigeon: !!data?.canPayWithPigeon,
+      sendInvoicesFrom: data?.sendInvoicesFrom ?? '',
+      vatNumber: data?.vatNumber ?? '',
     };
   }
 }

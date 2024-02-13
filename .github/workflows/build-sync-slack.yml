@@ -47,7 +47,7 @@ jobs:
         id: test-folders
         run: |
           test_folders=$(go list ./... | grep -v /gen | grep -v /test | paste -sd "," -)
-          echo "::set-output name=test_folders::$test_folders"
+          echo "{name}={test_folders}" >> $GITHUB_OUTPUT
 
       - name: Test
         run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out -coverpkg=${{ steps.test-folders.outputs.test_folders }} ./...
@@ -110,7 +110,7 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v5.5.0
+        uses: docker/metadata-action@v5.5.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 

@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -54,6 +55,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 			Billed:     model.MonthlyBilled,
 			Quantity:   10,
 			Price:      100.50,
+			VatRate:    20.5,
 			Name:       "Test service line item",
 			ContractId: contractId,
 			ParentId:   serviceLineItemId,
@@ -90,12 +92,13 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, serviceLineItemId, serviceLineItem.ParentId)
-	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
+	require.Equal(t, neo4jenum.BilledTypeMonthly, serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
 	require.Equal(t, 100.50, serviceLineItem.Price)
+	require.Equal(t, 20.5, serviceLineItem.VatRate)
 	require.Equal(t, "Test service line item", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
@@ -138,6 +141,7 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 			Name:     "Updated Service Line Item",
 			Price:    200.0,
 			Quantity: 20,
+			VatRate:  20.5,
 			Billed:   model.AnnuallyBilled,
 		},
 		commonmodel.Source{
@@ -168,11 +172,12 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.AnnuallyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, neo4jenum.BilledTypeAnnually, serviceLineItem.Billed)
 	require.Equal(t, int64(20), serviceLineItem.Quantity)
 	require.Equal(t, 200.0, serviceLineItem.Price)
+	require.Equal(t, 20.5, serviceLineItem.VatRate)
 	require.Equal(t, "Updated Service Line Item", serviceLineItem.Name)
 }
 
@@ -435,8 +440,8 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.Equal(t, now, serviceLineItem.UpdatedAt)
 	require.Equal(t, now, *serviceLineItem.EndedAt)
 	require.True(t, serviceLineItem.IsCanceled)
@@ -512,9 +517,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, neo4jenum.BilledTypeMonthly, serviceLineItem.Billed)
 	require.Equal(t, float64(200.0), serviceLineItem.Price)
 
 	// verify action
@@ -597,9 +602,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.UsageBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, neo4jenum.BilledTypeUsage, serviceLineItem.Billed)
 	require.Equal(t, float64(200.0), serviceLineItem.Price)
 	require.Equal(t, "test reason for change", serviceLineItem.Comments)
 
@@ -684,9 +689,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.AnnuallyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, neo4jenum.BilledTypeAnnually, serviceLineItem.Billed)
 	require.Equal(t, float64(50.0), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 
@@ -770,9 +775,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.OnceBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, neo4jenum.BilledTypeOnce, serviceLineItem.Billed)
 	require.Equal(t, float64(50.0), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 
@@ -853,8 +858,8 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.Equal(t, int64(20), serviceLineItem.Quantity)
 
 	// verify action
@@ -933,9 +938,9 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.NoneBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, neo4jenum.BilledTypeNone, serviceLineItem.Billed)
 	require.Equal(t, int64(350), serviceLineItem.Quantity)
 
 	// verify actionat
@@ -1017,9 +1022,9 @@ func TestServiceLineItemEventHandler_OnUpdateBilledType_TimelineEvent(t *testing
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, neo4jenum.BilledTypeMonthly, serviceLineItem.Billed)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 
 	// verify action
@@ -1107,10 +1112,10 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, serviceLineItemId, serviceLineItem.ParentId)
-	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
+	require.Equal(t, neo4jenum.BilledTypeMonthly, serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
 	require.Equal(t, float64(170.25), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
@@ -1204,10 +1209,10 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, serviceLineItemId, serviceLineItem.ParentId)
-	require.Equal(t, model.AnnuallyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
+	require.Equal(t, neo4jenum.BilledTypeAnnually, serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
 	require.Equal(t, float64(170.25), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
@@ -1301,10 +1306,10 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, serviceLineItemId, serviceLineItem.ParentId)
-	require.Equal(t, model.QuarterlyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
+	require.Equal(t, neo4jenum.BilledTypeQuarterly, serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
 	require.Equal(t, float64(170.25), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
@@ -1397,10 +1402,10 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, serviceLineItemId, serviceLineItem.ParentId)
-	require.Equal(t, model.OnceBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
+	require.Equal(t, neo4jenum.BilledTypeOnce, serviceLineItem.Billed)
 	require.Equal(t, float64(170.25), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
@@ -1492,10 +1497,10 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, serviceLineItemId, serviceLineItem.ParentId)
-	require.Equal(t, model.UsageBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
+	require.Equal(t, neo4jenum.BilledTypeUsage, serviceLineItem.Billed)
 	require.Equal(t, float64(170.25), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
@@ -1591,10 +1596,10 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, serviceLineItemParentId, serviceLineItem.ParentId)
-	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemParentId, serviceLineItem.ParentID)
+	require.Equal(t, neo4jenum.BilledTypeMonthly, serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
 	require.Equal(t, "Test service line item", serviceLineItem.Name)
 	require.Equal(t, "reason for what change?", serviceLineItem.Comments)
@@ -1692,10 +1697,10 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, serviceLineItemParentId, serviceLineItem.ParentId)
-	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemParentId, serviceLineItem.ParentID)
+	require.Equal(t, neo4jenum.BilledTypeMonthly, serviceLineItem.Billed)
 	require.Equal(t, float64(850.75), serviceLineItem.Price)
 	require.Equal(t, "Test service line item", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
@@ -1791,10 +1796,10 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-	require.Equal(t, serviceLineItemParentId, serviceLineItem.ParentId)
-	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemParentId, serviceLineItem.ParentID)
+	require.Equal(t, neo4jenum.BilledTypeMonthly, serviceLineItem.Billed)
 	require.Equal(t, float64(850.75), serviceLineItem.Price)
 	require.Equal(t, "This is a reason for change", serviceLineItem.Comments)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
@@ -1902,10 +1907,10 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId2, serviceLineItem.Id)
-	require.Equal(t, serviceLineItemId1, serviceLineItem.ParentId)
-	require.Equal(t, model.QuarterlyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId2, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemId1, serviceLineItem.ParentID)
+	require.Equal(t, neo4jenum.BilledTypeQuarterly, serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
 	require.Equal(t, float64(170.25), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
@@ -2009,10 +2014,10 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 	require.Nil(t, err)
 	require.NotNil(t, serviceLineItemDbNode)
 
-	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
-	require.Equal(t, serviceLineItemId2, serviceLineItem.Id)
-	require.Equal(t, serviceLineItemId1, serviceLineItem.ParentId)
-	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId2, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemId1, serviceLineItem.ParentID)
+	require.Equal(t, neo4jenum.BilledTypeMonthly, serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
 	require.Equal(t, float64(100), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)

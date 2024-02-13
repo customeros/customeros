@@ -5,6 +5,7 @@ import { Button } from '@ui/form/Button';
 import { useDisclosure } from '@ui/utils';
 import { Text } from '@ui/typography/Text';
 import { Plus } from '@ui/media/icons/Plus';
+import { Map01 } from '@ui/media/icons/Map01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useMasterPlansQuery } from '@shared/graphql/masterPlans.generated';
 import {
@@ -70,9 +71,18 @@ export const OnboardingMenu = () => {
             <Text noOfLines={1}>{m.name}</Text>
           </MenuItem>
         ))}
-        <MenuItem>Plan 2</MenuItem>
-        <MenuDivider />
-        <MenuItem onClick={handleEditMasterPlans}>Edit master plans</MenuItem>
+        <MenuDivider
+          mx='2'
+          borderBottom='unset'
+          borderTop='1px dashed'
+          borderColor='gray.300'
+        />
+        <MenuItem
+          icon={<Map01 color='gray.500' />}
+          onClick={handleEditMasterPlans}
+        >
+          Edit master plans
+        </MenuItem>
       </MenuList>
     </Menu>
   );

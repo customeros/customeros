@@ -58,16 +58,18 @@ func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, 
 				ON CREATE SET
 					s.createdAt=$createdAt,
 					s.invoicingEnabled=$invoicingEnabled,
+					s.invoicingPostpaid=$invoicingPostpaid,
 					s.tenant=$tenant,
 					s.logoUrl=$logoUrl,
 					s.defaultCurrency=$defaultCurrency`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":               settingsId,
-		"tenant":           tenant,
-		"invoicingEnabled": settings.InvoicingEnabled,
-		"createdAt":        settings.CreatedAt,
-		"defaultCurrency":  settings.DefaultCurrency,
-		"logoUrl":          settings.LogoUrl,
+		"id":                settingsId,
+		"tenant":            tenant,
+		"invoicingEnabled":  settings.InvoicingEnabled,
+		"invoicingPostpaid": settings.InvoicingPostpaid,
+		"createdAt":         settings.CreatedAt,
+		"defaultCurrency":   settings.DefaultCurrency,
+		"logoUrl":           settings.LogoUrl,
 	})
 	return settingsId
 }
@@ -97,7 +99,15 @@ func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithCon
 					tbp.internationalPaymentsSwiftBic=$internationalPaymentsSwiftBic,
 					tbp.internationalPaymentsBankName=$internationalPaymentsBankName,
 					tbp.internationalPaymentsBankAddress=$internationalPaymentsBankAddress,
-					tbp.internationalPaymentsInstructions=$internationalPaymentsInstructions`, tenant)
+					tbp.internationalPaymentsInstructions=$internationalPaymentsInstructions,
+					tbp.vatNumber=$vatNumber,
+					tbp.sendInvoicesFrom=$sendInvoicesFrom,
+					tbp.canPayWithCard=$canPayWithCard,
+					tbp.canPayWithDirectDebitSEPA=$canPayWithDirectDebitSEPA,
+					tbp.canPayWithDirectDebitACH=$canPayWithDirectDebitACH,
+					tbp.canPayWithDirectDebitBacs=$canPayWithDirectDebitBacs,
+					tbp.canPayWithPigeon=$canPayWithPigeon
+`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":                            tenant,
 		"profileId":                         profileId,
@@ -121,6 +131,13 @@ func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithCon
 		"internationalPaymentsBankName":     profile.InternationalPaymentsBankName,
 		"internationalPaymentsBankAddress":  profile.InternationalPaymentsBankAddress,
 		"internationalPaymentsInstructions": profile.InternationalPaymentsInstructions,
+		"vatNumber":                         profile.VatNumber,
+		"sendInvoicesFrom":                  profile.SendInvoicesFrom,
+		"canPayWithCard":                    profile.CanPayWithCard,
+		"canPayWithDirectDebitSEPA":         profile.CanPayWithDirectDebitSEPA,
+		"canPayWithDirectDebitACH":          profile.CanPayWithDirectDebitACH,
+		"canPayWithDirectDebitBacs":         profile.CanPayWithDirectDebitBacs,
+		"canPayWithPigeon":                  profile.CanPayWithPigeon,
 	})
 	return profileId
 }
@@ -643,38 +660,44 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 					c.country=$country,
 					c.organizationLegalName=$organizationLegalName,
 					c.invoiceEmail=$invoiceEmail,
-					c.invoiceNote=$invoiceNote
+					c.invoiceNote=$invoiceNote,
+					c.canPayWithCard=$canPayWithCard,
+					c.canPayWithDirectDebit=$canPayWithDirectDebit,
+					c.canPayWithBankTransfer=$canPayWithBankTransfer
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":                    contractId,
-		"organizationId":        organizationId,
-		"tenant":                tenant,
-		"source":                contract.Source,
-		"sourceOfTruth":         contract.SourceOfTruth,
-		"appSource":             contract.AppSource,
-		"createdAt":             contract.CreatedAt,
-		"updatedAt":             contract.UpdatedAt,
-		"name":                  contract.Name,
-		"contractUrl":           contract.ContractUrl,
-		"status":                contract.ContractStatus.String(),
-		"renewalCycle":          contract.RenewalCycle.String(),
-		"renewalPeriods":        contract.RenewalPeriods,
-		"signedAt":              utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
-		"serviceStartedAt":      utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
-		"endedAt":               utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
-		"currency":              contract.Currency.String(),
-		"invoicingStartDate":    utils.ToNeo4jDateAsAny(contract.InvoicingStartDate),
-		"nextInvoiceDate":       utils.ToNeo4jDateAsAny(contract.NextInvoiceDate),
-		"billingCycle":          contract.BillingCycle.String(),
-		"addressLine1":          contract.AddressLine1,
-		"addressLine2":          contract.AddressLine2,
-		"zip":                   contract.Zip,
-		"locality":              contract.Locality,
-		"country":               contract.Country,
-		"organizationLegalName": contract.OrganizationLegalName,
-		"invoiceEmail":          contract.InvoiceEmail,
-		"invoiceNote":           contract.InvoiceNote,
+		"id":                     contractId,
+		"organizationId":         organizationId,
+		"tenant":                 tenant,
+		"source":                 contract.Source,
+		"sourceOfTruth":          contract.SourceOfTruth,
+		"appSource":              contract.AppSource,
+		"createdAt":              contract.CreatedAt,
+		"updatedAt":              contract.UpdatedAt,
+		"name":                   contract.Name,
+		"contractUrl":            contract.ContractUrl,
+		"status":                 contract.ContractStatus.String(),
+		"renewalCycle":           contract.RenewalCycle.String(),
+		"renewalPeriods":         contract.RenewalPeriods,
+		"signedAt":               utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
+		"serviceStartedAt":       utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
+		"endedAt":                utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
+		"currency":               contract.Currency.String(),
+		"invoicingStartDate":     utils.ToNeo4jDateAsAny(contract.InvoicingStartDate),
+		"nextInvoiceDate":        utils.ToNeo4jDateAsAny(contract.NextInvoiceDate),
+		"billingCycle":           contract.BillingCycle.String(),
+		"addressLine1":           contract.AddressLine1,
+		"addressLine2":           contract.AddressLine2,
+		"zip":                    contract.Zip,
+		"locality":               contract.Locality,
+		"country":                contract.Country,
+		"organizationLegalName":  contract.OrganizationLegalName,
+		"invoiceEmail":           contract.InvoiceEmail,
+		"invoiceNote":            contract.InvoiceNote,
+		"canPayWithCard":         contract.CanPayWithCard,
+		"canPayWithDirectDebit":  contract.CanPayWithDirectDebit,
+		"canPayWithBankTransfer": contract.CanPayWithBankTransfer,
 	})
 	return contractId
 }
@@ -770,7 +793,8 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 					sli.endedAt=$endedAt,
 					sli.createdAt=$createdAt,
 					sli.updatedAt=$updatedAt,
-	                sli.parentId=$parentId
+	                sli.parentId=$parentId,
+					sli.vatRate=toFloat($vatRate)
 				`, tenant)
 
 	params := map[string]any{
@@ -793,6 +817,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 		"createdAt":        serviceLineItem.CreatedAt,
 		"updatedAt":        serviceLineItem.UpdatedAt,
 		"parentId":         serviceLineItem.ParentID,
+		"vatRate":          serviceLineItem.VatRate,
 	}
 
 	if serviceLineItem.EndedAt != nil {
@@ -939,7 +964,9 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 				i.status=$status,
 				i.note=$note,
 				i.customerEmail=$customerEmail,
-				i.paymentLink=$paymentLink
+				i.paymentLink=$paymentLink,
+				i.offCycle=$offCycle,
+				i.postpaid=$postpaid
 			WITH c, i 
 			MERGE (c)-[:HAS_INVOICE]->(i) 
 				`, tenant)
@@ -967,6 +994,8 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 		"note":             invoice.Note,
 		"customerEmail":    invoice.Customer.Email,
 		"paymentLink":      invoice.PaymentDetails.PaymentLink,
+		"offCycle":         invoice.OffCycle,
+		"postpaid":         invoice.Postpaid,
 	}
 
 	ExecuteWriteQuery(ctx, driver, query, params)

@@ -37,6 +37,7 @@ type ServiceLineItemCreateData struct {
 	AppSource         string                       `json:"appSource"`
 	StartedAt         *time.Time                   `json:"startedAt"`
 	EndedAt           *time.Time                   `json:"endedAt"`
+	SliVatRate        float64                      `json:"sliVatRate"`
 }
 
 type ServiceLineItemUpdateData struct {
@@ -49,6 +50,7 @@ type ServiceLineItemUpdateData struct {
 	SliComments             string                 `json:"sliComments"`
 	Source                  neo4jentity.DataSource `json:"source"`
 	AppSource               string                 `json:"appSource"`
+	SliVatRate              float64                `json:"sliVatRate"`
 }
 
 type ServiceLineItemService interface {
@@ -105,6 +107,7 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		Name:           serviceLineItemDetails.SliName,
 		Quantity:       serviceLineItemDetails.SliQuantity,
 		Price:          serviceLineItemDetails.SliPrice,
+		VatRate:        serviceLineItemDetails.SliVatRate,
 		StartedAt:      utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt),
 		EndedAt:        utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.EndedAt),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -170,6 +173,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		Price:                   serviceLineItemDetails.SliPrice,
 		Comments:                serviceLineItemDetails.SliComments,
 		IsRetroactiveCorrection: serviceLineItemDetails.IsRetroactiveCorrection,
+		VatRate:                 serviceLineItemDetails.SliVatRate,
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(serviceLineItemDetails.Source),
 			AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
@@ -346,6 +350,7 @@ type ServiceLineItemDetails struct {
 	Billed                  neo4jenum.BilledType
 	Comments                string
 	IsRetroactiveCorrection bool
+	VatRate                 float64
 }
 
 func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error) {
@@ -395,6 +400,7 @@ func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, contr
 				SliPrice:      serviceLineItem.Price,
 				SliQuantity:   serviceLineItem.Quantity,
 				SliBilledType: serviceLineItem.Billed,
+				SliVatRate:    serviceLineItem.VatRate,
 				Source:        neo4jentity.DataSourceOpenline,
 				AppSource:     constants.AppSourceCustomerOsApi,
 			})
@@ -415,6 +421,7 @@ func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, contr
 				SliQuantity:             serviceLineItem.Quantity,
 				SliBilledType:           serviceLineItem.Billed,
 				SliComments:             serviceLineItem.Comments,
+				SliVatRate:              serviceLineItem.VatRate,
 				Source:                  neo4jentity.DataSourceOpenline,
 				AppSource:               constants.AppSourceCustomerOsApi,
 			})
@@ -456,5 +463,6 @@ func MapServiceLineItemBulkItemToData(input *model.ServiceLineItemBulkUpdateItem
 		Billed:                  billed,
 		Comments:                utils.IfNotNilString(input.Comments),
 		IsRetroactiveCorrection: utils.IfNotNilBool(input.IsRetroactiveCorrection),
+		VatRate:                 utils.IfNotNilFloat64(input.VatRate),
 	}
 }

@@ -42,7 +42,7 @@ func EnrichEventWithMetadataExtended(event *eventstore.Event, span opentracing.S
 	}
 }
 
-func AllowCheckIfEventIsRedundant(appSource, loggedInUserId string) bool {
+func AllowCheckForNoChanges(appSource, loggedInUserId string) bool {
 	return (appSource == constants.AppSourceIntegrationApp || appSource == constants.AppSourceSyncCustomerOsData) && loggedInUserId == ""
 }
 

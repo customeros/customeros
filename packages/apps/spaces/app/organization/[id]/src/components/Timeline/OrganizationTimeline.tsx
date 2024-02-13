@@ -180,7 +180,12 @@ export const OrganizationTimeline: FC = () => {
     });
 
   if (!isRestoring && !timelineEmailEvents?.length) {
-    return <EmptyTimeline invalidateQuery={invalidateQuery} />;
+    return (
+      <>
+        <EmptyTimeline invalidateQuery={invalidateQuery} />
+        <TimelineEventPreviewModal invalidateQuery={invalidateQuery} />
+      </>
+    );
   }
 
   return (

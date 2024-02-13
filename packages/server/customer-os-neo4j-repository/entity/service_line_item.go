@@ -26,6 +26,7 @@ type ServiceLineItemEntity struct {
 	SourceOfTruth    DataSource
 	AppSource        string
 	ParentID         string
+	VatRate          float64
 }
 
 type ServiceLineItemEntities []ServiceLineItemEntity

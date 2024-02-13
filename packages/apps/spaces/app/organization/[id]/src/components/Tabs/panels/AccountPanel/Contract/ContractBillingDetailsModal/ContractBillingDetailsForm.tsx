@@ -4,6 +4,7 @@ import React, { FC, useMemo } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { FormInput } from '@ui/form/Input';
 import { ModalBody } from '@ui/overlay/Modal';
+import { FormUrlInput } from '@ui/form/UrlInput';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getCurrencyOptions } from '@shared/util/currencyOptions';
@@ -25,7 +26,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
 
   return (
     <ModalBody pb='0' gap={4} display='flex' flexDir='column' flex={1}>
-      <FormInput
+      <FormUrlInput
         label='Link to contract'
         isLabelVisible
         labelProps={{
@@ -106,7 +107,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             formId={formId}
             name='zip'
             textOverflow='ellipsis'
-            placeholder='ZIP/Potal code'
+            placeholder='ZIP/Postal code'
             onFocus={() => onSetIsBillingDetailsFocused(true)}
             onBlur={() => onSetIsBillingDetailsFocused(false)}
             autoComplete='off'

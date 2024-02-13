@@ -32,7 +32,7 @@ const AccountPanelComponent = () => {
   const router = useRouter();
 
   const { isModalOpen } = useAccountPanelStateContext();
-  const { data, isFetching } = useGetContractsQuery(client, {
+  const { data, isLoading } = useGetContractsQuery(client, {
     id,
   });
   const { data: invoicesCountData, isFetching: isFetchingInvoicesCount } =
@@ -40,7 +40,7 @@ const AccountPanelComponent = () => {
       organizationId: id,
     });
 
-  if (isFetching) {
+  if (isLoading) {
     return <AccountPanelSkeleton />;
   }
 
@@ -174,7 +174,7 @@ const AccountPanelComponent = () => {
         shouldBlockPanelScroll={isModalOpen}
       >
         <Contracts
-          isFetching={isFetching}
+          isLoading={isLoading}
           organization={data?.organization as Organization}
         />
       </OrganizationPanel>

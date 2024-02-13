@@ -283,7 +283,7 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 		cypher += `org.description = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.description = '' THEN $description ELSE org.description END,`
 	}
 	if data.UpdateHide {
-		cypher += `org.hide = CASE WHEN $overwrite=true OR (org.sourceOfTruth=$source AND $hide = false) THEN $hide ELSE org.hide END,`
+		cypher += `org.hide = CASE WHEN $overwrite=true OR $hide = false THEN $hide ELSE org.hide END,`
 	}
 	if data.UpdateIsCustomer {
 		cypher += `org.isCustomer = CASE WHEN $overwrite=true OR (org.sourceOfTruth=$source AND $isCustomer = true) THEN $isCustomer ELSE org.isCustomer END,`
@@ -425,7 +425,8 @@ func (r *organizationWriteRepository) SetVisibility(ctx context.Context, tenant,
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.Bool("hide", hide))
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
+			WHERE org:Organization_%s
 		 SET	org.hide = $hide,
 				org.updatedAt = $now`, tenant)
 	params := map[string]any{
@@ -445,7 +446,7 @@ func (r *organizationWriteRepository) SetVisibility(ctx context.Context, tenant,
 }
 
 func (r *organizationWriteRepository) UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId, touchpointType string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.SetVisibility")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateLastTouchpoint")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId), log.String("touchpointId", touchpointId), log.Object("touchpointAt", touchpointAt))

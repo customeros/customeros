@@ -145,7 +145,7 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 		}
 	}
 	if err != nil {
-		zap.L().Sugar().Fatalf("(VerifyConnectivity) Failed to verify connectivity: %s", err.Error())
+		zap.L().Sugar().Fatalf("(VerifyConnectivity) Failed to verify connectivity after all attempts: %s", err.Error())
 	}
 	return nil
 }
@@ -588,17 +588,20 @@ func ExecuteQueryInTx(ctx context.Context, tx neo4j.ManagedTransaction, query st
 	return err
 }
 
-func ExecuteQuery(ctx context.Context, driver neo4j.DriverWithContext, database, cypher string, params map[string]any) (*neo4j.EagerResult, error) {
+func ExecuteQuery(ctx context.Context, driver neo4j.DriverWithContext, database, cypher string, params map[string]any, traceError func(err error)) (*neo4j.EagerResult, error) {
 	sugarLogger := zap.L().With(zap.String("database", database)).Sugar()
 	sugarLogger.Infof("(ExecuteQuery): %s", cypher)
 
 	if err := ctx.Err(); errors.Is(err, context.Canceled) {
+		traceError(err)
 		sugarLogger.Errorf("(newNeo4 - ExecuteQuery) Context is cancelled by calling the cancel function: %s", err.Error())
 		panic(err)
 	} else if errors.Is(err, context.DeadlineExceeded) {
+		traceError(err)
 		sugarLogger.Errorf("(newNeo4 - ExecuteQuery) Context is cancelled by deadline exceeded: %s", err.Error())
 		panic(err)
 	} else if err != nil {
+		traceError(err)
 		sugarLogger.Errorf("(newNeo4 - ExecuteQuery) Context is cancelled by another error: %s", err.Error())
 		panic(err)
 	}

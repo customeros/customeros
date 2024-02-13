@@ -1,4 +1,5 @@
 import { SelectOption } from '@shared/types/SelectOptions';
+import { UpdateContractMutationVariables } from '@organization/src/graphql/updateContract.generated';
 import {
   ContractUpdateInput,
   ContractRenewalCycle,
@@ -80,25 +81,13 @@ export class ContractDTO implements TimeToRenewalForm {
   }
 
   static toPayload(
-    data: TimeToRenewalForm,
-  ): Omit<ContractUpdateInput, 'contractId'> {
+    data: Partial<ContractUpdateInput> & { contractId: string },
+  ): UpdateContractMutationVariables {
     return {
-      endedAt: data?.endedAt,
-      invoicingStartDate: data?.invoicingStartDate,
-      serviceStartedAt: data?.serviceStartedAt,
-      billingCycle: data?.billingCycle?.value,
-      renewalCycle:
-        data?.renewalCycle?.value === 'MULTI_YEAR'
-          ? ContractRenewalCycle.AnnualRenewal
-          : data?.renewalCycle?.value,
-      name: data?.name,
-      contractUrl: data?.contractUrl,
-      renewalPeriods:
-        data?.renewalCycle?.value === 'MULTI_YEAR'
-          ? parseInt(data?.renewalPeriods || '2')
-          : data?.renewalPeriods
-          ? parseInt(data?.renewalPeriods)
-          : undefined,
+      input: {
+        patch: true,
+        ...data,
+      },
     };
   }
 }

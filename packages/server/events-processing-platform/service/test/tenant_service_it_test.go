@@ -51,6 +51,13 @@ func TestTenantService_AddBillingProfile(t *testing.T) {
 		InternationalPaymentsBankName:     "internationalPaymentsBankName",
 		InternationalPaymentsBankAddress:  "internationalPaymentsBankAddress",
 		InternationalPaymentsInstructions: "internationalPaymentsInstructions",
+		VatNumber:                         "vatNumber",
+		SendInvoicesFrom:                  "sendInvoicesFrom",
+		CanPayWithCard:                    true,
+		CanPayWithDirectDebitSEPA:         true,
+		CanPayWithDirectDebitACH:          true,
+		CanPayWithDirectDebitBacs:         true,
+		CanPayWithPigeon:                  true,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -91,6 +98,13 @@ func TestTenantService_AddBillingProfile(t *testing.T) {
 	require.Equal(t, "internationalPaymentsBankName", eventData.InternationalPaymentsBankName)
 	require.Equal(t, "internationalPaymentsBankAddress", eventData.InternationalPaymentsBankAddress)
 	require.Equal(t, "internationalPaymentsInstructions", eventData.InternationalPaymentsInstructions)
+	require.Equal(t, "vatNumber", eventData.VatNumber)
+	require.Equal(t, "sendInvoicesFrom", eventData.SendInvoicesFrom)
+	require.Equal(t, true, eventData.CanPayWithCard)
+	require.Equal(t, true, eventData.CanPayWithDirectDebitSEPA)
+	require.Equal(t, true, eventData.CanPayWithDirectDebitACH)
+	require.Equal(t, true, eventData.CanPayWithDirectDebitBacs)
+	require.Equal(t, true, eventData.CanPayWithPigeon)
 	require.Equal(t, "app", eventData.SourceFields.AppSource)
 	require.Equal(t, "source", eventData.SourceFields.Source)
 	require.Equal(t, "source", eventData.SourceFields.SourceOfTruth)
@@ -127,6 +141,13 @@ func TestTenantService_UpdateBillingProfile(t *testing.T) {
 		Zip:                           "zip",
 		DomesticPaymentsBankInfo:      "domesticPaymentsBankInfo",
 		InternationalPaymentsBankInfo: "internationalPaymentsBankInfo",
+		VatNumber:                     "vatNumber",
+		SendInvoicesFrom:              "sendInvoicesFrom",
+		CanPayWithCard:                true,
+		CanPayWithDirectDebitSEPA:     true,
+		CanPayWithDirectDebitACH:      true,
+		CanPayWithDirectDebitBacs:     true,
+		CanPayWithPigeon:              true,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -159,6 +180,13 @@ func TestTenantService_UpdateBillingProfile(t *testing.T) {
 	require.Equal(t, "legalName", eventData.LegalName)
 	require.Equal(t, "domesticPaymentsBankInfo", eventData.DomesticPaymentsBankInfo)
 	require.Equal(t, "internationalPaymentsBankInfo", eventData.InternationalPaymentsBankInfo)
+	require.Equal(t, "vatNumber", eventData.VatNumber)
+	require.Equal(t, "sendInvoicesFrom", eventData.SendInvoicesFrom)
+	require.Equal(t, true, eventData.CanPayWithCard)
+	require.Equal(t, true, eventData.CanPayWithDirectDebitSEPA)
+	require.Equal(t, true, eventData.CanPayWithDirectDebitACH)
+	require.Equal(t, true, eventData.CanPayWithDirectDebitBacs)
+	require.Equal(t, true, eventData.CanPayWithPigeon)
 	require.Equal(t, 0, len(eventData.FieldsMask))
 }
 

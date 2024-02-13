@@ -4,6 +4,7 @@ query organizationOnboardingPlans($organizationId: ID!) {
     name
     retired
     masterPlanId
+    createdAt
     milestones {
       id
       name
@@ -11,6 +12,7 @@ query organizationOnboardingPlans($organizationId: ID!) {
       dueDate
       optional
       items {
+        uuid
         status
         text
         updatedAt

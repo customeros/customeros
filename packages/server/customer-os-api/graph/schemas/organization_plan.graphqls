@@ -102,6 +102,7 @@ type OrganizationPlanMilestoneItem {
     status: OnboardingPlanMilestoneItemStatus!
     updatedAt: Time!
     text: String!
+    uuid: ID!
 }
 
 input OrganizationPlanInput {
@@ -134,6 +135,7 @@ input OrganizationPlanMilestoneItemInput {
     status: OnboardingPlanMilestoneItemStatus!
     updatedAt: Time!
     text: String!
+    uuid: ID
 }
 
 input OrganizationPlanMilestoneUpdateInput {

@@ -27,6 +27,8 @@ type InvoiceEntity struct {
 	Status                        enum.InvoiceStatus
 	Note                          string
 	PaymentDetails                PaymentDetails
+	OffCycle                      bool
+	Postpaid                      bool
 
 	Source        DataSource
 	SourceOfTruth DataSource

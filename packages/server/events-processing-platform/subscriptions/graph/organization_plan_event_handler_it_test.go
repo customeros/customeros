@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
+	orgmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
@@ -27,9 +28,16 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 
 	// prepare neo4j data
 	timeNow := utils.Now()
+	so := int64(0)
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "test org",
+		OnboardingDetails: neo4jentity.OnboardingDetails{
+			Status:       orgmodel.NotApplicable.String(),
+			UpdatedAt:    &timeNow,
+			Comments:     "",
+			SortingOrder: &so,
+		},
 	})
 	mpid := neo4jtest.CreateMasterPlan(ctx, testDatabase.Driver, tenantName, neo4jentity.MasterPlanEntity{
 		Source:        constants.SourceOpenline,
@@ -104,6 +112,19 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 	createdMilestones := neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "HAS_MILESTONE")
 	// should be 1 => 1 master plan milestone + 0 org plan milestone
 	require.Equal(t, 1, createdMilestones)
+
+	// double check there is only one organization plan created
+	organizationPlansCount := neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "ORGANIZATION_PLAN_BELONGS_TO_ORGANIZATION")
+	require.Equal(t, 1, organizationPlansCount)
+	opForOrgNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan+"_"+tenantName)
+	require.Nil(t, err)
+	require.Len(t, opForOrgNodes, 1)
+
+	// Check onboarding status updated
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganization, orgId)
+	require.Nil(t, err)
+	org := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
+	require.Equal(t, orgmodel.NotStarted.String(), org.OnboardingDetails.Status)
 }
 
 func TestOrganizationPlanEventHandler_OnCreateMilestone(t *testing.T) {
@@ -201,6 +222,7 @@ func TestOrganizationPlanEventHandler_OnCreateMilestone(t *testing.T) {
 		require.Equal(t, model.TaskNotDone.String(), item.Status)
 		txt := fmt.Sprintf("item%d", i+1)
 		require.Equal(t, txt, item.Text)
+		require.NotEqual(t, "", item.Uuid) // have *some* uuid
 	}
 }
 
@@ -328,7 +350,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 		Retired:       false,
 		Order:         0,
 		DueDate:       timeNow.Add(time.Hour * 24),
-		Items:         []neo4jentity.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskNotDone.String(), UpdatedAt: timeNow}, {Text: "item2", Status: model.TaskNotDone.String(), UpdatedAt: timeNow}},
+		Items:         []neo4jentity.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskNotDone.String(), UpdatedAt: timeNow, Uuid: "item1"}, {Text: "item2", Status: model.TaskNotDone.String(), UpdatedAt: timeNow, Uuid: "item2"}},
 		Optional:      false,
 		StatusDetails: neo4jentity.OrganizationPlanMilestoneStatusDetails{
 			Status:    model.MilestoneNotStarted.String(),
@@ -358,7 +380,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 		milestoneId,
 		"new name",
 		10,
-		[]model.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskDone.String(), UpdatedAt: updateTime}, {Text: "item2Change", Status: model.TaskNotDone.String(), UpdatedAt: updateTime}},
+		[]model.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskDone.String(), UpdatedAt: updateTime, Uuid: "item1"}, {Text: "item2Change", Status: model.TaskNotDone.String(), UpdatedAt: updateTime, Uuid: "item2"}},
 		[]string{event.FieldMaskName, event.FieldMaskOptional, event.FieldMaskItems, event.FieldMaskDueDate, event.FieldMaskOrder, event.FieldMaskStatusDetails},
 		true,  // optional
 		false, // adhoc
@@ -402,15 +424,23 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 		if i == 0 {
 			require.Equal(t, model.TaskDone.String(), item.Status)
 			require.Equal(t, "item1", item.Text)
+			require.Equal(t, "item1", item.Uuid)
 		} else {
 			require.Equal(t, model.TaskNotDone.String(), item.Status)
 			require.Equal(t, "item2Change", item.Text)
+			require.Equal(t, "item2", item.Uuid)
 		}
 	}
 	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan, opid)
 	require.Nil(t, err)
 	op := neo4jmapper.MapDbNodeToOrganizationPlanEntity(organizationPlanDbNode)
 	require.Equal(t, model.OnTrack.String(), op.StatusDetails.Status) // automatic update
+
+	// Check onboarding status updated
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganization, orgId)
+	require.Nil(t, err)
+	org := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
+	require.Equal(t, orgmodel.OnTrack.String(), org.OnboardingDetails.Status)
 }
 
 func TestOrganizationPlanEventHandler_OnReorderMilestones(t *testing.T) {
@@ -455,7 +485,7 @@ func TestOrganizationPlanEventHandler_OnReorderMilestones(t *testing.T) {
 		Retired:       false,
 		Order:         0,
 		DueDate:       timeNow.Add(time.Hour * 24),
-		Items:         []neo4jentity.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskNotDone.String(), UpdatedAt: timeNow}, {Text: "item2", Status: model.TaskNotDone.String(), UpdatedAt: timeNow}},
+		Items:         []neo4jentity.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskNotDone.String(), UpdatedAt: timeNow, Uuid: "item1"}, {Text: "item2", Status: model.TaskNotDone.String(), UpdatedAt: timeNow, Uuid: "item2"}},
 		Optional:      false,
 		StatusDetails: neo4jentity.OrganizationPlanMilestoneStatusDetails{
 			Status:    model.MilestoneNotStarted.String(),
@@ -473,7 +503,7 @@ func TestOrganizationPlanEventHandler_OnReorderMilestones(t *testing.T) {
 		Retired:       false,
 		Order:         1,
 		DueDate:       timeNow.Add(time.Hour * 24),
-		Items:         []neo4jentity.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskNotDone.String(), UpdatedAt: timeNow}, {Text: "item2", Status: model.TaskNotDone.String(), UpdatedAt: timeNow}},
+		Items:         []neo4jentity.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskNotDone.String(), UpdatedAt: timeNow, Uuid: "item1"}, {Text: "item2", Status: model.TaskNotDone.String(), UpdatedAt: timeNow, Uuid: "item2"}},
 		Optional:      false,
 		StatusDetails: neo4jentity.OrganizationPlanMilestoneStatusDetails{
 			Status:    model.MilestoneNotStarted.String(),
@@ -574,7 +604,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneLate(t *testing.T) {
 		Retired:       false,
 		Order:         0,
 		DueDate:       timeNow.Add(time.Hour * 24),
-		Items:         []neo4jentity.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskNotDone.String(), UpdatedAt: timeNow}, {Text: "item2", Status: model.TaskNotDone.String(), UpdatedAt: timeNow}},
+		Items:         []neo4jentity.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskNotDone.String(), UpdatedAt: timeNow, Uuid: "item1"}, {Text: "item2", Status: model.TaskNotDone.String(), UpdatedAt: timeNow, Uuid: "item2"}},
 		Optional:      false,
 		StatusDetails: neo4jentity.OrganizationPlanMilestoneStatusDetails{
 			Status:    model.MilestoneNotStarted.String(),
@@ -604,7 +634,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneLate(t *testing.T) {
 		milestoneId,
 		"new name",
 		10,
-		[]model.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskDone.String(), UpdatedAt: lateUpdateTime}, {Text: "item2Change", Status: model.TaskNotDone.String(), UpdatedAt: lateUpdateTime}},
+		[]model.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskDone.String(), UpdatedAt: lateUpdateTime, Uuid: "item1"}, {Text: "item2Change", Status: model.TaskNotDone.String(), UpdatedAt: lateUpdateTime, Uuid: "item2"}},
 		[]string{event.FieldMaskName, event.FieldMaskOptional, event.FieldMaskItems, event.FieldMaskOrder, event.FieldMaskStatusDetails},
 		true,  // optional
 		false, // adhoc
@@ -648,15 +678,23 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneLate(t *testing.T) {
 		if i == 0 {
 			require.Equal(t, model.TaskDone.String(), item.Status)
 			require.Equal(t, "item1", item.Text)
+			require.Equal(t, "item1", item.Uuid)
 		} else {
 			require.Equal(t, model.TaskNotDone.String(), item.Status)
 			require.Equal(t, "item2Change", item.Text)
+			require.Equal(t, "item2", item.Uuid)
 		}
 	}
 	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan, opid)
 	require.Nil(t, err)
 	op := neo4jmapper.MapDbNodeToOrganizationPlanEntity(organizationPlanDbNode)
 	require.Equal(t, model.Late.String(), op.StatusDetails.Status) // automatic update
+
+	// Check onboarding status updated
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganization, orgId)
+	require.Nil(t, err)
+	org := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
+	require.Equal(t, orgmodel.Late.String(), org.OnboardingDetails.Status)
 }
 
 func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T) {
@@ -701,7 +739,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T)
 		Retired:       false,
 		Order:         0,
 		DueDate:       timeNow.Add(time.Hour * 24),
-		Items:         []neo4jentity.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskNotDone.String(), UpdatedAt: timeNow}, {Text: "item2", Status: model.TaskNotDone.String(), UpdatedAt: timeNow}},
+		Items:         []neo4jentity.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskNotDone.String(), UpdatedAt: timeNow, Uuid: "item1"}, {Text: "item2", Status: model.TaskNotDone.String(), UpdatedAt: timeNow, Uuid: "item2"}},
 		Optional:      false,
 		StatusDetails: neo4jentity.OrganizationPlanMilestoneStatusDetails{
 			Status:    model.MilestoneNotStarted.String(),
@@ -731,7 +769,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T)
 		milestoneId,
 		"new name",
 		10,
-		[]model.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskDone.String(), UpdatedAt: lateUpdateTime}, {Text: "item2Change", Status: model.TaskDoneLate.String(), UpdatedAt: lateUpdateTime}},
+		[]model.OrganizationPlanMilestoneItem{{Text: "item1", Status: model.TaskDone.String(), UpdatedAt: lateUpdateTime, Uuid: "item1"}, {Text: "item2Change", Status: model.TaskDoneLate.String(), UpdatedAt: lateUpdateTime, Uuid: "item2"}},
 		[]string{event.FieldMaskName, event.FieldMaskOptional, event.FieldMaskItems, event.FieldMaskOrder, event.FieldMaskStatusDetails},
 		true,  // optional
 		false, // adhoc
@@ -771,13 +809,21 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T)
 		if i == 0 {
 			require.Equal(t, model.TaskDone.String(), item.Status)
 			require.Equal(t, "item1", item.Text)
+			require.Equal(t, "item1", item.Uuid)
 		} else {
 			require.Equal(t, model.TaskDoneLate.String(), item.Status)
 			require.Equal(t, "item2Change", item.Text)
+			require.Equal(t, "item2", item.Uuid)
 		}
 	}
 	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan, opid)
 	require.Nil(t, err)
 	op := neo4jmapper.MapDbNodeToOrganizationPlanEntity(organizationPlanDbNode)
 	require.Equal(t, model.DoneLate.String(), op.StatusDetails.Status) // automatic update
+
+	// Check onboarding status updated
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganization, orgId)
+	require.Nil(t, err)
+	org := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
+	require.Equal(t, orgmodel.Done.String(), org.OnboardingDetails.Status)
 }

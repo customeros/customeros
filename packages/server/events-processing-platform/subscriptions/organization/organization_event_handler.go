@@ -3,6 +3,9 @@ package organization
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
@@ -10,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	"strings"
 
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
@@ -198,6 +200,15 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 		fieldsMask = append(fieldsMask, model.FieldMaskWebsite)
 	}
 
+	// add fields to fields mask
+	fieldsMask = *h.addFieldMasks(&model.OrganizationDataFields{
+		Employees:          result.CompanySize,
+		YearFounded:        &result.YearFounded,
+		Headquarters:       result.HeadquartersLocation,
+		EmployeeGrowthRate: result.EmployeeGrowthRate,
+		LogoUrl:            result.LogoUrl,
+	}, fieldsMask)
+
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	updateGrpcRequest := organizationpb.UpdateOrganizationGrpcRequest{
 		Tenant:         tenant,
@@ -250,23 +261,23 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 	return nil
 }
 
-func (h *organizationEventHandler) addFieldMasks(orgFields *model.OrganizationDataFields, fieldMasks *[]string) *[]string {
+func (h *organizationEventHandler) addFieldMasks(orgFields *model.OrganizationDataFields, fieldMasks []string) *[]string {
 	if orgFields.Employees != 0 {
-		*fieldMasks = append(*fieldMasks, model.FieldMaskEmployees)
+		fieldMasks = append(fieldMasks, model.FieldMaskEmployees)
 	}
 	if *orgFields.YearFounded != 0 {
-		*fieldMasks = append(*fieldMasks, model.FieldMaskYearFounded)
+		fieldMasks = append(fieldMasks, model.FieldMaskYearFounded)
 	}
 	if orgFields.Headquarters != "" {
-		*fieldMasks = append(*fieldMasks, model.FieldMaskHeadquarters)
+		fieldMasks = append(fieldMasks, model.FieldMaskHeadquarters)
 	}
 	if orgFields.EmployeeGrowthRate != "" {
-		*fieldMasks = append(*fieldMasks, model.FieldMaskEmployeeGrowthRate)
+		fieldMasks = append(fieldMasks, model.FieldMaskEmployeeGrowthRate)
 	}
 	if orgFields.LogoUrl != "" {
-		*fieldMasks = append(*fieldMasks, model.FieldMaskLogoUrl)
+		fieldMasks = append(fieldMasks, model.FieldMaskLogoUrl)
 	}
-	return fieldMasks
+	return &fieldMasks
 }
 
 func (h *organizationEventHandler) updateOrganizationNameIfEmpty(ctx context.Context, tenant, url string, organization *neo4jentity.OrganizationEntity, span opentracing.Span) {
@@ -323,9 +334,20 @@ func (h *organizationEventHandler) AdjustNewOrganizationFields(ctx context.Conte
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
 	market := h.mapMarketValue(eventData.Market)
 	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
+
+	// wait for organization to be created in neo4j before updating it
+	for attempt := 1; attempt <= constants.MaxRetriesCheckDataInNeo4j; attempt++ {
+		exists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization)
+		if err == nil && exists {
+			break
+		}
+		time.Sleep(utils.BackOffExponentialDelay(attempt))
+	}
 
 	if eventData.Market != market || eventData.Industry != industry {
 		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry, span)

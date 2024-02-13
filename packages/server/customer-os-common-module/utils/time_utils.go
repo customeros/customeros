@@ -161,6 +161,10 @@ func StartOfDayInUTC(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
 }
 
+func EndOfDayInUTC(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 999999999, time.UTC)
+}
+
 func AddOneMonthFallbackToLastDayOfMonth(date time.Time) time.Time {
 	// Calculate the next month
 	nextMonth := date.AddDate(0, 1, 0)

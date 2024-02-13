@@ -79,7 +79,6 @@ export const InvoicePreviewModal = () => {
       <Card m={6} mt={3} p='4' boxShadow='xs' variant='outline' w={600}>
         <CardBody as={Flex} p='0' align='center'>
           <InvoicePreviewModalContent
-            id={modalContent?.id ?? ''}
             data={data}
             isFetching={isFetching}
             isError={isError}

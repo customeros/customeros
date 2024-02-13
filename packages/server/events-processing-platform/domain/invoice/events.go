@@ -11,6 +11,7 @@ import (
 
 const (
 	InvoiceCreateForContractV1 = "V1_INVOICE_CREATE_FOR_CONTRACT"
+	InvoiceFillRequestedV1     = "V1_INVOICE_FILL_REQUESTED"
 	InvoiceFillV1              = "V1_INVOICE_FILL"
 	InvoicePdfRequestedV1      = "V1_INVOICE_PDF_REQUESTED"
 	InvoicePdfGeneratedV1      = "V1_INVOICE_PDF_GENERATED"
@@ -18,6 +19,7 @@ const (
 	InvoiceUpdateV1            = "V1_INVOICE_UPDATE"
 	InvoicePaidV1              = "V1_INVOICE_PAID"
 	InvoicePayNotificationV1   = "V1_INVOICE_PAY_NOTIFICATION"
+	InvoiceDeleteV1            = "V1_INVOICE_DELETE"
 )
 
 const (

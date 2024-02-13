@@ -32,6 +32,8 @@ message NewInvoiceForContractRequest {
   string currency = 11; // mandatory
   BillingCycle billingCycle = 12;
   string note = 13;
+  bool offCycle = 14;
+  bool postpaid = 15;
 }
 
 message FillInvoiceRequest {
@@ -40,16 +42,17 @@ message FillInvoiceRequest {
   string invoiceId = 3;
   double amount = 4;
   double vat = 5;
-  double total = 6;
-  repeated InvoiceLine invoiceLines = 7;
-  google.protobuf.Timestamp updatedAt = 8;
-  string appSource = 9;
-  InvoiceStatus status = 10;
-  string Note = 11;
-  string DomesticPaymentsBankInfo = 12;
-  string InternationalPaymentsBankInfo = 13;
-  FillInvoiceCustomer Customer = 14;
-  FillInvoiceProvider Provider = 15;
+  double subtotal = 6 [deprecated = true];
+  double total = 7;
+  repeated InvoiceLine invoiceLines = 8;
+  google.protobuf.Timestamp updatedAt = 9;
+  string appSource = 10;
+  InvoiceStatus status = 11;
+  string Note = 12;
+  string DomesticPaymentsBankInfo = 13;
+  string InternationalPaymentsBankInfo = 14;
+  FillInvoiceCustomer Customer = 15;
+  FillInvoiceProvider Provider = 16;
 }
 
 message FillInvoiceCustomer {
@@ -145,6 +148,21 @@ message PayInvoiceNotificationRequest {
   string appSource = 4;
 }
 
+message RequestFillInvoiceRequest {
+  string tenant = 1;
+  string invoiceId = 2;
+  string contractId = 3;
+  string loggedInUserId = 4;
+  string appSource = 5;
+}
+
+message PermanentlyDeleteDraftInvoiceRequest {
+  string tenant = 1;
+  string invoiceId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
 message InvoiceIdResponse {
   string id = 1;
 }
@@ -158,4 +176,6 @@ service InvoiceGrpcService {
   rpc SimulateInvoice(SimulateInvoiceRequest) returns (InvoiceIdResponse);
   rpc UpdateInvoice(UpdateInvoiceRequest) returns (InvoiceIdResponse);
   rpc PayInvoiceNotification(PayInvoiceNotificationRequest) returns (InvoiceIdResponse);
+  rpc RequestFillInvoice(RequestFillInvoiceRequest) returns (InvoiceIdResponse);
+  rpc PermanentlyDeleteDraftInvoice(PermanentlyDeleteDraftInvoiceRequest) returns (InvoiceIdResponse);
 }

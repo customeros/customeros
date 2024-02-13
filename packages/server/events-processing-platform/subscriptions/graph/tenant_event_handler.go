@@ -67,6 +67,13 @@ func (h *TenantEventHandler) OnAddBillingProfileV1(ctx context.Context, evt even
 		InternationalPaymentsBankName:     eventData.InternationalPaymentsBankName,
 		InternationalPaymentsBankAddress:  eventData.InternationalPaymentsBankAddress,
 		InternationalPaymentsInstructions: eventData.InternationalPaymentsInstructions,
+		VatNumber:                         eventData.VatNumber,
+		SendInvoicesFrom:                  eventData.SendInvoicesFrom,
+		CanPayWithCard:                    eventData.CanPayWithCard,
+		CanPayWithDirectDebitSEPA:         eventData.CanPayWithDirectDebitSEPA,
+		CanPayWithDirectDebitACH:          eventData.CanPayWithDirectDebitACH,
+		CanPayWithDirectDebitBacs:         eventData.CanPayWithDirectDebitBacs,
+		CanPayWithPigeon:                  eventData.CanPayWithPigeon,
 	}
 	err := h.repositories.Neo4jRepositories.TenantWriteRepository.CreateTenantBillingProfile(ctx, tenantName, data)
 	if err != nil {
@@ -104,6 +111,13 @@ func (h *TenantEventHandler) OnUpdateBillingProfileV1(ctx context.Context, evt e
 		Zip:                                 eventData.Zip,
 		DomesticPaymentsBankInfo:            eventData.DomesticPaymentsBankInfo,
 		InternationalPaymentsBankInfo:       eventData.InternationalPaymentsBankInfo,
+		VatNumber:                           eventData.VatNumber,
+		SendInvoicesFrom:                    eventData.SendInvoicesFrom,
+		CanPayWithCard:                      eventData.CanPayWithCard,
+		CanPayWithDirectDebitSEPA:           eventData.CanPayWithDirectDebitSEPA,
+		CanPayWithDirectDebitACH:            eventData.CanPayWithDirectDebitACH,
+		CanPayWithDirectDebitBacs:           eventData.CanPayWithDirectDebitBacs,
+		CanPayWithPigeon:                    eventData.CanPayWithPigeon,
 		UpdateEmail:                         eventData.UpdateEmail(),
 		UpdatePhone:                         eventData.UpdatePhone(),
 		UpdateAddressLine1:                  eventData.UpdateAddressLine1(),
@@ -115,6 +129,13 @@ func (h *TenantEventHandler) OnUpdateBillingProfileV1(ctx context.Context, evt e
 		UpdateLegalName:                     eventData.UpdateLegalName(),
 		UpdateDomesticPaymentsBankInfo:      eventData.UpdateDomesticPaymentsBankInfo(),
 		UpdateInternationalPaymentsBankInfo: eventData.UpdateInternationalPaymentsBankInfo(),
+		UpdateVatNumber:                     eventData.UpdateVatNumber(),
+		UpdateSendInvoicesFrom:              eventData.UpdateSendInvoicesFrom(),
+		UpdateCanPayWithCard:                eventData.UpdateCanPayWithCard(),
+		UpdateCanPayWithDirectDebitSEPA:     eventData.UpdateCanPayWithDirectDebitSEPA(),
+		UpdateCanPayWithDirectDebitACH:      eventData.UpdateCanPayWithDirectDebitACH(),
+		UpdateCanPayWithDirectDebitBacs:     eventData.UpdateCanPayWithDirectDebitBacs(),
+		UpdateCanPayWithPigeon:              eventData.UpdateCanPayWithPigeon(),
 	}
 	err := h.repositories.Neo4jRepositories.TenantWriteRepository.UpdateTenantBillingProfile(ctx, tenantName, data)
 	if err != nil {
@@ -139,13 +160,15 @@ func (h *TenantEventHandler) OnUpdateTenantSettingsV1(ctx context.Context, evt e
 	span.SetTag(tracing.SpanTagEntityId, tenantName)
 
 	data := neo4jrepository.TenantSettingsFields{
-		UpdatedAt:              eventData.UpdatedAt,
-		LogoUrl:                eventData.LogoUrl,
-		InvoicingEnabled:       eventData.InvoicingEnabled,
-		DefaultCurrency:        neo4jenum.DecodeCurrency(eventData.DefaultCurrency),
-		UpdateLogoUrl:          eventData.UpdateLogoUrl(),
-		UpdateInvoicingEnabled: eventData.UpdateInvoicingEnabled(),
-		UpdateDefaultCurrency:  eventData.UpdateDefaultCurrency(),
+		UpdatedAt:               eventData.UpdatedAt,
+		LogoUrl:                 eventData.LogoUrl,
+		InvoicingEnabled:        eventData.InvoicingEnabled,
+		InvoicingPostpaid:       eventData.InvoicingPostpaid,
+		DefaultCurrency:         neo4jenum.DecodeCurrency(eventData.DefaultCurrency),
+		UpdateLogoUrl:           eventData.UpdateLogoUrl(),
+		UpdateInvoicingEnabled:  eventData.UpdateInvoicingEnabled(),
+		UpdateDefaultCurrency:   eventData.UpdateDefaultCurrency(),
+		UpdateInvoicingPostpaid: eventData.UpdateInvoicingPostpaid(),
 	}
 	err := h.repositories.Neo4jRepositories.TenantWriteRepository.UpdateTenantSettings(ctx, tenantName, data)
 	if err != nil {

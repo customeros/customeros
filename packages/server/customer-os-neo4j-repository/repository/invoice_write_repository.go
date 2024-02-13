@@ -17,7 +17,8 @@ type InvoiceCreateFields struct {
 	ContractId      string                  `json:"contractId"`
 	Currency        neo4jenum.Currency      `json:"currency"`
 	DryRun          bool                    `json:"dryRun"`
-	InvoiceNumber   string                  `json:"invoiceNumber"`
+	OffCycle        bool                    `json:"offCycle"`
+	Postpaid        bool                    `json:"postpaid"`
 	PeriodStartDate time.Time               `json:"periodStartDate"`
 	PeriodEndDate   time.Time               `json:"periodEndDate"`
 	CreatedAt       time.Time               `json:"createdAt"`
@@ -78,6 +79,7 @@ type InvoiceWriteRepository interface {
 	MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
 	SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	SetPayInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
+	DeleteInvoice(ctx context.Context, tenant, invoiceId string) error
 }
 
 type invoiceWriteRepository struct {
@@ -112,7 +114,8 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 								i.sourceOfTruth=$sourceOfTruth,
 								i.appSource=$appSource,
 								i.dryRun=$dryRun,
-								i.number=$number,
+								i.offCycle=$offCycle,
+								i.postpaid=$postpaid,
 								i.currency=$currency,
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
@@ -132,13 +135,14 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"sourceOfTruth": data.SourceFields.Source,
 		"appSource":     data.SourceFields.AppSource,
 		"dryRun":        data.DryRun,
-		"number":        data.InvoiceNumber,
+		"offCycle":      data.OffCycle,
 		"currency":      data.Currency.String(),
 		"periodStart":   data.PeriodStartDate,
 		"periodEnd":     data.PeriodEndDate,
 		"billingCycle":  data.BillingCycle.String(),
 		"status":        data.Status.String(),
 		"note":          data.Note,
+		"postpaid":      data.Postpaid,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -162,7 +166,6 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i:Invoice_%s,
 								i.currency=$currency,
 								i.dryRun=$dryRun,
-								i.number=$number,
 								i.currency=$currency,
 								i.periodStartDate=$periodStart,
 								i.periodEndDate=$periodEnd,
@@ -191,6 +194,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.providerAddressCountry=$providerAddressCountry
 							SET 
 								i.updatedAt=$updatedAt,
+								i.number=$number,
 								i.amount=$amount,
 								i.vat=$vat,
 								i.totalAmount=$totalAmount,
@@ -406,6 +410,30 @@ func (r *invoiceWriteRepository) SetPayInvoiceNotificationSentAt(ctx context.Con
 		"tenant":    tenant,
 		"invoiceId": invoiceId,
 		"now":       utils.Now(),
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *invoiceWriteRepository) DeleteInvoice(ctx context.Context, tenant, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.DeleteInvoice")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[r1:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})<-[r2:HAS_INVOICE]-(:Contract)
+							WHERE i:Invoice_%s
+							DELETE r1,r2,i`, tenant)
+	params := map[string]any{
+		"tenant":    tenant,
+		"invoiceId": invoiceId,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

@@ -10,7 +10,12 @@
     },
     {
       "name": "Check for nodes missing link with tenant",
-      "query": "MATCH (n:Organization|Contact|Email|PhoneNumber|Location|Tag|User|MergedContact|MergedOrganization|Issue|Workspace|EntityTemplate) where not (n)--(:Tenant) return count(n)"
+      "query": "WITH [\"Tenant\",\"InteractionSession\",\"JobRole\",\"Domain\",\"Social\",\"TimelineEvent\",\"CustomField\",\"AlternateOrganization\",\"Calendar\",\"ServiceLineItem\",\"Opportunity\",\"OrganizationPlanMilestone\",\"MasterPlanMilestone\",\"InvoiceLine\",\"Attachment\",\"Player\",\"AlternateContact\",\"TechnicalNode\",\"AlternateCustomField\",\"Comment\",\"AlternateUser\",\"Country\",\"State\",\"Meeting\"] as labels MATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) AND NOT (n)--(:Tenant)  RETURN count(n)"
+    },
+    {
+      "name": "Check for nodes missing mandatory links",
+      "query": "CALL {\n     MATCH (n:InvoiceLine) WHERE NOT (n)<-[:HAS_INVOICE_LINE]-(:Invoice) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:Invoice) WHERE NOT (n)<-[:HAS_INVOICE]-(:Contract) RETURN count(n) as cnt\n     UNION ALL\n     MATCH (n:ServiceLineItem) WHERE NOT (n)<-[:HAS_SERVICE]-(:Contract) RETURN count(n) as cnt\n} RETURN sum(cnt)",
+      "description": "Checks: 1 - Invoice line without invoice. 2 - Invoice without contract. 3 - Service line item without contract."
     },
     {
       "name": "Check organization nodes labels",
@@ -54,7 +59,7 @@
     },
     {
       "name": "Check orphan nodes",
-      "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain AND NOT n:TechnicalNode return count(n)"
+      "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain AND NOT n:TechnicalNode AND NOT n:Attachment return count(n)"
     },
     {
       "name": "Check emails not shared between users",
@@ -84,7 +89,7 @@
     },
     {
       "name": "Check source fields",
-      "query": "MATCH (n:User|Contact|Email|PhoneNumber|Organization|Issue|Comment|Contract|Opportunity|ServiceLineItem|MasterPlan|MasterPlanMilestone|BillingProfile) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
+      "query": "WITH [\"Tenant\",\"ExternalSystem\",\"Domain\",\"InteractionSession\",\"AlternateOrganization\",\"Action\",\"TenantSettings\",\"MergedOrganization\",\"AlternateContact\",\"TechnicalNode\",\"CustomField\",\"AlternateCustomField\",\"TenantMetadata\",\"AlternateUser\",\"Tag\",\"CustomFieldTemplate\",\"State\",\"Player\"] as labels\nMATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) \nWITH n \nWHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = ''\nRETURN count(n)"
     },
     {
       "name": "Check for comments without parent",
@@ -130,7 +135,7 @@
     },
     {
       "name": "Check contract and invoice link consistency",
-      "query": "CALL {\n    MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false AND date(coalesce(c.nextInvoiceDate, c.invoicingStartDate, datetime())) <= date(i.periodEndDate) RETURN count(i) as cnt\n    UNION ALL\n    MATCH (c:Contract) WHERE c.techInvoicingStartedAt IS NOT NULL WITH c OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice) WHERE i IS NULL RETURN count(c) as cnt\n} RETURN sum(cnt)",
+      "query": "CALL {\n    MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false AND date(coalesce(c.nextInvoiceDate, c.invoicingStartDate, datetime())) <= date(i.periodEndDate) RETURN count(i) as cnt\n    UNION ALL\n    MATCH (c:Contract) WHERE c.techInvoicingStartedAt IS NOT NULL WITH c OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false and i.createdAt > c.techInvoicingStartedAt-duration({hours: 1}) WITH i,c WHERE i IS NULL RETURN count(c) as cnt\n} RETURN sum(cnt)",
       "description": "Checks: 1 - Check that contract next invoice date is not before invoice period end date. 2 - Check that contract with techInvoicingStartedAt date has at least one invoice."
     },
     {

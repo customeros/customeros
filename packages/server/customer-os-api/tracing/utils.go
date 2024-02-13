@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	SpanTagTenant    = tracing.SpanTagTenant
 	SpanTagComponent = tracing.SpanTagComponent
 	SpanTagEntityId  = tracing.SpanTagEntityId
 )
@@ -74,11 +73,15 @@ func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
 func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {
 	tenant := common.GetTenantFromContext(ctx)
 	loggedInUserId := common.GetUserIdFromContext(ctx)
+	loggedInUserEmail := common.GetUserEmailFromContext(ctx)
 	if tenant != "" {
 		span.SetTag(tracing.SpanTagTenant, tenant)
 	}
 	if loggedInUserId != "" {
 		span.SetTag(tracing.SpanTagUserId, loggedInUserId)
+	}
+	if loggedInUserEmail != "" {
+		span.SetTag(tracing.SpanTagUserEmail, loggedInUserEmail)
 	}
 }
 

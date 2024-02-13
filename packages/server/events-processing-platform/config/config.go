@@ -118,14 +118,13 @@ type ContractSubscription struct {
 }
 
 type NotificationsSubscription struct {
-	Enabled           bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_ENABLED" envDefault:"true"`
-	GroupName         string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_GROUP_NAME" envDefault:"notifications-v2" validate:"required"`
-	PoolSize          int    `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
-	BufferSizeClient  uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
-	StartPosition     uint64 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_START_POSITION" envDefault:"0"`
-	IgnoreEvents      bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"true"`
-	RedirectUrl       string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_REDIRECT_URL" envDefault:"https://app.openline.dev"`
-	EmailTemplatePath string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_EMAIL_TEMPLATE_PATH" envDefault:"./email_templates"`
+	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_ENABLED" envDefault:"true"`
+	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_GROUP_NAME" envDefault:"notifications-v2" validate:"required"`
+	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
+	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
+	StartPosition    uint64 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_START_POSITION" envDefault:"0"`
+	IgnoreEvents     bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"true"`
+	RedirectUrl      string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_REDIRECT_URL" envDefault:"https://app.openline.dev"`
 }
 
 type InvoiceSubscription struct {
@@ -217,10 +216,6 @@ type Services struct {
 	}
 	Postmark struct {
 		ApiKey string `env:"POSTMARK_API_KEY,required" envDefault:"N/A"`
-	}
-	MJML struct {
-		ApplicationId string `env:"MJML_APPLICATION_ID,required" envDefault:""`
-		SecretKey     string `env:"MJML_SECRET_KEY,required" envDefault:""`
 	}
 	FileStoreApiConfig fsc.FileStoreApiConfig
 }

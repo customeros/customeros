@@ -387,8 +387,11 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.invoiceEventHandler.OnInvoicePdfGenerated(ctx, evt)
 	case invoiceevents.InvoiceUpdateV1:
 		return s.invoiceEventHandler.OnInvoiceUpdateV1(ctx, evt)
+	case invoiceevents.InvoiceDeleteV1:
+		return s.invoiceEventHandler.OnInvoiceDeleteV1(ctx, evt)
 	case invoiceevents.InvoicePdfRequestedV1,
 		invoiceevents.InvoicePaidV1,
+		invoiceevents.InvoiceFillRequestedV1,
 		invoiceevents.InvoicePayNotificationV1:
 		return nil // do nothing
 	case invoiceevents.InvoicePayV1:

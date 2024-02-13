@@ -370,22 +370,15 @@ type ContactTagInput struct {
 // Updates data fields associated with an existing customer record in customerOS.
 // **An `update` object.**
 type ContactUpdateInput struct {
-	// The unique ID associated with the contact in customerOS.
-	// **Required.**
-	ID string `json:"id"`
-	// The prefix associate with the contact in customerOS.
-	Prefix *string `json:"prefix,omitempty"`
-	// The first name of the contact in customerOS.
+	ID              string  `json:"id"`
+	Patch           *bool   `json:"patch,omitempty"`
 	FirstName       *string `json:"firstName,omitempty"`
+	LastName        *string `json:"lastName,omitempty"`
 	Name            *string `json:"name,omitempty"`
+	Prefix          *string `json:"prefix,omitempty"`
 	Description     *string `json:"description,omitempty"`
 	Timezone        *string `json:"timezone,omitempty"`
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
-	// The last name of the contact in customerOS.
-	LastName *string `json:"lastName,omitempty"`
-	Label    *string `json:"label,omitempty"`
-	// Id of the contact owner (user)
-	OwnerID *string `json:"ownerId,omitempty"`
 }
 
 // Specifies how many pages of contact information has been returned in the query response.
@@ -1034,6 +1027,7 @@ type Invoice struct {
 	Source                        DataSource       `json:"source"`
 	SourceOfTruth                 DataSource       `json:"sourceOfTruth"`
 	AppSource                     string           `json:"appSource"`
+	Organization                  *Organization    `json:"organization"`
 	DryRun                        bool             `json:"dryRun"`
 	Number                        string           `json:"number"`
 	PeriodStartDate               time.Time        `json:"periodStartDate"`
@@ -1041,6 +1035,7 @@ type Invoice struct {
 	DueDate                       time.Time        `json:"dueDate"`
 	Amount                        float64          `json:"amount"`
 	Vat                           float64          `json:"vat"`
+	SubtotalAmount                float64          `json:"subtotalAmount"`
 	TotalAmount                   float64          `json:"totalAmount"`
 	Currency                      string           `json:"currency"`
 	RepositoryFileID              string           `json:"repositoryFileId"`
@@ -1519,16 +1514,7 @@ func (this MeetingsPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
 
-type MilestoneItem struct {
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	Text      string    `json:"text"`
-}
-
-type MilestoneItemInput struct {
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	Text      string    `json:"text"`
+type Mutation struct {
 }
 
 type Note struct {
@@ -1761,18 +1747,18 @@ func (OrganizationParticipant) IsIssueParticipant() {}
 func (OrganizationParticipant) IsMeetingParticipant() {}
 
 type OrganizationPlan struct {
-	ID                string                       `json:"id"`
-	CreatedAt         time.Time                    `json:"createdAt"`
-	UpdatedAt         time.Time                    `json:"updatedAt"`
-	Name              string                       `json:"name"`
-	Source            DataSource                   `json:"source"`
-	SourceOfTruth     DataSource                   `json:"sourceOfTruth"`
-	AppSource         string                       `json:"appSource"`
-	Retired           bool                         `json:"retired"`
-	Milestones        []*OrganizationPlanMilestone `json:"milestones"`
-	RetiredMilestones []*OrganizationPlanMilestone `json:"retiredMilestones"`
-	StatusDetails     *StatusDetails               `json:"statusDetails"`
-	MasterPlanID      string                       `json:"masterPlanId"`
+	ID                string                         `json:"id"`
+	CreatedAt         time.Time                      `json:"createdAt"`
+	UpdatedAt         time.Time                      `json:"updatedAt"`
+	Name              string                         `json:"name"`
+	Source            DataSource                     `json:"source"`
+	SourceOfTruth     DataSource                     `json:"sourceOfTruth"`
+	AppSource         string                         `json:"appSource"`
+	Retired           bool                           `json:"retired"`
+	Milestones        []*OrganizationPlanMilestone   `json:"milestones"`
+	RetiredMilestones []*OrganizationPlanMilestone   `json:"retiredMilestones"`
+	StatusDetails     *OrganizationPlanStatusDetails `json:"statusDetails"`
+	MasterPlanID      string                         `json:"masterPlanId"`
 }
 
 func (OrganizationPlan) IsSourceFields()                   {}
@@ -1790,19 +1776,20 @@ type OrganizationPlanInput struct {
 }
 
 type OrganizationPlanMilestone struct {
-	ID            string           `json:"id"`
-	CreatedAt     time.Time        `json:"createdAt"`
-	UpdatedAt     time.Time        `json:"updatedAt"`
-	Name          string           `json:"name"`
-	Source        DataSource       `json:"source"`
-	SourceOfTruth DataSource       `json:"sourceOfTruth"`
-	AppSource     string           `json:"appSource"`
-	Order         int64            `json:"order"`
-	DueDate       time.Time        `json:"dueDate"`
-	Optional      bool             `json:"optional"`
-	Items         []*MilestoneItem `json:"items"`
-	Retired       bool             `json:"retired"`
-	StatusDetails *StatusDetails   `json:"statusDetails"`
+	ID            string                                  `json:"id"`
+	CreatedAt     time.Time                               `json:"createdAt"`
+	UpdatedAt     time.Time                               `json:"updatedAt"`
+	Name          string                                  `json:"name"`
+	Source        DataSource                              `json:"source"`
+	SourceOfTruth DataSource                              `json:"sourceOfTruth"`
+	AppSource     string                                  `json:"appSource"`
+	Order         int64                                   `json:"order"`
+	DueDate       time.Time                               `json:"dueDate"`
+	Optional      bool                                    `json:"optional"`
+	Items         []*OrganizationPlanMilestoneItem        `json:"items"`
+	Retired       bool                                    `json:"retired"`
+	StatusDetails *OrganizationPlanMilestoneStatusDetails `json:"statusDetails"`
+	Adhoc         bool                                    `json:"adhoc"`
 }
 
 func (OrganizationPlanMilestone) IsSourceFields()                   {}
@@ -1822,6 +1809,19 @@ type OrganizationPlanMilestoneInput struct {
 	Optional           bool      `json:"optional"`
 	Items              []string  `json:"items"`
 	OrganizationID     string    `json:"organizationId"`
+	Adhoc              bool      `json:"adhoc"`
+}
+
+type OrganizationPlanMilestoneItem struct {
+	Status    OnboardingPlanMilestoneItemStatus `json:"status"`
+	UpdatedAt time.Time                         `json:"updatedAt"`
+	Text      string                            `json:"text"`
+}
+
+type OrganizationPlanMilestoneItemInput struct {
+	Status    OnboardingPlanMilestoneItemStatus `json:"status"`
+	UpdatedAt time.Time                         `json:"updatedAt"`
+	Text      string                            `json:"text"`
 }
 
 type OrganizationPlanMilestoneReorderInput struct {
@@ -1830,26 +1830,51 @@ type OrganizationPlanMilestoneReorderInput struct {
 	OrderedIds         []string `json:"orderedIds"`
 }
 
+type OrganizationPlanMilestoneStatusDetails struct {
+	Status    OnboardingPlanMilestoneStatus `json:"status"`
+	UpdatedAt time.Time                     `json:"updatedAt"`
+	Text      string                        `json:"text"`
+}
+
+type OrganizationPlanMilestoneStatusDetailsInput struct {
+	Status    OnboardingPlanMilestoneStatus `json:"status"`
+	UpdatedAt time.Time                     `json:"updatedAt"`
+	Text      string                        `json:"text"`
+}
+
 type OrganizationPlanMilestoneUpdateInput struct {
-	OrganizationPlanID string                `json:"organizationPlanId"`
-	ID                 string                `json:"id"`
-	Name               *string               `json:"name,omitempty"`
-	Order              *int64                `json:"order,omitempty"`
-	DueDate            *time.Time            `json:"dueDate,omitempty"`
-	UpdatedAt          time.Time             `json:"updatedAt"`
-	Optional           *bool                 `json:"optional,omitempty"`
-	Retired            *bool                 `json:"retired,omitempty"`
-	Items              []*MilestoneItemInput `json:"items,omitempty"`
-	StatusDetails      *StatusDetailsInput   `json:"statusDetails,omitempty"`
-	OrganizationID     string                `json:"organizationId"`
+	OrganizationPlanID string                                       `json:"organizationPlanId"`
+	ID                 string                                       `json:"id"`
+	Name               *string                                      `json:"name,omitempty"`
+	Order              *int64                                       `json:"order,omitempty"`
+	DueDate            *time.Time                                   `json:"dueDate,omitempty"`
+	UpdatedAt          time.Time                                    `json:"updatedAt"`
+	Optional           *bool                                        `json:"optional,omitempty"`
+	Retired            *bool                                        `json:"retired,omitempty"`
+	Items              []*OrganizationPlanMilestoneItemInput        `json:"items,omitempty"`
+	StatusDetails      *OrganizationPlanMilestoneStatusDetailsInput `json:"statusDetails,omitempty"`
+	OrganizationID     string                                       `json:"organizationId"`
+	Adhoc              *bool                                        `json:"adhoc,omitempty"`
+}
+
+type OrganizationPlanStatusDetails struct {
+	Status    OnboardingPlanStatus `json:"status"`
+	UpdatedAt time.Time            `json:"updatedAt"`
+	Text      string               `json:"text"`
+}
+
+type OrganizationPlanStatusDetailsInput struct {
+	Status    OnboardingPlanStatus `json:"status"`
+	UpdatedAt time.Time            `json:"updatedAt"`
+	Text      string               `json:"text"`
 }
 
 type OrganizationPlanUpdateInput struct {
-	ID             string              `json:"id"`
-	Name           *string             `json:"name,omitempty"`
-	Retired        *bool               `json:"retired,omitempty"`
-	StatusDetails  *StatusDetailsInput `json:"statusDetails,omitempty"`
-	OrganizationID string              `json:"organizationId"`
+	ID             string                              `json:"id"`
+	Name           *string                             `json:"name,omitempty"`
+	Retired        *bool                               `json:"retired,omitempty"`
+	StatusDetails  *OrganizationPlanStatusDetailsInput `json:"statusDetails,omitempty"`
+	OrganizationID string                              `json:"organizationId"`
 }
 
 type OrganizationUpdateInput struct {
@@ -2009,6 +2034,9 @@ type PlayerUser struct {
 	Tenant  string `json:"tenant"`
 }
 
+type Query struct {
+}
+
 type RenewalRecord struct {
 	Organization *Organization `json:"organization"`
 	Contract     *Contract     `json:"contract"`
@@ -2064,6 +2092,7 @@ type ServiceLineItem struct {
 	AppSource     string            `json:"appSource"`
 	ExternalLinks []*ExternalSystem `json:"externalLinks"`
 	ParentID      string            `json:"parentId"`
+	VatRate       float64           `json:"vatRate"`
 }
 
 func (ServiceLineItem) IsNode()            {}
@@ -2081,6 +2110,7 @@ type ServiceLineItemBulkUpdateItem struct {
 	Billed                  *BilledType `json:"billed,omitempty"`
 	Price                   *float64    `json:"price,omitempty"`
 	Quantity                *int64      `json:"quantity,omitempty"`
+	VatRate                 *float64    `json:"vatRate,omitempty"`
 	Comments                *string     `json:"comments,omitempty"`
 	IsRetroactiveCorrection *bool       `json:"isRetroactiveCorrection,omitempty"`
 }
@@ -2096,6 +2126,7 @@ type ServiceLineItemInput struct {
 	Billed            *BilledType                   `json:"billed,omitempty"`
 	Price             *float64                      `json:"price,omitempty"`
 	Quantity          *int64                        `json:"quantity,omitempty"`
+	VatRate           *float64                      `json:"vatRate,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 	StartedAt         *time.Time                    `json:"startedAt,omitempty"`
@@ -2108,6 +2139,7 @@ type ServiceLineItemUpdateInput struct {
 	Billed                  *BilledType                   `json:"billed,omitempty"`
 	Price                   *float64                      `json:"price,omitempty"`
 	Quantity                *int64                        `json:"quantity,omitempty"`
+	VatRate                 *float64                      `json:"vatRate,omitempty"`
 	Comments                *string                       `json:"comments,omitempty"`
 	AppSource               *string                       `json:"appSource,omitempty"`
 	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
@@ -2156,18 +2188,6 @@ type State struct {
 	Country *Country `json:"country"`
 	Name    string   `json:"name"`
 	Code    string   `json:"code"`
-}
-
-type StatusDetails struct {
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	Text      string    `json:"text"`
-}
-
-type StatusDetailsInput struct {
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	Text      string    `json:"text"`
 }
 
 type SuggestedMergeOrganization struct {
@@ -3726,6 +3746,153 @@ func (e *MeetingStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e MeetingStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type OnboardingPlanMilestoneItemStatus string
+
+const (
+	OnboardingPlanMilestoneItemStatusNotDone     OnboardingPlanMilestoneItemStatus = "NOT_DONE"
+	OnboardingPlanMilestoneItemStatusSkipped     OnboardingPlanMilestoneItemStatus = "SKIPPED"
+	OnboardingPlanMilestoneItemStatusDone        OnboardingPlanMilestoneItemStatus = "DONE"
+	OnboardingPlanMilestoneItemStatusNotDoneLate OnboardingPlanMilestoneItemStatus = "NOT_DONE_LATE"
+	OnboardingPlanMilestoneItemStatusSkippedLate OnboardingPlanMilestoneItemStatus = "SKIPPED_LATE"
+	OnboardingPlanMilestoneItemStatusDoneLate    OnboardingPlanMilestoneItemStatus = "DONE_LATE"
+)
+
+var AllOnboardingPlanMilestoneItemStatus = []OnboardingPlanMilestoneItemStatus{
+	OnboardingPlanMilestoneItemStatusNotDone,
+	OnboardingPlanMilestoneItemStatusSkipped,
+	OnboardingPlanMilestoneItemStatusDone,
+	OnboardingPlanMilestoneItemStatusNotDoneLate,
+	OnboardingPlanMilestoneItemStatusSkippedLate,
+	OnboardingPlanMilestoneItemStatusDoneLate,
+}
+
+func (e OnboardingPlanMilestoneItemStatus) IsValid() bool {
+	switch e {
+	case OnboardingPlanMilestoneItemStatusNotDone, OnboardingPlanMilestoneItemStatusSkipped, OnboardingPlanMilestoneItemStatusDone, OnboardingPlanMilestoneItemStatusNotDoneLate, OnboardingPlanMilestoneItemStatusSkippedLate, OnboardingPlanMilestoneItemStatusDoneLate:
+		return true
+	}
+	return false
+}
+
+func (e OnboardingPlanMilestoneItemStatus) String() string {
+	return string(e)
+}
+
+func (e *OnboardingPlanMilestoneItemStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OnboardingPlanMilestoneItemStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OnboardingPlanMilestoneItemStatus", str)
+	}
+	return nil
+}
+
+func (e OnboardingPlanMilestoneItemStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type OnboardingPlanMilestoneStatus string
+
+const (
+	OnboardingPlanMilestoneStatusNotStarted     OnboardingPlanMilestoneStatus = "NOT_STARTED"
+	OnboardingPlanMilestoneStatusStarted        OnboardingPlanMilestoneStatus = "STARTED"
+	OnboardingPlanMilestoneStatusDone           OnboardingPlanMilestoneStatus = "DONE"
+	OnboardingPlanMilestoneStatusNotStartedLate OnboardingPlanMilestoneStatus = "NOT_STARTED_LATE"
+	OnboardingPlanMilestoneStatusStartedLate    OnboardingPlanMilestoneStatus = "STARTED_LATE"
+	OnboardingPlanMilestoneStatusDoneLate       OnboardingPlanMilestoneStatus = "DONE_LATE"
+)
+
+var AllOnboardingPlanMilestoneStatus = []OnboardingPlanMilestoneStatus{
+	OnboardingPlanMilestoneStatusNotStarted,
+	OnboardingPlanMilestoneStatusStarted,
+	OnboardingPlanMilestoneStatusDone,
+	OnboardingPlanMilestoneStatusNotStartedLate,
+	OnboardingPlanMilestoneStatusStartedLate,
+	OnboardingPlanMilestoneStatusDoneLate,
+}
+
+func (e OnboardingPlanMilestoneStatus) IsValid() bool {
+	switch e {
+	case OnboardingPlanMilestoneStatusNotStarted, OnboardingPlanMilestoneStatusStarted, OnboardingPlanMilestoneStatusDone, OnboardingPlanMilestoneStatusNotStartedLate, OnboardingPlanMilestoneStatusStartedLate, OnboardingPlanMilestoneStatusDoneLate:
+		return true
+	}
+	return false
+}
+
+func (e OnboardingPlanMilestoneStatus) String() string {
+	return string(e)
+}
+
+func (e *OnboardingPlanMilestoneStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OnboardingPlanMilestoneStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OnboardingPlanMilestoneStatus", str)
+	}
+	return nil
+}
+
+func (e OnboardingPlanMilestoneStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type OnboardingPlanStatus string
+
+const (
+	OnboardingPlanStatusNotStarted     OnboardingPlanStatus = "NOT_STARTED"
+	OnboardingPlanStatusOnTrack        OnboardingPlanStatus = "ON_TRACK"
+	OnboardingPlanStatusLate           OnboardingPlanStatus = "LATE"
+	OnboardingPlanStatusDone           OnboardingPlanStatus = "DONE"
+	OnboardingPlanStatusNotStartedLate OnboardingPlanStatus = "NOT_STARTED_LATE"
+	OnboardingPlanStatusDoneLate       OnboardingPlanStatus = "DONE_LATE"
+)
+
+var AllOnboardingPlanStatus = []OnboardingPlanStatus{
+	OnboardingPlanStatusNotStarted,
+	OnboardingPlanStatusOnTrack,
+	OnboardingPlanStatusLate,
+	OnboardingPlanStatusDone,
+	OnboardingPlanStatusNotStartedLate,
+	OnboardingPlanStatusDoneLate,
+}
+
+func (e OnboardingPlanStatus) IsValid() bool {
+	switch e {
+	case OnboardingPlanStatusNotStarted, OnboardingPlanStatusOnTrack, OnboardingPlanStatusLate, OnboardingPlanStatusDone, OnboardingPlanStatusNotStartedLate, OnboardingPlanStatusDoneLate:
+		return true
+	}
+	return false
+}
+
+func (e OnboardingPlanStatus) String() string {
+	return string(e)
+}
+
+func (e *OnboardingPlanStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OnboardingPlanStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OnboardingPlanStatus", str)
+	}
+	return nil
+}
+
+func (e OnboardingPlanStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

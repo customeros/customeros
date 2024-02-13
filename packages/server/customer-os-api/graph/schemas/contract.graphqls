@@ -75,6 +75,9 @@ input ContractUpdateInput {
     zip:                String
     organizationLegalName: String
     invoiceEmail:       String
+    canPayWithCard:     Boolean
+    canPayWithDirectDebit:     Boolean
+    canPayWithBankTransfer: Boolean
     invoiceNote:        String
 }
 

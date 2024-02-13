@@ -294,6 +294,13 @@ func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organiza
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()), log.String("loggedInUserId", loggedInUserId), log.Object("fieldsMask", fieldsMask))
 	tracing.LogObjectAsJson(span, "organizationFields", organizationFields)
 
+	if aggregate.AllowCheckForNoChanges(organizationFields.Source.AppSource, loggedInUserId) {
+		if a.Organization.SkipUpdate(organizationFields) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return nil
+		}
+	}
+
 	var eventsOnUpdate []eventstore.Event
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, utils.Now())
@@ -484,7 +491,7 @@ func (a *OrganizationAggregate) linkDomain(ctx context.Context, cmd *command.Lin
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
-	if aggregate.AllowCheckIfEventIsRedundant(cmd.AppSource, cmd.LoggedInUserId) {
+	if aggregate.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
 		if utils.Contains(a.Organization.Domains, strings.TrimSpace(cmd.Domain)) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil

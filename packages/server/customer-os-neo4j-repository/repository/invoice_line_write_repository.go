@@ -66,7 +66,11 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tena
 								il.appSource=$appSource,
 								il.sourceOfTruth=$sourceOfTruth,
 								il.serviceLineItemId=$serviceLineItemId,
-								il.serviceLineItemParentId=$serviceLineItemParentId`, tenant)
+								il.serviceLineItemParentId=$serviceLineItemParentId
+							WITH il
+							MATCH (sli:ServiceLineItem {id:$serviceLineItemId}) 
+							WHERE sli:ServiceLineItem_%s AND $serviceLineItemId <> ""
+							MERGE (il)-[:INVOICED]->(sli)`, tenant, tenant)
 	params := map[string]any{
 		"tenant":                  tenant,
 		"invoiceId":               invoiceId,

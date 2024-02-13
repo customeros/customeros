@@ -11,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
@@ -333,29 +332,10 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			emailidList = append(emailidList, bccEmailId)
 		}
 
-		organizationIdList, err := s.repositories.OrganizationRepository.GetOrganizationsLinkedToEmailsInTx(ctx, tx, tenant, emailidList)
-		if err != nil {
-			logrus.Errorf("unable to retrieve organization id list for tenant: %v", err)
-			return entity.ERROR, nil, err
-		}
-
 		err = tx.Commit(ctx)
 		if err != nil {
 			logrus.Errorf("failed to commit transaction: %v", err)
 			return entity.ERROR, nil, err
-		}
-
-		for _, organizationId := range organizationIdList {
-
-			_, err := s.services.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: organizationId,
-				AppSource:      AppSource,
-			})
-			if err != nil {
-				logrus.Errorf("unable to refresh last touchpoint for organization: %v", err)
-				return entity.ERROR, nil, err
-			}
 		}
 
 	} else {

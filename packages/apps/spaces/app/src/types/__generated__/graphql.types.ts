@@ -416,20 +416,11 @@ export type ContactTagInput = {
  */
 export type ContactUpdateInput = {
   description?: InputMaybe<Scalars['String']['input']>;
-  /** The first name of the contact in customerOS. */
   firstName?: InputMaybe<Scalars['String']['input']>;
-  /**
-   * The unique ID associated with the contact in customerOS.
-   * **Required.**
-   */
   id: Scalars['ID']['input'];
-  label?: InputMaybe<Scalars['String']['input']>;
-  /** The last name of the contact in customerOS. */
   lastName?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  /** Id of the contact owner (user) */
-  ownerId?: InputMaybe<Scalars['ID']['input']>;
-  /** The prefix associate with the contact in customerOS. */
+  patch?: InputMaybe<Scalars['Boolean']['input']>;
   prefix?: InputMaybe<Scalars['String']['input']>;
   profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
@@ -533,6 +524,9 @@ export type ContractUpdateInput = {
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   appSource?: InputMaybe<Scalars['String']['input']>;
   billingCycle?: InputMaybe<ContractBillingCycle>;
+  canPayWithBankTransfer?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithDirectDebit?: InputMaybe<Scalars['Boolean']['input']>;
   contractId: Scalars['ID']['input'];
   contractUrl?: InputMaybe<Scalars['String']['input']>;
   country?: InputMaybe<Scalars['String']['input']>;
@@ -874,6 +868,7 @@ export type DashboardTimeToOnboardPerMonth = {
 };
 
 export enum DataSource {
+  Close = 'CLOSE',
   Hubspot = 'HUBSPOT',
   Intercom = 'INTERCOM',
   Mixpanel = 'MIXPANEL',
@@ -1051,6 +1046,7 @@ export type ExternalSystemReferenceInput = {
 
 export enum ExternalSystemType {
   Calcom = 'CALCOM',
+  Close = 'CLOSE',
   Hubspot = 'HUBSPOT',
   Intercom = 'INTERCOM',
   Mixpanel = 'MIXPANEL',
@@ -1789,19 +1785,6 @@ export type MeetingsPage = Pages & {
    * **Required.**
    */
   totalPages: Scalars['Int']['output'];
-};
-
-export type MilestoneItem = {
-  __typename?: 'MilestoneItem';
-  status: Scalars['String']['output'];
-  text: Scalars['String']['output'];
-  updatedAt: Scalars['Time']['output'];
-};
-
-export type MilestoneItemInput = {
-  status: Scalars['String']['input'];
-  text: Scalars['String']['input'];
-  updatedAt: Scalars['Time']['input'];
 };
 
 export type Mutation = {
@@ -2730,6 +2713,33 @@ export type OnboardingDetails = {
   updatedAt?: Maybe<Scalars['Time']['output']>;
 };
 
+export enum OnboardingPlanMilestoneItemStatus {
+  Done = 'DONE',
+  DoneLate = 'DONE_LATE',
+  NotDone = 'NOT_DONE',
+  NotDoneLate = 'NOT_DONE_LATE',
+  Skipped = 'SKIPPED',
+  SkippedLate = 'SKIPPED_LATE',
+}
+
+export enum OnboardingPlanMilestoneStatus {
+  Done = 'DONE',
+  DoneLate = 'DONE_LATE',
+  NotStarted = 'NOT_STARTED',
+  NotStartedLate = 'NOT_STARTED_LATE',
+  Started = 'STARTED',
+  StartedLate = 'STARTED_LATE',
+}
+
+export enum OnboardingPlanStatus {
+  Done = 'DONE',
+  DoneLate = 'DONE_LATE',
+  Late = 'LATE',
+  NotStarted = 'NOT_STARTED',
+  NotStartedLate = 'NOT_STARTED_LATE',
+  OnTrack = 'ON_TRACK',
+}
+
 export enum OnboardingStatus {
   Done = 'DONE',
   Late = 'LATE',
@@ -2942,7 +2952,7 @@ export type OrganizationPlan = Node &
     retiredMilestones: Array<OrganizationPlanMilestone>;
     source: DataSource;
     sourceOfTruth: DataSource;
-    statusDetails: StatusDetails;
+    statusDetails: OrganizationPlanStatusDetails;
     updatedAt: Scalars['Time']['output'];
   };
 
@@ -2955,22 +2965,24 @@ export type OrganizationPlanInput = {
 export type OrganizationPlanMilestone = Node &
   SourceFields & {
     __typename?: 'OrganizationPlanMilestone';
+    adhoc: Scalars['Boolean']['output'];
     appSource: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
     dueDate: Scalars['Time']['output'];
     id: Scalars['ID']['output'];
-    items: Array<MilestoneItem>;
+    items: Array<OrganizationPlanMilestoneItem>;
     name: Scalars['String']['output'];
     optional: Scalars['Boolean']['output'];
     order: Scalars['Int64']['output'];
     retired: Scalars['Boolean']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
-    statusDetails: StatusDetails;
+    statusDetails: OrganizationPlanMilestoneStatusDetails;
     updatedAt: Scalars['Time']['output'];
   };
 
 export type OrganizationPlanMilestoneInput = {
+  adhoc: Scalars['Boolean']['input'];
   createdAt: Scalars['Time']['input'];
   dueDate: Scalars['Time']['input'];
   items: Array<Scalars['String']['input']>;
@@ -2981,23 +2993,65 @@ export type OrganizationPlanMilestoneInput = {
   organizationPlanId: Scalars['ID']['input'];
 };
 
+export type OrganizationPlanMilestoneItem = {
+  __typename?: 'OrganizationPlanMilestoneItem';
+  status: OnboardingPlanMilestoneItemStatus;
+  text: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+  uuid: Scalars['ID']['output'];
+};
+
+export type OrganizationPlanMilestoneItemInput = {
+  status: OnboardingPlanMilestoneItemStatus;
+  text: Scalars['String']['input'];
+  updatedAt: Scalars['Time']['input'];
+  uuid?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type OrganizationPlanMilestoneReorderInput = {
   orderedIds: Array<Scalars['ID']['input']>;
   organizationId: Scalars['ID']['input'];
   organizationPlanId: Scalars['ID']['input'];
 };
 
+export type OrganizationPlanMilestoneStatusDetails = {
+  __typename?: 'OrganizationPlanMilestoneStatusDetails';
+  status: OnboardingPlanMilestoneStatus;
+  text: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+};
+
+export type OrganizationPlanMilestoneStatusDetailsInput = {
+  status: OnboardingPlanMilestoneStatus;
+  text: Scalars['String']['input'];
+  updatedAt: Scalars['Time']['input'];
+};
+
 export type OrganizationPlanMilestoneUpdateInput = {
+  adhoc?: InputMaybe<Scalars['Boolean']['input']>;
   dueDate?: InputMaybe<Scalars['Time']['input']>;
   id: Scalars['ID']['input'];
-  items?: InputMaybe<Array<InputMaybe<MilestoneItemInput>>>;
+  items?: InputMaybe<Array<InputMaybe<OrganizationPlanMilestoneItemInput>>>;
   name?: InputMaybe<Scalars['String']['input']>;
   optional?: InputMaybe<Scalars['Boolean']['input']>;
   order?: InputMaybe<Scalars['Int64']['input']>;
   organizationId: Scalars['ID']['input'];
   organizationPlanId: Scalars['ID']['input'];
   retired?: InputMaybe<Scalars['Boolean']['input']>;
-  statusDetails?: InputMaybe<StatusDetailsInput>;
+  statusDetails?: InputMaybe<OrganizationPlanMilestoneStatusDetailsInput>;
+  updatedAt: Scalars['Time']['input'];
+};
+
+export type OrganizationPlanStatusDetails = {
+  __typename?: 'OrganizationPlanStatusDetails';
+  status: OnboardingPlanStatus;
+  text: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+};
+
+export type OrganizationPlanStatusDetailsInput = {
+  status: OnboardingPlanStatus;
+  text: Scalars['String']['input'];
   updatedAt: Scalars['Time']['input'];
 };
 
@@ -3006,7 +3060,7 @@ export type OrganizationPlanUpdateInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   organizationId: Scalars['ID']['input'];
   retired?: InputMaybe<Scalars['Boolean']['input']>;
-  statusDetails?: InputMaybe<StatusDetailsInput>;
+  statusDetails?: InputMaybe<OrganizationPlanStatusDetailsInput>;
 };
 
 export type OrganizationUpdateInput = {
@@ -3577,6 +3631,7 @@ export type ServiceLineItem = Node & {
   sourceOfTruth: DataSource;
   startedAt: Scalars['Time']['output'];
   updatedAt: Scalars['Time']['output'];
+  vatRate: Scalars['Float']['output'];
 };
 
 export type ServiceLineItemBulkUpdateInput = {
@@ -3593,6 +3648,7 @@ export type ServiceLineItemBulkUpdateItem = {
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;
+  vatRate?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type ServiceLineItemCloseInput = {
@@ -3610,6 +3666,7 @@ export type ServiceLineItemInput = {
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   startedAt?: InputMaybe<Scalars['Time']['input']>;
+  vatRate?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type ServiceLineItemUpdateInput = {
@@ -3622,6 +3679,7 @@ export type ServiceLineItemUpdateInput = {
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceLineItemId: Scalars['ID']['input'];
+  vatRate?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type Social = Node &
@@ -3673,19 +3731,6 @@ export type State = {
   country: Country;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-};
-
-export type StatusDetails = {
-  __typename?: 'StatusDetails';
-  status: Scalars['String']['output'];
-  text: Scalars['String']['output'];
-  updatedAt: Scalars['Time']['output'];
-};
-
-export type StatusDetailsInput = {
-  status: Scalars['String']['input'];
-  text: Scalars['String']['input'];
-  updatedAt: Scalars['Time']['input'];
 };
 
 export type SuggestedMergeOrganization = {
@@ -3759,6 +3804,11 @@ export type TenantBillingProfile = Node &
     addressLine2: Scalars['String']['output'];
     addressLine3: Scalars['String']['output'];
     appSource: Scalars['String']['output'];
+    canPayWithCard: Scalars['Boolean']['output'];
+    canPayWithDirectDebitACH: Scalars['Boolean']['output'];
+    canPayWithDirectDebitBacs: Scalars['Boolean']['output'];
+    canPayWithDirectDebitSEPA: Scalars['Boolean']['output'];
+    canPayWithPigeon: Scalars['Boolean']['output'];
     country: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
     domesticPaymentsBankInfo: Scalars['String']['output'];
@@ -3768,9 +3818,11 @@ export type TenantBillingProfile = Node &
     legalName: Scalars['String']['output'];
     locality: Scalars['String']['output'];
     phone: Scalars['String']['output'];
+    sendInvoicesFrom: Scalars['String']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
     updatedAt: Scalars['Time']['output'];
+    vatNumber: Scalars['String']['output'];
     zip: Scalars['String']['output'];
   };
 
@@ -3778,6 +3830,11 @@ export type TenantBillingProfileInput = {
   addressLine1?: InputMaybe<Scalars['String']['input']>;
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   addressLine3?: InputMaybe<Scalars['String']['input']>;
+  canPayWithCard: Scalars['Boolean']['input'];
+  canPayWithDirectDebitACH: Scalars['Boolean']['input'];
+  canPayWithDirectDebitBacs: Scalars['Boolean']['input'];
+  canPayWithDirectDebitSEPA: Scalars['Boolean']['input'];
+  canPayWithPigeon: Scalars['Boolean']['input'];
   country?: InputMaybe<Scalars['String']['input']>;
   domesticPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
@@ -3785,6 +3842,8 @@ export type TenantBillingProfileInput = {
   legalName?: InputMaybe<Scalars['String']['input']>;
   locality?: InputMaybe<Scalars['String']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
+  sendInvoicesFrom: Scalars['String']['input'];
+  vatNumber: Scalars['String']['input'];
   zip?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -3792,6 +3851,11 @@ export type TenantBillingProfileUpdateInput = {
   addressLine1?: InputMaybe<Scalars['String']['input']>;
   addressLine2?: InputMaybe<Scalars['String']['input']>;
   addressLine3?: InputMaybe<Scalars['String']['input']>;
+  canPayWithCard?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithDirectDebitACH?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithDirectDebitBacs?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithDirectDebitSEPA?: InputMaybe<Scalars['Boolean']['input']>;
+  canPayWithPigeon?: InputMaybe<Scalars['Boolean']['input']>;
   country?: InputMaybe<Scalars['String']['input']>;
   domesticPaymentsBankInfo?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
@@ -3801,6 +3865,8 @@ export type TenantBillingProfileUpdateInput = {
   locality?: InputMaybe<Scalars['String']['input']>;
   patch?: InputMaybe<Scalars['Boolean']['input']>;
   phone?: InputMaybe<Scalars['String']['input']>;
+  sendInvoicesFrom?: InputMaybe<Scalars['String']['input']>;
+  vatNumber?: InputMaybe<Scalars['String']['input']>;
   zip?: InputMaybe<Scalars['String']['input']>;
 };
 

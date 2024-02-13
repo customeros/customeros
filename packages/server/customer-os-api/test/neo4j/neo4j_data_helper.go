@@ -505,6 +505,7 @@ func AddSetTemplateToEntity(ctx context.Context, driver *neo4j.DriverWithContext
 	return templateId.String()
 }
 
+// Deprecated
 func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant, tagName string) string {
 	var tagId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
@@ -521,6 +522,7 @@ func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant, tag
 	return tagId.String()
 }
 
+// Deprecated
 func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, issue entity.IssueEntity) string {
 	var issueId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
@@ -553,6 +555,7 @@ func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	return issueId.String()
 }
 
+// Deprecated
 func IssueReportedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
 	query := `MATCH (e:Organization|User|Contact {id:$entityId}), (i:Issue {id:$issueId})
 			MERGE (e)<-[:REPORTED_BY]-(i)`
@@ -571,6 +574,7 @@ func IssueSubmittedBy(ctx context.Context, driver *neo4j.DriverWithContext, issu
 	})
 }
 
+// Deprecated
 func IssueFollowedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
 	query := `MATCH (e:Organization|User|Contact {id:$entityId}), (i:Issue {id:$issueId})
 			MERGE (e)<-[:FOLLOWED_BY]-(i)`

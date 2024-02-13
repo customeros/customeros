@@ -34,6 +34,9 @@ type ContractEntity struct {
 	OrganizationLegalName           string
 	InvoiceEmail                    string
 	InvoiceNote                     string
+	CanPayWithCard                  bool
+	CanPayWithDirectDebit           bool
+	CanPayWithBankTransfer          bool
 
 	DataloaderKey string
 }

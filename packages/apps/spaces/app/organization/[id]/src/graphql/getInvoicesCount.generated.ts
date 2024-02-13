@@ -35,7 +35,11 @@ export type GetInvoicesCountQuery = {
 
 export const GetInvoicesCountDocument = `
     query getInvoicesCount($organizationId: ID) {
-  invoices(pagination: {page: 0, limit: 50}, organizationId: $organizationId) {
+  invoices(
+    pagination: {page: 0, limit: 0}
+    organizationId: $organizationId
+    where: {filter: {property: "DRY_RUN", operation: EQ, value: false}}
+  ) {
     totalElements
   }
 }

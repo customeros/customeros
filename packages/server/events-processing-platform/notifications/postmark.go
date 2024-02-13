@@ -17,9 +17,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
+const (
+	PostmarkMessageStreamInvoice = "invoices"
+)
+
 type PostmarkEmail struct {
-	WorkflowId   string
-	TemplateData map[string]string
+	WorkflowId    string
+	MessageStream string
+	TemplateData  map[string]string
 
 	From    string
 	To      string
@@ -34,6 +39,7 @@ type PostmarkEmailAttachment struct {
 	Filename       string
 	ContentEncoded string
 	ContentType    string
+	ContentID      string
 }
 
 type PostmarkProvider struct {
@@ -49,15 +55,23 @@ func NewPostmarkProvider(log logger.Logger, serverToken string) *PostmarkProvide
 }
 
 func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, span opentracing.Span) error {
-	rawEmailTemplate, err := np.LoadEmailBody(postmarkEmail.WorkflowId)
+	htmlContent, err := np.LoadEmailContent(postmarkEmail.WorkflowId, "mjml", postmarkEmail.TemplateData)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		np.log.Errorf("(PostmarkProvider.SendNotification.LoadEmailContent) error: %s", err.Error())
+		return err
+	}
+	htmlContent, err = np.ConvertMjmlToHtml(htmlContent)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		np.log.Errorf("(PostmarkProvider.SendNotification. ConvertMjmlToHtml) error: %s", err.Error())
 		return err
 	}
 
-	htmlEmailTemplate, err := np.FillTemplate(rawEmailTemplate, postmarkEmail.TemplateData)
+	textContent, err := np.LoadEmailContent(postmarkEmail.WorkflowId, "txt", postmarkEmail.TemplateData)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		np.log.Errorf("(PostmarkProvider.SendNotification.LoadEmailContent) error: %s", err.Error())
 		return err
 	}
 
@@ -67,8 +81,13 @@ func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail 
 		Cc:         postmarkEmail.CC,
 		Bcc:        postmarkEmail.BCC,
 		Subject:    postmarkEmail.Subject,
-		HTMLBody:   htmlEmailTemplate,
+		TextBody:   textContent,
+		HTMLBody:   htmlContent,
 		TrackOpens: true,
+	}
+
+	if postmarkEmail.MessageStream != "" {
+		email.MessageStream = postmarkEmail.MessageStream
 	}
 
 	if postmarkEmail.Attachments != nil {
@@ -77,6 +96,7 @@ func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail 
 				Name:        attachment.Filename,
 				Content:     attachment.ContentEncoded,
 				ContentType: attachment.ContentType,
+				ContentID:   attachment.ContentID,
 			})
 		}
 	}
@@ -92,15 +112,33 @@ func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail 
 	return nil
 }
 
-func (np *PostmarkProvider) LoadEmailBody(workflowId string) (string, error) {
+func (np *PostmarkProvider) LoadEmailContent(workflowId, fileExtension string, templateData map[string]string) (string, error) {
+	rawEmailTemplate, err := np.LoadEmailBody(workflowId, fileExtension)
+	if err != nil {
+		return "", err
+	}
+
+	emailTemplate := np.FillTemplate(rawEmailTemplate, templateData)
+	if err != nil {
+		return "", err
+	}
+
+	return emailTemplate, nil
+}
+
+func (np *PostmarkProvider) GetFileName(workflowId, fileExtension string) string {
 	var fileName string
 	switch workflowId {
 	case WorkflowInvoicePaid:
-		fileName = "invoice.paid.mjml"
+		fileName = "invoice.paid." + fileExtension
 	case WorkflowInvoiceReady:
-		fileName = "invoice.ready.mjml"
+		fileName = "invoice.ready." + fileExtension
 	}
+	return fileName
+}
 
+func (np *PostmarkProvider) LoadEmailBody(workflowId, fileExtension string) (string, error) {
+	fileName := np.GetFileName(workflowId, fileExtension)
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String("eu-west-1")})
 	if err != nil {
 		return "", err
@@ -121,12 +159,16 @@ func (np *PostmarkProvider) LoadEmailBody(workflowId string) (string, error) {
 	return string(buffer.Bytes()), nil
 }
 
-func (np *PostmarkProvider) FillTemplate(template string, replace map[string]string) (string, error) {
+func (np *PostmarkProvider) FillTemplate(template string, replace map[string]string) string {
 	filledTemplate := template
 	for k, v := range replace {
 		filledTemplate = strings.Replace(filledTemplate, k, v, -1)
 	}
 
+	return filledTemplate
+}
+
+func (np *PostmarkProvider) ConvertMjmlToHtml(filledTemplate string) (string, error) {
 	html, err := mjml.ToHTML(context.Background(), filledTemplate)
 	var mjmlError mjml.Error
 	if errors.As(err, &mjmlError) {

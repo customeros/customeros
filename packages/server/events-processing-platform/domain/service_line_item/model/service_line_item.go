@@ -24,6 +24,7 @@ type ServiceLineItem struct {
 	Source     commonmodel.Source `json:"source"`
 	IsDeleted  bool               `json:"isDeleted"`
 	IsCanceled bool               `json:"isCanceled"`
+	VatRate    float64            `json:"vatRate"`
 }
 
 // ServiceLineItemDataFields contains all the fields that may be used to create or update a service line item.
@@ -35,6 +36,7 @@ type ServiceLineItemDataFields struct {
 	ContractId string     `json:"contractId"`
 	ParentId   string     `json:"parentId"`
 	Comments   string     `json:"comments,omitempty"`
+	VatRate    float64    `json:"vatRate"`
 }
 
 func (sli ServiceLineItem) IsEnded() bool {

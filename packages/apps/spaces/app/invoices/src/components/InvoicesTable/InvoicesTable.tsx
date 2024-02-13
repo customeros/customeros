@@ -4,45 +4,37 @@ import { useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useIsRestoring } from '@tanstack/react-query';
-import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Invoice } from '@graphql/types';
 import { Heading } from '@ui/typography/Heading';
 import { Table, TableInstance } from '@ui/presentation/Table';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { filterOutDryRunInvoices } from '@shared/components/Invoice/utils';
-import { useGetInvoicesQuery } from '@shared/graphql/getInvoices.generated';
 import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
+import { useInfiniteInvoices } from '@shared/components/Invoice/hooks/useInfiniteInvoices';
 
 import { columns } from './Columns/Columns';
 
 export function InvoicesTable() {
   const isRestoring = useIsRestoring();
-  const enableFeature = useFeatureIsOn('gp-dedicated-1');
-
   const searchParams = useSearchParams();
   const selectedInvoiceId = searchParams?.get('invoice');
   const router = useRouter();
 
-  const client = getGraphQLClient();
   const tableRef = useRef<TableInstance<Invoice>>(null);
-
-  const { data, isFetching, isFetched } = useGetInvoicesQuery(client, {
-    pagination: {
-      page: 0,
-      limit: 40,
-    },
-    where: {
-      ...filterOutDryRunInvoices,
-    },
-  });
+  const {
+    invoiceFlattenData,
+    totalInvoicesCount,
+    isFetching,
+    isFetched,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteInvoices();
 
   useEffect(() => {
     if (!selectedInvoiceId && tableRef.current) {
       const newParams = new URLSearchParams(searchParams ?? '');
-      const firstId = data?.invoices?.content?.[0]?.id;
+      const firstId = invoiceFlattenData?.[0]?.id;
       if (!firstId) return;
       newParams.set('invoice', firstId);
       router.replace(`/invoices?${newParams.toString()}`);
@@ -58,7 +50,7 @@ export function InvoicesTable() {
     }
   }, [tableRef, isFetched, selectedInvoiceId]);
 
-  if (data?.invoices.totalElements === 0) {
+  if (totalInvoicesCount === 0) {
     return <EmptyState maxW={500} isDashboard />;
   }
 
@@ -75,16 +67,15 @@ export function InvoicesTable() {
       </Heading>
       <Box ml={-3}>
         <Table<Invoice>
-          data={(data?.invoices?.content as Invoice[]) ?? []}
+          data={invoiceFlattenData ?? []}
           columns={columns}
-          enableTableActions={enableFeature !== null ? enableFeature : true}
           onFullRowSelection={(id) => id && handleOpenInvoice(id)}
           enableRowSelection={false}
           fullRowSelection={true}
-          canFetchMore={false}
-          // onFetchMore={handleFetchMore}
+          canFetchMore={hasNextPage}
+          onFetchMore={fetchNextPage}
           isLoading={isRestoring ? false : isFetching}
-          totalItems={isRestoring ? 40 : data?.invoices?.totalElements || 0}
+          totalItems={isRestoring ? 10 : totalInvoicesCount || 0}
           tableRef={tableRef}
           borderColor='gray.100'
           rowHeight={48}

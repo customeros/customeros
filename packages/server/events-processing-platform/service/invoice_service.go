@@ -64,11 +64,7 @@ func (s *invoiceService) NewInvoiceForContract(ctx context.Context, request *inv
 
 	invoiceId := uuid.New().String()
 
-	extraParams := map[string]any{
-		invoice.PARAM_INVOICE_NUMBER: s.prepareInvoiceNumber(request.Tenant),
-	}
-
-	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, invoiceId, request, extraParams); err != nil {
+	if _, err := s.invoiceRequestHandler.Handle(ctx, request.Tenant, invoiceId, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(NewOnCycleInvoiceForContract) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -113,7 +109,11 @@ func (s *invoiceService) FillInvoice(ctx context.Context, request *invoicepb.Fil
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
 	}
 
-	if _, err := s.invoiceRequestHandler.HandleWithRetry(ctx, request.Tenant, request.InvoiceId, true, request); err != nil {
+	extraParams := map[string]any{
+		invoice.PARAM_INVOICE_NUMBER: s.prepareInvoiceNumber(request.Tenant),
+	}
+
+	if _, err := s.invoiceRequestHandler.HandleWithRetry(ctx, request.Tenant, request.InvoiceId, true, request, extraParams); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(FillInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -246,4 +246,42 @@ func (s *invoiceService) checkContractExists(ctx context.Context, tenant, contra
 	}
 
 	return true, nil // The contract exists
+}
+
+func (s *invoiceService) RequestFillInvoice(ctx context.Context, request *invoicepb.RequestFillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.RequestFillInvoice")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.InvoiceId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
+	}
+
+	if _, err := s.invoiceRequestHandler.HandleWithRetry(ctx, request.Tenant, request.InvoiceId, true, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(RequestFillInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
+}
+
+func (s *invoiceService) PermanentlyDeleteDraftInvoice(ctx context.Context, request *invoicepb.PermanentlyDeleteDraftInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.PermanentlyDeleteDraftInvoice")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.InvoiceId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
+	}
+
+	if _, err := s.invoiceRequestHandler.HandleWithRetry(ctx, request.Tenant, request.InvoiceId, true, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(PermanentlyDeleteDraftInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
 }

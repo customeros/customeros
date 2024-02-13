@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"context"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -14,6 +15,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"time"
 )
 
 const (
@@ -69,9 +71,9 @@ func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any, param
 
 	switch r := request.(type) {
 	case *invoicepb.NewInvoiceForContractRequest:
-		return nil, a.CreateNewInvoiceForContract(ctx, r, invoiceNumber)
+		return nil, a.CreateNewInvoiceForContract(ctx, r)
 	case *invoicepb.FillInvoiceRequest:
-		return nil, a.FillInvoice(ctx, r)
+		return nil, a.FillInvoice(ctx, r, invoiceNumber)
 	case *invoicepb.GenerateInvoicePdfRequest:
 		return nil, a.CreatePdfRequestedEvent(ctx, r)
 	case *invoicepb.PdfGeneratedInvoiceRequest:
@@ -82,6 +84,10 @@ func (a *InvoiceAggregate) HandleRequest(ctx context.Context, request any, param
 		return nil, a.UpdateInvoice(ctx, r)
 	case *invoicepb.PayInvoiceNotificationRequest:
 		return nil, a.CreatePayInvoiceNotificationEvent(ctx, r)
+	case *invoicepb.RequestFillInvoiceRequest:
+		return nil, a.CreateFillRequestedEvent(ctx, r)
+	case *invoicepb.PermanentlyDeleteDraftInvoiceRequest:
+		return nil, a.PermanentlyDeleteDraftInvoice(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -112,7 +118,7 @@ func (a *InvoiceAggregate) CreatePdfGeneratedEvent(ctx context.Context, request 
 	return a.Apply(event)
 }
 
-func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, request *invoicepb.NewInvoiceForContractRequest, invoiceNumber string) error {
+func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, request *invoicepb.NewInvoiceForContractRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.CreateNewInvoiceForContract")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
@@ -122,16 +128,12 @@ func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, requ
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	if invoiceNumber == "" {
-		invoiceNumber = uuid.New().String()
-	}
-
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	periodStartDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodStart)
 	periodEndDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodEnd)
 	billingCycle := BillingCycle(request.BillingCycle)
 
-	createEvent, err := NewInvoiceForContractCreateEvent(a, sourceFields, request.ContractId, request.Currency, invoiceNumber, billingCycle.String(), request.Note, request.DryRun, createdAtNotNil, *periodStartDate, *periodEndDate)
+	createEvent, err := NewInvoiceForContractCreateEvent(a, sourceFields, request.ContractId, request.Currency, billingCycle.String(), request.Note, request.DryRun, request.OffCycle, request.Postpaid, createdAtNotNil, *periodStartDate, *periodEndDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceCreateEvent")
@@ -145,7 +147,7 @@ func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, requ
 	return a.Apply(createEvent)
 }
 
-func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.FillInvoiceRequest) error {
+func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.FillInvoiceRequest, invoiceNumber string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.FillInvoice")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
@@ -156,6 +158,11 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 		err := errors.New("invoice is nil")
 		tracing.TraceErr(span, err)
 		return err
+	}
+
+	invoiceNumberForEvent := invoiceNumber
+	if a.Invoice.InvoiceNumber != "" {
+		invoiceNumberForEvent = a.Invoice.InvoiceNumber
 	}
 
 	// prepare invoice lines
@@ -187,7 +194,7 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 		request.DomesticPaymentsBankInfo, request.InternationalPaymentsBankInfo,
 		request.Customer.Name, request.Customer.AddressLine1, request.Customer.AddressLine2, request.Customer.Zip, request.Customer.Locality, request.Customer.Country, request.Customer.Email,
 		request.Provider.LogoUrl, request.Provider.Name, request.Provider.Email, request.Provider.AddressLine1, request.Provider.AddressLine2, request.Provider.Zip, request.Provider.Locality, request.Provider.Country,
-		request.Note, invoiceStatus, request.Amount, request.Vat, request.Total, invoiceLines)
+		request.Note, invoiceStatus, invoiceNumberForEvent, request.Amount, request.Vat, request.Total, invoiceLines)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceFillEvent")
@@ -213,6 +220,28 @@ func (a *InvoiceAggregate) CreatePdfRequestedEvent(ctx context.Context, r *invoi
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewInvoicePdfRequestedEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: r.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    r.AppSource,
+	})
+
+	return a.Apply(event)
+}
+
+func (a *InvoiceAggregate) CreateFillRequestedEvent(ctx context.Context, r *invoicepb.RequestFillInvoiceRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.CreateFillRequestedEvent")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := NewInvoiceFillRequestedEvent(a, r.ContractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewInvoiceFillRequestedEvent")
 	}
 
 	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
@@ -263,6 +292,11 @@ func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.Updat
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUpdateInvoiceEvent")
 	}
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+		Tenant: r.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    r.AppSource,
+	})
 	events = append(events, updateEvent)
 
 	// if status updated, and set from non-paid to paid
@@ -274,14 +308,13 @@ func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.Updat
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewInvoicePaidEvent")
 		}
+		aggregate.EnrichEventWithMetadataExtended(&paidEvent, span, aggregate.EventMetadata{
+			Tenant: r.Tenant,
+			UserId: r.LoggedInUserId,
+			App:    r.AppSource,
+		})
 		events = append(events, paidEvent)
 	}
-
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
-		Tenant: r.Tenant,
-		UserId: r.LoggedInUserId,
-		App:    r.AppSource,
-	})
 
 	return a.ApplyAll(events)
 }
@@ -311,6 +344,47 @@ func (a *InvoiceAggregate) PayInvoice(ctx context.Context, request *invoicepb.Pa
 	return a.Apply(payEvent)
 }
 
+func (a *InvoiceAggregate) PermanentlyDeleteDraftInvoice(ctx context.Context, request *invoicepb.PermanentlyDeleteDraftInvoiceRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.PermanentlyDeleteDraftInvoice")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	if a.Invoice == nil {
+		err := errors.New("invoice is nil")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if a.Invoice.Status != neo4jenum.InvoiceStatusDraft.String() {
+		err := errors.New("invoice status is not draft")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if len(a.Invoice.InvoiceLines) > 0 {
+		err := errors.New("invoice has invoice lines")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	deleteEvent, err := NewInvoiceDeleteEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "InvoicePayEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&deleteEvent, span, aggregate.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	streamMetadata := esdb.StreamMetadata{}
+	streamMetadata.SetMaxAge(time.Duration(constants.StreamMetadataMaxAgeSecondsExtended) * time.Second)
+	a.SetStreamMetadata(&streamMetadata)
+
+	return a.Apply(deleteEvent)
+}
+
 func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case InvoiceCreateForContractV1:
@@ -323,8 +397,10 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		return a.onUpdateInvoice(evt)
 	case InvoicePayV1,
 		InvoicePdfRequestedV1,
+		InvoiceFillRequestedV1,
 		InvoicePaidV1,
-		InvoicePayNotificationV1:
+		InvoicePayNotificationV1,
+		InvoiceDeleteV1:
 		return nil
 	default:
 		err := eventstore.ErrInvalidEventType
@@ -345,13 +421,15 @@ func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
 	a.Invoice.DueDate = eventData.DueDate
 	a.Invoice.ContractId = eventData.ContractId
 	a.Invoice.SourceFields = eventData.SourceFields
-	a.Invoice.InvoiceNumber = eventData.InvoiceNumber
 	a.Invoice.DryRun = eventData.DryRun
+	a.Invoice.OffCycle = eventData.OffCycle
+	a.Invoice.Postpaid = eventData.Postpaid
 	a.Invoice.Currency = eventData.Currency
 	a.Invoice.PeriodStartDate = eventData.PeriodStartDate
 	a.Invoice.PeriodEndDate = eventData.PeriodEndDate
 	a.Invoice.BillingCycle = eventData.BillingCycle
 	a.Invoice.Note = eventData.Note
+	a.Invoice.Status = neo4jenum.InvoiceStatusDraft.String()
 
 	return nil
 }
@@ -362,6 +440,7 @@ func (a *InvoiceAggregate) onFillInvoice(evt eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 
+	a.Invoice.InvoiceNumber = eventData.InvoiceNumber
 	a.Invoice.UpdatedAt = eventData.UpdatedAt
 	a.Invoice.Amount = eventData.Amount
 	a.Invoice.VAT = eventData.VAT

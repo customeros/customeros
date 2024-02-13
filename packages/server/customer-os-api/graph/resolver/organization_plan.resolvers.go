@@ -329,7 +329,73 @@ func (r *queryResolver) OrganizationPlansForOrganization(ctx context.Context, or
 		graphql.AddErrorf(ctx, "Failed to get Org plans for organization %s", organizationID)
 		return nil, nil
 	}
-	return mapper.MapEntitiesToOrganizationPlans(orgPlanEntities), nil
+	opArray := mapper.MapEntitiesToOrganizationPlans(orgPlanEntities)
+	for _, op := range opArray {
+		span.SetTag(tracing.SpanTagEntityId, op.ID)
+		allMilestonesDone := true
+		planLate := false
+		planStarted := false
+		for _, m := range op.Milestones {
+			span.SetTag(tracing.SpanTagEntityId, m.ID)
+			now := time.Now().UTC()
+			due := m.DueDate
+			if now.After(due) && now.Day() != due.Day() {
+				planLate = true
+				switch m.StatusDetails.Status {
+				case model.OnboardingPlanMilestoneStatusDone:
+				case model.OnboardingPlanMilestoneStatusDoneLate:
+					planStarted = true
+					m.StatusDetails.Status = model.OnboardingPlanMilestoneStatusDoneLate
+				case model.OnboardingPlanMilestoneStatusStarted:
+				case model.OnboardingPlanMilestoneStatusStartedLate:
+					allMilestonesDone = false
+					planStarted = true
+					m.StatusDetails.Status = model.OnboardingPlanMilestoneStatusStartedLate
+				default:
+					allMilestonesDone = false
+					m.StatusDetails.Status = model.OnboardingPlanMilestoneStatusNotStartedLate
+				}
+				m.StatusDetails.UpdatedAt = time.Now().UTC()
+
+				stsDtls := &model.OrganizationPlanMilestoneStatusDetailsInput{
+					Status:    m.StatusDetails.Status,
+					UpdatedAt: m.StatusDetails.UpdatedAt,
+					Text:      m.StatusDetails.Text,
+				}
+
+				err = r.Services.OrganizationPlanService.UpdateOrganizationPlanMilestone(
+					ctx,
+					organizationID,
+					op.ID,
+					m.ID,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					stsDtls,
+				)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					graphql.AddErrorf(ctx, "Failed to update org plan milestone")
+					return nil, err
+				}
+			}
+		}
+		// update plan status in place for UI, the milestones updates will propagate status through the DB
+		if planLate {
+			if allMilestonesDone {
+				op.StatusDetails.Status = model.OnboardingPlanStatusDoneLate
+			} else if planStarted {
+				op.StatusDetails.Status = model.OnboardingPlanStatusLate
+			} else {
+				op.StatusDetails.Status = model.OnboardingPlanStatusNotStartedLate
+			}
+		}
+	}
+	return opArray, nil
 }
 
 // OrganizationPlans is the resolver for the organizationPlans field.

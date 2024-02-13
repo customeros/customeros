@@ -15,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -103,6 +102,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	isNewVersionForExistingSLI := serviceLineItemId != eventData.ParentId && eventData.ParentId != ""
 	previousPrice := float64(0)
 	previousQuantity := int64(0)
+	previousVatRate := float64(0)
 	previousBilled := ""
 	reasonForChange := eventData.Comments
 	if isNewVersionForExistingSLI {
@@ -113,14 +113,15 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 			h.log.Errorf("error while getting latest service line item with parent id %s: %s", eventData.ParentId, err.Error())
 		}
 		if sliDbNode != nil {
-			previousServiceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*sliDbNode)
+			previousServiceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
 			previousPrice = previousServiceLineItem.Price
 			previousQuantity = previousServiceLineItem.Quantity
-			previousBilled = previousServiceLineItem.Billed
+			previousBilled = previousServiceLineItem.Billed.String()
+			previousVatRate = previousServiceLineItem.VatRate
 			//use the booleans below to create the appropriate action message
 			priceChanged = previousServiceLineItem.Price != eventData.Price
 			quantityChanged = previousServiceLineItem.Quantity != eventData.Quantity
-			billedTypeChanged = previousServiceLineItem.Billed != eventData.Billed
+			billedTypeChanged = previousServiceLineItem.Billed.String() != eventData.Billed
 		}
 	}
 	data := neo4jrepository.ServiceLineItemCreateFields{
@@ -128,6 +129,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		PreviousQuantity:           previousQuantity,
 		PreviousPrice:              previousPrice,
 		PreviousBilled:             previousBilled,
+		PreviousVatRate:            previousVatRate,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source.Source),
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source.SourceOfTruth),
@@ -144,6 +146,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		Name:       eventData.Name,
 		Billed:     eventData.Billed,
 		Comments:   eventData.Comments,
+		VatRate:    eventData.VatRate,
 	}
 	err := h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.CreateForContract(ctx, eventData.Tenant, serviceLineItemId, data)
 	if err != nil {
@@ -157,7 +160,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		h.log.Errorf("Error while getting service line item by id %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
-	serviceLineItemEntity := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	serviceLineItemEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
 
 	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
 	err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, eventData.ContractId)
@@ -235,7 +238,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 		PreviousBilledType: previousBilled,
 		Quantity:           eventData.Quantity,
 		Price:              eventData.Price,
-		Comment:            "billed type is " + serviceLineItemEntity.Billed + " for service " + name,
+		Comment:            "billed type is " + serviceLineItemEntity.Billed.String() + " for service " + name,
 		ReasonForChange:    reasonForChange,
 	})
 	if err != nil {
@@ -249,11 +252,11 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	cycle := getBillingCycleNamingConvention(eventData.Billed)
 	previousCycle := getBillingCycleNamingConvention(previousBilled)
 	if previousCycle == "" {
-		previousCycle = getBillingCycleNamingConvention(serviceLineItemEntity.Billed)
+		previousCycle = getBillingCycleNamingConvention(serviceLineItemEntity.Billed.String())
 	}
 
 	if !isNewVersionForExistingSLI {
-		if serviceLineItemEntity.Billed == model.AnnuallyBilled.String() || serviceLineItemEntity.Billed == model.QuarterlyBilled.String() || serviceLineItemEntity.Billed == model.MonthlyBilled.String() {
+		if serviceLineItemEntity.Billed.String() == model.AnnuallyBilled.String() || serviceLineItemEntity.Billed.String() == model.QuarterlyBilled.String() || serviceLineItemEntity.Billed.String() == model.MonthlyBilled.String() {
 			message = userEntity.FirstName + " " + userEntity.LastName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " x " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
 			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now(), extraActionProperties)
 			if err != nil {
@@ -261,7 +264,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 				h.log.Errorf("Failed creating recurring billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
 			}
 		}
-		if serviceLineItemEntity.Billed == model.OnceBilled.String() {
+		if serviceLineItemEntity.Billed.String() == model.OnceBilled.String() {
 			message = userEntity.FirstName + " " + userEntity.LastName + " added an one time service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price)
 			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now(), extraActionProperties)
 			if err != nil {
@@ -269,7 +272,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 				h.log.Errorf("Failed creating once billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
 			}
 		}
-		if serviceLineItemEntity.Billed == model.UsageBilled.String() {
+		if serviceLineItemEntity.Billed.String() == model.UsageBilled.String() {
 			message = userEntity.FirstName + " " + userEntity.LastName + " added a per use service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price)
 			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now(), extraActionProperties)
 			if err != nil {
@@ -365,11 +368,11 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		tracing.TraceErr(span, err)
 		return err
 	}
-	serviceLineItemEntity := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	serviceLineItemEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
 	//we will use the following booleans below to check if the price, quantity, billed type has changed
 	priceChanged := serviceLineItemEntity.Price != eventData.Price
 	quantityChanged := serviceLineItemEntity.Quantity != eventData.Quantity
-	billedTypeChanged := serviceLineItemEntity.Billed != eventData.Billed
+	billedTypeChanged := serviceLineItemEntity.Billed.String() != eventData.Billed
 
 	data := neo4jrepository.ServiceLineItemUpdateFields{
 		Price:     eventData.Price,
@@ -379,6 +382,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		Name:      eventData.Name,
 		Source:    helper.GetSource(eventData.Source.Source),
 		UpdatedAt: eventData.UpdatedAt,
+		VatRate:   eventData.VatRate,
 	}
 	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.Update(ctx, eventData.Tenant, serviceLineItemId, data)
 	if err != nil {
@@ -434,7 +438,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		ServiceName:     serviceLineItemEntity.Name,
 		Price:           eventData.Price,
 		PreviousPrice:   serviceLineItemEntity.Price,
-		BilledType:      serviceLineItemEntity.Billed,
+		BilledType:      serviceLineItemEntity.Billed.String(),
 		Quantity:        serviceLineItemEntity.Quantity,
 		Comment:         "price changed is " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " for service " + name,
 		ReasonForChange: eventData.Comments,
@@ -450,7 +454,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		PreviousQuantity: serviceLineItemEntity.Quantity,
 		Quantity:         eventData.Quantity,
 		Price:            serviceLineItemEntity.Price,
-		BilledType:       serviceLineItemEntity.Billed,
+		BilledType:       serviceLineItemEntity.Billed.String(),
 		Comment:          "quantity changed is " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " for service " + name,
 		ReasonForChange:  eventData.Comments,
 	})
@@ -463,10 +467,10 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		UserName:           userEntity.FirstName + " " + userEntity.LastName,
 		ServiceName:        serviceLineItemEntity.Name,
 		BilledType:         eventData.Billed,
-		PreviousBilledType: serviceLineItemEntity.Billed,
+		PreviousBilledType: serviceLineItemEntity.Billed.String(),
 		Quantity:           serviceLineItemEntity.Quantity,
 		Price:              serviceLineItemEntity.Price,
-		Comment:            "billed type changed is " + serviceLineItemEntity.Billed + " for service " + name,
+		Comment:            "billed type changed is " + serviceLineItemEntity.Billed.String() + " for service " + name,
 		ReasonForChange:    eventData.Comments,
 	})
 	if err != nil {
@@ -474,7 +478,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		h.log.Errorf("Failed to serialize billed type metadata: %s", err.Error())
 		return errors.Wrap(err, "Failed to serialize billed type metadata")
 	}
-	oldCycle := getBillingCycleNamingConvention(serviceLineItemEntity.Billed)
+	oldCycle := getBillingCycleNamingConvention(serviceLineItemEntity.Billed.String())
 	cycle := getBillingCycleNamingConvention(eventData.Billed)
 	extraActionProperties := map[string]interface{}{
 		"comments": eventData.Comments,
@@ -565,7 +569,7 @@ func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventsto
 		tracing.TraceErr(span, err)
 		return err
 	}
-	serviceLineItemEntity := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	serviceLineItemEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
 	if serviceLineItemEntity.Name != "" {
 		serviceLineItemName = serviceLineItemEntity.Name
 	} else {

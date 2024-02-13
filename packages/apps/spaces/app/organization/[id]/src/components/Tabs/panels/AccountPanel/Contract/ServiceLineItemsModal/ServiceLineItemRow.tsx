@@ -88,6 +88,7 @@ export const ServiceLineItemRow = ({
           onChange={(event) => handleChange('name', event.target.value)}
           key={`name-${index}`}
           textDecoration={service.isDeleted ? 'line-through' : 'unset'}
+          autoComplete='off'
         />
       </ServiceLineItemInputWrapper>
       <ServiceLineItemInputWrapper width='20%' isDeleted={service.isDeleted}>
@@ -143,6 +144,7 @@ export const ServiceLineItemRow = ({
             fontSize='sm'
             value={service.quantity}
             p={0}
+            autoComplete='off'
             onChange={(event) => handleChange('quantity', event.target.value)}
           />
         </NumberInput>
@@ -174,7 +176,7 @@ export const ServiceLineItemRow = ({
             aria-label='Recurring'
             placeholder='Frequency'
             name='billed'
-            onChange={(newValue) => handleChange('billed', newValue)}
+            onChange={(newValue) => handleChange('billed', newValue.value)}
             options={subscriptionOptions}
             value={subscriptionOptions.find((e) => e.value === service.billed)}
             chakraStyles={{

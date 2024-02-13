@@ -8,6 +8,7 @@ type OrganizationPlanMilestoneItem struct {
 	Text      string    `json:"text"`
 	Status    string    `json:"status"`
 	UpdatedAt time.Time `json:"updatedAt"`
+	Uuid      string    `json:"uuid"`
 }
 
 type OrganizationPlanMilestoneStatusDetails struct {

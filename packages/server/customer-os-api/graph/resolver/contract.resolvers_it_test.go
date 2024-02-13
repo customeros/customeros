@@ -135,7 +135,10 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			require.Equal(t, "test organization legal name", contract.OrganizationLegalName)
 			require.Equal(t, "test invoice email", contract.InvoiceEmail)
 			require.Equal(t, "test invoice note", contract.InvoiceNote)
-			require.Equal(t, 17, len(contract.FieldsMask))
+			require.Equal(t, true, contract.CanPayWithCard)
+			require.Equal(t, true, contract.CanPayWithDirectDebit)
+			require.Equal(t, true, contract.CanPayWithBankTransfer)
+			require.Equal(t, 20, len(contract.FieldsMask))
 			calledUpdateContract = true
 			return &contractpb.ContractIdGrpcResponse{
 				Id: contractId,
@@ -157,6 +160,59 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 	require.Nil(t, err)
 	contract := contractStruct.Contract_Update
 	require.Equal(t, contractId, contract.ID)
+
+	require.True(t, calledUpdateContract)
+}
+
+func TestMutationResolver_ContractUpdate_NullDateFields(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	calledUpdateContract := false
+
+	contractServiceCallbacks := events_platform.MockContractServiceCallbacks{
+		UpdateContract: func(context context.Context, contract *contractpb.UpdateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
+			require.Equal(t, tenantName, contract.Tenant)
+			require.Equal(t, contractId, contract.Id)
+			require.Equal(t, testUserId, contract.LoggedInUserId)
+			require.Equal(t, string(neo4jentity.DataSourceOpenline), contract.SourceFields.Source)
+			require.Equal(t, "customer-os-api", contract.SourceFields.AppSource)
+
+			require.Nil(t, contract.SignedAt)
+			require.Nil(t, contract.ServiceStartedAt)
+			require.Nil(t, contract.EndedAt)
+			require.Nil(t, contract.InvoicingStartDate)
+
+			require.Equal(t, 4, len(contract.FieldsMask))
+			calledUpdateContract = true
+			return &contractpb.ContractIdGrpcResponse{
+				Id: contractId,
+			}, nil
+		},
+	}
+	events_platform.SetContractCallbacks(&contractServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "contract/update_contract_null_dates", map[string]interface{}{
+		"contractId": contractId,
+	})
+
+	var contractStruct struct {
+		Contract_Update model.Contract
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &contractStruct)
+	require.Nil(t, err)
+	contract := contractStruct.Contract_Update
+	require.Equal(t, contractId, contract.ID)
+	require.Nil(t, contract.SignedAt)
+	require.Nil(t, contract.ServiceStartedAt)
+	require.Nil(t, contract.EndedAt)
+	require.Nil(t, contract.InvoicingStartDate)
 
 	require.True(t, calledUpdateContract)
 }
@@ -190,6 +246,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Quantity:  2,
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test1",
+		VatRate:   0.1,
 	})
 	serviceLineItemId2 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
 		Name:      "service line item 2",
@@ -200,6 +257,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Quantity:  23,
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test2",
+		VatRate:   0.2,
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization":    1,
@@ -242,6 +300,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.Equal(t, int64(2), firstServiceLineItem.Quantity)
 	require.Equal(t, model.DataSourceOpenline, firstServiceLineItem.Source)
 	require.Equal(t, "test1", firstServiceLineItem.AppSource)
+	require.Equal(t, 0.1, firstServiceLineItem.VatRate)
 
 	secondServiceLineItem := contractEntity.ServiceLineItems[1]
 	require.Equal(t, serviceLineItemId2, secondServiceLineItem.ID)
@@ -253,6 +312,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.Equal(t, int64(23), secondServiceLineItem.Quantity)
 	require.Equal(t, model.DataSourceOpenline, secondServiceLineItem.Source)
 	require.Equal(t, "test2", secondServiceLineItem.AppSource)
+	require.Equal(t, 0.2, secondServiceLineItem.VatRate)
 }
 
 func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {

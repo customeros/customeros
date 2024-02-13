@@ -11,5 +11,12 @@ query TenantBillingProfiles {
         internationalPaymentsBankInfo
         country
         email
+        vatNumber
+        sendInvoicesFrom
+        canPayWithDirectDebitACH
+        canPayWithDirectDebitSEPA
+        canPayWithDirectDebitBacs
+        canPayWithCard
+        canPayWithPigeon
     }
 }

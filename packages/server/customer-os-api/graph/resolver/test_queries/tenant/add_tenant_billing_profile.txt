@@ -12,6 +12,13 @@ tenant_AddBillingProfile(
         legalName: "legalName"
         domesticPaymentsBankInfo: "domesticPaymentsBankInfo"
         internationalPaymentsBankInfo: "internationalPaymentsBankInfo"
+        vatNumber: "vatNumber"
+        sendInvoicesFrom: "sendInvoicesFrom"
+        canPayWithCard: true
+        canPayWithDirectDebitSEPA: true
+        canPayWithDirectDebitACH: true
+        canPayWithDirectDebitBacs: true
+        canPayWithPigeon: true
     }) {
     id
   }

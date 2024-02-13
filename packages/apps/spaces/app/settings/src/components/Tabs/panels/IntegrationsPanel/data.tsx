@@ -16,6 +16,24 @@ export interface IntegrationItem {
 
 export const integrationsData: IntegrationItem[] = [
   {
+    key: 'unthread',
+    state: 'INACTIVE',
+    icon: '/integrationOptionLogos/unthread.png',
+    identifier: 'unthread',
+    name: 'Unthread',
+    fields: [],
+    isFromIntegrationApp: true,
+  },
+  {
+    key: 'customeros-custom-payment-provider',
+    state: 'INACTIVE',
+    icon: '/integrationOptionLogos/customer-os.png',
+    identifier: 'customeros-custom-payment-provider',
+    name: 'Custom payment provider',
+    fields: [],
+    isFromIntegrationApp: true,
+  },
+  {
     key: 'gsuite',
     state: 'INACTIVE',
     icon: '/integrationOptionLogos/google-icon.svg',
@@ -302,9 +320,9 @@ export const integrationsData: IntegrationItem[] = [
     ],
   },
   {
-    key: 'closecom',
+    key: 'close-oauth',
     state: 'INACTIVE',
-    identifier: 'closecom',
+    identifier: 'close-oauth',
     name: 'Close.com',
     icon: 'integrationOptionLogos/close.com.svg',
     fields: [
@@ -313,6 +331,7 @@ export const integrationsData: IntegrationItem[] = [
         label: 'API Key',
       },
     ],
+    isFromIntegrationApp: true,
   },
 
   {

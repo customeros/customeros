@@ -52,7 +52,7 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
 
   constructor(data?: Partial<OrganizationQuery['organization']> | null) {
     this.id = data?.id || '';
-    this.name = data?.name || '';
+    this.name = data?.name ?? 'Unnamed';
     this.description = data?.description || '';
     this.website = data?.website || '';
 

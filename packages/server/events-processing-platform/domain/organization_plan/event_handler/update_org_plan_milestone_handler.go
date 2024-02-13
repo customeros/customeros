@@ -55,11 +55,18 @@ func (h *updateOrganizationPlanMilestoneCommandHandler) Handle(ctx context.Conte
 		}
 
 		updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
+		statusDetails := model.OrganizationPlanDetails{}
+		if request.StatusDetails != nil {
+			statusDetails = model.OrganizationPlanDetails{
+				Status:    request.StatusDetails.Status,
+				UpdatedAt: updatedAtNotNil,
+				Comments:  request.StatusDetails.Comments,
+			}
+		}
 
-		statusDetails := model.OrganizationPlanDetails{
-			Status:    request.StatusDetails.Status,
-			UpdatedAt: updatedAtNotNil,
-			Comments:  request.StatusDetails.Comments,
+		var dueDate time.Time
+		if request.DueDate != nil {
+			dueDate = request.DueDate.AsTime()
 		}
 
 		evt, err := event.NewOrganizationPlanMilestoneUpdateEvent(
@@ -74,7 +81,7 @@ func (h *updateOrganizationPlanMilestoneCommandHandler) Handle(ctx context.Conte
 			request.Adhoc,
 			request.Retired,
 			updatedAtNotNil,
-			request.DueDate.AsTime(),
+			dueDate,
 			statusDetails,
 		)
 		if err != nil {
@@ -165,6 +172,7 @@ func GrpcItemsToDomainItems(items []*orgplanpb.OrganizationPlanMilestoneItem) []
 			Status:    item.Status,
 			Text:      item.Text,
 			UpdatedAt: item.UpdatedAt.AsTime(),
+			Uuid:      item.Uuid,
 		})
 	}
 	return domainItems

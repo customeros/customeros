@@ -355,7 +355,14 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 		Description:     descriptionUpdate,
 	}
 	curTime := utils.Now()
-	event, err := contactEvents.NewContactUpdateEvent(contactAggregate, source, dataFields, cmnmod.ExternalSystem{}, curTime)
+	event, err := contactEvents.NewContactUpdateEvent(contactAggregate, source, dataFields, cmnmod.ExternalSystem{}, curTime,
+		[]string{contactEvents.FieldMaskName,
+			contactEvents.FieldMaskFirstName,
+			contactEvents.FieldMaskLastName,
+			contactEvents.FieldMaskTimezone,
+			contactEvents.FieldMaskProfilePhotoUrl,
+			contactEvents.FieldMaskPrefix,
+			contactEvents.FieldMaskDescription})
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactUpdate(context.Background(), event)
 	require.Nil(t, err)

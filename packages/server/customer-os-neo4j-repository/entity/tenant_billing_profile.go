@@ -26,6 +26,13 @@ type TenantBillingProfileEntity struct {
 	InternationalPaymentsBankName     string
 	InternationalPaymentsBankAddress  string
 	InternationalPaymentsInstructions string
+	VatNumber                         string
+	SendInvoicesFrom                  string
+	CanPayWithCard                    bool
+	CanPayWithDirectDebitSEPA         bool
+	CanPayWithDirectDebitACH          bool
+	CanPayWithDirectDebitBacs         bool
+	CanPayWithPigeon                  bool
 	Source                            DataSource
 	SourceOfTruth                     DataSource
 	AppSource                         string

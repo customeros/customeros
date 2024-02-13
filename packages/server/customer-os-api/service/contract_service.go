@@ -22,6 +22,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"time"
 )
 
 type ContractService interface {
@@ -180,32 +181,66 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 
 	fieldMask := []contractpb.ContractFieldMask{}
 	contractUpdateRequest := contractpb.UpdateContractGrpcRequest{
-		Tenant:             common.GetTenantFromContext(ctx),
-		Id:                 input.ContractID,
-		LoggedInUserId:     common.GetUserIdFromContext(ctx),
-		Name:               utils.IfNotNilString(input.Name),
-		ContractUrl:        utils.IfNotNilString(input.ContractURL),
-		SignedAt:           utils.ConvertTimeToTimestampPtr(input.SignedAt),
-		ServiceStartedAt:   utils.ConvertTimeToTimestampPtr(input.ServiceStartedAt),
-		InvoicingStartDate: utils.ConvertTimeToTimestampPtr(input.InvoicingStartDate),
-		EndedAt:            utils.ConvertTimeToTimestampPtr(input.EndedAt),
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             input.ContractID,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		Name:           utils.IfNotNilString(input.Name),
+		ContractUrl:    utils.IfNotNilString(input.ContractURL),
 		SourceFields: &commonpb.SourceFields{
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: utils.StringFirstNonEmpty(utils.IfNotNilString(input.AppSource), constants.AppSourceCustomerOsApi),
 		},
-		RenewalPeriods:        input.RenewalPeriods,
-		AddressLine1:          utils.IfNotNilString(input.AddressLine1),
-		AddressLine2:          utils.IfNotNilString(input.AddressLine2),
-		Locality:              utils.IfNotNilString(input.Locality),
-		Country:               utils.IfNotNilString(input.Country),
-		Zip:                   utils.IfNotNilString(input.Zip),
-		OrganizationLegalName: utils.IfNotNilString(input.OrganizationLegalName),
-		InvoiceEmail:          utils.IfNotNilString(input.InvoiceEmail),
-		InvoiceNote:           utils.IfNotNilString(input.InvoiceNote),
+		RenewalPeriods:         input.RenewalPeriods,
+		AddressLine1:           utils.IfNotNilString(input.AddressLine1),
+		AddressLine2:           utils.IfNotNilString(input.AddressLine2),
+		Locality:               utils.IfNotNilString(input.Locality),
+		Country:                utils.IfNotNilString(input.Country),
+		Zip:                    utils.IfNotNilString(input.Zip),
+		OrganizationLegalName:  utils.IfNotNilString(input.OrganizationLegalName),
+		InvoiceEmail:           utils.IfNotNilString(input.InvoiceEmail),
+		InvoiceNote:            utils.IfNotNilString(input.InvoiceNote),
+		CanPayWithCard:         utils.IfNotNilBool(input.CanPayWithCard),
+		CanPayWithDirectDebit:  utils.IfNotNilBool(input.CanPayWithDirectDebit),
+		CanPayWithBankTransfer: utils.IfNotNilBool(input.CanPayWithBankTransfer),
 	}
 	if input.Currency != nil {
 		contractUpdateRequest.Currency = mapper.MapCurrencyFromModel(*input.Currency).String()
 	}
+
+	nullTime := time.Time{}
+
+	if input.SignedAt != nil {
+		if *input.SignedAt != nullTime {
+			contractUpdateRequest.SignedAt = utils.ConvertTimeToTimestampPtr(input.SignedAt)
+		} else {
+			contractUpdateRequest.SignedAt = nil
+		}
+	}
+
+	if input.ServiceStartedAt != nil {
+		if *input.ServiceStartedAt != nullTime {
+			contractUpdateRequest.ServiceStartedAt = utils.ConvertTimeToTimestampPtr(input.ServiceStartedAt)
+		} else {
+			contractUpdateRequest.ServiceStartedAt = nil
+		}
+	}
+
+	if input.EndedAt != nil {
+		if *input.EndedAt != nullTime {
+			contractUpdateRequest.EndedAt = utils.ConvertTimeToTimestampPtr(input.EndedAt)
+		} else {
+			contractUpdateRequest.EndedAt = nil
+		}
+	}
+
+	if input.InvoicingStartDate != nil {
+		if *input.InvoicingStartDate != nullTime {
+			contractUpdateRequest.InvoicingStartDate = utils.ConvertTimeToTimestampPtr(input.InvoicingStartDate)
+		} else {
+			contractUpdateRequest.InvoicingStartDate = nil
+		}
+	}
+
 	// prepare renewal cycle
 	if input.RenewalCycle != nil {
 		switch *input.RenewalCycle {
@@ -289,7 +324,20 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		if input.InvoiceNote != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE)
 		}
+		if input.CanPayWithCard != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_CARD)
+		}
+		if input.CanPayWithDirectDebit != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_DIRECT_DEBIT)
+		}
+		if input.CanPayWithBankTransfer != nil {
+			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER)
+		}
 		contractUpdateRequest.FieldsMask = fieldMask
+		if len(fieldMask) == 0 {
+			span.LogFields(log.String("result", "No fields to update"))
+			return nil
+		}
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)

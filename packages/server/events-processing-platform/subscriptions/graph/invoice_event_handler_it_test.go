@@ -29,12 +29,30 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	eventHandler := &InvoiceEventHandler{
 		log:          testLogger,
 		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
 
 	now := utils.Now()
 	yesterday := now.AddDate(0, 0, -1)
 	tomorrow := now.AddDate(0, 0, 1)
 	invoiceId := uuid.New().String()
+
+	// prepare grpc mock
+	calledRequestFillInvoice := false
+	invoiceGrpcServiceCallbacks := mocked_grpc.MockInvoiceServiceCallbacks{
+		RequestFillInvoice: func(context context.Context, inv *invoicepb.RequestFillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, inv.Tenant)
+			require.Equal(t, invoiceId, inv.InvoiceId)
+			require.Equal(t, "", inv.LoggedInUserId)
+			require.Equal(t, contractId, inv.ContractId)
+			require.Equal(t, constants.AppSourceEventProcessingPlatform, inv.AppSource)
+			calledRequestFillInvoice = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: invoiceId,
+			}, nil
+		},
+	}
+	mocked_grpc.SetInvoiceCallbacks(&invoiceGrpcServiceCallbacks)
 
 	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, invoiceId)
 	newEvent, err := invoice.NewInvoiceForContractCreateEvent(
@@ -45,9 +63,10 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 		},
 		contractId,
 		"EUR",
-		"INV-123",
 		neo4jenum.BillingCycleMonthlyBilling.String(),
 		"some note",
+		true,
+		true,
 		true,
 		now,
 		yesterday,
@@ -78,7 +97,9 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Equal(t, now, createdInvoice.UpdatedAt)
 	require.Equal(t, now, createdInvoice.DueDate)
 	require.Equal(t, true, createdInvoice.DryRun)
-	require.Equal(t, "INV-123", createdInvoice.Number)
+	require.Equal(t, true, createdInvoice.OffCycle)
+	require.Equal(t, true, createdInvoice.Postpaid)
+	require.Equal(t, "", createdInvoice.Number)
 	require.Equal(t, yesterday, createdInvoice.PeriodStartDate)
 	require.Equal(t, tomorrow, createdInvoice.PeriodEndDate)
 	require.Equal(t, neo4jenum.BillingCycleMonthlyBilling, createdInvoice.BillingCycle)
@@ -88,6 +109,8 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Equal(t, neo4jenum.CurrencyEUR, createdInvoice.Currency)
 	require.Equal(t, "", createdInvoice.RepositoryFileId)
 	require.Equal(t, "some note", createdInvoice.Note)
+
+	require.True(t, calledRequestFillInvoice)
 }
 
 func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
@@ -160,6 +183,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 		"providerAddressCountry",
 		"note abc",
 		neo4jenum.InvoiceStatusDue.String(),
+		"INV-001",
 		100,
 		20,
 		120,
@@ -279,11 +303,11 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), secondInvoiceLine.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, secondInvoiceLine.AppSource)
 	require.Equal(t, "test02", secondInvoiceLine.Name)
-	require.Equal(t, float64(50.2), secondInvoiceLine.Price)
+	require.Equal(t, 50.2, secondInvoiceLine.Price)
 	require.Equal(t, int64(22), secondInvoiceLine.Quantity)
-	require.Equal(t, float64(100.2), secondInvoiceLine.Amount)
-	require.Equal(t, float64(20.2), secondInvoiceLine.Vat)
-	require.Equal(t, float64(120.2), secondInvoiceLine.TotalAmount)
+	require.Equal(t, 100.2, secondInvoiceLine.Amount)
+	require.Equal(t, 20.2, secondInvoiceLine.Vat)
+	require.Equal(t, 120.2, secondInvoiceLine.TotalAmount)
 	require.Equal(t, "service-line-item-id-2", secondInvoiceLine.ServiceLineItemId)
 	require.Equal(t, "service-line-item-parent-id-2", secondInvoiceLine.ServiceLineItemParentId)
 	require.Equal(t, neo4jenum.BilledTypeAnnually, secondInvoiceLine.BilledType)
@@ -392,4 +416,36 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
 	require.Equal(t, neo4jenum.InvoiceStatusPaid, invoiceEntity.Status)
 	require.Equal(t, "link-1", invoiceEntity.PaymentDetails.PaymentLink)
+}
+
+func TestInvoiceEventHandler_OnInvoiceDeleteV1(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	organizationId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, organizationId, neo4jentity.ContractEntity{})
+	id := neo4jtest.CreateInvoiceForContract(ctx, testDatabase.Driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
+
+	// Prepare the event handler
+	eventHandler := &InvoiceEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, id)
+	invoiceDeleteEvent, err := invoice.NewInvoiceDeleteEvent(
+		aggregate,
+	)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = eventHandler.OnInvoiceDeleteV1(context.Background(), invoiceDeleteEvent)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelInvoice:                    0,
+		neo4jutil.NodeLabelInvoice + "_" + tenantName: 0,
+	})
 }

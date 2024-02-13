@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"time"
 
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -146,4 +147,23 @@ func (o *Organization) GetSocialIdForUrl(url string) string {
 		}
 	}
 	return ""
+}
+
+func (o *Organization) ContainsExternalSystem(externalSystem string) bool {
+	for _, es := range o.ExternalSystems {
+		if es.ExternalSystemId == externalSystem {
+			return true
+		}
+	}
+	return false
+}
+
+func (o *Organization) SkipUpdate(fields *OrganizationFields) bool {
+	if fields.ExternalSystem.Available() && !o.ContainsExternalSystem(fields.ExternalSystem.ExternalSystemId) {
+		return false
+	}
+	if o.Source.SourceOfTruth == constants.SourceOpenline && fields.ExternalSystem.Available() {
+		return true
+	}
+	return false
 }

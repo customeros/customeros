@@ -3,6 +3,7 @@ import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 import { useRef, useState, useEffect, MouseEvent } from 'react';
 
+import { useDeepCompareEffect } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import differenceInCalendarMonths from 'date-fns/differenceInCalendarMonths';
@@ -152,16 +153,41 @@ export const ContactCard = ({
       )} at ${organizationName}`;
   })();
 
-  const { state } = useForm<ContactForm>({
+  const { state, setDefaultValues } = useForm<ContactForm>({
     formId,
     defaultValues: data,
     stateReducer: (state, action, next) => {
+      if (
+        action.type === 'FIELD_CHANGE' &&
+        action.payload.name === 'timezone'
+      ) {
+        updateContact.mutate(
+          ContactFormDto.toDto(
+            { timezone: action.payload.value?.value },
+            data.id,
+          ),
+        );
+
+        return next;
+      }
       if (action.type === 'FIELD_BLUR') {
         switch (action.payload.name) {
-          case 'name':
-          case 'timezone':
+          case 'name': {
+            updateContact.mutate(
+              ContactFormDto.toDto(
+                { [action.payload.name]: action.payload.value },
+                data.id,
+              ),
+            );
+            break;
+          }
           case 'note': {
-            updateContact.mutate(ContactFormDto.toDto({ ...state.values }));
+            updateContact.mutate(
+              ContactFormDto.toDto(
+                { description: action.payload.value },
+                data.id,
+              ),
+            );
             break;
           }
           case 'title':
@@ -237,6 +263,10 @@ export const ContactCard = ({
       return next;
     },
   });
+
+  useDeepCompareEffect(() => {
+    setDefaultValues(data);
+  }, [data]);
 
   const handleDelete = (e: MouseEvent) => {
     e.stopPropagation();

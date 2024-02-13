@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 
 import { useIsRestoring } from '@tanstack/react-query';
@@ -50,7 +51,6 @@ export const PreviewPanel = ({ id }: { id: string }) => {
       </Flex>
 
       <InvoicePreviewModalContent
-        id={id ?? ''}
         data={data}
         isFetching={isFetching || isRestoring}
         isError={isError}

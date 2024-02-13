@@ -1,3 +1,4 @@
+'use client';
 import { GridItem } from '@ui/layout/Grid';
 import { PageLayout } from '@shared/components/PageLayout';
 import { RootSidenav } from '@shared/components/RootSidenav/RootSidenav';

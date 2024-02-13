@@ -160,6 +160,13 @@ func (s *tenantService) CreateTenantBillingProfile(ctx context.Context, input mo
 		Zip:                           utils.IfNotNilString(input.Zip),
 		DomesticPaymentsBankInfo:      utils.IfNotNilString(input.DomesticPaymentsBankInfo),
 		InternationalPaymentsBankInfo: utils.IfNotNilString(input.InternationalPaymentsBankInfo),
+		VatNumber:                     utils.IfNotNilString(input.VatNumber),
+		SendInvoicesFrom:              utils.IfNotNilString(input.SendInvoicesFrom),
+		CanPayWithCard:                utils.IfNotNilBool(input.CanPayWithCard),
+		CanPayWithDirectDebitSEPA:     utils.IfNotNilBool(input.CanPayWithDirectDebitSepa),
+		CanPayWithDirectDebitACH:      utils.IfNotNilBool(input.CanPayWithDirectDebitAch),
+		CanPayWithDirectDebitBacs:     utils.IfNotNilBool(input.CanPayWithDirectDebitBacs),
+		CanPayWithPigeon:              utils.IfNotNilBool(input.CanPayWithPigeon),
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -213,6 +220,13 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 		Zip:                           utils.IfNotNilString(input.Zip),
 		DomesticPaymentsBankInfo:      utils.IfNotNilString(input.DomesticPaymentsBankInfo),
 		InternationalPaymentsBankInfo: utils.IfNotNilString(input.InternationalPaymentsBankInfo),
+		VatNumber:                     utils.IfNotNilString(input.VatNumber),
+		SendInvoicesFrom:              utils.IfNotNilString(input.SendInvoicesFrom),
+		CanPayWithCard:                utils.IfNotNilBool(input.CanPayWithCard),
+		CanPayWithDirectDebitSEPA:     utils.IfNotNilBool(input.CanPayWithDirectDebitSepa),
+		CanPayWithDirectDebitACH:      utils.IfNotNilBool(input.CanPayWithDirectDebitAch),
+		CanPayWithDirectDebitBacs:     utils.IfNotNilBool(input.CanPayWithDirectDebitBacs),
+		CanPayWithPigeon:              utils.IfNotNilBool(input.CanPayWithPigeon),
 	}
 
 	if input.Patch != nil && *input.Patch {
@@ -248,6 +262,27 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 		}
 		if input.InternationalPaymentsBankInfo != nil {
 			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_INTERNATIONAL_PAYMENTS_BANK_INFO)
+		}
+		if input.VatNumber != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_VAT_NUMBER)
+		}
+		if input.SendInvoicesFrom != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_FROM)
+		}
+		if input.CanPayWithCard != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_CARD)
+		}
+		if input.CanPayWithDirectDebitSepa != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_SEPA)
+		}
+		if input.CanPayWithDirectDebitAch != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_ACH)
+		}
+		if input.CanPayWithDirectDebitBacs != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_DIRECT_DEBIT_BACS)
+		}
+		if input.CanPayWithPigeon != nil {
+			fieldMask = append(fieldMask, tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON)
 		}
 		updateRequest.FieldsMask = fieldMask
 	}

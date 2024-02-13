@@ -11,7 +11,7 @@ import (
 
 func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 	if dbNode == nil {
-		return nil
+		return &entity.InvoiceEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	invoiceEntity := entity.InvoiceEntity{
@@ -19,6 +19,8 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		CreatedAt:                     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:                     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		DryRun:                        utils.GetBoolPropOrFalse(props, "dryRun"),
+		OffCycle:                      utils.GetBoolPropOrFalse(props, "offCycle"),
+		Postpaid:                      utils.GetBoolPropOrFalse(props, "postpaid"),
 		Number:                        utils.GetStringPropOrEmpty(props, "number"),
 		PeriodStartDate:               utils.GetTimePropOrEpochStart(props, "periodStartDate"),
 		PeriodEndDate:                 utils.GetTimePropOrEpochStart(props, "periodEndDate"),
@@ -274,12 +276,13 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	tenantSettingsEntity := entity.TenantSettingsEntity{
-		Id:               utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		LogoUrl:          utils.GetStringPropOrEmpty(props, "logoUrl"),
-		InvoicingEnabled: utils.GetBoolPropOrFalse(props, "invoicingEnabled"),
-		DefaultCurrency:  enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "defaultCurrency")),
+		Id:                utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		LogoUrl:           utils.GetStringPropOrEmpty(props, "logoUrl"),
+		InvoicingEnabled:  utils.GetBoolPropOrFalse(props, "invoicingEnabled"),
+		InvoicingPostpaid: utils.GetBoolPropOrFalse(props, "invoicingPostpaid"),
+		DefaultCurrency:   enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "defaultCurrency")),
 	}
 	return &tenantSettingsEntity
 }
@@ -311,6 +314,13 @@ func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBi
 		InternationalPaymentsBankName:     utils.GetStringPropOrEmpty(props, "internationalPaymentsBankName"),
 		InternationalPaymentsBankAddress:  utils.GetStringPropOrEmpty(props, "internationalPaymentsBankAddress"),
 		InternationalPaymentsInstructions: utils.GetStringPropOrEmpty(props, "internationalPaymentsInstructions"),
+		VatNumber:                         utils.GetStringPropOrEmpty(props, "vatNumber"),
+		SendInvoicesFrom:                  utils.GetStringPropOrEmpty(props, "sendInvoicesFrom"),
+		CanPayWithCard:                    utils.GetBoolPropOrFalse(props, "canPayWithCard"),
+		CanPayWithDirectDebitSEPA:         utils.GetBoolPropOrFalse(props, "canPayWithDirectDebitSEPA"),
+		CanPayWithDirectDebitACH:          utils.GetBoolPropOrFalse(props, "canPayWithDirectDebitACH"),
+		CanPayWithDirectDebitBacs:         utils.GetBoolPropOrFalse(props, "canPayWithDirectDebitBacs"),
+		CanPayWithPigeon:                  utils.GetBoolPropOrFalse(props, "canPayWithPigeon"),
 		Source:                            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:                     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:                         utils.GetStringPropOrEmpty(props, "appSource"),
@@ -368,6 +378,9 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		OrganizationLegalName:           utils.GetStringPropOrEmpty(props, "organizationLegalName"),
 		InvoiceEmail:                    utils.GetStringPropOrEmpty(props, "invoiceEmail"),
 		InvoiceNote:                     utils.GetStringPropOrEmpty(props, "invoiceNote"),
+		CanPayWithCard:                  utils.GetBoolPropOrFalse(props, "canPayWithCard"),
+		CanPayWithDirectDebit:           utils.GetBoolPropOrFalse(props, "canPayWithDirectDebit"),
+		CanPayWithBankTransfer:          utils.GetBoolPropOrFalse(props, "canPayWithBankTransfer"),
 	}
 	return &contract
 }
@@ -461,6 +474,7 @@ func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *entity.ServiceLineIt
 		Comments:      utils.GetStringPropOrEmpty(props, "comments"),
 		ParentID:      utils.GetStringPropOrEmpty(props, "parentId"),
 		IsCanceled:    utils.GetBoolPropOrFalse(props, "isCanceled"),
+		VatRate:       utils.GetFloatPropOrZero(props, "vatRate"),
 	}
 	return &serviceLineItem
 }

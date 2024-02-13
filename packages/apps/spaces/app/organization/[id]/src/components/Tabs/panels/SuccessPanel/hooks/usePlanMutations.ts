@@ -4,6 +4,7 @@ import { useDebounce } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { toastError } from '@ui/presentation/Toast';
+import { OnboardingPlanStatus } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCreateOnboardingPlanMutation } from '@organization/src/graphql/createOnboardingPlan.generated';
 import { useUpdateOnboardingPlanMutation } from '@organization/src/graphql/updateOnboardingPlan.generated';
@@ -40,11 +41,12 @@ export const usePlanMutations = ({
           draft?.organizationPlansForOrganization?.unshift({
             masterPlanId: 'temp',
             id: 'temp',
+            createdAt: new Date().toISOString(),
             name: name ?? 'Unnamed plan',
             milestones: [],
             retired: false,
             statusDetails: {
-              status: 'NOT_STARTED',
+              status: OnboardingPlanStatus.NotStarted,
               text: 'Not started',
               updatedAt: new Date().toISOString(),
             },

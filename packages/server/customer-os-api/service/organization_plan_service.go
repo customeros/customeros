@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -213,7 +214,8 @@ func (s *organizationPlanService) GetOrganizationPlanMilestoneById(ctx context.C
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Organization plan milestone with id {%s} not found", organizationPlanMilestoneId))
 		return nil, wrappedErr
 	} else {
-		return neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(organizationPlanMilestoneDbNode), nil
+		opm := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(organizationPlanMilestoneDbNode)
+		return opm, nil
 	}
 }
 
@@ -262,7 +264,7 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 	span.SetTag(tracing.SpanTagEntityId, organizationPlanMilestoneId)
 	span.LogFields(log.Object("name", name), log.Object("order", order), log.Object("dueDate", dueDate), log.Object("items", items), log.Object("optional", optional), log.Object("retired", retired))
 
-	if name == nil && retired == nil && order == nil && dueDate == nil && optional == nil && items == nil {
+	if name == nil && retired == nil && order == nil && dueDate == nil && optional == nil && items == nil && adhoc == nil && statusDetails == nil {
 		// nothing to update
 		return nil
 	}
@@ -285,18 +287,20 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		LoggedInUserId:              common.GetUserIdFromContext(ctx),
 		AppSource:                   constants.AppSourceCustomerOsApi,
 		OrgId:                       orgId,
+		Name:                        utils.IfNotNilString(name),
+		Retired:                     utils.IfNotNilBool(retired),
+		Order:                       utils.IfNotNilInt64(order),
+		Optional:                    utils.IfNotNilBool(optional),
+		Adhoc:                       utils.IfNotNilBool(adhoc),
 	}
 	fieldsMask := make([]orgplanpb.OrganizationPlanMilestoneFieldMask, 0)
 	if name != nil {
-		grpcRequest.Name = utils.IfNotNilString(name)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_NAME)
 	}
 	if retired != nil {
-		grpcRequest.Retired = utils.IfNotNilBool(retired)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_RETIRED)
 	}
 	if order != nil {
-		grpcRequest.Order = utils.IfNotNilInt64(order)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ORDER)
 	}
 	if dueDate != nil {
@@ -305,7 +309,6 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_DUE_DATE)
 	}
 	if optional != nil {
-		grpcRequest.Optional = utils.IfNotNilBool(optional)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_OPTIONAL)
 	}
 	if items != nil {
@@ -317,7 +320,6 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_STATUS_DETAILS)
 	}
 	if adhoc != nil {
-		grpcRequest.Adhoc = utils.IfNotNilBool(adhoc)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ADHOC)
 	}
 	grpcRequest.FieldsMask = fieldsMask
@@ -545,10 +547,17 @@ func milestoneStatusDetailsInputToProtobuf(sd *model.OrganizationPlanMilestoneSt
 func modelItemsToPbItems(items []*model.OrganizationPlanMilestoneItemInput) []*orgplanpb.OrganizationPlanMilestoneItem {
 	out := make([]*orgplanpb.OrganizationPlanMilestoneItem, 0, len(items))
 	for _, v := range items {
+		var iUuid string
+		if v.UUID == nil {
+			iUuid = uuid.New().String()
+		} else {
+			iUuid = *v.UUID
+		}
 		out = append(out, &orgplanpb.OrganizationPlanMilestoneItem{
 			Status:    v.Status.String(),
 			UpdatedAt: utils.ConvertTimeToTimestampPtr(&v.UpdatedAt),
 			Text:      v.Text,
+			Uuid:      iUuid,
 		})
 	}
 	return out
