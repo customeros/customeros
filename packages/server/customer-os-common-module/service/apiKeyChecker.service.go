@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
@@ -11,7 +13,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
-	"net/http"
 )
 
 type App string
@@ -28,8 +29,9 @@ const (
 )
 
 const ApiKeyHeader = "X-Openline-API-KEY"
+const TenantApiKeyHeader = "X-CUSTOMER-OS-API-KEY"
 
-func ApiKeyCheckerHTTP(appKeyRepo repository.AppKeyRepository, app App, opts ...CommonServiceOption) func(c *gin.Context) {
+func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantApiKeyRepository, appKeyRepo repository.AppKeyRepository, app App, opts ...CommonServiceOption) func(c *gin.Context) {
 	// Apply the options to configure the middleware
 	config := &Options{}
 	for _, opt := range opts {
@@ -47,6 +49,7 @@ func ApiKeyCheckerHTTP(appKeyRepo repository.AppKeyRepository, app App, opts ...
 		span.LogFields(log.String("app", string(app)))
 
 		kh := c.GetHeader(ApiKeyHeader)
+		tenantKh := c.GetHeader(TenantApiKeyHeader)
 		if kh != "" {
 			// Check if the API key matches the cached value
 			if config.cache != nil && config.cache.CheckApiKey(string(app), kh) {
@@ -90,8 +93,51 @@ func ApiKeyCheckerHTTP(appKeyRepo repository.AppKeyRepository, app App, opts ...
 				span.Finish()
 			}
 			c.Next()
-			// illegal request, terminate the current process
+		} else if tenantKh != "" {
+			// Check if the API key matches the cached value
+			if config.cache != nil && config.cache.CheckApiKey(string(app), tenantKh) {
+				// Valid API key found in cache
+				span.LogFields(log.Bool("cached", true))
+				if !spanFinished {
+					spanFinished = true
+					span.Finish()
+				}
+				c.Next()
+				return
+			}
+			span.LogFields(log.Bool("cached", false))
+			keyResult := tenantApiKeyRepo.GetApiKey(string(app))
+
+			if keyResult.Error != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"errors": []gin.H{{"message”": "Invalid api key"}},
+				})
+				c.Abort()
+				return
+			}
+
+			apiKey := keyResult.Result.(*entity.TenantApiKey)
+
+			if apiKey == nil {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"errors": []gin.H{{"message": "Invalid api key"}},
+				})
+				c.Abort()
+				return
+			}
+
+			// If the API key is valid after database check, cache it
+			if config.cache != nil && keyResult.Result != nil {
+				config.cache.SetApiKey(string(app), tenantKh)
+			}
+
+			if !spanFinished {
+				spanFinished = true
+				span.Finish()
+			}
+			c.Next()
 		} else {
+			// illegal request, terminate the current process
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"errors": []gin.H{{"message": "Api key is required"}},
 			})
@@ -109,16 +155,13 @@ func ApiKeyCheckerGRPC(ctx context.Context, appKeyRepo repository.AppKeyReposito
 	}
 
 	kh := md.Get(ApiKeyHeader)
-	if kh != nil && len(kh) == 1 {
+	if len(kh) == 1 {
 		keyResult := appKeyRepo.FindByKey(ctx, string(app), kh[0])
 		if keyResult.Error != nil {
 			return false
 		}
 		appKey := keyResult.Result.(*entity.AppKey)
-		if appKey == nil {
-			return false
-		}
-		return true
+		return appKey != nil
 	}
 	return false
 }
