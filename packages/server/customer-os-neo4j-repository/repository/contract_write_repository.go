@@ -90,8 +90,8 @@ type ContractWriteRepository interface {
 	ContractCausedOnboardingStatusChange(ctx context.Context, tenant, contractId string) error
 	MarkStatusRenewalRequested(ctx context.Context, tenant, contractId string) error
 	MarkRolloutRenewalRequested(ctx context.Context, tenant, contractId string) error
-	MarkCycleInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
-	MarkOffCycleInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
+	MarkCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
+	MarkOffCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
 }
 
 type contractWriteRepository struct {
@@ -456,8 +456,8 @@ func (r *contractWriteRepository) MarkRolloutRenewalRequested(ctx context.Contex
 	return err
 }
 
-func (r *contractWriteRepository) MarkCycleInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkCycleInvoicingStarted")
+func (r *contractWriteRepository) MarkCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkCycleInvoicingRequested")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
@@ -479,8 +479,8 @@ func (r *contractWriteRepository) MarkCycleInvoicingStarted(ctx context.Context,
 	return err
 }
 
-func (r *contractWriteRepository) MarkOffCycleInvoicingStarted(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkOffCycleInvoicingStarted")
+func (r *contractWriteRepository) MarkOffCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkOffCycleInvoicingRequested")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
