@@ -93,7 +93,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 	invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(invoiceDbNode)
 
 	if invoiceEntity.OffCycle {
-		return h.fillOffCycleInvoice(ctx, eventData.Tenant, eventData.ContractId, *invoiceEntity)
+		return h.fillOffCyclePrepaidInvoice(ctx, eventData.Tenant, eventData.ContractId, *invoiceEntity)
 	} else {
 		return h.fillCycleInvoice(ctx, eventData.Tenant, eventData.ContractId, *invoiceEntity)
 	}
@@ -122,9 +122,12 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 	}
 
 	amount, vat, totalAmount := float64(0), float64(0), float64(0)
-	invoiceLines := []*invoicepb.InvoiceLine{}
+	var invoiceLines []*invoicepb.InvoiceLine
 
 	referenceTime := invoiceEntity.PeriodStartDate
+	if invoiceEntity.Postpaid {
+		referenceTime = utils.EndOfDayInUTC(invoiceEntity.PeriodEndDate)
+	}
 	for _, sliEntity := range sliEntities {
 		// skip for now one time and usage SLIs
 		if sliEntity.Billed == neo4jenum.BilledTypeOnce || sliEntity.Billed == neo4jenum.BilledTypeUsage {
@@ -185,8 +188,8 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 	return h.prepareAndCallFillInvoice(ctx, tenant, contractId, invoiceEntity, amount, vat, totalAmount, invoiceLines, span)
 }
 
-func (h *InvoiceEventHandler) fillOffCycleInvoice(ctx context.Context, tenant, contractId string, invoiceEntity neo4jentity.InvoiceEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.fillOffCycleInvoice")
+func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, tenant, contractId string, invoiceEntity neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.fillOffCyclePrepaidInvoice")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
