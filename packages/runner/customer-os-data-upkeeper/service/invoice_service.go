@@ -58,6 +58,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 	referenceTime := utils.Now()
 	dryRun := false
 	cachedTenantDefaultCurrencies := make(map[string]neo4jenum.Currency)
+	cachedTenantPostpaidFlags := make(map[string]bool)
 
 	for {
 		select {
@@ -90,6 +91,8 @@ func (s *invoiceService) GenerateCycleInvoices() {
 				currency = s.getTenantDefaultCurrency(ctx, tenant, cachedTenantDefaultCurrencies).String()
 			}
 
+			isPostpaid := s.getTenantInvoicingPostpaidFlag(ctx, tenant, cachedTenantPostpaidFlags)
+
 			var invoicePeriodStart, invoicePeriodEnd time.Time
 			if contract.NextInvoiceDate != nil {
 				invoicePeriodStart = *contract.NextInvoiceDate
@@ -98,7 +101,12 @@ func (s *invoiceService) GenerateCycleInvoices() {
 			}
 			invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycle)
 
-			readyToRequestInvoice := invoicePeriodEnd.After(invoicePeriodStart)
+			readyToRequestInvoice := false
+			if isPostpaid {
+				readyToRequestInvoice = utils.EndOfDayInUTC(invoicePeriodEnd).Before(referenceTime)
+			} else {
+				readyToRequestInvoice = invoicePeriodEnd.After(invoicePeriodStart)
+			}
 			if readyToRequestInvoice {
 				newInvoiceRequest := invoicepb.NewInvoiceForContractRequest{
 					Tenant:             record.Tenant,
@@ -108,6 +116,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 					InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
 					DryRun:             dryRun,
 					Note:               contract.InvoiceNote,
+					Postpaid:           isPostpaid,
 					SourceFields: &commonpb.SourceFields{
 						AppSource: constants.AppSourceDataUpkeeper,
 						Source:    neo4jentity.DataSourceOpenline.String(),
@@ -152,6 +161,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
+				return
 			}
 		}
 		//sleep for async processing, then check again
@@ -185,6 +195,18 @@ func (s *invoiceService) getTenantDefaultCurrency(ctx context.Context, tenant st
 
 	cachedTenantDefaultCurrencies[tenant] = tenantSettings.DefaultCurrency
 	return tenantSettings.DefaultCurrency
+}
+
+func (s *invoiceService) getTenantInvoicingPostpaidFlag(ctx context.Context, tenant string, cachedTenantPostpaidFlags map[string]bool) bool {
+	if postpaid, ok := cachedTenantPostpaidFlags[tenant]; ok {
+		return postpaid
+	}
+
+	dbNode, _ := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
+	tenantSettings := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
+
+	cachedTenantPostpaidFlags[tenant] = tenantSettings.InvoicingPostpaid
+	return tenantSettings.InvoicingPostpaid
 }
 
 func (s *invoiceService) SendPayNotifications() {
