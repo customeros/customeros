@@ -1,44 +1,44 @@
 import { FilePond, registerPlugin } from 'react-filepond';
-import React, { useRef, useState, useEffect, ChangeEvent } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
-import axios from 'axios';
-import Compressor from 'compressorjs';
 import { useWillUnmount } from 'rooks';
-import { ExtFile } from '@files-ui/core';
+import { FilePondFile } from 'filepond';
 import { renderToString } from 'react-dom/server';
 import { useQueryClient } from '@tanstack/react-query';
+import FilePondPluginImageResize from 'filepond-plugin-image-resize';
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
+import FilePondPluginValidateSize from 'filepond-plugin-file-validate-size';
+import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
 import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 import { useUpdateTenantSettingsMutation } from '@settings/graphql/updateTenantSettings.generated';
-import {
-  Dropzone,
-  ImagePreview,
-  FileInputButton,
-  FilesUiProvider,
-} from '@files-ui/react';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
-import { Image03 } from '@ui/media/icons/Image03';
+import { IconButton } from '@ui/form/IconButton';
 import { Upload01 } from '@ui/media/icons/Upload01';
-import { Image as ChakraImage } from '@ui/media/Image';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCustomerLogo } from '@shared/state/CustomerLogo.atom';
 
 registerPlugin(FilePondPluginImagePreview);
+registerPlugin(FilePondPluginValidateSize);
+registerPlugin(FilePondPluginImageResize);
+registerPlugin(FilePondPluginFileValidateType);
+
 interface LogoUploaderProps {}
 
 export const LogoUploader: React.FC<LogoUploaderProps> = () => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
-  const pond = useRef<FilePond | null>(null);
+  const pondRef = useRef<FilePond | null>(null);
 
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
   const queryKey = useTenantSettingsQuery.getKey();
-  const [{ logoUrl, dimensions }, setLogoUrl] = useCustomerLogo();
-  const [progress, setProgress] = useState(0);
+  const [{ logoUrl }, setLogoUrl] = useCustomerLogo();
+  const [hasError, setHasError] = useState<null | {
+    file: string;
+    error: string;
+  }>(null);
 
   const updateTenantSettingsMutation = useUpdateTenantSettingsMutation(client, {
     onMutate: ({ input: { patch, ...newSettings } }) => {
@@ -61,97 +61,41 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
     },
   });
 
-  const [files, setFiles] = React.useState<any[]>([]);
+  const [files, setFiles] = React.useState<Array<FilePondFile>>([]);
 
-  function FetchLogo({
-    id,
-    setLogoUrl,
-  }: {
-    id: string;
-    setLogoUrl: (args: any) => void;
-  }) {
-    return fetch(`/fs/file/${id}/download`)
-      .then(async (response: any) => {
-        const blob = await response.blob();
-        console.log('🏷️ ----- response: ', response);
-        const reader = new FileReader();
-        reader.onload = function () {
-          const img = new Image();
-          img.src = reader.result as string;
-          const dataUrl = reader.result as any;
-          if (dataUrl) {
-            setLogoUrl({
-              logoUrl: dataUrl,
-              dimensions: {
-                width: img.width || '136',
-                height: img.height || '36',
-              },
-            });
-          } else {
-            console.log('🏷️ ----- : ERROR');
-          }
-        };
-        reader.readAsDataURL(blob);
-      })
-      .catch((reason: any) => {
-        console.log('🏷️ ----- : ERROR CATCH', reason);
-      });
-  }
-
-  const updateFiles = async (incomingFiles: ExtFile[]) => {
-    // Do something with the files
-    // Assuming the first file is what you want to compress and upload
-    const file = incomingFiles[0];
-    setFiles(incomingFiles);
-    if (!file?.file) {
-      return;
-    }
-    new Compressor(file.file, {
-      quality: 0.92, // Set the quality for compression
-      success: async (result) => {
-        setFiles([result]);
-
-        const formData = new FormData();
-        formData.append('file', result, `${(result as File).name}`); // Append the compressed file
-
-        // Send the compressed image file to server with fetch API
-
-        try {
-          const response = await axios.post('fs/file', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-            onUploadProgress: function (progressEvent) {
-              setProgress((progressEvent.loaded / progressEvent.total) * 100);
+  const fetchLogo = async ({ id }: { id: string }) => {
+    try {
+      const response = await fetch(`/fs/file/${id}/download`);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onload = function () {
+        const img = new Image();
+        img.src = reader.result as string;
+        const dataUrl = reader.result as string;
+        if (dataUrl) {
+          setLogoUrl({
+            logoUrl: dataUrl,
+            dimensions: {
+              width: img.width || 136,
+              height: img.height || 36,
             },
           });
-          if (response.status === 200) {
-            // Assuming updateTenantSettingsMutation is a function you've defined to update your application state
-            updateTenantSettingsMutation.mutate({
-              input: {
-                patch: true,
-                logoUrl: response.data.previewUrl, // Ensure this matches the structure of your API response
-              },
-            });
+          if (!files.length) {
+            setFiles([blob as unknown as FilePondFile]);
           }
-        } catch (error) {
-          console.error('Error uploading file:', error);
+        } else {
+          setHasError({ error: 'Error loading logo', file: 'logo' });
         }
-      },
-      error(err) {
-        console.log('Compression error:', err.message);
-      },
-    });
+      };
+      reader.readAsDataURL(blob);
+    } catch (reason) {
+      setHasError({ error: 'Error loading logo', file: 'logo' });
+    }
   };
-  const removeFile = (id) => {
-    setFiles(files.filter((x) => x.id !== id));
-  };
+
   useWillUnmount(() => {
     queryClient.cancelQueries({ queryKey });
   });
-
-  //
-
   useEffect(() => {
     if (tenantSettingsData?.tenantSettings?.logoUrl) {
       const uuidRegex =
@@ -159,26 +103,14 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
       const match = `${tenantSettingsData?.tenantSettings?.logoUrl}`.match(
         uuidRegex,
       );
-      FetchLogo({ id: match[0], setLogoUrl });
-      // setFiles([{
-      //   source: `${tenantSettingsData?.tenantSettings?.logoUrl}`,
-      // }])
+
+      if (match) {
+        fetchLogo({ id: match[0] });
+      }
     }
   }, [tenantSettingsData?.tenantSettings?.logoUrl]);
 
-  // useEffect(() => {
-  //   if (logoUrl) {
-  //     setFiles([
-  //       {
-  //         source: `${logoUrl}`,
-  //         options: {
-  //           type: 'local',
-  //         },
-  //       },
-  //     ]);
-  //   }
-  // }, [logoUrl]);
-  function genLabel() {
+  function getDefaultLabel() {
     return renderToString(
       <div className='filepond-label-container'>
         <svg
@@ -193,7 +125,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
             stroke='#475467'
             strokeWidth='2'
             strokeLinecap='round'
-            strokeLineJoin='round'
+            strokeLinejoin='round'
           />
         </svg>
         <p className='filepond-idle-label-text'>
@@ -205,136 +137,188 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
     );
   }
 
-  const genLogoLabel = () => {
-    return renderToString(
-      <Box position='relative'>
-        <ChakraImage
-          src={`${logoUrl}`}
-          alt=''
-          width={dimensions.width || 136}
-          height={dimensions.height || 36}
-          style={{ objectFit: 'contain' }}
-        />
-      </Box>,
-    );
-  };
-
   return (
     <>
-      <Flex justifyContent='space-between'>
-        <Text color='gray.600' fontSize='sm' fontWeight='semibold' mb={4}>
+      <Flex justifyContent='space-between' alignItems='center'>
+        <Text color='gray.600' fontSize='sm' fontWeight='semibold'>
           Organization logo
         </Text>
         {logoUrl && (
-          <Box
-            sx={{
-              '& .material-button-root.text-6:hover': {
-                backgroundColor: 'var(--chakra-colors-primary-50)',
-              },
-            }}
-          >
-            <FileInputButton
-              variant='text'
-              value={files}
-              onChange={updateFiles}
-              accept={'image/*'}
-              maxFileSize={150000}
-              maxFiles={1}
-              autoClean
-              disableRipple
-              style={{
-                padding: 0,
-
-                maxHeight: '21px',
-                color: 'var(--chakra-colors-primary-600)',
-                letterSpacing: 'normal',
-                textTransform: 'unset',
-                fontSize: '12px',
-              }}
-            >
-              Upload new
-            </FileInputButton>
-          </Box>
+          <IconButton
+            variant='ghost'
+            aria-label='Upload file'
+            size='sm'
+            color={'gray.500'}
+            icon={<Upload01 />}
+            onClick={() => pondRef.current?.browse()}
+          />
         )}
       </Flex>
 
-      <FilePond
-        ref={(ref) => {
-          pond.current = ref;
-        }}
-        files={files}
-        onupdatefiles={setFiles}
-        server={{
-          url: '/fs/file',
+      <Box
+        mb={logoUrl ? 2 : 0}
+        onClick={() => hasError && pondRef.current?.browse()}
+        className={
+          hasError ? 'filepond-error' : logoUrl ? 'filepond-uploaded' : ''
+        }
+      >
+        <FilePond
+          ref={pondRef}
+          // @ts-expect-error ignore for now
+          files={files}
+          onupdatefiles={setFiles}
+          server={{
+            url: '/fs/file',
 
-          timeout: 70000,
-          load: (source, load, error, progress, abort, headers) => {
-            const myRequest = new Request(source);
-            fetch(myRequest).then(function (response) {
-              response.blob().then(function (myBlob) {
-                load(myBlob);
+            timeout: 5000,
+            load: (source, load, error, progress, abort, headers) => {
+              const myRequest = new Request(source);
+              fetch(myRequest).then(function (response) {
+                response.blob().then(function (myBlob) {
+                  load(myBlob);
+                });
               });
-            });
-          },
-          process: (
-            fieldName,
-            file,
-            metadata,
-            load,
-            error,
-            progress,
-            abort,
-            transfer,
-            options,
-          ) => {
-            // fieldName is the name of the input field
-            // file is the actual file object to send
-            const formData = new FormData();
-            formData.append('file', file, file.name);
+            },
+            fetch: (source, load, error, progress, abort, headers) => {
+              const myRequest = new Request(source);
+              fetch(myRequest).then(function (response) {
+                response.blob().then(function (myBlob) {
+                  load(myBlob);
+                });
+              });
+            },
 
-            const request = new XMLHttpRequest();
-            request.open('POST', '/fs/file');
+            process: (
+              fieldName,
+              file,
+              metadata,
+              load,
+              error,
+              progress,
+              abort,
+              transfer,
+              options,
+            ) => {
+              // fieldName is the name of the input field
+              // file is the actual file object to send
+              const formData = new FormData();
+              formData.append('file', file, file.name);
 
-            // Should call the progress method to update the progress to 100% before calling load
-            // Setting computable to false switches the loading indicator to infinite mode
-            request.upload.onprogress = (e) => {
-              progress(e.lengthComputable, e.loaded, e.total);
-            };
+              const request = new XMLHttpRequest();
+              request.open('POST', '/fs/file');
+              // Should call the progress method to update the progress to 100% before calling load
+              // Setting computable to false switches the loading indicator to infinite mode
+              request.upload.onprogress = (e) => {
+                progress(e.lengthComputable, e.loaded, e.total);
+              };
+              // Should call the load method when done and pass the returned server file id
+              // this server file id is then used later on when reverting or restoring a file
+              // so your server knows which file to return without exposing that info to the client
+              request.onload = function (ev) {
+                if (request.status >= 200 && request.status < 300) {
+                  // the load method accepts either a string (id) or an object
+                  load(request.responseText);
+                  const previewUrl = JSON.parse(request.response).id;
+                  updateTenantSettingsMutation.mutate({
+                    input: {
+                      patch: true,
+                      logoUrl: previewUrl, // Ensure this matches the structure of your API response
+                    },
+                  });
+                  const reader = new FileReader();
+                  reader.readAsDataURL(file);
+                  reader.onload = function () {
+                    const img = new Image();
+                    img.src = reader.result as string;
+                    setLogoUrl({
+                      logoUrl: reader.result as string,
+                      dimensions: {
+                        width: img.width,
+                        height: img.height,
+                      },
+                    });
+                    fetchLogo({ id: previewUrl });
 
-            // Should call the load method when done and pass the returned server file id
-            // this server file id is then used later on when reverting or restoring a file
-            // so your server knows which file to return without exposing that info to the client
-            request.onload = function () {
-              if (request.status >= 200 && request.status < 300) {
-                // the load method accepts either a string (id) or an object
-                load(request.responseText);
-              } else {
-                // Can call the error method if something is wrong, should exit after
-                error('oh no');
-              }
-            };
+                    return reader.result;
+                  };
+                } else {
+                  // Can call the error method if something is wrong, should exit after
+                  error('oh no');
+                }
+              };
 
-            request.send(formData);
+              request.send(formData);
 
-            // Should expose an abort method so the request can be cancelled
-            return {
-              abort: () => {
-                // This function is entered if the user has tapped the cancel button
-                request.abort();
+              // Should expose an abort method so the request can be cancelled
+              return {
+                abort: () => {
+                  // This function is entered if the user has tapped the cancel button
+                  request.abort();
 
-                // Let FilePond know the request has been cancelled
-                abort();
-              },
-            };
-          },
-        }}
-        maxFiles={1}
-        allowMultiple={false}
-        allowReplace={true}
-        name='files'
-        labelIdle={logoUrl ? genLogoLabel() : genLabel()}
-        stylePanelAspectRatio={'4:1'}
-      />
+                  // Let FilePond know the request has been cancelled
+                  abort();
+                },
+              };
+            },
+          }}
+          maxFiles={1}
+          allowMultiple={false}
+          allowReplace={true}
+          name='files'
+          acceptedFileTypes={[
+            'image/jpg',
+            'image/png',
+            'image/gif',
+            'image/jpeg',
+          ]}
+          panelHeight={120}
+          imagePreviewMaxFileSize='150KB'
+          maxFileSize='150KB'
+          imagePreviewMaxInstantPreviewFileSize={150000}
+          imagePreviewMaxHeight={136}
+          imageResizeTargetWidth={40}
+          imageResizeMode='contain'
+          imageResizeTargetHeight={36}
+          labelIdle={getDefaultLabel()}
+          labelFileProcessingError={'Upload failed, please try again'}
+          labelFileProcessing={'Processing'}
+          labelFileAdded='Label file added'
+          labelMaxFileSizeExceeded={'Your logo needs to be less than 150KB'}
+          labelFileLoading={'Loading file'}
+          labelFileWaitingForSize={'Waiting for size'}
+          labelFileLoadError={'Error processing file'}
+          labelFileProcessingComplete={'File processing complete'}
+          labelFileProcessingAborted={'Processing aborted'}
+          labelFileTypeNotAllowed={'Your logo must be PNG, JPG or GIF'}
+          credits={false}
+          onerror={(error, file) => {
+            // @ts-expect-error error file
+            setHasError({ error: error?.main, file: file?.file?.name });
+          }}
+          onremovefile={() => {
+            setHasError(null);
+            if (logoUrl) {
+              updateTenantSettingsMutation.mutate({
+                input: {
+                  patch: true,
+                  logoUrl: '',
+                },
+              });
+            }
+          }}
+          onaddfilestart={(file) => {
+            setHasError(null);
+            if (logoUrl) {
+              updateTenantSettingsMutation.mutate({
+                input: {
+                  patch: true,
+                  logoUrl: '',
+                },
+              });
+            }
+          }}
+        />
+      </Box>
     </>
   );
 };

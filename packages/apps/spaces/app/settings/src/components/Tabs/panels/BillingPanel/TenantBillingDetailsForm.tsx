@@ -1,22 +1,26 @@
 'use client';
 
+import React, { useEffect } from 'react';
 import { useForm } from 'react-inverted-form';
-import React, { useMemo, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useDebounce } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
-import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
+import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/VatInput';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
 import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateTenantBillingProfile.generated';
 
 import { Flex } from '@ui/layout/Flex';
+import { Eu } from '@ui/media/logos/Eu';
+import { Us } from '@ui/media/logos/Us';
+import { Gb } from '@ui/media/logos/Gb';
+import { Text } from '@ui/typography/Text';
 import { FormInput } from '@ui/form/Input';
-import { CardBody } from '@ui/layout/Card';
 import { FormSelect } from '@ui/form/SyncSelect';
+import { Divider } from '@ui/presentation/Divider';
 import { TenantBillingProfile } from '@graphql/types';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { FormSwitch } from '@ui/form/Switch/FromSwitch';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
@@ -29,17 +33,9 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
   setIsInvoiceProviderFocused,
-  setIsDomesticBankingDetailsSectionHovered,
-  setIsDomesticBankingDetailsSectionFocused,
-  setIsInternationalBankingDetailsSectionHovered,
-  setIsInternationalBankingDetailsSectionFocused,
 }: {
   setIsInvoiceProviderFocused: (newState: boolean) => void;
   setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
-  setIsDomesticBankingDetailsSectionHovered: (newState: boolean) => void;
-  setIsDomesticBankingDetailsSectionFocused: (newState: boolean) => void;
-  setIsInternationalBankingDetailsSectionHovered: (newState: boolean) => void;
-  setIsInternationalBankingDetailsSectionFocused: (newState: boolean) => void;
 }) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
@@ -87,79 +83,74 @@ export const TenantBillingPanelDetailsForm = ({
     },
   );
   const formId = 'tenant-billing-profile-form';
-  const invoicePreviewStaticData = useMemo(
-    () => ({
-      status: 'Preview',
-      invoiceNumber: 'INV-003',
-      lines: [
-        {
-          amount: 100,
-          createdAt: new Date().toISOString(),
-          id: 'dummy-id',
-          name: 'Professional tier',
-          price: 50,
-          quantity: 2,
-          totalAmount: 100,
-          vat: 0,
-        },
-      ],
-      tax: 0,
-      note: '',
-      total: 100,
-      dueDate: new Date().toISOString(),
-      subtotal: 100,
-      issueDate: new Date().toISOString(),
-      billedTo: {
-        addressLine1: '29 Maple Lane',
-        addressLine2: 'Springfield, Haven County',
-        locality: 'San Francisco',
-        zip: '89302',
-        country: 'United States',
-        email: 'invoices@acme.com',
-        name: 'Acme Corp.',
-      },
-    }),
-    [],
-  );
 
   const newDefaults = new TenantBillingDetailsDto();
 
   const handleUpdateData = useDebounce((d: TenantBillingDetails) => {
     const payload = TenantBillingDetailsDto.toPayload(d);
-
     updateBillingProfileMutation.mutate({
       input: {
         id: tenantBillingProfileId,
         ...payload,
       },
     });
-  }, 500);
+  }, 2500);
   const { state, setDefaultValues } = useForm({
     formId,
     defaultValues: newDefaults,
     stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        if (action.payload.name === 'country') {
-          const payload = TenantBillingDetailsDto.toPayload(next.values);
-          updateBillingProfileMutation.mutate({
-            input: {
-              id: tenantBillingProfileId,
-              ...payload,
-            },
-          });
+        switch (action.payload.name) {
+          case 'country':
+          case 'canPayWithDirectDebitSEPA':
+          case 'canPayWithDirectDebitACH':
+          case 'canPayWithDirectDebitBacs':
+          case 'canPayWithCard':
+          case 'canPayWithPigeon': {
+            const payload = TenantBillingDetailsDto.toPayload(next.values);
+            updateBillingProfileMutation.mutate({
+              input: {
+                id: tenantBillingProfileId,
+                ...payload,
+              },
+            });
 
-          return {
-            ...next,
-          };
+            return next;
+          }
+          case 'vatNumber':
+          case 'sendInvoicesFrom':
+          case 'organizationLegalName':
+          case 'addressLine1':
+          case 'addressLine2':
+          case 'addressLine3':
+          case 'zip':
+          case 'locality': {
+            handleUpdateData({
+              ...next.values,
+            });
+
+            return next;
+          }
+          default:
+            return next;
         }
-        if (action.payload.name !== 'country') {
-          handleUpdateData({
-            ...next.values,
-          });
+      }
+      if (action.type === 'FIELD_BLUR') {
+        switch (action.payload.name) {
+          case 'vatNumber':
+          case 'sendInvoicesFrom':
+          case 'organizationLegalName':
+          case 'addressLine1':
+          case 'addressLine2':
+          case 'addressLine3':
+          case 'zip':
+          case 'locality': {
+            handleUpdateData.flush();
 
-          return {
-            ...next,
-          };
+            return next;
+          }
+          default:
+            return next;
         }
       }
 
@@ -174,7 +165,15 @@ export const TenantBillingPanelDetailsForm = ({
   useEffect(() => {
     if (isFetchedAfterMount && !data?.tenantBillingProfiles.length) {
       createBillingProfileMutation.mutate({
-        input: {},
+        input: {
+          canPayWithDirectDebitACH: false,
+          canPayWithDirectDebitSEPA: false,
+          canPayWithDirectDebitBacs: false,
+          canPayWithCard: false,
+          canPayWithPigeon: false,
+          sendInvoicesFrom: '',
+          vatNumber: '',
+        },
       });
     }
   }, [isFetchedAfterMount, data]);
@@ -193,8 +192,7 @@ export const TenantBillingPanelDetailsForm = ({
   }, [isFetchedAfterMount, data]);
 
   return (
-    <CardBody as={Flex} flexDir='column' px='6' w='full' gap={4}>
-      <LogoUploader />
+    <Flex flexDir='column' gap={4}>
       <FormInput
         autoComplete='off'
         label='Organization legal name'
@@ -242,7 +240,7 @@ export const TenantBillingPanelDetailsForm = ({
           onBlur={() => setIsInvoiceProviderFocused(false)}
         />
 
-        <Flex>
+        <Flex gap={2}>
           <FormInput
             autoComplete='off'
             label='Billing address locality'
@@ -256,7 +254,7 @@ export const TenantBillingPanelDetailsForm = ({
             autoComplete='off'
             label='Billing address zip/Postal code'
             name='zip'
-            placeholder='ZIP/Potal code'
+            placeholder='ZIP/Postal code'
             formId={formId}
             onFocus={() => setIsInvoiceProviderFocused(true)}
             onBlur={() => setIsInvoiceProviderFocused(false)}
@@ -268,9 +266,27 @@ export const TenantBillingPanelDetailsForm = ({
           formId={formId}
           options={countryOptions}
         />
+        <VatInput
+          formId={formId}
+          name='vatNumber'
+          autoComplete='off'
+          label='VAT number'
+          isLabelVisible
+          labelProps={{
+            fontSize: 'sm',
+            mb: 0,
+            mt: 4,
+            fontWeight: 'semibold',
+          }}
+          textOverflow='ellipsis'
+          placeholder='VAT number'
+          onFocus={() => setIsInvoiceProviderFocused(true)}
+          onBlur={() => setIsInvoiceProviderFocused(false)}
+        />
+
         <FormInput
           autoComplete='off'
-          label='Email'
+          label='Send invoice from'
           isLabelVisible
           labelProps={{
             fontSize: 'sm',
@@ -291,40 +307,94 @@ export const TenantBillingPanelDetailsForm = ({
         />
       </Flex>
 
-      <FormAutoresizeTextarea
-        label='Domestic banking details'
-        isLabelVisible
-        name='domesticPaymentsBankInfo'
+      <Flex position='relative' alignItems='center'>
+        <Text color='gray.500' fontSize='xs' whiteSpace='nowrap' mr={2}>
+          Customer can pay using
+        </Text>
+        <Divider background='gray.200' />
+      </Flex>
+
+      <FormSwitch
+        name='canPayWithCard'
         formId={formId}
-        labelProps={{
-          fontSize: 'sm',
-          mb: 0,
-          fontWeight: 'semibold',
-        }}
-        onMouseEnter={() => setIsDomesticBankingDetailsSectionHovered(true)}
-        onMouseLeave={() => setIsDomesticBankingDetailsSectionHovered(false)}
-        onFocus={() => setIsDomesticBankingDetailsSectionFocused(true)}
-        onBlur={() => setIsDomesticBankingDetailsSectionFocused(false)}
+        size='sm'
+        label={
+          <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
+            Credit or Debit cards
+          </Text>
+        }
       />
-      <FormAutoresizeTextarea
-        label='International banking details'
-        isLabelVisible
-        name='internationalPaymentsBankInfo'
+
+      <Flex flexDir='column' gap={2}>
+        <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
+          Direct debit via
+        </Text>
+        <FormSwitch
+          name='canPayWithDirectDebitSEPA'
+          formId={formId}
+          size='sm'
+          label={
+            <Text
+              fontSize='sm'
+              fontWeight='medium'
+              whiteSpace='nowrap'
+              as='label'
+            >
+              <Eu mr={2} />
+              SEPA
+            </Text>
+          }
+        />
+        <FormSwitch
+          name='canPayWithDirectDebitACH'
+          formId={formId}
+          size='sm'
+          label={
+            <Text
+              fontSize='sm'
+              fontWeight='medium'
+              whiteSpace='nowrap'
+              as='label'
+            >
+              <Us mr={2} />
+              ACH
+            </Text>
+          }
+        />
+
+        <FormSwitch
+          name='canPayWithDirectDebitBacs'
+          formId={formId}
+          size='sm'
+          label={
+            <Text
+              fontSize='sm'
+              fontWeight='medium'
+              whiteSpace='nowrap'
+              as='label'
+            >
+              <Gb mr={2} />
+              Bacs
+            </Text>
+          }
+        />
+      </Flex>
+      {/*<Flex justifyContent='space-between' alignItems='center'>*/}
+      {/*  <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>*/}
+      {/*    Bank transfer*/}
+      {/*  </Text>*/}
+      {/*  <Switch size='sm' />*/}
+      {/*</Flex>*/}
+      <FormSwitch
+        name='canPayWithPigeon'
         formId={formId}
-        labelProps={{
-          fontSize: 'sm',
-          mb: 0,
-          fontWeight: 'semibold',
-        }}
-        onMouseEnter={() =>
-          setIsInternationalBankingDetailsSectionHovered(true)
+        size='sm'
+        label={
+          <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
+            Carrier pigeon
+          </Text>
         }
-        onMouseLeave={() =>
-          setIsInternationalBankingDetailsSectionHovered(false)
-        }
-        onFocus={() => setIsInternationalBankingDetailsSectionFocused(true)}
-        onBlur={() => setIsInternationalBankingDetailsSectionFocused(false)}
       />
-    </CardBody>
+    </Flex>
   );
 };
