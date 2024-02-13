@@ -19,7 +19,7 @@ type Repositories struct {
 	UserRepository                  neo4jrepo.UserRepository
 	TenantRepository                neo4jrepo.TenantRepository
 	StateRepository                 neo4jrepo.StateRepository
-	ApiKeyRepository                repository.ApiKeyRepository
+	TenantApiKeyRepository          repository.TenantApiKeyRepository
 }
 
 func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositories {
@@ -32,7 +32,7 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 		UserRepository:                  neo4jrepo.NewUserRepository(driver),
 		TenantRepository:                neo4jrepo.NewTenantRepository(driver),
 		StateRepository:                 neo4jrepo.NewStateRepository(driver),
-		ApiKeyRepository:                repository.NewApiKeyRepo(db),
+		TenantApiKeyRepository:          repository.NewTenantApiKeyRepo(db),
 	}
 
 	var err error
@@ -67,7 +67,7 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.ApiKey{})
+	err = db.AutoMigrate(&entity.TenantApiKey{})
 	if err != nil {
 		log.Print(err)
 		panic(err)
