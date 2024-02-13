@@ -78,6 +78,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare sources for docker build
+        run: |
+          mkdir tmp-sources
+          mkdir tmp-sources/customer-os-common-module
+          mkdir tmp-sources/settings-api
+
+          rsync -av --progress --exclude="tmp-sources" * tmp-sources/settings-api
+          cp .env tmp-sources/settings-api/.env
+          cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
+
+          cp Dockerfile tmp-sources/Dockerfile
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
         with:
@@ -94,7 +106,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v5.1.0
         with:
-          context: packages/server/settings-api/.
+          context: packages/server/settings-api/tmp-sources/.
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

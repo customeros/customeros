@@ -129,8 +129,8 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 		referenceTime = utils.EndOfDayInUTC(invoiceEntity.PeriodEndDate)
 	}
 	for _, sliEntity := range sliEntities {
-		// skip for now one time and usage SLIs
-		if sliEntity.Billed == neo4jenum.BilledTypeOnce || sliEntity.Billed == neo4jenum.BilledTypeUsage {
+		// skip for now usage SLIs
+		if sliEntity.Billed == neo4jenum.BilledTypeUsage {
 			continue
 		}
 		// skip SLI if of None type
@@ -145,11 +145,37 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 		if !sliEntity.IsActiveAt(referenceTime) {
 			continue
 		}
+		// process one time SLIs
+		if sliEntity.Billed == neo4jenum.BilledTypeOnce {
+
+		}
+
+		calculatedSLIAmount, calculatedSLIVat := float64(0), float64(0)
+		invoiceLineCalculationsReady := false
+		// process one time SLIs
+		if sliEntity.Billed == neo4jenum.BilledTypeOnce {
+			// Check any version of SLI not invoiced
+			result, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, tenant, sliEntity.ParentID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Error getting latest invoice line for sli parent id {%s}: {%s}", sliEntity.ID, err.Error)
+			}
+			if result != nil {
+				// SLI already invoiced
+				continue
+			}
+			calculatedSLIAmount = utils.TruncateFloat64(sliEntity.Price, 2)
+			calculatedSLIVat = utils.TruncateFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
+			invoiceLineCalculationsReady = true
+		}
 		// process monthly, quarterly and annually SLIs
 		if sliEntity.Billed == neo4jenum.BilledTypeMonthly || sliEntity.Billed == neo4jenum.BilledTypeQuarterly || sliEntity.Billed == neo4jenum.BilledTypeAnnually {
-			calculatedSLIAmount := calculateSLIAmountForCycleInvoicing(sliEntity.Quantity, sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycle)
+			calculatedSLIAmount = calculateSLIAmountForCycleInvoicing(sliEntity.Quantity, sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycle)
 			calculatedSLIAmount = utils.TruncateFloat64(calculatedSLIAmount, 2)
-			calculatedSLIVat := utils.TruncateFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
+			calculatedSLIVat = utils.TruncateFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
+			invoiceLineCalculationsReady = true
+		}
+		if invoiceLineCalculationsReady {
 			amount += calculatedSLIAmount
 			vat += calculatedSLIVat
 			invoiceLine := invoicepb.InvoiceLine{

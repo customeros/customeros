@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -12,8 +13,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/dto"
 	"github.com/sirupsen/logrus"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
 	"log"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
 )
 
 func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
@@ -53,7 +55,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/validateAddress",
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
+		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationAddressRequest
 			if err := c.BindJSON(&request); err != nil {
@@ -123,7 +125,7 @@ func main() {
 		})
 
 	r.POST("/validatePhoneNumber",
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
+		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationPhoneNumberRequest
 
@@ -150,7 +152,7 @@ func main() {
 		})
 
 	r.POST("/validateEmail",
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
+		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationEmailRequest
 
