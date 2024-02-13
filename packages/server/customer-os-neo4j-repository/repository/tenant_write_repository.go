@@ -86,13 +86,15 @@ type TenantBillingProfileUpdateFields struct {
 }
 
 type TenantSettingsFields struct {
-	UpdatedAt              time.Time     `json:"updatedAt"`
-	LogoUrl                string        `json:"logoUrl"`
-	DefaultCurrency        enum.Currency `json:"defaultCurrency"`
-	InvoicingEnabled       bool          `json:"invoicingEnabled"`
-	UpdateLogoUrl          bool          `json:"updateLogoUrl"`
-	UpdateInvoicingEnabled bool          `json:"updateInvoicingEnabled"`
-	UpdateDefaultCurrency  bool          `json:"updateDefaultCurrency"`
+	UpdatedAt               time.Time     `json:"updatedAt"`
+	LogoUrl                 string        `json:"logoUrl"`
+	DefaultCurrency         enum.Currency `json:"defaultCurrency"`
+	InvoicingEnabled        bool          `json:"invoicingEnabled"`
+	InvoicingPostpaid       bool          `json:"invoicingPostpaid"`
+	UpdateLogoUrl           bool          `json:"updateLogoUrl"`
+	UpdateInvoicingEnabled  bool          `json:"updateInvoicingEnabled"`
+	UpdateInvoicingPostpaid bool          `json:"updateInvoicingPostpaid"`
+	UpdateDefaultCurrency   bool          `json:"updateDefaultCurrency"`
 }
 
 type TenantWriteRepository interface {
@@ -316,6 +318,10 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 	if data.UpdateInvoicingEnabled {
 		cypher += ", ts.invoicingEnabled=$invoicingEnabled"
 		params["invoicingEnabled"] = data.InvoicingEnabled
+	}
+	if data.UpdateInvoicingPostpaid {
+		cypher += ", ts.invoicingPostpaid=$invoicingPostpaid"
+		params["invoicingPostpaid"] = data.InvoicingPostpaid
 	}
 	if data.UpdateDefaultCurrency {
 		cypher += ", ts.defaultCurrency=$defaultCurrency"

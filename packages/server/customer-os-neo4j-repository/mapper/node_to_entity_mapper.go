@@ -275,12 +275,13 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	tenantSettingsEntity := entity.TenantSettingsEntity{
-		Id:               utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		LogoUrl:          utils.GetStringPropOrEmpty(props, "logoUrl"),
-		InvoicingEnabled: utils.GetBoolPropOrFalse(props, "invoicingEnabled"),
-		DefaultCurrency:  enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "defaultCurrency")),
+		Id:                utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		LogoUrl:           utils.GetStringPropOrEmpty(props, "logoUrl"),
+		InvoicingEnabled:  utils.GetBoolPropOrFalse(props, "invoicingEnabled"),
+		InvoicingPostpaid: utils.GetBoolPropOrFalse(props, "invoicingPostpaid"),
+		DefaultCurrency:   enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "defaultCurrency")),
 	}
 	return &tenantSettingsEntity
 }

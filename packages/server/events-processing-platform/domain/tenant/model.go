@@ -16,9 +16,10 @@ type Tenant struct {
 }
 
 type TenantSettings struct {
-	InvoicingEnabled bool   `json:"invoicingEnabled"`
-	DefaultCurrency  string `json:"defaultCurrency"`
-	LogoUrl          string `json:"logoUrl"`
+	InvoicingEnabled  bool   `json:"invoicingEnabled"`
+	InvoicingPostpaid bool   `json:"invoicingPostpaid"`
+	DefaultCurrency   string `json:"defaultCurrency"`
+	LogoUrl           string `json:"logoUrl"`
 }
 
 type TenantBillingProfile struct {

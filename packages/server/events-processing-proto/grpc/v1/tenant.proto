@@ -93,6 +93,7 @@ enum TenantSettingsFieldMask {
   TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY = 1;
   TENANT_SETTINGS_FIELD_INVOICING_ENABLED = 2;
   TENANT_SETTINGS_FIELD_LOGO_URL = 3;
+  TENANT_SETTINGS_FIELD_INVOICING_POSTPAID = 4;
 }
 
 message UpdateTenantSettingsRequest {
@@ -104,6 +105,7 @@ message UpdateTenantSettingsRequest {
   string defaultCurrency = 7;
   bool invoicingEnabled = 8;
   string logoUrl = 9;
+  bool invoicingPostpaid = 10;
 }
 
 service tenantGrpcService {

@@ -33,6 +33,7 @@ message NewInvoiceForContractRequest {
   BillingCycle billingCycle = 12;
   string note = 13;
   bool offCycle = 14;
+  bool postpaid = 15;
 }
 
 message FillInvoiceRequest {
