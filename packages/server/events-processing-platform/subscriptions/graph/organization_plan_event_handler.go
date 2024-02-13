@@ -233,37 +233,8 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		UpdateStatusDetails: eventData.UpdateStatusDetails(),
 		UpdateAdhoc:         eventData.UpdateAdhoc(),
 	}
-	// check if milestone status should update
-	if eventData.UpdateItems() {
-		allItemsDone, late, started := allItemsDoneLateStarted(eventData.Items)
-		late = late || eventData.UpdatedAt.After(dueDate) && eventData.UpdatedAt.Day() != dueDate.Day()
-		if allItemsDone {
-			if late {
-				data.StatusDetails.Status = model.MilestoneDoneLate.String()
-			} else {
-				data.StatusDetails.Status = model.MilestoneDone.String()
-			}
-		} else {
-			if started {
-				if late {
-					data.StatusDetails.Status = model.MilestoneStartedLate.String()
-				} else {
-					data.StatusDetails.Status = model.MilestoneStarted.String()
-				}
-			} else {
-				if late {
-					data.StatusDetails.Status = model.MilestoneNotStartedLate.String()
-				} else {
-					data.StatusDetails.Status = model.MilestoneNotStarted.String()
-				}
-			}
-		}
-		data.StatusDetails.UpdatedAt = eventData.UpdatedAt
-		data.StatusDetails.Comments = eventData.StatusDetails.Comments
-		data.UpdateStatusDetails = true
-	}
-
-	if eventData.UpdateDueDate() && !eventData.UpdateItems() {
+	// if due date changed, update status details downstream
+	if eventData.UpdateDueDate() {
 		lateStatus := (eventData.StatusDetails.Status == model.MilestoneNotStartedLate.String() || eventData.StatusDetails.Status == model.MilestoneStartedLate.String() || eventData.StatusDetails.Status == model.MilestoneDoneLate.String())
 		milestoneLate := eventData.UpdatedAt.After(dueDate) && eventData.UpdatedAt.Day() != dueDate.Day() || lateStatus
 		// change milestone status if due date changed
@@ -307,6 +278,35 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 				}
 			}
 		}
+	}
+	// check if milestone status should update
+	if eventData.UpdateItems() {
+		allItemsDone, late, started := allItemsDoneLateStarted(eventData.Items)
+		late = late || eventData.UpdatedAt.After(dueDate) && eventData.UpdatedAt.Day() != dueDate.Day()
+		if allItemsDone {
+			if late {
+				data.StatusDetails.Status = model.MilestoneDoneLate.String()
+			} else {
+				data.StatusDetails.Status = model.MilestoneDone.String()
+			}
+		} else {
+			if started {
+				if late {
+					data.StatusDetails.Status = model.MilestoneStartedLate.String()
+				} else {
+					data.StatusDetails.Status = model.MilestoneStarted.String()
+				}
+			} else {
+				if late {
+					data.StatusDetails.Status = model.MilestoneNotStartedLate.String()
+				} else {
+					data.StatusDetails.Status = model.MilestoneNotStarted.String()
+				}
+			}
+		}
+		data.StatusDetails.UpdatedAt = eventData.UpdatedAt
+		data.StatusDetails.Comments = eventData.StatusDetails.Comments
+		data.UpdateStatusDetails = true
 	}
 
 	err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, eventData.OrganizationPlanId, eventData.MilestoneId, data)
