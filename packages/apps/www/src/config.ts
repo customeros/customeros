@@ -101,6 +101,13 @@ export const SIDEBAR: Sidebar = {
       { text: "API Reference", link: "en/api/invoice-api"},
       { text: "Invoice Events", link: "en/api/invoice-events"},
       { text: "Invoice Object", link: "en/api/invoice-object"},
+      { text: "Line Items Object", link: "en/api/invoice-line-items-object"},
+      { text: "Tax Object", link: "en/api/invoice-tax-object"},
+    ],
+    "Organizations API": [
+      { text: "API Reference", link: "en/api/organization-api"},
+      { text: "Organization Events", link: "en/api/organization-events"},
+      { text: "Organization Object", link: "en/api/organization-object"},
     ],
     CLI: [
       { text: "Getting Started", link: "en/cli/getting-started" },

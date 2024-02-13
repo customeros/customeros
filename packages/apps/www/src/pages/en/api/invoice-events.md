@@ -9,7 +9,7 @@ Listen for events on your CustomerOS account so you can take action in your appl
 
 ## Invoice events
 
-You can subscribe to any of the invoice events described below.  All events send the [`invoice` data object](#the-invoice-object) to your configured webhook endpoint.
+You can subscribe to any of the invoice events described below.  All events send the [`invoice` data object](invoice-object) to your configured webhook endpoint.
 
 ### invoice.finalized
 This event occurs when an open invoice is generated for a customer. 
@@ -73,44 +73,3 @@ This event occurs when an invoice has been voided and is no longer able to be ac
   }
 }
 ```
-
-
-### id
-Unique `string` idenfying the invoice object.  This property is always set.
-
-### object
-`String` representing the object's type.  Objects of the same type share the same value. 
-
-### amountDue
-
-### amountPaid
-
-### amountRemaining
-
-### created
-
-### currency
-
-### due
-
-### invoiceUrl
-
-### lastUpdated
-
-### lineItems
-
-### note
-
-### number
-
-### organization
-
-### paid
-
-### subtotal
-
-### status
-
-### tax
-
-

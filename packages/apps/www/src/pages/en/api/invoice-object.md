@@ -59,22 +59,31 @@ Unique `string` idenfying the invoice object.  This property is always set.
 `String` representing the object's type.  Objects of the same type share the same value. 
 
 ### amountDue
+`Float` representing the total amount due for this invoice, including any applicable taxes.
 
 ### amountPaid
+`Float` representing the amount that has been paid against the invoice.
 
 ### amountRemaining
+`Float` representing the difference between the `amountDue` and `amountPaid`.
 
 ### created
+ISO 8601 `timestamp` of when the invoice object was created.
 
 ### currency
+`Enum` representing the three-letter ISO currency code, in lower case.
 
 ### due
+ISO 8601 `timestamp` representing the date payment for this invoice is due.
 
 ### invoiceUrl
+A nullable `string` representing the URL for the hosted invoice page which allows customers to view and pay an invoice.
 
 ### lastUpdated
+ISO 8601 `timestamp` of when the invoice was last updated.
 
 ### lineItems
+
 
 ### note
 
