@@ -110,7 +110,7 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantApiKeyRepository, appKe
 
 			if keyResult.Error != nil {
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errors": []gin.H{{"message": fmt.Sprintf("Error while checking api key: %s", keyResult.Error.Error())}},
+					"errors": []gin.H{{"message”": "Invalid api key"}},
 				})
 				c.Abort()
 				return
