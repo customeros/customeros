@@ -53,16 +53,14 @@ func (s syncEmailService) SyncEmail(ctx context.Context, email model.EmailData) 
 
 	if email.SentBy != "" {
 		domain := utils.ExtractDomain(email.SentBy)
-		domainsSlice = append(domainsSlice, domain)
+		utils.EnforceSingleValue(domainsSlice, domain)
 		name = utils.ExtractName(email.SentBy)
 	}
 
 	organizationData := model.OrganizationData{
-		BaseData: email.BaseData,
-		//CustomerOsId:   "", TODO check if this is needed
+		BaseData:       email.BaseData,
 		Name:           name,
 		Domains:        domainsSlice,
-		Email:          email.SentBy,
 		DomainRequired: true,
 	}
 	organizationsData = append(organizationsData, organizationData)

@@ -424,3 +424,9 @@ func ExtractName(email string) string {
 	name := strings.TrimSpace(email[:atIndex])
 	return name
 }
+
+func EnforceSingleValue(slice []string, value string) {
+	for i := range slice {
+		slice[i] = value
+	}
+}
