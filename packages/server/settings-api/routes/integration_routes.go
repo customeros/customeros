@@ -12,7 +12,7 @@ import (
 func InitIntegrationRoutes(r *gin.Engine, ctx context.Context, services *service.Services) {
 	r.GET("/integrations",
 		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.Repositories.CommonRepositories.AppKeyRepository, commonService.SETTINGS_API),
+		commonService.ApiKeyCheckerHTTP(services.Repositories.CommonRepositories.TenantApiKeyRepository, services.Repositories.CommonRepositories.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
@@ -28,7 +28,7 @@ func InitIntegrationRoutes(r *gin.Engine, ctx context.Context, services *service
 
 	r.POST("/integration",
 		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.Repositories.CommonRepositories.AppKeyRepository, commonService.SETTINGS_API),
+		commonService.ApiKeyCheckerHTTP(services.Repositories.CommonRepositories.TenantApiKeyRepository, services.Repositories.CommonRepositories.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			var request map[string]interface{}
 
@@ -51,7 +51,7 @@ func InitIntegrationRoutes(r *gin.Engine, ctx context.Context, services *service
 
 	r.DELETE("/integration/:identifier",
 		commonService.TenantUserContextEnhancer(commonService.USERNAME, services.Repositories.CommonRepositories),
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.Repositories.CommonRepositories.AppKeyRepository, commonService.SETTINGS_API),
+		commonService.ApiKeyCheckerHTTP(services.Repositories.CommonRepositories.TenantApiKeyRepository, services.Repositories.CommonRepositories.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			identifier := c.Param("identifier")
 			if identifier == "" {
