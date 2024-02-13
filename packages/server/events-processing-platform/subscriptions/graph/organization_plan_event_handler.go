@@ -233,10 +233,13 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		UpdateStatusDetails: eventData.UpdateStatusDetails(),
 		UpdateAdhoc:         eventData.UpdateAdhoc(),
 	}
+
+	milestoneShouldBeLate := eventData.UpdatedAt.After(dueDate) && (eventData.UpdatedAt.Year() != dueDate.Year() || eventData.UpdatedAt.Month() != dueDate.Month() || eventData.UpdatedAt.Day() != dueDate.Day())
+	milestoneIsLate := (eventData.StatusDetails.Status == model.MilestoneNotStartedLate.String() || eventData.StatusDetails.Status == model.MilestoneStartedLate.String() || eventData.StatusDetails.Status == model.MilestoneDoneLate.String())
+	downstreamStatusChanged := false
 	// if due date changed, update status details downstream
-	if eventData.UpdateDueDate() {
-		lateStatus := (eventData.StatusDetails.Status == model.MilestoneNotStartedLate.String() || eventData.StatusDetails.Status == model.MilestoneStartedLate.String() || eventData.StatusDetails.Status == model.MilestoneDoneLate.String())
-		milestoneLate := eventData.UpdatedAt.After(dueDate) && eventData.UpdatedAt.Day() != dueDate.Day() || lateStatus
+	if eventData.UpdateDueDate() && milestoneShouldBeLate != milestoneIsLate {
+		milestoneLate := milestoneIsLate || milestoneShouldBeLate
 		// change milestone status if due date changed
 		if milestoneLate {
 			if data.StatusDetails.Status == model.MilestoneDone.String() {
@@ -259,30 +262,40 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		data.UpdateStatusDetails = true
 
 		// propagate status downstream to items
-		for _, item := range eventData.Items {
+		newItems := make([]entity.OrganizationPlanMilestoneItem, len(eventData.Items))
+		for i, item := range data.Items {
+			sts := item.Status
 			if milestoneLate {
 				if item.Status == model.TaskDone.String() {
-					item.Status = model.TaskDoneLate.String()
+					sts = model.TaskDoneLate.String()
 				} else if item.Status == model.TaskNotDone.String() {
-					item.Status = model.TaskNotDoneLate.String()
+					sts = model.TaskNotDoneLate.String()
 				} else if item.Status == model.TaskSkipped.String() {
-					item.Status = model.TaskSkippedLate.String()
+					sts = model.TaskSkippedLate.String()
 				}
 			} else {
 				if item.Status == model.TaskDoneLate.String() {
-					item.Status = model.TaskDone.String()
+					sts = model.TaskDone.String()
 				} else if item.Status == model.TaskNotDoneLate.String() {
-					item.Status = model.TaskNotDone.String()
+					sts = model.TaskNotDone.String()
 				} else if item.Status == model.TaskSkippedLate.String() {
-					item.Status = model.TaskSkipped.String()
+					sts = model.TaskSkipped.String()
 				}
 			}
+			newItems[i] = entity.OrganizationPlanMilestoneItem{
+				Text:      item.Text,
+				Status:    sts,
+				Uuid:      item.Uuid,
+				UpdatedAt: eventData.UpdatedAt,
+			}
 		}
+		data.Items = newItems
+		downstreamStatusChanged = true
 	}
 	// check if milestone status should update
-	if eventData.UpdateItems() {
+	if eventData.UpdateItems() && !downstreamStatusChanged {
 		allItemsDone, late, started := allItemsDoneLateStarted(eventData.Items)
-		late = late || eventData.UpdatedAt.After(dueDate) && eventData.UpdatedAt.Day() != dueDate.Day()
+		late = late || milestoneShouldBeLate
 		if allItemsDone {
 			if late {
 				data.StatusDetails.Status = model.MilestoneDoneLate.String()
