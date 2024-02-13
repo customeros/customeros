@@ -24,6 +24,8 @@ type Invoice implements SourceFields & Node {
 
     organization:       Organization! @goField(forceResolver: true)
     dryRun:             Boolean!
+    postpaid:           Boolean!
+    offCycle:           Boolean!
     number:             String!
     periodStartDate:    Time!
     periodEndDate:      Time!

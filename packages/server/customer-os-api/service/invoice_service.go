@@ -231,13 +231,14 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 	}
 	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycle)
 
+	tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
 	currency := contract.Currency.String()
 	if currency == "" {
-		tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return "", err
-		}
 		currency = tenantSettings.DefaultCurrency.String()
 	}
 
@@ -251,6 +252,7 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 		InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
 		Currency:           currency,
 		Note:               contract.InvoiceNote,
+		Postpaid:           tenantSettings.InvoicingPostpaid,
 		SourceFields: &commonpb.SourceFields{
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: constants.AppSourceCustomerOsApi,

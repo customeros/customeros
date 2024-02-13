@@ -133,7 +133,7 @@ func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, requ
 	periodEndDate := utils.TimestampProtoToTimePtr(request.InvoicePeriodEnd)
 	billingCycle := BillingCycle(request.BillingCycle)
 
-	createEvent, err := NewInvoiceForContractCreateEvent(a, sourceFields, request.ContractId, request.Currency, billingCycle.String(), request.Note, request.DryRun, request.OffCycle, createdAtNotNil, *periodStartDate, *periodEndDate)
+	createEvent, err := NewInvoiceForContractCreateEvent(a, sourceFields, request.ContractId, request.Currency, billingCycle.String(), request.Note, request.DryRun, request.OffCycle, request.Postpaid, createdAtNotNil, *periodStartDate, *periodEndDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceCreateEvent")
@@ -423,6 +423,7 @@ func (a *InvoiceAggregate) onInvoiceCreateEvent(evt eventstore.Event) error {
 	a.Invoice.SourceFields = eventData.SourceFields
 	a.Invoice.DryRun = eventData.DryRun
 	a.Invoice.OffCycle = eventData.OffCycle
+	a.Invoice.Postpaid = eventData.Postpaid
 	a.Invoice.Currency = eventData.Currency
 	a.Invoice.PeriodStartDate = eventData.PeriodStartDate
 	a.Invoice.PeriodEndDate = eventData.PeriodEndDate

@@ -1032,6 +1032,8 @@ type Invoice struct {
 	AppSource                     string           `json:"appSource"`
 	Organization                  *Organization    `json:"organization"`
 	DryRun                        bool             `json:"dryRun"`
+	Postpaid                      bool             `json:"postpaid"`
+	OffCycle                      bool             `json:"offCycle"`
 	Number                        string           `json:"number"`
 	PeriodStartDate               time.Time        `json:"periodStartDate"`
 	PeriodEndDate                 time.Time        `json:"periodEndDate"`

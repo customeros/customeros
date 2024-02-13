@@ -572,9 +572,11 @@ type ComplexityRoot struct {
 		InvoiceLines                  func(childComplexity int) int
 		Note                          func(childComplexity int) int
 		Number                        func(childComplexity int) int
+		OffCycle                      func(childComplexity int) int
 		Organization                  func(childComplexity int) int
 		PeriodEndDate                 func(childComplexity int) int
 		PeriodStartDate               func(childComplexity int) int
+		Postpaid                      func(childComplexity int) int
 		Provider                      func(childComplexity int) int
 		RepositoryFileID              func(childComplexity int) int
 		Source                        func(childComplexity int) int
@@ -4299,6 +4301,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Invoice.Number(childComplexity), true
 
+	case "Invoice.offCycle":
+		if e.complexity.Invoice.OffCycle == nil {
+			break
+		}
+
+		return e.complexity.Invoice.OffCycle(childComplexity), true
+
 	case "Invoice.organization":
 		if e.complexity.Invoice.Organization == nil {
 			break
@@ -4319,6 +4328,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Invoice.PeriodStartDate(childComplexity), true
+
+	case "Invoice.postpaid":
+		if e.complexity.Invoice.Postpaid == nil {
+			break
+		}
+
+		return e.complexity.Invoice.Postpaid(childComplexity), true
 
 	case "Invoice.provider":
 		if e.complexity.Invoice.Provider == nil {
@@ -11893,6 +11909,8 @@ type Invoice implements SourceFields & Node {
 
     organization:       Organization! @goField(forceResolver: true)
     dryRun:             Boolean!
+    postpaid:           Boolean!
+    offCycle:           Boolean!
     number:             String!
     periodStartDate:    Time!
     periodEndDate:      Time!
@@ -34616,6 +34634,94 @@ func (ec *executionContext) fieldContext_Invoice_dryRun(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Invoice_postpaid(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_postpaid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Postpaid, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_postpaid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_offCycle(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_offCycle(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OffCycle, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_offCycle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Invoice_number(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Invoice_number(ctx, field)
 	if err != nil {
@@ -36339,6 +36445,10 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 				return ec.fieldContext_Invoice_organization(ctx, field)
 			case "dryRun":
 				return ec.fieldContext_Invoice_dryRun(ctx, field)
+			case "postpaid":
+				return ec.fieldContext_Invoice_postpaid(ctx, field)
+			case "offCycle":
+				return ec.fieldContext_Invoice_offCycle(ctx, field)
 			case "number":
 				return ec.fieldContext_Invoice_number(ctx, field)
 			case "periodStartDate":
@@ -69919,6 +70029,10 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 				return ec.fieldContext_Invoice_organization(ctx, field)
 			case "dryRun":
 				return ec.fieldContext_Invoice_dryRun(ctx, field)
+			case "postpaid":
+				return ec.fieldContext_Invoice_postpaid(ctx, field)
+			case "offCycle":
+				return ec.fieldContext_Invoice_offCycle(ctx, field)
 			case "number":
 				return ec.fieldContext_Invoice_number(ctx, field)
 			case "periodStartDate":
@@ -92507,6 +92621,16 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "dryRun":
 			out.Values[i] = ec._Invoice_dryRun(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "postpaid":
+			out.Values[i] = ec._Invoice_postpaid(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "offCycle":
+			out.Values[i] = ec._Invoice_offCycle(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
