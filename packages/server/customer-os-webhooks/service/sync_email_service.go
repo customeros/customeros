@@ -63,7 +63,7 @@ func (s syncEmailService) SyncEmail(ctx context.Context, email model.EmailData) 
 	organizationData := model.OrganizationData{
 		BaseData: model.BaseData{
 			AppSource: email.AppSource,
-			Source:    email.ExternalSystem,
+			Source:    email.Source,
 		},
 		Name:           name,
 		Domains:        []string{domain},

@@ -17,6 +17,7 @@ enum ExternalSystemType {
     STRIPE
     MIXPANEL
     CLOSE
+    OUTLOOK
 }
 
 type ExternalSystem {

@@ -3074,6 +3074,7 @@ const (
 	DataSourceStripe         DataSource = "STRIPE"
 	DataSourceMixpanel       DataSource = "MIXPANEL"
 	DataSourceClose          DataSource = "CLOSE"
+	DataSourceOutlook        DataSource = "OUTLOOK"
 )
 
 var AllDataSource = []DataSource{
@@ -3089,11 +3090,12 @@ var AllDataSource = []DataSource{
 	DataSourceStripe,
 	DataSourceMixpanel,
 	DataSourceClose,
+	DataSourceOutlook,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel, DataSourceClose:
+	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel, DataSourceClose, DataSourceOutlook:
 		return true
 	}
 	return false
@@ -3262,6 +3264,7 @@ const (
 	ExternalSystemTypeStripe         ExternalSystemType = "STRIPE"
 	ExternalSystemTypeMixpanel       ExternalSystemType = "MIXPANEL"
 	ExternalSystemTypeClose          ExternalSystemType = "CLOSE"
+	ExternalSystemTypeOutlook        ExternalSystemType = "OUTLOOK"
 )
 
 var AllExternalSystemType = []ExternalSystemType{
@@ -3275,11 +3278,12 @@ var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeStripe,
 	ExternalSystemTypeMixpanel,
 	ExternalSystemTypeClose,
+	ExternalSystemTypeOutlook,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce, ExternalSystemTypeStripe, ExternalSystemTypeMixpanel, ExternalSystemTypeClose:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce, ExternalSystemTypeStripe, ExternalSystemTypeMixpanel, ExternalSystemTypeClose, ExternalSystemTypeOutlook:
 		return true
 	}
 	return false
