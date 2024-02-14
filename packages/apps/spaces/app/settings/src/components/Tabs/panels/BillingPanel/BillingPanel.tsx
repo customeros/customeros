@@ -7,6 +7,7 @@ import { produce } from 'immer';
 import { useDebounce } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/VatInput';
+import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
 import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateTenantBillingProfile.generated';
@@ -249,6 +250,7 @@ export const BillingPanel = () => {
           </Heading>
         </CardHeader>
         <CardBody as={Flex} flexDir='column' px='6' w='full' gap={4}>
+          <LogoUploader />
           <FormInput
             autoComplete='off'
             label='Organization legal name'

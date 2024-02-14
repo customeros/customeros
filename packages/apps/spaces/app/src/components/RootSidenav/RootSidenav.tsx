@@ -9,13 +9,13 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
-import { Image } from '@ui/media/Image';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { GridItem } from '@ui/layout/Grid';
 import { Receipt } from '@ui/media/icons/Receipt';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
+import { Image as ChakraImage } from '@ui/media/Image';
 import { mockedTableDefs } from '@shared/util/tableDefs.mock';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
@@ -122,7 +122,7 @@ export const RootSidenav = () => {
         overflow='hidden'
         position='relative'
       >
-        <Image
+        <ChakraImage
           width={136}
           height={30}
           w='136px'
