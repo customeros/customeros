@@ -1,7 +1,7 @@
 {
   "addressLine1": "20 Main St",
   "addressLine2": "Apt 8",  
-  "billingCycle": "MONTHLY_BILLING",
+  "billingCycle": "MONTHLY",
   "billingEmail": "finance@acmecorp.com",
   "committedPeriods": 1,
   "contractEnded": "2024-02-01T20:53:13.381944294Z",
