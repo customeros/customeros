@@ -373,9 +373,12 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 	if !proratedSliFound && len(invoiceLines) > 0 {
 		// if no prorated SLI found, then invoice contains only once billed SLIs
 		// accept the invoice if today is monthly anniversary of the contract invoicing start date
-		if !isMonthlyAnniversary(invoiceEntity.PeriodEndDate.AddDate(0, 0, 1)) {
-			invoiceLines = []*invoicepb.InvoiceLine{}
-		}
+
+		// UPDATE: The rule is on hold, invoice will be issued even if contains only one time SLIs
+
+		//if !isMonthlyAnniversary(invoiceEntity.PeriodEndDate.AddDate(0, 0, 1)) {
+		//	invoiceLines = []*invoicepb.InvoiceLine{}
+		//}
 	}
 
 	if totalAmount == 0 || len(invoiceLines) == 0 {
