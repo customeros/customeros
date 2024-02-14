@@ -27,7 +27,7 @@ curl -X POST \
 
 The invoice query request requires that you pass the invoice `id` as a query parameter.  
 
-As this is a graphQL request, you are able to specify the exact payload you would like returned in the response.  In the example above, we've specified that `metadata`, `amountDue`, `currency`, and `due` are returned, but you can choose from any of the response parameters defined in the [invoice object](invoice-object)
+As this is a graphQL request, you are able to specify the exact payload you would like returned in the response.  In the example above, we've specified that `metadata`, `amountDue`, `currency`, and `due` are returned, but you can choose from any of the response parameters defined in the [invoice object](objects/invoice-object)
 
 ## Invoice query response
 ```json
