@@ -34,7 +34,7 @@ export const MilestoneDuration = ({
         htmlFor={inputId}
         whiteSpace='nowrap'
       >
-        Max duration:
+        Time budget:
       </Text>
       {isActiveItem ? (
         <Text fontSize='sm'>{defaultValue}</Text>

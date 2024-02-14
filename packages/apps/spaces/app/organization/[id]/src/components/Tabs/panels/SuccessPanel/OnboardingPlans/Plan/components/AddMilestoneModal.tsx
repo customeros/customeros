@@ -106,7 +106,7 @@ export const AddMilestoneModal = ({
                     {milestone.name}
                   </Text>
                   <Text color='gray.500'>
-                    Max duration:{' '}
+                    Time budget:{' '}
                     {`${milestone.durationHours / 24} ${
                       milestone.durationHours > 24 ? 'days' : 'day'
                     }`}

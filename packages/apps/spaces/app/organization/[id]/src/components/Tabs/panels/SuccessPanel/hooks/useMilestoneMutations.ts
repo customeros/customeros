@@ -72,7 +72,7 @@ export const useMilestoneMutations = (
         mutateCacheEntry(() => context.previousEntries);
       }
       toastError(
-        `We could'nt update the milestone`,
+        `We couldn't update the milestone`,
         'update-org-plan-milestone',
       );
     },
@@ -111,7 +111,7 @@ export const useMilestoneMutations = (
       if (context?.previousEntries) {
         mutateCacheEntry(() => context.previousEntries);
       }
-      toastError(`We could'nt add the milestone`, 'add-org-plan-milestone');
+      toastError(`We couldn't add the milestone`, 'add-org-plan-milestone');
     },
     onSettled: invalidateQuery,
   });
