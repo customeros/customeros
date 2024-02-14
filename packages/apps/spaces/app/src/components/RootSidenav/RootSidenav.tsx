@@ -6,9 +6,7 @@ import { produce } from 'immer';
 import { signOut } from 'next-auth/react';
 import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
-import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 
-import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
 import { VStack } from '@ui/layout/Stack';
@@ -20,7 +18,6 @@ import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { Image as ChakraImage } from '@ui/media/Image';
 import { mockedTableDefs } from '@shared/util/tableDefs.mock';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useCustomerLogo } from '@shared/state/CustomerLogo.atom';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
@@ -42,8 +39,6 @@ export const RootSidenav = () => {
     `customeros-player-last-position`,
     { root: 'organization' },
   );
-  const [{ logoUrl, dimensions }, setLogoUrl] = useCustomerLogo();
-  const { data: tenantSettingsData } = useTenantSettingsQuery(client);
 
   const { data: tableViewDefsData } = useTableViewDefsQuery(
     client,
@@ -69,42 +64,7 @@ export const RootSidenav = () => {
 
     router.push(`/${path}`);
   };
-  const fetchLogo = async ({ id }: { id: string }) => {
-    try {
-      const response = await fetch(`/fs/file/${id}/download`);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      reader.onload = function () {
-        const img = new Image();
-        img.src = reader.result as string;
-        const dataUrl = reader.result as string;
-        if (dataUrl) {
-          setLogoUrl({
-            logoUrl: dataUrl,
-            dimensions: {
-              width: img.width || 136,
-              height: img.height || 36,
-            },
-          });
-        }
-      };
-      reader.readAsDataURL(blob);
-    } catch (reason) {
-      throw new Error(`Failed to fetch logo: ${reason}`);
-    }
-  };
-  useEffect(() => {
-    if (!logoUrl && tenantSettingsData?.tenantSettings?.logoUrl) {
-      const uuidRegex =
-        /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
-      const match = `${tenantSettingsData?.tenantSettings?.logoUrl}`.match(
-        uuidRegex,
-      );
-      if (match) {
-        fetchLogo({ id: match[0] });
-      }
-    }
-  }, [tenantSettingsData?.tenantSettings?.logoUrl, logoUrl]);
+
   const checkIsActive = (path: string, options?: { preset: string }) => {
     const [_pathName, _searchParams] = path.split('?');
     const presetParam = new URLSearchParams(searchParams?.toString()).get(
@@ -162,28 +122,16 @@ export const RootSidenav = () => {
         overflow='hidden'
         position='relative'
       >
-        {logoUrl ? (
-          <Box position='relative' maxWidth={300} maxHeight={120}>
-            <ChakraImage
-              src={`${logoUrl}`}
-              alt='CustomerOS'
-              width={dimensions.width || 136}
-              height={dimensions.height || 45}
-              style={{ objectFit: 'contain', maxHeight: '40px' }}
-            />
-          </Box>
-        ) : (
-          <ChakraImage
-            width={136}
-            height={30}
-            w='136px'
-            h='30px'
-            alt='CustomerOS'
-            pointerEvents='none'
-            src={logoCustomerOs}
-            transition='opacity 0.25s ease-in-out'
-          />
-        )}
+        <ChakraImage
+          width={136}
+          height={30}
+          w='136px'
+          h='30px'
+          alt='CustomerOS'
+          pointerEvents='none'
+          src={logoCustomerOs}
+          transition='opacity 0.25s ease-in-out'
+        />
       </Flex>
 
       <VStack spacing='2' w='full' mb='4'>
