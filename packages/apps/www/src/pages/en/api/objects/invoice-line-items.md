@@ -20,6 +20,7 @@ lang: en
         "tax": {
             <tax object>
         },
+        "taxDue": 0.0,
         "total": 0.0
     }
 ]

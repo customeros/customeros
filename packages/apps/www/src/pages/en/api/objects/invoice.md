@@ -35,9 +35,6 @@ lang: en
   "paid": false,
   "subtotal": 0.0,
   "status": "DUE", 
-  "tax": {
-    <tax object>
-  },
   "taxDue": 0.0
 }
 ```
