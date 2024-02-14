@@ -60,11 +60,25 @@ func MapEntityToInvoiceLine(entity *neo4jentity.InvoiceLineEntity) *model.Invoic
 		return nil
 	}
 	return &model.InvoiceLine{
+		Metadata: &model.Metadata{
+			ID:            entity.Id,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        MapDataSourceToModel(entity.Source),
+			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+			AppSource:     entity.AppSource,
+		},
+		Description: entity.Name,
+		Price:       entity.Price,
+		Quantity:    int(entity.Quantity),
+		Total:       entity.TotalAmount,
+		Subtotal:    entity.Amount,
+		TaxDue:      entity.Vat,
+
+		//Deprecated all below
 		ID:          entity.Id,
 		CreatedAt:   entity.CreatedAt,
 		Name:        entity.Name,
-		Price:       entity.Price,
-		Quantity:    int(entity.Quantity),
 		Amount:      entity.Amount,
 		Vat:         entity.Vat,
 		TotalAmount: entity.TotalAmount,

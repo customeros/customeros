@@ -14,13 +14,14 @@ type InvoicesPage implements Pages {
     totalElements: Int64!
 }
 
-type Invoice implements SourceFields & Node {
-    id:                 ID!
-    createdAt:          Time!
-    updatedAt:          Time!
-    source:             DataSource!
-    sourceOfTruth:      DataSource!
-    appSource:          String!
+type Invoice implements MetadataInterface {
+    metadata:           Metadata!
+    id:                 ID! @deprecated(reason: "Use metadata instead.")
+    createdAt:          Time! @deprecated(reason: "Use metadata instead.")
+    updatedAt:          Time! @deprecated(reason: "Use metadata instead.")
+    source:             DataSource! @deprecated(reason: "Use metadata instead.")
+    sourceOfTruth:      DataSource! @deprecated(reason: "Use metadata instead.")
+    appSource:          String! @deprecated(reason: "Use metadata instead.")
 
     organization:       Organization! @goField(forceResolver: true)
     dryRun:             Boolean!
@@ -64,17 +65,27 @@ type InvoiceProvider {
     addressCountry:     String
 }
 
-type InvoiceLine implements Node {
-    id:                 ID!
-    createdAt:          Time!
-
-    name:               String!
+type InvoiceLine implements MetadataInterface {
+    metadata:           Metadata!
+    description:        String!
     price:              Float!
     quantity:           Int!
+    subtotal:           Float!
+    total:              Float!
+    taxDue:             Float!
 
-    amount:             Float!
-    vat:                Float!
-    totalAmount:        Float!
+    id:                 ID! @deprecated(reason: "Use metadata instead.")
+    createdAt:          Time! @deprecated(reason: "Use metadata instead.")
+    name:               String! @deprecated(reason: "Use description instead.")
+    amount:             Float! @deprecated(reason: "Use subtotal instead.")
+    vat:                Float! @deprecated(reason: "Use taxDue instead.")
+    totalAmount:        Float! @deprecated(reason: "Use total instead.")
+}
+
+type Tax {
+    salesTax:   Boolean!
+    vat:        Boolean!
+    taxRate:    Float!
 }
 
 input InvoiceSimulateInput {

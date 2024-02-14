@@ -36,12 +36,12 @@ invoice(id: $id) {
     }
 
     invoiceLines {
-        name
+        description
         price
         quantity
-        amount
-        vat
-        totalAmount
+        subtotal
+        taxDue
+        total
     }
 
     organization {
