@@ -428,5 +428,10 @@ func (s *interactionEventService) setParticipantTypeForGrpcRequest(participantLa
 		participant.ParticipantType = &interactioneventpb.Participant_User{
 			User: &interactioneventpb.User{},
 		}
+	case neo4jutil.NodeLabelJobRole:
+		participant.ParticipantType = &interactioneventpb.Participant_JobRole{
+			JobRole: &interactioneventpb.JobRole{},
+		}
 	}
+
 }

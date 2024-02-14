@@ -10,6 +10,7 @@ const (
 	UserType         ParticipantType = "User"
 	ContactType      ParticipantType = "Contact"
 	OrganizationType ParticipantType = "Organization"
+	JobRoleType      ParticipantType = "JobRole"
 )
 
 type Participant struct {
@@ -25,6 +26,8 @@ func (p Participant) NodeLabel() string {
 		return neo4jutil.NodeLabelContact
 	case OrganizationType:
 		return neo4jutil.NodeLabelOrganization
+	case JobRoleType:
+		return neo4jutil.NodeLabelJobRole
 	default:
 		return ""
 	}
