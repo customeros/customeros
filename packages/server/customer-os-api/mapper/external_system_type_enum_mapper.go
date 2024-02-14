@@ -17,6 +17,7 @@ var externalSystemTypeByModel = map[model.ExternalSystemType]entity.ExternalSyst
 	model.ExternalSystemTypeStripe:         entity.Stripe,
 	model.ExternalSystemTypeMixpanel:       entity.Mixpanel,
 	model.ExternalSystemTypeClose:          entity.Close,
+	model.ExternalSystemTypeOutlook:        entity.Outlook,
 }
 
 var externalSystemTypeByValue = utils.ReverseMap(externalSystemTypeByModel)

@@ -69,13 +69,15 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 
 	// pre-validate organization input before syncing
 	for _, org := range organizations {
-		if org.ExternalSystem == "" {
+		if org.ExternalSystem == "" && org.Source == "" {
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
 			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
-		if !neo4jentity.IsValidDataSource(strings.ToLower(org.ExternalSystem)) {
-			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", org.ExternalSystem))
-			return SyncResult{}, errors.ErrExternalSystemNotAccepted
+		if org.ExternalSystem != "" {
+			if !neo4jentity.IsValidDataSource(strings.ToLower(org.ExternalSystem)) {
+				tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", org.ExternalSystem))
+				return SyncResult{}, errors.ErrExternalSystemNotAccepted
+			}
 		}
 	}
 
@@ -183,13 +185,15 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 
 	// Merge external system neo4j node
-	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, orgInput.ExternalSystem)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", orgInput.ExternalSystem, tenant, err.Error())
-		s.log.Error(reason)
-		span.LogFields(log.String("output", "failed"))
-		return NewFailedSyncStatus(reason)
+	if orgInput.ExternalSystem != "" {
+		err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, orgInput.ExternalSystem)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", orgInput.ExternalSystem, tenant, err.Error())
+			s.log.Error(reason)
+			span.LogFields(log.String("output", "failed"))
+			return NewFailedSyncStatus(reason)
+		}
 	}
 
 	// Remove personal email provider domains from organization domains
@@ -282,18 +286,20 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			Headquarters:       orgInput.Headquarters,
 			EmployeeGrowthRate: orgInput.EmployeeGrowthRate,
 			SourceFields: &commonpb.SourceFields{
-				Source:    orgInput.ExternalSystem,
+				Source:    utils.StringFirstNonEmpty(orgInput.ExternalSystem, orgInput.Source),
 				AppSource: appSource,
 			},
 			FieldsMask: fieldsMask,
-			ExternalSystemFields: &commonpb.ExternalSystemFields{
+		}
+		if orgInput.ExternalSystem != "" {
+			upsertOrganizationGrpcRequest.ExternalSystemFields = &commonpb.ExternalSystemFields{
 				ExternalSystemId: orgInput.ExternalSystem,
 				ExternalId:       orgInput.ExternalId,
 				ExternalUrl:      orgInput.ExternalUrl,
 				ExternalIdSecond: orgInput.ExternalIdSecond,
 				ExternalSource:   orgInput.ExternalSourceEntity,
 				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
-			},
+			}
 		}
 		_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return s.grpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationGrpcRequest)

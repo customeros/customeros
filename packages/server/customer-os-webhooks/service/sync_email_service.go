@@ -51,18 +51,25 @@ func (s syncEmailService) SyncEmail(ctx context.Context, email model.EmailData) 
 		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
+	domain := ""
 	if email.SentBy != "" {
-		domain := utils.ExtractDomain(email.SentBy)
+		domain = utils.ExtractDomain(email.SentBy)
 		utils.EnforceSingleValue(domainsSlice, domain)
 		name = utils.ExtractName(email.SentBy)
 	}
 
+	// TODO if email present in COS, skip org creation, contact creation, email node creation, same for to / cc / bcc
+	// TODO for each email -> create org, contact email node. -> Check Edi logic
 	organizationData := model.OrganizationData{
-		BaseData:       email.BaseData,
+		BaseData: model.BaseData{
+			AppSource: email.AppSource,
+			Source:    email.ExternalSystem,
+		},
 		Name:           name,
-		Domains:        domainsSlice,
+		Domains:        []string{domain},
 		DomainRequired: true,
 	}
+	// TODO for all CC/ bCC/ to
 	organizationsData = append(organizationsData, organizationData)
 
 	orgSyncResult, err := s.services.OrganizationService.SyncOrganizations(ctx, organizationsData)

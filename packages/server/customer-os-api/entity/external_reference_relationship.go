@@ -15,6 +15,7 @@ const (
 	Stripe         ExternalSystemId = "stripe"
 	Mixpanel       ExternalSystemId = "mixpanel"
 	Close          ExternalSystemId = "close"
+	Outlook        ExternalSystemId = "outlook"
 )
 
 const (
@@ -37,7 +38,7 @@ type ExternalSystemEntities []ExternalSystemEntity
 
 func ExternalSystemTypeFromString(input string) ExternalSystemId {
 	for _, v := range []ExternalSystemId{
-		Hubspot, ZendeskSupport, CalCom, Pipedrive, Slack, Intercom, Salesforce, Stripe, Mixpanel, Close,
+		Hubspot, ZendeskSupport, CalCom, Pipedrive, Slack, Intercom, Salesforce, Stripe, Mixpanel, Close, Outlook,
 	} {
 		if string(v) == input {
 			return v

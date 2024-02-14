@@ -11,4 +11,5 @@ enum DataSource {
     STRIPE
     MIXPANEL
     CLOSE
+    OUTLOOK
 }

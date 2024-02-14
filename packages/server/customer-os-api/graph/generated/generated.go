@@ -11626,6 +11626,7 @@ enum ExternalSystemType {
     STRIPE
     MIXPANEL
     CLOSE
+    OUTLOOK
 }
 
 type ExternalSystem {
@@ -13287,6 +13288,7 @@ input SocialUpdateInput {
     STRIPE
     MIXPANEL
     CLOSE
+    OUTLOOK
 }`, BuiltIn: false},
 	{Name: "../schemas/state.graphqls", Input: `type State {
     id: ID!
