@@ -8,7 +8,7 @@ lang: en
 ## The invoiceLineItems data object
 
 ```json
-"invoiceLineItems": [
+[
     {
         "metadata": {
             <metadata object>
