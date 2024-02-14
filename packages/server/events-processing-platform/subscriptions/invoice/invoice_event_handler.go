@@ -158,7 +158,7 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 			result, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, tenant, sliEntity.ParentID)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				h.log.Errorf("Error getting latest invoice line for sli parent id {%s}: {%s}", sliEntity.ID, err.Error)
+				h.log.Errorf("Error getting latest invoice line for sli parent id {%s}: {%s}", sliEntity.ParentID, err.Error())
 			}
 			if result != nil {
 				// SLI already invoiced
@@ -242,13 +242,27 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 		// process only monthly, quarterly and annually SLIs
 		if sliEntity.Billed != neo4jenum.BilledTypeMonthly &&
 			sliEntity.Billed != neo4jenum.BilledTypeQuarterly &&
-			sliEntity.Billed != neo4jenum.BilledTypeAnnually {
+			sliEntity.Billed != neo4jenum.BilledTypeAnnually &&
+			sliEntity.Billed != neo4jenum.BilledTypeOnce {
 			continue
 		}
 		// SLIs that started on or after reference date are not applicable
 		if sliEntity.StartedAt.After(referenceDate) || sliEntity.StartedAt.Equal(referenceDate) {
 			continue
 		}
+		// One time invoiced SLIs are not applicable
+		if sliEntity.Billed == neo4jenum.BilledTypeOnce {
+			ilDbNodeAndInvoiceId, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, tenant, sliEntity.ParentID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Error getting latest invoice line for sli parent id {%s}: {%s}", sliEntity.ParentID, err.Error())
+				return err
+			}
+			if ilDbNodeAndInvoiceId != nil {
+				continue
+			}
+		}
+
 		filteredSliEntities = append(filteredSliEntities, sliEntity)
 	}
 	// sort SLIs by startedAt
@@ -264,8 +278,9 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 	span.LogFields(log.Int("result - amount of SLIs to process", len(filteredSliEntities)))
 
 	amount, vat, totalAmount := float64(0), float64(0), float64(0)
-	invoiceLines := []*invoicepb.InvoiceLine{}
+	var invoiceLines []*invoicepb.InvoiceLine
 
+	proratedSliFound := false
 	// iterate SLIs by parent id
 	for parentId, slis := range sliByParentID {
 		// get latest SLI that is active on reference date
@@ -287,34 +302,44 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 			h.log.Errorf("Error getting latest invoice line for sli parent id {%s}: {%s}", parentId, err.Error())
 			return err
 		}
-		proratedInvoicedSLIAmount := float64(0)
-		if ilDbNodeAndInvoiceId != nil {
-			previousInvoiceDbNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, tenant, ilDbNodeAndInvoiceId.LinkedNodeId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Error getting invoice {%s}: {%s}", ilDbNodeAndInvoiceId.LinkedNodeId, err.Error())
-				return err
+		finalSLIAmount, calculatedSLIVat := float64(0), float64(0)
+		if sliToInvoice.Billed == neo4jenum.BilledTypeOnce {
+			finalSLIAmount = utils.TruncateFloat64(sliToInvoice.Price, 2)
+			if finalSLIAmount <= 0 {
+				continue
 			}
-			previousInvoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(previousInvoiceDbNode)
-			// if previous invoice is for different cycle, charge full amount
-			if !previousInvoiceEntity.PeriodEndDate.Before(invoiceEntity.PeriodEndDate) {
-				// calculate already invoiced amount, prorated for the period
-				invoiceLineEntity := neo4jmapper.MapDbNodeToInvoiceLineEntity(ilDbNodeAndInvoiceId.Node)
-				calculatedInvoicedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(invoiceLineEntity.Quantity, invoiceLineEntity.Price, invoiceLineEntity.BilledType, neo4jenum.BillingCycleAnnuallyBilling)
-				proratedInvoicedSLIAmount = prorateAnnualSLIAmount(sliToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedInvoicedSLIAmountFor1Year)
-				proratedInvoicedSLIAmount = utils.TruncateFloat64(proratedInvoicedSLIAmount, 2)
+			calculatedSLIVat = utils.TruncateFloat64(finalSLIAmount*sliToInvoice.VatRate/100, 2)
+		} else {
+			proratedInvoicedSLIAmount := float64(0)
+			if ilDbNodeAndInvoiceId != nil {
+				previousInvoiceDbNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, tenant, ilDbNodeAndInvoiceId.LinkedNodeId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					h.log.Errorf("Error getting invoice {%s}: {%s}", ilDbNodeAndInvoiceId.LinkedNodeId, err.Error())
+					return err
+				}
+				previousInvoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(previousInvoiceDbNode)
+				// if previous invoice is for different cycle, charge full amount
+				if !previousInvoiceEntity.PeriodEndDate.Before(invoiceEntity.PeriodEndDate) {
+					// calculate already invoiced amount, prorated for the period
+					invoiceLineEntity := neo4jmapper.MapDbNodeToInvoiceLineEntity(ilDbNodeAndInvoiceId.Node)
+					calculatedInvoicedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(invoiceLineEntity.Quantity, invoiceLineEntity.Price, invoiceLineEntity.BilledType, neo4jenum.BillingCycleAnnuallyBilling)
+					proratedInvoicedSLIAmount = prorateAnnualSLIAmount(sliToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedInvoicedSLIAmountFor1Year)
+					proratedInvoicedSLIAmount = utils.TruncateFloat64(proratedInvoicedSLIAmount, 2)
+				}
 			}
-		}
 
-		calculatedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(sliToInvoice.Quantity, sliToInvoice.Price, sliToInvoice.Billed, neo4jenum.BillingCycleAnnuallyBilling)
-		proratedSLIAmount := prorateAnnualSLIAmount(sliToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedSLIAmountFor1Year)
-		proratedSLIAmount = utils.TruncateFloat64(proratedSLIAmount, 2)
-		finalSLIAmount := proratedSLIAmount - proratedInvoicedSLIAmount
-		span.LogFields(log.Float64(fmt.Sprintf("result - final amount for SLI with parent id %s", parentId), finalSLIAmount))
-		if finalSLIAmount <= 0 {
-			continue
+			calculatedSLIAmountFor1Year := calculateSLIAmountForCycleInvoicing(sliToInvoice.Quantity, sliToInvoice.Price, sliToInvoice.Billed, neo4jenum.BillingCycleAnnuallyBilling)
+			proratedSLIAmount := prorateAnnualSLIAmount(sliToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedSLIAmountFor1Year)
+			proratedSLIAmount = utils.TruncateFloat64(proratedSLIAmount, 2)
+			finalSLIAmount = proratedSLIAmount - proratedInvoicedSLIAmount
+			span.LogFields(log.Float64(fmt.Sprintf("result - final amount for SLI with parent id %s", parentId), finalSLIAmount))
+			if finalSLIAmount <= 0 {
+				continue
+			}
+			calculatedSLIVat = utils.TruncateFloat64(finalSLIAmount*sliToInvoice.VatRate/100, 2)
+			proratedSliFound = true
 		}
-		calculatedSLIVat := utils.TruncateFloat64(finalSLIAmount*sliToInvoice.VatRate/100, 2)
 		amount += finalSLIAmount
 		vat += calculatedSLIVat
 		invoiceLine := invoicepb.InvoiceLine{
@@ -334,11 +359,20 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 			invoiceLine.BilledType = commonpb.BilledType_QUARTERLY_BILLED
 		case neo4jenum.BilledTypeAnnually:
 			invoiceLine.BilledType = commonpb.BilledType_ANNUALLY_BILLED
+		case neo4jenum.BilledTypeOnce:
+			invoiceLine.BilledType = commonpb.BilledType_ONCE_BILLED
 		}
 		invoiceLines = append(invoiceLines, &invoiceLine)
 	}
-
 	totalAmount = amount + vat
+
+	if !proratedSliFound && len(invoiceLines) > 0 {
+		// if no prorated SLI found, then invoice contains only once billed SLIs
+		// accept the invoice if today is monthly anniversary of the contract invoicing start date
+		if !isMonthlyAnniversary(invoiceEntity.PeriodEndDate.AddDate(0, 0, 1)) {
+			invoiceLines = []*invoicepb.InvoiceLine{}
+		}
+	}
 
 	if totalAmount == 0 || len(invoiceLines) == 0 {
 		_, err = h.grpcClients.InvoiceClient.PermanentlyDeleteDraftInvoice(ctx, &invoicepb.PermanentlyDeleteDraftInvoiceRequest{
@@ -354,6 +388,14 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 	} else {
 		return h.prepareAndCallFillInvoice(ctx, tenant, contractId, invoiceEntity, amount, vat, totalAmount, invoiceLines, span)
 	}
+}
+
+func isMonthlyAnniversary(date time.Time) bool {
+	now := utils.Now()
+	if now.Day() == date.Day() {
+		return true
+	}
+	return false
 }
 
 func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
