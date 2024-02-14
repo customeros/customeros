@@ -239,9 +239,8 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 	downstreamStatusChanged := false
 	// if due date changed, update status details downstream
 	if eventData.UpdateDueDate() && milestoneShouldBeLate != milestoneIsLate {
-		milestoneLate := milestoneIsLate || milestoneShouldBeLate
 		// change milestone status if due date changed
-		if milestoneLate {
+		if milestoneShouldBeLate {
 			if data.StatusDetails.Status == model.MilestoneDone.String() {
 				data.StatusDetails.Status = model.MilestoneDoneLate.String()
 			} else if data.StatusDetails.Status == model.MilestoneNotStarted.String() {
@@ -265,7 +264,7 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		newItems := make([]entity.OrganizationPlanMilestoneItem, len(eventData.Items))
 		for i, item := range data.Items {
 			sts := item.Status
-			if milestoneLate {
+			if milestoneShouldBeLate {
 				if item.Status == model.TaskDone.String() {
 					sts = model.TaskDoneLate.String()
 				} else if item.Status == model.TaskNotDone.String() {
