@@ -13,8 +13,8 @@ lang: en
         <metadata object>
     },
     "salesTax": true,
-    "vat": false,
-    "taxRate": 0.075
+    "taxRate": 0.075,
+    "vat": false
 }
 ```
 

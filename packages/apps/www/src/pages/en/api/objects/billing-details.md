@@ -9,7 +9,7 @@ lang: en
 
 ```json
 {
-    "billingCycle": "MONTHLY_BILLING",
+    "billingCycle": "MONTHLY",
     "invoicingStarted": "2024-01-26T00:00:00Z",
     "addressLine1": "20 Main St",
     "addressLine2": "Apt 8",

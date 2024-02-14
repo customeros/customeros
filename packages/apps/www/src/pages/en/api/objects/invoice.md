@@ -10,9 +10,6 @@ lang: en
 
 ```json
 {
-  "metadata": {
-    <metadata object>
-  },
   "amountDue": 0.0,
   "amountPaid": 0.0,
   "amountRemaining": 0.0,
@@ -28,6 +25,9 @@ lang: en
   "invoiceLineItems": [
     <invoiceLineItems object>
   ],
+  "metadata": {
+    <metadata object>
+  },
   "note": "",
   "organization": {
     <organization object>
