@@ -15,12 +15,10 @@ import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateT
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 import { FormInput } from '@ui/form/Input';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Heading } from '@ui/typography/Heading';
 import { TenantBillingProfile } from '@graphql/types';
-import { FormSwitch } from '@ui/form/Switch/FromSwitch';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
 import { countryOptions } from '@shared/util/countryOptions';
@@ -401,16 +399,6 @@ export const BillingPanel = () => {
           {/*  </Text>*/}
           {/*  <Switch size='sm' />*/}
           {/*</Flex>*/}
-          <FormSwitch
-            name='canPayWithPigeon'
-            formId={formId}
-            size='sm'
-            label={
-              <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
-                Carrier pigeon
-              </Text>
-            }
-          />
         </CardBody>
       </Card>
       <Box borderRight='1px solid' borderColor='gray.300' maxH='100vh'>

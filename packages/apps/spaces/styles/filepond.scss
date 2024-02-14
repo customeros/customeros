@@ -202,7 +202,7 @@
 
 .filepond-idle-label-text {
   margin-top: var(--chakra-space-2);
-  font-size: var(--chakra-fontSizes-sm);
+  font-size: var(--chakra-fontSizes-sm) !important;
   color: var(--chakra-colors-gray-700);
 }
 
