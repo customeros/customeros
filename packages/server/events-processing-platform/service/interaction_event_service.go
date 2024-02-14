@@ -129,6 +129,9 @@ func GetParticipantTypeFromPB(participant *interactioneventpb.Participant) commo
 		return commonmodel.ContactType
 	case *interactioneventpb.Participant_Organization:
 		return commonmodel.OrganizationType
+	case *interactioneventpb.Participant_JobRole:
+		return commonmodel.JobRoleType
+
 	default:
 		return ""
 	}

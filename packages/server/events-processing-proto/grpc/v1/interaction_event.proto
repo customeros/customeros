@@ -33,6 +33,7 @@ message Participant {
     User user = 2;
     Contact contact = 3;
     Organization organization = 4;
+    JobRole jobRole = 5;
   }
 }
 
@@ -46,6 +47,10 @@ message Contact {
 
 message Organization {
   // Fields specific to Organization, if any.
+}
+
+message JobRole {
+  // Fields specific to JobRole, if any.
 }
 
 message Sender {
