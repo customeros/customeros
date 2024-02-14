@@ -13,7 +13,7 @@
 .filepond--file-info .filepond--file-info-main,
 .filepond--file-info .filepond--file-info-sub,
 .filepond--file-status .filepond--file-status-main {
-  color: var(--chakra-colors-gray-700);
+  color: transparent;
   font-size: var(--chakra-fontSizes-sm);
   text-align: left;
   font-family: var(--font-barlow);
@@ -44,9 +44,12 @@
 }
 .filepond-error .filepond--file {
   margin-top: -5px;
+  padding: 0;
+  position: relative;
   &:after {
     content: 'Try another';
     margin-top: 2px;
+    line-height: 1.6;
     color: var(--chakra-colors-error-700);
     font-size: var(--chakra-fontSizes-sm);
     font-weight: var(--chakra-fontWeights-semibold);
@@ -58,8 +61,9 @@
 
 }
 
-.filepond--root .filepond--drop-label  {
-  min-height: 120px;
+
+.filepond--root .filepond--drop-label label {
+  cursor: pointer !important;
 }
 .filepond-error .filepond--drop-label {
   min-height: 4.75rem;
@@ -112,6 +116,7 @@
 
 .filepond-error  {.filepond--panel-root {
   background: var(--chakra-colors-error-25);
+  opacity: 1;
 
 }
   .filepond--file-info .filepond--file-info-main,
@@ -140,6 +145,7 @@
 
 [data-filepond-item-state*='busy'] .filepond--file-info,
 [data-filepond-item-state*='busy'] .filepond--file-status,
+[data-filepond-item-state~='processing'] .filepond--file-info,
 [data-filepond-item-state~='processing'] .filepond--file-status,
 [data-filepond-item-state='processing-complete'] .filepond--file-action-button,
 [data-filepond-item-state='processing-complete'] .filepond--file-status,
@@ -151,11 +157,12 @@
 }
 
 .filepond-label-container {
-  height: 120px;
 }
 
 .filepond--root {
   cursor: pointer;
+  margin-bottom: 0;
+  width: 343px;
 }
 
 .filepond--panel-root {
@@ -173,17 +180,16 @@
 .filepond--label-action {
   color: var(--chakra-colors-primary-700);
   font-weight: var(--chakra-fontWeights-bold);
-  font-size: var(--chakra-fontSizes-sm);
+  font-size: var(--chakra-fontSizes-sm) !important;
   text-decoration: none;
   margin-top: var(--chakra-space-2);
 }
 
 
 .filepond-sizes {
-  font-size: var(--chakra-fontSizes-xs) !important;
+  font-size: var(--chakra-fontSizes-sm) !important;
   text-align: center;
-  margin-top: var(--chakra-space-2);
-
+  color: var(--chakra-colors-gray-500);
 }
 
 .filepond-upload-image {
@@ -196,7 +202,8 @@
 
 .filepond-idle-label-text {
   margin-top: var(--chakra-space-2);
-
+  font-size: var(--chakra-fontSizes-sm);
+  color: var(--chakra-colors-gray-700);
 }
 
 .filepond-label-container {
@@ -250,12 +257,14 @@
   font-weight: 500;
   gap: 8px;
   align-items: flex-end;
-  min-height: 120px;
 }
 .filepond-upload-text {
   color: var(--chakra-colors-gray-700);
 }
 
-
-
-
+[data-filepond-item-state*='invalid'] .filepond--panel,
+[data-filepond-item-state*='invalid'] .filepond--file-wrapper,
+[data-filepond-item-state*='error'] .filepond--panel,
+[data-filepond-item-state*='error'] .filepond--file-wrapper {
+  animation: none;
+}

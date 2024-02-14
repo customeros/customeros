@@ -1,5 +1,5 @@
-import { FilePond, registerPlugin } from 'react-filepond';
 import React, { useRef, useState, useEffect } from 'react';
+import { FilePond, FileStatus, registerPlugin } from 'react-filepond';
 
 import { useWillUnmount } from 'rooks';
 import { FilePondFile } from 'filepond';
@@ -17,6 +17,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { Upload01 } from '@ui/media/icons/Upload01';
+import { Image as ChakraImage } from '@ui/media/Image';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCustomerLogo } from '@shared/state/CustomerLogo.atom';
 
@@ -34,7 +35,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
 
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
   const queryKey = useTenantSettingsQuery.getKey();
-  const [{ logoUrl }, setLogoUrl] = useCustomerLogo();
+  const [{ logoUrl, dimensions }, setLogoUrl] = useCustomerLogo();
   const [hasError, setHasError] = useState<null | {
     file: string;
     error: string;
@@ -80,9 +81,6 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
               height: img.height || 36,
             },
           });
-          if (!files.length) {
-            setFiles([blob as unknown as FilePondFile]);
-          }
         } else {
           setHasError({ error: 'Error loading logo', file: 'logo' });
         }
@@ -131,15 +129,20 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
         <p className='filepond-idle-label-text'>
           <span className='filepond--label-action'>Click to upload</span> or
           drag and drop
-          <p className='filepond-sizes'>PNG, JPG or GIF (Max 3MB)</p>
+          <p className='filepond-sizes'>PNG or JPG (Max 150KB)</p>
         </p>
       </div>,
     );
   }
 
+  const isLoading =
+    pondRef.current?.getFile()?.status === FileStatus.PROCESSING_QUEUED ||
+    pondRef.current?.getFile()?.status === FileStatus.PROCESSING ||
+    pondRef.current?.getFile()?.status === FileStatus.LOADING;
+
   return (
-    <>
-      <Flex justifyContent='space-between' alignItems='center'>
+    <Box position='relative'>
+      <Flex justifyContent='space-between' alignItems='center' mb={2}>
         <Text color='gray.600' fontSize='sm' fontWeight='semibold'>
           Organization logo
         </Text>
@@ -155,38 +158,69 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
         )}
       </Flex>
 
+      {logoUrl && !isLoading && !hasError && (
+        <Box
+          position='relative'
+          maxHeight={120}
+          width='full'
+          display='flex'
+          justifyContent='center'
+          padding={4}
+        >
+          <ChakraImage
+            src={`${logoUrl}`}
+            alt='CustomerOS'
+            width={dimensions.width || 136}
+            height={dimensions.height || 45}
+            style={{ objectFit: 'contain', maxHeight: '40px' }}
+          />
+        </Box>
+      )}
+
       <Box
-        mb={logoUrl ? 2 : 0}
         onClick={() => hasError && pondRef.current?.browse()}
         className={
           hasError ? 'filepond-error' : logoUrl ? 'filepond-uploaded' : ''
         }
+        sx={{
+          '&': {
+            position:
+              logoUrl && !isLoading && !hasError ? 'absolute' : 'static',
+            top: logoUrl && !isLoading && !hasError ? '-9999' : 'auto',
+          },
+          '& .filepond--root .filepond--drop-label': {
+            minHeight:
+              files.length || hasError ? `${32}px` : `${120}px !important`,
+          },
+        }}
       >
         <FilePond
           ref={pondRef}
           // @ts-expect-error ignore for now
           files={files}
           onupdatefiles={setFiles}
+          dropOnPage={true}
+          dropOnElement={false}
           server={{
             url: '/fs/file',
 
             timeout: 5000,
-            load: (source, load, error, progress, abort, headers) => {
-              const myRequest = new Request(source);
-              fetch(myRequest).then(function (response) {
-                response.blob().then(function (myBlob) {
-                  load(myBlob);
-                });
-              });
-            },
-            fetch: (source, load, error, progress, abort, headers) => {
-              const myRequest = new Request(source);
-              fetch(myRequest).then(function (response) {
-                response.blob().then(function (myBlob) {
-                  load(myBlob);
-                });
-              });
-            },
+            // load: (source, load, error, progress, abort, headers) => {
+            //   const myRequest = new Request(source);
+            //   fetch(myRequest).then(function (response) {
+            //     response.blob().then(function (myBlob) {
+            //       load(myBlob);
+            //     });
+            //   });
+            // },
+            // fetch: (source, load, error, progress, abort, headers) => {
+            //   const myRequest = new Request(source);
+            //   fetch(myRequest).then(function (response) {
+            //     response.blob().then(function (myBlob) {
+            //       load(myBlob);
+            //     });
+            //   });
+            // },
 
             process: (
               fieldName,
@@ -265,31 +299,24 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
           allowMultiple={false}
           allowReplace={true}
           name='files'
-          acceptedFileTypes={[
-            'image/jpg',
-            'image/png',
-            'image/gif',
-            'image/jpeg',
-          ]}
+          allowDrop={!files.length}
+          acceptedFileTypes={['image/jpg', 'image/png', 'image/jpeg']}
           panelHeight={120}
           imagePreviewMaxFileSize='150KB'
           maxFileSize='150KB'
           imagePreviewMaxInstantPreviewFileSize={150000}
-          imagePreviewMaxHeight={136}
+          imagePreviewMaxHeight={32}
           imageResizeTargetWidth={40}
           imageResizeMode='contain'
-          imageResizeTargetHeight={36}
+          imageResizeTargetHeight={32}
           labelIdle={getDefaultLabel()}
-          labelFileProcessingError={'Upload failed, please try again'}
-          labelFileProcessing={'Processing'}
-          labelFileAdded='Label file added'
+          labelFileProcessing={'Uploading'}
           labelMaxFileSizeExceeded={'Your logo needs to be less than 150KB'}
-          labelFileLoading={'Loading file'}
           labelFileWaitingForSize={'Waiting for size'}
-          labelFileLoadError={'Error processing file'}
-          labelFileProcessingComplete={'File processing complete'}
-          labelFileProcessingAborted={'Processing aborted'}
-          labelFileTypeNotAllowed={'Your logo must be PNG, JPG or GIF'}
+          labelFileLoadError={'Upload failed, please try again'}
+          labelFileProcessingError={'Upload failed, please try again'}
+          labelFileProcessingComplete={'Logo uploaded successfully'}
+          labelFileTypeNotAllowed={'Your logo must be a PNG or JPG'}
           credits={false}
           onerror={(error, file) => {
             // @ts-expect-error error file
@@ -319,6 +346,6 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
           }}
         />
       </Box>
-    </>
+    </Box>
   );
 };
