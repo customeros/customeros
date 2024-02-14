@@ -145,10 +145,6 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 		if !sliEntity.IsActiveAt(referenceTime) {
 			continue
 		}
-		// process one time SLIs
-		if sliEntity.Billed == neo4jenum.BilledTypeOnce {
-
-		}
 
 		calculatedSLIAmount, calculatedSLIVat := float64(0), float64(0)
 		invoiceLineCalculationsReady := false
@@ -164,7 +160,11 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 				// SLI already invoiced
 				continue
 			}
-			calculatedSLIAmount = utils.TruncateFloat64(sliEntity.Price, 2)
+			quantity := sliEntity.Quantity
+			if sliEntity.Quantity <= 0 {
+				quantity = 1
+			}
+			calculatedSLIAmount = utils.TruncateFloat64(float64(quantity)*sliEntity.Price, 2)
 			calculatedSLIVat = utils.TruncateFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
 			invoiceLineCalculationsReady = true
 		}
@@ -304,7 +304,11 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 		}
 		finalSLIAmount, calculatedSLIVat := float64(0), float64(0)
 		if sliToInvoice.Billed == neo4jenum.BilledTypeOnce {
-			finalSLIAmount = utils.TruncateFloat64(sliToInvoice.Price, 2)
+			quantity := sliToInvoice.Quantity
+			if quantity <= 0 {
+				quantity = 1
+			}
+			finalSLIAmount = utils.TruncateFloat64(float64(quantity)*sliToInvoice.Price, 2)
 			if finalSLIAmount <= 0 {
 				continue
 			}
