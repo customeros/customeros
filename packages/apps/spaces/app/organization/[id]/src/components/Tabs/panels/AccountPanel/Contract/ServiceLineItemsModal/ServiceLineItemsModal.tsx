@@ -53,6 +53,7 @@ interface SubscriptionServiceModalProps {
   contractId: string;
   onClose: () => void;
   contractName: string;
+  currency?: string | null;
   organizationName: string;
   serviceLineItems: Array<ServiceLineItem>;
 }
@@ -106,6 +107,7 @@ export const ServiceLineItemsModal = ({
   serviceLineItems,
   contractId,
   contractName,
+  currency,
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
   const client = getGraphQLClient();
@@ -123,7 +125,6 @@ export const ServiceLineItemsModal = ({
   const updateServices = useUpdateServicesMutation(client, {
     onMutate: ({ input }) => {
       queryClient.cancelQueries({ queryKey });
-
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
         return produce(currentCache, (draft) => {
           const previousContracts = draft?.['organization']?.['contracts'];
@@ -153,7 +154,7 @@ export const ServiceLineItemsModal = ({
 
       return { previousEntries };
     },
-    onError: (_, __, context) => {
+    onError: (err, __, context) => {
       queryClient.setQueryData<GetContractsQuery>(
         queryKey,
         context?.previousEntries,
@@ -307,6 +308,7 @@ export const ServiceLineItemsModal = ({
               <ServiceLineItemRow
                 service={service}
                 index={index}
+                currency={currency}
                 onChange={(data) => handleUpdateService(index, data)}
               />
             </Fragment>

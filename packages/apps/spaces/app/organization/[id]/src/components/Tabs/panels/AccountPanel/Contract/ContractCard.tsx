@@ -494,12 +494,14 @@ export const ContractCard = ({
               hasEnded={data.status === ContractStatus.Ended}
               startedAt={data.serviceStartedAt}
               renewCycle={data.renewalCycle}
+              currency={data.currency}
               opportunity={data.opportunities?.[0]}
             />
           )}
         </Collapse>
         <Services
           data={data?.serviceLineItems}
+          currency={data?.currency}
           onModalOpen={onServiceLineItemsOpen}
         />
 
@@ -516,6 +518,7 @@ export const ContractCard = ({
           contractId={data.id}
           onClose={onServiceLineItemClose}
           contractName={data.name}
+          currency={data.currency}
           serviceLineItems={data?.serviceLineItems ?? []}
           organizationName={organizationName}
         />

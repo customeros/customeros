@@ -10,10 +10,11 @@ import { ServicesList } from '@organization/src/components/Tabs/panels/AccountPa
 
 interface Props {
   onModalOpen: () => void;
+  currency?: string | null;
   data?: Array<ServiceLineItem> | null;
 }
 
-export const Services: React.FC<Props> = ({ data, onModalOpen }) => {
+export const Services: React.FC<Props> = ({ data, currency, onModalOpen }) => {
   return (
     <>
       <Flex w='full' alignItems='center' justifyContent='space-between'>
@@ -33,7 +34,13 @@ export const Services: React.FC<Props> = ({ data, onModalOpen }) => {
         />
       </Flex>
 
-      {data?.length && <ServicesList data={data} onModalOpen={onModalOpen} />}
+      {data?.length && (
+        <ServicesList
+          data={data}
+          onModalOpen={onModalOpen}
+          currency={currency}
+        />
+      )}
     </>
   );
 };

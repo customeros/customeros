@@ -39,6 +39,7 @@ interface RenewalARRCardProps {
   hasEnded: boolean;
   startedAt: string;
   opportunity: Opportunity;
+  currency?: string | null;
   renewCycle: ContractRenewalCycle;
 }
 export const RenewalARRCard = ({
@@ -46,6 +47,7 @@ export const RenewalARRCard = ({
   hasEnded,
   renewCycle,
   opportunity,
+  currency,
 }: RenewalARRCardProps) => {
   const orgId = useParams()?.id as string;
   const queryClient = useQueryClient();
@@ -132,8 +134,16 @@ export const RenewalARRCard = ({
       : differenceInMonths > 1
     : null;
 
-  const formattedMaxAmount = formatCurrency(opportunity.maxAmount ?? 0);
-  const formattedAmount = formatCurrency(hasEnded ? 0 : opportunity.amount);
+  const formattedMaxAmount = formatCurrency(
+    opportunity.maxAmount ?? 0,
+    2,
+    currency ?? 'USD',
+  );
+  const formattedAmount = formatCurrency(
+    hasEnded ? 0 : opportunity.amount,
+    2,
+    currency ?? 'USD',
+  );
 
   const hasRewenewChanged = formattedMaxAmount !== formattedAmount; // should be also less
 
