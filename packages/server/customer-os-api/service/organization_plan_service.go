@@ -170,13 +170,22 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 		return "", err
 	}
 
+	var due time.Time
+	var dueDatePtr *time.Time
+	if dueDate != nil {
+		due = dueDate.UTC()
+		dueDatePtr = &due
+	} else {
+		dueDatePtr = nil
+	}
+
 	grpcRequest := orgplanpb.CreateOrganizationPlanMilestoneGrpcRequest{
 		Tenant:             common.GetTenantFromContext(ctx),
 		OrganizationPlanId: organizationPlanId,
 		LoggedInUserId:     common.GetUserIdFromContext(ctx),
 		Name:               name,
 		Order:              *order,
-		DueDate:            utils.ConvertTimeToTimestampPtr(dueDate),
+		DueDate:            utils.ConvertTimeToTimestampPtr(dueDatePtr),
 		Optional:           optional,
 		Items:              items,
 		SourceFields: &commonpb.SourceFields{
@@ -304,7 +313,7 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_ORDER)
 	}
 	if dueDate != nil {
-		due := utils.IfNotNilTimeWithDefault(dueDate, time.Now().UTC())
+		due := utils.IfNotNilTimeWithDefault(dueDate, time.Now().UTC()).UTC()
 		grpcRequest.DueDate = utils.ConvertTimeToTimestampPtr(&due)
 		fieldsMask = append(fieldsMask, orgplanpb.OrganizationPlanMilestoneFieldMask_ORGANIZATION_PLAN_MILESTONE_PROPERTY_DUE_DATE)
 	}
