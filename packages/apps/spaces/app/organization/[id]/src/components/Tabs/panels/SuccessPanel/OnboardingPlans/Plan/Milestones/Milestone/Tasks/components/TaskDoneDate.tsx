@@ -14,6 +14,7 @@ interface TaskDoneDateProps {
   isOpen?: boolean;
   onOpen?: () => void;
   onClose?: () => void;
+  milestoneDueDate: string;
   onChange: (value: string) => void;
 }
 
@@ -22,6 +23,7 @@ export const TaskDoneDate = ({
   onOpen,
   onClose,
   onChange,
+  milestoneDueDate,
   value = new Date().toISOString(),
 }: TaskDoneDateProps) => {
   const taskUpdatedAtDate = DateTimeUtils.format(
@@ -57,9 +59,9 @@ export const TaskDoneDate = ({
           <PopoverBody w='fit-content'>
             <InlineDatePicker
               selected={new Date(value)}
-              maxDate={new Date()}
+              maxDate={new Date(milestoneDueDate)}
               onChange={(date) => {
-                date && onChange(date?.toISOString());
+                date && onChange(DateTimeUtils.toISOMidnight(date));
               }}
             />
           </PopoverBody>

@@ -8,19 +8,19 @@ import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu';
 interface MilestoneMenuProps {
   opacity?: number;
   transition?: string;
-  isOptional?: boolean;
   onRetire?: () => void;
   onAddTask?: () => void;
   onDuplicate?: () => void;
   onSetDueDate?: () => void;
+  isMilestoneDone?: boolean;
 }
 
 export const MilestoneMenu = ({
   onRetire,
   onAddTask,
-  isOptional,
   onDuplicate,
   onSetDueDate,
+  isMilestoneDone,
   ...buttonProps
 }: MilestoneMenuProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -43,12 +43,14 @@ export const MilestoneMenu = ({
       />
       <Portal>
         <MenuList minW='10rem'>
-          <MenuItem
-            onClick={onSetDueDate}
-            icon={<CalendarCheck02 color='gray.500' />}
-          >
-            Set due date
-          </MenuItem>
+          {!isMilestoneDone && (
+            <MenuItem
+              onClick={onSetDueDate}
+              icon={<CalendarCheck02 color='gray.500' />}
+            >
+              Set due date
+            </MenuItem>
+          )}
           <MenuItem onClick={onRetire} icon={<MinusCircle color='gray.500' />}>
             Remove
           </MenuItem>
