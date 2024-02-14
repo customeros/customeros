@@ -14,7 +14,7 @@ import { OnboardingStatus } from './OnboardingStatus';
 export const SuccessPanel = () => {
   const client = getGraphQLClient();
   const id = useParams()?.id as string;
-  const { data } = useOrganizationQuery(client, { id });
+  const { data, isPending } = useOrganizationQuery(client, { id });
   const isFeatureOn = useFeatureIsOn('onboarding-plans');
 
   return (
@@ -22,7 +22,10 @@ export const SuccessPanel = () => {
       title='Success'
       actionItem={isFeatureOn ? <OnboardingMenu /> : undefined}
     >
-      <OnboardingStatus data={data?.organization?.accountDetails?.onboarding} />
+      <OnboardingStatus
+        isLoading={isPending}
+        data={data?.organization?.accountDetails?.onboarding}
+      />
 
       {isFeatureOn && <OnboardingPlans />}
     </PanelContainer>

@@ -6,6 +6,9 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
+import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import {
   OnboardingPlanMilestoneStatus,
   OnboardingPlanMilestoneItemStatus,
@@ -26,7 +29,12 @@ export const useMilestoneMutations = (
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const organizationId = (useParams()?.id ?? '') as string;
+  const [timelineMeta] = useTimelineMeta();
 
+  const timelineQueryKey = useInfiniteGetTimelineQuery.getKey(
+    timelineMeta.getTimelineVariables,
+  );
+  const orgQueryKey = useOrganizationQuery.getKey({ id: organizationId });
   const queryKey = useOrganizationOnboardingPlansQuery.getKey({
     organizationId,
   });
@@ -34,7 +42,13 @@ export const useMilestoneMutations = (
     queryClient,
     { organizationId },
   );
-  const invalidateQuery = () => queryClient.invalidateQueries({ queryKey });
+  const invalidate = () => {
+    setTimeout(() => queryClient.invalidateQueries({ queryKey }), 200);
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: orgQueryKey });
+      queryClient.invalidateQueries({ queryKey: timelineQueryKey });
+    }, 2000);
+  };
 
   const updateMilestone = useUpdateOnboardingPlanMilestoneMutation(client, {
     onMutate: ({ input }) => {
@@ -76,7 +90,7 @@ export const useMilestoneMutations = (
         'update-org-plan-milestone',
       );
     },
-    onSettled: () => setTimeout(invalidateQuery, 200),
+    onSettled: invalidate,
   });
 
   const addMilestone = useAddOnboardingPlanMilestoneMutation(client, {
@@ -113,7 +127,7 @@ export const useMilestoneMutations = (
       }
       toastError(`We couldn't add the milestone`, 'add-org-plan-milestone');
     },
-    onSettled: invalidateQuery,
+    onSettled: invalidate,
   });
 
   return {
