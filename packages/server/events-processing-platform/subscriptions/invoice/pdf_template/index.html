@@ -318,56 +318,56 @@
     </div>
 
     <div class="invoice-printed-frame44433" style="bottom: 0;width: 780px; margin:auto;">
-        <div class="invoice-printed-frame3615">
-            <div class="invoice-printed-dates1">
-                <div class="invoice-payment-details-container">
-                    <div class="invoice-title-2 TextsmSemibold">
-                        Domestic payments
-                    </div>
-                </div>
-                <div class="invoice-payment-details-header-container">
-                    <div class="TextsmRegular invoice-text">
-                        {{safeHTML .DomesticPaymentsBankInfo}}
-                    </div>
-                </div>
-                &nbsp;
-                <div class="invoice-payment-details-container">
-                    <div class="invoice-title-3 TextsmMedium">
-                        Reference:
-                    </div>
-                    &nbsp;
-                    <div class="invoice-text-left TextsmRegular">
-                        {{.InvoiceNumber}}
-                    </div>
-                </div>
-            </div>
+<!--        <div class="invoice-printed-frame3615">-->
+<!--            <div class="invoice-printed-dates1">-->
+<!--                <div class="invoice-payment-details-container">-->
+<!--                    <div class="invoice-title-2 TextsmSemibold">-->
+<!--                        Domestic payments-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="invoice-payment-details-header-container">-->
+<!--                    <div class="TextsmRegular invoice-text">-->
+<!--                        {{safeHTML .DomesticPaymentsBankInfo}}-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                &nbsp;-->
+<!--                <div class="invoice-payment-details-container">-->
+<!--                    <div class="invoice-title-3 TextsmMedium">-->
+<!--                        Reference:-->
+<!--                    </div>-->
+<!--                    &nbsp;-->
+<!--                    <div class="invoice-text-left TextsmRegular">-->
+<!--                        {{.InvoiceNumber}}-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
 
-            {{if .InternationalPaymentsBankInfo}}
-            <div class="invoice-printed-dates2">
-                <div class="invoice-payment-details-container">
-                    <div class="invoice-title-2 TextsmSemibold">
-                        International payments
-                    </div>
-                </div>
-                <div class="invoice-payment-details-container">
-                    <div class="TextsmRegular invoice-text">
-                        {{safeHTML .InternationalPaymentsBankInfo}}
-                    </div>
-                </div>
-                &nbsp;
-                <div class="invoice-payment-details-container">
-                    <div class="invoice-title-3 TextsmMedium">
-                        Reference:
-                    </div>
-                    &nbsp;
-                    <div class="invoice-text-left TextsmRegular">
-                        {{.InvoiceNumber}}
-                    </div>
-                </div>
-            </div>
-            {{else}}
-            {{end}}
-        </div>
+<!--            {{if .InternationalPaymentsBankInfo}}-->
+<!--            <div class="invoice-printed-dates2">-->
+<!--                <div class="invoice-payment-details-container">-->
+<!--                    <div class="invoice-title-2 TextsmSemibold">-->
+<!--                        International payments-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="invoice-payment-details-container">-->
+<!--                    <div class="TextsmRegular invoice-text">-->
+<!--                        {{safeHTML .InternationalPaymentsBankInfo}}-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                &nbsp;-->
+<!--                <div class="invoice-payment-details-container">-->
+<!--                    <div class="invoice-title-3 TextsmMedium">-->
+<!--                        Reference:-->
+<!--                    </div>-->
+<!--                    &nbsp;-->
+<!--                    <div class="invoice-text-left TextsmRegular">-->
+<!--                        {{.InvoiceNumber}}-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            {{else}}-->
+<!--            {{end}}-->
+<!--        </div>-->
         <div class="invoice-footer-container">
             <div class="invoice-customeros-logo-container">
                 <img alt="CustomerOS" class="invoice-printed-customer-os" src="customer-os.png"/>
