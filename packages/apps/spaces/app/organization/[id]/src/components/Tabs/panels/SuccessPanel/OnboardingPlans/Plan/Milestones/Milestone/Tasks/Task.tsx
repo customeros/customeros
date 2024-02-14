@@ -8,6 +8,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Input } from '@ui/form/Input';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { SkipForward } from '@ui/media/icons/SkipForward';
 import { OnboardingPlanMilestoneItemStatus } from '@graphql/types';
 
@@ -107,7 +108,7 @@ export const Task = memo(
               : OnboardingPlanMilestoneItemStatus.NotDone;
           }
 
-          draft.updatedAt = new Date().toISOString();
+          draft.updatedAt = DateTimeUtils.toISOMidnight(new Date());
         });
 
         const next = (value as TaskDatum[]).map((v, i) =>
@@ -173,7 +174,7 @@ export const Task = memo(
         if (!item) return;
 
         item.status = computeNextStatus(item.status);
-        item.updatedAt = new Date().toISOString();
+        item.updatedAt = DateTimeUtils.toISOMidnight(new Date());
       });
 
       onChange?.(nextItems);
@@ -188,7 +189,7 @@ export const Task = memo(
         draft.push({
           text: '',
           uuid: crypto.randomUUID(),
-          updatedAt: new Date().toISOString(),
+          updatedAt: DateTimeUtils.toISOMidnight(new Date()),
           status: isPastDueDate
             ? OnboardingPlanMilestoneItemStatus.NotDoneLate
             : OnboardingPlanMilestoneItemStatus.NotDone,
@@ -259,6 +260,7 @@ export const Task = memo(
             isOpen={isCalendarOpen}
             value={itemValue?.updatedAt}
             onChange={handleUpdateDoneDate}
+            milestoneDueDate={milestoneDueDate}
             onOpen={() => setIsCalendarOpen(true)}
             onClose={() => setIsCalendarOpen(false)}
           />

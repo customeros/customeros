@@ -138,6 +138,22 @@ export const Milestone = ({
     [state.values],
   );
 
+  const mostRecentDoneTask = useMemo(() => {
+    const doneTasks = milestone?.items?.filter(
+      (i) =>
+        i.status === OnboardingPlanMilestoneItemStatus.Done ||
+        i.status === OnboardingPlanMilestoneItemStatus.DoneLate,
+    );
+
+    return doneTasks?.reduce((acc, curr) => {
+      if (!acc) return curr;
+      const accDate = new Date(acc?.updatedAt as string);
+      const currDate = new Date(curr?.updatedAt as string);
+
+      return accDate > currDate ? acc : curr;
+    }, null as TaskDatum | null);
+  }, [milestone.items]);
+
   const checkboxColorScheme = useMemo(() => {
     if (isChecked) return isLate ? 'warning' : 'success';
     if (isLate) return 'warning';
@@ -233,7 +249,7 @@ export const Milestone = ({
             )}
             <MilestoneMenu
               onRetire={handleRetire}
-              isOptional={milestone.optional}
+              isMilestoneDone={isChecked}
               onSetDueDate={handleOpenDueDate}
               {...hoveredProps}
             />
@@ -252,6 +268,7 @@ export const Milestone = ({
               isOpen={isDueDateOpen}
               onOpen={handleOpenDueDate}
               onClose={handleCloseDueDate}
+              minDate={mostRecentDoneTask?.updatedAt}
               status={state?.values?.statusDetails?.status}
             />
             {!!milestone?.items?.length && (

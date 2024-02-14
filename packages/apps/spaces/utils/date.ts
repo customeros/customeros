@@ -1,5 +1,7 @@
 import { format, utcToZonedTime } from 'date-fns-tz';
 import {
+  set,
+  formatRFC3339,
   formatDistanceToNow,
   differenceInMinutes,
   isToday as isTodayDateFns,
@@ -146,5 +148,19 @@ export class DateTimeUtils {
     return format(zonedDateStr ?? _date, formatString, {
       timeZone: timeZone || undefined,
     });
+  }
+
+  public static toISOMidnight(date: string | Date): string {
+    const dateAtMidnight = set(
+      typeof date === 'string' ? this.getDate(date) : date,
+      {
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+        milliseconds: 0,
+      },
+    );
+
+    return formatRFC3339(dateAtMidnight);
   }
 }

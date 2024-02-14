@@ -7,6 +7,7 @@ import setHours from 'date-fns/setHours';
 import { Button } from '@ui/form/Button';
 import { VStack } from '@ui/layout/Stack';
 import { Plus } from '@ui/media/icons/Plus';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { OnboardingPlanMilestoneItemStatus } from '@graphql/types';
 
 import { Task } from './Task';
@@ -32,7 +33,7 @@ export const Tasks = memo(
         draft.push({
           text: '',
           uuid: crypto.randomUUID(),
-          updatedAt: new Date().toISOString(),
+          updatedAt: DateTimeUtils.toISOMidnight(new Date()),
           status: isPastDue
             ? OnboardingPlanMilestoneItemStatus.NotDoneLate
             : OnboardingPlanMilestoneItemStatus.NotDone,

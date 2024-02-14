@@ -43,6 +43,19 @@ export function getMilestoneDueDate(
   return displayText;
 }
 
+export function getMilestoneDoneDate(
+  value: string,
+  status: OnboardingPlanMilestoneStatus,
+) {
+  if (!value) return '';
+  const isLate = checkMilestoneLate(status);
+
+  return `Done ${isLate ? 'late on' : 'on'} ${DateTimeUtils.format(
+    value,
+    DateTimeUtils.date,
+  )}`;
+}
+
 function checkMilestoneLate(status?: OnboardingPlanMilestoneStatus) {
   if (!status) return false;
 
