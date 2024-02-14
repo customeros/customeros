@@ -9,7 +9,7 @@ Listen for `invoice` events on your CustomerOS instance so you can take action i
 
 ## Invoice events
 
-You can subscribe to any of the invoice events described below.  All events send an event identifier and the [`invoice` data object](invoice-object) to your configured webhook endpoint.
+You can subscribe to any of the invoice events described below.  All events send an event identifier and the [`invoice` data object](objects/invoice-object) to your configured webhook endpoint.
 
 You can use the same webhook URL for as many events as you like.
 
