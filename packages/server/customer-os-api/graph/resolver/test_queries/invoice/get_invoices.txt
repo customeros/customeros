@@ -14,7 +14,7 @@ query GetInvoice($page: Int!, $limit: Int!) {
         id
         number
         invoiceLines {
-            name
+            description
         }
       }
   }

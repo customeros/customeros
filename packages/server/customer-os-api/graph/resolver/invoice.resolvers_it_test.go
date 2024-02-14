@@ -81,12 +81,12 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Equal(t, "Note", *invoice.Note)
 
 	require.Equal(t, 1, len(invoice.InvoiceLines))
-	require.Equal(t, "SLI 1", invoice.InvoiceLines[0].Name)
+	require.Equal(t, "SLI 1", invoice.InvoiceLines[0].Description)
 	require.Equal(t, 100.0, invoice.InvoiceLines[0].Price)
 	require.Equal(t, 1, invoice.InvoiceLines[0].Quantity)
-	require.Equal(t, 100.0, invoice.InvoiceLines[0].Amount)
-	require.Equal(t, 19.0, invoice.InvoiceLines[0].Vat)
-	require.Equal(t, 119.0, invoice.InvoiceLines[0].TotalAmount)
+	require.Equal(t, 100.0, invoice.InvoiceLines[0].Subtotal)
+	require.Equal(t, 19.0, invoice.InvoiceLines[0].TaxDue)
+	require.Equal(t, 119.0, invoice.InvoiceLines[0].Total)
 
 	require.Equal(t, organizationId, invoice.Organization.ID)
 }
@@ -159,9 +159,9 @@ func TestInvoiceResolver_Invoices(t *testing.T) {
 
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].ID)
 	require.Equal(t, "1", invoiceStruct.Invoices.Content[0].Number)
-	require.Equal(t, "SLI 1", invoiceStruct.Invoices.Content[0].InvoiceLines[0].Name)
+	require.Equal(t, "SLI 1", invoiceStruct.Invoices.Content[0].InvoiceLines[0].Description)
 	require.Equal(t, "11", invoiceStruct.Invoices.Content[1].Number)
-	require.Equal(t, "SLI 3", invoiceStruct.Invoices.Content[1].InvoiceLines[0].Name)
+	require.Equal(t, "SLI 3", invoiceStruct.Invoices.Content[1].InvoiceLines[0].Description)
 }
 
 func TestInvoiceResolver_SimulateInvoice(t *testing.T) {
