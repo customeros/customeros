@@ -25,8 +25,8 @@ lang: en
   "invoicePeriodStart": "2024-01-26T00:00:00Z",
   "invoicePeriodEnd": "2024-01-26T00:00:00Z", 
   "invoiceUrl": "https://customeros.ai/invoices/96d612a8-b086-4dae-9f10-a12796f30c55",
-  "lineItems": [
-    <lineItems object>
+  "invoiceLineItems": [
+    <invoiceLineItems object>
   ],
   "note": "",
   "organization": {
@@ -37,7 +37,8 @@ lang: en
   "status": "DUE", 
   "tax": {
     <tax object>
-  }
+  },
+  "taxDue": 0.0
 }
 ```
 
@@ -100,4 +101,7 @@ An `enum` representing the current status of the invoice.  Valid values are:
 
 ### tax
 The invoice [`tax` object](invoice-tax-object)
+
+### taxDue
+A `float` respresenting the applicable tax rate multiplied by the subtotal
 

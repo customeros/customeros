@@ -1,11 +1,11 @@
 ---
-title: _metadata Object
-description: The _metadata data object
+title: Billing details object
+description: The billing details data object
 layout: ../../../../layouts/docs.astro
 lang: en
 ---
 
-## the _metadata data object
+## The billing details data object
 
 ```json
 "billingDetails": {
