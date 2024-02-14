@@ -9,20 +9,20 @@ lang: en
 
 ```json
 [
-    {
-        "metadata": {
-            <metadata object>
-        },
-        "description": "My Amazing Product",
-        "price": 0.0,
-        "quantity": 0,
-        "subtotal": 0.0,
-        "tax": {
-            <tax object>
-        },
-        "taxDue": 0.0,
-        "total": 0.0
-    }
+  {
+    "description": "My Amazing Product",
+    "metadata": {
+      "<metadata object>"
+    },    
+    "price": 0.0,
+    "quantity": 0,
+    "subtotal": 0.0, 
+    "tax": {
+      "<tax object>"
+    },
+    "taxDue": 0.0,    
+    "total": 0.0
+  }
 ]
 ```
 

@@ -28,14 +28,14 @@ lang: en
   "metadata": {
     <metadata object>
   },
-  "name": "My Contract",
+  "contractName": "My Contract",
   "opportunities": [
     {
       <opportunities object>
     }
   ],
   "serviceStarted": "2024-01-26T00:00:00Z",
-  "status": "LIVE"
+  "contractStatus": "LIVE"
 }
   
 ```
