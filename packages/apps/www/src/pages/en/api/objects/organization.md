@@ -15,9 +15,11 @@ lang: en
   "contracts": [
     <contract object>
   ],
+  "customerOsId": "C-XSC-SDF",
   "customFields": [
     <customFields object>
   ],
+  "customId": "myCustomId",
   "description": "The best company in the world",
   "domains": [
     "acmecorp.com",
@@ -51,6 +53,7 @@ lang: en
   "people": [
     <people object>
   ],
+  "public": true,
   "socialMedia": [
     <socialMedia object>
   ],
