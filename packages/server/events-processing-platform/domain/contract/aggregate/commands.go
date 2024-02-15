@@ -205,7 +205,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		externalSystem,
 		source,
 		updatedAtNotNil,
-		extractFieldsMask(request.FieldsMask),
+		fieldsMask,
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)
