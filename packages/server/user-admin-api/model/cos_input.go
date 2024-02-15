@@ -45,6 +45,13 @@ type TenantBillingProfileInput struct {
 	Zip                           string `json:"zip"`
 	DomesticPaymentsBankInfo      string `json:"domesticPaymentsBankInfo"`
 	InternationalPaymentsBankInfo string `json:"internationalPaymentsBankInfo"`
+	VatNumber                     string `json:"vatNumber"`
+	SendInvoicesFrom              string `json:"sendInvoicesFrom"`
+	CanPayWithCard                bool   `json:"canPayWithCard"`
+	CanPayWithDirectDebitSEPA     bool   `json:"canPayWithDirectDebitSEPA"`
+	CanPayWithDirectDebitACH      bool   `json:"canPayWithDirectDebitACH"`
+	CanPayWithDirectDebitBacs     bool   `json:"canPayWithDirectDebitBacs"`
+	CanPayWithPigeon              bool   `json:"canPayWithPigeon"`
 }
 
 type NextDryRunInvoiceForContractInput struct {

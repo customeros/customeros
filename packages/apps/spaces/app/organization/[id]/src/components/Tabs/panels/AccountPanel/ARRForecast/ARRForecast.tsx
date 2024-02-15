@@ -19,6 +19,7 @@ import { useARRInfoModalContext } from '@organization/src/components/Tabs/panels
 
 interface ARRForecastProps {
   name: string;
+  currency?: string | null;
   isInitialLoading?: boolean;
   contracts?: Contract[] | null;
   renewalSunnary?: RenewalSummary | null;
@@ -28,6 +29,7 @@ export const ARRForecast = ({
   isInitialLoading,
   renewalSunnary,
   name,
+  currency = 'USD',
 }: ARRForecastProps) => {
   const isRestoring = useIsRestoring();
   const { modal } = useARRInfoModalContext();
@@ -35,8 +37,14 @@ export const ARRForecast = ({
   const isUpdatingContract = useIsMutatingContract();
   const formattedMaxAmount = formatCurrency(
     renewalSunnary?.maxArrForecast ?? 0,
+    2,
+    currency ?? 'USD',
   );
-  const formattedAmount = formatCurrency(renewalSunnary?.arrForecast ?? 0);
+  const formattedAmount = formatCurrency(
+    renewalSunnary?.arrForecast ?? 0,
+    2,
+    currency ?? 'USD',
+  );
 
   const hasForecastChanged = formattedMaxAmount !== formattedAmount;
 

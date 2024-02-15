@@ -7,22 +7,18 @@ import { produce } from 'immer';
 import { useDebounce } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { VatInput } from '@settings/components/Tabs/panels/BillingPanel/VatInput';
+import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
+import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/PaymentMethods';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 import { useCreateBillingProfileMutation } from '@settings/graphql/createTenantBillingProfile.generated';
 import { useTenantUpdateBillingProfileMutation } from '@settings/graphql/updateTenantBillingProfile.generated';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
-import { Gb } from '@ui/media/logos/Gb';
-import { Us } from '@ui/media/logos/Us';
-import { Eu } from '@ui/media/logos/Eu';
-import { Text } from '@ui/typography/Text';
 import { FormInput } from '@ui/form/Input';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Heading } from '@ui/typography/Heading';
-import { Divider } from '@ui/presentation/Divider';
 import { TenantBillingProfile } from '@graphql/types';
-import { FormSwitch } from '@ui/form/Switch/FromSwitch';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
 import { countryOptions } from '@shared/util/countryOptions';
@@ -227,6 +223,31 @@ export const BillingPanel = () => {
     }
   }, [isFetchedAfterMount, data]);
 
+  const handleDisablePaymentMethods = () => {
+    updateBillingProfileMutation.mutate({
+      input: {
+        id: tenantBillingProfileId,
+        canPayWithDirectDebitACH: false,
+        canPayWithDirectDebitSEPA: false,
+        canPayWithDirectDebitBacs: false,
+        canPayWithCard: false,
+        canPayWithPigeon: false,
+        patch: true,
+      },
+    });
+    const newDefaults = new TenantBillingDetailsDto(
+      data?.tenantBillingProfiles?.[0] as TenantBillingProfile,
+    );
+    setDefaultValues({
+      ...newDefaults,
+      canPayWithDirectDebitACH: false,
+      canPayWithDirectDebitSEPA: false,
+      canPayWithDirectDebitBacs: false,
+      canPayWithCard: false,
+      canPayWithPigeon: false,
+    });
+  };
+
   return (
     <Flex>
       <Card
@@ -249,6 +270,7 @@ export const BillingPanel = () => {
           </Heading>
         </CardHeader>
         <CardBody as={Flex} flexDir='column' px='6' w='full' gap={4}>
+          <LogoUploader />
           <FormInput
             autoComplete='off'
             label='Organization legal name'
@@ -364,94 +386,19 @@ export const BillingPanel = () => {
             />
           </Flex>
 
-          <Flex position='relative' alignItems='center'>
-            <Text color='gray.500' fontSize='xs' whiteSpace='nowrap' mr={2}>
-              Customer can pay using
-            </Text>
-            <Divider background='gray.200' />
-          </Flex>
-
-          <FormSwitch
-            name='canPayWithCard'
-            formId={formId}
-            size='sm'
-            label={
-              <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
-                Credit or Debit cards
-              </Text>
-            }
+          <PaymentMethods
+            canPayWithCard={state.values.canPayWithCard}
+            canPayWithDirectDebitACH={state.values.canPayWithDirectDebitACH}
+            canPayWithDirectDebitSEPA={state.values.canPayWithDirectDebitSEPA}
+            canPayWithDirectDebitBacs={state.values.canPayWithDirectDebitBacs}
+            onResetPaymentMethods={handleDisablePaymentMethods}
           />
-
-          <Flex flexDir='column' gap={2}>
-            <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
-              Direct debit via
-            </Text>
-            <FormSwitch
-              name='canPayWithDirectDebitSEPA'
-              formId={formId}
-              size='sm'
-              label={
-                <Text
-                  fontSize='sm'
-                  fontWeight='medium'
-                  whiteSpace='nowrap'
-                  as='label'
-                >
-                  <Eu mr={2} />
-                  SEPA
-                </Text>
-              }
-            />
-            <FormSwitch
-              name='canPayWithDirectDebitACH'
-              formId={formId}
-              size='sm'
-              label={
-                <Text
-                  fontSize='sm'
-                  fontWeight='medium'
-                  whiteSpace='nowrap'
-                  as='label'
-                >
-                  <Us mr={2} />
-                  ACH
-                </Text>
-              }
-            />
-
-            <FormSwitch
-              name='canPayWithDirectDebitBacs'
-              formId={formId}
-              size='sm'
-              label={
-                <Text
-                  fontSize='sm'
-                  fontWeight='medium'
-                  whiteSpace='nowrap'
-                  as='label'
-                >
-                  <Gb mr={2} />
-                  Bacs
-                </Text>
-              }
-            />
-          </Flex>
           {/*<Flex justifyContent='space-between' alignItems='center'>*/}
           {/*  <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>*/}
           {/*    Bank transfer*/}
           {/*  </Text>*/}
           {/*  <Switch size='sm' />*/}
           {/*</Flex>*/}
-          <FormSwitch
-            name='canPayWithPigeon'
-            formId={formId}
-            size='sm'
-            label={
-              <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
-                Carrier pigeon
-              </Text>
-            }
-          />
         </CardBody>
       </Card>
       <Box borderRight='1px solid' borderColor='gray.300' maxH='100vh'>

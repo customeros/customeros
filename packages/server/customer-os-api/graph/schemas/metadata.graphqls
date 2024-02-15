@@ -1,0 +1,8 @@
+type Metadata implements SourceFieldsInterface & Node {
+    id:             ID!
+    created:        Time!
+    lastUpdated:    Time!
+    source:         DataSource!
+    sourceOfTruth:  DataSource!
+    appSource:      String!
+}

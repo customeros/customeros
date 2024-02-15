@@ -36,6 +36,11 @@ type MeetingParticipant interface {
 	IsMeetingParticipant()
 }
 
+type MetadataInterface interface {
+	IsMetadataInterface()
+	GetMetadata() *Metadata
+}
+
 type Node interface {
 	IsNode()
 	GetID() string
@@ -61,6 +66,13 @@ type SourceFields interface {
 	IsNode()
 	IsSourceFields()
 	GetID() string
+	GetSource() DataSource
+	GetSourceOfTruth() DataSource
+	GetAppSource() string
+}
+
+type SourceFieldsInterface interface {
+	IsSourceFieldsInterface()
 	GetSource() DataSource
 	GetSourceOfTruth() DataSource
 	GetAppSource() string
@@ -1024,41 +1036,49 @@ type InteractionSessionParticipantInput struct {
 }
 
 type Invoice struct {
-	ID                            string           `json:"id"`
-	CreatedAt                     time.Time        `json:"createdAt"`
-	UpdatedAt                     time.Time        `json:"updatedAt"`
-	Source                        DataSource       `json:"source"`
-	SourceOfTruth                 DataSource       `json:"sourceOfTruth"`
-	AppSource                     string           `json:"appSource"`
+	Metadata                      *Metadata        `json:"metadata"`
 	Organization                  *Organization    `json:"organization"`
 	DryRun                        bool             `json:"dryRun"`
 	Postpaid                      bool             `json:"postpaid"`
 	OffCycle                      bool             `json:"offCycle"`
-	Number                        string           `json:"number"`
-	PeriodStartDate               time.Time        `json:"periodStartDate"`
-	PeriodEndDate                 time.Time        `json:"periodEndDate"`
-	DueDate                       time.Time        `json:"dueDate"`
-	Amount                        float64          `json:"amount"`
-	Vat                           float64          `json:"vat"`
-	TotalAmount                   float64          `json:"totalAmount"`
+	AmountDue                     float64          `json:"amountDue"`
+	AmountPaid                    float64          `json:"amountPaid"`
+	AmountRemaining               float64          `json:"amountRemaining"`
+	InvoiceNumber                 string           `json:"invoiceNumber"`
+	InvoicePeriodStart            time.Time        `json:"invoicePeriodStart"`
+	InvoicePeriodEnd              time.Time        `json:"invoicePeriodEnd"`
+	InvoiceURL                    string           `json:"invoiceUrl"`
+	Due                           time.Time        `json:"due"`
 	Currency                      string           `json:"currency"`
 	RepositoryFileID              string           `json:"repositoryFileId"`
-	InvoiceLines                  []*InvoiceLine   `json:"invoiceLines"`
+	InvoiceLineItems              []*InvoiceLine   `json:"invoiceLineItems"`
 	Status                        *InvoiceStatus   `json:"status,omitempty"`
 	Note                          *string          `json:"note,omitempty"`
 	DomesticPaymentsBankInfo      *string          `json:"domesticPaymentsBankInfo,omitempty"`
 	InternationalPaymentsBankInfo *string          `json:"internationalPaymentsBankInfo,omitempty"`
 	Customer                      *InvoiceCustomer `json:"customer"`
 	Provider                      *InvoiceProvider `json:"provider"`
+	Paid                          bool             `json:"paid"`
+	Subtotal                      float64          `json:"subtotal"`
+	TaxDue                        float64          `json:"taxDue"`
+	ID                            string           `json:"id"`
+	CreatedAt                     time.Time        `json:"createdAt"`
+	UpdatedAt                     time.Time        `json:"updatedAt"`
+	Source                        DataSource       `json:"source"`
+	SourceOfTruth                 DataSource       `json:"sourceOfTruth"`
+	AppSource                     string           `json:"appSource"`
+	InvoiceLines                  []*InvoiceLine   `json:"invoiceLines"`
+	Number                        string           `json:"number"`
+	DueDate                       time.Time        `json:"dueDate"`
+	PeriodStartDate               time.Time        `json:"periodStartDate"`
+	PeriodEndDate                 time.Time        `json:"periodEndDate"`
+	Amount                        float64          `json:"amount"`
+	TotalAmount                   float64          `json:"totalAmount"`
+	Vat                           float64          `json:"vat"`
 }
 
-func (Invoice) IsSourceFields()                   {}
-func (this Invoice) GetID() string                { return this.ID }
-func (this Invoice) GetSource() DataSource        { return this.Source }
-func (this Invoice) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
-func (this Invoice) GetAppSource() string         { return this.AppSource }
-
-func (Invoice) IsNode() {}
+func (Invoice) IsMetadataInterface()        {}
+func (this Invoice) GetMetadata() *Metadata { return this.Metadata }
 
 type InvoiceCustomer struct {
 	Name            *string `json:"name,omitempty"`
@@ -1071,18 +1091,23 @@ type InvoiceCustomer struct {
 }
 
 type InvoiceLine struct {
+	Metadata    *Metadata `json:"metadata"`
+	Description string    `json:"description"`
+	Price       float64   `json:"price"`
+	Quantity    int       `json:"quantity"`
+	Subtotal    float64   `json:"subtotal"`
+	TaxDue      float64   `json:"taxDue"`
+	Total       float64   `json:"total"`
 	ID          string    `json:"id"`
 	CreatedAt   time.Time `json:"createdAt"`
 	Name        string    `json:"name"`
-	Price       float64   `json:"price"`
-	Quantity    int       `json:"quantity"`
 	Amount      float64   `json:"amount"`
 	Vat         float64   `json:"vat"`
 	TotalAmount float64   `json:"totalAmount"`
 }
 
-func (InvoiceLine) IsNode()            {}
-func (this InvoiceLine) GetID() string { return this.ID }
+func (InvoiceLine) IsMetadataInterface()        {}
+func (this InvoiceLine) GetMetadata() *Metadata { return this.Metadata }
 
 type InvoiceLineInput struct {
 	ServiceLineItemID *string    `json:"serviceLineItemId,omitempty"`
@@ -1517,6 +1542,23 @@ func (this MeetingsPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
+
+type Metadata struct {
+	ID            string     `json:"id"`
+	Created       time.Time  `json:"created"`
+	LastUpdated   time.Time  `json:"lastUpdated"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+}
+
+func (Metadata) IsSourceFieldsInterface()          {}
+func (this Metadata) GetSource() DataSource        { return this.Source }
+func (this Metadata) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this Metadata) GetAppSource() string         { return this.AppSource }
+
+func (Metadata) IsNode()            {}
+func (this Metadata) GetID() string { return this.ID }
 
 type Mutation struct {
 }
@@ -2259,6 +2301,12 @@ type TagInput struct {
 type TagUpdateInput struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type Tax struct {
+	SalesTax bool    `json:"salesTax"`
+	Vat      bool    `json:"vat"`
+	TaxRate  float64 `json:"taxRate"`
 }
 
 type TenantBillableInfo struct {

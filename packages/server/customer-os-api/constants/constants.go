@@ -7,5 +7,8 @@ const (
 	ComponentService         = "service"
 	ComponentNeo4jRepository = "neo4jRepository"
 
+	UrlCustomerOsApi = "https://customeros.ai"
+	UrlInvoices      = UrlCustomerOsApi + "/invoices"
+
 	MaxRetriesCheckDataInNeo4jAfterEventRequest int = 5
 )

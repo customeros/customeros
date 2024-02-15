@@ -1,6 +1,7 @@
 package resolver
 
 import (
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
@@ -65,28 +66,34 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Nil(t, err)
 
 	invoice := invoiceStruct.Invoice
-	require.Equal(t, invoiceId, invoice.ID)
-	require.Equal(t, timeNow, invoice.CreatedAt)
-	require.Equal(t, timeNow, invoice.UpdatedAt)
-	require.Equal(t, false, invoice.DryRun)
-	require.Equal(t, "1", invoice.Number)
+	require.Equal(t, invoiceId, invoice.Metadata.ID)
+	require.Equal(t, timeNow, invoice.Metadata.Created)
+	require.Equal(t, timeNow, invoice.Metadata.LastUpdated)
+	require.False(t, invoice.DryRun)
+	require.False(t, invoice.Postpaid)
+	require.False(t, invoice.OffCycle)
+	require.Equal(t, "1", invoice.InvoiceNumber)
+	require.Equal(t, fmt.Sprintf("%s/%s", constants.UrlInvoices, invoice.Metadata.ID), invoice.InvoiceURL)
 	require.Equal(t, "RON", invoice.Currency)
-	require.Equal(t, yesterday, invoice.PeriodStartDate)
-	require.Equal(t, tomorrow, invoice.PeriodEndDate)
-	require.Equal(t, timeNow, invoice.DueDate)
-	require.Equal(t, 100.0, invoice.Amount)
-	require.Equal(t, 19.0, invoice.Vat)
-	require.Equal(t, 119.0, invoice.TotalAmount)
+	require.Equal(t, yesterday, invoice.InvoicePeriodStart)
+	require.Equal(t, tomorrow, invoice.InvoicePeriodEnd)
+	require.Equal(t, timeNow, invoice.Due)
+	require.Equal(t, 100.0, invoice.Subtotal)
+	require.Equal(t, 19.0, invoice.TaxDue)
+	require.Equal(t, 119.0, invoice.AmountDue)
 	require.Equal(t, "ABC", invoice.RepositoryFileID)
 	require.Equal(t, "Note", *invoice.Note)
+	require.False(t, invoice.Paid)
+	require.Equal(t, 119.0, invoice.AmountRemaining)
+	require.Equal(t, 0.0, invoice.AmountPaid)
 
-	require.Equal(t, 1, len(invoice.InvoiceLines))
-	require.Equal(t, "SLI 1", invoice.InvoiceLines[0].Name)
-	require.Equal(t, 100.0, invoice.InvoiceLines[0].Price)
-	require.Equal(t, 1, invoice.InvoiceLines[0].Quantity)
-	require.Equal(t, 100.0, invoice.InvoiceLines[0].Amount)
-	require.Equal(t, 19.0, invoice.InvoiceLines[0].Vat)
-	require.Equal(t, 119.0, invoice.InvoiceLines[0].TotalAmount)
+	require.Equal(t, 1, len(invoice.InvoiceLineItems))
+	require.Equal(t, "SLI 1", invoice.InvoiceLineItems[0].Description)
+	require.Equal(t, 100.0, invoice.InvoiceLineItems[0].Price)
+	require.Equal(t, 1, invoice.InvoiceLineItems[0].Quantity)
+	require.Equal(t, 100.0, invoice.InvoiceLineItems[0].Subtotal)
+	require.Equal(t, 19.0, invoice.InvoiceLineItems[0].TaxDue)
+	require.Equal(t, 119.0, invoice.InvoiceLineItems[0].Total)
 
 	require.Equal(t, organizationId, invoice.Organization.ID)
 }
@@ -157,11 +164,11 @@ func TestInvoiceResolver_Invoices(t *testing.T) {
 	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
 	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
 
-	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].ID)
-	require.Equal(t, "1", invoiceStruct.Invoices.Content[0].Number)
-	require.Equal(t, "SLI 1", invoiceStruct.Invoices.Content[0].InvoiceLines[0].Name)
-	require.Equal(t, "11", invoiceStruct.Invoices.Content[1].Number)
-	require.Equal(t, "SLI 3", invoiceStruct.Invoices.Content[1].InvoiceLines[0].Name)
+	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
+	require.Equal(t, "1", invoiceStruct.Invoices.Content[0].InvoiceNumber)
+	require.Equal(t, "SLI 1", invoiceStruct.Invoices.Content[0].InvoiceLineItems[0].Description)
+	require.Equal(t, "11", invoiceStruct.Invoices.Content[1].InvoiceNumber)
+	require.Equal(t, "SLI 3", invoiceStruct.Invoices.Content[1].InvoiceLineItems[0].Description)
 }
 
 func TestInvoiceResolver_SimulateInvoice(t *testing.T) {
@@ -255,8 +262,8 @@ func TestInvoiceResolver_InvoicesForOrganization(t *testing.T) {
 	})
 
 	organization2Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contrac3tId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization2Id, neo4jentity.ContractEntity{})
-	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contrac3tId, neo4jentity.InvoiceEntity{
+	contractId3 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization2Id, neo4jentity.ContractEntity{})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId3, neo4jentity.InvoiceEntity{
 		Number: "3",
 	})
 
@@ -283,8 +290,8 @@ func TestInvoiceResolver_InvoicesForOrganization(t *testing.T) {
 	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
 	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
 
-	require.ElementsMatch(t, []string{invoice1Id, invoice2Id}, []string{invoiceStruct.Invoices.Content[0].ID, invoiceStruct.Invoices.Content[1].ID})
-	require.ElementsMatch(t, []string{"1", "2"}, []string{invoiceStruct.Invoices.Content[0].Number, invoiceStruct.Invoices.Content[1].Number})
+	require.ElementsMatch(t, []string{invoice1Id, invoice2Id}, []string{invoiceStruct.Invoices.Content[0].Metadata.ID, invoiceStruct.Invoices.Content[1].Metadata.ID})
+	require.ElementsMatch(t, []string{"1", "2"}, []string{invoiceStruct.Invoices.Content[0].InvoiceNumber, invoiceStruct.Invoices.Content[1].InvoiceNumber})
 }
 
 func TestInvoiceResolver_NextDryRunForContract(t *testing.T) {

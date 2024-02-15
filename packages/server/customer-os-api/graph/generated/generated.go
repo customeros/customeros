@@ -560,20 +560,31 @@ type ComplexityRoot struct {
 
 	Invoice struct {
 		Amount                        func(childComplexity int) int
+		AmountDue                     func(childComplexity int) int
+		AmountPaid                    func(childComplexity int) int
+		AmountRemaining               func(childComplexity int) int
 		AppSource                     func(childComplexity int) int
 		CreatedAt                     func(childComplexity int) int
 		Currency                      func(childComplexity int) int
 		Customer                      func(childComplexity int) int
 		DomesticPaymentsBankInfo      func(childComplexity int) int
 		DryRun                        func(childComplexity int) int
+		Due                           func(childComplexity int) int
 		DueDate                       func(childComplexity int) int
 		ID                            func(childComplexity int) int
 		InternationalPaymentsBankInfo func(childComplexity int) int
+		InvoiceLineItems              func(childComplexity int) int
 		InvoiceLines                  func(childComplexity int) int
+		InvoiceNumber                 func(childComplexity int) int
+		InvoicePeriodEnd              func(childComplexity int) int
+		InvoicePeriodStart            func(childComplexity int) int
+		InvoiceURL                    func(childComplexity int) int
+		Metadata                      func(childComplexity int) int
 		Note                          func(childComplexity int) int
 		Number                        func(childComplexity int) int
 		OffCycle                      func(childComplexity int) int
 		Organization                  func(childComplexity int) int
+		Paid                          func(childComplexity int) int
 		PeriodEndDate                 func(childComplexity int) int
 		PeriodStartDate               func(childComplexity int) int
 		Postpaid                      func(childComplexity int) int
@@ -582,6 +593,8 @@ type ComplexityRoot struct {
 		Source                        func(childComplexity int) int
 		SourceOfTruth                 func(childComplexity int) int
 		Status                        func(childComplexity int) int
+		Subtotal                      func(childComplexity int) int
+		TaxDue                        func(childComplexity int) int
 		TotalAmount                   func(childComplexity int) int
 		UpdatedAt                     func(childComplexity int) int
 		Vat                           func(childComplexity int) int
@@ -600,10 +613,15 @@ type ComplexityRoot struct {
 	InvoiceLine struct {
 		Amount      func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
+		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
+		Metadata    func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Price       func(childComplexity int) int
 		Quantity    func(childComplexity int) int
+		Subtotal    func(childComplexity int) int
+		TaxDue      func(childComplexity int) int
+		Total       func(childComplexity int) int
 		TotalAmount func(childComplexity int) int
 		Vat         func(childComplexity int) int
 	}
@@ -788,6 +806,15 @@ type ComplexityRoot struct {
 		Content       func(childComplexity int) int
 		TotalElements func(childComplexity int) int
 		TotalPages    func(childComplexity int) int
+	}
+
+	Metadata struct {
+		AppSource     func(childComplexity int) int
+		Created       func(childComplexity int) int
+		ID            func(childComplexity int) int
+		LastUpdated   func(childComplexity int) int
+		Source        func(childComplexity int) int
+		SourceOfTruth func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -1344,6 +1371,12 @@ type ComplexityRoot struct {
 		UpdatedAt func(childComplexity int) int
 	}
 
+	Tax struct {
+		SalesTax func(childComplexity int) int
+		TaxRate  func(childComplexity int) int
+		Vat      func(childComplexity int) int
+	}
+
 	TenantBillableInfo struct {
 		GreylistedContacts       func(childComplexity int) int
 		GreylistedOrganizations  func(childComplexity int) int
@@ -1519,6 +1552,8 @@ type InteractionSessionResolver interface {
 }
 type InvoiceResolver interface {
 	Organization(ctx context.Context, obj *model.Invoice) (*model.Organization, error)
+
+	InvoiceLineItems(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error)
 
 	InvoiceLines(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error)
 }
@@ -4217,6 +4252,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Invoice.Amount(childComplexity), true
 
+	case "Invoice.amountDue":
+		if e.complexity.Invoice.AmountDue == nil {
+			break
+		}
+
+		return e.complexity.Invoice.AmountDue(childComplexity), true
+
+	case "Invoice.amountPaid":
+		if e.complexity.Invoice.AmountPaid == nil {
+			break
+		}
+
+		return e.complexity.Invoice.AmountPaid(childComplexity), true
+
+	case "Invoice.amountRemaining":
+		if e.complexity.Invoice.AmountRemaining == nil {
+			break
+		}
+
+		return e.complexity.Invoice.AmountRemaining(childComplexity), true
+
 	case "Invoice.appSource":
 		if e.complexity.Invoice.AppSource == nil {
 			break
@@ -4259,6 +4315,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Invoice.DryRun(childComplexity), true
 
+	case "Invoice.due":
+		if e.complexity.Invoice.Due == nil {
+			break
+		}
+
+		return e.complexity.Invoice.Due(childComplexity), true
+
 	case "Invoice.dueDate":
 		if e.complexity.Invoice.DueDate == nil {
 			break
@@ -4280,12 +4343,54 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Invoice.InternationalPaymentsBankInfo(childComplexity), true
 
+	case "Invoice.invoiceLineItems":
+		if e.complexity.Invoice.InvoiceLineItems == nil {
+			break
+		}
+
+		return e.complexity.Invoice.InvoiceLineItems(childComplexity), true
+
 	case "Invoice.invoiceLines":
 		if e.complexity.Invoice.InvoiceLines == nil {
 			break
 		}
 
 		return e.complexity.Invoice.InvoiceLines(childComplexity), true
+
+	case "Invoice.invoiceNumber":
+		if e.complexity.Invoice.InvoiceNumber == nil {
+			break
+		}
+
+		return e.complexity.Invoice.InvoiceNumber(childComplexity), true
+
+	case "Invoice.invoicePeriodEnd":
+		if e.complexity.Invoice.InvoicePeriodEnd == nil {
+			break
+		}
+
+		return e.complexity.Invoice.InvoicePeriodEnd(childComplexity), true
+
+	case "Invoice.invoicePeriodStart":
+		if e.complexity.Invoice.InvoicePeriodStart == nil {
+			break
+		}
+
+		return e.complexity.Invoice.InvoicePeriodStart(childComplexity), true
+
+	case "Invoice.invoiceUrl":
+		if e.complexity.Invoice.InvoiceURL == nil {
+			break
+		}
+
+		return e.complexity.Invoice.InvoiceURL(childComplexity), true
+
+	case "Invoice.metadata":
+		if e.complexity.Invoice.Metadata == nil {
+			break
+		}
+
+		return e.complexity.Invoice.Metadata(childComplexity), true
 
 	case "Invoice.note":
 		if e.complexity.Invoice.Note == nil {
@@ -4314,6 +4419,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Invoice.Organization(childComplexity), true
+
+	case "Invoice.paid":
+		if e.complexity.Invoice.Paid == nil {
+			break
+		}
+
+		return e.complexity.Invoice.Paid(childComplexity), true
 
 	case "Invoice.periodEndDate":
 		if e.complexity.Invoice.PeriodEndDate == nil {
@@ -4370,6 +4482,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Invoice.Status(childComplexity), true
+
+	case "Invoice.subtotal":
+		if e.complexity.Invoice.Subtotal == nil {
+			break
+		}
+
+		return e.complexity.Invoice.Subtotal(childComplexity), true
+
+	case "Invoice.taxDue":
+		if e.complexity.Invoice.TaxDue == nil {
+			break
+		}
+
+		return e.complexity.Invoice.TaxDue(childComplexity), true
 
 	case "Invoice.totalAmount":
 		if e.complexity.Invoice.TotalAmount == nil {
@@ -4455,12 +4581,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InvoiceLine.CreatedAt(childComplexity), true
 
+	case "InvoiceLine.description":
+		if e.complexity.InvoiceLine.Description == nil {
+			break
+		}
+
+		return e.complexity.InvoiceLine.Description(childComplexity), true
+
 	case "InvoiceLine.id":
 		if e.complexity.InvoiceLine.ID == nil {
 			break
 		}
 
 		return e.complexity.InvoiceLine.ID(childComplexity), true
+
+	case "InvoiceLine.metadata":
+		if e.complexity.InvoiceLine.Metadata == nil {
+			break
+		}
+
+		return e.complexity.InvoiceLine.Metadata(childComplexity), true
 
 	case "InvoiceLine.name":
 		if e.complexity.InvoiceLine.Name == nil {
@@ -4482,6 +4622,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InvoiceLine.Quantity(childComplexity), true
+
+	case "InvoiceLine.subtotal":
+		if e.complexity.InvoiceLine.Subtotal == nil {
+			break
+		}
+
+		return e.complexity.InvoiceLine.Subtotal(childComplexity), true
+
+	case "InvoiceLine.taxDue":
+		if e.complexity.InvoiceLine.TaxDue == nil {
+			break
+		}
+
+		return e.complexity.InvoiceLine.TaxDue(childComplexity), true
+
+	case "InvoiceLine.total":
+		if e.complexity.InvoiceLine.Total == nil {
+			break
+		}
+
+		return e.complexity.InvoiceLine.Total(childComplexity), true
 
 	case "InvoiceLine.totalAmount":
 		if e.complexity.InvoiceLine.TotalAmount == nil {
@@ -5476,6 +5637,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MeetingsPage.TotalPages(childComplexity), true
+
+	case "Metadata.appSource":
+		if e.complexity.Metadata.AppSource == nil {
+			break
+		}
+
+		return e.complexity.Metadata.AppSource(childComplexity), true
+
+	case "Metadata.created":
+		if e.complexity.Metadata.Created == nil {
+			break
+		}
+
+		return e.complexity.Metadata.Created(childComplexity), true
+
+	case "Metadata.id":
+		if e.complexity.Metadata.ID == nil {
+			break
+		}
+
+		return e.complexity.Metadata.ID(childComplexity), true
+
+	case "Metadata.lastUpdated":
+		if e.complexity.Metadata.LastUpdated == nil {
+			break
+		}
+
+		return e.complexity.Metadata.LastUpdated(childComplexity), true
+
+	case "Metadata.source":
+		if e.complexity.Metadata.Source == nil {
+			break
+		}
+
+		return e.complexity.Metadata.Source(childComplexity), true
+
+	case "Metadata.sourceOfTruth":
+		if e.complexity.Metadata.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Metadata.SourceOfTruth(childComplexity), true
 
 	case "Mutation.analysis_Create":
 		if e.complexity.Mutation.AnalysisCreate == nil {
@@ -9759,6 +9962,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Tag.UpdatedAt(childComplexity), true
 
+	case "Tax.salesTax":
+		if e.complexity.Tax.SalesTax == nil {
+			break
+		}
+
+		return e.complexity.Tax.SalesTax(childComplexity), true
+
+	case "Tax.taxRate":
+		if e.complexity.Tax.TaxRate == nil {
+			break
+		}
+
+		return e.complexity.Tax.TaxRate(childComplexity), true
+
+	case "Tax.vat":
+		if e.complexity.Tax.Vat == nil {
+			break
+		}
+
+		return e.complexity.Tax.Vat(childComplexity), true
+
 	case "TenantBillableInfo.greylistedContacts":
 		if e.complexity.TenantBillableInfo.GreylistedContacts == nil {
 			break
@@ -11869,6 +12093,10 @@ interface Pages {
     totalElements: Int64!
 }
 
+interface MetadataInterface {
+    metadata: Metadata!
+}
+
 interface Node {
     id: ID!
 }
@@ -11878,6 +12106,12 @@ interface SourceFields implements Node {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+}
+
+interface SourceFieldsInterface {
+    source:         DataSource!
+    sourceOfTruth:  DataSource!
+    appSource:      String!
 }
 
 interface ExtensibleEntity implements Node {
@@ -11900,34 +12134,47 @@ type InvoicesPage implements Pages {
     totalElements: Int64!
 }
 
-type Invoice implements SourceFields & Node {
-    id:                 ID!
-    createdAt:          Time!
-    updatedAt:          Time!
-    source:             DataSource!
-    sourceOfTruth:      DataSource!
-    appSource:          String!
-
+type Invoice implements MetadataInterface {
+    metadata:           Metadata!
     organization:       Organization! @goField(forceResolver: true)
     dryRun:             Boolean!
     postpaid:           Boolean!
     offCycle:           Boolean!
-    number:             String!
-    periodStartDate:    Time!
-    periodEndDate:      Time!
-    dueDate:            Time!
-    amount:             Float!
-    vat:                Float!
-    totalAmount:        Float!
+    amountDue:          Float!
+    amountPaid:         Float!
+    amountRemaining:    Float!
+    invoiceNumber:      String!
+    invoicePeriodStart: Time!
+    invoicePeriodEnd:   Time!
+    invoiceUrl:         String!
+    due:                Time!
     currency:           String!
     repositoryFileId:   String!
-    invoiceLines:       [InvoiceLine!]! @goField(forceResolver: true)
+    invoiceLineItems:   [InvoiceLine!]! @goField(forceResolver: true)
     status:             InvoiceStatus
     note:               String
     domesticPaymentsBankInfo:       String
     internationalPaymentsBankInfo:  String
     customer:                   InvoiceCustomer!
     provider:                   InvoiceProvider!
+    paid:                       Boolean!
+    subtotal:                   Float!
+    taxDue:                     Float!
+
+    id:                 ID! @deprecated(reason: "Use metadata instead.")
+    createdAt:          Time! @deprecated(reason: "Use metadata instead.")
+    updatedAt:          Time! @deprecated(reason: "Use metadata instead.")
+    source:             DataSource! @deprecated(reason: "Use metadata instead.")
+    sourceOfTruth:      DataSource! @deprecated(reason: "Use metadata instead.")
+    appSource:          String! @deprecated(reason: "Use metadata instead.")
+    invoiceLines:       [InvoiceLine!]! @goField(forceResolver: true) @deprecated(reason: "Use invoiceLineItems instead.")
+    number:             String! @deprecated(reason: "Use invoiceNumber instead.")
+    dueDate:            Time! @deprecated(reason: "Use due instead.")
+    periodStartDate:    Time! @deprecated(reason: "Use invoicePeriodStart instead.")
+    periodEndDate:      Time! @deprecated(reason: "Use invoicePeriodEnd instead.")
+    amount:             Float! @deprecated(reason: "Use subtotal instead.")
+    totalAmount:        Float! @deprecated(reason: "Use amountDue instead.")
+    vat:                Float! @deprecated(reason: "Use taxDue instead.")
 }
 
 type InvoiceCustomer {
@@ -11950,17 +12197,27 @@ type InvoiceProvider {
     addressCountry:     String
 }
 
-type InvoiceLine implements Node {
-    id:                 ID!
-    createdAt:          Time!
-
-    name:               String!
+type InvoiceLine implements MetadataInterface {
+    metadata:           Metadata!
+    description:        String!
     price:              Float!
     quantity:           Int!
+    subtotal:           Float!
+    taxDue:             Float!
+    total:              Float!
 
-    amount:             Float!
-    vat:                Float!
-    totalAmount:        Float!
+    id:                 ID! @deprecated(reason: "Use metadata instead.")
+    createdAt:          Time! @deprecated(reason: "Use metadata instead.")
+    name:               String! @deprecated(reason: "Use description instead.")
+    amount:             Float! @deprecated(reason: "Use subtotal instead.")
+    vat:                Float! @deprecated(reason: "Use taxDue instead.")
+    totalAmount:        Float! @deprecated(reason: "Use total instead.")
+}
+
+type Tax {
+    salesTax:   Boolean!
+    vat:        Boolean!
+    taxRate:    Float!
 }
 
 input InvoiceSimulateInput {
@@ -12410,6 +12667,14 @@ type Meeting implements Node {
     agendaContentType: String
     externalSystem:  [ExternalSystem!]! @goField(forceResolver: true)
     status: MeetingStatus!
+}`, BuiltIn: false},
+	{Name: "../schemas/metadata.graphqls", Input: `type Metadata implements SourceFieldsInterface & Node {
+    id:             ID!
+    created:        Time!
+    lastUpdated:    Time!
+    source:         DataSource!
+    sourceOfTruth:  DataSource!
+    appSource:      String!
 }`, BuiltIn: false},
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation
 
@@ -34176,8 +34441,8 @@ func (ec *executionContext) fieldContext_InteractionSession_describedBy(ctx cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_id(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_id(ctx, field)
+func (ec *executionContext) _Invoice_metadata(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_metadata(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -34190,7 +34455,7 @@ func (ec *executionContext) _Invoice_id(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.Metadata, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -34202,239 +34467,33 @@ func (ec *executionContext) _Invoice_id(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Invoice_metadata(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Invoice",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Invoice_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Invoice_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Invoice",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Invoice_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Invoice_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Invoice",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Invoice_source(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_source(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Source, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.DataSource)
-	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Invoice_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Invoice",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DataSource does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Invoice_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_sourceOfTruth(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SourceOfTruth, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.DataSource)
-	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Invoice_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Invoice",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DataSource does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Invoice_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_appSource(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AppSource, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Invoice_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Invoice",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Metadata_id(ctx, field)
+			case "created":
+				return ec.fieldContext_Metadata_created(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_Metadata_lastUpdated(ctx, field)
+			case "source":
+				return ec.fieldContext_Metadata_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Metadata_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Metadata_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
 		},
 	}
 	return fc, nil
@@ -34724,8 +34783,8 @@ func (ec *executionContext) fieldContext_Invoice_offCycle(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_number(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_number(ctx, field)
+func (ec *executionContext) _Invoice_amountDue(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_amountDue(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -34738,7 +34797,139 @@ func (ec *executionContext) _Invoice_number(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Number, nil
+		return obj.AmountDue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_amountDue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_amountPaid(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_amountPaid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AmountPaid, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_amountPaid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_amountRemaining(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_amountRemaining(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AmountRemaining, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_amountRemaining(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_invoiceNumber(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_invoiceNumber(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InvoiceNumber, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -34755,7 +34946,7 @@ func (ec *executionContext) _Invoice_number(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_number(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Invoice_invoiceNumber(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Invoice",
 		Field:      field,
@@ -34768,8 +34959,8 @@ func (ec *executionContext) fieldContext_Invoice_number(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_periodStartDate(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_periodStartDate(ctx, field)
+func (ec *executionContext) _Invoice_invoicePeriodStart(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_invoicePeriodStart(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -34782,7 +34973,7 @@ func (ec *executionContext) _Invoice_periodStartDate(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PeriodStartDate, nil
+		return obj.InvoicePeriodStart, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -34799,7 +34990,7 @@ func (ec *executionContext) _Invoice_periodStartDate(ctx context.Context, field 
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_periodStartDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Invoice_invoicePeriodStart(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Invoice",
 		Field:      field,
@@ -34812,8 +35003,8 @@ func (ec *executionContext) fieldContext_Invoice_periodStartDate(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_periodEndDate(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_periodEndDate(ctx, field)
+func (ec *executionContext) _Invoice_invoicePeriodEnd(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_invoicePeriodEnd(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -34826,7 +35017,7 @@ func (ec *executionContext) _Invoice_periodEndDate(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PeriodEndDate, nil
+		return obj.InvoicePeriodEnd, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -34843,7 +35034,7 @@ func (ec *executionContext) _Invoice_periodEndDate(ctx context.Context, field gr
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_periodEndDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Invoice_invoicePeriodEnd(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Invoice",
 		Field:      field,
@@ -34856,8 +35047,8 @@ func (ec *executionContext) fieldContext_Invoice_periodEndDate(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_dueDate(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_dueDate(ctx, field)
+func (ec *executionContext) _Invoice_invoiceUrl(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_invoiceUrl(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -34870,7 +35061,51 @@ func (ec *executionContext) _Invoice_dueDate(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DueDate, nil
+		return obj.InvoiceURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_invoiceUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_due(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_due(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Due, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -34887,7 +35122,7 @@ func (ec *executionContext) _Invoice_dueDate(ctx context.Context, field graphql.
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_dueDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Invoice_due(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Invoice",
 		Field:      field,
@@ -34895,138 +35130,6 @@ func (ec *executionContext) fieldContext_Invoice_dueDate(ctx context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Invoice_amount(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_amount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Amount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Invoice_amount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Invoice",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Invoice_vat(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_vat(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Vat, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Invoice_vat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Invoice",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Invoice_totalAmount(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_totalAmount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TotalAmount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Invoice_totalAmount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Invoice",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -35120,8 +35223,8 @@ func (ec *executionContext) fieldContext_Invoice_repositoryFileId(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _Invoice_invoiceLines(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Invoice_invoiceLines(ctx, field)
+func (ec *executionContext) _Invoice_invoiceLineItems(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_invoiceLineItems(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -35134,7 +35237,7 @@ func (ec *executionContext) _Invoice_invoiceLines(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Invoice().InvoiceLines(rctx, obj)
+		return ec.resolvers.Invoice().InvoiceLineItems(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -35151,7 +35254,7 @@ func (ec *executionContext) _Invoice_invoiceLines(ctx context.Context, field gra
 	return ec.marshalNInvoiceLine2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceLineᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Invoice_invoiceLines(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Invoice_invoiceLineItems(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Invoice",
 		Field:      field,
@@ -35159,16 +35262,26 @@ func (ec *executionContext) fieldContext_Invoice_invoiceLines(ctx context.Contex
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_InvoiceLine_metadata(ctx, field)
+			case "description":
+				return ec.fieldContext_InvoiceLine_description(ctx, field)
+			case "price":
+				return ec.fieldContext_InvoiceLine_price(ctx, field)
+			case "quantity":
+				return ec.fieldContext_InvoiceLine_quantity(ctx, field)
+			case "subtotal":
+				return ec.fieldContext_InvoiceLine_subtotal(ctx, field)
+			case "taxDue":
+				return ec.fieldContext_InvoiceLine_taxDue(ctx, field)
+			case "total":
+				return ec.fieldContext_InvoiceLine_total(ctx, field)
 			case "id":
 				return ec.fieldContext_InvoiceLine_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_InvoiceLine_createdAt(ctx, field)
 			case "name":
 				return ec.fieldContext_InvoiceLine_name(ctx, field)
-			case "price":
-				return ec.fieldContext_InvoiceLine_price(ctx, field)
-			case "quantity":
-				return ec.fieldContext_InvoiceLine_quantity(ctx, field)
 			case "amount":
 				return ec.fieldContext_InvoiceLine_amount(ctx, field)
 			case "vat":
@@ -35466,6 +35579,782 @@ func (ec *executionContext) fieldContext_Invoice_provider(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Invoice_paid(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_paid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Paid, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_paid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_subtotal(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_subtotal(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Subtotal, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_subtotal(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_taxDue(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_taxDue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TaxDue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_taxDue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_id(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_source(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_invoiceLines(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_invoiceLines(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Invoice().InvoiceLines(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.InvoiceLine)
+	fc.Result = res
+	return ec.marshalNInvoiceLine2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInvoiceLineᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_invoiceLines(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_InvoiceLine_metadata(ctx, field)
+			case "description":
+				return ec.fieldContext_InvoiceLine_description(ctx, field)
+			case "price":
+				return ec.fieldContext_InvoiceLine_price(ctx, field)
+			case "quantity":
+				return ec.fieldContext_InvoiceLine_quantity(ctx, field)
+			case "subtotal":
+				return ec.fieldContext_InvoiceLine_subtotal(ctx, field)
+			case "taxDue":
+				return ec.fieldContext_InvoiceLine_taxDue(ctx, field)
+			case "total":
+				return ec.fieldContext_InvoiceLine_total(ctx, field)
+			case "id":
+				return ec.fieldContext_InvoiceLine_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InvoiceLine_createdAt(ctx, field)
+			case "name":
+				return ec.fieldContext_InvoiceLine_name(ctx, field)
+			case "amount":
+				return ec.fieldContext_InvoiceLine_amount(ctx, field)
+			case "vat":
+				return ec.fieldContext_InvoiceLine_vat(ctx, field)
+			case "totalAmount":
+				return ec.fieldContext_InvoiceLine_totalAmount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InvoiceLine", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_number(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_number(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Number, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_number(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_dueDate(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_dueDate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DueDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_dueDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_periodStartDate(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_periodStartDate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PeriodStartDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_periodStartDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_periodEndDate(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_periodEndDate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PeriodEndDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_periodEndDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_amount(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_amount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Amount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_amount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_totalAmount(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_totalAmount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalAmount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_totalAmount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Invoice_vat(ctx context.Context, field graphql.CollectedField, obj *model.Invoice) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Invoice_vat(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Vat, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Invoice_vat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Invoice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InvoiceCustomer_name(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceCustomer) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InvoiceCustomer_name(ctx, field)
 	if err != nil {
@@ -35753,6 +36642,328 @@ func (ec *executionContext) fieldContext_InvoiceCustomer_addressCountry(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _InvoiceLine_metadata(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceLine_metadata(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metadata, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Metadata)
+	fc.Result = res
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceLine_metadata(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceLine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Metadata_id(ctx, field)
+			case "created":
+				return ec.fieldContext_Metadata_created(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_Metadata_lastUpdated(ctx, field)
+			case "source":
+				return ec.fieldContext_Metadata_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Metadata_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Metadata_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceLine_description(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceLine_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceLine_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceLine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceLine_price(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceLine_price(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Price, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceLine_price(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceLine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceLine_quantity(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceLine_quantity(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Quantity, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceLine_quantity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceLine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceLine_subtotal(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceLine_subtotal(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Subtotal, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceLine_subtotal(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceLine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceLine_taxDue(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceLine_taxDue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TaxDue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceLine_taxDue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceLine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceLine_total(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceLine_total(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Total, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceLine_total(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceLine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InvoiceLine_id(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InvoiceLine_id(ctx, field)
 	if err != nil {
@@ -35880,94 +37091,6 @@ func (ec *executionContext) fieldContext_InvoiceLine_name(ctx context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _InvoiceLine_price(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_InvoiceLine_price(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Price, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_InvoiceLine_price(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "InvoiceLine",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _InvoiceLine_quantity(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_InvoiceLine_quantity(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Quantity, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_InvoiceLine_quantity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "InvoiceLine",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -36431,18 +37554,8 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Invoice_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Invoice_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Invoice_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_Invoice_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Invoice_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Invoice_appSource(ctx, field)
+			case "metadata":
+				return ec.fieldContext_Invoice_metadata(ctx, field)
 			case "organization":
 				return ec.fieldContext_Invoice_organization(ctx, field)
 			case "dryRun":
@@ -36451,26 +37564,28 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 				return ec.fieldContext_Invoice_postpaid(ctx, field)
 			case "offCycle":
 				return ec.fieldContext_Invoice_offCycle(ctx, field)
-			case "number":
-				return ec.fieldContext_Invoice_number(ctx, field)
-			case "periodStartDate":
-				return ec.fieldContext_Invoice_periodStartDate(ctx, field)
-			case "periodEndDate":
-				return ec.fieldContext_Invoice_periodEndDate(ctx, field)
-			case "dueDate":
-				return ec.fieldContext_Invoice_dueDate(ctx, field)
-			case "amount":
-				return ec.fieldContext_Invoice_amount(ctx, field)
-			case "vat":
-				return ec.fieldContext_Invoice_vat(ctx, field)
-			case "totalAmount":
-				return ec.fieldContext_Invoice_totalAmount(ctx, field)
+			case "amountDue":
+				return ec.fieldContext_Invoice_amountDue(ctx, field)
+			case "amountPaid":
+				return ec.fieldContext_Invoice_amountPaid(ctx, field)
+			case "amountRemaining":
+				return ec.fieldContext_Invoice_amountRemaining(ctx, field)
+			case "invoiceNumber":
+				return ec.fieldContext_Invoice_invoiceNumber(ctx, field)
+			case "invoicePeriodStart":
+				return ec.fieldContext_Invoice_invoicePeriodStart(ctx, field)
+			case "invoicePeriodEnd":
+				return ec.fieldContext_Invoice_invoicePeriodEnd(ctx, field)
+			case "invoiceUrl":
+				return ec.fieldContext_Invoice_invoiceUrl(ctx, field)
+			case "due":
+				return ec.fieldContext_Invoice_due(ctx, field)
 			case "currency":
 				return ec.fieldContext_Invoice_currency(ctx, field)
 			case "repositoryFileId":
 				return ec.fieldContext_Invoice_repositoryFileId(ctx, field)
-			case "invoiceLines":
-				return ec.fieldContext_Invoice_invoiceLines(ctx, field)
+			case "invoiceLineItems":
+				return ec.fieldContext_Invoice_invoiceLineItems(ctx, field)
 			case "status":
 				return ec.fieldContext_Invoice_status(ctx, field)
 			case "note":
@@ -36483,6 +37598,40 @@ func (ec *executionContext) fieldContext_InvoicesPage_content(ctx context.Contex
 				return ec.fieldContext_Invoice_customer(ctx, field)
 			case "provider":
 				return ec.fieldContext_Invoice_provider(ctx, field)
+			case "paid":
+				return ec.fieldContext_Invoice_paid(ctx, field)
+			case "subtotal":
+				return ec.fieldContext_Invoice_subtotal(ctx, field)
+			case "taxDue":
+				return ec.fieldContext_Invoice_taxDue(ctx, field)
+			case "id":
+				return ec.fieldContext_Invoice_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Invoice_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Invoice_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Invoice_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Invoice_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Invoice_appSource(ctx, field)
+			case "invoiceLines":
+				return ec.fieldContext_Invoice_invoiceLines(ctx, field)
+			case "number":
+				return ec.fieldContext_Invoice_number(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Invoice_dueDate(ctx, field)
+			case "periodStartDate":
+				return ec.fieldContext_Invoice_periodStartDate(ctx, field)
+			case "periodEndDate":
+				return ec.fieldContext_Invoice_periodEndDate(ctx, field)
+			case "amount":
+				return ec.fieldContext_Invoice_amount(ctx, field)
+			case "totalAmount":
+				return ec.fieldContext_Invoice_totalAmount(ctx, field)
+			case "vat":
+				return ec.fieldContext_Invoice_vat(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Invoice", field.Name)
 		},
@@ -42859,6 +44008,270 @@ func (ec *executionContext) fieldContext_MeetingsPage_totalElements(ctx context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Metadata_id(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Metadata_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Metadata_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Metadata",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Metadata_created(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Metadata_created(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Created, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Metadata_created(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Metadata",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Metadata_lastUpdated(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Metadata_lastUpdated(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastUpdated, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Metadata_lastUpdated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Metadata",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Metadata_source(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Metadata_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Metadata_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Metadata",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Metadata_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Metadata_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Metadata_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Metadata",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Metadata_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Metadata_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Metadata_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Metadata",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -70015,18 +71428,8 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Invoice_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Invoice_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Invoice_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_Invoice_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Invoice_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Invoice_appSource(ctx, field)
+			case "metadata":
+				return ec.fieldContext_Invoice_metadata(ctx, field)
 			case "organization":
 				return ec.fieldContext_Invoice_organization(ctx, field)
 			case "dryRun":
@@ -70035,26 +71438,28 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 				return ec.fieldContext_Invoice_postpaid(ctx, field)
 			case "offCycle":
 				return ec.fieldContext_Invoice_offCycle(ctx, field)
-			case "number":
-				return ec.fieldContext_Invoice_number(ctx, field)
-			case "periodStartDate":
-				return ec.fieldContext_Invoice_periodStartDate(ctx, field)
-			case "periodEndDate":
-				return ec.fieldContext_Invoice_periodEndDate(ctx, field)
-			case "dueDate":
-				return ec.fieldContext_Invoice_dueDate(ctx, field)
-			case "amount":
-				return ec.fieldContext_Invoice_amount(ctx, field)
-			case "vat":
-				return ec.fieldContext_Invoice_vat(ctx, field)
-			case "totalAmount":
-				return ec.fieldContext_Invoice_totalAmount(ctx, field)
+			case "amountDue":
+				return ec.fieldContext_Invoice_amountDue(ctx, field)
+			case "amountPaid":
+				return ec.fieldContext_Invoice_amountPaid(ctx, field)
+			case "amountRemaining":
+				return ec.fieldContext_Invoice_amountRemaining(ctx, field)
+			case "invoiceNumber":
+				return ec.fieldContext_Invoice_invoiceNumber(ctx, field)
+			case "invoicePeriodStart":
+				return ec.fieldContext_Invoice_invoicePeriodStart(ctx, field)
+			case "invoicePeriodEnd":
+				return ec.fieldContext_Invoice_invoicePeriodEnd(ctx, field)
+			case "invoiceUrl":
+				return ec.fieldContext_Invoice_invoiceUrl(ctx, field)
+			case "due":
+				return ec.fieldContext_Invoice_due(ctx, field)
 			case "currency":
 				return ec.fieldContext_Invoice_currency(ctx, field)
 			case "repositoryFileId":
 				return ec.fieldContext_Invoice_repositoryFileId(ctx, field)
-			case "invoiceLines":
-				return ec.fieldContext_Invoice_invoiceLines(ctx, field)
+			case "invoiceLineItems":
+				return ec.fieldContext_Invoice_invoiceLineItems(ctx, field)
 			case "status":
 				return ec.fieldContext_Invoice_status(ctx, field)
 			case "note":
@@ -70067,6 +71472,40 @@ func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, fiel
 				return ec.fieldContext_Invoice_customer(ctx, field)
 			case "provider":
 				return ec.fieldContext_Invoice_provider(ctx, field)
+			case "paid":
+				return ec.fieldContext_Invoice_paid(ctx, field)
+			case "subtotal":
+				return ec.fieldContext_Invoice_subtotal(ctx, field)
+			case "taxDue":
+				return ec.fieldContext_Invoice_taxDue(ctx, field)
+			case "id":
+				return ec.fieldContext_Invoice_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Invoice_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Invoice_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Invoice_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Invoice_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Invoice_appSource(ctx, field)
+			case "invoiceLines":
+				return ec.fieldContext_Invoice_invoiceLines(ctx, field)
+			case "number":
+				return ec.fieldContext_Invoice_number(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Invoice_dueDate(ctx, field)
+			case "periodStartDate":
+				return ec.fieldContext_Invoice_periodStartDate(ctx, field)
+			case "periodEndDate":
+				return ec.fieldContext_Invoice_periodEndDate(ctx, field)
+			case "amount":
+				return ec.fieldContext_Invoice_amount(ctx, field)
+			case "totalAmount":
+				return ec.fieldContext_Invoice_totalAmount(ctx, field)
+			case "vat":
+				return ec.fieldContext_Invoice_vat(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Invoice", field.Name)
 		},
@@ -76684,6 +78123,138 @@ func (ec *executionContext) fieldContext_Tag_appSource(ctx context.Context, fiel
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tax_salesTax(ctx context.Context, field graphql.CollectedField, obj *model.Tax) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tax_salesTax(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SalesTax, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tax_salesTax(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tax",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tax_vat(ctx context.Context, field graphql.CollectedField, obj *model.Tax) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tax_vat(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Vat, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tax_vat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tax",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tax_taxRate(ctx context.Context, field graphql.CollectedField, obj *model.Tax) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tax_taxRate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TaxRate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tax_taxRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tax",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -87508,24 +89079,47 @@ func (ec *executionContext) _MeetingParticipant(ctx context.Context, sel ast.Sel
 	}
 }
 
+func (ec *executionContext) _MetadataInterface(ctx context.Context, sel ast.SelectionSet, obj model.MetadataInterface) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.Invoice:
+		return ec._Invoice(ctx, sel, &obj)
+	case *model.Invoice:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Invoice(ctx, sel, obj)
+	case model.InvoiceLine:
+		return ec._InvoiceLine(ctx, sel, &obj)
+	case *model.InvoiceLine:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InvoiceLine(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj model.Node) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case model.OrganizationPlanMilestone:
-		return ec._OrganizationPlanMilestone(ctx, sel, &obj)
-	case *model.OrganizationPlanMilestone:
+	case model.PageView:
+		return ec._PageView(ctx, sel, &obj)
+	case *model.PageView:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._OrganizationPlanMilestone(ctx, sel, obj)
-	case model.MasterPlan:
-		return ec._MasterPlan(ctx, sel, &obj)
-	case *model.MasterPlan:
+		return ec._PageView(ctx, sel, obj)
+	case model.InvoicingCycle:
+		return ec._InvoicingCycle(ctx, sel, &obj)
+	case *model.InvoicingCycle:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._MasterPlan(ctx, sel, obj)
+		return ec._InvoicingCycle(ctx, sel, obj)
 	case model.BillingProfile:
 		return ec._BillingProfile(ctx, sel, &obj)
 	case *model.BillingProfile:
@@ -87533,6 +89127,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._BillingProfile(ctx, sel, obj)
+	case model.Contact:
+		return ec._Contact(ctx, sel, &obj)
+	case *model.Contact:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Contact(ctx, sel, obj)
 	case model.Issue:
 		return ec._Issue(ctx, sel, &obj)
 	case *model.Issue:
@@ -87540,6 +89141,20 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Issue(ctx, sel, obj)
+	case model.Location:
+		return ec._Location(ctx, sel, &obj)
+	case *model.Location:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Location(ctx, sel, obj)
+	case model.MasterPlan:
+		return ec._MasterPlan(ctx, sel, &obj)
+	case *model.MasterPlan:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._MasterPlan(ctx, sel, obj)
 	case model.TenantBillingProfile:
 		return ec._TenantBillingProfile(ctx, sel, &obj)
 	case *model.TenantBillingProfile:
@@ -87554,20 +89169,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Social(ctx, sel, obj)
-	case model.PageView:
-		return ec._PageView(ctx, sel, &obj)
-	case *model.PageView:
+	case model.OrganizationPlanMilestone:
+		return ec._OrganizationPlanMilestone(ctx, sel, &obj)
+	case *model.OrganizationPlanMilestone:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._PageView(ctx, sel, obj)
-	case model.Location:
-		return ec._Location(ctx, sel, &obj)
-	case *model.Location:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Location(ctx, sel, obj)
+		return ec._OrganizationPlanMilestone(ctx, sel, obj)
 	case model.OrganizationPlan:
 		return ec._OrganizationPlan(ctx, sel, &obj)
 	case *model.OrganizationPlan:
@@ -87575,6 +89183,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._OrganizationPlan(ctx, sel, obj)
+	case model.Metadata:
+		return ec._Metadata(ctx, sel, &obj)
+	case *model.Metadata:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Metadata(ctx, sel, obj)
 	case model.MasterPlanMilestone:
 		return ec._MasterPlanMilestone(ctx, sel, &obj)
 	case *model.MasterPlanMilestone:
@@ -87582,93 +89197,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._MasterPlanMilestone(ctx, sel, obj)
-	case model.Invoice:
-		return ec._Invoice(ctx, sel, &obj)
-	case *model.Invoice:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Invoice(ctx, sel, obj)
-	case model.Contact:
-		return ec._Contact(ctx, sel, &obj)
-	case *model.Contact:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Contact(ctx, sel, obj)
-	case model.InvoicingCycle:
-		return ec._InvoicingCycle(ctx, sel, &obj)
-	case *model.InvoicingCycle:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InvoicingCycle(ctx, sel, obj)
-	case model.InteractionSession:
-		return ec._InteractionSession(ctx, sel, &obj)
-	case *model.InteractionSession:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InteractionSession(ctx, sel, obj)
-	case model.Organization:
-		return ec._Organization(ctx, sel, &obj)
-	case *model.Organization:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Organization(ctx, sel, obj)
-	case model.ExtensibleEntity:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._ExtensibleEntity(ctx, sel, obj)
-	case model.SourceFields:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._SourceFields(ctx, sel, obj)
-	case model.EntityTemplate:
-		return ec._EntityTemplate(ctx, sel, &obj)
-	case *model.EntityTemplate:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._EntityTemplate(ctx, sel, obj)
-	case model.InteractionEvent:
-		return ec._InteractionEvent(ctx, sel, &obj)
-	case *model.InteractionEvent:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InteractionEvent(ctx, sel, obj)
-	case model.Attachment:
-		return ec._Attachment(ctx, sel, &obj)
-	case *model.Attachment:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Attachment(ctx, sel, obj)
-	case model.Meeting:
-		return ec._Meeting(ctx, sel, &obj)
-	case *model.Meeting:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Meeting(ctx, sel, obj)
-	case model.Opportunity:
-		return ec._Opportunity(ctx, sel, &obj)
-	case *model.Opportunity:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Opportunity(ctx, sel, obj)
-	case model.InvoiceLine:
-		return ec._InvoiceLine(ctx, sel, &obj)
-	case *model.InvoiceLine:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InvoiceLine(ctx, sel, obj)
 	case model.FieldSetTemplate:
 		return ec._FieldSetTemplate(ctx, sel, &obj)
 	case *model.FieldSetTemplate:
@@ -87676,48 +89204,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._FieldSetTemplate(ctx, sel, obj)
-	case model.Analysis:
-		return ec._Analysis(ctx, sel, &obj)
-	case *model.Analysis:
+	case model.InteractionEvent:
+		return ec._InteractionEvent(ctx, sel, &obj)
+	case *model.InteractionEvent:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._Analysis(ctx, sel, obj)
-	case model.CustomFieldTemplate:
-		return ec._CustomFieldTemplate(ctx, sel, &obj)
-	case *model.CustomFieldTemplate:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._CustomFieldTemplate(ctx, sel, obj)
-	case model.ServiceLineItem:
-		return ec._ServiceLineItem(ctx, sel, &obj)
-	case *model.ServiceLineItem:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._ServiceLineItem(ctx, sel, obj)
-	case model.CustomField:
-		return ec._CustomField(ctx, sel, &obj)
-	case *model.CustomField:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._CustomField(ctx, sel, obj)
-	case model.Contract:
-		return ec._Contract(ctx, sel, &obj)
-	case *model.Contract:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Contract(ctx, sel, obj)
-	case model.TableViewDef:
-		return ec._TableViewDef(ctx, sel, &obj)
-	case *model.TableViewDef:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._TableViewDef(ctx, sel, obj)
+		return ec._InteractionEvent(ctx, sel, obj)
 	case model.ViewType:
 		return ec._ViewType(ctx, sel, &obj)
 	case *model.ViewType:
@@ -87725,13 +89218,44 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._ViewType(ctx, sel, obj)
-	case model.ColumnDef:
-		return ec._ColumnDef(ctx, sel, &obj)
-	case *model.ColumnDef:
+	case model.CustomFieldTemplate:
+		return ec._CustomFieldTemplate(ctx, sel, &obj)
+	case *model.CustomFieldTemplate:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._ColumnDef(ctx, sel, obj)
+		return ec._CustomFieldTemplate(ctx, sel, obj)
+	case model.ExtensibleEntity:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ExtensibleEntity(ctx, sel, obj)
+	case model.Meeting:
+		return ec._Meeting(ctx, sel, &obj)
+	case *model.Meeting:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Meeting(ctx, sel, obj)
+	case model.SourceFields:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SourceFields(ctx, sel, obj)
+	case model.Opportunity:
+		return ec._Opportunity(ctx, sel, &obj)
+	case *model.Opportunity:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Opportunity(ctx, sel, obj)
+	case model.Organization:
+		return ec._Organization(ctx, sel, &obj)
+	case *model.Organization:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Organization(ctx, sel, obj)
 	case model.ColumnType:
 		return ec._ColumnType(ctx, sel, &obj)
 	case *model.ColumnType:
@@ -87739,6 +89263,69 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._ColumnType(ctx, sel, obj)
+	case model.InteractionSession:
+		return ec._InteractionSession(ctx, sel, &obj)
+	case *model.InteractionSession:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InteractionSession(ctx, sel, obj)
+	case model.Analysis:
+		return ec._Analysis(ctx, sel, &obj)
+	case *model.Analysis:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Analysis(ctx, sel, obj)
+	case model.ServiceLineItem:
+		return ec._ServiceLineItem(ctx, sel, &obj)
+	case *model.ServiceLineItem:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ServiceLineItem(ctx, sel, obj)
+	case model.Attachment:
+		return ec._Attachment(ctx, sel, &obj)
+	case *model.Attachment:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Attachment(ctx, sel, obj)
+	case model.EntityTemplate:
+		return ec._EntityTemplate(ctx, sel, &obj)
+	case *model.EntityTemplate:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._EntityTemplate(ctx, sel, obj)
+	case model.TableViewDef:
+		return ec._TableViewDef(ctx, sel, &obj)
+	case *model.TableViewDef:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._TableViewDef(ctx, sel, obj)
+	case model.CustomField:
+		return ec._CustomField(ctx, sel, &obj)
+	case *model.CustomField:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._CustomField(ctx, sel, obj)
+	case model.ColumnDef:
+		return ec._ColumnDef(ctx, sel, &obj)
+	case *model.ColumnDef:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ColumnDef(ctx, sel, obj)
+	case model.Contract:
+		return ec._Contract(ctx, sel, &obj)
+	case *model.Contract:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Contract(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -87843,13 +89430,6 @@ func (ec *executionContext) _SourceFields(ctx context.Context, sel ast.Selection
 			return graphql.Null
 		}
 		return ec._BillingProfile(ctx, sel, obj)
-	case model.Invoice:
-		return ec._Invoice(ctx, sel, &obj)
-	case *model.Invoice:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Invoice(ctx, sel, obj)
 	case model.InvoicingCycle:
 		return ec._InvoicingCycle(ctx, sel, &obj)
 	case *model.InvoicingCycle:
@@ -87920,6 +89500,22 @@ func (ec *executionContext) _SourceFields(ctx context.Context, sel ast.Selection
 			return graphql.Null
 		}
 		return ec._TenantBillingProfile(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+func (ec *executionContext) _SourceFieldsInterface(ctx context.Context, sel ast.SelectionSet, obj model.SourceFieldsInterface) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.Metadata:
+		return ec._Metadata(ctx, sel, &obj)
+	case *model.Metadata:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Metadata(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -92544,7 +94140,7 @@ func (ec *executionContext) _InteractionSession(ctx context.Context, sel ast.Sel
 	return out
 }
 
-var invoiceImplementors = []string{"Invoice", "SourceFields", "Node"}
+var invoiceImplementors = []string{"Invoice", "MetadataInterface"}
 
 func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, obj *model.Invoice) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, invoiceImplementors)
@@ -92555,33 +94151,8 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Invoice")
-		case "id":
-			out.Values[i] = ec._Invoice_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "createdAt":
-			out.Values[i] = ec._Invoice_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "updatedAt":
-			out.Values[i] = ec._Invoice_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "source":
-			out.Values[i] = ec._Invoice_source(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "sourceOfTruth":
-			out.Values[i] = ec._Invoice_sourceOfTruth(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "appSource":
-			out.Values[i] = ec._Invoice_appSource(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._Invoice_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -92636,38 +94207,43 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "number":
-			out.Values[i] = ec._Invoice_number(ctx, field, obj)
+		case "amountDue":
+			out.Values[i] = ec._Invoice_amountDue(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "periodStartDate":
-			out.Values[i] = ec._Invoice_periodStartDate(ctx, field, obj)
+		case "amountPaid":
+			out.Values[i] = ec._Invoice_amountPaid(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "periodEndDate":
-			out.Values[i] = ec._Invoice_periodEndDate(ctx, field, obj)
+		case "amountRemaining":
+			out.Values[i] = ec._Invoice_amountRemaining(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "dueDate":
-			out.Values[i] = ec._Invoice_dueDate(ctx, field, obj)
+		case "invoiceNumber":
+			out.Values[i] = ec._Invoice_invoiceNumber(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "amount":
-			out.Values[i] = ec._Invoice_amount(ctx, field, obj)
+		case "invoicePeriodStart":
+			out.Values[i] = ec._Invoice_invoicePeriodStart(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "vat":
-			out.Values[i] = ec._Invoice_vat(ctx, field, obj)
+		case "invoicePeriodEnd":
+			out.Values[i] = ec._Invoice_invoicePeriodEnd(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "totalAmount":
-			out.Values[i] = ec._Invoice_totalAmount(ctx, field, obj)
+		case "invoiceUrl":
+			out.Values[i] = ec._Invoice_invoiceUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "due":
+			out.Values[i] = ec._Invoice_due(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -92681,7 +94257,7 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "invoiceLines":
+		case "invoiceLineItems":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -92690,7 +94266,7 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Invoice_invoiceLines(ctx, field, obj)
+				res = ec._Invoice_invoiceLineItems(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -92732,6 +94308,122 @@ func (ec *executionContext) _Invoice(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "provider":
 			out.Values[i] = ec._Invoice_provider(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "paid":
+			out.Values[i] = ec._Invoice_paid(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "subtotal":
+			out.Values[i] = ec._Invoice_subtotal(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "taxDue":
+			out.Values[i] = ec._Invoice_taxDue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "id":
+			out.Values[i] = ec._Invoice_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "createdAt":
+			out.Values[i] = ec._Invoice_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Invoice_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "source":
+			out.Values[i] = ec._Invoice_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "sourceOfTruth":
+			out.Values[i] = ec._Invoice_sourceOfTruth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "appSource":
+			out.Values[i] = ec._Invoice_appSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "invoiceLines":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Invoice_invoiceLines(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "number":
+			out.Values[i] = ec._Invoice_number(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "dueDate":
+			out.Values[i] = ec._Invoice_dueDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "periodStartDate":
+			out.Values[i] = ec._Invoice_periodStartDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "periodEndDate":
+			out.Values[i] = ec._Invoice_periodEndDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "amount":
+			out.Values[i] = ec._Invoice_amount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "totalAmount":
+			out.Values[i] = ec._Invoice_totalAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "vat":
+			out.Values[i] = ec._Invoice_vat(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -92806,7 +94498,7 @@ func (ec *executionContext) _InvoiceCustomer(ctx context.Context, sel ast.Select
 	return out
 }
 
-var invoiceLineImplementors = []string{"InvoiceLine", "Node"}
+var invoiceLineImplementors = []string{"InvoiceLine", "MetadataInterface"}
 
 func (ec *executionContext) _InvoiceLine(ctx context.Context, sel ast.SelectionSet, obj *model.InvoiceLine) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, invoiceLineImplementors)
@@ -92817,6 +94509,41 @@ func (ec *executionContext) _InvoiceLine(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("InvoiceLine")
+		case "metadata":
+			out.Values[i] = ec._InvoiceLine_metadata(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._InvoiceLine_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "price":
+			out.Values[i] = ec._InvoiceLine_price(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quantity":
+			out.Values[i] = ec._InvoiceLine_quantity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "subtotal":
+			out.Values[i] = ec._InvoiceLine_subtotal(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "taxDue":
+			out.Values[i] = ec._InvoiceLine_taxDue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "total":
+			out.Values[i] = ec._InvoiceLine_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "id":
 			out.Values[i] = ec._InvoiceLine_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -92829,16 +94556,6 @@ func (ec *executionContext) _InvoiceLine(ctx context.Context, sel ast.SelectionS
 			}
 		case "name":
 			out.Values[i] = ec._InvoiceLine_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "price":
-			out.Values[i] = ec._InvoiceLine_price(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "quantity":
-			out.Values[i] = ec._InvoiceLine_quantity(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -94584,6 +96301,70 @@ func (ec *executionContext) _MeetingsPage(ctx context.Context, sel ast.Selection
 			}
 		case "totalElements":
 			out.Values[i] = ec._MeetingsPage_totalElements(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var metadataImplementors = []string{"Metadata", "SourceFieldsInterface", "Node"}
+
+func (ec *executionContext) _Metadata(ctx context.Context, sel ast.SelectionSet, obj *model.Metadata) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, metadataImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Metadata")
+		case "id":
+			out.Values[i] = ec._Metadata_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "created":
+			out.Values[i] = ec._Metadata_created(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lastUpdated":
+			out.Values[i] = ec._Metadata_lastUpdated(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._Metadata_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sourceOfTruth":
+			out.Values[i] = ec._Metadata_sourceOfTruth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "appSource":
+			out.Values[i] = ec._Metadata_appSource(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -100206,6 +101987,55 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 	return out
 }
 
+var taxImplementors = []string{"Tax"}
+
+func (ec *executionContext) _Tax(ctx context.Context, sel ast.SelectionSet, obj *model.Tax) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, taxImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Tax")
+		case "salesTax":
+			out.Values[i] = ec._Tax_salesTax(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "vat":
+			out.Values[i] = ec._Tax_vat(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "taxRate":
+			out.Values[i] = ec._Tax_taxRate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var tenantBillableInfoImplementors = []string{"TenantBillableInfo"}
 
 func (ec *executionContext) _TenantBillableInfo(ctx context.Context, sel ast.SelectionSet, obj *model.TenantBillableInfo) graphql.Marshaler {
@@ -104084,6 +105914,16 @@ func (ec *executionContext) marshalNMeetingsPage2ᚖgithubᚗcomᚋopenlineᚑai
 		return graphql.Null
 	}
 	return ec._MeetingsPage(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMetadata(ctx context.Context, sel ast.SelectionSet, v *model.Metadata) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Metadata(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNNote2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v model.Note) graphql.Marshaler {

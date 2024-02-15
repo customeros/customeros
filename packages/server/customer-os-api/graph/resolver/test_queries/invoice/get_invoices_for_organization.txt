@@ -6,10 +6,12 @@ query GetInvoice($page: Int!, $limit: Int!, $organizationId: ID) {
       totalPages
       totalElements
       content {
-        id
-        number
-        invoiceLines {
-            name
+        metadata {
+            id
+        }
+        invoiceNumber
+        invoiceLineItems {
+            description
         }
       }
   }

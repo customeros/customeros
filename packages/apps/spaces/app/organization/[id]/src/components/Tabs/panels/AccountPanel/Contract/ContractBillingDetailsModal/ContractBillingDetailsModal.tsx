@@ -1,7 +1,9 @@
 'use client';
+import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 import React, { useRef, useMemo, useState } from 'react';
 
+import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
@@ -15,6 +17,7 @@ import { Invoice } from '@shared/components/Invoice/Invoice';
 import { countryOptions } from '@shared/util/countryOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
+import { GetContractQuery } from '@organization/src/graphql/getContract.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
   Modal,
@@ -24,9 +27,9 @@ import {
   ModalOverlay,
 } from '@ui/overlay/Modal';
 import {
-  GetContractQuery,
-  useGetContractQuery,
-} from '@organization/src/graphql/getContract.generated';
+  GetContractsQuery,
+  useGetContractsQuery,
+} from '@organization/src/graphql/getContracts.generated';
 
 import { BillingDetailsDto } from './BillingDetails.dto';
 import { ContractBillingDetailsForm } from './ContractBillingDetailsForm';
@@ -49,13 +52,14 @@ export const ContractBillingDetailsModal = ({
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
   const formId = `billing-details-form-${contractId}`;
+  const organizationId = useParams()?.id as string;
 
   const [isBillingDetailsFocused, setIsBillingDetailsFocused] =
     useState<boolean>(false);
 
   const [isBillingDetailsHovered, setIsBillingDetailsHovered] =
     useState<boolean>(false);
-  const queryKey = useGetContractQuery.getKey({ id: contractId });
+  const queryKey = useGetContractsQuery.getKey({ id: organizationId });
 
   const queryClient = useQueryClient();
   const client = getGraphQLClient();
@@ -63,7 +67,40 @@ export const ContractBillingDetailsModal = ({
   const { data: tenantBillingProfile } = useTenantBillingProfilesQuery(client);
 
   const updateContract = useUpdateContractMutation(client, {
-    onError: (error) => {
+    onMutate: ({ input: { patch, contractId, ...input } }) => {
+      queryClient.cancelQueries({ queryKey });
+      queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
+        return produce(currentCache, (draft) => {
+          const previousContracts = draft?.['organization']?.['contracts'];
+          const updatedContractIndex = previousContracts?.findIndex(
+            (contract) => contract.id === contractId,
+          );
+
+          if (draft?.['organization']?.['contracts']) {
+            draft['organization']['contracts']?.map((contractData, index) => {
+              if (index !== updatedContractIndex) {
+                return contractData;
+              }
+
+              return {
+                ...contractData,
+                ...input,
+              };
+            });
+          }
+        });
+      });
+      const previousEntries =
+        queryClient.getQueryData<GetContractsQuery>(queryKey);
+
+      return { previousEntries };
+    },
+    onError: (error, _, context) => {
+      queryClient.setQueryData<GetContractsQuery>(
+        queryKey,
+        context?.previousEntries,
+      );
+
       toastError(
         'Failed to update billing details',
         `update-contract-error-${error}`,
@@ -77,12 +114,14 @@ export const ContractBillingDetailsModal = ({
       onClose();
     },
     onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
+
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
         queryClient.invalidateQueries({ queryKey });
-      }, 1000);
+      }, 500);
     },
   });
   const defaultValues = new BillingDetailsDto({

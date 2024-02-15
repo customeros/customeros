@@ -17,8 +17,10 @@ export interface FormSwitchProps extends SwitchProps {
   name: string;
   formId: string;
   label?: ReactNode;
+  leftElement?: ReactNode;
   isLabelVisible?: boolean;
   labelProps?: FormLabelProps;
+  onChangeCallback?: (onCallback: () => void) => void;
 }
 
 export const FormSwitch = forwardRef(
@@ -29,12 +31,30 @@ export const FormSwitch = forwardRef(
       label,
       isLabelVisible = true,
       labelProps,
+      leftElement,
+      onChangeCallback,
       ...props
     }: FormSwitchProps,
     ref,
   ) => {
     const { getInputProps } = useField(name, formId);
     const { value, onChange, ...rest } = getInputProps();
+
+    const handleChange = (value: boolean) => {
+      if (!value) {
+        onChange(value);
+
+        return;
+      }
+      if (value) {
+        if (onChangeCallback) {
+          onChangeCallback(() => onChange(value));
+
+          return;
+        }
+        onChange(value);
+      }
+    };
 
     return (
       <FormControl
@@ -52,15 +72,17 @@ export const FormSwitch = forwardRef(
             <FormLabel>{label}</FormLabel>
           </VisuallyHidden>
         )}
-
-        <Switch
-          ref={ref}
-          {...rest}
-          {...props}
-          isChecked={value}
-          onChange={() => onChange(!value)}
-          colorScheme='primary'
-        />
+        <Flex alignItems='center'>
+          {leftElement && leftElement}
+          <Switch
+            ref={ref}
+            {...rest}
+            {...props}
+            isChecked={value}
+            onChange={() => handleChange(!value)}
+            colorScheme='primary'
+          />
+        </Flex>
       </FormControl>
     );
   },
