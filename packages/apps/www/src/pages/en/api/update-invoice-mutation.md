@@ -19,8 +19,6 @@ curl -X POST \
         patch: true
       }) { 
         id 
-        paid 
-        status 
       } 
     }"
   }' \
@@ -39,8 +37,6 @@ As this is a graphQL request, you are able to specify the exact payload you woul
 "data": {
     "invoice_Update": {
         "id": "96d699a8-b986-4dae-9f10-a23196f30c90",
-        "paid": true,
-        "status": "PAID"
     }
 }
 ```
