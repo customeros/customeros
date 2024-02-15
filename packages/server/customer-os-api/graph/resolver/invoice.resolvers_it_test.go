@@ -354,3 +354,50 @@ func TestInvoiceResolver_NextDryRunForContract(t *testing.T) {
 
 	require.Equal(t, invoiceId, invoiceStruct.Invoice_NextDryRunForContract)
 }
+
+func TestMutationResolver_InvoiceUpdate(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
+
+	calledUpdateInvoice := false
+
+	invoiceServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
+		UpdateInvoice: func(context context.Context, invoice *invoicepb.UpdateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+			require.Equal(t, tenantName, invoice.Tenant)
+			require.Equal(t, invoiceId, invoice.InvoiceId)
+			require.Equal(t, testUserId, invoice.LoggedInUserId)
+			require.Equal(t, "customer-os-api", invoice.AppSource)
+			require.Equal(t, invoicepb.InvoiceStatus_INVOICE_STATUS_PAID, invoice.Status)
+			require.Equal(t, 1, len(invoice.FieldsMask))
+			require.ElementsMatch(t, []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS},
+				invoice.FieldsMask)
+			calledUpdateInvoice = true
+			return &invoicepb.InvoiceIdResponse{
+				Id: invoiceId,
+			}, nil
+		},
+	}
+	events_platform.SetInvoiceCallbacks(&invoiceServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "invoice/update_invoice", map[string]interface{}{
+		"invoiceId": invoiceId,
+	})
+
+	var invoiceStruct struct {
+		Invoice_Update model.Invoice
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
+	require.Nil(t, err)
+	invoice := invoiceStruct.Invoice_Update
+	require.Equal(t, invoiceId, invoice.Metadata.ID)
+
+	require.True(t, calledUpdateInvoice)
+}

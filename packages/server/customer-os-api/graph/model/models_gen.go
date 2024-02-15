@@ -1134,6 +1134,12 @@ type InvoiceSimulateInput struct {
 	InvoiceLines    []*InvoiceLineInput `json:"invoiceLines"`
 }
 
+type InvoiceUpdateInput struct {
+	ID     string         `json:"id"`
+	Status *InvoiceStatus `json:"status,omitempty"`
+	Patch  bool           `json:"patch"`
+}
+
 type InvoicesPage struct {
 	Content       []*Invoice `json:"content"`
 	TotalPages    int        `json:"totalPages"`

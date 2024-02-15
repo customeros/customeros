@@ -30,12 +30,77 @@ type InvoiceService interface {
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceData) (string, error)
 	NextInvoiceDryRun(ctx context.Context, contractId string) (string, error)
+	UpdateInvoice(ctx context.Context, input model.InvoiceUpdateInput) error
 }
 type invoiceService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 	services     *Services
+}
+
+func (s *invoiceService) UpdateInvoice(ctx context.Context, input model.InvoiceUpdateInput) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.UpdateInvoice")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	if input.ID == "" {
+		err := fmt.Errorf("invoice id is missing")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	invoiceExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.ID, neo4jutil.NodeLabelInvoice)
+	if !invoiceExists {
+		err := fmt.Errorf("invoice with id {%s} not found", input.ID)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	fieldMask := []invoicepb.InvoiceFieldMask{}
+	invoiceUpdateRequest := invoicepb.UpdateInvoiceRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		InvoiceId:      input.ID,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AppSource:      constants.AppSourceCustomerOsApi,
+	}
+	// prepare invoice status
+	if input.Status != nil {
+		switch *input.Status {
+		case model.InvoiceStatusDraft:
+			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_DRAFT
+		case model.InvoiceStatusDue:
+			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_DUE
+		case model.InvoiceStatusPaid:
+			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_PAID
+		default:
+			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_NONE
+		}
+	}
+
+	if input.Patch {
+		if input.Status != nil {
+			fieldMask = append(fieldMask, invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS)
+		}
+		invoiceUpdateRequest.FieldsMask = fieldMask
+		if len(fieldMask) == 0 {
+			span.LogFields(log.String("result", "No fields to update"))
+			return nil
+		}
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := s.grpcClients.InvoiceClient.UpdateInvoice(ctx, &invoiceUpdateRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func NewInvoiceService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) InvoiceService {

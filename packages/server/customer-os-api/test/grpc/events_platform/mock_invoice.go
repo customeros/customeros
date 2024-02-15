@@ -8,6 +8,7 @@ import (
 type MockInvoiceServiceCallbacks struct {
 	NewInvoiceForContract func(context.Context, *invoicepb.NewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error)
 	SimulateInvoice       func(context.Context, *invoicepb.SimulateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
+	UpdateInvoice         func(context.Context, *invoicepb.UpdateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error)
 }
 
 var invoiceCallbacks = &MockInvoiceServiceCallbacks{}
@@ -32,4 +33,11 @@ func (MockInvoiceService) SimulateInvoice(context context.Context, proto *invoic
 		panic("invoiceCallbacks.SimulateInvoice is not set")
 	}
 	return invoiceCallbacks.SimulateInvoice(context, proto)
+}
+
+func (MockInvoiceService) UpdateInvoice(context context.Context, proto *invoicepb.UpdateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
+	if invoiceCallbacks.UpdateInvoice == nil {
+		panic("invoiceCallbacks.UpdateInvoice is not set")
+	}
+	return invoiceCallbacks.UpdateInvoice(context, proto)
 }
