@@ -1,6 +1,7 @@
 package resolver
 
 import (
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
@@ -65,28 +66,34 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Nil(t, err)
 
 	invoice := invoiceStruct.Invoice
-	require.Equal(t, invoiceId, invoice.ID)
-	require.Equal(t, timeNow, invoice.CreatedAt)
-	require.Equal(t, timeNow, invoice.UpdatedAt)
-	require.Equal(t, false, invoice.DryRun)
-	require.Equal(t, "1", invoice.Number)
+	require.Equal(t, invoiceId, invoice.Metadata.ID)
+	require.Equal(t, timeNow, invoice.Metadata.Created)
+	require.Equal(t, timeNow, invoice.Metadata.LastUpdated)
+	require.False(t, invoice.DryRun)
+	require.False(t, invoice.Postpaid)
+	require.False(t, invoice.OffCycle)
+	require.Equal(t, "1", invoice.InvoiceNumber)
+	require.Equal(t, fmt.Sprintf("%s/%s", constants.UrlInvoices, invoice.Metadata.ID), invoice.InvoiceURL)
 	require.Equal(t, "RON", invoice.Currency)
-	require.Equal(t, yesterday, invoice.PeriodStartDate)
-	require.Equal(t, tomorrow, invoice.PeriodEndDate)
-	require.Equal(t, timeNow, invoice.DueDate)
-	require.Equal(t, 100.0, invoice.Amount)
-	require.Equal(t, 19.0, invoice.Vat)
-	require.Equal(t, 119.0, invoice.TotalAmount)
+	require.Equal(t, yesterday, invoice.InvoicePeriodStart)
+	require.Equal(t, tomorrow, invoice.InvoicePeriodEnd)
+	require.Equal(t, timeNow, invoice.Due)
+	require.Equal(t, 100.0, invoice.Subtotal)
+	require.Equal(t, 19.0, invoice.TaxDue)
+	require.Equal(t, 119.0, invoice.AmountDue)
 	require.Equal(t, "ABC", invoice.RepositoryFileID)
 	require.Equal(t, "Note", *invoice.Note)
+	require.False(t, invoice.Paid)
+	require.Equal(t, 119.0, invoice.AmountRemaining)
+	require.Equal(t, 0.0, invoice.AmountPaid)
 
-	require.Equal(t, 1, len(invoice.InvoiceLines))
-	require.Equal(t, "SLI 1", invoice.InvoiceLines[0].Description)
-	require.Equal(t, 100.0, invoice.InvoiceLines[0].Price)
-	require.Equal(t, 1, invoice.InvoiceLines[0].Quantity)
-	require.Equal(t, 100.0, invoice.InvoiceLines[0].Subtotal)
-	require.Equal(t, 19.0, invoice.InvoiceLines[0].TaxDue)
-	require.Equal(t, 119.0, invoice.InvoiceLines[0].Total)
+	require.Equal(t, 1, len(invoice.InvoiceLineItems))
+	require.Equal(t, "SLI 1", invoice.InvoiceLineItems[0].Description)
+	require.Equal(t, 100.0, invoice.InvoiceLineItems[0].Price)
+	require.Equal(t, 1, invoice.InvoiceLineItems[0].Quantity)
+	require.Equal(t, 100.0, invoice.InvoiceLineItems[0].Subtotal)
+	require.Equal(t, 19.0, invoice.InvoiceLineItems[0].TaxDue)
+	require.Equal(t, 119.0, invoice.InvoiceLineItems[0].Total)
 
 	require.Equal(t, organizationId, invoice.Organization.ID)
 }

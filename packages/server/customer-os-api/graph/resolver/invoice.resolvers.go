@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -33,6 +32,20 @@ func (r *invoiceResolver) Organization(ctx context.Context, obj *model.Invoice) 
 		return nil, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// InvoiceLineItems is the resolver for the invoiceLineItems field.
+func (r *invoiceResolver) InvoiceLineItems(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	entities, err := dataloader.For(ctx).GetInvoiceLinesForInvoice(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("failed to get invoice lines for invoice %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to fetch invoice lines for invoice %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToInvoiceLines(entities), nil
 }
 
 // InvoiceLines is the resolver for the invoiceLines field.
