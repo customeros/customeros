@@ -1,6 +1,6 @@
 ---
-title: Invoice API
-description: Invoice data object
+title: Invoice Query
+description: Invoice query
 layout: ../../../layouts/docs.astro
 lang: en
 ---
@@ -14,7 +14,10 @@ curl -X POST \
   -d '{
     "query": "query { 
       invoice(id: \"96d699a8-b986-4dae-9f10-a23196f30c90\") { 
-        metadata 
+        metadata {
+          created
+          id
+        }
         amountDue 
         currency
         due
@@ -27,7 +30,7 @@ curl -X POST \
 
 The invoice query request requires that you pass the invoice `id` as a query parameter.  
 
-As this is a graphQL request, you are able to specify the exact payload you would like returned in the response.  In the example above, we've specified that `metadata`, `amountDue`, `currency`, and `due` are returned, but you can choose from any of the response parameters defined in the [invoice object](objects/invoice-object)
+As this is a graphQL request, you are able to specify the exact payload you would like returned in the response.  In the example above, we've specified that `metadata`, `amountDue`, `currency`, and `due` are returned, but you can choose from any of the response parameters defined in the [invoice object](objects/invoice)
 
 ## Invoice query response
 ```json
