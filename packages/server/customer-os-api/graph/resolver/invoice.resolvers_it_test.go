@@ -262,8 +262,8 @@ func TestInvoiceResolver_InvoicesForOrganization(t *testing.T) {
 	})
 
 	organization2Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contrac3tId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization2Id, neo4jentity.ContractEntity{})
-	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contrac3tId, neo4jentity.InvoiceEntity{
+	contractId3 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organization2Id, neo4jentity.ContractEntity{})
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId3, neo4jentity.InvoiceEntity{
 		Number: "3",
 	})
 
@@ -290,8 +290,8 @@ func TestInvoiceResolver_InvoicesForOrganization(t *testing.T) {
 	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
 	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
 
-	require.ElementsMatch(t, []string{invoice1Id, invoice2Id}, []string{invoiceStruct.Invoices.Content[0].ID, invoiceStruct.Invoices.Content[1].ID})
-	require.ElementsMatch(t, []string{"1", "2"}, []string{invoiceStruct.Invoices.Content[0].Number, invoiceStruct.Invoices.Content[1].Number})
+	require.ElementsMatch(t, []string{invoice1Id, invoice2Id}, []string{invoiceStruct.Invoices.Content[0].Metadata.ID, invoiceStruct.Invoices.Content[1].Metadata.ID})
+	require.ElementsMatch(t, []string{"1", "2"}, []string{invoiceStruct.Invoices.Content[0].InvoiceNumber, invoiceStruct.Invoices.Content[1].InvoiceNumber})
 }
 
 func TestInvoiceResolver_NextDryRunForContract(t *testing.T) {
