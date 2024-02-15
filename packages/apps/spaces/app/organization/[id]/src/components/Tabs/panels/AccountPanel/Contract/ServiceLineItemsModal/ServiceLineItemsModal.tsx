@@ -53,6 +53,7 @@ interface SubscriptionServiceModalProps {
   contractId: string;
   onClose: () => void;
   contractName: string;
+  notes?: string | null;
   currency?: string | null;
   organizationName: string;
   serviceLineItems: Array<ServiceLineItem>;
@@ -107,6 +108,7 @@ export const ServiceLineItemsModal = ({
   serviceLineItems,
   contractId,
   contractName,
+  notes = '',
   currency,
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
@@ -140,6 +142,7 @@ export const ServiceLineItemsModal = ({
 
               return {
                 ...contractData,
+                invoiceNote: input.invoiceNote,
                 serviceLineItems: {
                   ...input.serviceLineItems.map((e) => getNewItem(e)),
                 },
@@ -184,7 +187,7 @@ export const ServiceLineItemsModal = ({
     },
   });
   const [services, setServices] = useState<Array<ServiceItem>>([]);
-  const [_, setNote] = useState<string>('');
+  const [invoiceNote, setInvoiceNote] = useState<string>(`${notes}`);
   useEffect(() => {
     if (isOpen) {
       if (serviceLineItems.length) {
@@ -224,6 +227,7 @@ export const ServiceLineItemsModal = ({
     updateServices.mutate({
       input: {
         contractId,
+        invoiceNote,
         serviceLineItems: services
           .filter((e) => !e.isDeleted)
           .map((e) => ({
@@ -336,10 +340,11 @@ export const ServiceLineItemsModal = ({
               mb: 0,
               fontWeight: 'semibold',
             }}
-            name='contractUrl'
+            name='invoiceNote'
             textOverflow='ellipsis'
             placeholder='Customer invoice note'
-            onChange={(event) => setNote(event.target.value)}
+            value={invoiceNote}
+            onChange={(event) => setInvoiceNote(event.target.value)}
           />
         </ModalBody>
         <ModalFooter p='6'>

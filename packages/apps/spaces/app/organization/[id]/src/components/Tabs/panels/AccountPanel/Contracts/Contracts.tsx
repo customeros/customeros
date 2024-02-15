@@ -25,7 +25,7 @@ export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
             renewalSunnary={organization?.accountDetails?.renewalSummary}
             name={organization?.name || ''}
             isInitialLoading={isLoading}
-            currency={organization?.contracts[0]?.currency}
+            currency={organization?.contracts?.[0]?.currency || 'USD'}
           />
           {organization?.contracts.map((contract) => (
             <Flex

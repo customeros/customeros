@@ -163,7 +163,6 @@ export const ContractCard = ({
     },
     500,
   );
-
   const defaultValues = ContractDTO.toForm({
     organizationName,
     ...(data ?? {}),
@@ -521,6 +520,7 @@ export const ContractCard = ({
           currency={data.currency}
           serviceLineItems={data?.serviceLineItems ?? []}
           organizationName={organizationName}
+          notes={data?.invoiceNote}
         />
       </CardFooter>
     </Card>
