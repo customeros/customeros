@@ -5,6 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"sort"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -21,17 +27,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/webhook"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"io"
-	"net/http"
-	"os"
-	"sort"
-	"time"
 )
 
 type RequestBodyInvoiceReady struct {
@@ -611,21 +613,27 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	if invoiceEntity.DryRun {
 		return nil
 	}
-
 	// do not invoke invoice ready webhook if it was already invoked
 	if invoiceEntity.InvoiceInternalFields.PaymentRequestedAt == nil {
-		err = h.invokeInvoiceReadyWebhook(ctx, eventData.Tenant, *invoiceEntity)
+		err = h.integrationAppInvoiceReadyWebhook(ctx, eventData.Tenant, *invoiceEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error invoking invoice ready webhook for invoice %s: %s", invoiceId, err.Error())
-			return err
 		}
+	}
+
+	// dispatch invoice finalized event
+	err = h.dispatchInvoiceFinalizedEvent(ctx, eventData.Tenant, *invoiceEntity)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoiceId, err.Error())
+		// TODO: must implement retry mechanism for dispatching invoice finalized event
 	}
 
 	return nil
 }
 
-func (h *InvoiceEventHandler) invokeInvoiceReadyWebhook(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
+func (h *InvoiceEventHandler) integrationAppInvoiceReadyWebhook(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.invokeInvoiceReadyWebhook")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -706,6 +714,35 @@ func (h *InvoiceEventHandler) invokeInvoiceReadyWebhook(ctx context.Context, ten
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error setting invoice payment requested for invoice %s: %s", invoice.Id, err.Error())
+	}
+
+	return nil
+}
+
+func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.dispatchInvoiceFinalizedEvent")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.LogObjectAsJson(span, "invoice", invoice)
+
+	// // get organization linked to invoice to build payload for webhook
+	// organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+	// if err != nil {
+	// 	tracing.TraceErr(span, err)
+	// 	h.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
+	// 	return err
+	// }
+	// organizationEntity := neo4jentity.OrganizationEntity{}
+	// if organizationDbNode != nil {
+	// 	organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+	// }
+
+	// dispatch the event
+	err := webhook.DispatchWebhook(tenant, webhook.WebhookEventInvoiceFinalized, nil, h.repositories)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoice.Id, err.Error())
+		return err
 	}
 
 	return nil
