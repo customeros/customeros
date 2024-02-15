@@ -95,6 +95,8 @@ export const SIDEBAR: Sidebar = {
     "Contracts API": [
       { text: "Query: Contracts", link: "en/api/contract-query"},
       { text: "Mutation: Update Contracts", link: "en/api/update-contract-mutation"},
+      { text: "Mutation: Create ContractLineItem", link: "en/api/create-contract-line-item-mutation"},
+      { text: "Mutation: Update ContractLineItem", link: "en/api/update-contract-line-item-mutation"},
       { text: "Contract Events", link: "en/api/contract-events"},
     ],
     "Invoices API": [
