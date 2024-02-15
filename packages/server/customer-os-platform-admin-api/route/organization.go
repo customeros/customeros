@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
@@ -84,6 +85,8 @@ func refreshLastTouchpointHandler(services *service.Services, log logger.Logger)
 							}
 						}
 					}(skip, limit)
+
+					time.Sleep(10 * time.Second)
 				}
 			}(tenantName)
 		}
