@@ -83,7 +83,10 @@ const AccountPanelComponent = () => {
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
         return produce(currentCache, (draft) => {
           if (draft?.['organization']?.['contracts']) {
-            draft['organization']['contracts'] = [contract];
+            draft['organization']['contracts'] = [
+              ...(currentCache?.organization?.contracts || []),
+              contract,
+            ];
           }
         });
       });
