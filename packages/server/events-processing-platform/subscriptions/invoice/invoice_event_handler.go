@@ -616,7 +616,7 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 
 	// do not invoke invoice ready webhook if it was already invoked
 	if invoiceEntity.InvoiceInternalFields.PaymentRequestedAt == nil {
-		err = h.invokeInvoiceReadyWebhook(ctx, eventData.Tenant, *invoiceEntity)
+		err = h.integrationAppInvoiceReadyWebhook(ctx, eventData.Tenant, *invoiceEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error invoking invoice ready webhook for invoice %s: %s", invoiceId, err.Error())
@@ -635,7 +635,7 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	return nil
 }
 
-func (h *InvoiceEventHandler) invokeInvoiceReadyWebhook(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
+func (h *InvoiceEventHandler) integrationAppInvoiceReadyWebhook(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.invokeInvoiceReadyWebhook")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
