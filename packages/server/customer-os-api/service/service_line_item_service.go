@@ -156,12 +156,20 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		return err
 	}
 
-	serviceLineItemExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.Id, neo4jutil.NodeLabelServiceLineItem)
-	if !serviceLineItemExists {
-		err := fmt.Errorf("(ServiceLineItemService.Update) service line item with id {%s} not found", serviceLineItemDetails.Id)
-		s.log.Error(err.Error())
+	serviceLineItem, err := s.GetById(ctx, serviceLineItemDetails.Id)
+	if err != nil {
 		tracing.TraceErr(span, err)
+		s.log.Errorf("Error on getting service line item by id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 		return err
+	}
+
+	isRetroactiveCorrection := serviceLineItemDetails.IsRetroactiveCorrection
+	// If no price impacted fields changed, set retroactive correction to true
+	if serviceLineItem.Price == serviceLineItemDetails.SliPrice &&
+		serviceLineItem.Quantity == serviceLineItemDetails.SliQuantity &&
+		serviceLineItem.Billed == serviceLineItemDetails.SliBilledType &&
+		serviceLineItem.VatRate == serviceLineItemDetails.SliVatRate {
+		isRetroactiveCorrection = true
 	}
 
 	serviceLineItemUpdateRequest := servicelineitempb.UpdateServiceLineItemGrpcRequest{
@@ -172,7 +180,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		Quantity:                serviceLineItemDetails.SliQuantity,
 		Price:                   serviceLineItemDetails.SliPrice,
 		Comments:                serviceLineItemDetails.SliComments,
-		IsRetroactiveCorrection: serviceLineItemDetails.IsRetroactiveCorrection,
+		IsRetroactiveCorrection: isRetroactiveCorrection,
 		VatRate:                 serviceLineItemDetails.SliVatRate,
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(serviceLineItemDetails.Source),
@@ -194,7 +202,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		serviceLineItemUpdateRequest.Billed = commonpb.BilledType_NONE_BILLED
 	}
 	// set contract id if it's not a retroactive correction
-	if !serviceLineItemDetails.IsRetroactiveCorrection {
+	if !isRetroactiveCorrection {
 		contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -211,7 +219,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
+	_, err = s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
