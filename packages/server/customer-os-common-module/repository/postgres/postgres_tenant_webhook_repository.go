@@ -13,7 +13,7 @@ type TenantWebhookRepo struct {
 type TenantWebhookRepository interface {
 	GetWebhook(tenant, event string) helper.QueryResult
 	GetWebhooks(tenant string) helper.QueryResult
-	SaveWebhook(integration entity.TenantWebhook) helper.QueryResult
+	CreateWebhook(integration entity.TenantWebhook) helper.QueryResult
 }
 
 func NewTenantWebhookRepo(db *gorm.DB) *TenantWebhookRepo {
@@ -47,7 +47,7 @@ func (r *TenantWebhookRepo) GetWebhooks(tenant string) helper.QueryResult {
 	return helper.QueryResult{Result: &webhookEntity}
 }
 
-func (r *TenantWebhookRepo) SaveWebhook(webhook entity.TenantWebhook) helper.QueryResult {
+func (r *TenantWebhookRepo) CreateWebhook(webhook entity.TenantWebhook) helper.QueryResult {
 	webhookEntity := entity.TenantWebhook{
 		TenantName: webhook.TenantName,
 		ApiKey:     webhook.ApiKey,
