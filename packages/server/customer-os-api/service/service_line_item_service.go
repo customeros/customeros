@@ -60,7 +60,7 @@ type ServiceLineItemService interface {
 	GetById(ctx context.Context, id string) (*neo4jentity.ServiceLineItemEntity, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.ServiceLineItemEntities, error)
 	Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error
-	CreateOrUpdateInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error)
+	CreateOrUpdateOrDeleteInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error)
 }
 
 type serviceLineItemService struct {
@@ -361,15 +361,12 @@ type ServiceLineItemDetails struct {
 	VatRate                 float64
 }
 
-func (s *serviceLineItemService) CreateOrUpdateInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.CreateOrUpdateInBulk")
+func (s *serviceLineItemService) CreateOrUpdateOrDeleteInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.CreateOrUpdateOrDeleteInBulk")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("contractId", contractId))
 
-	if len(sliBulkData) == 0 {
-		return []string{}, nil
-	}
 	var responseIds []string
 
 	sliDbNodes, err := s.repositories.ServiceLineItemRepository.GetForContracts(ctx, common.GetTenantFromContext(ctx), []string{contractId})
