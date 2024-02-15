@@ -613,14 +613,12 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	if invoiceEntity.DryRun {
 		return nil
 	}
-
 	// do not invoke invoice ready webhook if it was already invoked
 	if invoiceEntity.InvoiceInternalFields.PaymentRequestedAt == nil {
 		err = h.integrationAppInvoiceReadyWebhook(ctx, eventData.Tenant, *invoiceEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error invoking invoice ready webhook for invoice %s: %s", invoiceId, err.Error())
-			return err
 		}
 	}
 
@@ -629,7 +627,7 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoiceId, err.Error())
-		return err
+		// TODO: must implement retry mechanism for dispatching invoice finalized event
 	}
 
 	return nil
