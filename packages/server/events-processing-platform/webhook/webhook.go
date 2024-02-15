@@ -40,7 +40,9 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload,
 
 	// Send the request
 	client := &http.Client{}
-	resp, err := client.Do(req)
+	const maxRetries = 18 // 2^18 = 262144 seconds = 72 hours = 3 days
+	backoffOperation := RetryWithBackoff(client.Do, req, maxRetries, 1)
+	resp, err := backoffOperation(req) // client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error sending request: %v", err)
 	}
