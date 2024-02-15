@@ -1,11 +1,12 @@
 'use client';
-import React, { useEffect } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 import { produce } from 'immer';
 import { signOut } from 'next-auth/react';
 import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
+import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -23,6 +24,7 @@ import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { useTableViewDefsQuery } from '@shared/graphql/tableViewDefs.generated';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
+import { useGetAllInvoicesCountQuery } from '@shared/graphql/getAllInvoicesCount.generated';
 
 import { SidenavItem } from './components/SidenavItem';
 import logoCustomerOs from './assets/logo-customeros.png';
@@ -39,6 +41,9 @@ export const RootSidenav = () => {
     `customeros-player-last-position`,
     { root: 'organization' },
   );
+
+  const { data: tenantSettingsData } = useTenantSettingsQuery(client);
+  const { data: totalInvoices } = useGetAllInvoicesCountQuery(client);
 
   const { data: tableViewDefsData } = useTableViewDefsQuery(
     client,
@@ -83,6 +88,13 @@ export const RootSidenav = () => {
   const handleSignOutClick = () => {
     signOut();
   };
+
+  const showInvoices = useMemo(() => {
+    return (
+      tenantSettingsData?.tenantSettings?.invoicingEnabled ||
+      totalInvoices?.invoices?.totalElements > 0
+    );
+  }, [tenantSettingsData?.tenantSettings?.invoicingEnabled]);
 
   useEffect(() => {
     [
@@ -165,17 +177,20 @@ export const RootSidenav = () => {
             />
           )}
         />
-        <SidenavItem
-          label='Invoices'
-          isActive={checkIsActive('invoices')}
-          onClick={() => handleItemClick('invoices')}
-          icon={
-            <Receipt
-              color={checkIsActive('invoices') ? 'gray.700' : 'gray.500'}
-              boxSize='5'
-            />
-          }
-        />
+
+        {showInvoices && (
+          <SidenavItem
+            label='Invoices'
+            isActive={checkIsActive('invoices')}
+            onClick={() => handleItemClick('invoices')}
+            icon={
+              <Receipt
+                color={checkIsActive('invoices') ? 'gray.700' : 'gray.500'}
+                boxSize='5'
+              />
+            }
+          />
+        )}
       </VStack>
 
       <VStack spacing='2' w='full'>

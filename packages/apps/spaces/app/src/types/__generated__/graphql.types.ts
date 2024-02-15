@@ -1305,9 +1305,11 @@ export type Invoice = Node &
     invoiceLines: Array<InvoiceLine>;
     note?: Maybe<Scalars['String']['output']>;
     number: Scalars['String']['output'];
+    offCycle: Scalars['Boolean']['output'];
     organization: Organization;
     periodEndDate: Scalars['Time']['output'];
     periodStartDate: Scalars['Time']['output'];
+    postpaid: Scalars['Boolean']['output'];
     provider: InvoiceProvider;
     repositoryFileId: Scalars['String']['output'];
     source: DataSource;

@@ -63,7 +63,7 @@ export const PaymentMethods = ({
     }
   };
   useEffect(() => {
-    if (!isStripeActive && !loading && iConnections.length > 0) {
+    if (!isStripeActive && !loading && iConnections?.length > 0) {
       onResetPaymentMethods();
     }
   }, [iConnections, isStripeActive, loading]);
@@ -216,16 +216,16 @@ export const PaymentMethods = ({
       {/*  </Text>*/}
       {/*  <Switch size='sm' />*/}
       {/*</Flex>*/}
-      <FormSwitch
-        name='canPayWithPigeon'
-        formId={formId}
-        size='sm'
-        label={
-          <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>
-            Carrier pigeon
-          </Text>
-        }
-      />
+      {/*<FormSwitch*/}
+      {/*  name='canPayWithPigeon'*/}
+      {/*  formId={formId}*/}
+      {/*  size='sm'*/}
+      {/*  label={*/}
+      {/*    <Text fontSize='sm' fontWeight='semibold' whiteSpace='nowrap'>*/}
+      {/*      Carrier pigeon*/}
+      {/*    </Text>*/}
+      {/*  }*/}
+      {/*/>*/}
     </>
   );
 };
