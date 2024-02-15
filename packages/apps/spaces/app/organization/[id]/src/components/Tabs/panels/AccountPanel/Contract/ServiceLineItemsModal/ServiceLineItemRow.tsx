@@ -1,6 +1,8 @@
 'use client';
 import React, { useRef, useEffect } from 'react';
 
+import { Currency } from '@settings/components/Tabs/panels/BillingPanel/Currency';
+
 import { Flex } from '@ui/layout/Flex';
 import { Input } from '@ui/form/Input';
 import { Text } from '@ui/typography/Text';
@@ -8,10 +10,10 @@ import { BilledType } from '@graphql/types';
 import { Select } from '@ui/form/SyncSelect';
 import { Delete } from '@ui/media/icons/Delete';
 import { IconButton } from '@ui/form/IconButton';
-import { CurrencyInput } from '@ui/form/CurrencyInput';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { FlipBackward } from '@ui/media/icons/FlipBackward';
 import { NumberInput, NumberInputField } from '@ui/form/NumberInput';
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { billedTypeOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
 import { ServiceItem } from './type';
@@ -21,6 +23,7 @@ const [_, _1, ...subscriptionOptions] = billedTypeOptions;
 interface ServiceLineItemProps {
   index: number;
   service: ServiceItem;
+  currency?: string | null;
   onChange: (updatedService: ServiceItem) => void;
 }
 
@@ -28,11 +31,15 @@ export const ServiceLineItemRow = ({
   service,
   onChange,
   index,
+  currency,
 }: ServiceLineItemProps) => {
   const handleChange = (field: keyof ServiceItem, value: string | boolean) => {
     onChange({ ...service, [field]: value });
   };
   const nameRef = useRef<HTMLInputElement | null>(null);
+
+  const currencySymbol =
+    formatCurrency(0, 0, currency ?? 'USD')?.split('0')[0] ?? '$';
   const handleTypeChange = (newValue: string) => {
     if (newValue === 'RECURRING') {
       onChange({
@@ -150,7 +157,7 @@ export const ServiceLineItemRow = ({
         </NumberInput>
       </ServiceLineItemInputWrapper>
       <ServiceLineItemInputWrapper width='20%' isDeleted={service.isDeleted}>
-        <CurrencyInput
+        <Currency
           name='price'
           w='full'
           placeholder='Per license'
@@ -158,16 +165,17 @@ export const ServiceLineItemRow = ({
           step={0.01}
           min={0.01}
           value={`${service.price}`}
-          keepWithinRange={true}
-          clampValueOnBlur={true}
           fontSize='sm'
           sx={{
-            '& *': {
+            '&': {
               fontSize: '14px !important',
               textDecoration: service.isDeleted ? 'line-through' : 'unset',
             },
           }}
-          onChange={(value) => handleChange('price', value)}
+          currency={currencySymbol}
+          onValueChange={(value) => {
+            handleChange('price', value);
+          }}
         />
       </ServiceLineItemInputWrapper>
       <ServiceLineItemInputWrapper width='20%' isDeleted={service.isDeleted}>

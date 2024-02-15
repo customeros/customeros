@@ -28,8 +28,10 @@ function getBilledTypeLabel(billedType: BilledType): string {
 const ServiceItem = ({
   data,
   onOpen,
+  currency,
 }: {
   data: ServiceLineItem;
+  currency?: string | null;
   onOpen: (props: ServiceLineItem) => void;
 }) => {
   const allowedFractionDigits = data.billed === BilledType.Usage ? 4 : 2;
@@ -67,7 +69,11 @@ const ServiceItem = ({
               </>
             )}
 
-            {formatCurrency(data.price ?? 0, allowedFractionDigits)}
+            {formatCurrency(
+              data.price ?? 0,
+              allowedFractionDigits,
+              currency ?? 'USD',
+            )}
             {getBilledTypeLabel(data.billed)}
           </Text>
         </Flex>
@@ -78,17 +84,26 @@ const ServiceItem = ({
 
 interface ServicesListProps {
   onModalOpen: () => void;
+  currency?: string | null;
   data?: Array<ServiceLineItem>;
 }
 
-export const ServicesList = ({ data, onModalOpen }: ServicesListProps) => {
+export const ServicesList = ({
+  data,
+  currency,
+  onModalOpen,
+}: ServicesListProps) => {
   const filteredData = data?.filter(({ endedAt }) => !endedAt);
 
   return (
     <Flex flexDir='column' gap={1}>
       {filteredData?.map((service, i) => (
         <React.Fragment key={`service-item-${service.id}`}>
-          <ServiceItem data={service} onOpen={onModalOpen} />
+          <ServiceItem
+            data={service}
+            onOpen={onModalOpen}
+            currency={currency}
+          />
           {filteredData?.length > 1 && filteredData?.length - 1 !== i && (
             <Divider w='full' orientation='horizontal' />
           )}
