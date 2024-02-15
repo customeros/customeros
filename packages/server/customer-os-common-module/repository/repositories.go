@@ -21,6 +21,7 @@ type Repositories struct {
 	StateRepository                 neo4jrepo.StateRepository
 	TenantApiKeyRepository          repository.TenantApiKeyRepository
 	TenantWebhookRepository         repository.TenantWebhookRepository
+	SlackChannelRepository          repository.SlackChannelRepository
 }
 
 func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositories {
@@ -35,6 +36,7 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 		StateRepository:                 neo4jrepo.NewStateRepository(driver),
 		TenantApiKeyRepository:          repository.NewTenantApiKeyRepo(db),
 		TenantWebhookRepository:         repository.NewTenantWebhookRepo(db),
+		SlackChannelRepository:          repository.NewSlackChannelRepository(db),
 	}
 
 	var err error
@@ -76,6 +78,12 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 	}
 
 	err = db.AutoMigrate(&entity.TenantWebhook{})
+	if err != nil {
+		log.Print(err)
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.SlackChannel{})
 	if err != nil {
 		log.Print(err)
 		panic(err)
