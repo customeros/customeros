@@ -9,15 +9,17 @@ import (
 type Services struct {
 	CommonRepositories *repository.Repositories
 
-	StateService StateService
+	StateService        StateService
+	SlackChannelService SlackChannelService
 }
 
 func InitServices(db *gorm.DB, driver *neo4j.DriverWithContext) *Services {
 	repositories := repository.InitRepositories(db, driver)
 
 	services := &Services{
-		CommonRepositories: repositories,
-		StateService:       NewStateService(repositories),
+		CommonRepositories:  repositories,
+		StateService:        NewStateService(repositories),
+		SlackChannelService: NewSlackChannelService(repositories),
 	}
 
 	return services
