@@ -120,12 +120,13 @@ export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
         <Button
           fontSize='sm'
           size='sm'
-          isLoading={createContract.status === 'pending'}
-          loadingText='Creating contract...'
+          isLoading={createContract.isPending}
+          isDisabled={createContract.isPending}
           colorScheme='primary'
           mt={6}
           variant='outline'
           width='fit-content'
+          loadingText='Creating contract...'
           onClick={() =>
             createContract.mutate({
               input: {

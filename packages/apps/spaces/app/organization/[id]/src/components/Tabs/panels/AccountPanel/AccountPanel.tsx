@@ -3,19 +3,33 @@
 import React, { FC, PropsWithChildren } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
-import { Box } from '@ui/layout/Box';
+import { produce } from 'immer';
+import { useSession } from 'next-auth/react';
+import { useQueryClient } from '@tanstack/react-query';
+
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
-import { Select } from '@ui/form/SyncSelect';
-import { Organization } from '@graphql/types';
+import { Plus } from '@ui/media/icons/Plus';
+import { Spinner } from '@ui/feedback/Spinner';
+import { IconButton } from '@ui/form/IconButton';
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
-import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
+import { toastError, toastSuccess } from '@ui/presentation/Toast';
+import { useCreateContractMutation } from '@organization/src/graphql/createContract.generated';
 import { useGetInvoicesCountQuery } from '@organization/src/graphql/getInvoicesCount.generated';
-import { contractButtonSelect } from '@organization/src/components/Tabs/shared/contractSelectStyles';
 import { Contracts } from '@organization/src/components/Tabs/panels/AccountPanel/Contracts/Contracts';
+import {
+  GetContractsQuery,
+  useGetContractsQuery,
+} from '@organization/src/graphql/getContracts.generated';
+import {
+  User,
+  DataSource,
+  Organization,
+  ContractStatus,
+  ContractRenewalCycle,
+} from '@graphql/types';
 
 import { Notes } from './Notes';
 import { EmptyContracts } from './EmptyContracts';
@@ -28,8 +42,12 @@ import {
 
 const AccountPanelComponent = () => {
   const client = getGraphQLClient();
+  const queryClient = useQueryClient();
+  const { data: session } = useSession();
+
   const id = useParams()?.id as string;
   const router = useRouter();
+  const queryKey = useGetContractsQuery.getKey({ id });
 
   const { isModalOpen } = useAccountPanelStateContext();
   const { data, isLoading } = useGetContractsQuery(client, {
@@ -39,6 +57,59 @@ const AccountPanelComponent = () => {
     useGetInvoicesCountQuery(client, {
       organizationId: id,
     });
+  const createContract = useCreateContractMutation(client, {
+    onMutate: () => {
+      const contract = {
+        appSource: DataSource.Openline,
+        contractUrl: '',
+        createdAt: new Date().toISOString(),
+        createdBy: [session?.user] as unknown as User,
+        externalLinks: [],
+        renewalCycle: ContractRenewalCycle.None,
+        id: `created-contract-${Math.random().toString()}`,
+        name: `${
+          data?.organization?.name?.length
+            ? `${data?.organization?.name}'s`
+            : "Unnamed's"
+        } contract`,
+        owner: null,
+        source: DataSource.Openline,
+        sourceOfTruth: DataSource.Openline,
+        status: ContractStatus.Draft,
+        updatedAt: new Date().toISOString(),
+        serviceLineItems: [],
+      };
+      queryClient.cancelQueries({ queryKey });
+      queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
+        return produce(currentCache, (draft) => {
+          if (draft?.['organization']?.['contracts']) {
+            draft['organization']['contracts'] = [contract];
+          }
+        });
+      });
+      const previousEntries =
+        queryClient.getQueryData<GetContractsQuery>(queryKey);
+
+      return { previousEntries };
+    },
+
+    onSuccess: (_, variables) => {
+      toastSuccess(
+        'Contract created',
+        `${variables?.input?.organizationId}-contract-created`,
+      );
+    },
+    onError: (_, __, context) => {
+      queryClient.setQueryData(queryKey, context?.previousEntries);
+      toastError(
+        'Failed to create contract',
+        'create-new-contract-for-organization-error',
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
 
   if (isLoading) {
     return <AccountPanelSkeleton />;
@@ -90,86 +161,27 @@ const AccountPanelComponent = () => {
           </Button>
         }
         actionItem={
-          <Box display='none'>
-            <Select
-              isSearchable={false}
-              isClearable={false}
-              isMulti={false}
-              value={{
-                label: 'Customer',
-                value: 'customer',
-              }}
-              options={[
-                {
-                  label: 'Customer',
-                  value: 'customer',
+          <IconButton
+            color='gray.500'
+            variant='ghost'
+            isLoading={createContract.isPending}
+            isDisabled={createContract.isPending}
+            icon={createContract.isPending ? <Spinner /> : <Plus />}
+            size='xs'
+            aria-label='Create new contract'
+            onClick={() =>
+              createContract.mutate({
+                input: {
+                  organizationId: id,
+                  name: `${
+                    data?.organization?.name?.length
+                      ? `${data?.organization?.name}'s`
+                      : "Unnamed's"
+                  } contract`,
                 },
-                {
-                  label: 'Prospect',
-                  value: 'prospect',
-                },
-              ]}
-              chakraStyles={{
-                ...contractButtonSelect,
-                container: (props, state) => {
-                  const isCustomer = state.getValue()[0]?.value === 'customer';
-
-                  return {
-                    ...props,
-                    px: 2,
-                    pointerEvents: 'none',
-                    py: '1px',
-                    border: '1px solid',
-                    borderColor: isCustomer ? 'success.200' : 'gray.300',
-                    backgroundColor: isCustomer ? 'success.50' : 'transparent',
-                    color: isCustomer ? 'success.700' : 'gray.500',
-
-                    borderRadius: '2xl',
-                    fontSize: 'xs',
-                    maxHeight: '22px',
-
-                    '& > div': {
-                      p: 0,
-                      border: 'none',
-                      fontSize: 'xs',
-                      maxHeight: '22px',
-                      minH: 'auto',
-                    },
-                  };
-                },
-                valueContainer: (props, state) => {
-                  const isCustomer = state.getValue()[0]?.value === 'customer';
-
-                  return {
-                    ...props,
-                    p: 0,
-                    border: 'none',
-                    fontSize: 'xs',
-                    maxHeight: '22px',
-                    minH: 'auto',
-                    color: isCustomer ? 'success.700' : 'gray.500',
-                  };
-                },
-                singleValue: (props) => {
-                  return {
-                    ...props,
-                    maxHeight: '22px',
-                    p: 0,
-                    minH: 'auto',
-                    color: 'inherit',
-                  };
-                },
-                menuList: (props) => {
-                  return {
-                    ...props,
-                    w: 'fit-content',
-                    left: '-32px',
-                  };
-                },
-              }}
-              leftElement={<ActivityHeart color='success.500' mr='1' />}
-            />
-          </Box>
+              })
+            }
+          />
         }
         shouldBlockPanelScroll={isModalOpen}
       >
