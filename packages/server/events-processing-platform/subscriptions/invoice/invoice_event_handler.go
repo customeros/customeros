@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"sort"
@@ -182,7 +183,7 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 			vat += calculatedSLIVat
 			invoiceLine := invoicepb.InvoiceLine{
 				Name:                    sliEntity.Name,
-				Price:                   sliEntity.Price,
+				Price:                   calculatePriceForBilledType(sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycle),
 				Quantity:                sliEntity.Quantity,
 				Amount:                  calculatedSLIAmount,
 				Total:                   calculatedSLIAmount + calculatedSLIVat,
@@ -350,7 +351,7 @@ func (h *InvoiceEventHandler) fillOffCyclePrepaidInvoice(ctx context.Context, te
 		vat += calculatedSLIVat
 		invoiceLine := invoicepb.InvoiceLine{
 			Name:                    sliToInvoice.Name,
-			Price:                   sliToInvoice.Price,
+			Price:                   sliToInvoice.Price, //TODO IMPORTANT - check if price should be calculated for billed type
 			Quantity:                sliToInvoice.Quantity,
 			Amount:                  finalSLIAmount,
 			Total:                   finalSLIAmount + calculatedSLIVat,
@@ -407,41 +408,47 @@ func isMonthlyAnniversary(date time.Time) bool {
 	return false
 }
 
+func calculatePriceForBilledType(price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
+	switch cycle {
+	case neo4jenum.BillingCycleMonthlyBilling:
+		switch billed {
+		case neo4jenum.BilledTypeMonthly:
+			return price
+		case neo4jenum.BilledTypeQuarterly:
+			return price / 3
+		case neo4jenum.BilledTypeAnnually:
+			return price / 12
+		}
+	case neo4jenum.BillingCycleQuarterlyBilling:
+		switch billed {
+		case neo4jenum.BilledTypeMonthly:
+			return price * 3
+		case neo4jenum.BilledTypeQuarterly:
+			return price
+		case neo4jenum.BilledTypeAnnually:
+			return price / 4
+		}
+	case neo4jenum.BillingCycleAnnuallyBilling:
+		switch billed {
+		case neo4jenum.BilledTypeMonthly:
+			return price * 12
+		case neo4jenum.BilledTypeQuarterly:
+			return price * 4
+		case neo4jenum.BilledTypeAnnually:
+			return price
+		}
+	}
+
+	return 0
+}
+
 func calculateSLIAmountForCycleInvoicing(quantity int64, price float64, billed neo4jenum.BilledType, cycle neo4jenum.BillingCycle) float64 {
 	sliAmount := float64(quantity) * price
 	if sliAmount == 0 {
 		return sliAmount
 	}
-	switch cycle {
-	case neo4jenum.BillingCycleMonthlyBilling:
-		switch billed {
-		case neo4jenum.BilledTypeMonthly:
-			return sliAmount
-		case neo4jenum.BilledTypeQuarterly:
-			return sliAmount / 3
-		case neo4jenum.BilledTypeAnnually:
-			return sliAmount / 12
-		}
-	case neo4jenum.BillingCycleQuarterlyBilling:
-		switch billed {
-		case neo4jenum.BilledTypeMonthly:
-			return sliAmount * 3
-		case neo4jenum.BilledTypeQuarterly:
-			return sliAmount
-		case neo4jenum.BilledTypeAnnually:
-			return sliAmount / 4
-		}
-	case neo4jenum.BillingCycleAnnuallyBilling:
-		switch billed {
-		case neo4jenum.BilledTypeMonthly:
-			return sliAmount * 12
-		case neo4jenum.BilledTypeQuarterly:
-			return sliAmount * 4
-		case neo4jenum.BilledTypeAnnually:
-			return sliAmount
-		}
-	}
-	return float64(0)
+
+	return calculatePriceForBilledType(sliAmount, billed, cycle)
 }
 
 func prorateAnnualSLIAmount(startDate, endDate time.Time, amount float64) float64 {
@@ -904,10 +911,10 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	// Save the PDF file to disk
-	//err = ioutil.WriteFile("output.pdf", *pdfBytes, 0644)
-	//if err != nil {
-	//	return errors.Wrap(err, "ioutil.WriteFile")
-	//}
+	err = ioutil.WriteFile("output.pdf", *pdfBytes, 0644)
+	if err != nil {
+		return errors.Wrap(err, "ioutil.WriteFile")
+	}
 
 	basePath := fmt.Sprintf("/INVOICE/%d/%s", invoiceEntity.CreatedAt.Year(), invoiceEntity.CreatedAt.Format("01"))
 
