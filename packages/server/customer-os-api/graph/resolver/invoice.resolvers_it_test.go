@@ -164,11 +164,11 @@ func TestInvoiceResolver_Invoices(t *testing.T) {
 	require.Equal(t, int64(2), invoiceStruct.Invoices.TotalElements)
 	require.Equal(t, 2, len(invoiceStruct.Invoices.Content))
 
-	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].ID)
-	require.Equal(t, "1", invoiceStruct.Invoices.Content[0].Number)
-	require.Equal(t, "SLI 1", invoiceStruct.Invoices.Content[0].InvoiceLines[0].Description)
-	require.Equal(t, "11", invoiceStruct.Invoices.Content[1].Number)
-	require.Equal(t, "SLI 3", invoiceStruct.Invoices.Content[1].InvoiceLines[0].Description)
+	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
+	require.Equal(t, "1", invoiceStruct.Invoices.Content[0].InvoiceNumber)
+	require.Equal(t, "SLI 1", invoiceStruct.Invoices.Content[0].InvoiceLineItems[0].Description)
+	require.Equal(t, "11", invoiceStruct.Invoices.Content[1].InvoiceNumber)
+	require.Equal(t, "SLI 3", invoiceStruct.Invoices.Content[1].InvoiceLineItems[0].Description)
 }
 
 func TestInvoiceResolver_SimulateInvoice(t *testing.T) {
