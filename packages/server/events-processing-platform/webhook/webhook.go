@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 )
 
-func DispatchWebhook(tenant string, event WebhookEvent, payload interface{}, db *repository.Repositories) error {
+func DispatchWebhook(tenant string, event WebhookEvent, payload *InvoicePayload, db *repository.Repositories) error {
 	// fetch webhook data from db
 	webhookResult := db.CommonRepositories.TenantWebhookRepository.GetWebhook(tenant, event.String())
 	if webhookResult.Error != nil {
@@ -25,13 +25,7 @@ func DispatchWebhook(tenant string, event WebhookEvent, payload interface{}, db 
 
 	wh := mapResultToWebhook(webhookResult)
 
-	// create request body
-	requestBody := map[string]interface{}{
-		"tenant": tenant,
-		"event":  event,
-		"data":   payload, // TODO: build data based off documentation
-	}
-	requestBodyJSON, err := json.Marshal(requestBody)
+	requestBodyJSON, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("(webhook.DispatchWebhook) error marshalling request body: %v", err)
 	}
