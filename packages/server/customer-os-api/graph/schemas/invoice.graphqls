@@ -6,6 +6,7 @@ extend type Query {
 extend type Mutation {
     invoice_NextDryRunForContract(contractId: ID!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     invoice_Simulate(input: InvoiceSimulateInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    invoice_Update(input: InvoiceUpdateInput!): Invoice!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type InvoicesPage implements Pages {
@@ -106,12 +107,19 @@ input InvoiceSimulateInput {
     periodEndDate:      Time
     invoiceLines:       [InvoiceLineInput!]!
 }
+
 input InvoiceLineInput {
     serviceLineItemId:  ID
     name:               String!
     billed:             BilledType!
     price:              Float!
     quantity:           Int!
+}
+
+input InvoiceUpdateInput {
+    id:       ID!
+    status:   InvoiceStatus
+    patch:    Boolean!
 }
 
 enum InvoiceStatus {

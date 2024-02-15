@@ -1,0 +1,13 @@
+mutation UpdateInvoice($invoiceId: ID!) {
+invoice_Update(
+    input: {
+        patch: true
+        id: $invoiceId
+        status: PAID
+    }
+  ) {
+    metadata {
+        id
+    }
+  }
+}

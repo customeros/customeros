@@ -110,6 +110,33 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 	return invoiceId, nil
 }
 
+// InvoiceUpdate is the resolver for the invoice_Update field.
+func (r *mutationResolver) InvoiceUpdate(ctx context.Context, input model.InvoiceUpdateInput) (*model.Invoice, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InvoiceUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.id", input.ID))
+
+	err := r.Services.InvoiceService.UpdateInvoice(ctx, input)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update invoice %s", input.ID)
+		return &model.Invoice{Metadata: &model.Metadata{
+			ID: input.ID,
+		}}, nil
+	}
+	invoiceEntity, err := r.Services.InvoiceService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", input.ID)
+		return &model.Invoice{Metadata: &model.Metadata{
+			ID: input.ID,
+		}}, nil
+	}
+
+	return mapper.MapEntityToInvoice(invoiceEntity), nil
+}
+
 // Invoice is the resolver for the invoice field.
 func (r *queryResolver) Invoice(ctx context.Context, id string) (*model.Invoice, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.Invoice", graphql.GetOperationContext(ctx))
