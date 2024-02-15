@@ -1,9 +1,12 @@
 package mapper
 
 import (
+	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 )
 
 func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
@@ -11,24 +14,27 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 		return nil
 	}
 	invoice := model.Invoice{
-		ID:                            entity.Id,
-		CreatedAt:                     entity.CreatedAt,
-		UpdatedAt:                     entity.UpdatedAt,
-		Source:                        MapDataSourceToModel(entity.Source),
-		SourceOfTruth:                 MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:                     entity.AppSource,
+		Metadata: &model.Metadata{
+			ID:            entity.Id,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        MapDataSourceToModel(entity.Source),
+			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+			AppSource:     entity.AppSource,
+		},
 		DryRun:                        entity.DryRun,
-		Number:                        entity.Number,
-		PeriodStartDate:               entity.PeriodStartDate,
-		PeriodEndDate:                 entity.PeriodEndDate,
-		DueDate:                       entity.DueDate,
-		Amount:                        entity.Amount,
-		Vat:                           entity.Vat,
 		Postpaid:                      entity.Postpaid,
 		OffCycle:                      entity.OffCycle,
-		TotalAmount:                   entity.TotalAmount,
+		InvoiceNumber:                 entity.Number,
+		InvoicePeriodStart:            entity.PeriodStartDate,
+		InvoicePeriodEnd:              entity.PeriodEndDate,
+		Due:                           entity.DueDate,
+		AmountDue:                     entity.TotalAmount,
+		TaxDue:                        entity.Vat,
+		Subtotal:                      entity.Amount,
 		Currency:                      entity.Currency.String(),
 		RepositoryFileID:              entity.RepositoryFileId,
+		InvoiceURL:                    fmt.Sprintf("%s/%s", constants.UrlInvoices, entity.Id),
 		Status:                        utils.ToPtr(MapInvoiceStatusToModel(entity.Status)),
 		Note:                          utils.StringPtrNillable(entity.Note),
 		DomesticPaymentsBankInfo:      utils.StringPtrNillable(entity.DomesticPaymentsBankInfo),
@@ -51,6 +57,29 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 			AddressLocality: utils.StringPtrNillable(entity.Provider.Locality),
 			AddressCountry:  utils.StringPtrNillable(entity.Provider.Country),
 		},
+		// Deprecated all below
+		ID:              entity.Id,
+		CreatedAt:       entity.CreatedAt,
+		UpdatedAt:       entity.UpdatedAt,
+		Source:          MapDataSourceToModel(entity.Source),
+		SourceOfTruth:   MapDataSourceToModel(entity.SourceOfTruth),
+		AppSource:       entity.AppSource,
+		Number:          entity.Number,
+		PeriodStartDate: entity.PeriodStartDate,
+		PeriodEndDate:   entity.PeriodEndDate,
+		DueDate:         entity.DueDate,
+		Amount:          entity.Amount,
+		Vat:             entity.Vat,
+		TotalAmount:     entity.TotalAmount,
+	}
+	if entity.Status == neo4jenum.InvoiceStatusPaid {
+		invoice.Paid = true
+		invoice.AmountRemaining = float64(0)
+		invoice.AmountPaid = entity.TotalAmount
+	} else {
+		invoice.Paid = false
+		invoice.AmountRemaining = entity.TotalAmount
+		invoice.AmountPaid = float64(0)
 	}
 	return &invoice
 }

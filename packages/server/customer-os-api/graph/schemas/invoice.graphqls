@@ -16,33 +16,45 @@ type InvoicesPage implements Pages {
 
 type Invoice implements MetadataInterface {
     metadata:           Metadata!
-    id:                 ID! @deprecated(reason: "Use metadata instead.")
-    createdAt:          Time! @deprecated(reason: "Use metadata instead.")
-    updatedAt:          Time! @deprecated(reason: "Use metadata instead.")
-    source:             DataSource! @deprecated(reason: "Use metadata instead.")
-    sourceOfTruth:      DataSource! @deprecated(reason: "Use metadata instead.")
-    appSource:          String! @deprecated(reason: "Use metadata instead.")
-
     organization:       Organization! @goField(forceResolver: true)
     dryRun:             Boolean!
     postpaid:           Boolean!
     offCycle:           Boolean!
-    number:             String!
-    periodStartDate:    Time!
-    periodEndDate:      Time!
-    dueDate:            Time!
-    amount:             Float!
-    vat:                Float!
-    totalAmount:        Float!
+    amountDue:          Float!
+    amountPaid:         Float!
+    amountRemaining:    Float!
+    invoiceNumber:      String!
+    invoicePeriodStart: Time!
+    invoicePeriodEnd:   Time!
+    invoiceUrl:         String!
+    due:                Time!
     currency:           String!
     repositoryFileId:   String!
-    invoiceLines:       [InvoiceLine!]! @goField(forceResolver: true)
+    invoiceLineItems:   [InvoiceLine!]! @goField(forceResolver: true)
     status:             InvoiceStatus
     note:               String
     domesticPaymentsBankInfo:       String
     internationalPaymentsBankInfo:  String
     customer:                   InvoiceCustomer!
     provider:                   InvoiceProvider!
+    paid:                       Boolean!
+    subtotal:                   Float!
+    taxDue:                     Float!
+
+    id:                 ID! @deprecated(reason: "Use metadata instead.")
+    createdAt:          Time! @deprecated(reason: "Use metadata instead.")
+    updatedAt:          Time! @deprecated(reason: "Use metadata instead.")
+    source:             DataSource! @deprecated(reason: "Use metadata instead.")
+    sourceOfTruth:      DataSource! @deprecated(reason: "Use metadata instead.")
+    appSource:          String! @deprecated(reason: "Use metadata instead.")
+    invoiceLines:       [InvoiceLine!]! @goField(forceResolver: true) @deprecated(reason: "Use invoiceLineItems instead.")
+    number:             String! @deprecated(reason: "Use invoiceNumber instead.")
+    dueDate:            Time! @deprecated(reason: "Use due instead.")
+    periodStartDate:    Time! @deprecated(reason: "Use invoicePeriodStart instead.")
+    periodEndDate:      Time! @deprecated(reason: "Use invoicePeriodEnd instead.")
+    amount:             Float! @deprecated(reason: "Use subtotal instead.")
+    totalAmount:        Float! @deprecated(reason: "Use amountDue instead.")
+    vat:                Float! @deprecated(reason: "Use taxDue instead.")
 }
 
 type InvoiceCustomer {
@@ -71,8 +83,8 @@ type InvoiceLine implements MetadataInterface {
     price:              Float!
     quantity:           Int!
     subtotal:           Float!
-    total:              Float!
     taxDue:             Float!
+    total:              Float!
 
     id:                 ID! @deprecated(reason: "Use metadata instead.")
     createdAt:          Time! @deprecated(reason: "Use metadata instead.")
