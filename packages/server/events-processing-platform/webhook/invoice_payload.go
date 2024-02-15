@@ -1,7 +1,12 @@
 package webhook
 
 import (
+	"fmt"
+	"time"
+
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 )
 
 type InvoiceLineItem struct {
@@ -12,20 +17,20 @@ type InvoiceLineItem struct {
 // source: https://docs.customeros.ai/en/api/invoice-events#example-event
 type InvoicePayload struct {
 	Data struct {
-		AmountDue          float64 `json:"amountDue"`
-		AmountPaid         float64 `json:"amountPaid"`
-		AmountRemaining    float64 `json:"amountRemaining"`
-		Currency           string  `json:"currency"`
-		Due                string  `json:"due"`
-		InvoiceNumber      string  `json:"invoiceNumber"`
-		InvoicePeriodEnd   string  `json:"invoicePeriodEnd"`
-		InvoicePeriodStart string  `json:"invoicePeriodStart"`
-		InvoiceUrl         string  `json:"invoiceUrl"`
-		Note               string  `json:"note"`
-		Paid               bool    `json:"paid"`
-		Status             string  `json:"status"`
-		Subtotal           float64 `json:"subtotal"`
-		TaxDue             float64 `json:"taxDue"`
+		AmountDue          float64   `json:"amountDue"`
+		AmountPaid         float64   `json:"amountPaid"`
+		AmountRemaining    float64   `json:"amountRemaining"`
+		Currency           string    `json:"currency"`
+		Due                time.Time `json:"due"`
+		InvoiceNumber      string    `json:"invoiceNumber"`
+		InvoicePeriodEnd   time.Time `json:"invoicePeriodEnd"`
+		InvoicePeriodStart time.Time `json:"invoicePeriodStart"`
+		InvoiceUrl         string    `json:"invoiceUrl"`
+		Note               string    `json:"note"`
+		Paid               bool      `json:"paid"`
+		Status             string    `json:"status"`
+		Subtotal           float64   `json:"subtotal"`
+		TaxDue             float64   `json:"taxDue"`
 		Contract           struct {
 			ContractName   string `json:"contractName"`
 			ContractStatus string `json:"contractStatus"`
@@ -40,8 +45,8 @@ type InvoicePayload struct {
 			} `json:"metadata"`
 		} `json:"invoiceLineItems"`
 		Metadata struct {
-			Created string `json:"created"`
-			ID      string `json:"id"`
+			Created time.Time `json:"created"`
+			ID      string    `json:"id"`
 		} `json:"metadata"`
 		Organization struct {
 			CustomerOsID string `json:"customerOsId"`
@@ -54,40 +59,50 @@ type InvoicePayload struct {
 	Event string `json:"event"`
 }
 
-func PopulateInvoiceFinalizedPayload(invoice *neo4jentity.InvoiceEntity, org *neo4jentity.OrganizationEntity, contract *neo4jentity.ContractEntity, slis []*neo4jentity.ServiceLineItemEntity) *InvoicePayload {
-	if invoice == nil || org == nil || contract == nil {
+func PopulateInvoiceFinalizedPayload(invoice *neo4jentity.InvoiceEntity, org *neo4jentity.OrganizationEntity, contract *neo4jentity.ContractEntity, ils []*neo4jentity.InvoiceLineEntity) *InvoicePayload {
+	if invoice == nil || org == nil || contract == nil || ils == nil {
 		return nil
 	}
 
 	invoiceLineItems := make([]InvoiceLineItem, 0)
 
-	for _, sli := range slis {
+	for _, il := range ils {
 		invoiceLineItems = append(invoiceLineItems, InvoiceLineItem{
-			Description: sli.Name,
-			MetadataID:  sli.ID,
+			Description: il.Name,
+			MetadataID:  il.Id,
 		})
 	}
 
+	paid := false
+	amountRemaining := invoice.TotalAmount
+	amountPaid := float64(0)
+
+	if invoice.Status == neo4jenum.InvoiceStatusPaid {
+		paid = true
+		amountRemaining = float64(0)
+		amountPaid = invoice.TotalAmount
+	}
+
 	payload := createInvoicePayload(
-		invoice.Amount,
-		invoice.Amount,
-		0,
+		invoice.TotalAmount,
+		amountPaid,
+		amountRemaining,
 		invoice.Currency.String(),
-		invoice.DueDate.String(),
+		invoice.DueDate,
 		invoice.Number,
-		invoice.PeriodEndDate.String(),
-		invoice.PeriodStartDate.String(),
-		"", // FIXME: Where does invoiceUrl come from?
+		invoice.PeriodEndDate,
+		invoice.PeriodStartDate,
+		fmt.Sprintf("%s/%s", constants.UrlInvoices, invoice.Id),
 		invoice.Note,
-		true, // FIXME: Where does paid come from?
+		paid,
 		invoice.Status.String(),
 		invoice.Amount,
 		invoice.Vat,
 		contract.Name,
 		contract.ContractStatus.String(),
 		contract.Id,
-		"", // FIXME: Where does metadataCreated come from?
-		"", // FIXME: Where does metadataID come from?
+		invoice.CreatedAt,
+		invoice.Id,
 		org.CustomerOsId,
 		org.ID,
 		org.Name,
@@ -102,11 +117,11 @@ func createInvoicePayload(
 	amountDue,
 	amountPaid,
 	amountRemaining float64,
-	currency,
-	due,
-	invoiceNumber,
+	currency string,
+	due time.Time,
+	invoiceNumber string,
 	invoicePeriodEnd,
-	invoicePeriodStart,
+	invoicePeriodStart time.Time,
 	invoiceUrl,
 	note string,
 	paid bool,
@@ -115,8 +130,8 @@ func createInvoicePayload(
 	taxDue float64,
 	contractName,
 	contractStatus,
-	contractMetadataID,
-	metadataCreated,
+	contractMetadataID string,
+	metadataCreated time.Time,
 	metadataID,
 	organizationCustomerOsID,
 	organizationMetadataID,

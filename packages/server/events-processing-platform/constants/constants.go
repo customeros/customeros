@@ -78,4 +78,7 @@ const (
 	StreamMetadataMaxCount              = 1000
 	StreamMetadataMaxAgeSeconds         = 7 * 24 * 60 * 60  // 7 days
 	StreamMetadataMaxAgeSecondsExtended = 30 * 24 * 60 * 60 // 30 days
+
+	UrlCustomerOsApi = "https://customeros.ai"
+	UrlInvoices      = UrlCustomerOsApi + "/invoices"
 )

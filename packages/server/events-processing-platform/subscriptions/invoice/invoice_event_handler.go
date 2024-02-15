@@ -753,23 +753,21 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 		}
 	}
 
-	// get service line items linked to invoice to build payload for webhook
-	sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetAllForContract(ctx, tenant, contractEntity.Id)
+	// get invoice line items linked to invoice to build payload for webhook
+	invoiceLineDbNodes, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetAllForInvoice(ctx, tenant, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error getting service line items for invoice %s: %s", invoice.Id, err.Error())
+		h.log.Errorf("Error getting invoice line items for invoice %s: %s", invoice.Id, err.Error())
 		return err
 	}
 
-	var sliEntities = []*neo4jentity.ServiceLineItemEntity{}
-	for _, sliDbNode := range sliDbNodes {
-		sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
-		if sliEntity != nil {
-			sliEntities = append(sliEntities, sliEntity)
-		}
+	ilEntities := []*neo4jentity.InvoiceLineEntity{}
+	for _, ilDbNode := range invoiceLineDbNodes {
+		ilEntity := neo4jmapper.MapDbNodeToInvoiceLineEntity(ilDbNode)
+		ilEntities = append(ilEntities, ilEntity)
 	}
 
-	webhookPayload := webhook.PopulateInvoiceFinalizedPayload(&invoice, &organizationEntity, &contractEntity, sliEntities)
+	webhookPayload := webhook.PopulateInvoiceFinalizedPayload(&invoice, &organizationEntity, &contractEntity, ilEntities)
 
 	// dispatch the event
 	err = webhook.DispatchWebhook(tenant, webhook.WebhookEventInvoiceFinalized, webhookPayload, h.repositories)
