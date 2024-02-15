@@ -19,6 +19,6 @@ func (TenantWebhook) TableName() string {
 
 func (TenantWebhook) UniqueIndex() [][]string {
 	return [][]string{
-		{"TenantName", "WebhookUrl", "Event"},
+		{"TenantName", "Event"},
 	}
 }
