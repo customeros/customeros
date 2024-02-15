@@ -740,7 +740,7 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 	// }
 
 	// dispatch the event
-	err := webhook.DispatchWebhook(tenant, "invoiceFinalized", nil, h.repositories)
+	err := webhook.DispatchWebhook(tenant, webhook.WebhookEventInvoiceFinalized, nil, h.repositories)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoice.Id, err.Error())

@@ -11,9 +11,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 )
 
-func DispatchWebhook(tenant, event string, payload interface{}, db *repository.Repositories) error {
+func DispatchWebhook(tenant string, event WebhookEvent, payload interface{}, db *repository.Repositories) error {
 	// fetch webhook data from db
-	webhookResult := db.CommonRepositories.TenantWebhookRepository.GetWebhook(tenant, event)
+	webhookResult := db.CommonRepositories.TenantWebhookRepository.GetWebhook(tenant, event.String())
 	if webhookResult.Error != nil {
 		return fmt.Errorf("error fetching webhook data: %v", webhookResult.Error)
 	}
