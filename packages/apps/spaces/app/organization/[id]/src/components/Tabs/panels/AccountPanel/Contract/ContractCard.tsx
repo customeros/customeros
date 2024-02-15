@@ -510,6 +510,7 @@ export const ContractCard = ({
           onClose={onClose}
           organizationName={organizationName}
           data={billingDetailsData?.contract}
+          notes={data?.invoiceNote}
         />
 
         <ServiceLineItemsModal

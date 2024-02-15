@@ -38,6 +38,7 @@ interface SubscriptionServiceModalProps {
   isOpen: boolean;
   contractId: string;
   onClose: () => void;
+  notes?: string | null;
   organizationName: string;
   data?: GetContractQuery['contract'] | null;
 }
@@ -49,6 +50,7 @@ export const ContractBillingDetailsModal = ({
   contractId,
   organizationName,
   data,
+  notes,
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
   const formId = `billing-details-form-${contractId}`;
@@ -177,7 +179,6 @@ export const ContractBillingDetailsModal = ({
         },
       ],
       tax: 0,
-      note: '',
       total: 100,
       dueDate: new Date().toISOString(),
       subtotal: 100,
@@ -289,6 +290,7 @@ export const ContractBillingDetailsModal = ({
                 isBilledToFocused={
                   isBillingDetailsFocused || isBillingDetailsHovered
                 }
+                note={notes}
                 currency={state?.values?.currency?.value}
                 billedTo={{
                   addressLine1: state.values.addressLine1 ?? '',
