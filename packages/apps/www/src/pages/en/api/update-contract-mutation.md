@@ -1,35 +1,24 @@
 ---
 title: Update Contract Mutation
-description: Update contract mutation
+description: Update contractLineItem mutation
 layout: ../../../layouts/docs.astro
 lang: en
 ---
 
-## UpdateContractLineItems mutation request
+## UpdateContract mutation request
 
 ```curl
 curl -X POST \
   -H "Content-Type: application/json" \
   -H "X-CUSTOMER-OS-API-KEY: <MY_API_KEY_HERE>" \
   -d '{
-    "query": "mutation UpdateContractLineItems { 
+    "query": "mutation UpdateContract { 
       contract_Update(input: { 
         id: \"96d699a8-b986-4dae-9f10-a23196f30c90\", 
-        contractLineItems: [{ 
-            metadata: { 
-                id: \"96d699a8-b986-4dae-9f10-a23196f30c90\" 
-            }, 
-            price: 10.00, 
-            quantity: 100 
-        }],
+        currency: "gbp",
         patch: true 
       }) { 
         id
-        contractLineItems: {
-            metadata: {
-                id
-            }
-        } 
       } 
     }"
   }' 
@@ -41,18 +30,13 @@ The contract mutation request requires that you pass the contract `id` as a quer
 
 In order to update only the fields specified in the request, you must pass `patch: true` as part of the query parameters.  If you do not, you must pass the full object in the request.
 
-As this is a graphQL request, you are able to specify the exact payload you would like returned in the response.  In the example above, we've specified that `id`, and a subset of `contractLineItems` are returned, but you can choose from any of the response parameters defined in the [contract object](objects/contract)
+As this is a graphQL request, you are able to specify the exact payload you would like returned in the response.  In the example above, we've specified that `id`, and `currency` are returned, but you can choose from any of the response parameters defined in the [contract object](objects/contract)
 
-## Invoice mutation response
+## UpdateContract mutation response
 ```json
 "data": {
     "contract_Update": {
         "id": "96d699a8-b986-4dae-9f10-a23196f30c90",
-        "contractLineItems": {
-            "metadata": {
-                "id": "96d699a8-b986-4dae-9f10-a23196f30c90"
-            }
-        }
     }
 }
 ```
