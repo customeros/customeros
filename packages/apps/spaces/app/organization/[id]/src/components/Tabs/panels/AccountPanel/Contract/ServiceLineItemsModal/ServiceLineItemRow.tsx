@@ -1,7 +1,7 @@
 'use client';
 import React, { useRef, useEffect } from 'react';
 
-import { Currency } from '@settings/components/Tabs/panels/BillingPanel/Currency';
+import { Currency } from '@settings/components/Tabs/panels/BillingPanel/components/Currency';
 
 import { Flex } from '@ui/layout/Flex';
 import { Input } from '@ui/form/Input';
