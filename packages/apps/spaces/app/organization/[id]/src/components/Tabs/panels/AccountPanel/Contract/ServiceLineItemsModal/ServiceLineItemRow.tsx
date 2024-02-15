@@ -39,7 +39,7 @@ export const ServiceLineItemRow = ({
   const nameRef = useRef<HTMLInputElement | null>(null);
 
   const currencySymbol =
-    formatCurrency(0, 0, currency ?? 'USD')?.split('0')[0] ?? '$';
+    formatCurrency(0, 0, currency || 'USD')?.split('0')[0] ?? '$';
   const handleTypeChange = (newValue: string) => {
     if (newValue === 'RECURRING') {
       onChange({

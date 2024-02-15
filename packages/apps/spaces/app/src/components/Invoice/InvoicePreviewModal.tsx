@@ -77,7 +77,7 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
       billedTo={customerAddressData}
       invoiceNumber={data?.invoice?.number ?? ''}
       lines={data?.invoice?.invoiceLines ?? []}
-      currency={data?.invoice?.currency ?? 'USD'}
+      currency={data?.invoice?.currency || 'USD'}
     />
   );
 };

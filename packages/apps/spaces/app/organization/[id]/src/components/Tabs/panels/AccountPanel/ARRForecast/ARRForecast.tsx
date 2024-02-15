@@ -33,17 +33,16 @@ export const ARRForecast = ({
 }: ARRForecastProps) => {
   const isRestoring = useIsRestoring();
   const { modal } = useARRInfoModalContext();
-
   const isUpdatingContract = useIsMutatingContract();
   const formattedMaxAmount = formatCurrency(
     renewalSunnary?.maxArrForecast ?? 0,
     2,
-    currency ?? 'USD',
+    currency || 'USD',
   );
   const formattedAmount = formatCurrency(
     renewalSunnary?.arrForecast ?? 0,
     2,
-    currency ?? 'USD',
+    currency || 'USD',
   );
 
   const hasForecastChanged = formattedMaxAmount !== formattedAmount;

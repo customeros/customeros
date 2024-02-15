@@ -137,12 +137,12 @@ export const RenewalARRCard = ({
   const formattedMaxAmount = formatCurrency(
     opportunity.maxAmount ?? 0,
     2,
-    currency ?? 'USD',
+    currency || 'USD',
   );
   const formattedAmount = formatCurrency(
     hasEnded ? 0 : opportunity.amount,
     2,
-    currency ?? 'USD',
+    currency || 'USD',
   );
 
   const hasRewenewChanged = formattedMaxAmount !== formattedAmount; // should be also less

@@ -72,7 +72,7 @@ const ServiceItem = ({
             {formatCurrency(
               data.price ?? 0,
               allowedFractionDigits,
-              currency ?? 'USD',
+              currency || 'USD',
             )}
             {getBilledTypeLabel(data.billed)}
           </Text>
