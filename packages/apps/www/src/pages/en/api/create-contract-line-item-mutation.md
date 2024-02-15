@@ -15,10 +15,17 @@ curl -X POST \
     "query": "mutation CreateContractLineItem { 
       contractLineItem_Create(input: { 
         contractId: \"96d699a8-b986-4dae-9f10-a23196f30c90\", 
-        name: "My Fantastic Product",
+        description: "My Fantastic Product",
         quantity: 10,
         price: 100.00,
-        billed: "MONTHLY",
+        billingCycle: "MONTHLY",
+        serviceEnded: "2024-01-26T00:00:00Z",
+        serviceStarted: "2024-01-26T00:00:00Z",
+        tax: {
+          vat: true,
+          salesTax: false,
+          taxRate: 0.20
+        }
       }) { 
         id
       } 
