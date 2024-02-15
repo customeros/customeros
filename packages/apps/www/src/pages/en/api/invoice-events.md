@@ -35,8 +35,48 @@ This event occurs when an invoice has been voided and is no longer able to be ac
 
 ```json
 {
-  "event": "invoice.finalized",
   "data": {
-    <invoice object>
+    "amountDue": 0.0,
+    "amountPaid": 0.0,
+    "amountRemaining": 0.0,
+    "contract": {
+      "contractName": "My Contract",
+      "contractStatus": "LIVE",
+      "metadata": {
+        "id": "96d612a8-b086-4dae-9f10-a12796f30c55"
+      }
+    },
+    "currency": "usd",
+    "due": "2024-02-01T19:42:00.656805391Z",
+    "invoiceLineItems": [
+      {
+        "description": "My Amazing Product",
+        "metadata": {
+          "id": "96d612a8-b086-4dae-9f10-a12796f30c55"
+        }
+      }
+    ],
+    "invoiceNumber": "LAM-23423",
+    "invoicePeriodEnd": "2024-01-26T00:00:00Z",
+    "invoicePeriodStart": "2024-01-26T00:00:00Z",
+    "invoiceUrl": "https://customeros.ai/invoices/96d612a8-b086-4dae-9f10-a12796f30c55",
+    "metadata": {
+      "created": "2024-02-01T19:42:00.656805391Z",
+      "id": "96d612a8-b086-4dae-9f10-a12796f30c55"
+    },
+    "note": "",
+    "organization": {
+      "customerOsId": "C-XSC-SDF",
+      "metadata": {
+        "id": "96d612a8-b086-4dae-9f10-a12796f30c55"
+      },
+      "name": "Acme Corp"
+    },
+    "paid": false,
+    "status": "DUE",
+    "subtotal": 0.0,
+    "taxDue": 0.0
+  },
+  "event": "invoice.finalized"
 }
 ```

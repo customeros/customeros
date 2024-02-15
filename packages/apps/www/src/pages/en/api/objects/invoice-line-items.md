@@ -12,7 +12,7 @@ lang: en
   {
     "description": "My Amazing Product",
     "metadata": {
-      "<metadata object>"
+      <metadata object>
     },    
     "price": 0.0,
     "quantity": 0,
