@@ -68,6 +68,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 		timeNow,
 		timeNow,
 		nil,
+		"",
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 
@@ -1087,6 +1088,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 		timeNow,
 		timeNow,
 		nil,
+		"",
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 
@@ -1184,6 +1186,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 		timeNow,
 		timeNow,
 		nil,
+		"",
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 
@@ -1281,6 +1284,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 		timeNow,
 		timeNow,
 		nil,
+		"",
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 
@@ -1377,6 +1381,7 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 		timeNow,
 		timeNow,
 		nil,
+		"",
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 
@@ -1472,6 +1477,7 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 		timeNow,
 		timeNow,
 		nil,
+		"",
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 
@@ -1571,6 +1577,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 		timeNow,
 		timeNow,
 		nil,
+		serviceLineItemParentId,
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 
@@ -1672,6 +1679,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 		timeNow,
 		timeNow,
 		nil,
+		serviceLineItemParentId,
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 
@@ -1771,6 +1779,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 		timeNow,
 		timeNow,
 		nil,
+		serviceLineItemParentId,
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 
@@ -1882,6 +1891,7 @@ func TestServiceLineItemEventHandler_OnUpdateBilledTypeNonRetroactiveForExisting
 		timeNow,
 		timeNow,
 		nil,
+		"",
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 
@@ -1989,6 +1999,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 		timeNow,
 		timeNow,
 		nil,
+		"",
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 

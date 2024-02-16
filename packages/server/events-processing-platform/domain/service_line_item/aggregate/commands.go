@@ -76,6 +76,7 @@ func (a *ServiceLineItemAggregate) createServiceLineItem(ctx context.Context, cm
 		updatedAtNotNil,
 		startedAtNotNil,
 		cmd.EndedAt,
+		cmd.PreviousVersionId,
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)
