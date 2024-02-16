@@ -12,8 +12,8 @@ import { Button } from '@ui/form/Button';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Star06 } from '@ui/media/icons/Star06';
 import { Heading } from '@ui/typography/Heading';
+import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useCreateContractMutation } from '@organization/src/graphql/createContract.generated';
 import {
   User,
@@ -67,13 +67,6 @@ export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
         queryClient.getQueryData<GetContractsQuery>(queryKey);
 
       return { previousEntries };
-    },
-
-    onSuccess: (_, variables) => {
-      toastSuccess(
-        'Contract created',
-        `${variables?.input?.organizationId}-contract-created`,
-      );
     },
     onError: (_, __, context) => {
       queryClient.setQueryData(queryKey, context?.previousEntries);
