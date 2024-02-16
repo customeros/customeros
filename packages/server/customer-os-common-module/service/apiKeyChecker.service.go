@@ -95,7 +95,7 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantApiKeyRepository, appKe
 			c.Next()
 		} else if tenantKh != "" {
 			// Check if the API key matches the cached value
-			if config.cache != nil && config.cache.CheckApiKey(string(app), tenantKh) {
+			if config.cache != nil && config.cache.CheckTenantApiKey(tenantKh) {
 				// Valid API key found in cache
 				span.LogFields(log.Bool("cached", true))
 				if !spanFinished {
@@ -106,7 +106,7 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantApiKeyRepository, appKe
 				return
 			}
 			span.LogFields(log.Bool("cached", false))
-			keyResult := tenantApiKeyRepo.GetApiKey(string(app))
+			keyResult := tenantApiKeyRepo.GetTenantWithApiKey(tenantKh)
 
 			if keyResult.Error != nil {
 				c.JSON(http.StatusUnauthorized, gin.H{
@@ -126,10 +126,15 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo repository.TenantApiKeyRepository, appKe
 				return
 			}
 
-			// If the API key is valid after database check, cache it
 			if config.cache != nil && keyResult.Result != nil {
-				config.cache.SetApiKey(string(app), tenantKh)
+				config.cache.SetTenantApiKey(tenantKh, apiKey.TenantName)
 			}
+
+			//todo check if tenant exists
+
+			//really important
+			//set the tenant name in the header for the next middleware
+			c.Request.Header.Set(TenantHeader, apiKey.TenantName)
 
 			if !spanFinished {
 				spanFinished = true

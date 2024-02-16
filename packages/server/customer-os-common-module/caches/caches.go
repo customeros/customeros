@@ -26,17 +26,19 @@ type UserDetail struct {
 }
 
 type Cache struct {
-	mu              sync.RWMutex
-	apiKeyCache     *freecache.Cache
-	tenantCache     *freecache.Cache
-	userDetailCache *freecache.Cache
+	mu                sync.RWMutex
+	apiKeyCache       *freecache.Cache
+	tenantApiKeyCache *freecache.Cache
+	tenantCache       *freecache.Cache
+	userDetailCache   *freecache.Cache
 }
 
 func NewCommonCache() *Cache {
 	return &Cache{
-		apiKeyCache:     freecache.NewCache(cache100KB),
-		tenantCache:     freecache.NewCache(cache1MB),
-		userDetailCache: freecache.NewCache(cache10MB),
+		apiKeyCache:       freecache.NewCache(cache100KB),
+		tenantApiKeyCache: freecache.NewCache(cache1MB),
+		tenantCache:       freecache.NewCache(cache1MB),
+		userDetailCache:   freecache.NewCache(cache10MB),
 	}
 }
 
@@ -63,6 +65,29 @@ func (c *Cache) CheckApiKey(app, apiKey string) bool {
 	}
 
 	return string(valueBytes) == apiKey // Check if the apiKey matches the one in the cache
+}
+
+func (c *Cache) CheckTenantApiKey(apiKey string) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	keyBytes := []byte(apiKey)
+	valueBytes, err := c.tenantApiKeyCache.Get(keyBytes)
+	if err != nil {
+		return false // Key not found in cache
+	}
+
+	return string(valueBytes) == apiKey
+}
+
+func (c *Cache) SetTenantApiKey(tenant, apiKey string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	keyBytes := []byte(apiKey)
+	valueBytes := []byte(tenant)
+
+	_ = c.tenantApiKeyCache.Set(keyBytes, valueBytes, expire24Hours)
 }
 
 func (c *Cache) AddTenant(tenant string) {
