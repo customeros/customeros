@@ -1999,7 +1999,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceAndBilledTypeNonRetroactiveFor
 		timeNow,
 		timeNow,
 		nil,
-		"",
+		serviceLineItemId1,
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 
