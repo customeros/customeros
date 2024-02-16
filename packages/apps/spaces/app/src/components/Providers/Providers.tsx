@@ -12,6 +12,7 @@ import { AnalyticsProvider } from '@shared/components/Providers/AnalyticsProvide
 
 import { Env, EnvProvider } from './EnvProvider';
 import { NextAuthProvider } from './SessionProvider';
+import { PhoenixSocketProvider } from './SocketProvider';
 import { GrowthbookProvider } from './GrowthbookProvider';
 import { NotificationsProvider } from './NotificationsProvider';
 interface ProvidersProps {
@@ -51,18 +52,20 @@ export const Providers = ({
         client={queryClient}
         persistOptions={{ persister }}
       >
-        <ReactQueryDevtools initialIsOpen={false} position='bottom' />
-        <RecoilRoot>
-          <NextAuthProvider>
-            <GrowthbookProvider>
-              <NotificationsProvider isProduction={isProduction}>
-                <AnalyticsProvider isProduction={isProduction}>
-                  {children}
-                </AnalyticsProvider>
-              </NotificationsProvider>
-            </GrowthbookProvider>
-          </NextAuthProvider>
-        </RecoilRoot>
+        <PhoenixSocketProvider>
+          <ReactQueryDevtools initialIsOpen={false} position='bottom' />
+          <RecoilRoot>
+            <NextAuthProvider>
+              <GrowthbookProvider>
+                <NotificationsProvider isProduction={isProduction}>
+                  <AnalyticsProvider isProduction={isProduction}>
+                    {children}
+                  </AnalyticsProvider>
+                </NotificationsProvider>
+              </GrowthbookProvider>
+            </NextAuthProvider>
+          </RecoilRoot>
+        </PhoenixSocketProvider>
       </PersistQueryClientProvider>
     </EnvProvider>
   );

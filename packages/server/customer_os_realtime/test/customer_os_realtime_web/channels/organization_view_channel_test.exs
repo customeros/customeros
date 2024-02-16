@@ -3,14 +3,12 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
   require Logger
 
   setup do
-    token = Phoenix.Token.sign(@endpoint, "user", "user.id")
-
     {:ok, _, socket} =
       CustomerOsRealtimeWeb.UserSocket
-      # (@max-openline): replace this direct assign to use `payload` during join action
-      |> socket("user_id", %{user_id: "USER.ID", username: "Max Mustermann", typing: true})
-      |> subscribe_and_join(CustomerOsRealtimeWeb.OrganizationChannel, "organization:lobby", %{
-        "user_token" => token
+      |> socket("token", %{token: "123"})
+      |> subscribe_and_join(CustomerOsRealtimeWeb.OrganizationChannel, "organization:123", %{
+        user_id: "USER.ID",
+        username: "Max Mustermann"
       })
 
     %{socket: socket}
@@ -34,7 +32,10 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
 
   test "broadcasting presence", %{socket: socket} do
     {:ok, _, _} =
-      subscribe_and_join(socket, "organization:lobby", %{})
+      subscribe_and_join(socket, "organization:123", %{
+        user_id: "USER.ID",
+        username: "Max Mustermann"
+      })
 
     user_data = %{
       "USER.ID" => %{
@@ -45,7 +46,6 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
             },
             online_at: inspect(System.system_time(:second)),
             username: "Max Mustermann",
-            typing: true,
             phx_ref: "F7I72QkXPlaBcQKF"
           }
         ]
@@ -63,8 +63,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
               },
               phx_ref: "F7I0nelpA_5MCgBk",
               online_at: inspect(System.system_time(:second)),
-              username: "Max Mustermann",
-              typing: true
+              username: "Max Mustermann"
             }
           ]
         }
