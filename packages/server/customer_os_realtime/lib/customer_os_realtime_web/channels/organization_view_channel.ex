@@ -14,8 +14,6 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
         %{"user_id" => user_id, "username" => username},
         socket
       ) do
-    dbg(socket.assigns)
-
     socket =
       socket
       |> assign(:user_id, user_id)
