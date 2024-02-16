@@ -7,6 +7,7 @@ import { produce } from 'immer';
 import { useSession } from 'next-auth/react';
 import { useQueryClient } from '@tanstack/react-query';
 
+import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { Plus } from '@ui/media/icons/Plus';
@@ -19,6 +20,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCreateContractMutation } from '@organization/src/graphql/createContract.generated';
 import { useGetInvoicesCountQuery } from '@organization/src/graphql/getInvoicesCount.generated';
 import { Contracts } from '@organization/src/components/Tabs/panels/AccountPanel/Contracts/Contracts';
+import { RelationshipButton } from '@organization/src/components/Tabs/panels/AccountPanel/RelationshipButton';
 import {
   GetContractsQuery,
   useGetContractsQuery,
@@ -158,27 +160,31 @@ const AccountPanelComponent = () => {
           </Button>
         }
         actionItem={
-          <IconButton
-            color='gray.500'
-            variant='ghost'
-            isLoading={createContract.isPending}
-            isDisabled={createContract.isPending}
-            icon={createContract.isPending ? <Spinner /> : <Plus />}
-            size='xs'
-            aria-label='Create new contract'
-            onClick={() =>
-              createContract.mutate({
-                input: {
-                  organizationId: id,
-                  name: `${
-                    data?.organization?.name?.length
-                      ? `${data?.organization?.name}'s`
-                      : "Unnamed's"
-                  } contract`,
-                },
-              })
-            }
-          />
+          <Flex alignItems='center'>
+            <IconButton
+              color='gray.500'
+              mr={1}
+              variant='ghost'
+              isLoading={createContract.isPending}
+              isDisabled={createContract.isPending}
+              icon={createContract.isPending ? <Spinner /> : <Plus />}
+              size='xs'
+              aria-label='Create new contract'
+              onClick={() =>
+                createContract.mutate({
+                  input: {
+                    organizationId: id,
+                    name: `${
+                      data?.organization?.name?.length
+                        ? `${data?.organization?.name}'s`
+                        : "Unnamed's"
+                    } contract`,
+                  },
+                })
+              }
+            />
+            <RelationshipButton />
+          </Flex>
         }
         shouldBlockPanelScroll={isModalOpen}
       >
