@@ -21,6 +21,34 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
 			AppSource:     entity.AppSource,
 		},
+		BillingDetails: &model.BillingDetails{
+			BillingCycle:          utils.ToPtr(MapContractBillingCycleToModel(entity.BillingCycle)),
+			InvoicingStarted:      entity.InvoicingStartDate,
+			AddressLine1:          utils.ToPtr(entity.AddressLine1),
+			AddressLine2:          utils.ToPtr(entity.AddressLine2),
+			Locality:              utils.ToPtr(entity.Locality),
+			Region:                utils.ToPtr(""), // TODO add regions
+			Country:               utils.ToPtr(entity.Country),
+			PostalCode:            utils.ToPtr(entity.Zip),
+			OrganizationLegalName: utils.ToPtr(entity.OrganizationLegalName),
+			BillingEmail:          utils.ToPtr(entity.InvoiceEmail),
+			InvoiceNote:           utils.ToPtr(entity.InvoiceNote),
+		},
+		CommittedPeriods:     entity.RenewalPeriods,
+		ContractEnded:        entity.EndedAt,
+		ContractName:         entity.Name,
+		ContractRenewalCycle: MapContractRenewalCycleToModel(entity.RenewalCycle),
+		ContractSigned:       entity.SignedAt,
+		ContractURL:          utils.StringPtrNillable(entity.ContractUrl),
+		Currency:             utils.ToPtr(MapCurrencyToModel(entity.Currency)),
+		InvoicingEnabled: entity.OrganizationLegalName != "" &&
+			entity.InvoiceEmail != "" &&
+			entity.InvoicingStartDate != nil &&
+			entity.BillingCycle != neo4jenum.BillingCycleNone, // TODO: replace with individual contract property
+		ServiceStarted: entity.ServiceStartedAt,
+		ContractStatus: MapContractStatusToModel(entity.ContractStatus),
+
+		// All below are deprecated
 		ID:                    entity.Id,
 		Name:                  entity.Name,
 		CreatedAt:             entity.CreatedAt,
@@ -34,9 +62,7 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		ServiceStartedAt:      entity.ServiceStartedAt,
 		SignedAt:              entity.SignedAt,
 		EndedAt:               entity.EndedAt,
-		ContractURL:           utils.StringPtrNillable(entity.ContractUrl),
 		InvoicingStartDate:    entity.InvoicingStartDate,
-		Currency:              utils.ToPtr(MapCurrencyToModel(entity.Currency)),
 		BillingCycle:          utils.ToPtr(MapContractBillingCycleToModel(entity.BillingCycle)),
 		AddressLine1:          utils.ToPtr(entity.AddressLine1),
 		AddressLine2:          utils.ToPtr(entity.AddressLine2),
