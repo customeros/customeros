@@ -1,6 +1,8 @@
 query GetContract($contractId: ID!) {
   contract(id: $contractId) {
-    id
+    metadata {
+        id
+    }
     addressLine1
     addressLine2
     locality
@@ -21,6 +23,9 @@ query GetContract($contractId: ID!) {
       sourceOfTruth
       appSource
       vatRate
+    }
+    createdBy {
+        id
     }
   }
 }
