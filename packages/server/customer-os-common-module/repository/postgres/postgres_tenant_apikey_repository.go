@@ -11,7 +11,7 @@ type TenantApiKeyRepo struct {
 }
 
 type TenantApiKeyRepository interface {
-	GetApiKey(tenant string) helper.QueryResult
+	GetTenantWithApiKey(apiKey string) helper.QueryResult
 	SaveApiKey(integration entity.TenantApiKey) helper.QueryResult
 }
 
@@ -19,10 +19,10 @@ func NewTenantApiKeyRepo(db *gorm.DB) *TenantApiKeyRepo {
 	return &TenantApiKeyRepo{db: db}
 }
 
-func (r *TenantApiKeyRepo) GetApiKey(tenant string) helper.QueryResult {
+func (r *TenantApiKeyRepo) GetTenantWithApiKey(apiKey string) helper.QueryResult {
 	var apiKeyEntity entity.TenantApiKey
 	err := r.db.
-		Where("tenant_name = ?", tenant).
+		Where("key = ?", apiKey).
 		First(&apiKeyEntity).Error
 
 	if err != nil {
