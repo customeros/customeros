@@ -245,6 +245,7 @@ type ComplexityRoot struct {
 		AppSource             func(childComplexity int) int
 		BillingCycle          func(childComplexity int) int
 		BillingDetails        func(childComplexity int) int
+		BillingEnabled        func(childComplexity int) int
 		CommittedPeriods      func(childComplexity int) int
 		ContractEnded         func(childComplexity int) int
 		ContractLineItems     func(childComplexity int) int
@@ -262,7 +263,6 @@ type ComplexityRoot struct {
 		ID                    func(childComplexity int) int
 		InvoiceEmail          func(childComplexity int) int
 		InvoiceNote           func(childComplexity int) int
-		InvoicingEnabled      func(childComplexity int) int
 		InvoicingStartDate    func(childComplexity int) int
 		Locality              func(childComplexity int) int
 		Metadata              func(childComplexity int) int
@@ -1445,9 +1445,9 @@ type ComplexityRoot struct {
 	}
 
 	TenantSettings struct {
-		DefaultCurrency  func(childComplexity int) int
-		InvoicingEnabled func(childComplexity int) int
-		LogoURL          func(childComplexity int) int
+		BillingEnabled  func(childComplexity int) int
+		DefaultCurrency func(childComplexity int) int
+		LogoURL         func(childComplexity int) int
 	}
 
 	User struct {
@@ -2840,6 +2840,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contract.BillingDetails(childComplexity), true
 
+	case "Contract.billingEnabled":
+		if e.complexity.Contract.BillingEnabled == nil {
+			break
+		}
+
+		return e.complexity.Contract.BillingEnabled(childComplexity), true
+
 	case "Contract.committedPeriods":
 		if e.complexity.Contract.CommittedPeriods == nil {
 			break
@@ -2958,13 +2965,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contract.InvoiceNote(childComplexity), true
-
-	case "Contract.invoicingEnabled":
-		if e.complexity.Contract.InvoicingEnabled == nil {
-			break
-		}
-
-		return e.complexity.Contract.InvoicingEnabled(childComplexity), true
 
 	case "Contract.invoicingStartDate":
 		if e.complexity.Contract.InvoicingStartDate == nil {
@@ -10431,19 +10431,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TenantBillingProfile.Zip(childComplexity), true
 
+	case "TenantSettings.billingEnabled":
+		if e.complexity.TenantSettings.BillingEnabled == nil {
+			break
+		}
+
+		return e.complexity.TenantSettings.BillingEnabled(childComplexity), true
+
 	case "TenantSettings.defaultCurrency":
 		if e.complexity.TenantSettings.DefaultCurrency == nil {
 			break
 		}
 
 		return e.complexity.TenantSettings.DefaultCurrency(childComplexity), true
-
-	case "TenantSettings.invoicingEnabled":
-		if e.complexity.TenantSettings.InvoicingEnabled == nil {
-			break
-		}
-
-		return e.complexity.TenantSettings.InvoicingEnabled(childComplexity), true
 
 	case "TenantSettings.logoUrl":
 		if e.complexity.TenantSettings.LogoURL == nil {
@@ -11436,7 +11436,7 @@ type Contract implements MetadataInterface {
     currency:           Currency
     createdBy:          User @goField(forceResolver: true)
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
-    invoicingEnabled:   Boolean!
+    billingEnabled:     Boolean!
     opportunities:      [Opportunity!] @goField(forceResolver: true)
     owner:              User @goField(forceResolver: true)
     serviceStarted:     Time
@@ -11495,7 +11495,7 @@ input ContractInput {
     currency:           Currency
     invoicingStartDate: Time
     billingCycle:       ContractBillingCycle
-    invoicingEnabled:   Boolean
+    billingEnabled:     Boolean
 }
 
 input ContractUpdateInput {
@@ -11523,7 +11523,7 @@ input ContractUpdateInput {
     canPayWithDirectDebit:     Boolean
     canPayWithBankTransfer: Boolean
     invoiceNote:        String
-    invoicingEnabled:   Boolean
+    billingEnabled:     Boolean
 }
 
 enum ContractRenewalCycle {
@@ -13910,9 +13910,9 @@ extend type Mutation {
 }
 
 type TenantSettings {
-    logoUrl:          String!
-    defaultCurrency:  Currency
-    invoicingEnabled: Boolean!
+    logoUrl:            String!
+    defaultCurrency:    Currency
+    billingEnabled:     Boolean!
 }
 
 type TenantBillingProfile implements SourceFields & Node {
@@ -13992,10 +13992,10 @@ input TenantBillingProfileUpdateInput {
 }
 
 input TenantSettingsInput {
-    patch:            Boolean
-    logoUrl:          String
-    defaultCurrency:  Currency
-    invoicingEnabled: Boolean
+    patch:              Boolean
+    logoUrl:            String
+    defaultCurrency:    Currency
+    billingEnabled:     Boolean
 }`, BuiltIn: false},
 	{Name: "../schemas/tenant_billable.graphqls", Input: `extend type Query {
     billableInfo: TenantBillableInfo! @hasRole(roles: [USER, ADMIN])
@@ -25166,8 +25166,8 @@ func (ec *executionContext) fieldContext_Contract_externalLinks(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Contract_invoicingEnabled(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contract_invoicingEnabled(ctx, field)
+func (ec *executionContext) _Contract_billingEnabled(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_billingEnabled(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -25180,7 +25180,7 @@ func (ec *executionContext) _Contract_invoicingEnabled(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.InvoicingEnabled, nil
+		return obj.BillingEnabled, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -25197,7 +25197,7 @@ func (ec *executionContext) _Contract_invoicingEnabled(ctx context.Context, fiel
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Contract_invoicingEnabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Contract_billingEnabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Contract",
 		Field:      field,
@@ -36042,8 +36042,8 @@ func (ec *executionContext) fieldContext_Invoice_contract(ctx context.Context, f
 				return ec.fieldContext_Contract_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
-			case "invoicingEnabled":
-				return ec.fieldContext_Contract_invoicingEnabled(ctx, field)
+			case "billingEnabled":
+				return ec.fieldContext_Contract_billingEnabled(ctx, field)
 			case "opportunities":
 				return ec.fieldContext_Contract_opportunities(ctx, field)
 			case "owner":
@@ -47844,8 +47844,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
-			case "invoicingEnabled":
-				return ec.fieldContext_Contract_invoicingEnabled(ctx, field)
+			case "billingEnabled":
+				return ec.fieldContext_Contract_billingEnabled(ctx, field)
 			case "opportunities":
 				return ec.fieldContext_Contract_opportunities(ctx, field)
 			case "owner":
@@ -48013,8 +48013,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
-			case "invoicingEnabled":
-				return ec.fieldContext_Contract_invoicingEnabled(ctx, field)
+			case "billingEnabled":
+				return ec.fieldContext_Contract_billingEnabled(ctx, field)
 			case "opportunities":
 				return ec.fieldContext_Contract_opportunities(ctx, field)
 			case "owner":
@@ -60845,8 +60845,8 @@ func (ec *executionContext) fieldContext_Mutation_tenant_UpdateSettings(ctx cont
 				return ec.fieldContext_TenantSettings_logoUrl(ctx, field)
 			case "defaultCurrency":
 				return ec.fieldContext_TenantSettings_defaultCurrency(ctx, field)
-			case "invoicingEnabled":
-				return ec.fieldContext_TenantSettings_invoicingEnabled(ctx, field)
+			case "billingEnabled":
+				return ec.fieldContext_TenantSettings_billingEnabled(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TenantSettings", field.Name)
 		},
@@ -65824,8 +65824,8 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
-			case "invoicingEnabled":
-				return ec.fieldContext_Contract_invoicingEnabled(ctx, field)
+			case "billingEnabled":
+				return ec.fieldContext_Contract_billingEnabled(ctx, field)
 			case "opportunities":
 				return ec.fieldContext_Contract_opportunities(ctx, field)
 			case "owner":
@@ -71896,8 +71896,8 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
-			case "invoicingEnabled":
-				return ec.fieldContext_Contract_invoicingEnabled(ctx, field)
+			case "billingEnabled":
+				return ec.fieldContext_Contract_billingEnabled(ctx, field)
 			case "opportunities":
 				return ec.fieldContext_Contract_opportunities(ctx, field)
 			case "owner":
@@ -75862,8 +75862,8 @@ func (ec *executionContext) fieldContext_Query_tenantSettings(ctx context.Contex
 				return ec.fieldContext_TenantSettings_logoUrl(ctx, field)
 			case "defaultCurrency":
 				return ec.fieldContext_TenantSettings_defaultCurrency(ctx, field)
-			case "invoicingEnabled":
-				return ec.fieldContext_TenantSettings_invoicingEnabled(ctx, field)
+			case "billingEnabled":
+				return ec.fieldContext_TenantSettings_billingEnabled(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TenantSettings", field.Name)
 		},
@@ -76716,8 +76716,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_contract(ctx context.Cont
 				return ec.fieldContext_Contract_createdBy(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
-			case "invoicingEnabled":
-				return ec.fieldContext_Contract_invoicingEnabled(ctx, field)
+			case "billingEnabled":
+				return ec.fieldContext_Contract_billingEnabled(ctx, field)
 			case "opportunities":
 				return ec.fieldContext_Contract_opportunities(ctx, field)
 			case "owner":
@@ -81633,8 +81633,8 @@ func (ec *executionContext) fieldContext_TenantSettings_defaultCurrency(ctx cont
 	return fc, nil
 }
 
-func (ec *executionContext) _TenantSettings_invoicingEnabled(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TenantSettings_invoicingEnabled(ctx, field)
+func (ec *executionContext) _TenantSettings_billingEnabled(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantSettings_billingEnabled(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -81647,7 +81647,7 @@ func (ec *executionContext) _TenantSettings_invoicingEnabled(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.InvoicingEnabled, nil
+		return obj.BillingEnabled, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -81664,7 +81664,7 @@ func (ec *executionContext) _TenantSettings_invoicingEnabled(ctx context.Context
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_TenantSettings_invoicingEnabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_TenantSettings_billingEnabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TenantSettings",
 		Field:      field,
@@ -85986,7 +85986,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "name", "renewalCycle", "renewalPeriods", "appSource", "contractUrl", "serviceStartedAt", "signedAt", "externalReference", "currency", "invoicingStartDate", "billingCycle", "invoicingEnabled"}
+	fieldsInOrder := [...]string{"organizationId", "name", "renewalCycle", "renewalPeriods", "appSource", "contractUrl", "serviceStartedAt", "signedAt", "externalReference", "currency", "invoicingStartDate", "billingCycle", "billingEnabled"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -86077,13 +86077,13 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.BillingCycle = data
-		case "invoicingEnabled":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingEnabled"))
+		case "billingEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingEnabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.InvoicingEnabled = data
+			it.BillingEnabled = data
 		}
 	}
 
@@ -86097,7 +86097,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "patch", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource", "currency", "invoicingStartDate", "billingCycle", "addressLine1", "addressLine2", "locality", "country", "zip", "organizationLegalName", "invoiceEmail", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoiceNote", "invoicingEnabled"}
+	fieldsInOrder := [...]string{"contractId", "patch", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource", "currency", "invoicingStartDate", "billingCycle", "addressLine1", "addressLine2", "locality", "country", "zip", "organizationLegalName", "invoiceEmail", "canPayWithCard", "canPayWithDirectDebit", "canPayWithBankTransfer", "invoiceNote", "billingEnabled"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -86272,13 +86272,13 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.InvoiceNote = data
-		case "invoicingEnabled":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingEnabled"))
+		case "billingEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingEnabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.InvoicingEnabled = data
+			it.BillingEnabled = data
 		}
 	}
 
@@ -90724,7 +90724,7 @@ func (ec *executionContext) unmarshalInputTenantSettingsInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"patch", "logoUrl", "defaultCurrency", "invoicingEnabled"}
+	fieldsInOrder := [...]string{"patch", "logoUrl", "defaultCurrency", "billingEnabled"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -90752,13 +90752,13 @@ func (ec *executionContext) unmarshalInputTenantSettingsInput(ctx context.Contex
 				return it, err
 			}
 			it.DefaultCurrency = data
-		case "invoicingEnabled":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoicingEnabled"))
+		case "billingEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingEnabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.InvoicingEnabled = data
+			it.BillingEnabled = data
 		}
 	}
 
@@ -93375,8 +93375,8 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "invoicingEnabled":
-			out.Values[i] = ec._Contract_invoicingEnabled(ctx, field, obj)
+		case "billingEnabled":
+			out.Values[i] = ec._Contract_billingEnabled(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -104567,8 +104567,8 @@ func (ec *executionContext) _TenantSettings(ctx context.Context, sel ast.Selecti
 			}
 		case "defaultCurrency":
 			out.Values[i] = ec._TenantSettings_defaultCurrency(ctx, field, obj)
-		case "invoicingEnabled":
-			out.Values[i] = ec._TenantSettings_invoicingEnabled(ctx, field, obj)
+		case "billingEnabled":
+			out.Values[i] = ec._TenantSettings_billingEnabled(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

@@ -330,7 +330,7 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 		AppSource:        constants.AppSourceCustomerOsApi,
 		LogoUrl:          utils.IfNotNilString(input.LogoURL),
 		DefaultCurrency:  defaultCurrency,
-		InvoicingEnabled: utils.IfNotNilBool(input.InvoicingEnabled),
+		InvoicingEnabled: utils.IfNotNilBool(input.BillingEnabled),
 	}
 
 	if input.Patch != nil && *input.Patch {
@@ -340,7 +340,7 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 		if input.DefaultCurrency != nil {
 			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_DEFAULT_CURRENCY)
 		}
-		if input.InvoicingEnabled != nil {
+		if input.BillingEnabled != nil {
 			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED)
 		}
 		updateRequest.FieldsMask = fieldMask

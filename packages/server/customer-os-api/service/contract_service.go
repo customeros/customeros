@@ -204,7 +204,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		CanPayWithCard:         utils.IfNotNilBool(input.CanPayWithCard),
 		CanPayWithDirectDebit:  utils.IfNotNilBool(input.CanPayWithDirectDebit),
 		CanPayWithBankTransfer: utils.IfNotNilBool(input.CanPayWithBankTransfer),
-		InvoicingEnabled:       utils.IfNotNilBool(input.InvoicingEnabled),
+		InvoicingEnabled:       utils.IfNotNilBool(input.BillingEnabled),
 	}
 	if input.Currency != nil {
 		contractUpdateRequest.Currency = mapper.MapCurrencyFromModel(*input.Currency).String()
@@ -336,7 +336,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		if input.CanPayWithBankTransfer != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER)
 		}
-		if input.InvoicingEnabled != nil {
+		if input.BillingEnabled != nil {
 			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_ENABLED)
 		}
 		contractUpdateRequest.FieldsMask = fieldMask

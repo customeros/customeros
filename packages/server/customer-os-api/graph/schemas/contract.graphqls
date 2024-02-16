@@ -19,7 +19,7 @@ type Contract implements MetadataInterface {
     currency:           Currency
     createdBy:          User @goField(forceResolver: true)
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
-    invoicingEnabled:   Boolean!
+    billingEnabled:     Boolean!
     opportunities:      [Opportunity!] @goField(forceResolver: true)
     owner:              User @goField(forceResolver: true)
     serviceStarted:     Time
@@ -78,7 +78,7 @@ input ContractInput {
     currency:           Currency
     invoicingStartDate: Time
     billingCycle:       ContractBillingCycle
-    invoicingEnabled:   Boolean
+    billingEnabled:     Boolean
 }
 
 input ContractUpdateInput {
@@ -106,7 +106,7 @@ input ContractUpdateInput {
     canPayWithDirectDebit:     Boolean
     canPayWithBankTransfer: Boolean
     invoiceNote:        String
-    invoicingEnabled:   Boolean
+    billingEnabled:     Boolean
 }
 
 enum ContractRenewalCycle {

@@ -41,7 +41,7 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		ContractSigned:       entity.SignedAt,
 		ContractURL:          utils.StringPtrNillable(entity.ContractUrl),
 		Currency:             utils.ToPtr(MapCurrencyToModel(entity.Currency)),
-		InvoicingEnabled:     entity.InvoicingEnabled,
+		BillingEnabled:       entity.InvoicingEnabled,
 		ServiceStarted:       entity.ServiceStartedAt,
 		ContractStatus:       MapContractStatusToModel(entity.ContractStatus),
 
@@ -83,7 +83,7 @@ func MapContractInputToEntity(input model.ContractInput) *neo4jentity.ContractEn
 		SourceOfTruth:      neo4jentity.DataSourceOpenline,
 		AppSource:          utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 		RenewalPeriods:     input.RenewalPeriods,
-		InvoicingEnabled:   utils.IfNotNilBool(input.InvoicingEnabled),
+		InvoicingEnabled:   utils.IfNotNilBool(input.BillingEnabled),
 	}
 
 	if input.RenewalCycle != nil {

@@ -444,7 +444,7 @@ type Contract struct {
 	Currency              *Currency             `json:"currency,omitempty"`
 	CreatedBy             *User                 `json:"createdBy,omitempty"`
 	ExternalLinks         []*ExternalSystem     `json:"externalLinks"`
-	InvoicingEnabled      bool                  `json:"invoicingEnabled"`
+	BillingEnabled        bool                  `json:"billingEnabled"`
 	Opportunities         []*Opportunity        `json:"opportunities,omitempty"`
 	Owner                 *User                 `json:"owner,omitempty"`
 	ServiceStarted        *time.Time            `json:"serviceStarted,omitempty"`
@@ -491,7 +491,7 @@ type ContractInput struct {
 	Currency           *Currency                     `json:"currency,omitempty"`
 	InvoicingStartDate *time.Time                    `json:"invoicingStartDate,omitempty"`
 	BillingCycle       *ContractBillingCycle         `json:"billingCycle,omitempty"`
-	InvoicingEnabled   *bool                         `json:"invoicingEnabled,omitempty"`
+	BillingEnabled     *bool                         `json:"billingEnabled,omitempty"`
 }
 
 type ContractUpdateInput struct {
@@ -519,7 +519,7 @@ type ContractUpdateInput struct {
 	CanPayWithDirectDebit  *bool                 `json:"canPayWithDirectDebit,omitempty"`
 	CanPayWithBankTransfer *bool                 `json:"canPayWithBankTransfer,omitempty"`
 	InvoiceNote            *string               `json:"invoiceNote,omitempty"`
-	InvoicingEnabled       *bool                 `json:"invoicingEnabled,omitempty"`
+	BillingEnabled         *bool                 `json:"billingEnabled,omitempty"`
 }
 
 type Country struct {
@@ -2441,16 +2441,16 @@ type TenantInput struct {
 }
 
 type TenantSettings struct {
-	LogoURL          string    `json:"logoUrl"`
-	DefaultCurrency  *Currency `json:"defaultCurrency,omitempty"`
-	InvoicingEnabled bool      `json:"invoicingEnabled"`
+	LogoURL         string    `json:"logoUrl"`
+	DefaultCurrency *Currency `json:"defaultCurrency,omitempty"`
+	BillingEnabled  bool      `json:"billingEnabled"`
 }
 
 type TenantSettingsInput struct {
-	Patch            *bool     `json:"patch,omitempty"`
-	LogoURL          *string   `json:"logoUrl,omitempty"`
-	DefaultCurrency  *Currency `json:"defaultCurrency,omitempty"`
-	InvoicingEnabled *bool     `json:"invoicingEnabled,omitempty"`
+	Patch           *bool     `json:"patch,omitempty"`
+	LogoURL         *string   `json:"logoUrl,omitempty"`
+	DefaultCurrency *Currency `json:"defaultCurrency,omitempty"`
+	BillingEnabled  *bool     `json:"billingEnabled,omitempty"`
 }
 
 type TimeRange struct {

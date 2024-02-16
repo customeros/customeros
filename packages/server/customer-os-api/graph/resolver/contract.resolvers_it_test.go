@@ -283,7 +283,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	contract := contractStruct.Contract
 	require.NotNil(t, contract)
 	require.Equal(t, contractId, contract.Metadata.ID)
-	require.True(t, contract.InvoicingEnabled)
+	require.True(t, contract.BillingEnabled)
 
 	billingDetails := contract.BillingDetails
 	require.Equal(t, "address line 1", *billingDetails.AddressLine1)

@@ -23,7 +23,7 @@ query GetContract($contractId: ID!) {
     contractSigned
     contractUrl
     currency
-    invoicingEnabled
+    billingEnabled
     serviceStarted
     contractStatus
     contractLineItems {
