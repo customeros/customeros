@@ -19,8 +19,8 @@ import (
 )
 
 func AddSlackRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
-	route.POST("/slack/channels",
-		handler.TracingEnhancer(ctx, "/slack/channels"),
+	route.POST("/sync/slack/channels",
+		handler.TracingEnhancer(ctx, "/sync/slack/channels"),
 		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.TenantApiKeyRepository, services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
 		syncSlackChannelsHandler(services, log))
 }
