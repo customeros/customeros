@@ -96,6 +96,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Equal(t, 119.0, invoice.InvoiceLineItems[0].Total)
 
 	require.Equal(t, organizationId, invoice.Organization.ID)
+	require.Equal(t, contractId, invoice.Contract.ID)
 }
 
 func TestInvoiceResolver_Invoices(t *testing.T) {

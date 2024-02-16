@@ -19,6 +19,7 @@ type ContractReadRepository interface {
 	GetContractByServiceLineItemId(ctx context.Context, tenant, serviceLineItemId string) (*dbtype.Node, error)
 	GetContractByOpportunityId(ctx context.Context, tenant string, opportunityId string) (*dbtype.Node, error)
 	GetContractsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
+	GetContractsForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
 	TenantsHasAtLeastOneContract(ctx context.Context, tenant string) (bool, error)
 	CountContracts(ctx context.Context, tenant string) (int64, error)
 	GetContractsToGenerateCycleInvoices(ctx context.Context, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
@@ -152,6 +153,36 @@ func (r *contractReadRepository) GetContractsForOrganizations(ctx context.Contex
 	params := map[string]any{
 		"tenant":          tenant,
 		"organizationIds": organizationIds,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *contractReadRepository) GetContractsForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsForInvoices")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_INVOICE]->(i:Invoice_%s)
+			WHERE i.id IN $invoiceIds
+			RETURN c, i.id`, tenant)
+	params := map[string]any{
+		"tenant":     tenant,
+		"invoiceIds": invoiceIds,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

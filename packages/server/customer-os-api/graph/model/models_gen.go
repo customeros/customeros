@@ -1038,6 +1038,7 @@ type InteractionSessionParticipantInput struct {
 type Invoice struct {
 	Metadata                      *Metadata        `json:"metadata"`
 	Organization                  *Organization    `json:"organization"`
+	Contract                      *Contract        `json:"contract"`
 	DryRun                        bool             `json:"dryRun"`
 	Postpaid                      bool             `json:"postpaid"`
 	OffCycle                      bool             `json:"offCycle"`

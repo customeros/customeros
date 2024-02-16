@@ -30,6 +30,7 @@ type ContractService interface {
 	Update(ctx context.Context, input model.ContractUpdateInput) error
 	GetById(ctx context.Context, id string) (*neo4jentity.ContractEntity, error)
 	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.ContractEntities, error)
+	GetContractsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.ContractEntities, error)
 	ContractsExistForTenant(ctx context.Context) (bool, error)
 	CountContracts(ctx context.Context, tenant string) (int64, error)
 }
@@ -372,6 +373,24 @@ func (s *contractService) GetContractsForOrganizations(ctx context.Context, orga
 	span.LogFields(log.Object("organizationIDs", organizationIDs))
 
 	contracts, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
+	if err != nil {
+		return nil, err
+	}
+	contractEntities := make(neo4jentity.ContractEntities, 0, len(contracts))
+	for _, v := range contracts {
+		contractEntity := neo4jmapper.MapDbNodeToContractEntity(v.Node)
+		contractEntity.DataloaderKey = v.LinkedNodeId
+		contractEntities = append(contractEntities, *contractEntity)
+	}
+	return &contractEntities, nil
+}
+
+func (s *contractService) GetContractsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.ContractEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractsForInvoices")
+	defer span.Finish()
+	span.LogFields(log.Object("invoiceIds", invoiceIds))
+
+	contracts, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForInvoices(ctx, common.GetTenantFromContext(ctx), invoiceIds)
 	if err != nil {
 		return nil, err
 	}
