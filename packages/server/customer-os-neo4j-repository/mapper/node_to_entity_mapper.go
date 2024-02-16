@@ -381,6 +381,7 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		CanPayWithCard:                  utils.GetBoolPropOrFalse(props, "canPayWithCard"),
 		CanPayWithDirectDebit:           utils.GetBoolPropOrFalse(props, "canPayWithDirectDebit"),
 		CanPayWithBankTransfer:          utils.GetBoolPropOrFalse(props, "canPayWithBankTransfer"),
+		InvoicingEnabled:                utils.GetBoolPropOrFalse(props, "invoicingEnabled"),
 	}
 	return &contract
 }
