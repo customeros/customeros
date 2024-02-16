@@ -21,6 +21,7 @@ import {
   ContractStatus,
   ContractRenewalCycle,
 } from '@graphql/types';
+import { RelationshipButton } from '@organization/src/components/Tabs/panels/AccountPanel/RelationshipButton';
 import {
   GetContractsQuery,
   useGetContractsQuery,
@@ -81,20 +82,7 @@ export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
   });
 
   return (
-    <OrganizationPanel
-      title='Account'
-      actionItem={
-        <Button
-          size='xs'
-          variant='outline'
-          type='button'
-          isDisabled
-          borderRadius='16px'
-        >
-          Prospect
-        </Button>
-      }
-    >
+    <OrganizationPanel title='Account' actionItem={<RelationshipButton />}>
       <Flex
         my={4}
         w='full'
