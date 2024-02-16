@@ -21,8 +21,6 @@ const PhoenixSocketProvider = ({ children }: { children: React.ReactNode }) => {
     setSocket(socket);
   }, [socketPath]);
 
-  if (!socket) return null;
-
   return (
     <PhoenixSocketContext.Provider value={{ socket }}>
       {children}
