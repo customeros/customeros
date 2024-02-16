@@ -3,7 +3,7 @@ tenant_UpdateSettings(
     input: {
         patch: true
         logoUrl: "https://logo.com"
-        invoicingEnabled: true
+        billingEnabled: true
         defaultCurrency: EUR
     }) {
     logoUrl

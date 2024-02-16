@@ -16,9 +16,9 @@ extend type Mutation {
 }
 
 type TenantSettings {
-    logoUrl:          String!
-    defaultCurrency:  Currency
-    invoicingEnabled: Boolean!
+    logoUrl:            String!
+    defaultCurrency:    Currency
+    billingEnabled:     Boolean!
 }
 
 type TenantBillingProfile implements SourceFields & Node {
@@ -98,8 +98,8 @@ input TenantBillingProfileUpdateInput {
 }
 
 input TenantSettingsInput {
-    patch:            Boolean
-    logoUrl:          String
-    defaultCurrency:  Currency
-    invoicingEnabled: Boolean
+    patch:              Boolean
+    logoUrl:            String
+    defaultCurrency:    Currency
+    billingEnabled:     Boolean
 }

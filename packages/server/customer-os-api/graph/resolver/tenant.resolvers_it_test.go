@@ -450,7 +450,7 @@ func TestQueryResolver_GetTenantSettings(t *testing.T) {
 	tenantSettings := tenantGraphqlResponse.TenantSettings
 	require.Equal(t, "logoUrl", tenantSettings.LogoURL)
 	require.Equal(t, model.CurrencyUsd, *tenantSettings.DefaultCurrency)
-	require.Equal(t, true, tenantSettings.InvoicingEnabled)
+	require.Equal(t, true, tenantSettings.BillingEnabled)
 }
 
 func TestMutationResolver_TenantUpdateSettings(t *testing.T) {
