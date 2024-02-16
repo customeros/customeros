@@ -10,21 +10,38 @@ func MapEntityToServiceLineItem(entity *neo4jentity.ServiceLineItemEntity) *mode
 		return nil
 	}
 	return &model.ServiceLineItem{
-		ID:            entity.ID,
+		Metadata: &model.Metadata{
+			ID:            entity.ID,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        MapDataSourceToModel(entity.Source),
+			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+			AppSource:     entity.AppSource,
+		},
+		BillingCycle:   MapBilledTypeToModel(entity.Billed),
+		Comments:       entity.Comments,
+		Description:    entity.Name,
+		ParentID:       entity.ParentID,
+		Price:          entity.Price,
+		Quantity:       entity.Quantity,
+		ServiceEnded:   entity.EndedAt,
+		ServiceStarted: entity.StartedAt,
+		Tax: &model.Tax{
+			TaxRate: entity.VatRate,
+		},
+
+		// All below are deprecated
+		VatRate:       entity.VatRate,
+		EndedAt:       entity.EndedAt,
+		StartedAt:     entity.StartedAt,
 		Name:          entity.Name,
+		Billed:        MapBilledTypeToModel(entity.Billed),
 		CreatedAt:     entity.CreatedAt,
 		UpdatedAt:     entity.UpdatedAt,
-		StartedAt:     entity.StartedAt,
-		EndedAt:       entity.EndedAt,
+		ID:            entity.ID,
 		Source:        MapDataSourceToModel(entity.Source),
 		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:     entity.AppSource,
-		Billed:        MapBilledTypeToModel(entity.Billed),
-		Price:         entity.Price,
-		Quantity:      entity.Quantity,
-		Comments:      entity.Comments,
-		ParentID:      entity.ParentID,
-		VatRate:       entity.VatRate,
 	}
 }
 

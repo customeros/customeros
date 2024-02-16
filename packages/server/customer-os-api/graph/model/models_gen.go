@@ -2156,27 +2156,33 @@ type Result struct {
 }
 
 type ServiceLineItem struct {
-	ID            string            `json:"id"`
-	CreatedAt     time.Time         `json:"createdAt"`
-	UpdatedAt     time.Time         `json:"updatedAt"`
-	StartedAt     time.Time         `json:"startedAt"`
-	EndedAt       *time.Time        `json:"endedAt,omitempty"`
-	Name          string            `json:"name"`
-	Billed        BilledType        `json:"billed"`
-	Price         float64           `json:"price"`
-	Quantity      int64             `json:"quantity"`
-	Comments      string            `json:"comments"`
-	CreatedBy     *User             `json:"createdBy,omitempty"`
-	Source        DataSource        `json:"source"`
-	SourceOfTruth DataSource        `json:"sourceOfTruth"`
-	AppSource     string            `json:"appSource"`
-	ExternalLinks []*ExternalSystem `json:"externalLinks"`
-	ParentID      string            `json:"parentId"`
-	VatRate       float64           `json:"vatRate"`
+	Metadata       *Metadata         `json:"metadata"`
+	BillingCycle   BilledType        `json:"billingCycle"`
+	Comments       string            `json:"comments"`
+	Description    string            `json:"description"`
+	ParentID       string            `json:"parentId"`
+	Price          float64           `json:"price"`
+	Quantity       int64             `json:"quantity"`
+	ServiceEnded   *time.Time        `json:"serviceEnded,omitempty"`
+	ServiceStarted time.Time         `json:"serviceStarted"`
+	Tax            *Tax              `json:"tax"`
+	CreatedBy      *User             `json:"createdBy,omitempty"`
+	ExternalLinks  []*ExternalSystem `json:"externalLinks"`
+	VatRate        float64           `json:"vatRate"`
+	StartedAt      time.Time         `json:"startedAt"`
+	EndedAt        *time.Time        `json:"endedAt,omitempty"`
+	Name           string            `json:"name"`
+	Billed         BilledType        `json:"billed"`
+	ID             string            `json:"id"`
+	CreatedAt      time.Time         `json:"createdAt"`
+	UpdatedAt      time.Time         `json:"updatedAt"`
+	Source         DataSource        `json:"source"`
+	SourceOfTruth  DataSource        `json:"sourceOfTruth"`
+	AppSource      string            `json:"appSource"`
 }
 
-func (ServiceLineItem) IsNode()            {}
-func (this ServiceLineItem) GetID() string { return this.ID }
+func (ServiceLineItem) IsMetadataInterface()        {}
+func (this ServiceLineItem) GetMetadata() *Metadata { return this.Metadata }
 
 type ServiceLineItemBulkUpdateInput struct {
 	ServiceLineItems []*ServiceLineItemBulkUpdateItem `json:"serviceLineItems"`

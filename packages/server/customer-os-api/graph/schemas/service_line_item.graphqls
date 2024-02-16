@@ -9,24 +9,31 @@ extend type Mutation {
     serviceLineItem_BulkUpdate(input: ServiceLineItemBulkUpdateInput!): [ID!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
-type ServiceLineItem implements Node {
-    id:                 ID!
-    createdAt:          Time!
-    updatedAt:          Time!
-    startedAt:          Time!
-    endedAt:            Time
-    name:               String!
-    billed:             BilledType!
+type ServiceLineItem implements MetadataInterface {
+    metadata:           Metadata!
+    billingCycle:       BilledType!
+    comments:           String!
+    description:        String!
+    parentId:           ID!
     price:              Float!
     quantity:           Int64!
-    comments:           String!
+    serviceEnded:       Time
+    serviceStarted:     Time!
+    tax:                Tax!
     createdBy:          User @goField(forceResolver: true)
-    source:             DataSource!
-    sourceOfTruth:      DataSource!
-    appSource:          String!
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
-    parentId:           ID!
-    vatRate:            Float!
+
+    vatRate:            Float! @deprecated(reason: "Use tax instead.")
+    startedAt:          Time! @deprecated(reason: "Use serviceStarted instead.")
+    endedAt:            Time @deprecated(reason: "Use serviceEnded instead.")
+    name:               String! @deprecated(reason: "Use description instead.")
+    billed:             BilledType! @deprecated(reason: "Use billingCycle instead.")
+    id:                 ID! @deprecated(reason: "Use metadata instead.")
+    createdAt:          Time! @deprecated(reason: "Use metadata instead.")
+    updatedAt:          Time! @deprecated(reason: "Use metadata instead.")
+    source:             DataSource! @deprecated(reason: "Use metadata instead.")
+    sourceOfTruth:      DataSource! @deprecated(reason: "Use metadata instead.")
+    appSource:          String! @deprecated(reason: "Use metadata instead.")
 }
 
 input ServiceLineItemInput {
@@ -76,6 +83,7 @@ input ServiceLineItemCloseInput {
     id:         ID!
     endedAt:    Time
 }
+
 
 enum BilledType {
     NONE
