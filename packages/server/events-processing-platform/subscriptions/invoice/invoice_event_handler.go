@@ -182,7 +182,7 @@ func (h *InvoiceEventHandler) fillCycleInvoice(ctx context.Context, tenant, cont
 			vat += calculatedSLIVat
 			invoiceLine := invoicepb.InvoiceLine{
 				Name:                    sliEntity.Name,
-				Price:                   calculatePriceForBilledType(sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycle),
+				Price:                   utils.TruncateFloat64(calculatePriceForBilledType(sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycle), 2),
 				Quantity:                sliEntity.Quantity,
 				Amount:                  calculatedSLIAmount,
 				Total:                   calculatedSLIAmount + calculatedSLIVat,
