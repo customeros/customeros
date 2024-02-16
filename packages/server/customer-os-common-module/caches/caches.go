@@ -87,7 +87,7 @@ func (c *Cache) SetTenantApiKey(tenant, apiKey string) {
 	keyBytes := []byte(apiKey)
 	valueBytes := []byte(tenant)
 
-	_ = c.apiKeyCache.Set(keyBytes, valueBytes, expire24Hours)
+	_ = c.tenantApiKeyCache.Set(keyBytes, valueBytes, expire24Hours)
 }
 
 func (c *Cache) AddTenant(tenant string) {
