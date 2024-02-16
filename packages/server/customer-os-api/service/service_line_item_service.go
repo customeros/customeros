@@ -217,6 +217,11 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		}
 		serviceLineItemUpdateRequest.ContractId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*contractDbNode), "id")
 	}
+	if !isRetroactiveCorrection && serviceLineItem.EndedAt != nil {
+		err = fmt.Errorf("service line item with id {%s} is already ended", serviceLineItemDetails.Id)
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)

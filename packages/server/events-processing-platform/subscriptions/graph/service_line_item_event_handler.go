@@ -99,7 +99,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 
 	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
 
-	isNewVersionForExistingSLI := serviceLineItemId != eventData.ParentId && eventData.ParentId != ""
+	isNewVersionForExistingSLI := serviceLineItemId != eventData.ParentId && eventData.PreviousVersionId != ""
 	previousPrice := float64(0)
 	previousQuantity := int64(0)
 	previousVatRate := float64(0)
@@ -107,13 +107,13 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	reasonForChange := eventData.Comments
 	if isNewVersionForExistingSLI {
 		//get the previous service line item to get the previous price and quantity
-		sliDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, eventData.ParentId)
+		previousSliDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, eventData.PreviousVersionId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while getting latest service line item with parent id %s: %s", eventData.ParentId, err.Error())
 		}
-		if sliDbNode != nil {
-			previousServiceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
+		if previousSliDbNode != nil {
+			previousServiceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(previousSliDbNode)
 			previousPrice = previousServiceLineItem.Price
 			previousQuantity = previousServiceLineItem.Quantity
 			previousBilled = previousServiceLineItem.Billed.String()

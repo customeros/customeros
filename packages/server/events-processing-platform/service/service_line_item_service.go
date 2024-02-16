@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
+	sliaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
@@ -66,6 +67,7 @@ func (s *serviceLineItemService) CreateServiceLineItem(ctx context.Context, requ
 		serviceLineItemId,
 		request.Tenant,
 		request.LoggedInUserId,
+		"",
 		model.ServiceLineItemDataFields{
 			Billed:     model.BilledType(request.Billed),
 			Quantity:   request.Quantity,
@@ -151,6 +153,17 @@ func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, requ
 			return nil, status.Errorf(codes.NotFound, "contract with ID %s not found", request.ContractId)
 		}
 
+		// Check if current SLI is not ended
+		sliEnded, err := s.checkSLINotEnded(ctx, request.Tenant, request.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Error(err, "error checking service line item end status")
+			return nil, status.Errorf(codes.Internal, "error checking service line item end status: %v", err)
+		}
+		if sliEnded {
+			return nil, status.Errorf(codes.FailedPrecondition, "service line item with ID %s is already ended", request.Id)
+		}
+
 		//Close service line item
 		closeSliCommand := command.NewCloseServiceLineItemCommand(request.Id, request.Tenant, request.LoggedInUserId, source.AppSource, false,
 			versionDate, utils.TimestampProtoToTimePtr(request.UpdatedAt))
@@ -168,6 +181,7 @@ func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, requ
 			serviceLineItemId,
 			request.Tenant,
 			request.LoggedInUserId,
+			request.Id,
 			model.ServiceLineItemDataFields{
 				Billed:     model.BilledType(request.Billed),
 				Quantity:   request.Quantity,
@@ -251,4 +265,18 @@ func (s *serviceLineItemService) checkContractExists(ctx context.Context, tenant
 	}
 
 	return true, nil // The contract exists
+}
+
+func (s *serviceLineItemService) checkSLINotEnded(ctx context.Context, tenant, id string) (bool, error) {
+	sliAggregate := sliaggregate.NewServiceLineItemAggregateWithTenantAndID(tenant, id)
+	err := s.aggregateStore.Exists(ctx, sliAggregate.GetID())
+	if err != nil {
+		if errors.Is(err, eventstore.ErrAggregateNotFound) {
+			return false, nil
+		} else {
+			return false, err
+		}
+	}
+
+	return sliAggregate.ServiceLineItem.EndedAt != nil, nil
 }
