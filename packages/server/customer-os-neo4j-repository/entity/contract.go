@@ -37,6 +37,7 @@ type ContractEntity struct {
 	CanPayWithCard                  bool
 	CanPayWithDirectDebit           bool
 	CanPayWithBankTransfer          bool
+	InvoicingEnabled                bool
 
 	DataloaderKey string
 }

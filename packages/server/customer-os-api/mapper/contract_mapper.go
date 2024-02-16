@@ -41,12 +41,9 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		ContractSigned:       entity.SignedAt,
 		ContractURL:          utils.StringPtrNillable(entity.ContractUrl),
 		Currency:             utils.ToPtr(MapCurrencyToModel(entity.Currency)),
-		InvoicingEnabled: entity.OrganizationLegalName != "" &&
-			entity.InvoiceEmail != "" &&
-			entity.InvoicingStartDate != nil &&
-			entity.BillingCycle != neo4jenum.BillingCycleNone, // TODO: replace with individual contract property
-		ServiceStarted: entity.ServiceStartedAt,
-		ContractStatus: MapContractStatusToModel(entity.ContractStatus),
+		InvoicingEnabled:     entity.InvoicingEnabled,
+		ServiceStarted:       entity.ServiceStartedAt,
+		ContractStatus:       MapContractStatusToModel(entity.ContractStatus),
 
 		// All below are deprecated
 		ID:                    entity.Id,

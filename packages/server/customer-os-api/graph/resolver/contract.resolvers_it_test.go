@@ -237,6 +237,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		InvoiceNote:           "invoice note",
 		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
 		InvoicingStartDate:    &now,
+		InvoicingEnabled:      true,
 	})
 
 	serviceLineItemId1 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{

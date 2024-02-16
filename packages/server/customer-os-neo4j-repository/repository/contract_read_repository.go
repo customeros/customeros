@@ -271,7 +271,8 @@ func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context
 
 	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(:ServiceLineItem)
 			WHERE 
-				ts.invoicingEnabled = true AND 
+				ts.invoicingEnabled = true AND
+				(c.invoicingEnabled = true OR c.invoicingEnabled IS NULL) AND
 				(o.hide = false OR o.hide IS NULL) AND
 				(c.currency <> "" OR ts.defaultCurrency <> "") AND
 				c.organizationLegalName IS NOT NULL AND 
@@ -321,7 +322,8 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
 			WHERE 
 				ts.invoicingEnabled = true AND 
-				ts.invoicingPostpaid = false  AND 
+				ts.invoicingPostpaid = false  AND
+				(c.invoicingEnabled = true OR c.invoicingEnabled IS NULL) AND
 				(o.hide = false OR o.hide IS NULL) AND
 				(c.currency <> "" OR ts.defaultCurrency <> "") AND
 				c.organizationLegalName IS NOT NULL AND 
