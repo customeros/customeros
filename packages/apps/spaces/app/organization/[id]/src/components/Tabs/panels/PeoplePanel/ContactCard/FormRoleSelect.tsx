@@ -67,7 +67,15 @@ export const FormRoleSelect = ({
                 backgroundColor: `${[colorScheme]}.50`,
 
                 '& div[role="button"]': {
-                  display: 'none',
+                  position: 'relative',
+                  background: 'transparent',
+                  outline: 'none',
+                  marginInlineStart: '2px',
+                  display: 'initial',
+                  boxShadow: 'none !important',
+                },
+                '& div[data-focus="true"]': {
+                  opacity: 1,
                 },
               };
             },
