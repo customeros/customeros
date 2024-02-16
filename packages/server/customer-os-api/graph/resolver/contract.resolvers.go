@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -20,8 +19,8 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-// ServiceLineItems is the resolver for the serviceLineItems field.
-func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error) {
+// ContractLineItems is the resolver for the contractLineItems field.
+func (r *contractResolver) ContractLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	serviceLineItemEntities, err := dataloader.For(ctx).GetServiceLineItemsForContract(ctx, obj.ID)
@@ -32,6 +31,34 @@ func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Cont
 		return nil, nil
 	}
 	return mapper.MapEntitiesToServiceLineItems(serviceLineItemEntities), nil
+}
+
+// CreatedBy is the resolver for the createdBy field.
+func (r *contractResolver) CreatedBy(ctx context.Context, obj *model.Contract) (*model.User, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	userEntityNillable, err := dataloader.For(ctx).GetUserCreatorForContract(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("error fetching user creator for service line item %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "error fetching user creator for service line item %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(userEntityNillable), nil
+}
+
+// ExternalLinks is the resolver for the externalLinks field.
+func (r *contractResolver) ExternalLinks(ctx context.Context, obj *model.Contract) ([]*model.ExternalSystem, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	entities, err := dataloader.For(ctx).GetExternalSystemsForContract(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get external system for contract %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get external system for contract %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToExternalSystems(entities), nil
 }
 
 // Opportunities is the resolver for the opportunities field.
@@ -67,32 +94,18 @@ func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*mod
 	return mapper.MapEntityToUser(owner), err
 }
 
-// CreatedBy is the resolver for the createdBy field.
-func (r *contractResolver) CreatedBy(ctx context.Context, obj *model.Contract) (*model.User, error) {
+// ServiceLineItems is the resolver for the serviceLineItems field.
+func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	userEntityNillable, err := dataloader.For(ctx).GetUserCreatorForContract(ctx, obj.ID)
+	serviceLineItemEntities, err := dataloader.For(ctx).GetServiceLineItemsForContract(ctx, obj.ID)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("error fetching user creator for service line item %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "error fetching user creator for service line item %s", obj.ID)
+		r.log.Errorf("Failed to get service line items for contract %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get service line items for contract %s", obj.ID)
 		return nil, nil
 	}
-	return mapper.MapEntityToUser(userEntityNillable), nil
-}
-
-// ExternalLinks is the resolver for the externalLinks field.
-func (r *contractResolver) ExternalLinks(ctx context.Context, obj *model.Contract) ([]*model.ExternalSystem, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	entities, err := dataloader.For(ctx).GetExternalSystemsForContract(ctx, obj.ID)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get external system for contract %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to get external system for contract %s", obj.ID)
-		return nil, nil
-	}
-	return mapper.MapEntitiesToExternalSystems(entities), nil
+	return mapper.MapEntitiesToServiceLineItems(serviceLineItemEntities), nil
 }
 
 // ContractCreate is the resolver for the contract_Create field.

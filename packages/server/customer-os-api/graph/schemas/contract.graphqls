@@ -8,38 +8,61 @@ extend type Mutation {
 
 type Contract implements MetadataInterface {
     metadata:           Metadata!
-
-    serviceStartedAt:   Time
-    signedAt:           Time
-    endedAt:            Time
-    name:               String!
-    renewalCycle:       ContractRenewalCycle!
-    renewalPeriods:     Int64
-    status:             ContractStatus!
-    serviceLineItems:   [ServiceLineItem!] @goField(forceResolver: true)
-    opportunities:      [Opportunity!] @goField(forceResolver: true)
-    owner:              User @goField(forceResolver: true)
-    createdBy:          User @goField(forceResolver: true) @deprecated(reason: "Use metadata instead.")
-    externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
+    billingDetails:     BillingDetails
+    committedPeriods:   Int64
+    contractEnded:      Time
+    contractLineItems:  [ServiceLineItem!] @goField(forceResolver: true)
+    contractName:       String!
+    contractRenewalCycle: ContractRenewalCycle!
+    contractSigned:     Time
     contractUrl:        String
     currency:           Currency
-    invoicingStartDate: Time
-    billingCycle:       ContractBillingCycle
-    addressLine1:       String
-    addressLine2:       String
-    locality:           String
-    country:            String
-    zip:                String
-    organizationLegalName: String
-    invoiceEmail:       String
-    invoiceNote:        String
+    createdBy:          User @goField(forceResolver: true)
+    externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
+    invoicingEnabled:   Boolean!
+    opportunities:      [Opportunity!] @goField(forceResolver: true)
+    owner:              User @goField(forceResolver: true)
+    serviceStarted:     Time
+    contractStatus:     ContractStatus!
 
+    status:             ContractStatus! @deprecated(reason: "Use contractStatus instead.")
+    serviceStartedAt:   Time @deprecated(reason: "Use serviceStarted instead.")
+    name:               String! @deprecated(reason: "Use contractName instead.")
+    signedAt:           Time @deprecated(reason: "Use contractSigned instead.")
+    renewalCycle:       ContractRenewalCycle! @deprecated(reason: "Use contractRenewalCycle instead.")
+    organizationLegalName: String @deprecated(reason: "Use billingDetails instead.")
+    invoiceEmail:       String @deprecated(reason: "Use billingDetails instead.")
     id:                 ID! @deprecated(reason: "Use metadata instead.")
     createdAt:          Time! @deprecated(reason: "Use metadata instead.")
     updatedAt:          Time! @deprecated(reason: "Use metadata instead.")
     source:             DataSource! @deprecated(reason: "Use metadata instead.")
     sourceOfTruth:      DataSource! @deprecated(reason: "Use metadata instead.")
     appSource:          String! @deprecated(reason: "Use metadata instead.")
+    renewalPeriods:     Int64 @deprecated(reason: "Use committedPeriods instead.")
+    endedAt:            Time @deprecated(reason: "Use contractEnded instead.")
+    serviceLineItems:   [ServiceLineItem!] @goField(forceResolver: true) @deprecated(reason: "Use contractLineItems instead.")
+    invoiceNote:        String @deprecated(reason: "Use billingDetails instead.")
+    billingCycle:       ContractBillingCycle @deprecated(reason: "Use billingDetails instead.")
+    invoicingStartDate: Time @deprecated(reason: "Use billingDetails instead.")
+    addressLine1:       String @deprecated(reason: "Use billingDetails instead.")
+    addressLine2:       String @deprecated(reason: "Use billingDetails instead.")
+    zip:                String @deprecated(reason: "Use billingDetails instead.")
+    locality:           String @deprecated(reason: "Use billingDetails instead.")
+    country:            String @deprecated(reason: "Use billingDetails instead.")
+}
+
+type BillingDetails {
+    billingCycle:          ContractBillingCycle
+    invoicingStarted:      Time
+    addressLine1:          String
+    addressLine2:          String
+    locality:              String
+    region:                String
+    country:               String
+    postalCode:            String
+    organizationLegalName: String
+    billingEmail:          String
+    invoiceNote:           String
 }
 
 input ContractInput {

@@ -235,6 +235,8 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		OrganizationLegalName: "organization legal name",
 		InvoiceEmail:          "invoice email",
 		InvoiceNote:           "invoice note",
+		BillingCycle:          neo4jenum.BillingCycleMonthlyBilling,
+		InvoicingStartDate:    &now,
 	})
 
 	serviceLineItemId1 := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
@@ -277,42 +279,47 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &contractStruct)
 	require.Nil(t, err)
 
-	contractEntity := contractStruct.Contract
-	require.NotNil(t, contractEntity)
-	require.Equal(t, contractId, contractEntity.Metadata.ID)
-	require.Equal(t, "address line 1", *contractEntity.AddressLine1)
-	require.Equal(t, "address line 2", *contractEntity.AddressLine2)
-	require.Equal(t, "zip", *contractEntity.Zip)
-	require.Equal(t, "locality", *contractEntity.Locality)
-	require.Equal(t, "country", *contractEntity.Country)
-	require.Equal(t, "organization legal name", *contractEntity.OrganizationLegalName)
-	require.Equal(t, "invoice email", *contractEntity.InvoiceEmail)
-	require.Equal(t, "invoice note", *contractEntity.InvoiceNote)
-	require.Equal(t, 2, len(contractEntity.ServiceLineItems))
+	contract := contractStruct.Contract
+	require.NotNil(t, contract)
+	require.Equal(t, contractId, contract.Metadata.ID)
+	require.True(t, contract.InvoicingEnabled)
 
-	firstServiceLineItem := contractEntity.ServiceLineItems[0]
-	require.Equal(t, serviceLineItemId1, firstServiceLineItem.ID)
-	require.Equal(t, "service line item 1", firstServiceLineItem.Name)
-	require.Equal(t, yesterday, firstServiceLineItem.CreatedAt)
-	require.Equal(t, yesterday, firstServiceLineItem.UpdatedAt)
-	require.Equal(t, model.BilledTypeAnnually, firstServiceLineItem.Billed)
-	require.Equal(t, float64(13), firstServiceLineItem.Price)
-	require.Equal(t, int64(2), firstServiceLineItem.Quantity)
-	require.Equal(t, model.DataSourceOpenline, firstServiceLineItem.Source)
-	require.Equal(t, "test1", firstServiceLineItem.AppSource)
-	require.Equal(t, 0.1, firstServiceLineItem.VatRate)
+	billingDetails := contract.BillingDetails
+	require.Equal(t, "address line 1", *billingDetails.AddressLine1)
+	require.Equal(t, "address line 2", *billingDetails.AddressLine2)
+	require.Equal(t, "zip", *billingDetails.PostalCode)
+	require.Equal(t, "locality", *billingDetails.Locality)
+	require.Equal(t, "country", *billingDetails.Country)
+	require.Equal(t, "organization legal name", *billingDetails.OrganizationLegalName)
+	require.Equal(t, "invoice email", *billingDetails.BillingEmail)
+	require.Equal(t, "invoice note", *billingDetails.InvoiceNote)
+	require.Equal(t, model.ContractBillingCycleMonthlyBilling, *billingDetails.BillingCycle)
 
-	secondServiceLineItem := contractEntity.ServiceLineItems[1]
-	require.Equal(t, serviceLineItemId2, secondServiceLineItem.ID)
-	require.Equal(t, "service line item 2", secondServiceLineItem.Name)
-	require.Equal(t, now, secondServiceLineItem.CreatedAt)
-	require.Equal(t, now, secondServiceLineItem.UpdatedAt)
-	require.Equal(t, model.BilledTypeUsage, secondServiceLineItem.Billed)
-	require.Equal(t, float64(255), secondServiceLineItem.Price)
-	require.Equal(t, int64(23), secondServiceLineItem.Quantity)
-	require.Equal(t, model.DataSourceOpenline, secondServiceLineItem.Source)
-	require.Equal(t, "test2", secondServiceLineItem.AppSource)
-	require.Equal(t, 0.2, secondServiceLineItem.VatRate)
+	require.Equal(t, 2, len(contract.ContractLineItems))
+
+	firstContractLineItem := contract.ContractLineItems[0]
+	require.Equal(t, serviceLineItemId1, firstContractLineItem.ID)
+	require.Equal(t, "service line item 1", firstContractLineItem.Name)
+	require.Equal(t, yesterday, firstContractLineItem.CreatedAt)
+	require.Equal(t, yesterday, firstContractLineItem.UpdatedAt)
+	require.Equal(t, model.BilledTypeAnnually, firstContractLineItem.Billed)
+	require.Equal(t, float64(13), firstContractLineItem.Price)
+	require.Equal(t, int64(2), firstContractLineItem.Quantity)
+	require.Equal(t, model.DataSourceOpenline, firstContractLineItem.Source)
+	require.Equal(t, "test1", firstContractLineItem.AppSource)
+	require.Equal(t, 0.1, firstContractLineItem.VatRate)
+
+	secondContractLineItem := contract.ContractLineItems[1]
+	require.Equal(t, serviceLineItemId2, secondContractLineItem.ID)
+	require.Equal(t, "service line item 2", secondContractLineItem.Name)
+	require.Equal(t, now, secondContractLineItem.CreatedAt)
+	require.Equal(t, now, secondContractLineItem.UpdatedAt)
+	require.Equal(t, model.BilledTypeUsage, secondContractLineItem.Billed)
+	require.Equal(t, float64(255), secondContractLineItem.Price)
+	require.Equal(t, int64(23), secondContractLineItem.Quantity)
+	require.Equal(t, model.DataSourceOpenline, secondContractLineItem.Source)
+	require.Equal(t, "test2", secondContractLineItem.AppSource)
+	require.Equal(t, 0.2, secondContractLineItem.VatRate)
 }
 
 func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
